@@ -62,7 +62,7 @@ impl MultiScaleChain {
 ///
 /// Extends MultiScaleConfig by replacing the fixed alpha with adaptive tuning:
 /// coarse-move probability alpha is updated every `adapt_interval` steps toward
-/// `target_accept` using a decaying Robbins-Monro step size gamma_t = gamma_0 / sqrt(t).
+/// `target_accept` using a decaying Robbins-Monro step size gamma_t = gamma_0 / t^0.75.
 ///
 /// coarse_tol = 3 × pop_tolerance (looser than MultiScaleConfig's 2×) to avoid
 /// over-rejection during early adaptation when alpha may be poorly calibrated.

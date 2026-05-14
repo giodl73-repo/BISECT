@@ -65,6 +65,9 @@ A verifier can independently reproduce the alpha trace from the base seed
 and step seeds using the MSC\_STEP\_ prefix formula.
 The adaptation introduces no new randomness: it is a deterministic function
 of the acceptance events, which are themselves determined by the step seeds.
+The \texttt{U.5+adaptive-multiscale-smoke} package now provides a replayable
+verifier for that mechanics claim.  State convergence and autocorrelation
+claims remain package-bound future evidence.
 
 \paragraph{Open questions.}
 Several extensions are deferred to future work:

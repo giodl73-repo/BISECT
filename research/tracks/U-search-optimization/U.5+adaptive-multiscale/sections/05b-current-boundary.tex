@@ -11,3 +11,11 @@ Published claims should name the adaptation schedule, target acceptance rate,
 resolution hierarchy, seed, diagnostics, and package hashes.  Without those
 artifacts, empirical statements about state-specific optimal $\alpha$ values
 should be treated as calibration examples rather than final benchmark results.
+
+The checked-in \texttt{U.5+adaptive-multiscale-smoke} package is the minimal
+positive fixture for this boundary.  It verifies alpha-trace replay,
+\texttt{coarse\_tol = 3 * pop\_tolerance}, clipping, final-alpha arithmetic, and
+the \texttt{MSC\_STEP\_} seed formula in
+\texttt{bisect-multiscale::adaptive\_evidence}.  It deliberately stops short of
+claiming production CLI availability, state-specific convergence, or
+autocorrelation improvement.

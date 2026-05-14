@@ -77,7 +77,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.2 | Parameter Sensitivity — evidence protocol for tuning robustness | [PDF](papers/U.2+parameter-sensitivity.pdf) | synthetic sweep package added; real 50-state sweep pending |
 | U.3 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/U.3+simulated-annealing.pdf) | synthetic SA seed/grid smoke package added; state empirical run package pending |
 | U.4 | Parallel Tempering — multi-chain replica exchange MCMC | [PDF](papers/U.4+parallel-tempering.pdf) | synthetic PT package added; production CLI pending |
-| U.5 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/U.5+adaptive-multiscale.pdf) | `bisect-multiscale` substrate |
+| U.5 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/U.5+adaptive-multiscale.pdf) | adaptive alpha-trace smoke package added; state convergence archive pending |
 | U.6 | Exact Redistricting via ILP — model-scoped certificates for small instances | [PDF](papers/U.6+ilp-redistricting.pdf) | solver package required |
 | U.7 | Pareto-Optimal Redistricting — transparent trade-offs via NSGA-II | [PDF](papers/U.7+pareto-redistricting.pdf) | `bisect-pareto` selected-frontier package |
 | U.8 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/U.8+percentile-sweep.pdf) | legal posture selection |

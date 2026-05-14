@@ -37,6 +37,7 @@
 | 2026-05-13 | U.3 Simulated Annealing Evidence | Add deterministic SA seed/grid smoke fixture and U.3 evidence boundary | archived |
 | 2026-05-13 | G Short-Burst Evidence | Add endpoint-retention, seed-stream, and diagnostic smoke fixture for G.6/G.12 | archived |
 | 2026-05-13 | U.11 Resolution Evidence | Add GEOID mapping, population aggregation, and coarse-adjacency smoke fixture | archived |
+| 2026-05-13 | U.5 Adaptive Multiscale Evidence | Add Robbins-Monro alpha-trace and MSC_STEP seed smoke fixture | archived |
 
 ## Operating Model
 

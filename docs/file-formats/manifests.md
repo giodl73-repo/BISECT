@@ -31,6 +31,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
 | `m1-economic-evidence-manifest.json` | `m1-economic-evidence-manifest v1` | `bisect-cli::lodes_evidence` | M.1 Economic Character Evidence wave |
 | `m3-housing-evidence-manifest.json` | `m3-housing-evidence-manifest v1` | `bisect-cli::housing_evidence` | M.3 Housing Character Evidence wave |
+| `u5-adaptive-evidence-manifest.json` | `u5-adaptive-evidence-manifest v1` | `bisect-multiscale::adaptive_evidence` | U.5 Adaptive Multiscale Evidence wave |
 | `u3-sa-evidence-manifest.json` | `u3-sa-evidence-manifest v1` | `bisect-cli::sa_evidence` | U.3 Simulated Annealing Evidence wave |
 | `u11-resolution-evidence-manifest.json` | `u11-resolution-evidence-manifest v1` | `bisect-multiscale::resolution_evidence` | U.11 Resolution Evidence wave |
 | `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
@@ -354,6 +355,26 @@ Required fields beyond §2:
 | `package_id` | Stable package slug including the covered U-track scope. |
 | `papers` | U-track papers covered, e.g. `["U.11"]`. |
 | `fixture_file` | `{path, sha256, role}` for the package-relative resolution fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.21 `u5-adaptive-evidence-manifest v1`
+
+Source: `bisect-multiscale::adaptive_evidence::AdaptiveEvidenceManifest`.
+
+This manifest binds U.5 adaptive-multiscale smoke fixtures to a verifier. It
+covers Robbins-Monro alpha-trace replay, gamma schedule, clipping bounds,
+`coarse_tol = 3 * pop_tolerance`, and the shared `MSC_STEP_` seed formula. It
+is not evidence for state-specific alpha convergence, autocorrelation
+improvements, production CLI availability, or legal adequacy.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered U-track scope. |
+| `papers` | U-track papers covered, e.g. `["U.5"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative adaptive-alpha fixture set. |
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 

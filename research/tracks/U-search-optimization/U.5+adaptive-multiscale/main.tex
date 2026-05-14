@@ -84,11 +84,14 @@ We introduce \ams{}, which tunes $\alpha$ automatically using
 Every $\Delta = 50$ steps the algorithm measures the observed coarse acceptance
 rate in the current window; if it exceeds the target (0.30) $\alpha$ is
 increased; if below, $\alpha$ is decreased.
-The Robbins-Monro step size $\gamma_t = \gamma_0 / \sqrt{t}$ satisfies the
+The Robbins-Monro step size $\gamma_t = \gamma_0 / t^{3/4}$ satisfies the
 classical stochastic-approximation conditions
 ($\sum \gamma_t = \infty$, $\sum \gamma_t^2 < \infty$), but the resulting
 trace should be interpreted as a calibrated tuning path rather than a proof of
 statewide optimality.
+The checked-in \texttt{U.5+adaptive-multiscale-smoke} package verifies alpha
+trace replay, clipping, coarse tolerance, and the shared \texttt{MSC\_STEP\_}
+seed formula on a synthetic acceptance ledger.
 
 The empirical claim to archive is whether North Carolina ($k=14$), Texas
 ($k=38$), and Iowa ($k=4$) stabilize at distinct $\alpha$ values and whether

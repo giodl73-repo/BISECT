@@ -101,6 +101,10 @@ We treat this as an empirically verified assumption and not a formal guarantee.
 Table~\ref{tab:alpha-convergence} and the narrative below summarise the
 empirical alpha trace for North Carolina, Texas, and Iowa, each starting at
 $\alpha_0 = 0.30$, with $T = 5{,}000$ steps, $\Delta = 50$, $\gamma_0 = 0.10$.
+These state-level traces remain empirical archive requirements.  The current
+\texttt{U.5+adaptive-multiscale-smoke} package verifies only the deterministic
+Robbins-Monro replay mechanics and seed contract, not the NC/TX/IA convergence
+table.
 
 \begin{table}[h]
   \centering

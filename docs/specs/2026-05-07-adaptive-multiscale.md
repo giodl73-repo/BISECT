@@ -25,7 +25,7 @@ Multi-scale MCMC (G.11) requires the user to set alpha (P(coarse move per step))
 
 Adaptive Multi-scale automatically tunes alpha using Robbins-Monro stochastic approximation (Robbins & Monro 1951): if the coarse acceptance rate exceeds the target (0.30), alpha increases; if below, alpha decreases. This converges to the optimal alpha without manual tuning.
 
-The Robbins-Monro approach is appropriate here because: (1) We assume the expected coarse acceptance rate is approximately monotone in alpha over the typical operating range [0.05, 0.95] — an assumption justified empirically for typical redistricting county graphs, though not formally proved for discrete MCMC. The Robbins-Monro convergence guarantee applies when this monotonicity holds. (2) The step-size decay schedule gamma_t = gamma_0/sqrt(t) satisfies the classical conditions (Σγ_t = ∞, Σγ_t² < ∞) guaranteeing convergence to the root of E[accept_rate − target] = 0.
+The Robbins-Monro approach is appropriate here because: (1) We assume the expected coarse acceptance rate is approximately monotone in alpha over the typical operating range [0.05, 0.95] — an assumption justified empirically for typical redistricting county graphs, though not formally proved for discrete MCMC. The Robbins-Monro convergence guarantee applies when this monotonicity holds. (2) The step-size decay schedule gamma_t = gamma_0/t^(3/4) satisfies the classical conditions (Σγ_t = ∞, Σγ_t² < ∞) guaranteeing convergence to the root of E[accept_rate − target] = 0.
 
 ---
 
@@ -47,7 +47,7 @@ AdaptiveMultiScaleChain(fine_adj, coarse_adj, fine_to_coarse, pop, k, pop_tolera
     // Every adapt_interval steps: update alpha
     if step % adapt_interval == 0:
       t = step / adapt_interval          // adaptation round
-      gamma_t = gamma_0 / sqrt(t)        // decaying step size
+      gamma_t = gamma_0 / t^(3/4)        // decaying step size
       recent_accept = mean(coarse_accept_window)
       alpha = clip(alpha + gamma_t * (recent_accept - target_accept), 0.05, 0.95)
       coarse_accept_window.clear()
@@ -55,7 +55,7 @@ AdaptiveMultiScaleChain(fine_adj, coarse_adj, fine_to_coarse, pop, k, pop_tolera
   // alpha_trace recorded for diagnostics
 ```
 
-The Robbins-Monro conditions: gamma_t = gamma_0/sqrt(t) satisfies Σγ_t = ∞ and Σγ_t² < ∞, guaranteeing convergence to the root of E[accept_rate − target] = 0 (i.e., the optimal alpha).
+The Robbins-Monro conditions: gamma_t = gamma_0/t^(3/4) satisfies Σγ_t = ∞ and Σγ_t² < ∞, guaranteeing convergence to the root of E[accept_rate − target] = 0 (i.e., the optimal alpha).
 
 **Coarse balance tolerance**: coarse_tol = 3 × pop_tolerance (matches MultiScaleChain default of 2–3×; the adaptive variant uses 3× to avoid over-rejection during early adaptation when alpha may be poorly calibrated).
 
@@ -206,7 +206,7 @@ This ensures `bisect label-verify` can confirm the search parameters and seed de
 
 - **Synthetic 2-county 4×4 grid**, adapt_interval=10, T=200: alpha converges to within 0.10 of target_accept; all accepted plans are valid (contiguous, balanced at fine level)
 - **coarse_tol**: construct with `pop_tolerance=0.005`; assert `coarse_tol == 0.015` (3× rule)
-- **gamma_0=0.1**: per-round alpha change ≤ 0.1 for all adaptation rounds (step sizes are bounded by gamma_0 / sqrt(1) = gamma_0 in the first round and decrease thereafter)
+- **gamma_0=0.1**: per-round alpha change ≤ 0.1 for all adaptation rounds (step sizes are bounded by gamma_0 / 1^(3/4) = gamma_0 in the first round and decrease thereafter)
 - **Clip enforcement**: if coarse acceptance rate is 1.0 (all accepted), alpha never exceeds 0.95; if 0.0 (none accepted), alpha never falls below 0.05
 - **alpha_trace length**: for T=200, adapt_interval=10, `len(alpha_trace) == 20` exactly
 - **Inherited seeding contract**: `step_seed` produces the same value as MultiScaleChain for the same inputs (shared formula, same prefix)
