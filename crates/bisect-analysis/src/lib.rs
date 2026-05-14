@@ -62,7 +62,7 @@ pub use partisan::{
 };
 pub use political::{PoliticalAnalyzer, PoliticalDistrict, PoliticalResult};
 pub use proportionality::{
-    aggregate_proportionality, ProportionalityAnalyzer, ProportionalityResult,
+    aggregate_proportionality, ProportionalityAnalyzer, ProportionalityError, ProportionalityResult,
 };
 pub use race_of_candidate::{
     parse_race_of_candidate_csv, AnnotationSet, AttestationDocFormat, AttestationDocRecord,

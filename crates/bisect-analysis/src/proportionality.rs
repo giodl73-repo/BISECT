@@ -34,6 +34,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::analyzer::{Analyzer, AnalyzerContext};
 
@@ -86,12 +87,39 @@ pub struct ProportionalityResult {
     pub per_district_dem_share_sorted: Vec<f64>,
 }
 
+#[derive(Debug, Error, Clone, PartialEq)]
+pub enum ProportionalityError {
+    #[error("[INPUT] non-finite {field} for geoid {geoid}: {value}")]
+    NonFiniteVote {
+        geoid: String,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[INPUT] negative {field} for geoid {geoid}: {value}")]
+    NegativeVote {
+        geoid: String,
+        field: &'static str,
+        value: f64,
+    },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteAggregate { operation: &'static str, value: f64 },
+}
+
 /// Compute proportionality metrics from raw political rows + an assignment.
 pub fn aggregate_proportionality(
     rows: &[PoliticalRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,
 ) -> ProportionalityResult {
+    try_aggregate_proportionality(rows, assignments, num_districts)
+        .expect("proportionality inputs are valid")
+}
+
+fn try_aggregate_proportionality(
+    rows: &[PoliticalRow],
+    assignments: &HashMap<String, usize>,
+    num_districts: usize,
+) -> Result<ProportionalityResult, ProportionalityError> {
     let mut per_district: HashMap<usize, (f64, f64)> = HashMap::new();
     for d in 1..=num_districts {
         per_district.insert(d, (0.0, 0.0));
@@ -101,23 +129,34 @@ pub fn aggregate_proportionality(
     let mut total_rep = 0.0f64;
 
     for row in rows {
+        validate_vote(&row.geoid, "dem_votes", row.dem_votes)?;
+        validate_vote(&row.geoid, "rep_votes", row.rep_votes)?;
         if let Some(&district) = assignments.get(&row.geoid) {
             let e = per_district.entry(district).or_insert((0.0, 0.0));
             e.0 += row.dem_votes;
+            validate_finite("district Democratic votes", e.0)?;
             e.1 += row.rep_votes;
+            validate_finite("district Republican votes", e.1)?;
             // Only accumulate statewide totals for tracts in this state's assignment.
             // The election CSV is national; counting all rows would produce the
             // national vote share, not the state vote share.
             total_dem += row.dem_votes;
+            validate_finite("statewide Democratic votes", total_dem)?;
             total_rep += row.rep_votes;
+            validate_finite("statewide Republican votes", total_rep)?;
         }
     }
 
     let total_two_party = total_dem + total_rep;
+    validate_finite("statewide two-party votes", total_two_party)?;
     let (dem_share_statewide, rep_share_statewide) = if total_two_party == 0.0 {
         (0.0, 0.0)
     } else {
-        (total_dem / total_two_party, total_rep / total_two_party)
+        let dem_share = total_dem / total_two_party;
+        let rep_share = total_rep / total_two_party;
+        validate_finite("statewide Democratic vote share", dem_share)?;
+        validate_finite("statewide Republican vote share", rep_share)?;
+        (dem_share, rep_share)
     };
 
     let mut dem_seats = 0usize;
@@ -128,7 +167,9 @@ pub fn aggregate_proportionality(
     for d in 1..=num_districts {
         let (dem, rep) = per_district[&d];
         let total = dem + rep;
+        validate_finite("district two-party votes", total)?;
         let dem_pct = if total == 0.0 { 0.0 } else { dem / total };
+        validate_finite("district Democratic vote share", dem_pct)?;
         per_district_share.push(dem_pct);
         // Tie-breaking convention: dem_pct >= 0.5 counts as a Dem seat.
         // Exact 0.5 is vanishingly rare with real data; this matches the
@@ -157,11 +198,12 @@ pub fn aggregate_proportionality(
     };
 
     let proportionality_gap_pp = 100.0 * (dem_seat_share - dem_share_statewide);
+    validate_finite("proportionality gap", proportionality_gap_pp)?;
     // If no vote data matched any assigned tract, the CSV lacks this state's tracts.
     // Mark unavailable so callers can exclude it rather than silently getting zeros.
     let available = total_two_party > 0.0;
 
-    ProportionalityResult {
+    Ok(ProportionalityResult {
         analyzer: "proportionality",
         available,
         dem_vote_share_statewide: dem_share_statewide,
@@ -176,7 +218,32 @@ pub fn aggregate_proportionality(
         proportionality_gap_pp,
         abs_proportionality_gap_pp: proportionality_gap_pp.abs(),
         per_district_dem_share_sorted: per_district_share,
+    })
+}
+
+fn validate_vote(geoid: &str, field: &'static str, value: f64) -> Result<(), ProportionalityError> {
+    if !value.is_finite() {
+        return Err(ProportionalityError::NonFiniteVote {
+            geoid: geoid.to_string(),
+            field,
+            value,
+        });
     }
+    if value < 0.0 {
+        return Err(ProportionalityError::NegativeVote {
+            geoid: geoid.to_string(),
+            field,
+            value,
+        });
+    }
+    Ok(())
+}
+
+fn validate_finite(operation: &'static str, value: f64) -> Result<(), ProportionalityError> {
+    if !value.is_finite() {
+        return Err(ProportionalityError::NonFiniteAggregate { operation, value });
+    }
+    Ok(())
 }
 
 pub struct ProportionalityAnalyzer;
@@ -221,11 +288,11 @@ impl Analyzer for ProportionalityAnalyzer {
 
         let mut rdr = csv::Reader::from_path(&csv_path)?;
         let rows: Vec<PoliticalRow> = rdr.deserialize().collect::<Result<Vec<_>, _>>()?;
-        Ok(aggregate_proportionality(
+        Ok(try_aggregate_proportionality(
             &rows,
             ctx.assignments,
             ctx.num_districts,
-        ))
+        )?)
     }
 }
 
@@ -330,6 +397,52 @@ mod tests {
         assert_eq!(result.n_districts, 5);
         // No vote data -> marked unavailable (e.g. Alaska/Hawaii missing from CSV)
         assert!(!result.available, "zero vote data must set available=false");
+    }
+
+    #[test]
+    fn rejects_non_finite_votes() {
+        let rows = vec![row("01", f64::NAN, 100.0)];
+        match try_aggregate_proportionality(&rows, &asgn(&[("01", 1)]), 1) {
+            Err(ProportionalityError::NonFiniteVote {
+                geoid,
+                field,
+                value,
+            }) => {
+                assert_eq!(geoid, "01");
+                assert_eq!(field, "dem_votes");
+                assert!(value.is_nan());
+            }
+            other => panic!("expected NonFiniteVote, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn rejects_negative_votes() {
+        let rows = vec![row("01", 100.0, -1.0)];
+        match try_aggregate_proportionality(&rows, &asgn(&[("01", 1)]), 1) {
+            Err(ProportionalityError::NegativeVote {
+                geoid,
+                field,
+                value,
+            }) => {
+                assert_eq!(geoid, "01");
+                assert_eq!(field, "rep_votes");
+                assert_eq!(value, -1.0);
+            }
+            other => panic!("expected NegativeVote, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn rejects_overflowed_statewide_votes() {
+        let rows = vec![row("01", f64::MAX, 0.0), row("02", f64::MAX, 0.0)];
+        match try_aggregate_proportionality(&rows, &asgn(&[("01", 1), ("02", 2)]), 2) {
+            Err(ProportionalityError::NonFiniteAggregate { operation, value }) => {
+                assert_eq!(operation, "statewide Democratic votes");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected NonFiniteAggregate, got {other:?}"),
+        }
     }
 
     #[test]

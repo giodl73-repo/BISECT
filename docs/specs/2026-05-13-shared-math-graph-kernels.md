@@ -299,6 +299,11 @@ Candidate first API:
      returning `(high, low)` evidence bounds, and bloc-voting propagates summary
      errors instead of substituting `(NaN, NaN)` cluster intervals.**
 
+Adjacent election-evidence consumers also enforce the same invariant before
+calling or comparing shared statistical outputs: partisan and proportionality
+ingestion reject non-finite, negative, or overflowed vote totals with typed
+errors instead of emitting non-finite vote shares, gaps, or bootstrap intervals.
+
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,
 ESS rejects non-finite trace values, integrated autocorrelation time rejects
