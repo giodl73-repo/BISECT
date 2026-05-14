@@ -799,16 +799,7 @@ pub fn run_proportional_section(
             Some(ubvec.clone()),
         ) {
             Ok((l, r)) => {
-                let ec: f64 = edge_weights
-                    .iter()
-                    .filter_map(|(&(u, v), &w)| {
-                        if l.contains(&u) != l.contains(&v) {
-                            Some(w)
-                        } else {
-                            None
-                        }
-                    })
-                    .sum();
+                let ec = weighted_edge_cut(edge_weights, &l);
                 if ec < best_ec {
                     best_ec = ec;
                     best_left = l;
@@ -1121,16 +1112,7 @@ pub fn run_geosection(
             ) {
                 Ok((l, r)) => {
                     // EC measured on original (unbiased) edge weights for fair comparison.
-                    let ec: f64 = edge_weights
-                        .iter()
-                        .filter_map(|(&(u, v), &w)| {
-                            if l.contains(&u) != l.contains(&v) {
-                                Some(w)
-                            } else {
-                                None
-                            }
-                        })
-                        .sum();
+                    let ec = weighted_edge_cut(edge_weights, &l);
                     if ec < ratio_best {
                         ratio_best = ec;
                         ratio_best_left = l;
@@ -1762,16 +1744,7 @@ pub fn run_all_splits_compact(
                         )
                         .ok()
                         .map(|(l, r)| {
-                            let ec: f64 = edge_weights
-                                .iter()
-                                .filter_map(|(&(u, v), &w)| {
-                                    if l.contains(&u) != l.contains(&v) {
-                                        Some(w)
-                                    } else {
-                                        None
-                                    }
-                                })
-                                .sum();
+                            let ec = weighted_edge_cut(edge_weights, &l);
                             (l, r, ec)
                         })
                     })
@@ -2203,6 +2176,13 @@ pub fn run_all_splits_percentile(
 fn count_edge_cuts(assignment: &HashMap<usize, usize>, adj: &[Vec<usize>]) -> usize {
     rgraph_core::undirected_edge_cut_by(adj, |node| assignment.get(&node).copied().unwrap_or(0))
         .expect("validated bisection-runner adjacency")
+}
+
+fn weighted_edge_cut(edge_weights: &HashMap<(usize, usize), f64>, left: &HashSet<usize>) -> f64 {
+    edge_weights
+        .iter()
+        .filter_map(|(&(u, v), &weight)| (left.contains(&u) != left.contains(&v)).then_some(weight))
+        .sum()
 }
 
 // ── BisectionEnsemble ─────────────────────────────────────────────────────────
@@ -8166,6 +8146,18 @@ mod tests {
             1,
             "4-node path bisection has 1 cut edge"
         );
+    }
+
+    #[test]
+    fn weighted_edge_cut_sums_crossing_weights() {
+        let edge_weights = HashMap::from([
+            ((0usize, 1usize), 1.5),
+            ((1usize, 2usize), 2.25),
+            ((2usize, 3usize), 3.0),
+        ]);
+        let left = HashSet::from([0usize, 1]);
+
+        assert_eq!(weighted_edge_cut(&edge_weights, &left), 2.25);
     }
 
     // ── Simulated Annealing tests ─────────────────────────────────────────────

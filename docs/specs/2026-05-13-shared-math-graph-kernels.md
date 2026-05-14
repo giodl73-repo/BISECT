@@ -201,7 +201,10 @@ The first implementation wave should create `rgraph-core` with a narrow API:
    bisection-runner helpers and HashSet-shaped evidence helpers reuse the
    graph-only edge traversal while keeping missing-assignment defaults and
    side-membership semantics local. `bisect-column` also uses the same adapter
-   for bitmask membership labels without adding a bitmask-specific shared API.**
+   for bitmask membership labels without adding a bitmask-specific shared API.
+   Weighted cut scoring in `bisect-cli::bisection_runner` is consolidated as a
+   local helper, not promoted to `rgraph-core`, because current reuse is confined
+   to one module and weight-policy boundaries are CLI-specific.**
 10. Assignment-label connectivity over adjacency lists. **Landed in
     `rgraph-core`; `bisect-local-search`, `bisect-clustering`, `bisect-flow`, and
     `bisect-ilp` consume the shared kernel while retaining domain wrappers for

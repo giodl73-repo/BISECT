@@ -53,6 +53,7 @@
 | 2026-05-14 | RGRAPH Edge Cut Adapter Kernel | Add closure-based edge-cut adapter for map/set-shaped assignments | archived |
 | 2026-05-14 | RGRAPH Subset Connectivity Kernel | Extract reusable node-subset connectivity checks from pricing, SMC, Pareto, and CLI evidence helpers | archived |
 | 2026-05-14 | RGRAPH Mask Edge Cut Consumer | Route bitmask edge-cut counting through `rgraph-core` adapter without adding new API | archived |
+| 2026-05-14 | CLI Weighted Cut Scoring Cleanup | Consolidate repeated weighted edge-cut scoring locally without promoting it to `rgraph-core` | archived |
 
 ## Operating Model
 
