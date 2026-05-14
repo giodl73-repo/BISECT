@@ -685,7 +685,7 @@ pub mod hypothesis {
 pub mod mcmc {
     use thiserror::Error;
 
-    #[derive(Debug, Error, Clone, PartialEq, Eq)]
+    #[derive(Debug, Error, Clone, PartialEq)]
     pub enum DiagnosticsError {
         #[error("[INPUT] requires >=4 parallel chains for Gelman-Rubin R-hat; got {0}")]
         InsufficientChains(usize),
@@ -693,6 +693,12 @@ pub mod mcmc {
         EmptyChain(usize),
         #[error("[INPUT] chains have differing lengths: {0:?}")]
         UnequalChainLengths(Vec<usize>),
+        #[error("[INPUT] chain {chain_index} contains non-finite value {value} at sample {sample_index}")]
+        NonFiniteChainValue {
+            chain_index: usize,
+            sample_index: usize,
+            value: f64,
+        },
         #[error("[INPUT] empty partition trajectory")]
         EmptyTrajectory,
         #[error("[INPUT] empty partition at index {0}")]
@@ -724,6 +730,15 @@ pub mod mcmc {
                 return Err(DiagnosticsError::UnequalChainLengths(
                     chains.iter().map(|c| c.len()).collect(),
                 ));
+            }
+            for (sample_index, &value) in chain.iter().enumerate() {
+                if !value.is_finite() {
+                    return Err(DiagnosticsError::NonFiniteChainValue {
+                        chain_index: i,
+                        sample_index,
+                        value,
+                    });
+                }
             }
         }
 
@@ -879,6 +894,27 @@ pub mod mcmc {
             let chain = vec![5.0; 50];
             let chains: Vec<&[f64]> = (0..4).map(|_| chain.as_slice()).collect();
             assert!((gelman_rubin_rhat(&chains).unwrap() - 1.0).abs() < 1e-9);
+        }
+
+        #[test]
+        fn rhat_rejects_non_finite_chain_values() {
+            let c1 = vec![1.0, 1.1, 1.2, 1.3];
+            let c2 = vec![1.0, f64::NAN, 1.2, 1.3];
+            let c3 = vec![1.0, 1.1, 1.2, 1.3];
+            let c4 = vec![1.0, 1.1, 1.2, 1.3];
+            let chains = vec![c1.as_slice(), c2.as_slice(), c3.as_slice(), c4.as_slice()];
+
+            match gelman_rubin_rhat(&chains) {
+                Err(DiagnosticsError::NonFiniteChainValue {
+                    chain_index,
+                    sample_index,
+                    value,
+                }) => {
+                    assert_eq!((chain_index, sample_index), (1, 1));
+                    assert!(value.is_nan());
+                }
+                other => panic!("expected non-finite chain value error, got {other:?}"),
+            }
         }
 
         #[test]

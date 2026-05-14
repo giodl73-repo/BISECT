@@ -278,9 +278,10 @@ Candidate first API:
      quantiles (`low_q > high_q`) with a typed `SummaryError` rather than
      returning `(high, low)` evidence bounds.**
 
-`rstat-core::mcmc::hamming_autocorrelation` rejects empty partition vectors with a
-typed diagnostics error so trajectory diagnostics cannot emit non-finite values
-for malformed partition records.
+`rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
+metrics: R-hat rejects non-finite chain values with a typed diagnostics error,
+and `hamming_autocorrelation` rejects empty partition vectors so trajectory
+diagnostics cannot emit non-finite values for malformed records.
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.

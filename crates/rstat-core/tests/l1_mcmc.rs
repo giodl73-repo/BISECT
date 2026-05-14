@@ -21,6 +21,24 @@ fn l1_mcmc_diagnostics_separate_converged_and_stuck_traces() {
 }
 
 #[test]
+fn l1_rhat_rejects_non_finite_evidence_trace() {
+    let c1 = vec![0.49, 0.50, 0.51, 0.50];
+    let c2 = vec![0.50, 0.49, f64::INFINITY, 0.50];
+    let c3 = vec![0.51, 0.50, 0.49, 0.50];
+    let c4 = vec![0.50, 0.51, 0.49, 0.50];
+    let chains = vec![c1.as_slice(), c2.as_slice(), c3.as_slice(), c4.as_slice()];
+
+    assert_eq!(
+        gelman_rubin_rhat(&chains),
+        Err(DiagnosticsError::NonFiniteChainValue {
+            chain_index: 1,
+            sample_index: 2,
+            value: f64::INFINITY
+        })
+    );
+}
+
+#[test]
 fn l1_hamming_tau_tracks_mixing_speed() {
     let slow = vec![
         vec![1, 1, 2, 2],
