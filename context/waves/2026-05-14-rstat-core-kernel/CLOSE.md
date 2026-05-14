@@ -26,6 +26,8 @@ kernel crate.
   - bloc-voting weighted standardization now uses `rstat-core` weighted summaries
   - population-weighted compactness now uses `rstat-core` weighted mean
   - bloc-voting HC3 p-values now use `rstat-core` probability helpers
+  - bloc-voting cluster-bootstrap intervals now use `rstat-core` percentile
+    intervals
 - Test ladder
   - L0 inline unit tests for summary, MCMC, and probability helpers
   - L1 integration tests for composed summary/probability and MCMC diagnostics

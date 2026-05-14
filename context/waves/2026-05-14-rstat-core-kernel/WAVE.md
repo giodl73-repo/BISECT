@@ -30,7 +30,8 @@ semantics out of `rcount-stats`.
 | 05 - Hypothesis and multiple-testing kernel | DONE | `rstat-core::hypothesis`; permutation and bloc-voting consumers |
 | 06 - Weighted summary kernel | DONE | `rstat-core::summary` weighted helpers; bloc-voting and compactness consumers |
 | 07 - Normal CDF probability helper | DONE | `rstat-core::probability::standard_normal_cdf`; bloc-voting consumer |
-| 08 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
+| 08 - Bootstrap percentile interval reuse | DONE | bloc-voting cluster bootstrap uses `rstat-core::summary` intervals |
+| 09 - Close and validation | DONE | `cargo test -p rstat-core`; `cargo test -p rstat-core -- --ignored`; `cargo test -p bisect-analysis` |
 
 ## Close Summary
 
@@ -48,6 +49,7 @@ semantics out of `rcount-stats`.
   multiple-testing corrections.
 - weighted descriptive summaries.
 - standard Normal CDF approximation.
+- R-7 percentile interval reuse for bootstrap reports.
 
 `bisect-analysis` still owns redistricting-specific record shapes and
 permutation-test report semantics, but delegates reusable math to `rstat-core`.

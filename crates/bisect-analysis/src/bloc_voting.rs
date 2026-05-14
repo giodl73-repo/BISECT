@@ -22,7 +22,9 @@ use thiserror::Error;
 use crate::race_of_candidate::RaceOfCandidateProvenance;
 use rstat_core::hypothesis::holm_bonferroni_named;
 use rstat_core::probability::standard_normal_cdf;
-use rstat_core::summary::{weighted_mean, weighted_std_dev_population};
+use rstat_core::summary::{
+    percentile_interval_sorted_copy, weighted_mean, weighted_std_dev_population,
+};
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -708,22 +710,6 @@ pub fn cluster_bootstrap(
         );
     }
 
-    let percentile = |v: &mut Vec<f64>, q: f64| -> f64 {
-        if v.is_empty() {
-            return f64::NAN;
-        }
-        v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        let pos = q * ((v.len() - 1) as f64);
-        let lo = pos.floor() as usize;
-        let hi = pos.ceil() as usize;
-        if lo == hi {
-            v[lo]
-        } else {
-            let frac = pos - (lo as f64);
-            v[lo] * (1.0 - frac) + v[hi] * frac
-        }
-    };
-
     let alpha = (1.0 - ci_level) / 2.0;
     let lo_q = alpha;
     let hi_q = 1.0 - alpha;
@@ -732,12 +718,12 @@ pub fn cluster_bootstrap(
     let mut naive_ci: HashMap<String, (f64, f64)> = HashMap::new();
     let mut diverged = false;
     for name in &names_with_intercept {
-        let mut cv = cluster_betas.remove(name).unwrap_or_default();
-        let mut nv = naive_betas.remove(name).unwrap_or_default();
-        let c_lo = percentile(&mut cv, lo_q);
-        let c_hi = percentile(&mut cv, hi_q);
-        let n_lo = percentile(&mut nv, lo_q);
-        let n_hi = percentile(&mut nv, hi_q);
+        let cv = cluster_betas.remove(name).unwrap_or_default();
+        let nv = naive_betas.remove(name).unwrap_or_default();
+        let (c_lo, c_hi) =
+            percentile_interval_sorted_copy(&cv, lo_q, hi_q).unwrap_or((f64::NAN, f64::NAN));
+        let (n_lo, n_hi) =
+            percentile_interval_sorted_copy(&nv, lo_q, hi_q).unwrap_or((f64::NAN, f64::NAN));
         cluster_ci.insert(name.clone(), (c_lo, c_hi));
         naive_ci.insert(name.clone(), (n_lo, n_hi));
         if (n_hi - c_hi).abs() > 0.05 || (n_lo - c_lo).abs() > 0.05 {

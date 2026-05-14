@@ -202,6 +202,9 @@ Candidate first API:
 9. Normal CDF approximation. **Landed in `rstat-core::probability`;
    `bisect-analysis::bloc_voting` consumes it for HC3 normal-approximation
    p-values.**
+10. Bootstrap percentile interval reuse. **`bisect-analysis::bloc_voting`
+    cluster-bootstrap intervals now consume the tested R-7 percentile interval
+    helper in `rstat-core::summary`.**
 
 RCOUNT should continue to own election-audit method replay. `rstat-core` owns
 only reusable math.
