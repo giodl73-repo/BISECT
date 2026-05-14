@@ -18,6 +18,7 @@ members = [
     "crates/rgraph-core",
     "crates/rstat-core",
     "crates/rmath-core",
+    "crates/ropt-core",
     "crates/bisect-core",
     "crates/bisect-data",
     "crates/bisect-apportion",

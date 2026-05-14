@@ -149,6 +149,11 @@ Owns generic optimizer/search machinery only after specific duplication exists:
 
 It does not own domain objectives or feasibility constraints.
 
+The initial optimizer kernel has landed with generic minimization-objective
+Pareto dominance, fast non-dominated sorting, and crowding distance in
+`ropt-core`. `bisect-pareto` consumes these helpers while retaining
+redistricting objective definitions and NSGA-II orchestration.
+
 ## First Wave: `rgraph-core`
 
 The first implementation wave should create `rgraph-core` with a narrow API:

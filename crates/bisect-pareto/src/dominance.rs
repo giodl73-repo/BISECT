@@ -6,14 +6,27 @@
 //! Per spec §3.2 and §3.3.
 
 use crate::objectives::Objectives;
+use ropt_core::ObjectiveVector;
+
+impl ObjectiveVector for Objectives {
+    fn objective_count(&self) -> usize {
+        3
+    }
+
+    fn objective_value(&self, index: usize) -> f64 {
+        match index {
+            0 => self.ec,
+            1 => self.d_seats,
+            2 => self.vra_deficit,
+            _ => panic!("objective index out of bounds"),
+        }
+    }
+}
 
 /// Returns true if `a` dominates `b`:
 /// `a` is no worse than `b` on all objectives AND strictly better on at least one.
 pub fn dominates(a: &Objectives, b: &Objectives) -> bool {
-    a.ec <= b.ec
-        && a.d_seats <= b.d_seats
-        && a.vra_deficit <= b.vra_deficit
-        && (a.ec < b.ec || a.d_seats < b.d_seats || a.vra_deficit < b.vra_deficit)
+    ropt_core::dominates(a, b).expect("valid finite bisect-pareto objectives")
 }
 
 /// Fast non-dominated sort (Deb et al. 2002, Algorithm 1).
@@ -24,47 +37,7 @@ pub fn dominates(a: &Objectives, b: &Objectives) -> bool {
 /// The variable `dominates_set[p]` = set of plans that plan `p` dominates
 /// (i.e., `p` is strictly better on at least one objective and no worse on any).
 pub fn fast_non_dominated_sort(objectives: &[Objectives]) -> Vec<Vec<usize>> {
-    let n = objectives.len();
-    if n == 0 {
-        return vec![];
-    }
-
-    // dominates_set[p] = indices of plans that p dominates
-    let mut dominates_set: Vec<Vec<usize>> = vec![vec![]; n];
-    // domination_count[p] = number of plans that dominate p
-    let mut domination_count: Vec<usize> = vec![0; n];
-
-    for p in 0..n {
-        for q in 0..n {
-            if p == q {
-                continue;
-            }
-            if dominates(&objectives[p], &objectives[q]) {
-                dominates_set[p].push(q);
-            } else if dominates(&objectives[q], &objectives[p]) {
-                domination_count[p] += 1;
-            }
-        }
-    }
-
-    let mut fronts: Vec<Vec<usize>> = Vec::new();
-    let mut current_front: Vec<usize> = (0..n).filter(|&p| domination_count[p] == 0).collect();
-
-    while !current_front.is_empty() {
-        fronts.push(current_front.clone());
-        let mut next_front: Vec<usize> = Vec::new();
-        for &p in &current_front {
-            for &q in &dominates_set[p] {
-                domination_count[q] -= 1;
-                if domination_count[q] == 0 {
-                    next_front.push(q);
-                }
-            }
-        }
-        current_front = next_front;
-    }
-
-    fronts
+    ropt_core::fast_non_dominated_sort(objectives).expect("valid finite bisect-pareto objectives")
 }
 
 /// Compute crowding distance for plans within a single front.
@@ -74,63 +47,7 @@ pub fn fast_non_dominated_sort(objectives: &[Objectives]) -> Vec<Vec<usize>> {
 ///
 /// If `front` has fewer than 2 plans, all distances are f64::INFINITY.
 pub fn crowding_distance(front: &[usize], objectives: &[Objectives]) -> Vec<f64> {
-    let n = front.len();
-    if n == 0 {
-        return vec![];
-    }
-    if n == 1 {
-        return vec![f64::INFINITY];
-    }
-    if n == 2 {
-        return vec![f64::INFINITY, f64::INFINITY];
-    }
-
-    let mut distances = vec![0.0f64; n];
-
-    // Process each objective dimension separately.
-    // Closure approach avoids fn-pointer coercion of capturing closures.
-    for obj_dim in 0..3usize {
-        // Sort front-local indices by this objective
-        let mut sorted: Vec<usize> = (0..n).collect();
-        sorted.sort_by(|&a, &b| {
-            let va = match obj_dim {
-                0 => objectives[front[a]].ec,
-                1 => objectives[front[a]].d_seats,
-                _ => objectives[front[a]].vra_deficit,
-            };
-            let vb = match obj_dim {
-                0 => objectives[front[b]].ec,
-                1 => objectives[front[b]].d_seats,
-                _ => objectives[front[b]].vra_deficit,
-            };
-            va.partial_cmp(&vb).unwrap()
-        });
-
-        let obj_val = |i: usize| -> f64 {
-            match obj_dim {
-                0 => objectives[front[i]].ec,
-                1 => objectives[front[i]].d_seats,
-                _ => objectives[front[i]].vra_deficit,
-            }
-        };
-
-        // Boundary plans get infinity
-        distances[sorted[0]] = f64::INFINITY;
-        distances[sorted[n - 1]] = f64::INFINITY;
-
-        let obj_min = obj_val(sorted[0]);
-        let obj_max = obj_val(sorted[n - 1]);
-        let obj_range = obj_max - obj_min;
-        if obj_range == 0.0 {
-            continue; // all plans identical on this objective
-        }
-
-        for i in 1..n - 1 {
-            distances[sorted[i]] += (obj_val(sorted[i + 1]) - obj_val(sorted[i - 1])) / obj_range;
-        }
-    }
-
-    distances
+    ropt_core::crowding_distance(front, objectives).expect("valid finite bisect-pareto objectives")
 }
 
 #[cfg(test)]

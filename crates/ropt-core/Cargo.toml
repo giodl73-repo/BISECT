@@ -1,0 +1,10 @@
+[package]
+name = "ropt-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Reusable deterministic optimization kernels"
+
+[dependencies]
+thiserror.workspace = true
