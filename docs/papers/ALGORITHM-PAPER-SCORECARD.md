@@ -107,7 +107,7 @@ Score bands:
 
 | Paper | P1 | P2 | P3 | P4 | P5 | P6 | Total | Priority |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| G.0 Ensemble Methodology | 3.1 | 3.1 | 3.0 | 3.2 | 3.3 | 3.1 | 18.8 | Needs modern package/diagnostic framing |
+| G.0 Ensemble Methodology | 3.5 | 3.4 | 3.3 | 3.6 | 3.6 | 3.4 | 20.8 | Strong; package/diagnostic framing updated |
 | G.1 GerryChain Congressional Comparison | 3.5 | 3.4 | 3.4 | 3.6 | 3.6 | 3.4 | 20.9 | Stronger; active synthetic package plus real-evidence gap |
 | G.2 Partisan Outcome Distributions | 3.4 | 3.3 | 3.2 | 3.5 | 3.5 | 3.3 | 20.2 | Stronger; active synthetic package plus real-election gap |
 | G.3 Compactness Distribution Position | 3.5 | 3.4 | 3.3 | 3.6 | 3.6 | 3.4 | 20.8 | Stronger; active synthetic package plus real-metric gap |

@@ -143,7 +143,7 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
-| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | Framework |
+| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | package/diagnostic framing updated |
 | G.1 | GerryChain Congressional Comparison — 6 key states | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | active synthetic + missing real-evidence packages |
 | G.2 | Partisan Outcome Distributions | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | active synthetic + missing real-evidence packages |
 | G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | active synthetic + missing real-evidence packages |

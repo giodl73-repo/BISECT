@@ -76,3 +76,22 @@ Where published ensembles are unavailable, we use literature-reported
 distributional summaries (mean, standard deviation, approximate percentile
 bounds) to bound $\pi_f(P^*)$.  These bounds are marked with \est{} throughout
 the G-track papers.
+
+\subsection{Package Evidence Boundary}
+
+The percentile in Equation~\ref{eq:percentile} is an evidence claim only when
+both sides of the comparison are archived.  A complete G-track package must bind
+the external trace, the deterministic \textsc{bisect} plan, the RCTX context, the
+metric output, and any election-input model used for partisan seats.  The current
+repository records two complementary fixtures:
+\begin{itemize}
+  \item \texttt{docs/examples/g-ensemble-evidence-packages/G.1-G.3+active-synthetic/}
+    is an active synthetic package that exercises every required artifact role.
+  \item \texttt{docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/}
+    records the remaining real external-trace, election, metric, diagnostic,
+    RPLAN, and RCTX gaps for headline G.1--G.3 empirical percentiles.
+\end{itemize}
+
+Thus, G.0 should be read as the methodology contract.  The synthetic package
+shows that the contract is executable; real state percentile claims require real
+packages with the same roles.

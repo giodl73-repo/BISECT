@@ -91,3 +91,18 @@ $\rho_H(10)$ & $< 0.10$ & Chain considered mixed \\
 For published ensembles (Herschlag 2020, DeFord 2021) we reproduce the
 authors' reported convergence diagnostics.  Where these are unavailable,
 we apply conservative uncertainty adjustments to reported percentiles.
+
+\subsection{Diagnostic Artifacts}
+
+Diagnostic thresholds are not self-authenticating.  A package that cites
+$\rhat$, \ess{}, or Hamming autocorrelation must include the trace or summary
+from which those quantities were computed, the seed policy, the chain count, the
+burn-in/thinning rule, and the statistic definitions.  In the package vocabulary
+used by the repository, these are \texttt{external-trace} and
+\texttt{diagnostic} artifacts.  Missing either artifact downgrades a percentile
+statement from empirical finding to protocol or design claim.
+
+The active synthetic G.1--G.3 package validates this artifact shape at small
+scale.  The missing-evidence package remains the live ledger for real diagnostic
+artifacts that must be added before G.1--G.3 percentiles can be cited as
+completed external-ensemble findings.

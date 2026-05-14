@@ -30,6 +30,7 @@
 | 2026-05-13 | G Active Ensemble Evidence Packages | Add active synthetic external trace, election, metric, plan/context evidence for G.1-G.3 | archived |
 | 2026-05-13 | M Community Source Completion | Promote M.1 and M.3 from source-only to PDF-backed paper entries | archived |
 | 2026-05-13 | K.5 Length-Width Uplift | Add AABB diagnostic test and align K.5 implementation boundary | archived |
+| 2026-05-13 | G.0 Methodology Package Framing | Modernize G.0 with package/diagnostic evidence boundaries | archived |
 
 ## Operating Model
 
