@@ -13,6 +13,7 @@
 ///
 /// Complexity: O(n × E × max_iter) where E = |edges|.
 /// For US census-tract subgraphs (n ≤ 4,000, E ≤ 25,000): < 100ms.
+use rmath_core::{center_in_place, dot, normalize_in_place};
 use std::collections::HashMap;
 
 /// Fiedler certificate for one bisection level.
@@ -60,28 +61,13 @@ fn apply_laplacian(
     lv
 }
 
-fn dot(a: &[f64], b: &[f64]) -> f64 {
-    a.iter().zip(b).map(|(x, y)| x * y).sum()
-}
-fn norm(v: &[f64]) -> f64 {
-    dot(v, v).sqrt()
-}
 fn normalize(v: &mut Vec<f64>) {
-    let n = norm(v);
-    if n > 1e-14 {
-        for x in v {
-            *x /= n;
-        }
-    }
+    normalize_in_place(v, 1e-14).expect("valid Fiedler iteration vector");
 }
 
 /// Project out the component of v along the all-ones direction (λ₁=0 eigenvector).
 fn project_out_ones(v: &mut Vec<f64>) {
-    let n = v.len() as f64;
-    let mean: f64 = v.iter().sum::<f64>() / n;
-    for x in v.iter_mut() {
-        *x -= mean;
-    }
+    center_in_place(v).expect("valid non-empty Fiedler iteration vector");
 }
 
 /// Compute the Fiedler value λ₂ of the weighted graph Laplacian.
@@ -123,7 +109,7 @@ pub fn compute_fiedler(
     let mut lambda_max = 0.0;
     for _ in 0..max_iter {
         let lv = apply_laplacian(&v, adjacency, edge_weights, &degree);
-        let rq = dot(&v, &lv); // Rayleigh quotient → eigenvalue estimate
+        let rq = dot(&v, &lv).expect("matching Laplacian vector dimensions");
         let prev = lambda_max;
         lambda_max = rq;
         // New direction: Lv normalised
@@ -157,7 +143,7 @@ pub fn compute_fiedler(
             .collect();
         project_out_ones(&mut w);
         let prev_dom = dom;
-        dom = dot(&u, &w); // Rayleigh quotient for (λ_max·I − L)
+        dom = dot(&u, &w).expect("matching shifted-Laplacian vector dimensions");
         normalize(&mut w);
         u = w;
         if (dom - prev_dom).abs() < tol {

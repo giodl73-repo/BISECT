@@ -7,6 +7,8 @@ pub enum LinearAlgebraError {
         left: (usize, usize),
         right: (usize, usize),
     },
+    #[error("[INPUT] vector must not be empty")]
+    EmptyVector,
     #[error("[INPUT] matrix must be square, got {rows}x{cols}")]
     NotSquare { rows: usize, cols: usize },
     #[error("[INPUT] matrix contains non-finite value {value} at ({row}, {col})")]
@@ -190,6 +192,60 @@ pub fn invert(m: &DenseMatrix) -> Result<DenseMatrix, LinearAlgebraError> {
     Ok(inv)
 }
 
+pub fn dot(a: &[f64], b: &[f64]) -> Result<f64, LinearAlgebraError> {
+    validate_vector(a)?;
+    validate_vector(b)?;
+    if a.len() != b.len() {
+        return Err(LinearAlgebraError::DimensionMismatch {
+            left: (a.len(), 1),
+            right: (b.len(), 1),
+        });
+    }
+    Ok(a.iter().zip(b).map(|(x, y)| x * y).sum())
+}
+
+pub fn l2_norm(values: &[f64]) -> Result<f64, LinearAlgebraError> {
+    Ok(dot(values, values)?.sqrt())
+}
+
+pub fn center_in_place(values: &mut [f64]) -> Result<(), LinearAlgebraError> {
+    validate_non_empty_vector(values)?;
+    let mean = values.iter().sum::<f64>() / values.len() as f64;
+    for value in values {
+        *value -= mean;
+    }
+    Ok(())
+}
+
+pub fn normalize_in_place(values: &mut [f64], min_norm: f64) -> Result<bool, LinearAlgebraError> {
+    validate_vector(values)?;
+    if !min_norm.is_finite() {
+        return Err(LinearAlgebraError::NonFiniteValue {
+            row: 0,
+            col: 0,
+            value: min_norm,
+        });
+    }
+    let norm = l2_norm(values)?;
+    if norm > min_norm {
+        for value in values {
+            *value /= norm;
+        }
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
+pub fn normalize_centered(
+    mut values: Vec<f64>,
+    min_norm: f64,
+) -> Result<Vec<f64>, LinearAlgebraError> {
+    center_in_place(&mut values)?;
+    normalize_in_place(&mut values, min_norm)?;
+    Ok(values)
+}
+
 fn validate_finite(matrix: &DenseMatrix) -> Result<(), LinearAlgebraError> {
     for row in 0..matrix.rows {
         for col in 0..matrix.cols {
@@ -209,6 +265,13 @@ fn validate_vector(values: &[f64]) -> Result<(), LinearAlgebraError> {
         }
     }
     Ok(())
+}
+
+fn validate_non_empty_vector(values: &[f64]) -> Result<(), LinearAlgebraError> {
+    if values.is_empty() {
+        return Err(LinearAlgebraError::EmptyVector);
+    }
+    validate_vector(values)
 }
 
 #[cfg(test)]
@@ -281,6 +344,58 @@ mod tests {
                 left: (2, 3),
                 right: (2, 3)
             })
+        );
+    }
+
+    #[test]
+    fn l0_dot_and_norm_match_hand_computed_values() {
+        assert_eq!(dot(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0]).unwrap(), 32.0);
+        assert_eq!(l2_norm(&[3.0, 4.0]).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn l0_centering_removes_mean() {
+        let mut values = vec![2.0, 4.0, 6.0];
+        center_in_place(&mut values).unwrap();
+
+        assert_eq!(values, vec![-2.0, 0.0, 2.0]);
+        assert!(values.iter().sum::<f64>().abs() < 1e-12);
+    }
+
+    #[test]
+    fn l0_normalize_centered_returns_unit_centered_vector() {
+        let values = normalize_centered(vec![1.0, 2.0, 3.0], 0.0).unwrap();
+
+        assert!(values.iter().sum::<f64>().abs() < 1e-12);
+        assert!((l2_norm(&values).unwrap() - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn l0_near_zero_normalization_reports_unchanged() {
+        let mut values = vec![0.0, 0.0, 0.0];
+
+        assert!(!normalize_in_place(&mut values, 1e-14).unwrap());
+        assert_eq!(values, vec![0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn l0_vector_dimension_mismatch_is_rejected() {
+        assert_eq!(
+            dot(&[1.0, 2.0], &[1.0]),
+            Err(LinearAlgebraError::DimensionMismatch {
+                left: (2, 1),
+                right: (1, 1)
+            })
+        );
+    }
+
+    #[test]
+    fn l0_empty_centering_is_rejected() {
+        let mut values = Vec::new();
+
+        assert_eq!(
+            center_in_place(&mut values),
+            Err(LinearAlgebraError::EmptyVector)
         );
     }
 }

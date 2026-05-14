@@ -42,6 +42,7 @@
 | 2026-05-14 | RSTAT Core Kernel | Extract reusable deterministic statistics from BISECT analysis into `rstat-core` | archived |
 | 2026-05-14 | RGRAPH Core Expansion | Add reusable graph-only connected components with BISECT contiguity consumer coverage | archived |
 | 2026-05-14 | RMATH Core Matrix Kernel | Extract deterministic dense matrix helpers from bloc-voting WLS/HC3 math | archived |
+| 2026-05-14 | RMATH Core Vector Kernel | Extract deterministic vector helpers from spectral and Fiedler math | archived |
 
 ## Operating Model
 

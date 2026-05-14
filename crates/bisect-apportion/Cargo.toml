@@ -8,6 +8,7 @@ description = "Huntington-Hill apportionment + extensible prime-factor redistric
 
 [dependencies]
 metis-core   = { workspace = true }
+rmath-core = { path = "../rmath-core" }
 # optional: only compiled when the "c-ffi" feature is enabled.
 # The "vendored" sub-feature bundles the METIS C source so no system
 # libmetis is required at runtime — but a C compiler is needed at build time.

@@ -242,16 +242,19 @@ The numeric kernel starts with small dense linear algebra, extracted from
 4. Test ladder. **Inline L0 tests, L1 WLS normal-equation/pivoting tests, and an
    ignored L2 Hilbert-like inverse stress test landed under
    `crates/rmath-core/tests/`.**
+5. Dot products, L2 norms, centering, in-place normalization, and centered
+   normalization. **Landed in `rmath-core`; `bisect-apportion::spectral` consumes
+   centered normalization and `bisect-data::fiedler` consumes dot, centering, and
+   normalization helpers.**
 
 `rmath-core` remains numeric-only. It must not own regression semantics,
 statistical inference, optimization objectives, or redistricting/route domain
 interpretation.
 
-Likely next `rmath-core` candidates are the existing eigen/vector routines:
-`bisect-data::fiedler` (weighted Laplacian lambda2 via deflated power iteration),
-`bisect-apportion::spectral` (smoothed spectral vector and normalization), and
+Likely next `rmath-core` candidates are the remaining existing eigen routines:
 `bisect-cli::geosection_orientation` (closed-form 2x2 covariance eigensystem for
-minor-axis orientation).
+minor-axis orientation), and possibly a graph-Laplacian power-iteration helper if
+another consumer appears beyond the current `bisect-data::fiedler` certificate.
 
 ## API Invariants
 

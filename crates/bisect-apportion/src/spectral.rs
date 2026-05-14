@@ -1,3 +1,4 @@
+use rmath_core::normalize_centered;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
@@ -125,7 +126,7 @@ fn smooth_spectral_vector(adjacency: &[Vec<usize>], max_iters: usize) -> (Vec<f6
     let n = adjacency.len();
     let center = (n.saturating_sub(1)) as f64 / 2.0;
     let anchor: Vec<f64> = (0..n).map(|idx| idx as f64 - center).collect();
-    let mut vector = normalize_centered(anchor.clone());
+    let mut vector = normalize_centered(anchor.clone(), 0.0).expect("valid spectral anchor vector");
     let mut converged = false;
     let mut iterations = 0usize;
     for iter in 0..max_iters {
@@ -143,7 +144,7 @@ fn smooth_spectral_vector(adjacency: &[Vec<usize>], max_iters: usize) -> (Vec<f6
             };
             next[node] = 0.85 * neighbor_mean + 0.15 * anchor[node];
         }
-        next = normalize_centered(next);
+        next = normalize_centered(next, 0.0).expect("valid spectral iteration vector");
         let delta = vector
             .iter()
             .zip(next.iter())
@@ -156,20 +157,6 @@ fn smooth_spectral_vector(adjacency: &[Vec<usize>], max_iters: usize) -> (Vec<f6
         }
     }
     (vector, iterations, converged)
-}
-
-fn normalize_centered(mut vector: Vec<f64>) -> Vec<f64> {
-    let mean = vector.iter().sum::<f64>() / vector.len() as f64;
-    for value in &mut vector {
-        *value -= mean;
-    }
-    let norm = vector.iter().map(|value| value * value).sum::<f64>().sqrt();
-    if norm > 0.0 {
-        for value in &mut vector {
-            *value /= norm;
-        }
-    }
-    vector
 }
 
 fn balanced_sweep(

@@ -1,4 +1,4 @@
-use rmath_core::{invert, mat_mul, DenseMatrix};
+use rmath_core::{center_in_place, invert, l2_norm, mat_mul, normalize_in_place, DenseMatrix};
 
 #[test]
 #[ignore = "L2 numeric stress: Hilbert-like inverse smoke test"]
@@ -18,4 +18,24 @@ fn l2_hilbert_like_inverse_multiplies_to_identity() {
             assert!((identity.at(i, j) - expected).abs() < 1e-6);
         }
     }
+}
+
+#[test]
+#[ignore = "L2 numeric stress: long alternating vector centering"]
+fn l2_long_alternating_vector_centers_and_normalizes() {
+    let mut values: Vec<f64> = (0..10_000)
+        .map(|idx| {
+            if idx % 2 == 0 {
+                idx as f64
+            } else {
+                -(idx as f64)
+            }
+        })
+        .collect();
+
+    center_in_place(&mut values).unwrap();
+    normalize_in_place(&mut values, 1e-14).unwrap();
+
+    assert!(values.iter().sum::<f64>().abs() < 1e-9);
+    assert!((l2_norm(&values).unwrap() - 1.0).abs() < 1e-12);
 }

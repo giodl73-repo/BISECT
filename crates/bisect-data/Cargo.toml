@@ -8,6 +8,7 @@ description = "Census data loading: TIGER shapefiles, adjacency graphs"
 
 [dependencies]
 bisect-core = { path = "../bisect-core" }
+rmath-core = { path = "../rmath-core" }
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
