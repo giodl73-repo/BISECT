@@ -15,6 +15,8 @@ pub enum LinearAlgebraError {
     NonFiniteValue { row: usize, col: usize, value: f64 },
     #[error("[INPUT] normalization threshold must be non-negative, got {value}")]
     NegativeNormalizationThreshold { value: f64 },
+    #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+    NonFiniteResult { operation: &'static str, value: f64 },
     #[error("[NUMERIC] singular matrix")]
     Singular,
 }
@@ -276,6 +278,8 @@ pub fn symmetric_2x2_eigensystem(
     let disc = (((matrix.a00 - matrix.a11) / 2.0).powi(2) + matrix.a01.powi(2)).sqrt();
     let lambda_min = trace_half - disc;
     let lambda_max = trace_half + disc;
+    validate_result_scalar("symmetric_2x2_eigensystem eigenvalue", lambda_min)?;
+    validate_result_scalar("symmetric_2x2_eigensystem eigenvalue", lambda_max)?;
 
     let mut minor_eigenvector = if matrix.a01.abs() > 1e-12 {
         (matrix.a01, lambda_min - matrix.a00)
@@ -285,6 +289,7 @@ pub fn symmetric_2x2_eigensystem(
         (0.0, 1.0)
     };
     let norm = l2_norm(&[minor_eigenvector.0, minor_eigenvector.1])?;
+    validate_result_scalar("symmetric_2x2_eigensystem eigenvector norm", norm)?;
     if norm > 0.0 {
         minor_eigenvector.0 /= norm;
         minor_eigenvector.1 /= norm;
@@ -317,6 +322,13 @@ fn validate_vector(values: &[f64]) -> Result<(), LinearAlgebraError> {
 fn validate_scalar(value: f64, row: usize, col: usize) -> Result<(), LinearAlgebraError> {
     if !value.is_finite() {
         return Err(LinearAlgebraError::NonFiniteValue { row, col, value });
+    }
+    Ok(())
+}
+
+fn validate_result_scalar(operation: &'static str, value: f64) -> Result<(), LinearAlgebraError> {
+    if !value.is_finite() {
+        return Err(LinearAlgebraError::NonFiniteResult { operation, value });
     }
     Ok(())
 }
@@ -506,6 +518,21 @@ mod tests {
                 assert!(value.is_infinite());
             }
             other => panic!("expected non-finite matrix error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn l0_symmetric_2x2_rejects_non_finite_eigenvalue_result() {
+        match symmetric_2x2_eigensystem(Symmetric2x2 {
+            a00: f64::MAX,
+            a01: 0.0,
+            a11: -f64::MAX,
+        }) {
+            Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+                assert_eq!(operation, "symmetric_2x2_eigensystem eigenvalue");
+                assert!(value.is_infinite());
+            }
+            other => panic!("expected non-finite eigensystem result, got {other:?}"),
         }
     }
 }

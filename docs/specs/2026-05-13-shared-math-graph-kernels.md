@@ -319,7 +319,9 @@ The numeric kernel starts with small dense linear algebra, extracted from
     zero-vector division into non-finite values.**
 6. Closed-form symmetric 2x2 eigensystem. **Landed in `rmath-core`;
    `bisect-cli::geosection_orientation` consumes the minor eigenvector for PCA
-   minor-axis orientation.**
+   minor-axis orientation. The eigensystem rejects non-finite intermediate
+   results, including overflowed eigenvalues and eigenvector norms, instead of
+   returning invalid orientation evidence.**
 
 `rmath-core` remains numeric-only. It must not own regression semantics,
 statistical inference, optimization objectives, or redistricting/route domain

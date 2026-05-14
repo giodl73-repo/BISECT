@@ -98,3 +98,20 @@ fn l1_symmetric_2x2_matches_geosection_horizontal_band_covariance() {
             < 1e-12
     );
 }
+
+#[test]
+fn l1_symmetric_2x2_rejects_overflowed_covariance_result() {
+    let result = symmetric_2x2_eigensystem(Symmetric2x2 {
+        a00: f64::MAX,
+        a01: 0.0,
+        a11: -f64::MAX,
+    });
+
+    match result {
+        Err(LinearAlgebraError::NonFiniteResult { operation, value }) => {
+            assert_eq!(operation, "symmetric_2x2_eigensystem eigenvalue");
+            assert!(value.is_infinite());
+        }
+        other => panic!("expected non-finite eigensystem result, got {other:?}"),
+    }
+}
