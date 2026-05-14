@@ -28,6 +28,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `j-apportionment-evidence-manifest.json` | `j-apportionment-evidence-manifest v1` | `bisect-apportion::evidence_manifest` | J Apportionment Evidence Packages wave |
 | `j-divisor-evidence-manifest.json` | `j-divisor-evidence-manifest v1` | `bisect-apportion::divisor_evidence` | J Divisor Method Evidence wave |
 | `k-reock-evidence-manifest.json` | `k-reock-evidence-manifest v1` | `bisect-analysis::compactness_evidence` | K Exact Reock Evidence Packages wave |
+| `m1-economic-evidence-manifest.json` | `m1-economic-evidence-manifest v1` | `bisect-cli::lodes_evidence` | M.1 Economic Character Evidence wave |
 | `m3-housing-evidence-manifest.json` | `m3-housing-evidence-manifest v1` | `bisect-cli::housing_evidence` | M.3 Housing Character Evidence wave |
 | `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
 
@@ -257,7 +258,26 @@ Required fields beyond §2:
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 
-### 3.16 `m3-housing-evidence-manifest v1`
+### 3.16 `m1-economic-evidence-manifest v1`
+
+Source: `bisect-cli::lodes_evidence::EconomicEvidenceManifest`.
+
+This manifest binds M.1/M.9 LODES WAC economic-character formula and edge-weight
+smoke fixtures to a verifier. It covers commercial intensity, industrial
+fraction, employment-intensity normalization, and the `economic-character`
+edge-weight blend.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable package slug including the covered M-track scope. |
+| `papers` | M-track papers covered, e.g. `["M.1", "M.9"]`. |
+| `fixture_file` | `{path, sha256, role}` for the package-relative economic fixture set. |
+| `verifier_path` | Package-relative source path for the verifier implementation. |
+| `verification_commands` | Commands that replay or validate the package. |
+
+### 3.17 `m3-housing-evidence-manifest v1`
 
 Source: `bisect-cli::housing_evidence::HousingEvidenceManifest`.
 

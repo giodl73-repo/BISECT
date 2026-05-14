@@ -162,3 +162,20 @@ Full computation of $\overline{\sigma}_{\mathrm{JPR}}$ for the three test
 states is designated Phase~2 (requires post-run tract-level analysis);
 the proportionality gap results in Section~\ref{sec:results} are the Phase~1
 findings.
+
+\subsection{Package-Verified Mechanics}
+
+The repository includes a hash-bound smoke package at
+\texttt{docs/examples/m-community-character-evidence-packages/M.1+economic-character-smoke}.
+The package verifies the LODES WAC formula path and edge-weight blend used by
+\texttt{--weights-override economic-character}.  Its fixture recomputes
+commercial intensity, industrial fraction, and capped employment intensity from
+synthetic WAC rows, then applies
+\[
+  w_{\mathrm{ec}}(u,v)
+  = w_{\mathrm{geo}}(u,v)
+    \times \bigl(\alpha + (1-\alpha)\mathrm{sim}(\mathbf{e}_u,\mathbf{e}_v)\bigr).
+\]
+This evidence validates implementation mechanics and tamper rejection. It does
+not replace the future Phase~2 within-district JPR variance analysis or a
+multi-state empirical sweep.

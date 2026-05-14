@@ -26,6 +26,19 @@ pub struct EconChar {
     pub jobs_per_resident: f64,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LodesWacRaw {
+    pub c000: f64,
+    pub cns01: f64,
+    pub cns02: f64,
+    pub cns05: f64,
+    pub cns07: f64,
+    pub cns08: f64,
+    pub cns09: f64,
+    pub cns10: f64,
+    pub cns11: f64,
+}
+
 impl EconChar {
     /// The zero vector — represents a pure residential (zero-job) tract.
     pub fn zero() -> Self {
@@ -34,6 +47,23 @@ impl EconChar {
             industrial_fraction: 0.0,
             jobs_per_resident: 0.0,
         }
+    }
+}
+
+pub fn derive_economic_character(raw: LodesWacRaw) -> EconChar {
+    let c000 = raw.c000.max(0.0);
+    if c000 < 1e-10 {
+        return EconChar::zero();
+    }
+
+    let commercial =
+        raw.cns07.max(0.0) + raw.cns09.max(0.0) + raw.cns10.max(0.0) + raw.cns11.max(0.0);
+    let industrial =
+        raw.cns01.max(0.0) + raw.cns02.max(0.0) + raw.cns05.max(0.0) + raw.cns08.max(0.0);
+    EconChar {
+        commercial_intensity: (commercial / c000).clamp(0.0, 1.0),
+        industrial_fraction: (industrial / c000).clamp(0.0, 1.0),
+        jobs_per_resident: (c000 / 10_000.0_f64).min(1.0),
     }
 }
 
@@ -164,37 +194,19 @@ pub fn load_lodes_wac_tract(
             })?
             .to_string();
 
-        let c000 = get(idx_c000)?;
-        let cns07 = get(idx_cns07)?;
-        let cns09 = get(idx_cns09)?;
-        let cns10 = get(idx_cns10)?;
-        let cns11 = get(idx_cns11)?;
-        let cns01 = get(idx_cns01)?;
-        let cns02 = get(idx_cns02)?;
-        let cns05 = get(idx_cns05)?;
-        let cns08 = get(idx_cns08)?;
-
-        let (commercial_intensity, industrial_fraction, jobs_per_resident) = if c000 < 1e-10 {
-            // Zero-job tract — pure residential
-            (0.0, 0.0, 0.0)
-        } else {
-            let ci = (cns07 + cns09 + cns10 + cns11) / c000;
-            let ind = (cns01 + cns02 + cns05 + cns08) / c000;
-            // Employment intensity proxy: c000 / 10_000, clamped [0, 1].
-            // 10_000 jobs ≈ a large employment centre (Research Triangle Park–scale).
-            // This keeps all three components on [0, 1] so cosine similarity is not
-            // dominated by scale (i.e. CI and IF contribute proportionally to JPR).
-            let jpr = (c000 / 10_000.0_f64).min(1.0);
-            (ci, ind, jpr)
-        };
-
         map.insert(
             geoid,
-            EconChar {
-                commercial_intensity,
-                industrial_fraction,
-                jobs_per_resident,
-            },
+            derive_economic_character(LodesWacRaw {
+                c000: get(idx_c000)?,
+                cns01: get(idx_cns01)?,
+                cns02: get(idx_cns02)?,
+                cns05: get(idx_cns05)?,
+                cns07: get(idx_cns07)?,
+                cns08: get(idx_cns08)?,
+                cns09: get(idx_cns09)?,
+                cns10: get(idx_cns10)?,
+                cns11: get(idx_cns11)?,
+            }),
         );
     }
 
@@ -254,6 +266,24 @@ mod tests {
             (cosine_similarity(&a, &b) - 1.0).abs() < 1e-10,
             "both-zero should be 1.0 (both residential)"
         );
+    }
+
+    #[test]
+    fn derive_economic_character_formula_clamps_and_normalizes() {
+        let ec = derive_economic_character(LodesWacRaw {
+            c000: 1_000.0,
+            cns01: 10.0,
+            cns02: 20.0,
+            cns05: 30.0,
+            cns07: 400.0,
+            cns08: 40.0,
+            cns09: 100.0,
+            cns10: 50.0,
+            cns11: 50.0,
+        });
+        assert!((ec.commercial_intensity - 0.60).abs() < 1e-12);
+        assert!((ec.industrial_fraction - 0.10).abs() < 1e-12);
+        assert!((ec.jobs_per_resident - 0.10).abs() < 1e-12);
     }
 
     #[test]

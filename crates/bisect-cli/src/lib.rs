@@ -30,6 +30,7 @@ pub mod io_utils;
 pub mod label;
 pub mod label_cmd;
 pub mod lodes;
+pub mod lodes_evidence;
 pub mod map_cmd;
 pub mod migrate;
 pub mod output;
