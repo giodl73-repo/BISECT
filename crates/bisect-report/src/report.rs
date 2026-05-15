@@ -192,7 +192,7 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 9: Audit trail
-    let audit = build_audit_section(ctx, m);
+    let audit = build_audit_section(ctx, m)?;
 
     // Section 10: Maps (embed base64 PNG if available)
     let maps = build_maps_section(ctx);
@@ -219,10 +219,10 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
     })
 }
 
-fn build_audit_section(ctx: &ReportContext, m: &PlanManifest) -> Value {
+fn build_audit_section(ctx: &ReportContext, m: &PlanManifest) -> anyhow::Result<Value> {
     let verification_command = generate_verification_command_from_manifest(m);
     let verification_script = generate_verification_script(m);
-    serde_json::json!({
+    Ok(serde_json::json!({
         "verification_command": verification_command,
         "verification_script": verification_script,
         "binary_version": m.binary_version,
@@ -242,38 +242,26 @@ fn build_audit_section(ctx: &ReportContext, m: &PlanManifest) -> Value {
         "audit_result": m.audit_result,
         "legal_profile_id": m.legal_profile_id,
         "context_hash": m.context_hash,
-        "rplan_source_hashes": read_rplan_source_hashes(ctx, m),
-        "algorithm_lineage": read_rplan_algorithm_lineage(ctx, m),
-    })
+        "rplan_source_hashes": read_rplan_source_hashes(ctx, m)?,
+        "algorithm_lineage": read_rplan_algorithm_lineage(ctx, m)?,
+    }))
 }
 
-fn read_rplan_algorithm_lineage(ctx: &ReportContext, m: &PlanManifest) -> Value {
+fn read_rplan_algorithm_lineage(ctx: &ReportContext, m: &PlanManifest) -> anyhow::Result<Value> {
     let Some(certificate_rel) = m.audit_certificate_path.as_deref() else {
-        return serde_json::json!({
+        return Ok(serde_json::json!({
             "status": "unavailable",
             "reason": "audit_certificate_path not recorded in manifest",
-        });
+        }));
     };
     let certificate_path = ctx.plan_dir.join(certificate_rel);
-    let text = match std::fs::read_to_string(&certificate_path) {
-        Ok(text) => text,
-        Err(e) => {
-            return serde_json::json!({
-                "status": "unavailable",
-                "reason": format!("cannot read {certificate_rel}: {e}"),
-            });
-        }
-    };
-    let certificate: Value = match serde_json::from_str(&text) {
-        Ok(certificate) => certificate,
-        Err(e) => {
-            return serde_json::json!({
-                "status": "unavailable",
-                "reason": format!("cannot parse {certificate_rel}: {e}"),
-            });
-        }
-    };
-    match certificate.get("algorithm_lineage") {
+    let text = std::fs::read_to_string(&certificate_path).map_err(|e| {
+        anyhow::anyhow!("[INPUT] cannot read audit certificate {certificate_rel}: {e}")
+    })?;
+    let certificate: Value = serde_json::from_str(&text).map_err(|e| {
+        anyhow::anyhow!("[INPUT] cannot parse audit certificate {certificate_rel}: {e}")
+    })?;
+    Ok(match certificate.get("algorithm_lineage") {
         Some(Value::Null) | None => serde_json::json!({
             "status": "unavailable",
             "reason": "certificate has no algorithm_lineage",
@@ -282,36 +270,22 @@ fn read_rplan_algorithm_lineage(ctx: &ReportContext, m: &PlanManifest) -> Value 
             "status": "ok",
             "lineage": lineage,
         }),
-    }
+    })
 }
 
-fn read_rplan_source_hashes(ctx: &ReportContext, m: &PlanManifest) -> Value {
+fn read_rplan_source_hashes(ctx: &ReportContext, m: &PlanManifest) -> anyhow::Result<Value> {
     let Some(rctx_rel) = m.rctx_path.as_deref() else {
-        return serde_json::json!({
+        return Ok(serde_json::json!({
             "status": "unavailable",
             "reason": "rctx_path not recorded in manifest",
-        });
+        }));
     };
     let rctx_path = ctx.plan_dir.join(rctx_rel);
-    let text = match std::fs::read_to_string(&rctx_path) {
-        Ok(text) => text,
-        Err(e) => {
-            return serde_json::json!({
-                "status": "unavailable",
-                "reason": format!("cannot read {rctx_rel}: {e}"),
-            });
-        }
-    };
-    let context = match rplan_io::read_rctx_str(&text) {
-        Ok(context) => context,
-        Err(e) => {
-            return serde_json::json!({
-                "status": "unavailable",
-                "reason": format!("cannot parse {rctx_rel}: {e}"),
-            });
-        }
-    };
-    if context.source_hashes.entries.is_empty() {
+    let text = std::fs::read_to_string(&rctx_path)
+        .map_err(|e| anyhow::anyhow!("[INPUT] cannot read RCTX {rctx_rel}: {e}"))?;
+    let context = rplan_io::read_rctx_str(&text)
+        .map_err(|e| anyhow::anyhow!("[INPUT] cannot parse RCTX {rctx_rel}: {e}"))?;
+    Ok(if context.source_hashes.entries.is_empty() {
         serde_json::json!({
             "status": "missing",
             "reason": "context source_hashes is empty",
@@ -321,7 +295,7 @@ fn read_rplan_source_hashes(ctx: &ReportContext, m: &PlanManifest) -> Value {
             "status": "ok",
             "entries": context.source_hashes.entries,
         })
-    }
+    })
 }
 
 /// Build the maps section (section 10) — embed PNG maps as base64 data URIs.
@@ -861,6 +835,40 @@ mod tests {
         assert_eq!(
             report.sections.audit["algorithm_lineage"]["lineage"]["method"],
             "branch-and-cut"
+        );
+    }
+
+    #[test]
+    fn test_assemble_report_rejects_malformed_rctx_audit_reference() {
+        let tmp = TempDir::new().unwrap();
+        let mut ctx = setup_plan_dir_with_all_required(&tmp, "vt_bad_rctx_audit");
+        ctx.manifest.rctx_path = Some("context.rctx".to_string());
+        std::fs::write(ctx.plan_dir.join("context.rctx"), "{bad rctx").unwrap();
+
+        let err = assemble_report(&ctx).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]")
+                && msg.contains("cannot parse RCTX")
+                && msg.contains("context.rctx"),
+            "malformed recorded RCTX must not become unavailable audit evidence: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_assemble_report_rejects_malformed_audit_certificate_reference() {
+        let tmp = TempDir::new().unwrap();
+        let mut ctx = setup_plan_dir_with_all_required(&tmp, "vt_bad_certificate_audit");
+        ctx.manifest.audit_certificate_path = Some("audit-certificate.json".to_string());
+        std::fs::write(ctx.plan_dir.join("audit-certificate.json"), "{bad json").unwrap();
+
+        let err = assemble_report(&ctx).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]")
+                && msg.contains("cannot parse audit certificate")
+                && msg.contains("audit-certificate.json"),
+            "malformed recorded audit certificate must not become unavailable audit evidence: {msg}"
         );
     }
 

@@ -300,6 +300,9 @@ defaulting parsed evidence fields.
 Report section assembly likewise rejects present malformed analysis JSON files,
 including optional sections, instead of downgrading parse failures to
 `status: unavailable`.
+Report audit assembly rejects malformed manifest-referenced RCTX and audit
+certificate files instead of presenting recorded-but-unreadable audit evidence
+as unavailable.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values
