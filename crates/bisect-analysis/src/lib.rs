@@ -75,7 +75,8 @@ pub use race_of_candidate::{
 pub use split_standards::{get_split_standard, SplitStandard};
 pub use splits::{
     analyze_county_splits, analyze_county_splits_with_state, analyze_municipal_splits,
-    county_fips_from_geoid, CountySplitResult, MunicipalSplitResult,
+    county_fips_from_geoid, try_analyze_county_splits, try_analyze_county_splits_with_state,
+    try_analyze_municipal_splits, CountySplitResult, MunicipalSplitResult, SplitError,
 };
 pub use summary::{
     try_merge_district, SummaryAnalyzer, SummaryDistrict, SummaryError, SummaryResult,

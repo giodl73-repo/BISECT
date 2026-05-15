@@ -63,6 +63,8 @@ pub struct MunicipalSplit {
 pub enum SplitError {
     #[error("[INPUT] GEOID {geoid} cannot be sliced at byte 5 to extract county FIPS")]
     InvalidCountyFipsBoundary { geoid: String },
+    #[error("[INPUT] assignment for tract {geoid} uses invalid district 0")]
+    InvalidDistrictLabel { geoid: String },
 }
 
 // ---------------------------------------------------------------------------
@@ -132,6 +134,11 @@ pub fn try_analyze_county_splits_with_state(
     let mut county_to_tracts: HashMap<String, usize> = HashMap::new();
 
     for (geoid, &district) in assignments {
+        if district == 0 {
+            return Err(SplitError::InvalidDistrictLabel {
+                geoid: geoid.clone(),
+            });
+        }
         let fips = try_county_fips_from_geoid(geoid)?.to_string();
         county_to_districts
             .entry(fips.clone())
@@ -216,14 +223,23 @@ pub fn analyze_municipal_splits(
     place_to_tracts: &HashMap<String, Vec<String>>,
     place_names: &HashMap<String, String>,
 ) -> MunicipalSplitResult {
+    try_analyze_municipal_splits(assignments, place_to_tracts, place_names)
+        .expect("municipal split assignment labels are valid")
+}
+
+pub fn try_analyze_municipal_splits(
+    assignments: &HashMap<String, usize>,
+    place_to_tracts: &HashMap<String, Vec<String>>,
+    place_names: &HashMap<String, String>,
+) -> Result<MunicipalSplitResult, SplitError> {
     if place_to_tracts.is_empty() {
-        return MunicipalSplitResult {
+        return Ok(MunicipalSplitResult {
             available: false,
             total: 0,
             split: 0,
             preservation_score: 1.0,
             split_list: vec![],
-        };
+        });
     }
 
     let mut split_list: Vec<MunicipalSplit> = Vec::new();
@@ -233,6 +249,9 @@ pub fn analyze_municipal_splits(
         let mut dists_in_place: HashSet<usize> = HashSet::new();
         for t in tracts {
             if let Some(&d) = assignments.get(t) {
+                if d == 0 {
+                    return Err(SplitError::InvalidDistrictLabel { geoid: t.clone() });
+                }
                 dists_in_place.insert(d);
             }
         }
@@ -259,13 +278,13 @@ pub fn analyze_municipal_splits(
         (total - split) as f64 / total as f64
     };
 
-    MunicipalSplitResult {
+    Ok(MunicipalSplitResult {
         available: true,
         total,
         split,
         preservation_score,
         split_list,
-    }
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -533,6 +552,19 @@ mod tests {
     }
 
     #[test]
+    fn test_try_analyze_county_splits_rejects_zero_district_label() {
+        let assignments = make_assignments(&[("53033000001", 0)]);
+        let err = try_analyze_county_splits(&assignments, None)
+            .expect_err("zero district labels must be rejected");
+        assert_eq!(
+            err,
+            SplitError::InvalidDistrictLabel {
+                geoid: "53033000001".to_string()
+            }
+        );
+    }
+
+    #[test]
     fn test_municipal_split_no_split_when_place_in_single_district() {
         let assignments = make_assignments(&[("53033005000", 3), ("53033005100", 3)]);
         let mut place_to_tracts = HashMap::new();
@@ -559,5 +591,20 @@ mod tests {
         let result = analyze_municipal_splits(&assignments, &place_to_tracts, &HashMap::new());
         assert_eq!(result.split, 1);
         assert_eq!(result.split_list[0].place_name, "9999999");
+    }
+
+    #[test]
+    fn test_try_analyze_municipal_splits_rejects_zero_district_label() {
+        let assignments = make_assignments(&[("53033005000", 0)]);
+        let mut place_to_tracts = HashMap::new();
+        place_to_tracts.insert("5363000".to_string(), vec!["53033005000".to_string()]);
+        let err = try_analyze_municipal_splits(&assignments, &place_to_tracts, &HashMap::new())
+            .expect_err("zero district labels must be rejected");
+        assert_eq!(
+            err,
+            SplitError::InvalidDistrictLabel {
+                geoid: "53033005000".to_string()
+            }
+        );
     }
 }

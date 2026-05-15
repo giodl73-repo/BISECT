@@ -263,6 +263,8 @@ evidence cannot panic while annotating non-primary components.
 County-split evidence construction now exposes a checked GEOID parsing path that
 rejects malformed UTF-8 byte boundaries before extracting five-byte county FIPS
 prefixes, so malformed split records return typed errors instead of panicking.
+County and municipal split aggregation now also reject zero district labels
+before split evidence can report invalid district 0 containment.
 Urban place aggregation now rejects zero or out-of-range district labels before
 place evidence can create extra district rows outside the expected plan domain.
 Plan-comparison evidence now rejects zero district labels in either plan before

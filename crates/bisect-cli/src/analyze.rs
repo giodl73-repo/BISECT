@@ -3,9 +3,9 @@ use crate::io_utils::write_json_atomic;
 use crate::partisan::{run_partisan, PartisanArgs};
 use crate::runner::load_all_states;
 use bisect_analysis::{
-    analyze_county_splits_with_state, analyze_municipal_splits, check_contiguity,
-    compute_exit_code_with_flags, get_split_standard, Analyzer, AnalyzerContext, AnalyzerType,
-    DemographicAnalyzer, PoliticalAnalyzer, SummaryAnalyzer, UrbanAnalyzer,
+    check_contiguity, compute_exit_code_with_flags, get_split_standard,
+    try_analyze_county_splits_with_state, try_analyze_municipal_splits, Analyzer, AnalyzerContext,
+    AnalyzerType, DemographicAnalyzer, PoliticalAnalyzer, SummaryAnalyzer, UrbanAnalyzer,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -471,16 +471,16 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             }
             AnalyzerType::Splits => {
                 let standard = get_split_standard(&state_code);
-                let county_result = analyze_county_splits_with_state(
+                let county_result = try_analyze_county_splits_with_state(
                     &assignments,
                     None, // county names not loaded (optional enrichment)
                     Some(&state_code),
-                );
+                )?;
                 // Municipal splits: not loaded unless geography data present
                 let place_to_tracts = HashMap::new();
                 let place_names = HashMap::new();
                 let municipal_result =
-                    analyze_municipal_splits(&assignments, &place_to_tracts, &place_names);
+                    try_analyze_municipal_splits(&assignments, &place_to_tracts, &place_names)?;
 
                 // Subdivision vocabulary: read from SplitStandard (populated from policy DB).
                 let (sub_term, sub_term_plural) = standard
