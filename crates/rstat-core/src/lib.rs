@@ -416,6 +416,269 @@ pub mod summary {
     }
 }
 
+pub mod scoring {
+    use crate::summary::{median, summary_stats, SummaryError};
+    use thiserror::Error;
+
+    #[derive(Debug, Error, Clone, PartialEq)]
+    pub enum ScoringError {
+        #[error(transparent)]
+        Summary(#[from] SummaryError),
+        #[error("[INPUT] value and weight lengths differ: {values} values vs {weights} weights")]
+        LengthMismatch { values: usize, weights: usize },
+        #[error("[INPUT] weight contains negative or non-finite value {value} at index {index}")]
+        InvalidWeight { index: usize, value: f64 },
+        #[error("[INPUT] total weight must be positive")]
+        ZeroTotalWeight,
+        #[error("[INPUT] age must be non-negative and finite, got {0}")]
+        InvalidAge(f64),
+        #[error("[INPUT] half-life must be positive and finite, got {0}")]
+        InvalidHalfLife(f64),
+        #[error("[INPUT] clip lower bound {low} exceeds upper bound {high}")]
+        InvalidClipBounds { low: f64, high: f64 },
+        #[error("[NUMERIC] {operation} produced non-finite value {value}")]
+        NonFiniteResult { operation: &'static str, value: f64 },
+    }
+
+    pub fn min_max_scores(values: &[f64]) -> Result<Vec<f64>, ScoringError> {
+        let stats = summary_stats(values)?;
+        if stats.min == stats.max {
+            return Ok(vec![0.5; values.len()]);
+        }
+        let span = stats.max - stats.min;
+        validate_result("min-max span", span)?;
+        values
+            .iter()
+            .map(|value| {
+                let score = (value - stats.min) / span;
+                validate_result("min-max score", score)?;
+                Ok(score)
+            })
+            .collect()
+    }
+
+    pub fn z_scores(values: &[f64]) -> Result<Vec<f64>, ScoringError> {
+        let stats = summary_stats(values)?;
+        if stats.std_dev_population == 0.0 {
+            return Ok(vec![0.0; values.len()]);
+        }
+        values
+            .iter()
+            .map(|value| {
+                let score = (value - stats.mean) / stats.std_dev_population;
+                validate_result("z-score", score)?;
+                Ok(score)
+            })
+            .collect()
+    }
+
+    pub fn robust_z_scores(values: &[f64]) -> Result<Vec<f64>, ScoringError> {
+        let center = median(values)?;
+        let deviations: Vec<f64> = values.iter().map(|value| (value - center).abs()).collect();
+        let mad = median(&deviations)?;
+        if mad == 0.0 {
+            return Ok(vec![0.0; values.len()]);
+        }
+        values
+            .iter()
+            .map(|value| {
+                let score = 0.674_489_75 * (value - center) / mad;
+                validate_result("robust z-score", score)?;
+                Ok(score)
+            })
+            .collect()
+    }
+
+    pub fn percentile_ranks(values: &[f64]) -> Result<Vec<f64>, ScoringError> {
+        summary_stats(values)?;
+        if values.len() == 1 {
+            return Ok(vec![0.5]);
+        }
+
+        let mut sorted: Vec<(usize, f64)> = values.iter().copied().enumerate().collect();
+        sorted.sort_by(|(left_index, left), (right_index, right)| {
+            left.total_cmp(right)
+                .then_with(|| left_index.cmp(right_index))
+        });
+
+        let mut ranks = vec![0.0; values.len()];
+        let mut start = 0usize;
+        while start < sorted.len() {
+            let mut end = start + 1;
+            while end < sorted.len() && sorted[end].1 == sorted[start].1 {
+                end += 1;
+            }
+            let average_rank = (start + end - 1) as f64 / 2.0;
+            let percentile = average_rank / (values.len() - 1) as f64;
+            validate_result("percentile rank", percentile)?;
+            for &(index, _) in &sorted[start..end] {
+                ranks[index] = percentile;
+            }
+            start = end;
+        }
+        Ok(ranks)
+    }
+
+    pub fn clipped_unit_score(value: f64, low: f64, high: f64) -> Result<f64, ScoringError> {
+        if !low.is_finite() || !high.is_finite() {
+            return Err(ScoringError::NonFiniteResult {
+                operation: "clip bound",
+                value: if !low.is_finite() { low } else { high },
+            });
+        }
+        if low > high {
+            return Err(ScoringError::InvalidClipBounds { low, high });
+        }
+        if !value.is_finite() {
+            return Err(ScoringError::NonFiniteResult {
+                operation: "clip value",
+                value,
+            });
+        }
+        Ok(value.clamp(low, high))
+    }
+
+    pub fn weighted_component_score(values: &[f64], weights: &[f64]) -> Result<f64, ScoringError> {
+        if values.len() != weights.len() {
+            return Err(ScoringError::LengthMismatch {
+                values: values.len(),
+                weights: weights.len(),
+            });
+        }
+        summary_stats(values)?;
+        let mut weighted_sum = 0.0;
+        let mut total_weight = 0.0;
+        for (index, (&value, &weight)) in values.iter().zip(weights).enumerate() {
+            if !weight.is_finite() || weight < 0.0 {
+                return Err(ScoringError::InvalidWeight {
+                    index,
+                    value: weight,
+                });
+            }
+            weighted_sum += value * weight;
+            total_weight += weight;
+            validate_result("weighted component sum", weighted_sum)?;
+            validate_result("weighted component total weight", total_weight)?;
+        }
+        if total_weight == 0.0 {
+            return Err(ScoringError::ZeroTotalWeight);
+        }
+        let score = weighted_sum / total_weight;
+        validate_result("weighted component score", score)?;
+        Ok(score)
+    }
+
+    pub fn exponential_recency_score(
+        age_seconds: f64,
+        half_life_seconds: f64,
+    ) -> Result<f64, ScoringError> {
+        if !age_seconds.is_finite() || age_seconds < 0.0 {
+            return Err(ScoringError::InvalidAge(age_seconds));
+        }
+        if !half_life_seconds.is_finite() || half_life_seconds <= 0.0 {
+            return Err(ScoringError::InvalidHalfLife(half_life_seconds));
+        }
+        let score = 2.0_f64.powf(-age_seconds / half_life_seconds);
+        validate_result("exponential recency score", score)?;
+        Ok(score)
+    }
+
+    fn validate_result(operation: &'static str, value: f64) -> Result<(), ScoringError> {
+        if value.is_finite() {
+            Ok(())
+        } else {
+            Err(ScoringError::NonFiniteResult { operation, value })
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn l0_min_max_scores_are_unit_scaled() {
+            assert_eq!(
+                min_max_scores(&[10.0, 20.0, 30.0]).unwrap(),
+                vec![0.0, 0.5, 1.0]
+            );
+            assert_eq!(min_max_scores(&[5.0, 5.0]).unwrap(), vec![0.5, 0.5]);
+        }
+
+        #[test]
+        fn l0_z_scores_are_centered_and_handle_zero_variance() {
+            let scores = z_scores(&[1.0, 2.0, 3.0]).unwrap();
+            assert!((scores[0] + 1.224_744_871_391_589).abs() < 1e-12);
+            assert_eq!(scores[1], 0.0);
+            assert!((scores[2] - 1.224_744_871_391_589).abs() < 1e-12);
+            assert_eq!(z_scores(&[4.0, 4.0]).unwrap(), vec![0.0, 0.0]);
+        }
+
+        #[test]
+        fn l0_robust_z_scores_use_median_absolute_deviation() {
+            let scores = robust_z_scores(&[1.0, 2.0, 100.0]).unwrap();
+            assert!((scores[0] + 0.674_489_75).abs() < 1e-12);
+            assert_eq!(scores[1], 0.0);
+            assert!((scores[2] - 66.099_995_5).abs() < 1e-9);
+            assert_eq!(robust_z_scores(&[7.0, 7.0]).unwrap(), vec![0.0, 0.0]);
+        }
+
+        #[test]
+        fn l0_percentile_ranks_are_deterministic_with_ties() {
+            assert_eq!(
+                percentile_ranks(&[30.0, 10.0, 10.0, 20.0]).unwrap(),
+                vec![1.0, 1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0]
+            );
+            assert_eq!(percentile_ranks(&[42.0]).unwrap(), vec![0.5]);
+        }
+
+        #[test]
+        fn l0_weighted_component_score_aggregates_explainable_components() {
+            assert_eq!(
+                weighted_component_score(&[0.5, 1.0, 0.0], &[1.0, 2.0, 1.0]).unwrap(),
+                0.625
+            );
+            assert_eq!(
+                weighted_component_score(&[1.0], &[0.0]),
+                Err(ScoringError::ZeroTotalWeight)
+            );
+        }
+
+        #[test]
+        fn l0_exponential_recency_score_uses_half_life() {
+            assert_eq!(exponential_recency_score(0.0, 10.0).unwrap(), 1.0);
+            assert_eq!(exponential_recency_score(10.0, 10.0).unwrap(), 0.5);
+            assert_eq!(
+                exponential_recency_score(-1.0, 10.0),
+                Err(ScoringError::InvalidAge(-1.0))
+            );
+        }
+
+        #[test]
+        fn l0_clipped_unit_score_validates_bounds() {
+            assert_eq!(clipped_unit_score(1.5, 0.0, 1.0).unwrap(), 1.0);
+            assert_eq!(clipped_unit_score(-0.5, 0.0, 1.0).unwrap(), 0.0);
+            assert_eq!(
+                clipped_unit_score(0.5, 1.0, 0.0),
+                Err(ScoringError::InvalidClipBounds {
+                    low: 1.0,
+                    high: 0.0
+                })
+            );
+        }
+
+        #[test]
+        fn l0_scoring_rejects_non_finite_samples() {
+            assert!(matches!(
+                min_max_scores(&[1.0, f64::NAN]),
+                Err(ScoringError::Summary(SummaryError::NonFiniteValue {
+                    index: 1,
+                    ..
+                }))
+            ));
+        }
+    }
+}
+
 pub mod resampling {
     use crate::summary::{percentile_interval_sorted_copy, SummaryError};
     use rand::rngs::SmallRng;
