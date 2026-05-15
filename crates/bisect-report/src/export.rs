@@ -105,7 +105,16 @@ pub fn import_gerrychain_to_assignments(gc_json: &str) -> anyhow::Result<HashMap
                 .as_u64()
                 .ok_or_else(|| anyhow::anyhow!("district value must be integer"))
                 as Result<u64, _>;
-            dist.map(|d| (k.clone(), d as usize))
+            dist.and_then(|d| {
+                if d == 0 {
+                    anyhow::bail!(
+                        "[INPUT] GerryChain assignment for GEOID {k} uses invalid district 0"
+                    );
+                }
+                let district = usize::try_from(d)
+                    .map_err(|_| anyhow::anyhow!("district value {d} is too large"))?;
+                Ok((k.clone(), district))
+            })
         })
         .collect::<anyhow::Result<_>>()?;
     Ok(assignments)
@@ -446,6 +455,18 @@ mod tests {
         assert!(
             result.is_err(),
             "non-integer district value must produce error"
+        );
+    }
+
+    #[test]
+    fn test_gerrychain_import_zero_district_errors() {
+        let json = r#"{"assignment": {"53001000100": 0}}"#;
+        let result = import_gerrychain_to_assignments(json);
+        assert!(result.is_err(), "district 0 must produce error");
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("invalid district 0"),
+            "error must classify and explain invalid district 0: {msg}"
         );
     }
 

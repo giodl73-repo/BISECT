@@ -272,6 +272,8 @@ Jaccard and tract-count deviation summaries can include an invalid district 0.
 Canonical assignment comparison in report/interchange helpers likewise rejects
 district 0 before relabeling, so round-trip equality evidence cannot normalize
 an invalid label into a valid canonical district.
+GerryChain assignment import now rejects district 0 at parse time, preventing
+external interchange inputs from materializing a zero-district RPLAN.
 
 ## Second Wave: `rstat-core`
 
