@@ -130,20 +130,32 @@ pub fn validate_rplan(rplan: &RplanFile) -> Result<ValidationResult, RplanError>
             version_str
         ));
     } else {
-        let major: u32 = parts[0].parse().unwrap_or(u32::MAX);
-        let minor: u32 = parts[1].parse().unwrap_or(u32::MAX);
-        if major != 0 {
-            return Err(RplanError::VersionError(format!(
-                "Unsupported major version {} in '{}'. This reader supports major version 0.",
-                major, version_str
-            )));
-        }
-        if minor > 1 {
-            warnings.push(format!(
-                "RPLAN minor version {} is newer than this reader (0.1). \
-                 Some fields may be ignored.",
-                minor
-            ));
+        let major = parts[0].parse::<u32>();
+        let minor = parts[1].parse::<u32>();
+        match (major, minor) {
+            (Ok(major), Ok(minor)) => {
+                if major != 0 {
+                    return Err(RplanError::VersionError(format!(
+                        "Unsupported major version {} in '{}'. This reader supports major version 0.",
+                        major, version_str
+                    )));
+                }
+                if minor > 1 {
+                    warnings.push(format!(
+                        "RPLAN minor version {} is newer than this reader (0.1). \
+                         Some fields may be ignored.",
+                        minor
+                    ));
+                }
+            }
+            (Err(_), _) => errors.push(format!(
+                "rplan_version major component '{}' must be an unsigned integer",
+                parts[0]
+            )),
+            (_, Err(_)) => errors.push(format!(
+                "rplan_version minor component '{}' must be an unsigned integer",
+                parts[1]
+            )),
         }
     }
 
@@ -502,6 +514,28 @@ mod tests {
         assert!(
             !vr.warnings.is_empty(),
             "Should have a warning about newer minor version"
+        );
+    }
+
+    #[test]
+    fn test_validate_malformed_version_major_fails() {
+        let mut rplan = make_minimal_valid_rplan();
+        rplan.rplan_version = "x.1".into();
+        let err = validate_rplan(&rplan).unwrap_err().to_string();
+        assert!(
+            err.contains("major component 'x' must be an unsigned integer"),
+            "malformed major component must fail explicitly: {err}"
+        );
+    }
+
+    #[test]
+    fn test_validate_malformed_version_minor_fails() {
+        let mut rplan = make_minimal_valid_rplan();
+        rplan.rplan_version = "0.x".into();
+        let err = validate_rplan(&rplan).unwrap_err().to_string();
+        assert!(
+            err.contains("minor component 'x' must be an unsigned integer"),
+            "malformed minor component must fail explicitly: {err}"
         );
     }
 

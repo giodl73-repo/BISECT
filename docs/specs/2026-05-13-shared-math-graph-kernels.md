@@ -309,6 +309,9 @@ discarding that provenance field.
 Narrative comparison provenance now rejects malformed `SOURCE_DATE_EPOCH`
 values instead of silently falling back to the unsigned draft timestamp
 sentinel.
+RPLAN validation now rejects non-numeric `rplan_version` components instead of
+coercing them into oversized major/minor values that can masquerade as version
+compatibility warnings.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values
