@@ -59,6 +59,16 @@ pub enum RoptError {
     NonFiniteResult { operation: &'static str, value: f64 },
     #[error("[INPUT] seed domain must not be empty")]
     EmptySeedDomain,
+    #[error("[INPUT] budgeted selection items must not be empty")]
+    EmptyBudgetItems,
+    #[error("[INPUT] budget must be positive")]
+    NonPositiveBudget,
+    #[error("[INPUT] budget item {item_index} must have positive cost")]
+    NonPositiveBudgetCost { item_index: usize },
+    #[error("[INPUT] budget item {item_index} has invalid score {score}")]
+    InvalidBudgetScore { item_index: usize, score: f64 },
+    #[error("[INPUT] no budget item fits budget {budget}; minimum item cost is {min_cost}")]
+    ImpossibleBudget { budget: usize, min_cost: usize },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,6 +76,19 @@ pub enum SeedPart {
     U32(u32),
     U64(u64),
     Usize(usize),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BudgetItem {
+    pub score: f64,
+    pub cost: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct BudgetSelection {
+    pub selected_indices: Vec<usize>,
+    pub total_score: f64,
+    pub total_cost: usize,
 }
 
 pub fn dominates<T: ObjectiveVector>(a: &T, b: &T) -> Result<bool, RoptError> {
@@ -214,6 +237,82 @@ pub fn derive_seed(domain: &[u8], parts: &[SeedPart]) -> Result<u64, RoptError> 
     ))
 }
 
+pub fn exact_budgeted_selection(
+    items: &[BudgetItem],
+    budget: usize,
+) -> Result<BudgetSelection, RoptError> {
+    validate_budget_items(items, budget)?;
+    let mut states: Vec<Option<BudgetSelection>> = vec![None; budget + 1];
+    states[0] = Some(BudgetSelection {
+        selected_indices: Vec::new(),
+        total_score: 0.0,
+        total_cost: 0,
+    });
+
+    for (item_index, item) in items.iter().enumerate() {
+        for capacity in (item.cost..=budget).rev() {
+            let Some(previous) = states[capacity - item.cost].clone() else {
+                continue;
+            };
+            let mut candidate = previous;
+            candidate.selected_indices.push(item_index);
+            candidate.total_score += item.score;
+            validate_result("budgeted exact score", candidate.total_score)?;
+            candidate.total_cost += item.cost;
+            if is_better_selection(&candidate, states[capacity].as_ref()) {
+                states[capacity] = Some(candidate);
+            }
+        }
+    }
+
+    states
+        .into_iter()
+        .flatten()
+        .filter(|selection| !selection.selected_indices.is_empty())
+        .max_by(compare_selections)
+        .ok_or_else(|| impossible_budget(items, budget))
+}
+
+pub fn greedy_budgeted_selection(
+    items: &[BudgetItem],
+    budget: usize,
+) -> Result<BudgetSelection, RoptError> {
+    validate_budget_items(items, budget)?;
+    let mut order: Vec<usize> = (0..items.len()).collect();
+    order.sort_by(|&left, &right| {
+        let left_density = items[left].score / items[left].cost as f64;
+        let right_density = items[right].score / items[right].cost as f64;
+        right_density
+            .total_cmp(&left_density)
+            .then_with(|| items[right].score.total_cmp(&items[left].score))
+            .then_with(|| items[left].cost.cmp(&items[right].cost))
+            .then_with(|| left.cmp(&right))
+    });
+
+    let mut selection = BudgetSelection {
+        selected_indices: Vec::new(),
+        total_score: 0.0,
+        total_cost: 0,
+    };
+    for item_index in order {
+        let item = items[item_index];
+        if selection.total_cost + item.cost > budget {
+            continue;
+        }
+        selection.selected_indices.push(item_index);
+        selection.total_cost += item.cost;
+        selection.total_score += item.score;
+        validate_result("budgeted greedy score", selection.total_score)?;
+    }
+    selection.selected_indices.sort_unstable();
+
+    if selection.selected_indices.is_empty() {
+        Err(impossible_budget(items, budget))
+    } else {
+        Ok(selection)
+    }
+}
+
 fn validate_pair<T: ObjectiveVector>(a: &T, b: &T) -> Result<(), RoptError> {
     validate_objective(a, 0, a.objective_count())?;
     validate_objective(b, 1, a.objective_count())
@@ -278,6 +377,50 @@ fn validate_front(front: &[usize], len: usize) -> Result<(), RoptError> {
         seen[point_index] = true;
     }
     Ok(())
+}
+
+fn validate_budget_items(items: &[BudgetItem], budget: usize) -> Result<(), RoptError> {
+    if items.is_empty() {
+        return Err(RoptError::EmptyBudgetItems);
+    }
+    if budget == 0 {
+        return Err(RoptError::NonPositiveBudget);
+    }
+    for (item_index, item) in items.iter().enumerate() {
+        if item.cost == 0 {
+            return Err(RoptError::NonPositiveBudgetCost { item_index });
+        }
+        if !item.score.is_finite() || item.score < 0.0 {
+            return Err(RoptError::InvalidBudgetScore {
+                item_index,
+                score: item.score,
+            });
+        }
+    }
+    Ok(())
+}
+
+fn is_better_selection(candidate: &BudgetSelection, incumbent: Option<&BudgetSelection>) -> bool {
+    let Some(incumbent) = incumbent else {
+        return true;
+    };
+    compare_selections(candidate, incumbent).is_gt()
+}
+
+fn compare_selections(left: &BudgetSelection, right: &BudgetSelection) -> std::cmp::Ordering {
+    left.total_score
+        .total_cmp(&right.total_score)
+        .then_with(|| right.total_cost.cmp(&left.total_cost))
+        .then_with(|| right.selected_indices.cmp(&left.selected_indices))
+}
+
+fn impossible_budget(items: &[BudgetItem], budget: usize) -> RoptError {
+    let min_cost = items
+        .iter()
+        .map(|item| item.cost)
+        .min()
+        .expect("validated budget items are non-empty");
+    RoptError::ImpossibleBudget { budget, min_cost }
 }
 
 fn validate_result(operation: &'static str, value: f64) -> Result<(), RoptError> {
@@ -366,6 +509,145 @@ mod tests {
             Err(RoptError::DuplicateFrontIndex {
                 front_index: 2,
                 point_index: 1
+            })
+        );
+    }
+
+    #[test]
+    fn l0_exact_budgeted_selection_finds_optimal_pack() {
+        let items = [
+            BudgetItem {
+                score: 6.0,
+                cost: 6,
+            },
+            BudgetItem {
+                score: 4.0,
+                cost: 4,
+            },
+            BudgetItem {
+                score: 5.0,
+                cost: 5,
+            },
+            BudgetItem {
+                score: 7.0,
+                cost: 7,
+            },
+        ];
+
+        assert_eq!(
+            exact_budgeted_selection(&items, 9).unwrap(),
+            BudgetSelection {
+                selected_indices: vec![1, 2],
+                total_score: 9.0,
+                total_cost: 9,
+            }
+        );
+    }
+
+    #[test]
+    fn l0_exact_budgeted_selection_tie_breaks_by_lower_cost_then_index_order() {
+        let items = [
+            BudgetItem {
+                score: 5.0,
+                cost: 5,
+            },
+            BudgetItem {
+                score: 5.0,
+                cost: 4,
+            },
+            BudgetItem {
+                score: 5.0,
+                cost: 4,
+            },
+        ];
+
+        assert_eq!(
+            exact_budgeted_selection(&items, 5).unwrap(),
+            BudgetSelection {
+                selected_indices: vec![1],
+                total_score: 5.0,
+                total_cost: 4,
+            }
+        );
+    }
+
+    #[test]
+    fn l0_greedy_budgeted_selection_is_deterministic_by_density() {
+        let items = [
+            BudgetItem {
+                score: 6.0,
+                cost: 6,
+            },
+            BudgetItem {
+                score: 4.0,
+                cost: 2,
+            },
+            BudgetItem {
+                score: 3.0,
+                cost: 2,
+            },
+        ];
+
+        assert_eq!(
+            greedy_budgeted_selection(&items, 4).unwrap(),
+            BudgetSelection {
+                selected_indices: vec![1, 2],
+                total_score: 7.0,
+                total_cost: 4,
+            }
+        );
+    }
+
+    #[test]
+    fn l0_budgeted_selection_rejects_malformed_inputs() {
+        assert_eq!(
+            exact_budgeted_selection(&[], 10),
+            Err(RoptError::EmptyBudgetItems)
+        );
+        assert_eq!(
+            exact_budgeted_selection(
+                &[BudgetItem {
+                    score: 1.0,
+                    cost: 1
+                }],
+                0
+            ),
+            Err(RoptError::NonPositiveBudget)
+        );
+        assert!(matches!(
+            exact_budgeted_selection(
+                &[BudgetItem {
+                    score: f64::NAN,
+                    cost: 1
+                }],
+                1
+            ),
+            Err(RoptError::InvalidBudgetScore {
+                item_index: 0,
+                score
+            }) if score.is_nan()
+        ));
+        assert_eq!(
+            exact_budgeted_selection(
+                &[BudgetItem {
+                    score: 1.0,
+                    cost: 0
+                }],
+                1
+            ),
+            Err(RoptError::NonPositiveBudgetCost { item_index: 0 })
+        );
+        assert_eq!(
+            exact_budgeted_selection(
+                &[BudgetItem {
+                    score: 1.0,
+                    cost: 5
+                }],
+                4
+            ),
+            Err(RoptError::ImpossibleBudget {
+                budget: 4,
+                min_cost: 5
             })
         );
     }
