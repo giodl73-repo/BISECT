@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use bisect_analysis::{build_chamber_adjacency, validate_nesting, NestingValidation};
+use bisect_analysis::{build_chamber_adjacency, try_validate_nesting, NestingValidation};
 
 // ---------------------------------------------------------------------------
 // Nest mode
@@ -408,7 +408,7 @@ pub fn run_suite_validate_with_overrides(
         2
     };
 
-    let nesting = validate_nesting(&house_assignments, &senate_assignments, ratio);
+    let nesting = try_validate_nesting(&house_assignments, &senate_assignments, ratio)?;
 
     Ok(SuiteValidateResult {
         suite_name: suite_name.to_string(),
@@ -508,7 +508,8 @@ pub fn run_suite_draw(
     // Nesting applies ONLY to state house and senate plans — not congressional.
     if args.nest_mode == NestMode::SenateInHouse {
         let required_ratio = resolve_nesting_ratio(&args.state, args.nest_ratio)?;
-        let validation = validate_nesting(house_assignments, senate_assignments, required_ratio);
+        let validation =
+            try_validate_nesting(house_assignments, senate_assignments, required_ratio)?;
         if !validation.valid {
             let violation_strs: Vec<String> = validation
                 .violations

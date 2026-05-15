@@ -55,8 +55,8 @@ pub use exit_codes::{
     BIT_NESTING,
 };
 pub use nesting::{
-    build_chamber_adjacency, compute_nest_ratio, validate_nesting, NestingValidation,
-    NestingViolation,
+    build_chamber_adjacency, compute_nest_ratio, try_validate_nesting, validate_nesting,
+    NestingError, NestingValidation, NestingViolation,
 };
 pub use partisan::{
     bootstrap_ci, compute_declination, compute_efficiency_gap, compute_mean_median,

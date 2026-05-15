@@ -22,6 +22,10 @@ pub enum NestingError {
         neighbor_index: usize,
         tract_count: usize,
     },
+    #[error("[INPUT] house assignment for tract {geoid} uses invalid district 0")]
+    InvalidHouseDistrictLabel { geoid: String },
+    #[error("[INPUT] senate assignment for tract {geoid} uses invalid district 0")]
+    InvalidSenateDistrictLabel { geoid: String },
 }
 
 // ---------------------------------------------------------------------------
@@ -247,6 +251,17 @@ pub fn validate_nesting(
     senate_assignments: &HashMap<String, usize>,
     required_ratio: usize,
 ) -> NestingValidation {
+    try_validate_nesting(house_assignments, senate_assignments, required_ratio)
+        .expect("nesting assignment labels are valid")
+}
+
+pub fn try_validate_nesting(
+    house_assignments: &HashMap<String, usize>,
+    senate_assignments: &HashMap<String, usize>,
+    required_ratio: usize,
+) -> Result<NestingValidation, NestingError> {
+    validate_nesting_inputs(house_assignments, senate_assignments)?;
+
     // Build senate_district → set of house districts
     let mut senate_to_house: HashMap<usize, HashSet<usize>> = HashMap::new();
     // Also track house_district → set of senate districts (to catch spanning)
@@ -316,11 +331,32 @@ pub fn validate_nesting(
         })
         .collect();
 
-    NestingValidation {
+    Ok(NestingValidation {
         valid: violations.is_empty(),
         violations,
         senate_to_house_map,
+    })
+}
+
+fn validate_nesting_inputs(
+    house_assignments: &HashMap<String, usize>,
+    senate_assignments: &HashMap<String, usize>,
+) -> Result<(), NestingError> {
+    for (geoid, &district) in house_assignments {
+        if district == 0 {
+            return Err(NestingError::InvalidHouseDistrictLabel {
+                geoid: geoid.clone(),
+            });
+        }
     }
+    for (geoid, &district) in senate_assignments {
+        if district == 0 {
+            return Err(NestingError::InvalidSenateDistrictLabel {
+                geoid: geoid.clone(),
+            });
+        }
+    }
+    Ok(())
 }
 
 /// Compute ratio: num_house / num_senate. Returns None if not evenly divisible.
@@ -545,6 +581,30 @@ mod tests {
         let v = &result.violations[0];
         assert_eq!(v.senate_district, 1);
         assert_eq!(v.house_districts.len(), 3);
+    }
+
+    #[test]
+    fn test_try_validate_nesting_rejects_zero_house_label() {
+        let house: HashMap<String, usize> = [("t0".into(), 0)].into();
+        let senate: HashMap<String, usize> = [("t0".into(), 1)].into();
+        let err = try_validate_nesting(&house, &senate, 2)
+            .expect_err("zero house district label must be rejected");
+        assert_eq!(
+            err,
+            NestingError::InvalidHouseDistrictLabel { geoid: "t0".into() }
+        );
+    }
+
+    #[test]
+    fn test_try_validate_nesting_rejects_zero_senate_label() {
+        let house: HashMap<String, usize> = [("t0".into(), 1)].into();
+        let senate: HashMap<String, usize> = [("t0".into(), 0)].into();
+        let err = try_validate_nesting(&house, &senate, 2)
+            .expect_err("zero senate district label must be rejected");
+        assert_eq!(
+            err,
+            NestingError::InvalidSenateDistrictLabel { geoid: "t0".into() }
+        );
     }
 
     #[test]

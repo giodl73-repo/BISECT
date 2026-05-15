@@ -251,6 +251,8 @@ Chamber-adjacency evidence construction now has a typed checked path that reject
 tract/adjacency length mismatches, zero or out-of-range district labels, and
 out-of-range neighbor indices before nesting or chamber-boundary evidence can
 panic on malformed graph rows.
+Nesting validation now rejects zero house or senate district labels before
+upper/lower chamber containment maps can include invalid district 0.
 Contiguity evidence construction now applies the same typed validation for
 tract/adjacency length mismatches, unknown assignment GEOIDs, zero or
 out-of-range district labels, and out-of-range neighbor indices before district
