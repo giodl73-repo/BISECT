@@ -1,5 +1,7 @@
 # bisect — Algorithmic Redistricting
 
+**Series:** [Election Systems](https://github.com/giodl73-repo/giodl73-repo/blob/main/series/election-systems.md).
+
 `bisect` draws congressional and state-legislative districts that are compact, population-balanced, reproducible to the byte, and derivable from first principles — for any chamber, any state, any census year.
 
 ## How it works
