@@ -71,6 +71,20 @@ fn parse_direct_assignment_object(
         .collect()
 }
 
+fn parse_assignment_file(path: &Path) -> anyhow::Result<HashMap<String, usize>> {
+    let content = std::fs::read_to_string(path)
+        .map_err(|e| anyhow::anyhow!("[INPUT] cannot read {}: {}", path.display(), e))?;
+    let value: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| anyhow::anyhow!("[INPUT] cannot parse {}: {}", path.display(), e))?;
+    let obj = value.as_object().ok_or_else(|| {
+        anyhow::anyhow!(
+            "[INPUT] assignment file {} must be a JSON object",
+            path.display()
+        )
+    })?;
+    parse_direct_assignment_object(&path.display().to_string(), obj)
+}
+
 /// Load a plan's final_assignments.json given a label, version, year, and base dir.
 ///
 /// If `label` ends with `.rplan`, parses it as an RPLAN file and extracts assignments
@@ -94,19 +108,7 @@ fn load_plan_assignments(
         let assignments_obj = v["assignments"].as_object().ok_or_else(|| {
             anyhow::anyhow!(".rplan file '{}' missing 'assignments' field", label)
         })?;
-        let assignments: HashMap<String, usize> = assignments_obj
-            .iter()
-            .map(|(geoid, dist_val)| {
-                let dist = dist_val.as_u64().ok_or_else(|| {
-                    anyhow::anyhow!(
-                        "assignment value for GEOID {} must be integer, got {}",
-                        geoid,
-                        dist_val
-                    )
-                })?;
-                Ok((geoid.clone(), dist as usize))
-            })
-            .collect::<anyhow::Result<_>>()?;
+        let assignments = parse_direct_assignment_object(label, assignments_obj)?;
         return Ok(assignments);
     }
 
@@ -167,13 +169,10 @@ fn load_plan_assignments(
         let p = PathBuf::from(label);
         let direct = p.join("data").join("final_assignments.json");
         if direct.exists() {
-            let raw: HashMap<String, usize> =
-                serde_json::from_str(&std::fs::read_to_string(&direct)?)?;
-            return Ok(raw);
+            return parse_assignment_file(&direct);
         }
         if p.is_file() {
-            let raw: HashMap<String, usize> = serde_json::from_str(&std::fs::read_to_string(&p)?)?;
-            return Ok(raw);
+            return parse_assignment_file(&p);
         }
     }
 
@@ -189,9 +188,7 @@ fn load_plan_assignments(
         if let Ok(ctx) = ctx_result {
             let asgn_path = ctx.assignments_path();
             if asgn_path.exists() {
-                let raw: HashMap<String, usize> =
-                    serde_json::from_str(&std::fs::read_to_string(&asgn_path)?)?;
-                return Ok(raw);
+                return parse_assignment_file(&asgn_path);
             }
         }
     }
@@ -205,9 +202,7 @@ fn load_plan_assignments(
         .join("data")
         .join("final_assignments.json");
     if plan_path.exists() {
-        let raw: HashMap<String, usize> =
-            serde_json::from_str(&std::fs::read_to_string(&plan_path)?)?;
-        return Ok(raw);
+        return parse_assignment_file(&plan_path);
     }
 
     // Fallback: {base}/{year}/plans/{label}/final_assignments.json (no data/ subdir)
@@ -217,9 +212,7 @@ fn load_plan_assignments(
         .join(label)
         .join("final_assignments.json");
     if flat_path.exists() {
-        let raw: HashMap<String, usize> =
-            serde_json::from_str(&std::fs::read_to_string(&flat_path)?)?;
-        return Ok(raw);
+        return parse_assignment_file(&flat_path);
     }
 
     // Also accept a bare directory path as label
@@ -227,9 +220,7 @@ fn load_plan_assignments(
         .join("data")
         .join("final_assignments.json");
     if direct_data.exists() {
-        let raw: HashMap<String, usize> =
-            serde_json::from_str(&std::fs::read_to_string(&direct_data)?)?;
-        return Ok(raw);
+        return parse_assignment_file(&direct_data);
     }
 
     anyhow::bail!(
@@ -1518,6 +1509,29 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_rplan_zero_district_value_returns_err() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("zero_vals.rplan");
+        let json = serde_json::json!({
+            "rplan_version": "0.1",
+            "metadata": {"label": "x", "year": "2020"},
+            "assignments": {
+                "53001000100": 0
+            }
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+        let err = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("[INPUT]")
+                && err.contains("53001000100")
+                && err.contains("must be a positive integer"),
+            ".rplan district 0 must be rejected: {err}"
+        );
+    }
+
     /// GerryChain flat format with district 0 is rejected.
     #[test]
     fn test_gerrychain_flat_format_district_zero_returns_err() {
@@ -1674,6 +1688,40 @@ mod tests {
         );
         let a = result.unwrap();
         assert_eq!(a.len(), 2, "must load 2 assignments");
+    }
+
+    #[test]
+    fn test_load_plan_assignments_rejects_zero_from_output_dir_override() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_data = tmp
+            .path()
+            .join("2020")
+            .join("plans")
+            .join("my_plan")
+            .join("data");
+        std::fs::create_dir_all(&plan_data).unwrap();
+        let assignments = serde_json::json!({"53001000100": 0, "53001000200": 2});
+        std::fs::write(
+            plan_data.join("final_assignments.json"),
+            assignments.to_string(),
+        )
+        .unwrap();
+
+        let err = load_plan_assignments(
+            "my_plan",
+            "outputs",
+            "v1",
+            "2020",
+            Some(&tmp.path().to_path_buf()),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("[INPUT]")
+                && err.contains("53001000100")
+                && err.contains("must be a positive integer"),
+            "resolved final_assignments.json district 0 must be rejected: {err}"
+        );
     }
 
     /// load_plan_assignments with JSON missing assignments key returns Err for .rplan.

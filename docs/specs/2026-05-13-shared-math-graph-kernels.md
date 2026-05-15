@@ -317,6 +317,9 @@ values in both flat and nested `assignment` shapes instead of filtering out bad
 entries and comparing a partial plan.
 Direct GerryChain/DRA comparison assignment JSON also rejects district `0`,
 matching imported-assignment invariants that district labels are positive.
+CLI comparison now applies the same positive-label assignment parser to `.rplan`
+inputs and resolved `final_assignments.json` files, so district `0` cannot
+bypass the direct JSON guard through another compare input path.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values
