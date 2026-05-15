@@ -75,8 +75,12 @@ pub fn import_geojson_plan(
                     district_polygons.push((district_id, poly));
                 }
             }
-            _ => {
-                // Unknown geometry type — skip (will fall back to nearest centroid)
+            other => {
+                anyhow::bail!(
+                    "[INPUT] unsupported GeoJSON geometry type '{}' for district_id {}",
+                    if other.is_empty() { "<missing>" } else { other },
+                    district_id
+                );
             }
         }
     }
@@ -464,6 +468,42 @@ mod tests {
         assert!(
             msg.contains("[INPUT]") && msg.contains("no usable Polygon"),
             "error must classify missing usable geometry: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_import_rejects_unsupported_geometry_type() {
+        let geojson_str = serde_json::to_string(&serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-122.5, 47.5]
+                    },
+                    "properties": {"district_id": 1}
+                },
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [-123.0, 47.0], [-122.0, 47.0], [-122.0, 48.0],
+                            [-123.0, 48.0], [-123.0, 47.0]
+                        ]]
+                    },
+                    "properties": {"district_id": 2}
+                }
+            ]
+        }))
+        .unwrap();
+        let centroids = HashMap::from([("53001001000".to_string(), (-122.5, 47.5))]);
+        let err = import_geojson_plan(&geojson_str, &centroids).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("unsupported GeoJSON geometry type 'Point'"),
+            "error must classify unsupported geometry types: {msg}"
         );
     }
 

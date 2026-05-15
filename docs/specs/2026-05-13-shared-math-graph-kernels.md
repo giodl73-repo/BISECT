@@ -287,6 +287,8 @@ coordinates to `(0, 0)`.
 District-polygon GeoJSON import now rejects files with no usable polygon
 geometry instead of returning an empty assignment set that later appears as a
 zero-district import.
+District-polygon GeoJSON import also rejects unsupported geometry types instead
+of silently dropping non-polygon features while importing the rest of the file.
 Comparison report assignment loading now rejects non-integer, zero, and
 oversized `final_assignments.json` district values before diff evidence is
 computed.
