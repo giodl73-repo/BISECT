@@ -56,9 +56,11 @@ pub fn check_plan_collision(plan_dir: &Path, force: bool) -> anyhow::Result<()> 
 
         anyhow::bail!(
             "ERROR: plan '{}' already exists at: {}\n\
+             Existing manifest created_at: {}\n\
              Use --force to overwrite, or choose a different --label.",
             label,
             plan_dir.display(),
+            created_at,
         );
     }
     Ok(())
@@ -293,14 +295,16 @@ mod tests {
             r#"{"created_at":"2026-03-15T09:00:00Z","label":"dated_plan"}"#,
         )
         .unwrap();
-        // The check_plan_collision reads created_at; error contains the path
         let err = check_plan_collision(&plan_dir, false)
             .unwrap_err()
             .to_string();
-        // path must be in the error
         assert!(
             err.contains("dated_plan"),
             "error must contain the plan label"
+        );
+        assert!(
+            err.contains("2026-03-15T09:00:00Z"),
+            "error must contain manifest created_at, got: {err}"
         );
     }
 
@@ -357,6 +361,11 @@ mod tests {
         assert!(
             result.is_err(),
             "corrupt manifest must still trigger collision error"
+        );
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("Existing manifest created_at: unknown"),
+            "corrupt manifest collision should make unknown timestamp explicit: {msg}"
         );
     }
 

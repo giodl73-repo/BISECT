@@ -303,6 +303,9 @@ including optional sections, instead of downgrading parse failures to
 Report audit assembly rejects malformed manifest-referenced RCTX and audit
 certificate files instead of presenting recorded-but-unreadable audit evidence
 as unavailable.
+Plan collision errors now surface the existing manifest `created_at` value, or
+an explicit `unknown` marker for malformed manifests, rather than reading and
+discarding that provenance field.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values
