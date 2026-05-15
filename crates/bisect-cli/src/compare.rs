@@ -45,12 +45,19 @@ fn parse_direct_assignment_object(
         .map(|(geoid, val)| {
             let district = val.as_u64().ok_or_else(|| {
                 anyhow::anyhow!(
-                    "[INPUT] assignment value for GEOID {} in {} must be a non-negative integer, got {}",
+                    "[INPUT] assignment value for GEOID {} in {} must be a positive integer, got {}",
                     geoid,
                     source,
                     val
                 )
             })?;
+            if district == 0 {
+                anyhow::bail!(
+                    "[INPUT] assignment value for GEOID {} in {} must be a positive integer, got 0",
+                    geoid,
+                    source
+                );
+            }
             let district = usize::try_from(district).map_err(|_| {
                 anyhow::anyhow!(
                     "[INPUT] assignment value for GEOID {} in {} is too large: {}",
@@ -1115,7 +1122,7 @@ mod tests {
         assert!(
             err.contains("[INPUT]")
                 && err.contains("53001000200")
-                && err.contains("must be a non-negative integer"),
+                && err.contains("must be a positive integer"),
             "malformed flat assignment value must not be silently filtered: {err}"
         );
     }
@@ -1138,7 +1145,7 @@ mod tests {
         assert!(
             err.contains("[INPUT]")
                 && err.contains("53033000200")
-                && err.contains("must be a non-negative integer"),
+                && err.contains("must be a positive integer"),
             "malformed nested assignment value must not be silently filtered: {err}"
         );
     }
@@ -1511,9 +1518,9 @@ mod tests {
         );
     }
 
-    /// GerryChain flat format with district 0 is handled.
+    /// GerryChain flat format with district 0 is rejected.
     #[test]
-    fn test_gerrychain_flat_format_district_zero() {
+    fn test_gerrychain_flat_format_district_zero_returns_err() {
         let tmp = tempfile::TempDir::new().unwrap();
         let path = tmp.path().join("gc_zero.json");
         let json = serde_json::json!({
@@ -1521,14 +1528,15 @@ mod tests {
             "53001000200": 1,
         });
         std::fs::write(&path, json.to_string()).unwrap();
-        let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        let err = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None)
+            .unwrap_err()
+            .to_string();
         assert!(
-            result.is_ok(),
-            "district 0 must be valid: {:?}",
-            result.err()
+            err.contains("[INPUT]")
+                && err.contains("53001000100")
+                && err.contains("must be a positive integer"),
+            "district 0 must be rejected: {err}"
         );
-        let assignments = result.unwrap();
-        assert_eq!(assignments["53001000100"], 0);
     }
 
     /// sha256_hex produces a 64-char lowercase hex string.
