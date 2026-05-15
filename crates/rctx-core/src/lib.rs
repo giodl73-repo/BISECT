@@ -350,6 +350,78 @@ pub fn synthetic_missing_source_ref_package_fixture() -> Result<RctxPackage, Rct
     Ok(package)
 }
 
+pub fn synthetic_ai_context_package_fixture() -> Result<RctxPackage, RctxCoreError> {
+    let context_hash = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
+    let repo_source_hash =
+        "sha256:d111111111111111111111111111111111111111111111111111111111111111";
+    let note_source_hash =
+        "sha256:d222222222222222222222222222222222222222222222222222222222222222";
+    let graph_hash = "sha256:d333333333333333333333333333333333333333333333333333333333333333";
+    let mut package = RctxPackage {
+        manifest: RctxManifest {
+            rctx_version: RCTX_VERSION.to_string(),
+            package_id: "crop-ai-context-fixture".to_string(),
+            jurisdiction: "AI-CONTEXT".to_string(),
+            producer: "crop-fixture".to_string(),
+            created_at: "2026-05-15T00:00:00Z".to_string(),
+            package_content_hash: zero_hash(),
+        },
+        source_index: vec![
+            RctxSourceIndexEntry {
+                source_id: "repo:README.md".to_string(),
+                path: "repo/README.md".to_string(),
+                sha256: repo_source_hash.to_string(),
+                media_type: "text/markdown".to_string(),
+                description: "Repository overview used as canonical context".to_string(),
+            },
+            RctxSourceIndexEntry {
+                source_id: "note:architecture.md".to_string(),
+                path: "notes/architecture.md".to_string(),
+                sha256: note_source_hash.to_string(),
+                media_type: "text/markdown".to_string(),
+                description: "Architecture note that bridges repo modules".to_string(),
+            },
+        ],
+        units: vec![ContextUnitIndex {
+            context_hash: context_hash.to_string(),
+            unit_ids: vec![
+                "unit:repo-readme:overview".to_string(),
+                "unit:note-architecture:bridge".to_string(),
+                "unit:issue-17:decision".to_string(),
+            ],
+        }],
+        graphs: vec![GraphRecord {
+            graph_id: "graph:crop-evidence-neighborhood".to_string(),
+            context_hash: context_hash.to_string(),
+            graph_hash: graph_hash.to_string(),
+            source_refs: vec![
+                "repo:README.md".to_string(),
+                "note:architecture.md".to_string(),
+            ],
+        }],
+        crosswalks: Vec::new(),
+        claim_boundary: ClaimBoundary {
+            package_id: "crop-ai-context-fixture".to_string(),
+            proves: vec![
+                "declared AI context units have stable identifiers".to_string(),
+                "declared evidence graph references known context and source ids".to_string(),
+                "package hash is deterministic for replayable context packs".to_string(),
+            ],
+            does_not_prove: vec![
+                "LLM answer correctness".to_string(),
+                "semantic completeness of every repository file".to_string(),
+                "embedding quality or model-specific retrieval behavior".to_string(),
+            ],
+            caveats: vec![
+                "fixture is intentionally domain-generic and contains no election geography"
+                    .to_string(),
+            ],
+        },
+    };
+    package.manifest.package_content_hash = package_content_hash(&package)?;
+    Ok(package)
+}
+
 pub fn synthetic_bad_crosswalk_weight_package_fixture() -> Result<RctxPackage, RctxCoreError> {
     let mut package = synthetic_minimal_package_fixture()?;
     package.crosswalks[0].weight = RationalWeight { num: 2, den: 1 };
@@ -790,6 +862,30 @@ mod tests {
         assert!(reports
             .iter()
             .any(|report| report.check_id == "crosswalk_source_refs"));
+        assert!(reports
+            .iter()
+            .any(|report| report.check_id == "graph_source_refs"));
+        assert!(reports
+            .iter()
+            .any(|report| report.check_id == "claim_boundary_present"));
+    }
+
+    #[test]
+    fn ai_context_package_fixture_verifies_without_election_assumptions() {
+        let package = synthetic_ai_context_package_fixture().unwrap();
+        let reports = verify_package(&package).expect("AI context RCTX package verifies");
+
+        assert_eq!(package.manifest.jurisdiction, "AI-CONTEXT");
+        assert!(package.crosswalks.is_empty());
+        assert_eq!(
+            package.units[0].unit_ids[1],
+            "unit:note-architecture:bridge"
+        );
+        assert!(package
+            .claim_boundary
+            .does_not_prove
+            .iter()
+            .any(|claim| { claim == "embedding quality or model-specific retrieval behavior" }));
         assert!(reports
             .iter()
             .any(|report| report.check_id == "graph_source_refs"));
