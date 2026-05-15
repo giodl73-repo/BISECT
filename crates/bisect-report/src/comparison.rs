@@ -184,9 +184,9 @@ pub fn load_plan_side_from_dir(
     let analysis_dir = plan_dir.join("analysis");
 
     let (leaning_seats, per_district_dem_share) =
-        load_partisan_seats(&analysis_dir, leaning_threshold, &mut analysis_sha);
-    let mm_count = load_mm_count(&analysis_dir, &mut analysis_sha);
-    let mean_pp = load_mean_pp(&analysis_dir, &mut analysis_sha);
+        load_partisan_seats(&analysis_dir, leaning_threshold, &mut analysis_sha)?;
+    let mm_count = load_mm_count(&analysis_dir, &mut analysis_sha)?;
+    let mean_pp = load_mean_pp(&analysis_dir, &mut analysis_sha)?;
 
     Ok(PlanSide {
         label,
@@ -234,23 +234,26 @@ fn load_analysis_json(
     analysis_dir: &Path,
     filename: &str,
     sha_map: &mut BTreeMap<String, String>,
-) -> Option<serde_json::Value> {
+) -> Result<Option<serde_json::Value>, AssembleError> {
     let path = analysis_dir.join(filename);
     if !path.is_file() {
-        return None;
+        return Ok(None);
     }
-    let bytes = std::fs::read(&path).ok()?;
+    let bytes = std::fs::read(&path)
+        .map_err(|e| AssembleError::Io(path.display().to_string(), e.to_string()))?;
     sha_map.insert(filename.to_string(), sha256_hex(&bytes));
-    serde_json::from_slice(&bytes).ok()
+    let value = serde_json::from_slice(&bytes)
+        .map_err(|e| AssembleError::JsonParse(path.display().to_string(), e.to_string()))?;
+    Ok(Some(value))
 }
 
 fn load_partisan_seats(
     analysis_dir: &Path,
     leaning_threshold: f64,
     sha_map: &mut BTreeMap<String, String>,
-) -> (usize, Vec<f64>) {
-    let Some(partisan) = load_analysis_json(analysis_dir, "partisan.json", sha_map) else {
-        return (0, Vec::new());
+) -> Result<(usize, Vec<f64>), AssembleError> {
+    let Some(partisan) = load_analysis_json(analysis_dir, "partisan.json", sha_map)? else {
+        return Ok((0, Vec::new()));
     };
     // Try several common shapes for the per-district Dem-share array.
     // Shape 1: { "districts": [{"dem_share": 0.55}, ...] }
@@ -277,25 +280,31 @@ fn load_partisan_seats(
         .iter()
         .filter(|&&s| s >= leaning_threshold)
         .count();
-    (leaning_seats, dem_shares)
+    Ok((leaning_seats, dem_shares))
 }
 
-fn load_mm_count(analysis_dir: &Path, sha_map: &mut BTreeMap<String, String>) -> usize {
-    let Some(vra) = load_analysis_json(analysis_dir, "vra_analysis.json", sha_map) else {
-        return 0;
+fn load_mm_count(
+    analysis_dir: &Path,
+    sha_map: &mut BTreeMap<String, String>,
+) -> Result<usize, AssembleError> {
+    let Some(vra) = load_analysis_json(analysis_dir, "vra_analysis.json", sha_map)? else {
+        return Ok(0);
     };
-    vra.get("mm_count").and_then(|v| v.as_u64()).unwrap_or(0) as usize
+    Ok(vra.get("mm_count").and_then(|v| v.as_u64()).unwrap_or(0) as usize)
 }
 
-fn load_mean_pp(analysis_dir: &Path, sha_map: &mut BTreeMap<String, String>) -> f64 {
-    let Some(comp) = load_analysis_json(analysis_dir, "compactness.json", sha_map) else {
-        return f64::NAN;
+fn load_mean_pp(
+    analysis_dir: &Path,
+    sha_map: &mut BTreeMap<String, String>,
+) -> Result<f64, AssembleError> {
+    let Some(comp) = load_analysis_json(analysis_dir, "compactness.json", sha_map)? else {
+        return Ok(f64::NAN);
     };
     // Try shapes:
     // 1. { "mean_polsby_popper": 0.42 }
     // 2. { "districts": [{"polsby_popper": 0.4}, ...] } -> compute mean
     if let Some(v) = comp.get("mean_polsby_popper").and_then(|v| v.as_f64()) {
-        return v;
+        return Ok(v);
     }
     if let Some(arr) = comp.get("districts").and_then(|v| v.as_array()) {
         let pps: Vec<f64> = arr
@@ -303,10 +312,10 @@ fn load_mean_pp(analysis_dir: &Path, sha_map: &mut BTreeMap<String, String>) -> 
             .filter_map(|d| d.get("polsby_popper").and_then(|x| x.as_f64()))
             .collect();
         if !pps.is_empty() {
-            return pps.iter().sum::<f64>() / (pps.len() as f64);
+            return Ok(pps.iter().sum::<f64>() / (pps.len() as f64));
         }
     }
-    f64::NAN
+    Ok(f64::NAN)
 }
 
 /// Compute a basic `DiffSummary` between two plans by reading their
@@ -802,6 +811,27 @@ mod tests {
         let side = load_plan_side_from_dir(&plan_dir, 0.5).unwrap();
         assert_eq!(side.leaning_seats, 2, "2 districts have dem_share >= 0.5");
         assert_eq!(side.per_district_dem_share.len(), 3);
+    }
+
+    #[test]
+    fn test_load_plan_side_rejects_malformed_partisan_json() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("bad_plan");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "bad_plan", "num_districts": 1}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(analysis_dir.join("partisan.json"), "{not json").unwrap();
+        let err = load_plan_side_from_dir(&plan_dir, 0.5).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("partisan.json"),
+            "error must classify and name malformed analysis JSON: {msg}"
+        );
     }
 
     #[test]

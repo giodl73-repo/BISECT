@@ -286,6 +286,9 @@ oversized `final_assignments.json` district values before diff evidence is
 computed.
 Comparison report manifest loading now rejects missing, zero, non-integer, and
 oversized `num_districts` instead of defaulting malformed plan metadata to zero.
+Comparison report analysis loading still treats absent optional analysis files as
+unknown, but now rejects unreadable or malformed JSON instead of silently
+defaulting parsed evidence fields.
 
 ## Second Wave: `rstat-core`
 
