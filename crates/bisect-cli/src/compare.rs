@@ -37,6 +37,33 @@ fn sha256_hex(bytes: &[u8]) -> String {
     s
 }
 
+fn parse_direct_assignment_object(
+    source: &str,
+    obj: &serde_json::Map<String, serde_json::Value>,
+) -> anyhow::Result<HashMap<String, usize>> {
+    obj.iter()
+        .map(|(geoid, val)| {
+            let district = val.as_u64().ok_or_else(|| {
+                anyhow::anyhow!(
+                    "[INPUT] assignment value for GEOID {} in {} must be a non-negative integer, got {}",
+                    geoid,
+                    source,
+                    val
+                )
+            })?;
+            let district = usize::try_from(district).map_err(|_| {
+                anyhow::anyhow!(
+                    "[INPUT] assignment value for GEOID {} in {} is too large: {}",
+                    geoid,
+                    source,
+                    district
+                )
+            })?;
+            Ok((geoid.clone(), district))
+        })
+        .collect()
+}
+
 /// Load a plan's final_assignments.json given a label, version, year, and base dir.
 ///
 /// If `label` ends with `.rplan`, parses it as an RPLAN file and extracts assignments
@@ -86,13 +113,15 @@ fn load_plan_assignments(
         if let Ok(content) = std::fs::read_to_string(&label_path) {
             if let Ok(v) = serde_json::from_str::<serde_json::Value>(&content) {
                 // Nested GerryChain format: {"assignment": {"GEOID": district, ...}}
-                if let Some(nested) = v.get("assignment").and_then(|a| a.as_object()) {
-                    let assignments: HashMap<String, usize> = nested
-                        .iter()
-                        .filter_map(|(geoid, val)| {
-                            val.as_u64().map(|d| (geoid.clone(), d as usize))
-                        })
-                        .collect();
+                if let Some(assignment) = v.get("assignment") {
+                    let nested = assignment.as_object().ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "[INPUT] assignment field in {} must be an object",
+                            label_path.display()
+                        )
+                    })?;
+                    let assignments =
+                        parse_direct_assignment_object(&label_path.display().to_string(), nested)?;
                     if !assignments.is_empty() {
                         return Ok(assignments);
                     }
@@ -104,12 +133,8 @@ fn load_plan_assignments(
                     && v.get("rplan_version").is_none()
                 {
                     if let Some(obj) = v.as_object() {
-                        let assignments: HashMap<String, usize> = obj
-                            .iter()
-                            .filter_map(|(geoid, val)| {
-                                val.as_u64().map(|d| (geoid.clone(), d as usize))
-                            })
-                            .collect();
+                        let assignments =
+                            parse_direct_assignment_object(&label_path.display().to_string(), obj)?;
                         if !assignments.is_empty() {
                             return Ok(assignments);
                         }
@@ -1072,6 +1097,50 @@ mod tests {
         assert_eq!(assignments.len(), 3);
         assert_eq!(assignments["53033000100"], 3);
         assert_eq!(assignments["53033000200"], 4);
+    }
+
+    #[test]
+    fn test_gerrychain_flat_format_rejects_malformed_assignment_value() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("gc_flat_bad.json");
+        let json = serde_json::json!({
+            "53001000100": 1,
+            "53001000200": "bad"
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+
+        let err = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("[INPUT]")
+                && err.contains("53001000200")
+                && err.contains("must be a non-negative integer"),
+            "malformed flat assignment value must not be silently filtered: {err}"
+        );
+    }
+
+    #[test]
+    fn test_gerrychain_assignment_key_rejects_malformed_assignment_value() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("gc_nested_bad.json");
+        let json = serde_json::json!({
+            "assignment": {
+                "53033000100": 3,
+                "53033000200": "bad"
+            }
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+
+        let err = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("[INPUT]")
+                && err.contains("53033000200")
+                && err.contains("must be a non-negative integer"),
+            "malformed nested assignment value must not be silently filtered: {err}"
+        );
     }
 
     // ── Task 129: N-plan summary table ────────────────────────────────────────

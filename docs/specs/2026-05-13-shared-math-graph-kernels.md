@@ -312,6 +312,9 @@ sentinel.
 RPLAN validation now rejects non-numeric `rplan_version` components instead of
 coercing them into oversized major/minor values that can masquerade as version
 compatibility warnings.
+Direct GerryChain/DRA comparison assignment JSON now rejects malformed district
+values in both flat and nested `assignment` shapes instead of filtering out bad
+entries and comparing a partial plan.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values
