@@ -344,8 +344,9 @@ non-finite polygon coordinates, non-finite centroids, population length
 mismatches, population overflows, and non-finite compactness intermediates before
 compactness evidence can emit `NaN`/`inf` values or panic on malformed rows.
 Race-of-candidate provenance parsing now rejects malformed curator attestation
-dates unless they match `YYYY-MM-DD` with in-range month/day fields, so annotation
-provenance cannot carry free-form or impossible attestation dates.
+dates unless they match `YYYY-MM-DD` with calendar-valid month/day fields
+including leap-year handling, so annotation provenance cannot carry free-form or
+impossible attestation dates.
 It also rejects absolute or parent-traversal attestation document paths before
 hashing, preserving the relative-path evidence package boundary.
 

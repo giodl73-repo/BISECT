@@ -464,9 +464,14 @@ fn validate_attestation_date(row: usize, value: &str) -> Result<(), RaceParseErr
         });
     }
 
+    let year = ((bytes[0] - b'0') as u16) * 1000
+        + ((bytes[1] - b'0') as u16) * 100
+        + ((bytes[2] - b'0') as u16) * 10
+        + (bytes[3] - b'0') as u16;
     let month = (bytes[5] - b'0') * 10 + (bytes[6] - b'0');
     let day = (bytes[8] - b'0') * 10 + (bytes[9] - b'0');
-    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+    let max_day = days_in_month(year, month);
+    if max_day == 0 || day == 0 || day > max_day {
         return Err(RaceParseError::InvalidAttestationDate {
             row,
             value: value.to_string(),
@@ -474,6 +479,20 @@ fn validate_attestation_date(row: usize, value: &str) -> Result<(), RaceParseErr
     }
 
     Ok(())
+}
+
+fn days_in_month(year: u16, month: u8) -> u8 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        _ => 0,
+    }
+}
+
+fn is_leap_year(year: u16) -> bool {
+    year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
 }
 
 fn validate_attestation_doc_path(
@@ -686,6 +705,52 @@ mod tests {
             parse_race_of_candidate_csv(&csv),
             Err(RaceParseError::InvalidAttestationDate { row: 2, .. })
         ));
+    }
+
+    #[test]
+    fn test_parse_invalid_calendar_attestation_date_rejected() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv = build_fixture(
+            tmp.path(),
+            &[(
+                "X",
+                "DEM",
+                "Black",
+                "C",
+                "creds",
+                "2026-02-29",
+                "src",
+                true,
+                "doc.pdf",
+                "pdf",
+            )],
+        );
+        assert!(matches!(
+            parse_race_of_candidate_csv(&csv),
+            Err(RaceParseError::InvalidAttestationDate { row: 2, .. })
+        ));
+    }
+
+    #[test]
+    fn test_parse_leap_day_attestation_date_accepted() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv = build_fixture(
+            tmp.path(),
+            &[(
+                "X",
+                "DEM",
+                "Black",
+                "C",
+                "creds",
+                "2024-02-29",
+                "src",
+                true,
+                "doc.pdf",
+                "pdf",
+            )],
+        );
+        let set = parse_race_of_candidate_csv(&csv).expect("valid leap day should parse");
+        assert_eq!(set.annotations[0].curator_attestation_date, "2024-02-29");
     }
 
     #[test]
