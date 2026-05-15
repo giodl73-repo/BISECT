@@ -40,7 +40,7 @@ pub use compactness::{
 };
 pub use comparison::{
     compare_plans, format_comparison_csv, format_comparison_json, format_comparison_table, jaccard,
-    PlanComparison,
+    try_compare_plans, ComparisonError, PlanComparison,
 };
 pub use contiguity::{bfs_component_count, check_contiguity, ContiguityResult, DistrictContiguity};
 pub use county_names::county_name;

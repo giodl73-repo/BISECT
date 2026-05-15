@@ -3,6 +3,7 @@
 /// Legal note: Output MUST NOT use "Winner:" framing — use "Lower:" instead.
 /// The choice of "better" plan is a legal/political determination outside this tool.
 use std::collections::{HashMap, HashSet};
+use thiserror::Error;
 
 // ---------------------------------------------------------------------------
 // Output types
@@ -56,6 +57,12 @@ pub struct PlanComparison {
     pub partisan: Option<PartisanComparison>,
 }
 
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+pub enum ComparisonError {
+    #[error("[INPUT] {plan} assignment for tract {geoid} uses invalid district 0")]
+    InvalidDistrictLabel { plan: &'static str, geoid: String },
+}
+
 // ---------------------------------------------------------------------------
 // Core functions
 // ---------------------------------------------------------------------------
@@ -73,6 +80,16 @@ pub fn compare_plans(
     assignments_a: &HashMap<String, usize>,
     assignments_b: &HashMap<String, usize>,
 ) -> PlanComparison {
+    try_compare_plans(assignments_a, assignments_b).expect("comparison assignment labels are valid")
+}
+
+pub fn try_compare_plans(
+    assignments_a: &HashMap<String, usize>,
+    assignments_b: &HashMap<String, usize>,
+) -> Result<PlanComparison, ComparisonError> {
+    validate_assignment_labels("plan_a", assignments_a)?;
+    validate_assignment_labels("plan_b", assignments_b)?;
+
     // Invert: district -> tract set
     let invert = |asgn: &HashMap<String, usize>| -> HashMap<usize, HashSet<String>> {
         let mut m: HashMap<usize, HashSet<String>> = HashMap::new();
@@ -124,7 +141,7 @@ pub fn compare_plans(
     // Compactness placeholder (not computable without geometry).
     let cmp_lower = "equal".to_string();
 
-    PlanComparison {
+    Ok(PlanComparison {
         plan_a: PlanSummary {
             label: "plan_a".into(),
             num_tracts: assignments_a.len(),
@@ -150,7 +167,22 @@ pub fn compare_plans(
         },
         county_splits: None,
         partisan: None,
+    })
+}
+
+fn validate_assignment_labels(
+    plan: &'static str,
+    assignments: &HashMap<String, usize>,
+) -> Result<(), ComparisonError> {
+    for (geoid, &district) in assignments {
+        if district == 0 {
+            return Err(ComparisonError::InvalidDistrictLabel {
+                plan,
+                geoid: geoid.clone(),
+            });
+        }
     }
+    Ok(())
 }
 
 /// Jaccard similarity for two sets.
@@ -388,6 +420,34 @@ mod tests {
             result.jaccard_similarity > 0.0 && result.jaccard_similarity < 1.0,
             "Partial overlap Jaccard should be in (0,1), got {}",
             result.jaccard_similarity
+        );
+    }
+
+    #[test]
+    fn test_try_compare_plans_rejects_zero_label_in_plan_a() {
+        let a: HashMap<String, usize> = [("t1".to_string(), 0)].into_iter().collect();
+        let b: HashMap<String, usize> = [("t1".to_string(), 1)].into_iter().collect();
+        let err = try_compare_plans(&a, &b).expect_err("plan A district 0 must be rejected");
+        assert_eq!(
+            err,
+            ComparisonError::InvalidDistrictLabel {
+                plan: "plan_a",
+                geoid: "t1".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_compare_plans_rejects_zero_label_in_plan_b() {
+        let a: HashMap<String, usize> = [("t1".to_string(), 1)].into_iter().collect();
+        let b: HashMap<String, usize> = [("t1".to_string(), 0)].into_iter().collect();
+        let err = try_compare_plans(&a, &b).expect_err("plan B district 0 must be rejected");
+        assert_eq!(
+            err,
+            ComparisonError::InvalidDistrictLabel {
+                plan: "plan_b",
+                geoid: "t1".to_string()
+            }
         );
     }
 

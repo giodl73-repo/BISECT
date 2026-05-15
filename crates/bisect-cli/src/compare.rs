@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use crate::args::{CompareArgs, CompareFormat};
 use crate::provenance::Provenance;
 use bisect_analysis::{
-    compare_plans, format_comparison_csv, format_comparison_json, format_comparison_table,
+    format_comparison_csv, format_comparison_json, format_comparison_table, try_compare_plans,
 };
 use bisect_report::comparison::{
     diff_from_assignments, load_plan_side_from_dir, AssembleError, ComparisonReport,
@@ -500,7 +500,7 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
     }
 
     // Run comparison
-    let mut comparison = compare_plans(&assignments_a, &assignments_b);
+    let mut comparison = try_compare_plans(&assignments_a, &assignments_b)?;
     // Set labels from args
     comparison.plan_a.label = args.plan_a.clone();
     comparison.plan_b.label = args.plan_b.clone().unwrap_or_else(|| "enacted".to_string());

@@ -263,6 +263,8 @@ rejects malformed UTF-8 byte boundaries before extracting five-byte county FIPS
 prefixes, so malformed split records return typed errors instead of panicking.
 Urban place aggregation now rejects zero or out-of-range district labels before
 place evidence can create extra district rows outside the expected plan domain.
+Plan-comparison evidence now rejects zero district labels in either plan before
+Jaccard and tract-count deviation summaries can include an invalid district 0.
 
 ## Second Wave: `rstat-core`
 
