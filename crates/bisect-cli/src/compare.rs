@@ -237,19 +237,21 @@ fn load_plan_assignments(
 /// from the RPLAN file instead of looking for manifest.json — because .rplan files
 /// have no accompanying manifest.
 ///
-/// Returns None if the manifest/rplan is absent or the year field is missing.
+/// Returns None if the manifest is absent or the year field is missing.
 fn read_plan_year(
     label: &str,
     output_base: &str,
     version: &str,
     year: &str,
     output_dir_override: Option<&PathBuf>,
-) -> Option<String> {
+) -> anyhow::Result<Option<String>> {
     // .rplan path: year lives in rplan["metadata"]["year"]
     if label.ends_with(".rplan") {
-        let content = std::fs::read_to_string(label).ok()?;
-        let v: serde_json::Value = serde_json::from_str(&content).ok()?;
-        return v["metadata"]["year"].as_str().map(String::from);
+        let content = std::fs::read_to_string(label)
+            .map_err(|e| anyhow::anyhow!("[INPUT] cannot read .rplan file '{}': {}", label, e))?;
+        let v: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| anyhow::anyhow!("[INPUT] cannot parse .rplan '{}': {}", label, e))?;
+        return read_year_value(&v["metadata"], label);
     }
 
     let base = if let Some(od) = output_dir_override {
@@ -262,9 +264,36 @@ fn read_plan_year(
         .join("plans")
         .join(label)
         .join("manifest.json");
-    let content = std::fs::read_to_string(&manifest_path).ok()?;
-    let v: serde_json::Value = serde_json::from_str(&content).ok()?;
-    v.get("year")?.as_str().map(String::from)
+    if !manifest_path.exists() {
+        return Ok(None);
+    }
+    let content = std::fs::read_to_string(&manifest_path).map_err(|e| {
+        anyhow::anyhow!(
+            "[INPUT] cannot read manifest {}: {}",
+            manifest_path.display(),
+            e
+        )
+    })?;
+    let v: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
+        anyhow::anyhow!(
+            "[INPUT] cannot parse manifest {}: {}",
+            manifest_path.display(),
+            e
+        )
+    })?;
+    read_year_value(&v, &manifest_path.display().to_string())
+}
+
+fn read_year_value(source: &serde_json::Value, label: &str) -> anyhow::Result<Option<String>> {
+    match source.get("year") {
+        None | Some(serde_json::Value::Null) => Ok(None),
+        Some(serde_json::Value::String(year)) => Ok(Some(year.clone())),
+        Some(value) => anyhow::bail!(
+            "[INPUT] year field in {} must be a string, got {}",
+            label,
+            value
+        ),
+    }
 }
 
 /// Load a plan's analysis JSON file given its base path and file name.
@@ -499,16 +528,21 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
             version,
             &args.year,
             args.output_dir.as_ref(),
-        );
-        let year_b = args.plan_b.as_deref().and_then(|b| {
-            read_plan_year(
-                b,
-                &args.output_base,
-                version,
-                &args.year,
-                args.output_dir.as_ref(),
-            )
-        });
+        )?;
+        let year_b = args
+            .plan_b
+            .as_deref()
+            .map(|b| {
+                read_plan_year(
+                    b,
+                    &args.output_base,
+                    version,
+                    &args.year,
+                    args.output_dir.as_ref(),
+                )
+            })
+            .transpose()?
+            .flatten();
         if let (Some(ya), Some(yb)) = (year_a, year_b) {
             if ya != yb {
                 eprintln!(
@@ -958,7 +992,7 @@ mod tests {
         std::fs::write(&rplan_path, rplan_json.to_string()).unwrap();
 
         let path_str = rplan_path.to_str().unwrap();
-        let year = read_plan_year(path_str, "outputs", "v1", "2020", None);
+        let year = read_plan_year(path_str, "outputs", "v1", "2020", None).unwrap();
         assert_eq!(
             year,
             Some("2010".to_string()),
@@ -998,8 +1032,10 @@ mod tests {
         make_rplan("2020", &plan_a_path);
         make_rplan("2010", &plan_b_path);
 
-        let year_a = read_plan_year(plan_a_path.to_str().unwrap(), "outputs", "v1", "2020", None);
-        let year_b = read_plan_year(plan_b_path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        let year_a =
+            read_plan_year(plan_a_path.to_str().unwrap(), "outputs", "v1", "2020", None).unwrap();
+        let year_b =
+            read_plan_year(plan_b_path.to_str().unwrap(), "outputs", "v1", "2020", None).unwrap();
 
         assert_eq!(
             year_a,
@@ -1749,11 +1785,62 @@ mod tests {
         let manifest = serde_json::json!({"label": "my_plan", "year": "2020", "state_code": "WA"});
         std::fs::write(plan_dir.join("manifest.json"), manifest.to_string()).unwrap();
 
-        let year = read_plan_year("my_plan", tmp.path().to_str().unwrap(), "v1", "2020", None);
+        let year =
+            read_plan_year("my_plan", tmp.path().to_str().unwrap(), "v1", "2020", None).unwrap();
         assert_eq!(
             year,
             Some("2020".to_string()),
             "read_plan_year must read year from manifest.json"
+        );
+    }
+
+    #[test]
+    fn test_read_plan_year_rejects_malformed_manifest_json() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("bad_manifest");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        std::fs::write(plan_dir.join("manifest.json"), "{bad json").unwrap();
+
+        let err = read_plan_year(
+            "bad_manifest",
+            tmp.path().to_str().unwrap(),
+            "v1",
+            "2020",
+            None,
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("[INPUT]") && err.contains("cannot parse manifest"),
+            "malformed manifest year evidence must fail explicitly: {err}"
+        );
+    }
+
+    #[test]
+    fn test_read_plan_year_rejects_non_string_year() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let rplan_path = tmp.path().join("bad_year.rplan");
+        let rplan_json = serde_json::json!({
+            "rplan_version": "0.1",
+            "metadata": {"label": "x", "year": 2020},
+            "assignments": {"53001000100": 1},
+            "geometry": null
+        });
+        std::fs::write(&rplan_path, rplan_json.to_string()).unwrap();
+
+        let err = read_plan_year(rplan_path.to_str().unwrap(), "outputs", "v1", "2020", None)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("[INPUT]")
+                && err.contains("year field")
+                && err.contains("must be a string"),
+            "non-string year must fail explicitly: {err}"
         );
     }
 }

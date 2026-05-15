@@ -320,6 +320,8 @@ matching imported-assignment invariants that district labels are positive.
 CLI comparison now applies the same positive-label assignment parser to `.rplan`
 inputs and resolved `final_assignments.json` files, so district `0` cannot
 bypass the direct JSON guard through another compare input path.
+CLI comparison year checks now reject malformed manifest/RPLAN year evidence
+instead of silently treating parse failures or non-string years as unknown.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values
