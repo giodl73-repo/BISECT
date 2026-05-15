@@ -321,10 +321,23 @@ fn load_mm_count(
     analysis_dir: &Path,
     sha_map: &mut BTreeMap<String, String>,
 ) -> Result<usize, AssembleError> {
+    let path = analysis_dir.join("vra_analysis.json");
     let Some(vra) = load_analysis_json(analysis_dir, "vra_analysis.json", sha_map)? else {
         return Ok(0);
     };
-    Ok(vra.get("mm_count").and_then(|v| v.as_u64()).unwrap_or(0) as usize)
+    let Some(mm_count) = vra.get("mm_count") else {
+        return Ok(0);
+    };
+    let mm_count = mm_count
+        .as_u64()
+        .ok_or_else(|| AssembleError::AnalysisInvalid {
+            path: path.display().to_string(),
+            reason: "mm_count must be a non-negative integer".to_string(),
+        })?;
+    usize::try_from(mm_count).map_err(|_| AssembleError::AnalysisInvalid {
+        path: path.display().to_string(),
+        reason: format!("mm_count {mm_count} is too large"),
+    })
 }
 
 fn load_mean_pp(
@@ -936,6 +949,31 @@ mod tests {
         assert_eq!(
             side.mm_count, 3,
             "mm_count must be read from vra_analysis.json"
+        );
+    }
+
+    #[test]
+    fn test_load_plan_side_rejects_malformed_mm_count() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("bad_plan");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "bad_plan", "num_districts": 2}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_dir.join("vra_analysis.json"),
+            serde_json::json!({"mm_count": "three"}).to_string(),
+        )
+        .unwrap();
+        let err = load_plan_side_from_dir(&plan_dir, 0.5).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("mm_count"),
+            "error must classify and explain malformed mm_count: {msg}"
         );
     }
 

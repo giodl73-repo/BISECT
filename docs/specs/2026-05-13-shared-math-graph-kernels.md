@@ -291,6 +291,8 @@ unknown, but now rejects unreadable or malformed JSON instead of silently
 defaulting parsed evidence fields.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
+VRA comparison analysis now rejects malformed or oversized `mm_count` values
+instead of defaulting present-but-invalid values to zero.
 
 ## Second Wave: `rstat-core`
 
