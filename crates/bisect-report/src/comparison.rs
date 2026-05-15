@@ -110,6 +110,12 @@ pub enum AssembleError {
     Io(String, String),
     #[error("[INPUT] cannot parse {0}: {1}")]
     JsonParse(String, String),
+    #[error("[INPUT] invalid assignment in {path} for GEOID {geoid}: {reason}")]
+    InvalidAssignment {
+        path: String,
+        geoid: String,
+        reason: String,
+    },
 }
 
 /// Build a `PlanSide` by reading `manifest.json` + selected analysis JSONs
@@ -331,9 +337,26 @@ fn load_assignments(plan_dir: &Path) -> Result<BTreeMap<String, usize>, Assemble
     let mut out = BTreeMap::new();
     if let Some(obj) = v.as_object() {
         for (geoid, district) in obj {
-            if let Some(d) = district.as_u64() {
-                out.insert(geoid.clone(), d as usize);
+            let d = district
+                .as_u64()
+                .ok_or_else(|| AssembleError::InvalidAssignment {
+                    path: path.display().to_string(),
+                    geoid: geoid.clone(),
+                    reason: "district must be an integer".to_string(),
+                })?;
+            if d == 0 {
+                return Err(AssembleError::InvalidAssignment {
+                    path: path.display().to_string(),
+                    geoid: geoid.clone(),
+                    reason: "district 0 is invalid".to_string(),
+                });
             }
+            let d = usize::try_from(d).map_err(|_| AssembleError::InvalidAssignment {
+                path: path.display().to_string(),
+                geoid: geoid.clone(),
+                reason: format!("district {d} is too large"),
+            })?;
+            out.insert(geoid.clone(), d);
         }
     }
     Ok(out)
@@ -837,5 +860,45 @@ mod tests {
             "identical assignments must produce 0 changed tracts"
         );
         assert!(diff.districts_with_changes.is_empty());
+    }
+
+    #[test]
+    fn test_diff_from_assignments_rejects_zero_district() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let a_dir = tmp.path().join("plan_a");
+        let b_dir = tmp.path().join("plan_b");
+        std::fs::create_dir_all(&a_dir).unwrap();
+        std::fs::create_dir_all(&b_dir).unwrap();
+        std::fs::write(a_dir.join("final_assignments.json"), r#"{"53001000100":0}"#).unwrap();
+        std::fs::write(b_dir.join("final_assignments.json"), r#"{"53001000100":1}"#).unwrap();
+        let err = diff_from_assignments(&a_dir, &b_dir).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("district 0 is invalid"),
+            "error must classify and explain invalid district 0: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_diff_from_assignments_rejects_non_integer_district() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let a_dir = tmp.path().join("plan_a");
+        let b_dir = tmp.path().join("plan_b");
+        std::fs::create_dir_all(&a_dir).unwrap();
+        std::fs::create_dir_all(&b_dir).unwrap();
+        std::fs::write(
+            a_dir.join("final_assignments.json"),
+            r#"{"53001000100":"one"}"#,
+        )
+        .unwrap();
+        std::fs::write(b_dir.join("final_assignments.json"), r#"{"53001000100":1}"#).unwrap();
+        let err = diff_from_assignments(&a_dir, &b_dir).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("district must be an integer"),
+            "error must classify and explain malformed district: {msg}"
+        );
     }
 }
