@@ -47,38 +47,32 @@ pub fn import_geojson_plan(
         let geo_type = geom["type"].as_str().unwrap_or("");
         match geo_type {
             "Polygon" => {
-                if let Some(poly) = parse_polygon(geom) {
-                    let centroid = poly.centroid();
-                    if let Some(c) = centroid {
-                        district_centroids.push((district_id, (c.x(), c.y())));
-                    } else {
-                        // Use first ring's first coordinate as fallback centroid
-                        let first_coord = geom["coordinates"][0][0].as_array();
-                        if let Some(coord) = first_coord {
-                            let lon = coord[0].as_f64().unwrap_or(0.0);
-                            let lat = coord[1].as_f64().unwrap_or(0.0);
-                            district_centroids.push((district_id, (lon, lat)));
-                        }
-                    }
-                    district_polygons.push((district_id, poly));
-                }
+                let poly = parse_polygon(geom)?;
+                let centroid = poly
+                    .centroid()
+                    .ok_or_else(|| anyhow::anyhow!("[INPUT] Polygon centroid is undefined"))?;
+                district_centroids.push((district_id, (centroid.x(), centroid.y())));
+                district_polygons.push((district_id, poly));
             }
             "MultiPolygon" => {
                 // Use first sub-polygon for PIP; all sub-polygons for centroid
-                if let Some(arr) = geom["coordinates"].as_array() {
-                    for sub_poly_coords in arr {
-                        let sub_geom = serde_json::json!({
-                            "type": "Polygon",
-                            "coordinates": sub_poly_coords,
-                        });
-                        if let Some(poly) = parse_polygon(&sub_geom) {
-                            let centroid = poly.centroid();
-                            if let Some(c) = centroid {
-                                district_centroids.push((district_id, (c.x(), c.y())));
-                            }
-                            district_polygons.push((district_id, poly));
-                        }
-                    }
+                let arr = geom["coordinates"].as_array().ok_or_else(|| {
+                    anyhow::anyhow!("[INPUT] MultiPolygon coordinates must be an array")
+                })?;
+                if arr.is_empty() {
+                    anyhow::bail!("[INPUT] MultiPolygon coordinates must not be empty");
+                }
+                for sub_poly_coords in arr {
+                    let sub_geom = serde_json::json!({
+                        "type": "Polygon",
+                        "coordinates": sub_poly_coords,
+                    });
+                    let poly = parse_polygon(&sub_geom)?;
+                    let centroid = poly
+                        .centroid()
+                        .ok_or_else(|| anyhow::anyhow!("[INPUT] Polygon centroid is undefined"))?;
+                    district_centroids.push((district_id, (centroid.x(), centroid.y())));
+                    district_polygons.push((district_id, poly));
                 }
             }
             _ => {
@@ -138,49 +132,62 @@ fn nearest_centroid(lon: f64, lat: f64, centroids: &[(usize, (f64, f64))]) -> Op
 }
 
 /// Parse a GeoJSON Polygon geometry into a geo::Polygon.
-fn parse_polygon(geom: &Value) -> Option<geo::Polygon> {
-    let rings = geom["coordinates"].as_array()?;
+fn parse_polygon(geom: &Value) -> anyhow::Result<geo::Polygon> {
+    let rings = geom["coordinates"]
+        .as_array()
+        .ok_or_else(|| anyhow::anyhow!("[INPUT] Polygon coordinates must be an array"))?;
     if rings.is_empty() {
-        return None;
+        anyhow::bail!("[INPUT] Polygon coordinates must include an exterior ring");
     }
 
-    let exterior: Vec<geo::Coord> = rings[0]
-        .as_array()?
-        .iter()
-        .filter_map(|c| {
-            let arr = c.as_array()?;
-            let lon = arr.first()?.as_f64()?;
-            let lat = arr.get(1)?.as_f64()?;
-            Some(geo::Coord { x: lon, y: lat })
-        })
-        .collect();
+    let exterior = parse_coordinate_ring(&rings[0], "exterior")?;
 
     if exterior.len() < 4 {
-        return None;
+        anyhow::bail!("[INPUT] Polygon exterior ring must contain at least 4 coordinates");
     }
 
     let interiors: Vec<geo::LineString> = rings[1..]
         .iter()
-        .filter_map(|ring| {
-            let coords: Vec<geo::Coord> = ring
-                .as_array()?
-                .iter()
-                .filter_map(|c| {
-                    let arr = c.as_array()?;
-                    let lon = arr.first()?.as_f64()?;
-                    let lat = arr.get(1)?.as_f64()?;
-                    Some(geo::Coord { x: lon, y: lat })
-                })
-                .collect();
+        .enumerate()
+        .map(|(idx, ring)| {
+            let coords = parse_coordinate_ring(ring, &format!("interior ring {idx}"))?;
             if coords.len() >= 4 {
-                Some(geo::LineString::new(coords))
+                Ok(geo::LineString::new(coords))
             } else {
-                None
+                anyhow::bail!(
+                    "[INPUT] Polygon interior ring {idx} must contain at least 4 coordinates"
+                )
             }
         })
-        .collect();
+        .collect::<anyhow::Result<_>>()?;
 
-    Some(geo::Polygon::new(geo::LineString::new(exterior), interiors))
+    Ok(geo::Polygon::new(geo::LineString::new(exterior), interiors))
+}
+
+fn parse_coordinate_ring(ring: &Value, label: &str) -> anyhow::Result<Vec<geo::Coord>> {
+    let coords = ring
+        .as_array()
+        .ok_or_else(|| anyhow::anyhow!("[INPUT] Polygon {label} must be an array"))?;
+    coords
+        .iter()
+        .enumerate()
+        .map(|(idx, coord)| {
+            let arr = coord.as_array().ok_or_else(|| {
+                anyhow::anyhow!("[INPUT] Polygon {label} coordinate {idx} must be an array")
+            })?;
+            let lon = arr.first().and_then(|v| v.as_f64()).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "[INPUT] Polygon {label} coordinate {idx} longitude must be a number"
+                )
+            })?;
+            let lat = arr.get(1).and_then(|v| v.as_f64()).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "[INPUT] Polygon {label} coordinate {idx} latitude must be a number"
+                )
+            })?;
+            Ok(geo::Coord { x: lon, y: lat })
+        })
+        .collect()
 }
 
 /// Full import pipeline: GeoJSON file path → RplanFile written in memory.
@@ -406,6 +413,32 @@ mod tests {
         assert!(
             msg.contains("[INPUT]") && msg.contains("integer 'district_id'"),
             "error must classify and explain malformed district_id: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_import_rejects_malformed_polygon_coordinate() {
+        let geojson_str = serde_json::to_string(&serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [-123.0, 47.0], ["bad", 47.0], [-122.0, 48.0],
+                        [-123.0, 48.0], [-123.0, 47.0]
+                    ]]
+                },
+                "properties": {"district_id": 1}
+            }]
+        }))
+        .unwrap();
+        let centroids = HashMap::from([("53001001000".to_string(), (-122.5, 47.5))]);
+        let err = import_geojson_plan(&geojson_str, &centroids).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("longitude must be a number"),
+            "error must classify and explain malformed polygon coordinate: {msg}"
         );
     }
 

@@ -281,6 +281,9 @@ missing or non-integer district property instead of silently skipping the row.
 District-polygon GeoJSON import now validates `district_id` as a positive
 integer before point-in-polygon assignment or nearest-centroid fallback can
 materialize an invalid imported district.
+District-polygon GeoJSON import also rejects malformed Polygon/MultiPolygon
+coordinate rings instead of skipping invalid geometry or defaulting bad
+coordinates to `(0, 0)`.
 Comparison report assignment loading now rejects non-integer, zero, and
 oversized `final_assignments.json` district values before diff evidence is
 computed.
