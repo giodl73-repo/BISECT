@@ -195,16 +195,13 @@ fn import_assignments_from_geojson_properties(
         let mut assignments = std::collections::HashMap::new();
         for feature in arr {
             let props = &feature["properties"];
-            if let (Some(geoid), Some(district)) =
-                (props["geoid"].as_str(), props["district"].as_u64())
-            {
-                assignments.insert(
-                    geoid.to_string(),
-                    validate_import_district(geoid, district)?,
-                );
-            } else if let (Some(geoid), Some(district)) =
-                (props["GEOID"].as_str(), props["district"].as_u64())
-            {
+            let geoid = props["geoid"].as_str().or_else(|| props["GEOID"].as_str());
+            if let Some(geoid) = geoid {
+                let district = props["district"].as_u64().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "[INPUT] GeoJSON assignment for GEOID {geoid} is missing an integer district"
+                    )
+                })?;
                 assignments.insert(
                     geoid.to_string(),
                     validate_import_district(geoid, district)?,
@@ -690,6 +687,27 @@ mod tests {
         assert!(
             msg.contains("[INPUT]") && msg.contains("invalid district 0"),
             "error must classify and explain invalid district 0: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_import_geojson_properties_non_integer_district_fails() {
+        let geojson = serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": null,
+                    "properties": {"geoid": "53001000100", "district": "one"}
+                }
+            ]
+        });
+        let result = import_assignments_from_geojson_properties(&geojson.to_string());
+        assert!(result.is_err(), "non-integer district must fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("integer district"),
+            "error must classify and explain malformed district: {msg}"
         );
     }
 }

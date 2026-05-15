@@ -276,6 +276,8 @@ GerryChain assignment import now rejects district 0 at parse time, preventing
 external interchange inputs from materializing a zero-district RPLAN.
 CLI DRA CSV and tract-level GeoJSON imports apply the same parse-time district
 0 rejection before deriving imported plan district counts.
+Tract-level GeoJSON import also rejects features that provide a GEOID with a
+missing or non-integer district property instead of silently skipping the row.
 
 ## Second Wave: `rstat-core`
 
