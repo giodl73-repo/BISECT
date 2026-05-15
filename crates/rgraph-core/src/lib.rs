@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 use thiserror::Error;
@@ -60,6 +60,19 @@ pub enum EdgeCutError {
         neighbor: usize,
         node_count: usize,
     },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BoundaryMetrics {
+    pub selected_count: usize,
+    pub complement_count: usize,
+    pub selected_internal_edges: usize,
+    pub complement_internal_edges: usize,
+    pub boundary_edges: usize,
+    pub selected_degree: usize,
+    pub complement_degree: usize,
+    pub total_edges: usize,
+    pub conductance: f64,
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
@@ -372,6 +385,80 @@ where
         }
     }
     Ok(cut_edges.len())
+}
+
+pub fn undirected_boundary_metrics<I>(
+    adjacency: &[Vec<I>],
+    selected: &[bool],
+) -> Result<BoundaryMetrics, EdgeCutError>
+where
+    I: NodeIndex,
+{
+    if adjacency.len() != selected.len() {
+        return Err(EdgeCutError::AssignmentLengthMismatch {
+            adjacency_len: adjacency.len(),
+            assignment_len: selected.len(),
+        });
+    }
+
+    let selected_count = selected.iter().filter(|&&is_selected| is_selected).count();
+    let complement_count = selected.len() - selected_count;
+    let mut seen_edges = HashSet::new();
+    let mut selected_internal_edges = 0usize;
+    let mut complement_internal_edges = 0usize;
+    let mut boundary_edges = 0usize;
+
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
+            let Some(neighbor) = neighbor.to_usize() else {
+                return Err(EdgeCutError::NeighborOutOfBounds {
+                    node,
+                    neighbor: usize::MAX,
+                    node_count: adjacency.len(),
+                });
+            };
+            if neighbor >= adjacency.len() {
+                return Err(EdgeCutError::NeighborOutOfBounds {
+                    node,
+                    neighbor,
+                    node_count: adjacency.len(),
+                });
+            }
+            if node == neighbor {
+                continue;
+            }
+            if !seen_edges.insert(ordered_pair(node, neighbor)) {
+                continue;
+            }
+
+            match (selected[node], selected[neighbor]) {
+                (true, true) => selected_internal_edges += 1,
+                (false, false) => complement_internal_edges += 1,
+                _ => boundary_edges += 1,
+            }
+        }
+    }
+
+    let selected_degree = selected_internal_edges * 2 + boundary_edges;
+    let complement_degree = complement_internal_edges * 2 + boundary_edges;
+    let denominator = selected_degree.min(complement_degree);
+    let conductance = if denominator == 0 {
+        0.0
+    } else {
+        boundary_edges as f64 / denominator as f64
+    };
+
+    Ok(BoundaryMetrics {
+        selected_count,
+        complement_count,
+        selected_internal_edges,
+        complement_internal_edges,
+        boundary_edges,
+        selected_degree,
+        complement_degree,
+        total_edges: selected_internal_edges + complement_internal_edges + boundary_edges,
+        conductance,
+    })
 }
 
 pub fn assignment_label_connected<I, D>(
@@ -1464,6 +1551,83 @@ mod tests {
         let assignment = vec![0_usize, 1, 1];
 
         assert_eq!(undirected_edge_cut(&adjacency, &assignment).unwrap(), 1);
+    }
+
+    #[test]
+    fn undirected_boundary_metrics_scores_selected_set() {
+        let adjacency = vec![
+            vec![1_usize, 2],
+            vec![0, 2, 3],
+            vec![0, 1, 3],
+            vec![1, 2, 4],
+            vec![3],
+        ];
+        let selected = vec![true, true, true, false, false];
+
+        assert_eq!(
+            undirected_boundary_metrics(&adjacency, &selected).unwrap(),
+            BoundaryMetrics {
+                selected_count: 3,
+                complement_count: 2,
+                selected_internal_edges: 3,
+                complement_internal_edges: 1,
+                boundary_edges: 2,
+                selected_degree: 8,
+                complement_degree: 4,
+                total_edges: 6,
+                conductance: 0.5,
+            }
+        );
+    }
+
+    #[test]
+    fn undirected_boundary_metrics_counts_asymmetric_edges_once() {
+        let adjacency = vec![vec![1_usize, 1], vec![], vec![1]];
+        let selected = vec![true, false, false];
+
+        assert_eq!(
+            undirected_boundary_metrics(&adjacency, &selected).unwrap(),
+            BoundaryMetrics {
+                selected_count: 1,
+                complement_count: 2,
+                selected_internal_edges: 0,
+                complement_internal_edges: 1,
+                boundary_edges: 1,
+                selected_degree: 1,
+                complement_degree: 3,
+                total_edges: 2,
+                conductance: 1.0,
+            }
+        );
+    }
+
+    #[test]
+    fn undirected_boundary_metrics_rejects_length_mismatch() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+        let selected = vec![true];
+
+        assert_eq!(
+            undirected_boundary_metrics(&adjacency, &selected),
+            Err(EdgeCutError::AssignmentLengthMismatch {
+                adjacency_len: 2,
+                assignment_len: 1
+            })
+        );
+    }
+
+    #[test]
+    fn undirected_boundary_metrics_rejects_out_of_bounds_neighbor() {
+        let adjacency = vec![vec![2_usize], vec![0]];
+        let selected = vec![true, false];
+
+        assert_eq!(
+            undirected_boundary_metrics(&adjacency, &selected),
+            Err(EdgeCutError::NeighborOutOfBounds {
+                node: 0,
+                neighbor: 2,
+                node_count: 2
+            })
+        );
     }
 
     #[test]
