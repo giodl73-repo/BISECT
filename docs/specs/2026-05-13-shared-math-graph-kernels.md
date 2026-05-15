@@ -269,6 +269,9 @@ Urban place aggregation now rejects zero or out-of-range district labels before
 place evidence can create extra district rows outside the expected plan domain.
 Plan-comparison evidence now rejects zero district labels in either plan before
 Jaccard and tract-count deviation summaries can include an invalid district 0.
+Canonical assignment comparison in report/interchange helpers likewise rejects
+district 0 before relabeling, so round-trip equality evidence cannot normalize
+an invalid label into a valid canonical district.
 
 ## Second Wave: `rstat-core`
 

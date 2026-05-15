@@ -12,6 +12,14 @@
 
 use std::collections::{BTreeMap, HashMap};
 
+use thiserror::Error;
+
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+pub enum CanonicalError {
+    #[error("[INPUT] assignment for GEOID {geoid} uses invalid district 0")]
+    InvalidDistrictLabel { geoid: String },
+}
+
 /// Canonicalize an assignment map by re-labeling districts so that:
 /// - District 1 contains the GEOID with the lexicographically smallest value
 ///   among all districts;
@@ -21,8 +29,16 @@ use std::collections::{BTreeMap, HashMap};
 /// This collapses pairs of assignments that differ only by district-label
 /// permutation into the same canonical form.
 pub fn canonicalize_assignments(assignments: &HashMap<String, usize>) -> BTreeMap<String, usize> {
+    try_canonicalize_assignments(assignments).expect("canonical assignment labels are valid")
+}
+
+/// Checked variant of [`canonicalize_assignments`] for external/interchange inputs.
+pub fn try_canonicalize_assignments(
+    assignments: &HashMap<String, usize>,
+) -> Result<BTreeMap<String, usize>, CanonicalError> {
+    validate_assignment_labels(assignments)?;
     if assignments.is_empty() {
-        return BTreeMap::new();
+        return Ok(BTreeMap::new());
     }
     // For each existing district label, find the lexicographically smallest GEOID.
     let mut smallest_geoid_per_district: HashMap<usize, &str> = HashMap::new();
@@ -48,7 +64,18 @@ pub fn canonicalize_assignments(assignments: &HashMap<String, usize>) -> BTreeMa
     for (geoid, &dist) in assignments {
         out.insert(geoid.clone(), label_map[&dist]);
     }
-    out
+    Ok(out)
+}
+
+fn validate_assignment_labels(assignments: &HashMap<String, usize>) -> Result<(), CanonicalError> {
+    for (geoid, &district) in assignments {
+        if district == 0 {
+            return Err(CanonicalError::InvalidDistrictLabel {
+                geoid: geoid.clone(),
+            });
+        }
+    }
+    Ok(())
 }
 
 /// Structured diff produced when two assignments are NOT canonically equal.
@@ -72,8 +99,16 @@ impl AssignmentDiff {
 /// Compute the canonical-form diff between two assignment maps.
 /// Returns an empty diff iff the two are canonically equal.
 pub fn diff_assignments(a: &HashMap<String, usize>, b: &HashMap<String, usize>) -> AssignmentDiff {
-    let ca = canonicalize_assignments(a);
-    let cb = canonicalize_assignments(b);
+    try_diff_assignments(a, b).expect("canonical assignment labels are valid")
+}
+
+/// Checked variant of [`diff_assignments`] for external/interchange inputs.
+pub fn try_diff_assignments(
+    a: &HashMap<String, usize>,
+    b: &HashMap<String, usize>,
+) -> Result<AssignmentDiff, CanonicalError> {
+    let ca = try_canonicalize_assignments(a)?;
+    let cb = try_canonicalize_assignments(b)?;
     let mut missing_in_a: Vec<String> = Vec::new();
     let mut missing_in_b: Vec<String> = Vec::new();
     let mut differing: Vec<(String, usize, usize)> = Vec::new();
@@ -92,11 +127,11 @@ pub fn diff_assignments(a: &HashMap<String, usize>, b: &HashMap<String, usize>) 
     missing_in_a.sort();
     missing_in_b.sort();
     differing.sort_by(|x, y| x.0.cmp(&y.0));
-    AssignmentDiff {
+    Ok(AssignmentDiff {
         missing_in_a,
         missing_in_b,
         differing,
-    }
+    })
 }
 
 /// Assert canonical equality with a structured error message on failure.
@@ -105,7 +140,7 @@ pub fn assert_canonical_equal(
     a: &HashMap<String, usize>,
     b: &HashMap<String, usize>,
 ) -> Result<(), String> {
-    let diff = diff_assignments(a, b);
+    let diff = try_diff_assignments(a, b).map_err(|e| e.to_string())?;
     if diff.is_empty() {
         return Ok(());
     }
@@ -209,6 +244,19 @@ mod tests {
     }
 
     #[test]
+    fn test_try_canonicalize_rejects_zero_district_label() {
+        let a = map(&[("01001", 0)]);
+        let err = try_canonicalize_assignments(&a)
+            .expect_err("district 0 must be rejected before canonical relabeling");
+        assert_eq!(
+            err,
+            CanonicalError::InvalidDistrictLabel {
+                geoid: "01001".to_string()
+            }
+        );
+    }
+
+    #[test]
     fn test_diff_empty_when_canonically_equal() {
         let a = map(&[("01001", 1), ("02002", 2)]);
         let b = map(&[("01001", 2), ("02002", 1)]);
@@ -238,6 +286,19 @@ mod tests {
     }
 
     #[test]
+    fn test_try_diff_rejects_zero_district_label() {
+        let a = map(&[("01001", 1)]);
+        let b = map(&[("01001", 0)]);
+        let err = try_diff_assignments(&a, &b).expect_err("district 0 must be rejected");
+        assert_eq!(
+            err,
+            CanonicalError::InvalidDistrictLabel {
+                geoid: "01001".to_string()
+            }
+        );
+    }
+
+    #[test]
     fn test_assert_canonical_equal_ok() {
         let a = map(&[("01001", 1), ("02002", 2)]);
         let b = map(&[("01001", 99), ("02002", 100)]); // arbitrary labels
@@ -256,6 +317,21 @@ mod tests {
         assert!(
             err.contains("02002"),
             "error must name the offending GEOID: {err}"
+        );
+    }
+
+    #[test]
+    fn test_assert_canonical_equal_rejects_zero_district_label() {
+        let a = map(&[("01001", 1)]);
+        let b = map(&[("01001", 0)]);
+        let err = assert_canonical_equal(&a, &b).unwrap_err();
+        assert!(
+            err.starts_with("[INPUT]"),
+            "error must use [INPUT] category: {err}"
+        );
+        assert!(
+            err.contains("invalid district 0"),
+            "error must explain the invalid district label: {err}"
         );
     }
 }
