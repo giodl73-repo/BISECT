@@ -297,6 +297,9 @@ oversized `num_districts` instead of defaulting malformed plan metadata to zero.
 Comparison report analysis loading still treats absent optional analysis files as
 unknown, but now rejects unreadable or malformed JSON instead of silently
 defaulting parsed evidence fields.
+Report section assembly likewise rejects present malformed analysis JSON files,
+including optional sections, instead of downgrading parse failures to
+`status: unavailable`.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values

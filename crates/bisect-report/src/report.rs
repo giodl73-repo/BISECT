@@ -67,22 +67,26 @@ fn present_optional_files(ctx: &ReportContext) -> std::collections::HashSet<&'st
 /// Read an analysis JSON file if present.
 /// Injects `"status": "ok"` into the result so templates can always
 /// check `.status == "unavailable"` regardless of file structure.
-fn read_analysis_json(analysis_dir: &Path, name: &str) -> Option<Value> {
+fn read_analysis_json(analysis_dir: &Path, name: &str) -> anyhow::Result<Option<Value>> {
     let path = analysis_dir.join(name);
-    if path.exists() {
-        std::fs::read_to_string(&path)
-            .ok()
-            .and_then(|s| serde_json::from_str::<Value>(&s).ok())
-            .map(|mut v| {
-                if let Some(obj) = v.as_object_mut() {
-                    obj.entry("status")
-                        .or_insert_with(|| serde_json::json!("ok"));
-                }
-                v
-            })
-    } else {
-        None
+    if !path.exists() {
+        return Ok(None);
     }
+
+    let text = std::fs::read_to_string(&path).map_err(|e| {
+        anyhow::anyhow!("[INPUT] cannot read analysis file {}: {e}", path.display())
+    })?;
+    let mut value = serde_json::from_str::<Value>(&text).map_err(|e| {
+        anyhow::anyhow!(
+            "[INPUT] cannot parse analysis file {} as JSON: {e}",
+            path.display()
+        )
+    })?;
+    if let Some(obj) = value.as_object_mut() {
+        obj.entry("status")
+            .or_insert_with(|| serde_json::json!("ok"));
+    }
+    Ok(Some(value))
 }
 
 /// Fully assembled 10-section redistricting report.
@@ -154,13 +158,13 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
     });
 
     // Section 2: Population equality (written by SummaryAnalyzer as summary.json)
-    let population_json = read_analysis_json(&analysis_dir, "summary.json")
+    let population_json = read_analysis_json(&analysis_dir, "summary.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 3: Geographic constraints
-    let contiguity_json = read_analysis_json(&analysis_dir, "contiguity.json")
+    let contiguity_json = read_analysis_json(&analysis_dir, "contiguity.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-    let splits_json = read_analysis_json(&analysis_dir, "splits.json")
+    let splits_json = read_analysis_json(&analysis_dir, "splits.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
     let geographic = serde_json::json!({
         "contiguity": contiguity_json,
@@ -168,23 +172,23 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
     });
 
     // Section 4: Partisan fairness (optional)
-    let partisan = read_analysis_json(&analysis_dir, "partisan.json")
+    let partisan = read_analysis_json(&analysis_dir, "partisan.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 5: VRA compliance (optional)
-    let vra = read_analysis_json(&analysis_dir, "vra_analysis.json")
+    let vra = read_analysis_json(&analysis_dir, "vra_analysis.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 6: Compactness
-    let compactness = read_analysis_json(&analysis_dir, "compactness.json")
+    let compactness = read_analysis_json(&analysis_dir, "compactness.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 7: Comparison (optional)
-    let comparison = read_analysis_json(&analysis_dir, "comparison.json")
+    let comparison = read_analysis_json(&analysis_dir, "comparison.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 8: Nesting (optional)
-    let nesting = read_analysis_json(&analysis_dir, "nesting.json")
+    let nesting = read_analysis_json(&analysis_dir, "nesting.json")?
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 9: Audit trail
@@ -532,6 +536,46 @@ mod tests {
             partisan["status"].as_str().unwrap_or(""),
             "unavailable",
             "partisan_fairness must show 'unavailable' when file absent"
+        );
+    }
+
+    #[test]
+    fn test_assemble_report_rejects_malformed_required_analysis_json() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_bad_summary");
+        std::fs::write(
+            ctx.plan_dir.join("analysis").join("summary.json"),
+            "{bad json",
+        )
+        .unwrap();
+
+        let err = assemble_report(&ctx).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]")
+                && msg.contains("summary.json")
+                && msg.contains("cannot parse analysis file"),
+            "malformed required analysis JSON must fail explicitly: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_assemble_report_rejects_malformed_optional_analysis_json() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_bad_partisan");
+        std::fs::write(
+            ctx.plan_dir.join("analysis").join("partisan.json"),
+            "{bad json",
+        )
+        .unwrap();
+
+        let err = assemble_report(&ctx).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]")
+                && msg.contains("partisan.json")
+                && msg.contains("cannot parse analysis file"),
+            "malformed optional analysis JSON must not be downgraded to unavailable: {msg}"
         );
     }
 
