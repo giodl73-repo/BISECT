@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::hash::Hash;
 use thiserror::Error;
@@ -73,6 +73,37 @@ pub struct BoundaryMetrics {
     pub complement_degree: usize,
     pub total_edges: usize,
     pub conductance: f64,
+}
+
+#[derive(Debug, Error, Clone, PartialEq, Eq)]
+pub enum ConnectorPathError {
+    #[error("[INPUT] connector sources must not be empty")]
+    EmptySources,
+    #[error("[INPUT] connector targets must not be empty")]
+    EmptyTargets,
+    #[error(
+        "[INPUT] connector {kind} node {node} is out of bounds for graph with {node_count} nodes"
+    )]
+    NodeOutOfBounds {
+        kind: &'static str,
+        node: usize,
+        node_count: usize,
+    },
+    #[error("[INPUT] neighbor index {neighbor} from node {node} is out of bounds for graph with {node_count} nodes")]
+    NeighborOutOfBounds {
+        node: usize,
+        neighbor: usize,
+        node_count: usize,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConnectorPath {
+    pub source: usize,
+    pub target: usize,
+    pub nodes: Vec<usize>,
+    pub bridge_nodes: Vec<usize>,
+    pub hop_count: usize,
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
@@ -461,6 +492,99 @@ where
     })
 }
 
+pub fn shortest_connector_path<I>(
+    adjacency: &[Vec<I>],
+    sources: &[usize],
+    targets: &[usize],
+) -> Result<Option<ConnectorPath>, ConnectorPathError>
+where
+    I: NodeIndex,
+{
+    if sources.is_empty() {
+        return Err(ConnectorPathError::EmptySources);
+    }
+    if targets.is_empty() {
+        return Err(ConnectorPathError::EmptyTargets);
+    }
+
+    let node_count = adjacency.len();
+    let mut sorted_sources = sources.to_vec();
+    sorted_sources.sort_unstable();
+    sorted_sources.dedup();
+    let mut sorted_targets = targets.to_vec();
+    sorted_targets.sort_unstable();
+    sorted_targets.dedup();
+
+    for &source in &sorted_sources {
+        if source >= node_count {
+            return Err(ConnectorPathError::NodeOutOfBounds {
+                kind: "source",
+                node: source,
+                node_count,
+            });
+        }
+    }
+    for &target in &sorted_targets {
+        if target >= node_count {
+            return Err(ConnectorPathError::NodeOutOfBounds {
+                kind: "target",
+                node: target,
+                node_count,
+            });
+        }
+    }
+
+    let undirected = undirected_index_adjacency_for_connectors(adjacency)?;
+    let target_set: HashSet<usize> = sorted_targets.iter().copied().collect();
+    let mut predecessor = vec![None; node_count];
+    let mut source_for = vec![None; node_count];
+    let mut seen = vec![false; node_count];
+    let mut queue = VecDeque::new();
+
+    for &source in &sorted_sources {
+        seen[source] = true;
+        source_for[source] = Some(source);
+        queue.push_back(source);
+    }
+
+    while let Some(node) = queue.pop_front() {
+        if target_set.contains(&node) {
+            let source = source_for[node].expect("visited connector node has source");
+            let mut nodes = Vec::new();
+            let mut cursor = node;
+            nodes.push(cursor);
+            while cursor != source {
+                cursor = predecessor[cursor].expect("connector path has predecessor");
+                nodes.push(cursor);
+            }
+            nodes.reverse();
+            let bridge_nodes = if nodes.len() <= 2 {
+                Vec::new()
+            } else {
+                nodes[1..nodes.len() - 1].to_vec()
+            };
+            return Ok(Some(ConnectorPath {
+                source,
+                target: node,
+                hop_count: nodes.len().saturating_sub(1),
+                nodes,
+                bridge_nodes,
+            }));
+        }
+
+        for &neighbor in &undirected[node] {
+            if !seen[neighbor] {
+                seen[neighbor] = true;
+                predecessor[neighbor] = Some(node);
+                source_for[neighbor] = source_for[node];
+                queue.push_back(neighbor);
+            }
+        }
+    }
+
+    Ok(None)
+}
+
 pub fn assignment_label_connected<I, D>(
     adjacency: &[Vec<I>],
     assignment: &[D],
@@ -610,6 +734,43 @@ where
             };
             if neighbor >= node_count {
                 return Err(SubsetConnectivityError::NeighborOutOfBounds {
+                    node,
+                    neighbor,
+                    node_count,
+                });
+            }
+            if node != neighbor {
+                undirected[node].push(neighbor);
+                undirected[neighbor].push(node);
+            }
+        }
+    }
+    for neighbors in &mut undirected {
+        neighbors.sort_unstable();
+        neighbors.dedup();
+    }
+    Ok(undirected)
+}
+
+fn undirected_index_adjacency_for_connectors<I>(
+    adjacency: &[Vec<I>],
+) -> Result<Vec<Vec<usize>>, ConnectorPathError>
+where
+    I: NodeIndex,
+{
+    let node_count = adjacency.len();
+    let mut undirected = vec![Vec::new(); node_count];
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
+            let Some(neighbor) = neighbor.to_usize() else {
+                return Err(ConnectorPathError::NeighborOutOfBounds {
+                    node,
+                    neighbor: usize::MAX,
+                    node_count,
+                });
+            };
+            if neighbor >= node_count {
+                return Err(ConnectorPathError::NeighborOutOfBounds {
                     node,
                     neighbor,
                     node_count,
@@ -1626,6 +1787,99 @@ mod tests {
                 node: 0,
                 neighbor: 2,
                 node_count: 2
+            })
+        );
+    }
+
+    #[test]
+    fn shortest_connector_path_recovers_missing_bridge_node() {
+        let adjacency = vec![
+            vec![1_usize],
+            vec![0, 2],
+            vec![1, 3],
+            vec![2],
+            vec![5],
+            vec![4],
+        ];
+
+        assert_eq!(
+            shortest_connector_path(&adjacency, &[0], &[3]).unwrap(),
+            Some(ConnectorPath {
+                source: 0,
+                target: 3,
+                nodes: vec![0, 1, 2, 3],
+                bridge_nodes: vec![1, 2],
+                hop_count: 3,
+            })
+        );
+    }
+
+    #[test]
+    fn shortest_connector_path_uses_deterministic_tie_breaking() {
+        let adjacency = vec![
+            vec![2_usize, 1],
+            vec![0, 4],
+            vec![0, 4],
+            vec![4],
+            vec![1, 2, 3],
+        ];
+
+        assert_eq!(
+            shortest_connector_path(&adjacency, &[0, 3], &[4]).unwrap(),
+            Some(ConnectorPath {
+                source: 3,
+                target: 4,
+                nodes: vec![3, 4],
+                bridge_nodes: vec![],
+                hop_count: 1,
+            })
+        );
+    }
+
+    #[test]
+    fn shortest_connector_path_returns_none_for_disconnected_sets() {
+        let adjacency = vec![vec![1_usize], vec![0], vec![3], vec![2]];
+
+        assert_eq!(
+            shortest_connector_path(&adjacency, &[0], &[3]).unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn shortest_connector_path_rejects_empty_sources() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+
+        assert_eq!(
+            shortest_connector_path(&adjacency, &[], &[1]),
+            Err(ConnectorPathError::EmptySources)
+        );
+    }
+
+    #[test]
+    fn shortest_connector_path_rejects_out_of_bounds_target() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+
+        assert_eq!(
+            shortest_connector_path(&adjacency, &[0], &[2]),
+            Err(ConnectorPathError::NodeOutOfBounds {
+                kind: "target",
+                node: 2,
+                node_count: 2,
+            })
+        );
+    }
+
+    #[test]
+    fn shortest_connector_path_rejects_out_of_bounds_neighbor() {
+        let adjacency = vec![vec![2_usize], vec![0]];
+
+        assert_eq!(
+            shortest_connector_path(&adjacency, &[0], &[1]),
+            Err(ConnectorPathError::NeighborOutOfBounds {
+                node: 0,
+                neighbor: 2,
+                node_count: 2,
             })
         );
     }
