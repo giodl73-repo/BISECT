@@ -1,0 +1,52 @@
+name: shared-kernels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/rctx-core/**"
+      - "crates/rgraph-core/**"
+      - "crates/rstat-core/**"
+      - "crates/ropt-core/**"
+      - "docs/specs/shared-kernel-external-consumers.md"
+      - ".github/workflows/shared-kernels.yml"
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/rctx-core/**"
+      - "crates/rgraph-core/**"
+      - "crates/rstat-core/**"
+      - "crates/ropt-core/**"
+      - "docs/specs/shared-kernel-external-consumers.md"
+      - ".github/workflows/shared-kernels.yml"
+
+jobs:
+  shared-kernels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test shared kernels
+        run: cargo test -p rctx-core -p rgraph-core -p rstat-core -p ropt-core -- --test-threads=1
+      - name: Resolve shared kernels as Git dependencies
+        shell: bash
+        run: |
+          tmp="$(mktemp -d)"
+          cat > "$tmp/Cargo.toml" <<EOF
+          [package]
+          name = "shared-kernel-consumer"
+          version = "0.1.0"
+          edition = "2021"
+
+          [dependencies]
+          rctx-core = { git = "file://${GITHUB_WORKSPACE}", package = "rctx-core" }
+          rgraph-core = { git = "file://${GITHUB_WORKSPACE}", package = "rgraph-core" }
+          rstat-core = { git = "file://${GITHUB_WORKSPACE}", package = "rstat-core" }
+          ropt-core = { git = "file://${GITHUB_WORKSPACE}", package = "ropt-core" }
+          EOF
+          mkdir -p "$tmp/src"
+          printf 'fn main() {}\n' > "$tmp/src/main.rs"
+          cargo metadata --manifest-path "$tmp/Cargo.toml" --format-version 1
