@@ -251,6 +251,10 @@ Chamber-adjacency evidence construction now has a typed checked path that reject
 tract/adjacency length mismatches, zero or out-of-range district labels, and
 out-of-range neighbor indices before nesting or chamber-boundary evidence can
 panic on malformed graph rows.
+Contiguity evidence construction now applies the same typed validation for
+tract/adjacency length mismatches, unknown assignment GEOIDs, zero or
+out-of-range district labels, and out-of-range neighbor indices before district
+component evidence can silently drop rows or traverse malformed adjacency.
 
 ## Second Wave: `rstat-core`
 

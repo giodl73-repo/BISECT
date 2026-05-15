@@ -5,6 +5,27 @@
 /// than one connected component is found the district is non-contiguous.
 use rgraph_core::{connected_components_in_nodes_with_filter, DirectedWeightedGraph, WeightedEdge};
 use std::collections::{HashMap, HashSet};
+use thiserror::Error;
+
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+pub enum ContiguityError {
+    #[error("[INPUT] geoids length {geoids} does not match adjacency length {adjacency}")]
+    TractAdjacencyLengthMismatch { geoids: usize, adjacency: usize },
+    #[error("[INPUT] assignment references GEOID {geoid} that is not present in tract_ids")]
+    UnknownAssignedGeoid { geoid: String },
+    #[error("[INPUT] assignment for tract {geoid} uses invalid district {district}; expected 1..={num_districts}")]
+    InvalidDistrictLabel {
+        geoid: String,
+        district: usize,
+        num_districts: usize,
+    },
+    #[error("[INPUT] adjacency for tract index {tract_index} references missing neighbor index {neighbor_index}; tract count is {tract_count}")]
+    InvalidAdjacencyIndex {
+        tract_index: usize,
+        neighbor_index: usize,
+        tract_count: usize,
+    },
+}
 
 /// Result of checking contiguity for all districts in a plan.
 #[derive(Debug, Clone, serde::Serialize)]
@@ -38,6 +59,18 @@ pub fn check_contiguity(
     geoids: &[String],
     num_districts: usize,
 ) -> ContiguityResult {
+    try_check_contiguity(assignments, adjacency, geoids, num_districts)
+        .expect("contiguity inputs are valid")
+}
+
+pub fn try_check_contiguity(
+    assignments: &HashMap<String, usize>,
+    adjacency: &[Vec<usize>],
+    geoids: &[String],
+    num_districts: usize,
+) -> Result<ContiguityResult, ContiguityError> {
+    validate_contiguity_inputs(assignments, adjacency, geoids, num_districts)?;
+
     // Build GEOID -> index map for fast lookup.
     let geoid_to_idx: HashMap<&str, usize> = geoids
         .iter()
@@ -123,10 +156,55 @@ pub fn check_contiguity(
         });
     }
 
-    ContiguityResult {
+    Ok(ContiguityResult {
         all_contiguous,
         districts: district_results,
+    })
+}
+
+fn validate_contiguity_inputs(
+    assignments: &HashMap<String, usize>,
+    adjacency: &[Vec<usize>],
+    geoids: &[String],
+    num_districts: usize,
+) -> Result<(), ContiguityError> {
+    if geoids.len() != adjacency.len() {
+        return Err(ContiguityError::TractAdjacencyLengthMismatch {
+            geoids: geoids.len(),
+            adjacency: adjacency.len(),
+        });
     }
+
+    let geoid_set: HashSet<&str> = geoids.iter().map(|geoid| geoid.as_str()).collect();
+    for (geoid, &district) in assignments {
+        if !geoid_set.contains(geoid.as_str()) {
+            return Err(ContiguityError::UnknownAssignedGeoid {
+                geoid: geoid.clone(),
+            });
+        }
+        if district == 0 || district > num_districts {
+            return Err(ContiguityError::InvalidDistrictLabel {
+                geoid: geoid.clone(),
+                district,
+                num_districts,
+            });
+        }
+    }
+
+    let tract_count = geoids.len();
+    for (tract_index, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor_index in neighbors {
+            if neighbor_index >= tract_count {
+                return Err(ContiguityError::InvalidAdjacencyIndex {
+                    tract_index,
+                    neighbor_index,
+                    tract_count,
+                });
+            }
+        }
+    }
+
+    Ok(())
 }
 
 /// Run BFS on `tract_indices` (restricted to that subset) using `adjacency`.
@@ -472,6 +550,72 @@ mod tests {
         assert_eq!(d1.component_count, 3);
         // The primary component has size 2; the other two (size 2 + 1) are disconnected
         assert!(!d1.disconnected_tracts.is_empty());
+    }
+
+    #[test]
+    fn test_try_check_contiguity_rejects_length_mismatch() {
+        let adj: Vec<Vec<usize>> = vec![];
+        let geoids = vec!["t0".to_string()];
+        let assignments: HashMap<String, usize> = [("t0".to_string(), 1)].into_iter().collect();
+        let err = try_check_contiguity(&assignments, &adj, &geoids, 1)
+            .expect_err("mismatched tract and adjacency lengths must be rejected");
+        assert_eq!(
+            err,
+            ContiguityError::TractAdjacencyLengthMismatch {
+                geoids: 1,
+                adjacency: 0
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_check_contiguity_rejects_unknown_assigned_geoid() {
+        let adj = vec![vec![]];
+        let geoids = vec!["t0".to_string()];
+        let assignments: HashMap<String, usize> =
+            [("missing".to_string(), 1)].into_iter().collect();
+        let err = try_check_contiguity(&assignments, &adj, &geoids, 1)
+            .expect_err("assignments for unknown GEOIDs must be rejected");
+        assert_eq!(
+            err,
+            ContiguityError::UnknownAssignedGeoid {
+                geoid: "missing".into()
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_check_contiguity_rejects_zero_district_label() {
+        let adj = vec![vec![]];
+        let geoids = vec!["t0".to_string()];
+        let assignments: HashMap<String, usize> = [("t0".to_string(), 0)].into_iter().collect();
+        let err = try_check_contiguity(&assignments, &adj, &geoids, 1)
+            .expect_err("zero district labels must be rejected");
+        assert_eq!(
+            err,
+            ContiguityError::InvalidDistrictLabel {
+                geoid: "t0".into(),
+                district: 0,
+                num_districts: 1
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_check_contiguity_rejects_missing_neighbor_index() {
+        let adj = vec![vec![1]];
+        let geoids = vec!["t0".to_string()];
+        let assignments: HashMap<String, usize> = [("t0".to_string(), 1)].into_iter().collect();
+        let err = try_check_contiguity(&assignments, &adj, &geoids, 1)
+            .expect_err("out-of-range adjacency indices must be rejected");
+        assert_eq!(
+            err,
+            ContiguityError::InvalidAdjacencyIndex {
+                tract_index: 0,
+                neighbor_index: 1,
+                tract_count: 1
+            }
+        );
     }
 
     #[test]
