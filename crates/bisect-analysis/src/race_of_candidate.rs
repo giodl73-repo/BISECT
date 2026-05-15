@@ -200,6 +200,8 @@ pub enum RaceParseError {
     InvalidAttestationFormat { value: String },
     #[error("[INPUT] row {row}: empty {field}")]
     EmptyRequired { row: usize, field: String },
+    #[error("[INPUT] row {row}: invalid curator_attestation_date '{value}' (expected YYYY-MM-DD)")]
+    InvalidAttestationDate { row: usize, value: String },
     #[error(
         "[INPUT] row {row}: invalid bool '{value}' for independently_verified (use true|false)"
     )]
@@ -295,6 +297,7 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
         let curator = need_nonempty("curator")?;
         let curator_credentials = need_nonempty("curator_credentials")?;
         let curator_attestation_date = need_nonempty("curator_attestation_date")?;
+        validate_attestation_date(row_num, &curator_attestation_date)?;
         let source = need_nonempty("source")?;
         let iv_str = get("independently_verified");
         let independently_verified = match iv_str {
@@ -443,6 +446,33 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
     })
 }
 
+fn validate_attestation_date(row: usize, value: &str) -> Result<(), RaceParseError> {
+    let bytes = value.as_bytes();
+    let valid = bytes.len() == 10
+        && bytes[4] == b'-'
+        && bytes[7] == b'-'
+        && bytes[..4].iter().all(u8::is_ascii_digit)
+        && bytes[5..7].iter().all(u8::is_ascii_digit)
+        && bytes[8..10].iter().all(u8::is_ascii_digit);
+    if !valid {
+        return Err(RaceParseError::InvalidAttestationDate {
+            row,
+            value: value.to_string(),
+        });
+    }
+
+    let month = (bytes[5] - b'0') * 10 + (bytes[6] - b'0');
+    let day = (bytes[8] - b'0') * 10 + (bytes[9] - b'0');
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return Err(RaceParseError::InvalidAttestationDate {
+            row,
+            value: value.to_string(),
+        });
+    }
+
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // SHA-256 helpers (duplicated from doctor.rs to avoid a cross-crate utility
 // dependency; both are tiny)
@@ -584,6 +614,57 @@ mod tests {
             }
             other => panic!("expected InvalidRace, got {:?}", other),
         }
+    }
+
+    #[test]
+    fn test_parse_invalid_attestation_date_rejected() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv = build_fixture(
+            tmp.path(),
+            &[(
+                "X",
+                "DEM",
+                "Black",
+                "C",
+                "creds",
+                "01/01/2026",
+                "src",
+                true,
+                "doc.pdf",
+                "pdf",
+            )],
+        );
+        match parse_race_of_candidate_csv(&csv) {
+            Err(RaceParseError::InvalidAttestationDate { row, value }) => {
+                assert_eq!(row, 2);
+                assert_eq!(value, "01/01/2026");
+            }
+            other => panic!("expected InvalidAttestationDate, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_parse_out_of_range_attestation_date_rejected() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv = build_fixture(
+            tmp.path(),
+            &[(
+                "X",
+                "DEM",
+                "Black",
+                "C",
+                "creds",
+                "2026-13-01",
+                "src",
+                true,
+                "doc.pdf",
+                "pdf",
+            )],
+        );
+        assert!(matches!(
+            parse_race_of_candidate_csv(&csv),
+            Err(RaceParseError::InvalidAttestationDate { row: 2, .. })
+        ));
     }
 
     #[test]

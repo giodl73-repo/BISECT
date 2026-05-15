@@ -46,7 +46,7 @@ pub fn aggregate_urban(
     try_aggregate_urban(rows, assignments, num_districts).expect("urban assignments are valid")
 }
 
-pub(crate) fn try_aggregate_urban(
+fn try_aggregate_urban(
     rows: &[PlaceRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,

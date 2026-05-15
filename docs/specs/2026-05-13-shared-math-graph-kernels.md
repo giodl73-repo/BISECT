@@ -343,6 +343,9 @@ Compactness geometry and population-weighted compactness consumers now reject
 non-finite polygon coordinates, non-finite centroids, population length
 mismatches, population overflows, and non-finite compactness intermediates before
 compactness evidence can emit `NaN`/`inf` values or panic on malformed rows.
+Race-of-candidate provenance parsing now rejects malformed curator attestation
+dates unless they match `YYYY-MM-DD` with in-range month/day fields, so annotation
+provenance cannot carry free-form or impossible attestation dates.
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,
