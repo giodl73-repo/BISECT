@@ -347,8 +347,8 @@ Race-of-candidate provenance parsing now rejects malformed curator attestation
 dates unless they match `YYYY-MM-DD` with calendar-valid month/day fields
 including leap-year handling, so annotation provenance cannot carry free-form or
 impossible attestation dates.
-It also rejects absolute or parent-traversal attestation document paths before
-hashing, preserving the relative-path evidence package boundary.
+It also rejects absolute, rooted, or parent-traversal attestation document paths
+before hashing, preserving the relative-path evidence package boundary.
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,

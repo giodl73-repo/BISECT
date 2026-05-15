@@ -501,9 +501,12 @@ fn validate_attestation_doc_path(
     path: &Path,
 ) -> Result<(), RaceParseError> {
     if path.is_absolute()
-        || path
-            .components()
-            .any(|component| matches!(component, Component::ParentDir | Component::Prefix(_)))
+        || path.components().any(|component| {
+            matches!(
+                component,
+                Component::ParentDir | Component::Prefix(_) | Component::RootDir
+            )
+        })
     {
         return Err(RaceParseError::InvalidAttestationPath {
             row,
@@ -784,6 +787,22 @@ mod tests {
             Err(RaceParseError::InvalidAttestationPath { row, path }) => {
                 assert_eq!(row, 2);
                 assert_eq!(path, absolute.display().to_string());
+            }
+            other => panic!("expected InvalidAttestationPath, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_parse_rooted_attestation_path_rejected() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv_str = "candidate_name,party,race,curator,curator_credentials,curator_attestation_date,source,independently_verified,attestation_doc_path,attestation_doc_format\n\
+            X,DEM,Black,C,creds,2026-01-01,src,true,\\doc.pdf,pdf\n";
+        let csv_path = tmp.path().join("race.csv");
+        fs::write(&csv_path, csv_str).unwrap();
+        match parse_race_of_candidate_csv(&csv_path) {
+            Err(RaceParseError::InvalidAttestationPath { row, path }) => {
+                assert_eq!(row, 2);
+                assert_eq!(path, "\\doc.pdf");
             }
             other => panic!("expected InvalidAttestationPath, got {:?}", other),
         }
