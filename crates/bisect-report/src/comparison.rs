@@ -344,6 +344,7 @@ fn load_mean_pp(
     analysis_dir: &Path,
     sha_map: &mut BTreeMap<String, String>,
 ) -> Result<f64, AssembleError> {
+    let path = analysis_dir.join("compactness.json");
     let Some(comp) = load_analysis_json(analysis_dir, "compactness.json", sha_map)? else {
         return Ok(f64::NAN);
     };
@@ -354,15 +355,30 @@ fn load_mean_pp(
         return Ok(v);
     }
     if let Some(arr) = comp.get("districts").and_then(|v| v.as_array()) {
-        let pps: Vec<f64> = arr
-            .iter()
-            .filter_map(|d| d.get("polsby_popper").and_then(|x| x.as_f64()))
-            .collect();
+        let pps = load_polsby_popper_from_objects(&path, arr)?;
         if !pps.is_empty() {
             return Ok(pps.iter().sum::<f64>() / (pps.len() as f64));
         }
     }
     Ok(f64::NAN)
+}
+
+fn load_polsby_popper_from_objects(
+    path: &Path,
+    arr: &[serde_json::Value],
+) -> Result<Vec<f64>, AssembleError> {
+    arr.iter()
+        .enumerate()
+        .map(|(idx, district)| {
+            district
+                .get("polsby_popper")
+                .and_then(|v| v.as_f64())
+                .ok_or_else(|| AssembleError::AnalysisInvalid {
+                    path: path.display().to_string(),
+                    reason: format!("districts[{idx}].polsby_popper must be a number"),
+                })
+        })
+        .collect()
 }
 
 /// Compute a basic `DiffSummary` between two plans by reading their
@@ -998,6 +1014,37 @@ mod tests {
         assert!(
             (side.mean_pp - 0.42).abs() < 1e-9,
             "mean_pp must be read from compactness.json"
+        );
+    }
+
+    #[test]
+    fn test_load_plan_side_rejects_malformed_polsby_popper() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("bad_plan");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "bad_plan", "num_districts": 2}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_dir.join("compactness.json"),
+            serde_json::json!({
+                "districts": [
+                    {"polsby_popper": 0.42},
+                    {"polsby_popper": "bad"}
+                ]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let err = load_plan_side_from_dir(&plan_dir, 0.5).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("districts[1].polsby_popper"),
+            "error must classify and locate malformed polsby_popper: {msg}"
         );
     }
 

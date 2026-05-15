@@ -293,6 +293,8 @@ Partisan comparison analysis now rejects non-numeric or missing Dem-share entrie
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values
 instead of defaulting present-but-invalid values to zero.
+Compactness comparison analysis now rejects non-numeric or missing per-district
+`polsby_popper` values instead of filtering them out of the mean.
 
 ## Second Wave: `rstat-core`
 
