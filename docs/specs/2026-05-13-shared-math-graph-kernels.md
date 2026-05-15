@@ -306,6 +306,9 @@ as unavailable.
 Plan collision errors now surface the existing manifest `created_at` value, or
 an explicit `unknown` marker for malformed manifests, rather than reading and
 discarding that provenance field.
+Narrative comparison provenance now rejects malformed `SOURCE_DATE_EPOCH`
+values instead of silently falling back to the unsigned draft timestamp
+sentinel.
 Partisan comparison analysis now rejects non-numeric or missing Dem-share entries
 in recognized per-district shapes instead of filtering them out of seat counts.
 VRA comparison analysis now rejects malformed or oversized `mm_count` values

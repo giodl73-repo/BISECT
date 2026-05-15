@@ -142,8 +142,26 @@ pub struct NarrativeManifestInputs {
 pub fn build_narrative_manifest(inputs: NarrativeManifestInputs) -> NarrativeManifest {
     let secs = std::env::var("SOURCE_DATE_EPOCH")
         .ok()
-        .and_then(|s| s.parse::<i64>().ok());
+        .and_then(|s| parse_source_date_epoch_value(&s).ok());
     build_narrative_manifest_with_clock(inputs, secs)
+}
+
+/// Read and validate `SOURCE_DATE_EPOCH` for callers that can surface input
+/// errors instead of falling back to the draft timestamp sentinel.
+pub fn parse_source_date_epoch_env() -> anyhow::Result<Option<i64>> {
+    match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(value) => parse_source_date_epoch_value(&value).map(Some),
+        Err(std::env::VarError::NotPresent) => Ok(None),
+        Err(std::env::VarError::NotUnicode(_)) => {
+            anyhow::bail!("[INPUT] SOURCE_DATE_EPOCH must be valid Unicode")
+        }
+    }
+}
+
+pub fn parse_source_date_epoch_value(value: &str) -> anyhow::Result<i64> {
+    value
+        .parse::<i64>()
+        .map_err(|e| anyhow::anyhow!("[INPUT] SOURCE_DATE_EPOCH must be an integer: {e}"))
 }
 
 /// Pure-function variant: caller supplies the SOURCE_DATE_EPOCH override
@@ -339,6 +357,16 @@ mod tests {
         // 1700000000 = 2023-11-14T22:13:20Z
         let m = build_narrative_manifest_with_clock(fixture_inputs(), Some(1_700_000_000));
         assert_eq!(m.approved_at, "2023-11-14T22:13:20Z");
+    }
+
+    #[test]
+    fn test_source_date_epoch_value_rejects_non_integer() {
+        let err = parse_source_date_epoch_value("not-an-integer").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("SOURCE_DATE_EPOCH must be an integer"),
+            "invalid SOURCE_DATE_EPOCH must fail explicitly: {msg}"
+        );
     }
 
     #[test]

@@ -16,7 +16,8 @@ use bisect_report::comparison::{
 use bisect_report::html_comparison::{render_comparison_html, HtmlComparisonContext};
 use bisect_report::narrative::{render_narrative, NarrativeConfig};
 use bisect_report::narrative_manifest::{
-    build_narrative_manifest_with_clock, serialize_manifest, NarrativeManifestInputs,
+    build_narrative_manifest_with_clock, parse_source_date_epoch_env, serialize_manifest,
+    NarrativeManifestInputs,
 };
 use sha2::{Digest, Sha256};
 
@@ -724,9 +725,7 @@ fn run_narrative_dispatch(
         comments_overlay_sha256: None,
     };
 
-    let source_date_epoch = std::env::var("SOURCE_DATE_EPOCH")
-        .ok()
-        .and_then(|s| s.parse::<i64>().ok());
+    let source_date_epoch = parse_source_date_epoch_env()?;
     let manifest = build_narrative_manifest_with_clock(inputs, source_date_epoch);
     let manifest_json = serialize_manifest(&manifest)
         .map_err(|e| anyhow::anyhow!("[INTERNAL] manifest serialize failed: {e}"))?;
