@@ -2883,6 +2883,8 @@ dependencies = [
 name = "rgraph-core"
 version = "0.1.0"
 dependencies = [
+ "ropt-core",
+ "rstat-core",
  "thiserror 2.0.18",
 ]
 

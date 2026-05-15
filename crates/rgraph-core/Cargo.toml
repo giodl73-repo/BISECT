@@ -9,3 +9,7 @@ description = "Reusable deterministic graph algorithms for civic analysis projec
 [dependencies]
 thiserror.workspace = true
 
+[dev-dependencies]
+ropt-core = { path = "../ropt-core" }
+rstat-core = { path = "../rstat-core" }
+
