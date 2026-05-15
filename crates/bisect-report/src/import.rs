@@ -37,10 +37,7 @@ pub fn import_geojson_plan(
     let mut district_centroids: Vec<(usize, (f64, f64))> = Vec::new();
 
     for feature in features {
-        let district_id = feature["properties"]["district_id"]
-            .as_u64()
-            .ok_or_else(|| anyhow::anyhow!("Feature missing 'district_id' property"))?
-            as usize;
+        let district_id = parse_district_id(feature)?;
 
         let geom = &feature["geometry"];
         if geom.is_null() {
@@ -115,6 +112,17 @@ pub fn import_geojson_plan(
     }
 
     Ok(assignments)
+}
+
+fn parse_district_id(feature: &Value) -> anyhow::Result<usize> {
+    let district_id = feature["properties"]["district_id"]
+        .as_u64()
+        .ok_or_else(|| anyhow::anyhow!("[INPUT] Feature missing integer 'district_id' property"))?;
+    if district_id == 0 {
+        anyhow::bail!("[INPUT] GeoJSON feature uses invalid district_id 0");
+    }
+    usize::try_from(district_id)
+        .map_err(|_| anyhow::anyhow!("[INPUT] district_id value {district_id} is too large"))
 }
 
 /// Find the nearest district centroid to (lon, lat).
@@ -347,6 +355,58 @@ mod tests {
         let assignments = import_geojson_plan(&geojson_str, &centroids).unwrap();
         assert_eq!(assignments["53001001000"], 1, "should be in district 1");
         assert_eq!(assignments["53001001001"], 2, "should be in district 2");
+    }
+
+    #[test]
+    fn test_import_rejects_zero_district_id() {
+        let geojson_str = serde_json::to_string(&serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [-123.0, 47.0], [-122.0, 47.0], [-122.0, 48.0],
+                        [-123.0, 48.0], [-123.0, 47.0]
+                    ]]
+                },
+                "properties": {"district_id": 0}
+            }]
+        }))
+        .unwrap();
+        let centroids = HashMap::from([("53001001000".to_string(), (-122.5, 47.5))]);
+        let err = import_geojson_plan(&geojson_str, &centroids).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("invalid district_id 0"),
+            "error must classify and explain invalid district_id: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_import_rejects_non_integer_district_id() {
+        let geojson_str = serde_json::to_string(&serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [-123.0, 47.0], [-122.0, 47.0], [-122.0, 48.0],
+                        [-123.0, 48.0], [-123.0, 47.0]
+                    ]]
+                },
+                "properties": {"district_id": "one"}
+            }]
+        }))
+        .unwrap();
+        let centroids = HashMap::from([("53001001000".to_string(), (-122.5, 47.5))]);
+        let err = import_geojson_plan(&geojson_str, &centroids).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("integer 'district_id'"),
+            "error must classify and explain malformed district_id: {msg}"
+        );
     }
 
     #[test]

@@ -278,6 +278,9 @@ CLI DRA CSV and tract-level GeoJSON imports apply the same parse-time district
 0 rejection before deriving imported plan district counts.
 Tract-level GeoJSON import also rejects features that provide a GEOID with a
 missing or non-integer district property instead of silently skipping the row.
+District-polygon GeoJSON import now validates `district_id` as a positive
+integer before point-in-polygon assignment or nearest-centroid fallback can
+materialize an invalid imported district.
 
 ## Second Wave: `rstat-core`
 
