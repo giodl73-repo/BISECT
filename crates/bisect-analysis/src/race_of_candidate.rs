@@ -23,7 +23,7 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -202,6 +202,8 @@ pub enum RaceParseError {
     EmptyRequired { row: usize, field: String },
     #[error("[INPUT] row {row}: invalid curator_attestation_date '{value}' (expected YYYY-MM-DD)")]
     InvalidAttestationDate { row: usize, value: String },
+    #[error("[INPUT] row {row}: invalid attestation_doc_path '{path}' (must be relative and stay within the CSV directory)")]
+    InvalidAttestationPath { row: usize, path: String },
     #[error(
         "[INPUT] row {row}: invalid bool '{value}' for independently_verified (use true|false)"
     )]
@@ -316,6 +318,7 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
 
         let doc_path_rel_str = need_nonempty("attestation_doc_path")?;
         let doc_path_rel = PathBuf::from(&doc_path_rel_str);
+        validate_attestation_doc_path(row_num, &doc_path_rel_str, &doc_path_rel)?;
         let doc_path_abs = csv_dir.join(&doc_path_rel);
 
         let declared_fmt = need_nonempty("attestation_doc_format")?;
@@ -470,6 +473,24 @@ fn validate_attestation_date(row: usize, value: &str) -> Result<(), RaceParseErr
         });
     }
 
+    Ok(())
+}
+
+fn validate_attestation_doc_path(
+    row: usize,
+    raw_path: &str,
+    path: &Path,
+) -> Result<(), RaceParseError> {
+    if path.is_absolute()
+        || path
+            .components()
+            .any(|component| matches!(component, Component::ParentDir | Component::Prefix(_)))
+    {
+        return Err(RaceParseError::InvalidAttestationPath {
+            row,
+            path: raw_path.to_string(),
+        });
+    }
     Ok(())
 }
 
@@ -665,6 +686,42 @@ mod tests {
             parse_race_of_candidate_csv(&csv),
             Err(RaceParseError::InvalidAttestationDate { row: 2, .. })
         ));
+    }
+
+    #[test]
+    fn test_parse_parent_traversal_attestation_path_rejected() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv_str = "candidate_name,party,race,curator,curator_credentials,curator_attestation_date,source,independently_verified,attestation_doc_path,attestation_doc_format\n\
+            X,DEM,Black,C,creds,2026-01-01,src,true,../doc.pdf,pdf\n";
+        let csv_path = tmp.path().join("race.csv");
+        fs::write(&csv_path, csv_str).unwrap();
+        match parse_race_of_candidate_csv(&csv_path) {
+            Err(RaceParseError::InvalidAttestationPath { row, path }) => {
+                assert_eq!(row, 2);
+                assert_eq!(path, "../doc.pdf");
+            }
+            other => panic!("expected InvalidAttestationPath, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_parse_absolute_attestation_path_rejected() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let absolute = tmp.path().join("doc.pdf");
+        let csv_str = format!(
+            "candidate_name,party,race,curator,curator_credentials,curator_attestation_date,source,independently_verified,attestation_doc_path,attestation_doc_format\n\
+            X,DEM,Black,C,creds,2026-01-01,src,true,{},pdf\n",
+            absolute.display()
+        );
+        let csv_path = tmp.path().join("race.csv");
+        fs::write(&csv_path, csv_str).unwrap();
+        match parse_race_of_candidate_csv(&csv_path) {
+            Err(RaceParseError::InvalidAttestationPath { row, path }) => {
+                assert_eq!(row, 2);
+                assert_eq!(path, absolute.display().to_string());
+            }
+            other => panic!("expected InvalidAttestationPath, got {:?}", other),
+        }
     }
 
     #[test]

@@ -346,6 +346,8 @@ compactness evidence can emit `NaN`/`inf` values or panic on malformed rows.
 Race-of-candidate provenance parsing now rejects malformed curator attestation
 dates unless they match `YYYY-MM-DD` with in-range month/day fields, so annotation
 provenance cannot carry free-form or impossible attestation dates.
+It also rejects absolute or parent-traversal attestation document paths before
+hashing, preserving the relative-path evidence package boundary.
 
 `rstat-core::mcmc` rejects malformed diagnostics inputs before producing evidence
 metrics: R-hat rejects non-finite chain values with a typed diagnostics error,
