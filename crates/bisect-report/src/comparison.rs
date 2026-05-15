@@ -110,6 +110,8 @@ pub enum AssembleError {
     Io(String, String),
     #[error("[INPUT] cannot parse {0}: {1}")]
     JsonParse(String, String),
+    #[error("[INPUT] invalid analysis file {path}: {reason}")]
+    AnalysisInvalid { path: String, reason: String },
     #[error("[INPUT] invalid assignment in {path} for GEOID {geoid}: {reason}")]
     InvalidAssignment {
         path: String,
@@ -252,6 +254,7 @@ fn load_partisan_seats(
     leaning_threshold: f64,
     sha_map: &mut BTreeMap<String, String>,
 ) -> Result<(usize, Vec<f64>), AssembleError> {
+    let path = analysis_dir.join("partisan.json");
     let Some(partisan) = load_analysis_json(analysis_dir, "partisan.json", sha_map)? else {
         return Ok((0, Vec::new()));
     };
@@ -261,18 +264,14 @@ fn load_partisan_seats(
     // Shape 3: top-level array of {dem_share}
     let dem_shares: Vec<f64> =
         if let Some(arr) = partisan.get("districts").and_then(|v| v.as_array()) {
-            arr.iter()
-                .filter_map(|d| d.get("dem_share").and_then(|x| x.as_f64()))
-                .collect()
+            load_dem_shares_from_objects(&path, arr)?
         } else if let Some(arr) = partisan
             .get("per_district_dem_share")
             .and_then(|v| v.as_array())
         {
-            arr.iter().filter_map(|x| x.as_f64()).collect()
+            load_dem_shares_from_numbers(&path, arr)?
         } else if let Some(arr) = partisan.as_array() {
-            arr.iter()
-                .filter_map(|d| d.get("dem_share").and_then(|x| x.as_f64()))
-                .collect()
+            load_dem_shares_from_objects(&path, arr)?
         } else {
             Vec::new()
         };
@@ -281,6 +280,41 @@ fn load_partisan_seats(
         .filter(|&&s| s >= leaning_threshold)
         .count();
     Ok((leaning_seats, dem_shares))
+}
+
+fn load_dem_shares_from_objects(
+    path: &Path,
+    arr: &[serde_json::Value],
+) -> Result<Vec<f64>, AssembleError> {
+    arr.iter()
+        .enumerate()
+        .map(|(idx, district)| {
+            district
+                .get("dem_share")
+                .and_then(|v| v.as_f64())
+                .ok_or_else(|| AssembleError::AnalysisInvalid {
+                    path: path.display().to_string(),
+                    reason: format!("districts[{idx}].dem_share must be a number"),
+                })
+        })
+        .collect()
+}
+
+fn load_dem_shares_from_numbers(
+    path: &Path,
+    arr: &[serde_json::Value],
+) -> Result<Vec<f64>, AssembleError> {
+    arr.iter()
+        .enumerate()
+        .map(|(idx, value)| {
+            value
+                .as_f64()
+                .ok_or_else(|| AssembleError::AnalysisInvalid {
+                    path: path.display().to_string(),
+                    reason: format!("per_district_dem_share[{idx}] must be a number"),
+                })
+        })
+        .collect()
 }
 
 fn load_mm_count(
@@ -831,6 +865,33 @@ mod tests {
         assert!(
             msg.contains("[INPUT]") && msg.contains("partisan.json"),
             "error must classify and name malformed analysis JSON: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_load_plan_side_rejects_non_numeric_dem_share() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("bad_plan");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "bad_plan", "num_districts": 2}).to_string(),
+        )
+        .unwrap();
+        let partisan = serde_json::json!({
+            "districts": [
+                {"dem_share": 0.55},
+                {"dem_share": "not-a-number"}
+            ]
+        });
+        std::fs::write(analysis_dir.join("partisan.json"), partisan.to_string()).unwrap();
+        let err = load_plan_side_from_dir(&plan_dir, 0.5).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("districts[1].dem_share"),
+            "error must classify and locate malformed dem_share: {msg}"
         );
     }
 
