@@ -161,10 +161,7 @@ pub fn load_plan_side_from_dir(
                 .unwrap_or("unknown")
         })
         .to_string();
-    let n_districts = manifest
-        .get("num_districts")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(0) as usize;
+    let n_districts = load_manifest_num_districts(&manifest_path, &manifest)?;
     let total_population = 0u64; // manifest doesn't carry it; would need analysis/summary.json
     let submission_type = manifest
         .get("submission_type")
@@ -204,6 +201,29 @@ pub fn load_plan_side_from_dir(
         submitted_by,
         submitted_at,
         analysis_sha256: analysis_sha,
+    })
+}
+
+fn load_manifest_num_districts(
+    manifest_path: &Path,
+    manifest: &serde_json::Value,
+) -> Result<usize, AssembleError> {
+    let n = manifest
+        .get("num_districts")
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| AssembleError::ManifestInvalid {
+            path: manifest_path.display().to_string(),
+            reason: "num_districts must be a positive integer".to_string(),
+        })?;
+    if n == 0 {
+        return Err(AssembleError::ManifestInvalid {
+            path: manifest_path.display().to_string(),
+            reason: "num_districts must be greater than 0".to_string(),
+        });
+    }
+    usize::try_from(n).map_err(|_| AssembleError::ManifestInvalid {
+        path: manifest_path.display().to_string(),
+        reason: format!("num_districts {n} is too large"),
     })
 }
 
@@ -723,6 +743,38 @@ mod tests {
         assert_eq!(
             side.label, "tx_plan_2020",
             "label must fall back to directory name when absent from manifest"
+        );
+    }
+
+    #[test]
+    fn test_load_plan_side_rejects_missing_num_districts() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("bad_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest_json = serde_json::json!({"label": "bad_plan"});
+        std::fs::write(plan_dir.join("manifest.json"), manifest_json.to_string()).unwrap();
+        let err = load_plan_side_from_dir(&plan_dir, 0.5).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("num_districts"),
+            "error must classify and explain missing num_districts: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_load_plan_side_rejects_zero_num_districts() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("bad_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest_json = serde_json::json!({"label": "bad_plan", "num_districts": 0});
+        std::fs::write(plan_dir.join("manifest.json"), manifest_json.to_string()).unwrap();
+        let err = load_plan_side_from_dir(&plan_dir, 0.5).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("greater than 0"),
+            "error must classify and explain zero num_districts: {msg}"
         );
     }
 

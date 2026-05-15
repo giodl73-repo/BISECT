@@ -284,6 +284,8 @@ materialize an invalid imported district.
 Comparison report assignment loading now rejects non-integer, zero, and
 oversized `final_assignments.json` district values before diff evidence is
 computed.
+Comparison report manifest loading now rejects missing, zero, non-integer, and
+oversized `num_districts` instead of defaulting malformed plan metadata to zero.
 
 ## Second Wave: `rstat-core`
 
