@@ -7,6 +7,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::county_names::county_name as lookup_county_name;
 use crate::split_standards::{get_split_standard, SplitStandard};
+use thiserror::Error;
 
 // ---------------------------------------------------------------------------
 // County split types
@@ -58,6 +59,12 @@ pub struct MunicipalSplit {
     pub split_severity: usize,
 }
 
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+pub enum SplitError {
+    #[error("[INPUT] GEOID {geoid} cannot be sliced at byte 5 to extract county FIPS")]
+    InvalidCountyFipsBoundary { geoid: String },
+}
+
 // ---------------------------------------------------------------------------
 // GEOID helpers
 // ---------------------------------------------------------------------------
@@ -65,10 +72,20 @@ pub struct MunicipalSplit {
 /// Parse county FIPS from an 11-char (or longer) Census tract GEOID.
 /// "530330001001" -> "53033" (state 53, county 033)
 pub fn county_fips_from_geoid(geoid: &str) -> &str {
+    try_county_fips_from_geoid(geoid).expect("GEOID has a valid county FIPS byte boundary")
+}
+
+pub fn try_county_fips_from_geoid(geoid: &str) -> Result<&str, SplitError> {
     if geoid.len() >= 5 {
-        &geoid[..5]
+        if geoid.is_char_boundary(5) {
+            Ok(&geoid[..5])
+        } else {
+            Err(SplitError::InvalidCountyFipsBoundary {
+                geoid: geoid.to_string(),
+            })
+        }
     } else {
-        geoid
+        Ok(geoid)
     }
 }
 
@@ -84,7 +101,15 @@ pub fn analyze_county_splits(
     assignments: &HashMap<String, usize>,
     county_names: Option<&HashMap<String, String>>,
 ) -> CountySplitResult {
-    analyze_county_splits_with_state(assignments, county_names, None)
+    try_analyze_county_splits(assignments, county_names)
+        .expect("county split assignment GEOIDs are valid")
+}
+
+pub fn try_analyze_county_splits(
+    assignments: &HashMap<String, usize>,
+    county_names: Option<&HashMap<String, String>>,
+) -> Result<CountySplitResult, SplitError> {
+    try_analyze_county_splits_with_state(assignments, county_names, None)
 }
 
 /// Same as `analyze_county_splits` but with state code for legal standard lookup.
@@ -93,12 +118,21 @@ pub fn analyze_county_splits_with_state(
     county_names: Option<&HashMap<String, String>>,
     state_code: Option<&str>,
 ) -> CountySplitResult {
+    try_analyze_county_splits_with_state(assignments, county_names, state_code)
+        .expect("county split assignment GEOIDs are valid")
+}
+
+pub fn try_analyze_county_splits_with_state(
+    assignments: &HashMap<String, usize>,
+    county_names: Option<&HashMap<String, String>>,
+    state_code: Option<&str>,
+) -> Result<CountySplitResult, SplitError> {
     // Build map: county_fips -> set of districts
     let mut county_to_districts: HashMap<String, HashSet<usize>> = HashMap::new();
     let mut county_to_tracts: HashMap<String, usize> = HashMap::new();
 
     for (geoid, &district) in assignments {
-        let fips = county_fips_from_geoid(geoid).to_string();
+        let fips = try_county_fips_from_geoid(geoid)?.to_string();
         county_to_districts
             .entry(fips.clone())
             .or_default()
@@ -157,7 +191,7 @@ pub fn analyze_county_splits_with_state(
         _ => None,
     });
 
-    CountySplitResult {
+    Ok(CountySplitResult {
         total,
         split,
         preservation_score,
@@ -166,7 +200,7 @@ pub fn analyze_county_splits_with_state(
         compliance_assessment,
         disclaimer,
         entity_note,
-    }
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -471,6 +505,31 @@ mod tests {
     fn test_county_fips_from_geoid_short_geoid_returns_as_is() {
         // GEOID shorter than 5 chars returns itself unchanged
         assert_eq!(county_fips_from_geoid("530"), "530");
+    }
+
+    #[test]
+    fn test_try_county_fips_from_geoid_rejects_invalid_utf8_boundary() {
+        let err = try_county_fips_from_geoid("ééé")
+            .expect_err("non-boundary byte 5 must be rejected instead of panicking");
+        assert_eq!(
+            err,
+            SplitError::InvalidCountyFipsBoundary {
+                geoid: "ééé".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_analyze_county_splits_rejects_invalid_geoid_boundary() {
+        let assignments = make_assignments(&[("ééé", 1)]);
+        let err = try_analyze_county_splits(&assignments, None)
+            .expect_err("invalid GEOID boundary must be rejected");
+        assert_eq!(
+            err,
+            SplitError::InvalidCountyFipsBoundary {
+                geoid: "ééé".to_string()
+            }
+        );
     }
 
     #[test]
