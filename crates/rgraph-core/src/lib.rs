@@ -107,6 +107,43 @@ pub struct ConnectorPath {
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
+pub enum ClusterSummaryError {
+    #[error("[INPUT] cluster {cluster_index} must not be empty")]
+    EmptyCluster { cluster_index: usize },
+    #[error("[INPUT] cluster {cluster_index} node {node} is out of bounds for graph with {node_count} nodes")]
+    NodeOutOfBounds {
+        cluster_index: usize,
+        node: usize,
+        node_count: usize,
+    },
+    #[error(
+        "[INPUT] node {node} appears in both cluster {first_cluster} and cluster {second_cluster}"
+    )]
+    DuplicateClusterNode {
+        node: usize,
+        first_cluster: usize,
+        second_cluster: usize,
+    },
+    #[error("[INPUT] neighbor index {neighbor} from node {node} is out of bounds for graph with {node_count} nodes")]
+    NeighborOutOfBounds {
+        node: usize,
+        neighbor: usize,
+        node_count: usize,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClusterSummary {
+    pub cluster_index: usize,
+    pub nodes: Vec<usize>,
+    pub representative_node: usize,
+    pub internal_edges: usize,
+    pub boundary_edges: usize,
+    pub volume: usize,
+    pub conductance: f64,
+}
+
+#[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum LabelConnectivityError {
     #[error("assignment length {assignment_len} does not match adjacency length {adjacency_len}")]
     AssignmentLengthMismatch {
@@ -583,6 +620,125 @@ where
     }
 
     Ok(None)
+}
+
+pub fn undirected_cluster_summaries<I, D>(
+    adjacency: &[Vec<I>],
+    clusters: &[Vec<D>],
+) -> Result<Vec<ClusterSummary>, ClusterSummaryError>
+where
+    I: NodeIndex,
+    D: NodeIndex,
+{
+    let node_count = adjacency.len();
+    let mut membership = vec![None; node_count];
+    let mut normalized_clusters = Vec::with_capacity(clusters.len());
+
+    for (cluster_index, cluster) in clusters.iter().enumerate() {
+        if cluster.is_empty() {
+            return Err(ClusterSummaryError::EmptyCluster { cluster_index });
+        }
+        let mut nodes = Vec::with_capacity(cluster.len());
+        for &node in cluster {
+            let Some(node) = node.to_usize() else {
+                return Err(ClusterSummaryError::NodeOutOfBounds {
+                    cluster_index,
+                    node: usize::MAX,
+                    node_count,
+                });
+            };
+            if node >= node_count {
+                return Err(ClusterSummaryError::NodeOutOfBounds {
+                    cluster_index,
+                    node,
+                    node_count,
+                });
+            }
+            if let Some(first_cluster) = membership[node] {
+                return Err(ClusterSummaryError::DuplicateClusterNode {
+                    node,
+                    first_cluster,
+                    second_cluster: cluster_index,
+                });
+            }
+            membership[node] = Some(cluster_index);
+            nodes.push(node);
+        }
+        nodes.sort_unstable();
+        normalized_clusters.push(nodes);
+    }
+
+    let mut internal_edges = vec![0usize; clusters.len()];
+    let mut boundary_edges = vec![0usize; clusters.len()];
+    let mut internal_degree = vec![vec![0usize; node_count]; clusters.len()];
+    let mut seen_edges = HashSet::new();
+
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        for &neighbor in neighbors {
+            let Some(neighbor) = neighbor.to_usize() else {
+                return Err(ClusterSummaryError::NeighborOutOfBounds {
+                    node,
+                    neighbor: usize::MAX,
+                    node_count,
+                });
+            };
+            if neighbor >= node_count {
+                return Err(ClusterSummaryError::NeighborOutOfBounds {
+                    node,
+                    neighbor,
+                    node_count,
+                });
+            }
+            if node == neighbor || !seen_edges.insert(ordered_pair(node, neighbor)) {
+                continue;
+            }
+
+            match (membership[node], membership[neighbor]) {
+                (Some(left), Some(right)) if left == right => {
+                    internal_edges[left] += 1;
+                    internal_degree[left][node] += 1;
+                    internal_degree[left][neighbor] += 1;
+                }
+                (Some(left), Some(right)) => {
+                    boundary_edges[left] += 1;
+                    boundary_edges[right] += 1;
+                }
+                (Some(cluster), None) | (None, Some(cluster)) => boundary_edges[cluster] += 1,
+                (None, None) => {}
+            }
+        }
+    }
+
+    normalized_clusters
+        .into_iter()
+        .enumerate()
+        .map(|(cluster_index, nodes)| {
+            let representative_node = nodes
+                .iter()
+                .copied()
+                .max_by(|&left, &right| {
+                    internal_degree[cluster_index][left]
+                        .cmp(&internal_degree[cluster_index][right])
+                        .then_with(|| right.cmp(&left))
+                })
+                .expect("empty clusters were rejected");
+            let volume = internal_edges[cluster_index] * 2 + boundary_edges[cluster_index];
+            let conductance = if volume == 0 {
+                0.0
+            } else {
+                boundary_edges[cluster_index] as f64 / volume as f64
+            };
+            Ok(ClusterSummary {
+                cluster_index,
+                nodes,
+                representative_node,
+                internal_edges: internal_edges[cluster_index],
+                boundary_edges: boundary_edges[cluster_index],
+                volume,
+                conductance,
+            })
+        })
+        .collect()
 }
 
 pub fn assignment_label_connected<I, D>(
@@ -1877,6 +2033,102 @@ mod tests {
         assert_eq!(
             shortest_connector_path(&adjacency, &[0], &[1]),
             Err(ConnectorPathError::NeighborOutOfBounds {
+                node: 0,
+                neighbor: 2,
+                node_count: 2,
+            })
+        );
+    }
+
+    #[test]
+    fn undirected_cluster_summaries_score_neighborhoods() {
+        let adjacency = vec![
+            vec![1_usize, 2],
+            vec![0, 2, 3],
+            vec![0, 1],
+            vec![1, 4],
+            vec![3],
+        ];
+        let clusters = vec![vec![0_usize, 1, 2], vec![3, 4]];
+
+        assert_eq!(
+            undirected_cluster_summaries(&adjacency, &clusters).unwrap(),
+            vec![
+                ClusterSummary {
+                    cluster_index: 0,
+                    nodes: vec![0, 1, 2],
+                    representative_node: 0,
+                    internal_edges: 3,
+                    boundary_edges: 1,
+                    volume: 7,
+                    conductance: 1.0 / 7.0,
+                },
+                ClusterSummary {
+                    cluster_index: 1,
+                    nodes: vec![3, 4],
+                    representative_node: 3,
+                    internal_edges: 1,
+                    boundary_edges: 1,
+                    volume: 3,
+                    conductance: 1.0 / 3.0,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn undirected_cluster_summaries_count_edges_to_unclustered_nodes() {
+        let adjacency = vec![vec![1_usize], vec![0, 2], vec![1]];
+        let clusters = vec![vec![0_usize, 1]];
+
+        assert_eq!(
+            undirected_cluster_summaries(&adjacency, &clusters).unwrap(),
+            vec![ClusterSummary {
+                cluster_index: 0,
+                nodes: vec![0, 1],
+                representative_node: 0,
+                internal_edges: 1,
+                boundary_edges: 1,
+                volume: 3,
+                conductance: 1.0 / 3.0,
+            }]
+        );
+    }
+
+    #[test]
+    fn undirected_cluster_summaries_reject_empty_cluster() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+        let clusters = vec![vec![0_usize], vec![]];
+
+        assert_eq!(
+            undirected_cluster_summaries(&adjacency, &clusters),
+            Err(ClusterSummaryError::EmptyCluster { cluster_index: 1 })
+        );
+    }
+
+    #[test]
+    fn undirected_cluster_summaries_reject_duplicate_cluster_node() {
+        let adjacency = vec![vec![1_usize], vec![0]];
+        let clusters = vec![vec![0_usize, 1], vec![1]];
+
+        assert_eq!(
+            undirected_cluster_summaries(&adjacency, &clusters),
+            Err(ClusterSummaryError::DuplicateClusterNode {
+                node: 1,
+                first_cluster: 0,
+                second_cluster: 1,
+            })
+        );
+    }
+
+    #[test]
+    fn undirected_cluster_summaries_reject_out_of_bounds_neighbor() {
+        let adjacency = vec![vec![2_usize], vec![0]];
+        let clusters = vec![vec![0_usize]];
+
+        assert_eq!(
+            undirected_cluster_summaries(&adjacency, &clusters),
+            Err(ClusterSummaryError::NeighborOutOfBounds {
                 node: 0,
                 neighbor: 2,
                 node_count: 2,
