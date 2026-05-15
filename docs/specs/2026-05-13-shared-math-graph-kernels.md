@@ -261,6 +261,8 @@ evidence cannot panic while annotating non-primary components.
 County-split evidence construction now exposes a checked GEOID parsing path that
 rejects malformed UTF-8 byte boundaries before extracting five-byte county FIPS
 prefixes, so malformed split records return typed errors instead of panicking.
+Urban place aggregation now rejects zero or out-of-range district labels before
+place evidence can create extra district rows outside the expected plan domain.
 
 ## Second Wave: `rstat-core`
 

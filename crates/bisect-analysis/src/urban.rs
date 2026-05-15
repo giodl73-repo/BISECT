@@ -1,6 +1,7 @@
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use thiserror::Error;
 
 use crate::analyzer::{Analyzer, AnalyzerContext};
 
@@ -27,11 +28,29 @@ pub struct UrbanResult {
     pub districts: Vec<UrbanDistrict>,
 }
 
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+pub enum UrbanError {
+    #[error("[INPUT] assignment for place GEOID {geoid} uses invalid district {district}; expected 1..={num_districts}")]
+    InvalidDistrictLabel {
+        geoid: String,
+        district: usize,
+        num_districts: usize,
+    },
+}
+
 pub fn aggregate_urban(
     rows: &[PlaceRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,
 ) -> UrbanResult {
+    try_aggregate_urban(rows, assignments, num_districts).expect("urban assignments are valid")
+}
+
+pub(crate) fn try_aggregate_urban(
+    rows: &[PlaceRow],
+    assignments: &HashMap<String, usize>,
+    num_districts: usize,
+) -> Result<UrbanResult, UrbanError> {
     // For each district, track best (largest_city_pop, largest_city_name) and num_places
     let mut district_places: HashMap<usize, Vec<(Option<String>, u64)>> = HashMap::new();
     for d in 1..=num_districts {
@@ -41,6 +60,13 @@ pub fn aggregate_urban(
     let mut unmatched = 0usize;
     for row in rows {
         if let Some(&district) = assignments.get(&row.geoid) {
+            if district == 0 || district > num_districts {
+                return Err(UrbanError::InvalidDistrictLabel {
+                    geoid: row.geoid.clone(),
+                    district,
+                    num_districts,
+                });
+            }
             district_places
                 .entry(district)
                 .or_default()
@@ -73,11 +99,11 @@ pub fn aggregate_urban(
         .collect();
     districts.sort_by_key(|d| d.district);
 
-    UrbanResult {
+    Ok(UrbanResult {
         analyzer: "urban",
         available: true,
         districts,
-    }
+    })
 }
 
 pub struct UrbanAnalyzer;
@@ -125,7 +151,7 @@ impl Analyzer for UrbanAnalyzer {
             .collect::<Result<Vec<_>, _>>()
             .context("failed to parse places CSV rows")?;
 
-        Ok(aggregate_urban(&rows, ctx.assignments, ctx.num_districts))
+        try_aggregate_urban(&rows, ctx.assignments, ctx.num_districts).map_err(anyhow::Error::from)
     }
 }
 
@@ -160,6 +186,38 @@ mod tests {
         );
         assert_eq!(result.districts[0].largest_city_pop, 45000);
         assert_eq!(result.districts[0].num_places, 2);
+    }
+
+    #[test]
+    fn test_try_aggregate_urban_rejects_zero_district_label() {
+        let rows = vec![make_place_row("50001", Some("Burlington"), 45000)];
+        let assignments = hashmap(&[("50001", 0)]);
+        let err = try_aggregate_urban(&rows, &assignments, 1)
+            .expect_err("zero district labels must be rejected");
+        assert_eq!(
+            err,
+            UrbanError::InvalidDistrictLabel {
+                geoid: "50001".to_string(),
+                district: 0,
+                num_districts: 1
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_aggregate_urban_rejects_out_of_range_district_label() {
+        let rows = vec![make_place_row("50001", Some("Burlington"), 45000)];
+        let assignments = hashmap(&[("50001", 2)]);
+        let err = try_aggregate_urban(&rows, &assignments, 1)
+            .expect_err("out-of-range district labels must be rejected");
+        assert_eq!(
+            err,
+            UrbanError::InvalidDistrictLabel {
+                geoid: "50001".to_string(),
+                district: 2,
+                num_districts: 1
+            }
+        );
     }
 
     #[test]
