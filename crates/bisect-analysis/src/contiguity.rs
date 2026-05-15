@@ -25,6 +25,8 @@ pub enum ContiguityError {
         neighbor_index: usize,
         tract_count: usize,
     },
+    #[error("[INPUT] GEOID {geoid} cannot be sliced at byte 5 to extract county FIPS")]
+    InvalidCountyFipsBoundary { geoid: String },
 }
 
 /// Result of checking contiguity for all districts in a plan.
@@ -143,8 +145,8 @@ pub fn try_check_contiguity(
         // Build human-readable county context for each disconnected tract.
         let disconnected_tract_counties: Vec<String> = disconnected_tracts
             .iter()
-            .map(|geoid| county_context_for_geoid(geoid))
-            .collect();
+            .map(|geoid| try_county_context_for_geoid(geoid))
+            .collect::<Result<Vec<_>, _>>()?;
 
         district_results.push(DistrictContiguity {
             district: d,
@@ -279,14 +281,23 @@ impl DirectedWeightedGraph for AdjacencyGraph<'_> {
 /// Extracts the first 5 characters (county FIPS) and looks up the county name.
 /// Returns "King County, WA" style strings, or the raw FIPS if unknown.
 pub fn county_context_for_geoid(geoid: &str) -> String {
+    try_county_context_for_geoid(geoid).expect("GEOID has a valid county FIPS byte boundary")
+}
+
+pub fn try_county_context_for_geoid(geoid: &str) -> Result<String, ContiguityError> {
     if geoid.len() < 5 {
-        return geoid.to_string();
+        return Ok(geoid.to_string());
+    }
+    if !geoid.is_char_boundary(5) {
+        return Err(ContiguityError::InvalidCountyFipsBoundary {
+            geoid: geoid.to_string(),
+        });
     }
     let county_fips = &geoid[..5];
-    match crate::county_names::county_name(county_fips) {
+    Ok(match crate::county_names::county_name(county_fips) {
         Some(name) => name.to_string(),
         None => county_fips.to_string(),
-    }
+    })
 }
 
 // Re-export for use in nesting tests from plan (Scenario 4).
@@ -430,6 +441,18 @@ mod tests {
         assert_eq!(
             ctx, "99999",
             "unknown FIPS should return raw FIPS, got: {ctx}"
+        );
+    }
+
+    #[test]
+    fn test_try_county_context_rejects_invalid_utf8_boundary() {
+        let err = try_county_context_for_geoid("ééé")
+            .expect_err("non-boundary byte 5 must be rejected instead of panicking");
+        assert_eq!(
+            err,
+            ContiguityError::InvalidCountyFipsBoundary {
+                geoid: "ééé".to_string()
+            }
         );
     }
 
@@ -614,6 +637,22 @@ mod tests {
                 tract_index: 0,
                 neighbor_index: 1,
                 tract_count: 1
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_check_contiguity_rejects_bad_disconnected_county_context_geoid() {
+        let adj = vec![vec![1usize], vec![0usize], vec![]];
+        let geoids = vec!["aaaaa".to_string(), "bbbbb".to_string(), "ééé".to_string()];
+        let assignments: HashMap<String, usize> =
+            geoids.iter().cloned().zip(std::iter::repeat(1)).collect();
+        let err = try_check_contiguity(&assignments, &adj, &geoids, 1)
+            .expect_err("malformed disconnected GEOID county context must be rejected");
+        assert_eq!(
+            err,
+            ContiguityError::InvalidCountyFipsBoundary {
+                geoid: "ééé".to_string()
             }
         );
     }

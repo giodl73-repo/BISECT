@@ -255,6 +255,9 @@ Contiguity evidence construction now applies the same typed validation for
 tract/adjacency length mismatches, unknown assignment GEOIDs, zero or
 out-of-range district labels, and out-of-range neighbor indices before district
 component evidence can silently drop rows or traverse malformed adjacency.
+Disconnected-tract county-context rendering also rejects malformed UTF-8 byte
+boundaries before extracting five-byte county FIPS prefixes, so contiguity
+evidence cannot panic while annotating non-primary components.
 County-split evidence construction now exposes a checked GEOID parsing path that
 rejects malformed UTF-8 byte boundaries before extracting five-byte county FIPS
 prefixes, so malformed split records return typed errors instead of panicking.
