@@ -2,6 +2,27 @@ use serde::Serialize;
 /// Chamber adjacency graph construction and nesting validation.
 /// Spec 5 — board amendments R3 applied.
 use std::collections::{HashMap, HashSet, VecDeque};
+use thiserror::Error;
+
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
+pub enum NestingError {
+    #[error(
+        "[INPUT] tract_ids length {tract_ids} does not match tract_adjacency length {adjacency}"
+    )]
+    TractAdjacencyLengthMismatch { tract_ids: usize, adjacency: usize },
+    #[error("[INPUT] assignment for tract {geoid} uses invalid district {district}; expected 1..={num_districts}")]
+    InvalidDistrictLabel {
+        geoid: String,
+        district: usize,
+        num_districts: usize,
+    },
+    #[error("[INPUT] tract adjacency for tract index {tract_index} references missing neighbor index {neighbor_index}; tract count is {tract_count}")]
+    InvalidAdjacencyIndex {
+        tract_index: usize,
+        neighbor_index: usize,
+        tract_count: usize,
+    },
+}
 
 // ---------------------------------------------------------------------------
 // Chamber adjacency
@@ -21,6 +42,28 @@ pub fn build_chamber_adjacency(
     tract_ids: &[String],
     num_house_districts: usize,
 ) -> Vec<Vec<usize>> {
+    try_build_chamber_adjacency(
+        house_assignments,
+        tract_adjacency,
+        tract_ids,
+        num_house_districts,
+    )
+    .expect("chamber adjacency inputs are valid")
+}
+
+pub fn try_build_chamber_adjacency(
+    house_assignments: &HashMap<String, usize>,
+    tract_adjacency: &[Vec<usize>],
+    tract_ids: &[String],
+    num_house_districts: usize,
+) -> Result<Vec<Vec<usize>>, NestingError> {
+    validate_chamber_adjacency_inputs(
+        house_assignments,
+        tract_adjacency,
+        tract_ids,
+        num_house_districts,
+    )?;
+
     // Group tract indices by house district (1-indexed → 0-indexed node in output)
     let mut district_tracts: HashMap<usize, Vec<usize>> = HashMap::new();
     for (idx, geoid) in tract_ids.iter().enumerate() {
@@ -128,13 +171,55 @@ pub fn build_chamber_adjacency(
         }
     }
 
-    adj.into_iter()
+    Ok(adj
+        .into_iter()
         .map(|set| {
             let mut v: Vec<usize> = set.into_iter().collect();
             v.sort();
             v
         })
-        .collect()
+        .collect())
+}
+
+fn validate_chamber_adjacency_inputs(
+    house_assignments: &HashMap<String, usize>,
+    tract_adjacency: &[Vec<usize>],
+    tract_ids: &[String],
+    num_house_districts: usize,
+) -> Result<(), NestingError> {
+    if tract_ids.len() != tract_adjacency.len() {
+        return Err(NestingError::TractAdjacencyLengthMismatch {
+            tract_ids: tract_ids.len(),
+            adjacency: tract_adjacency.len(),
+        });
+    }
+
+    for geoid in tract_ids {
+        if let Some(&district) = house_assignments.get(geoid) {
+            if district == 0 || district > num_house_districts {
+                return Err(NestingError::InvalidDistrictLabel {
+                    geoid: geoid.clone(),
+                    district,
+                    num_districts: num_house_districts,
+                });
+            }
+        }
+    }
+
+    let tract_count = tract_ids.len();
+    for (tract_index, neighbors) in tract_adjacency.iter().enumerate() {
+        for &neighbor_index in neighbors {
+            if neighbor_index >= tract_count {
+                return Err(NestingError::InvalidAdjacencyIndex {
+                    tract_index,
+                    neighbor_index,
+                    tract_count,
+                });
+            }
+        }
+    }
+
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------
@@ -365,6 +450,56 @@ mod tests {
         assert!(
             house_adj[0].is_empty(),
             "GEOID tie-break: primary='53001' (no neighbors) → dist1 not adjacent to dist2"
+        );
+    }
+
+    #[test]
+    fn test_try_build_chamber_adjacency_rejects_length_mismatch() {
+        let house_asgn: HashMap<String, usize> = [("t0".into(), 1)].into();
+        let tract_adj: Vec<Vec<usize>> = vec![];
+        let tract_ids: Vec<String> = vec!["t0".into()];
+        let err = try_build_chamber_adjacency(&house_asgn, &tract_adj, &tract_ids, 1)
+            .expect_err("mismatched tract and adjacency lengths must be rejected");
+        assert_eq!(
+            err,
+            NestingError::TractAdjacencyLengthMismatch {
+                tract_ids: 1,
+                adjacency: 0
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_build_chamber_adjacency_rejects_zero_district_label() {
+        let house_asgn: HashMap<String, usize> = [("t0".into(), 0)].into();
+        let tract_adj: Vec<Vec<usize>> = vec![vec![]];
+        let tract_ids: Vec<String> = vec!["t0".into()];
+        let err = try_build_chamber_adjacency(&house_asgn, &tract_adj, &tract_ids, 1)
+            .expect_err("zero district labels must be rejected");
+        assert_eq!(
+            err,
+            NestingError::InvalidDistrictLabel {
+                geoid: "t0".into(),
+                district: 0,
+                num_districts: 1
+            }
+        );
+    }
+
+    #[test]
+    fn test_try_build_chamber_adjacency_rejects_missing_neighbor_index() {
+        let house_asgn: HashMap<String, usize> = [("t0".into(), 1)].into();
+        let tract_adj: Vec<Vec<usize>> = vec![vec![1]];
+        let tract_ids: Vec<String> = vec!["t0".into()];
+        let err = try_build_chamber_adjacency(&house_asgn, &tract_adj, &tract_ids, 1)
+            .expect_err("out-of-range adjacency indices must be rejected");
+        assert_eq!(
+            err,
+            NestingError::InvalidAdjacencyIndex {
+                tract_index: 0,
+                neighbor_index: 1,
+                tract_count: 1
+            }
         );
     }
 

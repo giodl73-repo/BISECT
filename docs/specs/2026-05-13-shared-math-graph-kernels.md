@@ -247,6 +247,10 @@ connectivity, and restricted connected components), malformed one-way adjacency
 lists are handled as weak/undirected graphs rather than silently producing
 orientation-dependent answers. Directed shortest paths and reachability remain
 directed by design.
+Chamber-adjacency evidence construction now has a typed checked path that rejects
+tract/adjacency length mismatches, zero or out-of-range district labels, and
+out-of-range neighbor indices before nesting or chamber-boundary evidence can
+panic on malformed graph rows.
 
 ## Second Wave: `rstat-core`
 
