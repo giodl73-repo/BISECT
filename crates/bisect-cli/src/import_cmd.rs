@@ -198,11 +198,17 @@ fn import_assignments_from_geojson_properties(
             if let (Some(geoid), Some(district)) =
                 (props["geoid"].as_str(), props["district"].as_u64())
             {
-                assignments.insert(geoid.to_string(), district as usize);
+                assignments.insert(
+                    geoid.to_string(),
+                    validate_import_district(geoid, district)?,
+                );
             } else if let (Some(geoid), Some(district)) =
                 (props["GEOID"].as_str(), props["district"].as_u64())
             {
-                assignments.insert(geoid.to_string(), district as usize);
+                assignments.insert(
+                    geoid.to_string(),
+                    validate_import_district(geoid, district)?,
+                );
             }
         }
         if !assignments.is_empty() {
@@ -303,6 +309,13 @@ pub fn import_assignments_from_dra_csv(
                 district_str
             )
         })?;
+        if district == 0 {
+            anyhow::bail!(
+                "[INPUT] DRA CSV line {}: assignment for GEOID {} uses invalid district 0",
+                lineno + 1,
+                geoid
+            );
+        }
         assignments.insert(geoid.to_string(), district);
     }
 
@@ -310,6 +323,14 @@ pub fn import_assignments_from_dra_csv(
         anyhow::bail!("DRA CSV produced no assignments — check file format");
     }
     Ok(assignments)
+}
+
+fn validate_import_district(geoid: &str, district: u64) -> anyhow::Result<usize> {
+    if district == 0 {
+        anyhow::bail!("[INPUT] GeoJSON assignment for GEOID {geoid} uses invalid district 0");
+    }
+    usize::try_from(district)
+        .map_err(|_| anyhow::anyhow!("[INPUT] district value {district} is too large"))
 }
 
 // ---------------------------------------------------------------------------
@@ -457,6 +478,18 @@ mod tests {
         assert_eq!(assignments.len(), 2);
         assert_eq!(assignments["53001000100"], 1);
         assert_eq!(assignments["53001000200"], 2);
+    }
+
+    #[test]
+    fn test_import_dra_csv_zero_district_fails() {
+        let csv = "GEOID,DISTRICT\n53001000100,0\n";
+        let result = import_assignments_from_dra_csv(csv);
+        assert!(result.is_err(), "district 0 must fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("invalid district 0"),
+            "error must classify and explain invalid district 0: {msg}"
+        );
     }
 
     #[test]
@@ -637,5 +670,26 @@ mod tests {
         assert_eq!(assignments.len(), 2);
         assert_eq!(assignments["53001000100"], 1);
         assert_eq!(assignments["53001000200"], 2);
+    }
+
+    #[test]
+    fn test_import_geojson_properties_zero_district_fails() {
+        let geojson = serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": null,
+                    "properties": {"geoid": "53001000100", "district": 0}
+                }
+            ]
+        });
+        let result = import_assignments_from_geojson_properties(&geojson.to_string());
+        assert!(result.is_err(), "district 0 must fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("invalid district 0"),
+            "error must classify and explain invalid district 0: {msg}"
+        );
     }
 }

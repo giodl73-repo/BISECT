@@ -274,6 +274,8 @@ district 0 before relabeling, so round-trip equality evidence cannot normalize
 an invalid label into a valid canonical district.
 GerryChain assignment import now rejects district 0 at parse time, preventing
 external interchange inputs from materializing a zero-district RPLAN.
+CLI DRA CSV and tract-level GeoJSON imports apply the same parse-time district
+0 rejection before deriving imported plan district counts.
 
 ## Second Wave: `rstat-core`
 
