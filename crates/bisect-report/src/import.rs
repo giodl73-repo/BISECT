@@ -81,6 +81,10 @@ pub fn import_geojson_plan(
         }
     }
 
+    if district_polygons.is_empty() {
+        anyhow::bail!("[INPUT] GeoJSON contains no usable Polygon or MultiPolygon geometry");
+    }
+
     // PIP assignment: for each tract centroid, find the containing polygon
     let mut assignments = HashMap::with_capacity(tract_centroids.len());
 
@@ -100,9 +104,10 @@ pub fn import_geojson_plan(
             assigned = nearest_centroid(lon, lat, &district_centroids);
         }
 
-        if let Some(dist) = assigned {
-            assignments.insert(geoid.clone(), dist);
-        }
+        let dist = assigned.ok_or_else(|| {
+            anyhow::anyhow!("[INPUT] no polygon or fallback centroid could assign GEOID {geoid}")
+        })?;
+        assignments.insert(geoid.clone(), dist);
     }
 
     Ok(assignments)
@@ -439,6 +444,26 @@ mod tests {
         assert!(
             msg.contains("[INPUT]") && msg.contains("longitude must be a number"),
             "error must classify and explain malformed polygon coordinate: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_import_rejects_no_usable_polygon_geometry() {
+        let geojson_str = serde_json::to_string(&serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "geometry": null,
+                "properties": {"district_id": 1}
+            }]
+        }))
+        .unwrap();
+        let centroids = HashMap::from([("53001001000".to_string(), (-122.5, 47.5))]);
+        let err = import_geojson_plan(&geojson_str, &centroids).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("[INPUT]") && msg.contains("no usable Polygon"),
+            "error must classify missing usable geometry: {msg}"
         );
     }
 

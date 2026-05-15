@@ -284,6 +284,9 @@ materialize an invalid imported district.
 District-polygon GeoJSON import also rejects malformed Polygon/MultiPolygon
 coordinate rings instead of skipping invalid geometry or defaulting bad
 coordinates to `(0, 0)`.
+District-polygon GeoJSON import now rejects files with no usable polygon
+geometry instead of returning an empty assignment set that later appears as a
+zero-district import.
 Comparison report assignment loading now rejects non-integer, zero, and
 oversized `final_assignments.json` district values before diff evidence is
 computed.
