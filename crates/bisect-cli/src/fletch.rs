@@ -1,9 +1,11 @@
 use crate::fetch::FetchItem;
 use anyhow::{Context, Result};
 use fletch_core::{
-    adapter_handoff_report, dry_run_flight, fetch_plan_with_kind, fetch_to_cache,
-    graph_from_registry, validate_registry, CachePolicy, FetchOptions, FletchDefinition,
-    FletchRegistry, FreshnessPolicy, GraphNodeKind, SourceKind, SourceSpec, FLETCH_REGISTRY_SCHEMA,
+    adapter_handoff_report, cache_index_from_manifest, dry_run_flight, fetch_plan_with_kind,
+    fetch_to_cache, graph_from_registry, read_cache_manifest_json, upsert_cache_manifest_entries,
+    validate_registry, write_cache_manifest_json, CacheEntry, CacheManifest, CachePolicy,
+    FetchOptions, FletchDefinition, FletchRegistry, FreshnessPolicy, GraphNodeKind, SourceKind,
+    SourceSpec, FLETCH_CACHE_INDEX_SCHEMA, FLETCH_REGISTRY_SCHEMA,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -38,6 +40,33 @@ pub struct FletchSourceHandoffReport {
     pub flight_step_count: usize,
     pub validation_finding_count: usize,
     pub rows: Vec<FletchSourceHandoffRow>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct FletchCacheIndexRow {
+    pub fletch_id: String,
+    pub dataset_id: String,
+    pub cache_key: String,
+    pub sha256: String,
+    pub relative_path: String,
+    pub bytes: u64,
+    pub verified: bool,
+    pub evidence_status: String,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct FletchCacheIndexReport {
+    pub schema_version: String,
+    pub generated_by: String,
+    pub source_schema: String,
+    pub registry_id: String,
+    pub fletch_source_count: usize,
+    pub indexed_source_count: usize,
+    pub missing_source_count: usize,
+    pub unexpected_index_count: usize,
+    pub unverified_index_count: usize,
+    pub byte_count: u64,
+    pub rows: Vec<FletchCacheIndexRow>,
 }
 
 pub fn fletch_registry_from_items(items: &[FetchItem]) -> FletchRegistry {
@@ -238,6 +267,155 @@ pub fn fletch_source_handoff_gate_failures(report: &FletchSourceHandoffReport) -
     failures
 }
 
+pub fn fletch_cache_manifest_path(cache_root: &Path) -> PathBuf {
+    cache_root.join("cache-manifest.json")
+}
+
+pub fn read_fletch_cache_manifest(path: &Path) -> Result<CacheManifest> {
+    read_cache_manifest_json(path)
+        .with_context(|| format!("reading FLETCH cache manifest {}", path.display()))
+}
+
+pub fn fletch_cache_index_report(
+    registry: &FletchRegistry,
+    manifest: &CacheManifest,
+) -> FletchCacheIndexReport {
+    let expected_ids = registry
+        .fletches
+        .iter()
+        .map(|definition| definition.id.clone())
+        .collect::<BTreeSet<_>>();
+    let index = cache_index_from_manifest(manifest);
+    let indexed_by_dataset = index
+        .entries
+        .iter()
+        .map(|entry| (entry.dataset_id.clone(), entry))
+        .collect::<BTreeMap<_, _>>();
+
+    let mut rows = Vec::new();
+    for fletch_id in &expected_ids {
+        match indexed_by_dataset.get(fletch_id) {
+            Some(entry) => rows.push(FletchCacheIndexRow {
+                fletch_id: fletch_id.clone(),
+                dataset_id: entry.dataset_id.clone(),
+                cache_key: entry.cache_key.clone(),
+                sha256: entry.sha256.clone(),
+                relative_path: entry.relative_path.clone(),
+                bytes: entry.bytes,
+                verified: entry.verified,
+                evidence_status: if entry.verified {
+                    "indexed-verified"
+                } else {
+                    "indexed-unverified"
+                }
+                .to_string(),
+            }),
+            None => rows.push(FletchCacheIndexRow {
+                fletch_id: fletch_id.clone(),
+                dataset_id: String::new(),
+                cache_key: String::new(),
+                sha256: String::new(),
+                relative_path: String::new(),
+                bytes: 0,
+                verified: false,
+                evidence_status: "missing-index-row".to_string(),
+            }),
+        }
+    }
+    for entry in &index.entries {
+        if !expected_ids.contains(&entry.dataset_id) {
+            rows.push(FletchCacheIndexRow {
+                fletch_id: entry.dataset_id.clone(),
+                dataset_id: entry.dataset_id.clone(),
+                cache_key: entry.cache_key.clone(),
+                sha256: entry.sha256.clone(),
+                relative_path: entry.relative_path.clone(),
+                bytes: entry.bytes,
+                verified: entry.verified,
+                evidence_status: "unexpected-index-row".to_string(),
+            });
+        }
+    }
+
+    rows.sort_by(|left, right| {
+        left.evidence_status
+            .cmp(&right.evidence_status)
+            .then(left.fletch_id.cmp(&right.fletch_id))
+    });
+    let indexed_source_count = rows
+        .iter()
+        .filter(|row| {
+            matches!(
+                row.evidence_status.as_str(),
+                "indexed-verified" | "indexed-unverified"
+            )
+        })
+        .count();
+    let missing_source_count = rows
+        .iter()
+        .filter(|row| row.evidence_status == "missing-index-row")
+        .count();
+    let unexpected_index_count = rows
+        .iter()
+        .filter(|row| row.evidence_status == "unexpected-index-row")
+        .count();
+    let unverified_index_count = rows
+        .iter()
+        .filter(|row| row.evidence_status == "indexed-unverified")
+        .count();
+    let byte_count = rows
+        .iter()
+        .filter(|row| row.evidence_status == "indexed-verified")
+        .map(|row| row.bytes)
+        .sum();
+
+    FletchCacheIndexReport {
+        schema_version: "bisect.fletch-cache-index.v1".to_string(),
+        generated_by: "bisect-cli".to_string(),
+        source_schema: FLETCH_CACHE_INDEX_SCHEMA.to_string(),
+        registry_id: registry.registry_id.clone(),
+        fletch_source_count: expected_ids.len(),
+        indexed_source_count,
+        missing_source_count,
+        unexpected_index_count,
+        unverified_index_count,
+        byte_count,
+        rows,
+    }
+}
+
+pub fn write_fletch_cache_index(path: &Path, report: &FletchCacheIndexReport) -> Result<()> {
+    if let Some(parent) = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+    {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    let file =
+        std::fs::File::create(path).with_context(|| format!("writing {}", path.display()))?;
+    serde_json::to_writer_pretty(file, report)
+        .with_context(|| format!("serializing {}", path.display()))?;
+    Ok(())
+}
+
+pub fn fletch_cache_index_gate_failures(report: &FletchCacheIndexReport) -> Vec<String> {
+    let mut failures = Vec::new();
+    if report.unverified_index_count > 0 {
+        failures.push(format!(
+            "{} indexed source row(s) are unverified",
+            report.unverified_index_count
+        ));
+    }
+    if report.unexpected_index_count > 0 {
+        failures.push(format!(
+            "{} cache index row(s) do not map to the BISECT FLETCH registry",
+            report.unexpected_index_count
+        ));
+    }
+    failures
+}
+
 pub fn fetch_item_to_fletch(
     item: &FetchItem,
     cache_root: &Path,
@@ -263,11 +441,41 @@ pub fn fetch_item_to_fletch(
         "bisect_cache_target".to_string(),
         item.local_path.display().to_string(),
     );
-    fetch_to_cache(
+    let outcome = fetch_to_cache(
         &plan,
         FetchOptions::new(PathBuf::from(cache_root)).with_force(force),
     )
-    .map_err(|e| e.to_string())
+    .map_err(|e| e.to_string())?;
+    upsert_fletch_cache_manifest_entries(cache_root, [outcome.entry.clone()])
+        .map_err(|e| e.to_string())?;
+    Ok(outcome)
+}
+
+fn upsert_fletch_cache_manifest_entries(
+    cache_root: &Path,
+    entries: impl IntoIterator<Item = CacheEntry>,
+) -> Result<CacheManifest> {
+    let manifest_path = fletch_cache_manifest_path(cache_root);
+    let entries = entries.into_iter().collect::<Vec<_>>();
+    if entries.is_empty() {
+        return if manifest_path.exists() {
+            read_fletch_cache_manifest(&manifest_path)
+        } else {
+            fletch_core::cache_manifest(cache_root.display().to_string(), Vec::new())
+                .context("creating empty FLETCH cache manifest")
+        };
+    }
+    let manifest = if manifest_path.exists() {
+        read_fletch_cache_manifest(&manifest_path)?
+    } else {
+        fletch_core::cache_manifest(cache_root.display().to_string(), Vec::new())
+            .context("creating empty FLETCH cache manifest")?
+    };
+    let manifest = upsert_cache_manifest_entries(manifest, entries)
+        .context("upserting FLETCH cache manifest entries")?;
+    write_cache_manifest_json(&manifest_path, &manifest)
+        .with_context(|| format!("writing FLETCH cache manifest {}", manifest_path.display()))?;
+    Ok(manifest)
 }
 
 pub fn fletch_id_for_item(item: &FetchItem) -> String {
@@ -328,6 +536,23 @@ fn safe_id(value: &str) -> String {
 mod tests {
     use super::*;
 
+    fn cache_entry(dataset_id: &str, verified: bool) -> CacheEntry {
+        CacheEntry {
+            dataset_id: dataset_id.to_string(),
+            version: Some("2020".to_string()),
+            source_url: format!("https://example.test/{dataset_id}.zip"),
+            cache_key: format!("sha256:{}", "a".repeat(64)),
+            relative_path: "objects/sha256/aa".to_string(),
+            sha256: format!("sha256:{}", "b".repeat(64)),
+            bytes: 42,
+            fetched_at_ms: 1,
+            verified,
+            fetch_attempts: 1,
+            retry_count: 0,
+            last_retryable_error: None,
+        }
+    }
+
     fn fetch_item(kind: &str, url: Option<&str>) -> FetchItem {
         FetchItem {
             state_code: "VT".to_string(),
@@ -368,5 +593,22 @@ mod tests {
     fn fletch_id_for_item_is_stable_and_path_safe() {
         let item = fetch_item("school-districts", Some("https://example.test/school.zip"));
         assert_eq!(fletch_id_for_item(&item), "bisect.2020.vt.school-districts");
+    }
+
+    #[test]
+    fn fletch_cache_index_report_maps_manifest_to_registry_sources() {
+        let item = fetch_item("tiger", Some("https://example.test/tiger.zip"));
+        let registry = fletch_registry_from_items(&[item]);
+        let manifest =
+            fletch_core::cache_manifest("cache", vec![cache_entry("bisect.2020.vt.tiger", true)])
+                .unwrap();
+
+        let report = fletch_cache_index_report(&registry, &manifest);
+
+        assert_eq!(report.source_schema, FLETCH_CACHE_INDEX_SCHEMA);
+        assert_eq!(report.indexed_source_count, 1);
+        assert_eq!(report.missing_source_count, 0);
+        assert_eq!(report.unexpected_index_count, 0);
+        assert!(fletch_cache_index_gate_failures(&report).is_empty());
     }
 }

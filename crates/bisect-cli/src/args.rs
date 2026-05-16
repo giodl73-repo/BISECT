@@ -311,6 +311,8 @@ pub enum Commands {
     Fetch(FetchArgs),
     /// Inspect BISECT fetch sources as FLETCH cachelines without downloading
     FletchSources(FletchSourcesArgs),
+    /// Map the BISECT-owned FLETCH cache manifest to cache-index evidence
+    FletchCacheIndex(FletchCacheIndexArgs),
     /// Compute per-district analytics (demographic, political, urban, summary, contiguity, splits)
     Analyze(AnalyzeArgs),
     /// Compare two redistricting plans (Jaccard, population, compactness)
@@ -3472,6 +3474,46 @@ pub struct FletchSourcesArgs {
     pub details: bool,
 
     /// Fail if the generated handoff has registry or validation failures
+    #[arg(long)]
+    pub gate: bool,
+}
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct FletchCacheIndexArgs {
+    /// Census year: 2020, 2010, 2000, or all [default: 2020]
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+
+    /// State codes to inspect (default: all 50)
+    #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
+    pub states: Vec<String>,
+
+    /// Data types to inspect; defaults to the same "all" subset as bisect fetch
+    #[arg(long = "type", num_args = 0.., value_delimiter = ' ')]
+    pub data_types: Vec<DataType>,
+
+    /// Custom BISECT manifest file path (overrides BISECT_MANIFEST env var)
+    #[arg(long)]
+    pub manifest: Option<String>,
+
+    /// Read this FLETCH cache manifest. Defaults to <local_data_dir>/.fletch/cache-manifest.json.
+    #[arg(long, value_name = "FILE")]
+    pub cache_manifest: Option<std::path::PathBuf>,
+
+    /// Output cache-index evidence JSON
+    #[arg(
+        long,
+        default_value = "data/fletch-cache-index.json",
+        value_name = "FILE"
+    )]
+    pub output: std::path::PathBuf,
+
+    /// Print per-source evidence rows
+    #[arg(long)]
+    pub details: bool,
+
+    /// Fail if indexed rows are unverified or outside the BISECT FLETCH registry
     #[arg(long)]
     pub gate: bool,
 }

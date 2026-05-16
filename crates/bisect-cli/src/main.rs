@@ -10,8 +10,9 @@ use bisect_cli::exact_cmd::run_exact;
 use bisect_cli::export_cmd::run_export;
 use bisect_cli::fetch::{build_fetch_list, download_items, load_manifest, print_check_report};
 use bisect_cli::fletch::{
+    fletch_cache_index_gate_failures, fletch_cache_index_report, fletch_cache_manifest_path,
     fletch_registry_from_items, fletch_source_handoff_gate_failures, fletch_source_handoff_report,
-    write_fletch_source_handoff,
+    read_fletch_cache_manifest, write_fletch_cache_index, write_fletch_source_handoff,
 };
 use bisect_cli::ilp_audit::run_ilp_audit;
 use bisect_cli::import_cmd::run_import;
@@ -640,6 +641,87 @@ fn main() {
                 let failures = fletch_source_handoff_gate_failures(&report);
                 if !failures.is_empty() {
                     eprintln!("ERROR: FLETCH source handoff gate failed");
+                    for failure in failures {
+                        eprintln!("  - {failure}");
+                    }
+                    std::process::exit(1);
+                }
+                println!("  gate: pass");
+            }
+        }
+
+        // ── BISECT fletch-cache-index: manifest-backed source evidence ────────
+        Commands::FletchCacheIndex(args) => {
+            if let Some(ref path) = args.manifest {
+                std::env::set_var("BISECT_MANIFEST", path);
+            }
+            let valid_years = ["2020", "2010", "2000", "all"];
+            if !valid_years.contains(&args.year.as_str()) {
+                eprintln!(
+                    "ERROR: unsupported year '{}' — valid years are 2020, 2010, 2000, all",
+                    args.year
+                );
+                std::process::exit(1);
+            }
+            let manifest = load_manifest().unwrap_or_else(|e| {
+                eprintln!("ERROR loading manifest: {e}");
+                std::process::exit(1);
+            });
+            let years: Vec<String> = if args.year == "all" {
+                vec!["2020".into(), "2010".into(), "2000".into()]
+            } else {
+                vec![args.year.clone()]
+            };
+            let mut items = Vec::new();
+            for year in &years {
+                items.extend(build_fetch_list(
+                    &manifest,
+                    &args.states,
+                    year,
+                    &args.data_types,
+                ));
+            }
+            let registry = fletch_registry_from_items(&items);
+            let default_cache_manifest = fletch_cache_manifest_path(
+                &std::path::PathBuf::from(&manifest.local_data_dir).join(".fletch"),
+            );
+            let cache_manifest_path = args
+                .cache_manifest
+                .as_deref()
+                .unwrap_or(default_cache_manifest.as_path());
+            let cache_manifest =
+                read_fletch_cache_manifest(cache_manifest_path).unwrap_or_else(|e| {
+                    eprintln!("ERROR reading FLETCH cache manifest: {e}");
+                    std::process::exit(1);
+                });
+            let report = fletch_cache_index_report(&registry, &cache_manifest);
+            write_fletch_cache_index(&args.output, &report).unwrap_or_else(|e| {
+                eprintln!("ERROR writing FLETCH cache index: {e}");
+                std::process::exit(1);
+            });
+            println!("bisect fletch-cache-index");
+            println!("  registry: {}", report.registry_id);
+            println!("  manifest: {}", cache_manifest_path.display());
+            println!("  output: {}", args.output.display());
+            println!(
+                "  indexed: {} missing: {} unexpected: {} unverified: {}",
+                report.indexed_source_count,
+                report.missing_source_count,
+                report.unexpected_index_count,
+                report.unverified_index_count
+            );
+            if args.details {
+                for row in &report.rows {
+                    println!(
+                        "  [{}] {} -> {}",
+                        row.evidence_status, row.fletch_id, row.relative_path
+                    );
+                }
+            }
+            if args.gate {
+                let failures = fletch_cache_index_gate_failures(&report);
+                if !failures.is_empty() {
+                    eprintln!("ERROR: FLETCH cache index gate failed");
                     for failure in failures {
                         eprintln!("  - {failure}");
                     }
