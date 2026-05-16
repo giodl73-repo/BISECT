@@ -6,4 +6,6 @@ docs/examples/**/*.rplan text eol=lf
 docs/examples/**/*.txt text eol=crlf
 docs/examples/**/*.md text eol=crlf
 docs/examples/**/*.lp text eol=crlf
-docs/examples/rplan-*/** text eol=lf
+docs/examples/rplan-*/** text eol=crlf
+docs/examples/rplan-*/**/*.rctx text eol=lf
+docs/examples/rplan-*/**/*.rplan text eol=lf
