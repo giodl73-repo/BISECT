@@ -1,11 +1,12 @@
 use crate::fetch::FetchItem;
 use anyhow::{Context, Result};
 use fletch_core::{
-    adapter_handoff_report, cache_index_from_manifest, dry_run_flight, fetch_plan_with_kind,
-    fetch_to_cache, graph_from_registry, read_cache_manifest_json, upsert_cache_manifest_entries,
-    validate_registry, write_cache_manifest_json, CacheEntry, CacheManifest, CachePolicy,
-    FetchOptions, FletchDefinition, FletchRegistry, FreshnessPolicy, GraphNodeKind, SourceKind,
-    SourceSpec, FLETCH_CACHE_INDEX_SCHEMA, FLETCH_REGISTRY_SCHEMA,
+    adapter_handoff_report, cache_index_from_manifest, cache_index_gate_report, dry_run_flight,
+    fetch_plan_with_kind, fetch_to_cache, graph_from_registry, read_cache_manifest_json,
+    upsert_cache_manifest_entries, validate_registry, write_cache_manifest_json, CacheEntry,
+    CacheIndexGatePolicy, CacheManifest, CachePolicy, FetchOptions, FletchDefinition,
+    FletchRegistry, FreshnessPolicy, GraphNodeKind, SourceKind, SourceSpec,
+    FLETCH_CACHE_INDEX_SCHEMA, FLETCH_REGISTRY_SCHEMA,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -280,12 +281,18 @@ pub fn fletch_cache_index_report(
     registry: &FletchRegistry,
     manifest: &CacheManifest,
 ) -> FletchCacheIndexReport {
-    let expected_ids = registry
-        .fletches
-        .iter()
-        .map(|definition| definition.id.clone())
+    let expected_ids = cacheable_registry_ids(registry)
+        .into_iter()
         .collect::<BTreeSet<_>>();
     let index = cache_index_from_manifest(manifest);
+    let gate = cache_index_gate_report(
+        &index,
+        &CacheIndexGatePolicy {
+            expected_dataset_ids: expected_ids.iter().cloned().collect(),
+            require_verified: true,
+            allow_missing_expected: true,
+        },
+    );
     let indexed_by_dataset = index
         .entries
         .iter()
@@ -355,14 +362,8 @@ pub fn fletch_cache_index_report(
         .iter()
         .filter(|row| row.evidence_status == "missing-index-row")
         .count();
-    let unexpected_index_count = rows
-        .iter()
-        .filter(|row| row.evidence_status == "unexpected-index-row")
-        .count();
-    let unverified_index_count = rows
-        .iter()
-        .filter(|row| row.evidence_status == "indexed-unverified")
-        .count();
+    let unexpected_index_count = gate.unexpected_count;
+    let unverified_index_count = gate.unverified_count;
     let byte_count = rows
         .iter()
         .filter(|row| row.evidence_status == "indexed-verified")
@@ -382,6 +383,20 @@ pub fn fletch_cache_index_report(
         byte_count,
         rows,
     }
+}
+
+fn cacheable_registry_ids(registry: &FletchRegistry) -> Vec<String> {
+    registry
+        .fletches
+        .iter()
+        .filter(|definition| {
+            definition
+                .shafts
+                .iter()
+                .any(|shaft| matches!(shaft.kind, SourceKind::Http | SourceKind::File))
+        })
+        .map(|definition| definition.id.clone())
+        .collect()
 }
 
 pub fn write_fletch_cache_index(path: &Path, report: &FletchCacheIndexReport) -> Result<()> {
