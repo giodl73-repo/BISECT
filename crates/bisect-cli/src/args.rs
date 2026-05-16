@@ -309,6 +309,8 @@ pub enum Commands {
     States(StatesArgs),
     /// Download census data needed to run redistricting
     Fetch(FetchArgs),
+    /// Inspect BISECT fetch sources as FLETCH cachelines without downloading
+    FletchSources(FletchSourcesArgs),
     /// Compute per-district analytics (demographic, political, urban, summary, contiguity, splits)
     Analyze(AnalyzeArgs),
     /// Compare two redistricting plans (Jaccard, population, compactness)
@@ -3436,6 +3438,42 @@ pub struct FetchArgs {
     /// Set to 0 only in CI environments with explicit server permission.
     #[arg(long, default_value_t = 1)]
     pub polite_delay_secs: u64,
+}
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct FletchSourcesArgs {
+    /// Census year: 2020, 2010, 2000, or all [default: 2020]
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+
+    /// State codes to inspect (default: all 50)
+    #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
+    pub states: Vec<String>,
+
+    /// Data types to inspect; defaults to the same "all" subset as bisect fetch
+    #[arg(long = "type", num_args = 0.., value_delimiter = ' ')]
+    pub data_types: Vec<DataType>,
+
+    /// Custom manifest file path (overrides BISECT_MANIFEST env var)
+    #[arg(long)]
+    pub manifest: Option<String>,
+
+    /// Output handoff/readiness CSV
+    #[arg(
+        long,
+        default_value = "data/fletch-source-handoff.csv",
+        value_name = "FILE"
+    )]
+    pub output: std::path::PathBuf,
+
+    /// Print per-source handoff rows
+    #[arg(long)]
+    pub details: bool,
+
+    /// Fail if the generated handoff has registry or validation failures
+    #[arg(long)]
+    pub gate: bool,
 }
 
 // ---------------------------------------------------------------------------

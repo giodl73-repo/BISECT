@@ -47,6 +47,30 @@ bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 
 ## Commands
 
+### `bisect fletch-sources` — Source handoff gate
+
+Expands BISECT fetch sources into FLETCH cacheline handoff rows without
+downloading source bytes.
+
+```bash
+bisect fletch-sources --year 2020 --states VT --type tiger --gate
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-y`, `--year` | `2020` | Census year: `2020`, `2010`, `2000`, or `all` |
+| `--states <CODES>` | all states | Space-separated state codes to inspect |
+| `--type <TYPES>` | all default fetch types | Same data-type surface as `bisect fetch` |
+| `--manifest <PATH>` | built-in/local manifest | Override source manifest |
+| `--output <FILE>` | `data/fletch-source-handoff.csv` | Handoff ledger output |
+| `--details` | false | Print per-source handoff rows |
+| `--gate` | false | Exit non-zero on registry/readiness failures |
+
+The command classifies public HTTP sources as generic FLETCH-ready and release
+or non-implemented sources as adapter-required. A FLETCH cache hit only proves
+source acquisition; BISECT build/analyze/report commands still own all
+redistricting validation claims.
+
 ### `bisect state` — Single state
 
 Runs redistricting for one state and writes outputs to `outputs/{version}/`.

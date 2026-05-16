@@ -16,6 +16,7 @@ pub mod ensemble;
 pub mod exact_cmd;
 pub mod export_cmd;
 pub mod fetch;
+pub mod fletch;
 pub mod geometry;
 pub mod geosection_orientation;
 pub mod housing;

@@ -227,6 +227,7 @@ dependencies = [
  "clap",
  "csv",
  "flate2",
+ "fletch-core",
  "fontdb",
  "fs2",
  "geo 0.28.0",
@@ -1053,6 +1054,17 @@ checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
+]
+
+[[package]]
+name = "fletch-core"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

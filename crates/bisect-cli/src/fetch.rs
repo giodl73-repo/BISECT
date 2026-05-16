@@ -11,7 +11,6 @@
 /// Use --force to re-download even if present.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 
 // Manifest embedded at compile time. Falls back to this if no override present.
@@ -422,6 +421,7 @@ pub fn download_items(
     polite_delay_secs: u64,
 ) -> Result<(), String> {
     let mut downloaded_count = 0usize;
+    let fletch_cache_root = PathBuf::from(&manifest.local_data_dir).join(".fletch");
     for item in items {
         if !force && item.is_done() {
             println!(
@@ -494,57 +494,95 @@ pub fn download_items(
             }
 
             "tiger" | "pl94171" | "school-districts" | "eia-861" => {
-                // ZIP file: download and extract
+                // ZIP file: FLETCH owns source acquisition; BISECT owns extraction.
                 let url = item.url.as_deref().unwrap();
                 let dest = item.local_path.parent().unwrap();
                 println!(
-                    "[DOWN] {} {} {} <- {}",
+                    "[FLETCH] {} {} {} <- {}",
                     item.state_code,
                     item.year,
                     item.kind,
                     url.split('/').last().unwrap_or(url)
                 );
-                download_and_extract_zip(url, dest)?;
+                let outcome = crate::fletch::fetch_item_to_fletch(item, &fletch_cache_root, force)?;
+                extract_zip_file(&outcome.path, dest)?;
             }
 
             "lodes-wac" => {
-                // LODES WAC: download .csv.gz, decompress, aggregate blocks->tracts, save CSV
+                // LODES WAC: FLETCH gets .csv.gz; BISECT aggregates blocks->tracts.
                 let url = item.url.as_deref().unwrap();
                 let dest_dir = item.local_path.parent().unwrap();
                 println!(
-                    "[DOWN] {} {} lodes-wac <- {}",
+                    "[FLETCH] {} {} lodes-wac <- {}",
                     item.state_code,
                     item.year,
                     url.split('/').last().unwrap_or(url)
                 );
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
-                download_lodes_wac(url, &item.local_path)?;
+                match crate::fletch::fetch_item_to_fletch(item, &fletch_cache_root, force) {
+                    Ok(outcome) => aggregate_lodes_wac_gzip_file(&outcome.path, &item.local_path)?,
+                    Err(error) if error.contains("404") => {
+                        println!(
+                            "[WARN] LODES WAC not available for this state/year (404). Skipping."
+                        );
+                        std::fs::write(
+                            &item.local_path,
+                            "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08\n",
+                        )
+                        .map_err(|e| format!("write empty lodes: {e}"))?;
+                    }
+                    Err(error) => return Err(error),
+                }
             }
 
             "lodes-od" => {
-                // LODES OD: download .csv.gz, decompress, aggregate block pairs->tract pairs, save CSV
+                // LODES OD: FLETCH gets .csv.gz; BISECT aggregates block pairs->tract pairs.
                 let url = item.url.as_deref().unwrap();
                 let dest_dir = item.local_path.parent().unwrap();
                 println!(
-                    "[DOWN] {} {} lodes-od <- {}",
+                    "[FLETCH] {} {} lodes-od <- {}",
                     item.state_code,
                     item.year,
                     url.split('/').last().unwrap_or(url)
                 );
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
-                download_lodes_od(url, &item.local_path)?;
+                match crate::fletch::fetch_item_to_fletch(item, &fletch_cache_root, force) {
+                    Ok(outcome) => aggregate_lodes_od_gzip_file(&outcome.path, &item.local_path)?,
+                    Err(error) if error.contains("404") => {
+                        println!(
+                            "[WARN] LODES OD not available for this state/year (404). Skipping."
+                        );
+                        std::fs::write(&item.local_path, "home_geoid,work_geoid,s000\n")
+                            .map_err(|e| format!("write empty lodes-od: {e}"))?;
+                    }
+                    Err(error) => return Err(error),
+                }
             }
 
             "acs-housing" => {
-                // ACS housing: fetch Census ACS JSON, compute derived columns, write CSV
-                let url = item.url.as_deref().unwrap();
+                // ACS housing: FLETCH gets Census ACS JSON; BISECT derives columns.
                 let dest_dir = item.local_path.parent().unwrap();
                 println!(
-                    "[DOWN] {} {} acs-housing <- ACS API (state {})",
+                    "[FLETCH] {} {} acs-housing <- ACS API (state {})",
                     item.state_code, item.year, item.state_code
                 );
                 std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
-                download_acs_housing(url, &item.local_path)?;
+                match crate::fletch::fetch_item_to_fletch(item, &fletch_cache_root, force) {
+                    Ok(outcome) => {
+                        let body = std::fs::read_to_string(&outcome.path)
+                            .map_err(|e| format!("ACS FLETCH cache read: {e}"))?;
+                        write_acs_housing_body(&body, &item.local_path)?;
+                    }
+                    Err(error) if error.contains("404") => {
+                        println!("[WARN] ACS housing data not available for this state/year (404). Skipping.");
+                        std::fs::write(
+                            &item.local_path,
+                            "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n",
+                        )
+                        .map_err(|e| format!("write empty acs-housing: {e}"))?;
+                    }
+                    Err(error) => return Err(error),
+                }
             }
 
             _ => {
@@ -572,8 +610,7 @@ pub fn download_items(
 ///
 /// Aggregation: sum all block rows sharing the same 11-char tract prefix.
 pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
-    use std::collections::HashMap;
-    use std::io::{BufRead, BufReader};
+    use std::io::BufReader;
 
     let response = reqwest::blocking::get(url).map_err(|e| format!("HTTP GET {url}: {e}"))?;
     if !response.status().is_success() {
@@ -591,10 +628,22 @@ pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
         return Err(format!("HTTP {}: {url}", response.status()));
     }
 
-    // Decompress gzip stream
     let gz = flate2::read::GzDecoder::new(response);
-    let reader = BufReader::new(gz);
+    aggregate_lodes_wac_reader(BufReader::new(gz), dest_path)
+}
 
+pub fn aggregate_lodes_wac_gzip_file(path: &Path, dest_path: &Path) -> Result<(), String> {
+    use std::io::BufReader;
+    let file = std::fs::File::open(path).map_err(|e| format!("open LODES cache: {e}"))?;
+    let gz = flate2::read::GzDecoder::new(file);
+    aggregate_lodes_wac_reader(BufReader::new(gz), dest_path)
+}
+
+fn aggregate_lodes_wac_reader<R: std::io::BufRead>(
+    reader: R,
+    dest_path: &Path,
+) -> Result<(), String> {
+    use std::collections::HashMap;
     // Aggregate block rows to tracts
     // tract_geoid (11 chars) → [c000, cns07, cns09, cns10, cns11, cns01, cns02, cns05, cns08]
     let mut tracts: HashMap<String, [f64; 9]> = HashMap::new();
@@ -697,8 +746,7 @@ pub fn download_lodes_wac(url: &str, dest_path: &Path) -> Result<(), String> {
 ///
 /// Graceful 404 skip: LODES OD is not available for all states/years — treated as soft skip.
 pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), String> {
-    use std::collections::HashMap;
-    use std::io::{BufRead, BufReader};
+    use std::io::BufReader;
 
     let response = reqwest::blocking::get(url).map_err(|e| format!("HTTP GET {url}: {e}"))?;
     if !response.status().is_success() {
@@ -713,10 +761,22 @@ pub fn download_lodes_od(url: &str, dest_path: &std::path::Path) -> Result<(), S
         return Err(format!("HTTP {}: {url}", response.status()));
     }
 
-    // Decompress gzip stream
     let gz = flate2::read::GzDecoder::new(response);
-    let reader = BufReader::new(gz);
+    aggregate_lodes_od_reader(BufReader::new(gz), dest_path)
+}
 
+pub fn aggregate_lodes_od_gzip_file(path: &Path, dest_path: &Path) -> Result<(), String> {
+    use std::io::BufReader;
+    let file = std::fs::File::open(path).map_err(|e| format!("open LODES OD cache: {e}"))?;
+    let gz = flate2::read::GzDecoder::new(file);
+    aggregate_lodes_od_reader(BufReader::new(gz), dest_path)
+}
+
+fn aggregate_lodes_od_reader<R: std::io::BufRead>(
+    reader: R,
+    dest_path: &Path,
+) -> Result<(), String> {
+    use std::collections::HashMap;
     // Aggregate block-pair rows to tract-pair level
     // (home_tract, work_tract) -> total S000 jobs
     let mut od_pairs: HashMap<(String, String), u64> = HashMap::new();
@@ -821,12 +881,16 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
         return Err(format!("HTTP {}: ACS housing {url}", response.status()));
     }
 
-    // ACS API returns a JSON array-of-arrays: first row is header, rest are data.
     let body = response
         .text()
         .map_err(|e| format!("ACS response body: {e}"))?;
+    write_acs_housing_body(&body, dest_path)
+}
+
+pub fn write_acs_housing_body(body: &str, dest_path: &Path) -> Result<(), String> {
+    // ACS API returns a JSON array-of-arrays: first row is header, rest are data.
     let rows: Vec<Vec<serde_json::Value>> =
-        serde_json::from_str(&body).map_err(|e| format!("ACS JSON parse: {e}\nURL: {url}"))?;
+        serde_json::from_str(body).map_err(|e| format!("ACS JSON parse: {e}"))?;
 
     if rows.is_empty() {
         std::fs::write(
@@ -978,10 +1042,13 @@ pub fn download_and_extract_zip(url: &str, dest_dir: &Path) -> Result<(), String
         std::io::copy(&mut response, &mut out).map_err(|e| format!("streaming download: {e}"))?;
     }
 
-    // Extract from temp file
-    let zip_file = std::fs::File::open(&tmp_zip).map_err(|e| e.to_string())?;
-    let mut archive =
-        zip::ZipArchive::new(zip_file).map_err(|e| format!("invalid ZIP from {url}: {e}"))?;
+    extract_zip_file(&tmp_zip, dest_dir)
+}
+
+pub fn extract_zip_file(zip_path: &Path, dest_dir: &Path) -> Result<(), String> {
+    let zip_file = std::fs::File::open(zip_path).map_err(|e| e.to_string())?;
+    let mut archive = zip::ZipArchive::new(zip_file)
+        .map_err(|e| format!("invalid ZIP {}: {e}", zip_path.display()))?;
 
     std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
 

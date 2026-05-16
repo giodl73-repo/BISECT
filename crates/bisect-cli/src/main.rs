@@ -9,6 +9,10 @@ use bisect_cli::ensemble::run_ensemble;
 use bisect_cli::exact_cmd::run_exact;
 use bisect_cli::export_cmd::run_export;
 use bisect_cli::fetch::{build_fetch_list, download_items, load_manifest, print_check_report};
+use bisect_cli::fletch::{
+    fletch_registry_from_items, fletch_source_handoff_gate_failures, fletch_source_handoff_report,
+    write_fletch_source_handoff,
+};
 use bisect_cli::ilp_audit::run_ilp_audit;
 use bisect_cli::import_cmd::run_import;
 use bisect_cli::improve_cmd::run_improve;
@@ -570,6 +574,79 @@ fn main() {
                 eprintln!("ERROR: {e}");
                 std::process::exit(1);
             });
+        }
+
+        // ── BISECT fletch-sources: non-mutating source handoff gate ───────────
+        Commands::FletchSources(args) => {
+            if let Some(ref path) = args.manifest {
+                std::env::set_var("BISECT_MANIFEST", path);
+            }
+            let valid_years = ["2020", "2010", "2000", "all"];
+            if !valid_years.contains(&args.year.as_str()) {
+                eprintln!(
+                    "ERROR: unsupported year '{}' — valid years are 2020, 2010, 2000, all",
+                    args.year
+                );
+                std::process::exit(1);
+            }
+            let manifest = load_manifest().unwrap_or_else(|e| {
+                eprintln!("ERROR loading manifest: {e}");
+                std::process::exit(1);
+            });
+            let years: Vec<String> = if args.year == "all" {
+                vec!["2020".into(), "2010".into(), "2000".into()]
+            } else {
+                vec![args.year.clone()]
+            };
+            let mut items = Vec::new();
+            for year in &years {
+                items.extend(build_fetch_list(
+                    &manifest,
+                    &args.states,
+                    year,
+                    &args.data_types,
+                ));
+            }
+            let registry = fletch_registry_from_items(&items);
+            let report = fletch_source_handoff_report(&registry);
+            write_fletch_source_handoff(&args.output, &report).unwrap_or_else(|e| {
+                eprintln!("ERROR writing FLETCH handoff: {e}");
+                std::process::exit(1);
+            });
+            println!("bisect fletch-sources");
+            println!("  registry: {}", report.registry_id);
+            println!("  output: {}", args.output.display());
+            println!(
+                "  fletches: {} (sources {}, adapters {})",
+                report.fletch_count, report.source_count, report.adapter_source_count
+            );
+            println!(
+                "  graph: {} nodes, {} edges; flight steps {}",
+                report.graph_node_count, report.graph_edge_count, report.flight_step_count
+            );
+            if args.details {
+                for row in &report.rows {
+                    println!(
+                        "  [{}] {} {} {} -> {}",
+                        row.handoff_status,
+                        row.state_code,
+                        row.year,
+                        row.fetch_family,
+                        row.cache_targets
+                    );
+                }
+            }
+            if args.gate {
+                let failures = fletch_source_handoff_gate_failures(&report);
+                if !failures.is_empty() {
+                    eprintln!("ERROR: FLETCH source handoff gate failed");
+                    for failure in failures {
+                        eprintln!("  - {failure}");
+                    }
+                    std::process::exit(1);
+                }
+                println!("  gate: pass");
+            }
         }
 
         // ── bisect fetch: data download ───────────────────────────────────────
