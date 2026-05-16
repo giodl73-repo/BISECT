@@ -33,3 +33,21 @@ Overall: 23.2 / 28. Approved.
 3. Do not treat `data/.fletch` cache presence as proof that BISECT outputs are
    complete or legally/admissibly valid.
 
+## Post-Implementation Role Pass
+
+scope: committed implementation slice in `crates/bisect-cli/src/fletch.rs`,
+`crates/bisect-cli/src/fetch.rs`, CLI/docs updates, and FLETCH dependency wiring.
+
+| Role | Finding | Status |
+|---|---|---|
+| MERIDIAN | Source acquisition is kept outside graph construction and redistricting computation. FLETCH cache hits do not alter adjacency, weights, population balance, or METIS semantics. | Pass |
+| BENCHMARK | Focused tests cover FLETCH registry classification and existing fetch behavior. `bisect fletch-sources --gate` and an isolated local HTTP fetch smoke exercise the new seam. Full `bisect-cli` lib tests still have unrelated pre-existing `.bisect` registry failures. | Pass with known baseline caveat |
+| LEDGER | The handoff CSV records source family, cache target, acquisition mode, adapter-required status, and the claim boundary. `data/` remains ignored, so the ledger is generated rather than versioned. | Pass |
+| COVENANT | Source bytes are cached under `data/.fletch`, but BISECT does not claim that downloaded bytes validate a plan. Court/audit claims remain with build/analyze/report artifacts. | Pass |
+| TRENCH | Review found two failure modes: BISECT processing failures deleting FLETCH cache objects, and Windows-only test path literals. Both were fixed before push. | Pass |
+| COMMONS | Shared fetch infrastructure reduces duplicated acquisition logic without shifting public-interest or redistricting interpretation into FLETCH. | Pass |
+
+Remaining explicit boundary: release adjacency and election downloads are still
+adapter-required. Moving them into generic FLETCH needs a separate source/auth
+design, not a silent change to this slice.
+
