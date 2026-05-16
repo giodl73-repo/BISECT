@@ -38,17 +38,17 @@
     },
     {
       "path": "method-transcript.json",
-      "sha256": "99c4ffbb669436255638f99c093e98ac898abf5b2137bbd609d07c0b67cf506c",
+      "sha256": "64a97a00c688f17da222ff876bcaea1e0b874552c5070c3f70e2d4daf763a183",
       "role": "method-transcript"
     },
     {
       "path": "benchmark-notes.json",
-      "sha256": "6d6db960dbcf3ecc269eeb6f1545e73651945f8b50b72a3d1efa6a6e4669a429",
+      "sha256": "1a92505b85ca2d5079eb63696ffd68912e0726ee226ecf4e5ca846f6d12c16dc",
       "role": "benchmark-notes"
     },
     {
       "path": "command-transcript.txt",
-      "sha256": "b5618995363a320a2426f81f331d0b6f8737dd65b22f06bae3552f6e2628caa0",
+      "sha256": "49ec61fdc675f6921df32e2c577497254539d5c39d51cd62193675012627b0fa",
       "role": "command-transcript"
     }
   ],

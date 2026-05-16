@@ -15,12 +15,12 @@
     },
     {
       "path": "audit-certificate.json",
-      "sha256": "502f18e384d6cd8e9092ffb96730bc5b6fd81829c35b83a914e6f9b5fac85beb",
+      "sha256": "ce7f853d87eea4dce86168248375eea5239febe0415441dd5ec60ac03af9a9e9",
       "role": "certificate"
     },
     {
       "path": "method-transcript.json",
-      "sha256": "ce57e1315d96faf4b75d6d5c6ebbc33edf532e5cce1ff2e4a59f4bf859393df6",
+      "sha256": "c2440fca781bdf07d74ce591c71f614349c2363d79ffb0342e51fa8c8afcb6ba",
       "role": "method-transcript"
     }
   ],
