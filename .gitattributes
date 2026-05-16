@@ -1,2 +1,8 @@
 docs/papers/*.pdf binary
-docs/examples/k-reock-evidence-packages/exact-mbc-smoke/reock-fixtures.json text eol=crlf
+docs/examples/**/*.json text eol=crlf
+docs/examples/**/*.ndjson text eol=crlf
+docs/examples/**/*.rctx text eol=crlf
+docs/examples/**/*.rplan text eol=crlf
+docs/examples/**/*.txt text eol=crlf
+docs/examples/**/*.md text eol=crlf
+docs/examples/**/*.lp text eol=crlf
