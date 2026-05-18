@@ -84,6 +84,25 @@ const props = defineProps({
   }
 })
 
+const addIfInBounds = (neighbors, neighborId, total) => {
+  if (neighborId < total) neighbors.push(neighborId)
+}
+
+const addRightNeighbor = (neighbors, index, col, cols, total) => {
+  if (col < cols - 1) addIfInBounds(neighbors, index + 1, total)
+}
+
+const addBottomNeighbor = (neighbors, index, row, rows, cols, total) => {
+  if (row < rows - 1) addIfInBounds(neighbors, index + cols, total)
+}
+
+const addDiagonalNeighbor = (neighbors, index, col, row, grid, total) => {
+  if (col >= grid.cols - 1) return
+  if (row >= grid.rows - 1) return
+  if (Math.random() <= 0.6) return
+  addIfInBounds(neighbors, index + grid.cols + 1, total)
+}
+
 const svgRef = ref(null)
 const width = ref(800)
 const height = ref(500)
@@ -116,25 +135,13 @@ const generateTracts = () => {
     })
   }
 
-  // Generate edges (simplified grid adjacency)
+  const grid = { cols, rows }
   tracts.forEach((tract, i) => {
     const col = i % cols
     const row = Math.floor(i / cols)
-
-    // Right neighbor
-    if (col < cols - 1 && i + 1 < tracts.length) {
-      tract.neighbors.push(i + 1)
-    }
-
-    // Bottom neighbor
-    if (row < rows - 1 && i + cols < tracts.length) {
-      tract.neighbors.push(i + cols)
-    }
-
-    // Diagonal (some tracts)
-    if (Math.random() > 0.6 && col < cols - 1 && row < rows - 1 && i + cols + 1 < tracts.length) {
-      tract.neighbors.push(i + cols + 1)
-    }
+    addRightNeighbor(tract.neighbors, i, col, cols, tracts.length)
+    addBottomNeighbor(tract.neighbors, i, row, rows, cols, tracts.length)
+    addDiagonalNeighbor(tract.neighbors, i, col, row, grid, tracts.length)
   })
 
   return tracts
@@ -211,94 +218,100 @@ const getStepDescription = () => {
   return descriptions[currentStep.value] || ''
 }
 
+const appendEdges = g => {
+  g.selectAll('.edge')
+    .data(edges.value)
+    .enter()
+    .append('line')
+    .attr('class', 'edge')
+    .attr('x1', d => d.source.x)
+    .attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x)
+    .attr('y2', d => d.target.y)
+    .attr('stroke', '#cbd5e1')
+    .attr('stroke-width', 2)
+    .style('opacity', 0)
+    .transition()
+    .duration(1000)
+    .delay((d, i) => i * 5)
+    .style('opacity', 0.5)
+}
+
+const appendNodeMarks = nodes => {
+  nodes.append('circle')
+    .attr('r', 8)
+    .attr('fill', '#2563eb')
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 2)
+    .style('opacity', 0)
+    .transition()
+    .duration(500)
+    .delay((d, i) => currentStep.value === 1 ? i * 20 : 0)
+    .style('opacity', 1)
+}
+
+const appendNodeLabels = nodes => {
+  nodes.filter((d, i) => i < 5)
+    .append('text')
+    .attr('dy', -15)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '10px')
+    .attr('fill', '#64748b')
+    .text(d => `T${d.id}`)
+    .style('opacity', 0)
+    .transition()
+    .duration(500)
+    .delay((d, i) => currentStep.value === 1 ? i * 20 + 500 : 0)
+    .style('opacity', 1)
+}
+
+const appendNodes = g => {
+  const nodes = g.selectAll('.node')
+    .data(tracts.value)
+    .enter()
+    .append('g')
+    .attr('class', 'node')
+    .attr('transform', d => `translate(${d.x}, ${d.y})`)
+
+  appendNodeMarks(nodes)
+  appendNodeLabels(nodes)
+}
+
+const updateSimulationTick = g => {
+  g.selectAll('.edge')
+    .attr('x1', d => d.source.x)
+    .attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x)
+    .attr('y2', d => d.target.y)
+
+  g.selectAll('.node')
+    .attr('transform', d => `translate(${d.x}, ${d.y})`)
+}
+
+const applyNetworkLayout = g => {
+  if (viewMode.value !== 'network' || currentStep.value < 2) return
+  const simulation = d3.forceSimulation(tracts.value)
+    .force('link', d3.forceLink(edges.value).id(d => d.id).distance(80))
+    .force('charge', d3.forceManyBody().strength(-200))
+    .force('center', d3.forceCenter(width.value / 2, height.value / 2))
+    .force('collision', d3.forceCollide().radius(20))
+
+  simulation.on('tick', () => updateSimulationTick(g))
+  setTimeout(() => simulation.stop(), 2000)
+}
+
+const renderVisibleStep = g => {
+  if (currentStep.value >= 2) appendEdges(g)
+  if (currentStep.value >= 1) appendNodes(g)
+  applyNetworkLayout(g)
+}
+
 const renderVisualization = () => {
   if (!svgRef.value) return
 
   const svg = d3.select(svgRef.value)
   svg.selectAll('*').remove()
-
-  if (currentStep.value === 0) return
-
-  const g = svg.append('g')
-    .attr('transform', 'translate(0, 0)')
-
-  // Step 2+: Draw edges
-  if (currentStep.value >= 2) {
-    g.selectAll('.edge')
-      .data(edges.value)
-      .enter()
-      .append('line')
-      .attr('class', 'edge')
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y)
-      .attr('stroke', '#cbd5e1')
-      .attr('stroke-width', 2)
-      .style('opacity', 0)
-      .transition()
-      .duration(1000)
-      .delay((d, i) => i * 5)
-      .style('opacity', 0.5)
-  }
-
-  // Step 1+: Draw tracts (nodes)
-  if (currentStep.value >= 1) {
-    const nodes = g.selectAll('.node')
-      .data(tracts.value)
-      .enter()
-      .append('g')
-      .attr('class', 'node')
-      .attr('transform', d => `translate(${d.x}, ${d.y})`)
-
-    nodes.append('circle')
-      .attr('r', 8)
-      .attr('fill', '#2563eb')
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 2)
-      .style('opacity', 0)
-      .transition()
-      .duration(500)
-      .delay((d, i) => currentStep.value === 1 ? i * 20 : 0)
-      .style('opacity', 1)
-
-    // Add labels (show only for first few tracts)
-    nodes.filter((d, i) => i < 5)
-      .append('text')
-      .attr('dy', -15)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '10px')
-      .attr('fill', '#64748b')
-      .text(d => `T${d.id}`)
-      .style('opacity', 0)
-      .transition()
-      .duration(500)
-      .delay((d, i) => currentStep.value === 1 ? i * 20 + 500 : 0)
-      .style('opacity', 1)
-  }
-
-  // Network view: Apply force simulation
-  if (viewMode.value === 'network' && currentStep.value >= 2) {
-    const simulation = d3.forceSimulation(tracts.value)
-      .force('link', d3.forceLink(edges.value).id(d => d.id).distance(80))
-      .force('charge', d3.forceManyBody().strength(-200))
-      .force('center', d3.forceCenter(width.value / 2, height.value / 2))
-      .force('collision', d3.forceCollide().radius(20))
-
-    simulation.on('tick', () => {
-      g.selectAll('.edge')
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y)
-
-      g.selectAll('.node')
-        .attr('transform', d => `translate(${d.x}, ${d.y})`)
-    })
-
-    // Run simulation for a bit then stop
-    setTimeout(() => simulation.stop(), 2000)
-  }
+  if (currentStep.value > 0) renderVisibleStep(svg.append('g').attr('transform', 'translate(0, 0)'))
 }
 </script>
 

@@ -75,33 +75,32 @@ const generateTree = (n) => {
     split: null
   }
 
+  const makeChild = value => ({ name: `${value}`, value, children: [] })
+  const markLeaf = node => {
+    node.name = `D${node.districtId || '?'}`
+    node.isLeaf = true
+  }
+  const applySplit = (node, remaining) => {
+    const left = Math.floor(remaining / 2)
+    const right = Math.ceil(remaining / 2)
+    node.split = `[${left}, ${right}]`
+    node.children = [makeChild(left), makeChild(right)]
+    return { left, right }
+  }
+  const buildChild = (node, remaining) => {
+    if (remaining > 1) buildNode(node, remaining)
+    else markLeaf(node)
+  }
+
   const buildNode = (node, remaining) => {
     if (remaining === 1) {
-      node.name = `D${node.districtId || '?'}`
-      node.isLeaf = true
+      markLeaf(node)
       return
     }
 
-    const left = Math.floor(remaining / 2)
-    const right = Math.ceil(remaining / 2)
-
-    node.split = `[${left}, ${right}]`
-    node.children = [
-      { name: `${left}`, value: left, children: [], parent: node },
-      { name: `${right}`, value: right, children: [], parent: node }
-    ]
-
-    if (left > 1) buildNode(node.children[0], left)
-    else {
-      node.children[0].isLeaf = true
-      node.children[0].name = `D${node.children[0].districtId || '?'}`
-    }
-
-    if (right > 1) buildNode(node.children[1], right)
-    else {
-      node.children[1].isLeaf = true
-      node.children[1].name = `D${node.children[1].districtId || '?'}`
-    }
+    const { left, right } = applySplit(node, remaining)
+    buildChild(node.children[0], left)
+    buildChild(node.children[1], right)
   }
 
   if (n > 1) {
@@ -195,7 +194,11 @@ const renderTree = () => {
   const g = svg.append('g')
     .attr('transform', 'translate(50, 50)')
 
-  // Draw links
+  drawLinks(g, root)
+  drawNodes(g, root)
+}
+
+const drawLinks = (g, root) => {
   g.selectAll('.link')
     .data(root.links())
     .enter()
@@ -211,8 +214,9 @@ const renderTree = () => {
     .transition()
     .duration(500)
     .style('opacity', 1)
+}
 
-  // Draw nodes
+const drawNodes = (g, root) => {
   const nodes = g.selectAll('.node')
     .data(root.descendants())
     .enter()
@@ -221,18 +225,21 @@ const renderTree = () => {
     .attr('transform', d => `translate(${d.x}, ${d.y})`)
     .style('opacity', 0)
 
-  nodes.transition()
-    .duration(500)
-    .style('opacity', 1)
+  nodes.transition().duration(500).style('opacity', 1)
+  drawNodeCircles(nodes)
+  drawNodeLabels(nodes)
+  drawSplitLabels(nodes)
+}
 
-  // Node circles
+const drawNodeCircles = nodes => {
   nodes.append('circle')
     .attr('r', d => d.data.isLeaf ? 25 : 35)
     .attr('fill', d => d.data.isLeaf ? '#10b981' : props.color)
     .attr('stroke', '#fff')
     .attr('stroke-width', 3)
+}
 
-  // Node labels
+const drawNodeLabels = nodes => {
   nodes.append('text')
     .attr('dy', '0.35em')
     .attr('text-anchor', 'middle')
@@ -240,8 +247,9 @@ const renderTree = () => {
     .attr('fill', '#fff')
     .attr('font-size', d => d.data.isLeaf ? '14px' : '18px')
     .attr('font-weight', 'bold')
+}
 
-  // Split labels (above nodes)
+const drawSplitLabels = nodes => {
   nodes.filter(d => d.data.split)
     .append('text')
     .attr('dy', '-45')
@@ -264,8 +272,6 @@ const getVisibleTree = (tree, step) => {
 
   // Clone tree and show nodes up to current step
   const clone = JSON.parse(JSON.stringify(tree))
-  const splitsToShow = splits.value.slice(0, step)
-
   // Mark which nodes should be visible
   const markVisible = (node, depth = 0) => {
     if (depth >= step) {

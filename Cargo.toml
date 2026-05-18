@@ -69,8 +69,8 @@ rstar = "0.12"
 clap = { version = "4", features = ["derive"] }
 
 # PyO3 bindings
-pyo3 = { version = "0.22", features = ["abi3-py311"] }
-numpy = "0.22"
+pyo3 = { version = "0.24.2", features = ["abi3-py311"] }
+numpy = "0.24.0"
 
 # Utilities
 thiserror = { version = "2" }
