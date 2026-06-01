@@ -38,7 +38,28 @@ below. This does not constitute a clean-environment replay or full-scale run.
 
 ## Required L2 release-subset/full-scale record
 
-Before DCR-007 can close at L2 release-subset or full-scale level, record:
+The maintenance harness
+`scripts/maintenance/dcr007_release_subset_replay.py` is the controlled way to
+capture a candidate release-subset replay record. It writes an ignored JSON
+evidence file under `reports/vtrace/` by default, records environment, git
+status, config and data-manifest hashes, planned command lines, command outputs,
+and generated artifact hashes, and refuses clean replay unless the source status
+policy is satisfied.
+
+Typical preflight while local data manifests are dirty:
+
+```bash
+python scripts/maintenance/dcr007_release_subset_replay.py --preflight-only --allow-dirty-data
+```
+
+Typical clean release-subset replay command:
+
+```bash
+python scripts/maintenance/dcr007_release_subset_replay.py
+```
+
+Before DCR-007 can close at L2 release-subset or full-scale level, the generated
+record must include:
 
 - Clean checkout commit and working-tree status.
 - Rust toolchain, target, OS, CPU class, and build features.
@@ -54,4 +75,6 @@ Before DCR-007 can close at L2 release-subset or full-scale level, record:
 
 DCR-007 is not closed for L2 full-scale or clean release-subset reproducibility.
 Public claims may cite only the declared fixture and VT release-subset smoke
-scopes until a selected clean data-backed replay is executed and reviewed.
+scopes until a selected clean data-backed replay is executed and reviewed. The
+current local checkout has a dirty `data/manifest.json`, so preflight may use
+`--allow-dirty-data` only as tooling evidence; it is not clean replay evidence.

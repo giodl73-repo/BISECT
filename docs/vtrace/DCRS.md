@@ -204,8 +204,11 @@ Residual risk until closed: The project should not claim full release reproducib
 Execution evidence: `docs/vtrace/REPRODUCIBILITY_RUN.md` declares the current
 reproducibility class as `release-subset-smoke`, records fixture replay evidence
 and the VT `official_proposal/2020` build/analyze/report/verify SHA-chain smoke,
-and lists the required full release-subset/full-scale fields. L2 closure remains
-open until a clean data-backed replay is executed and reviewed.
+and lists the required full release-subset/full-scale fields. The maintenance
+harness `scripts/maintenance/dcr007_release_subset_replay.py` now captures a
+candidate replay record with environment, clean-source policy, command outputs,
+and artifact hashes. L2 closure remains open until that harness, or an equivalent
+reviewed procedure, is executed from a clean data-backed checkout and reviewed.
 
 ## Change Control
 
