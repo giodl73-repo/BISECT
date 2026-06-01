@@ -1,0 +1,76 @@
+# Repository checkout map for local multi-repo development.
+#
+# Paths are relative to this repository root unless `absolute` is present.
+# This file records the current local layout after the tracker repo reorganization;
+# it is not a publication or custody claim for generated data.
+#
+# Cargo does not read this file directly. Run:
+#
+#   python tools\repo_map.py write-cargo-config
+#
+# to generate the local .cargo/config.toml [patch] entries that make Cargo use
+# these checkouts instead of remote git dependencies.
+
+[standard]
+version = 1
+cargo_config = ".cargo/config.toml"
+
+[repos.bisect]
+role = "current repository"
+relative = "."
+canonical = "giodl73-repo/BISECT"
+clone_url = "https://github.com/giodl73-repo/BISECT.git"
+
+[repos.fletch]
+role = "source acquisition/cacheline dependency used by bisect-cli"
+relative = "../tracker/repos/tools-infra/fletch"
+canonical = "giodl73-repo/FLETCH"
+clone_url = "https://github.com/giodl73-repo/FLETCH.git"
+branch = "master"
+required_by = ["crates/bisect-cli"]
+cargo_patches = [
+  { package = "fletch-core", source = "https://github.com/giodl73-repo/FLETCH.git", path = "crates/fletch-core" },
+]
+
+[repos.metis_core]
+role = "METIS engine crate dependency"
+relative = "../tracker/repos/tools-infra/metis-core"
+canonical = "giodl73-repo/METIS-CORE"
+clone_url = "https://github.com/giodl73-repo/METIS-CORE.git"
+branch = "master"
+required_by = ["workspace.dependencies.metis-core"]
+cargo_patches = [
+  { package = "metis-core", source = "https://github.com/giodl73-repo/METIS-CORE.git", path = "." },
+]
+
+[repos.slice]
+role = "source package dependency used by FLETCH"
+relative = "../tracker/repos/tools-infra/slice"
+canonical = "giodl73-repo/SLICE"
+clone_url = "https://github.com/giodl73-repo/SLICE.git"
+branch = "main"
+required_by = ["repos.fletch:cargo"]
+cargo_patches = [
+  { package = "slice-core", source = "https://github.com/giodl73-repo/SLICE", path = "crates/slice-core" },
+]
+
+[repos.rcount]
+role = "election count package family upstream/reference"
+relative = "../tracker/repos/election-systems/rcount"
+canonical = "giodl73-repo/RCOUNT"
+clone_url = "https://github.com/giodl73-repo/RCOUNT.git"
+required_by = ["docs/vtrace/WP-004"]
+
+[repos.rplan]
+role = "district plan package family upstream/reference"
+relative = "../tracker/repos/election-systems/rplan"
+canonical = "giodl73-repo/RPLAN"
+clone_url = "https://github.com/giodl73-repo/RPLAN.git"
+required_by = ["docs/vtrace/WP-004"]
+
+[repos.vtrace]
+role = "NASA-inspired methodology source used for this adaptation"
+relative = "../tracker/repos/standards-protocols/vtrace"
+canonical = "giodl73-repo/VTRACE"
+clone_url = "https://github.com/giodl73-repo/VTRACE.git"
+required_by = ["docs/vtrace"]

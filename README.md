@@ -6,15 +6,15 @@
 [ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
 repository-local review panels.
 
-`bisect` draws congressional and state-legislative districts that are compact, population-balanced, reproducible to the byte, and derivable from first principles — for any chamber, any state, any census year.
+`bisect` draws congressional and state-legislative districts that are compact, population-balanced, and reviewable from first principles for supported chambers, states, and census years. Evidence-producing label-pipeline runs record hashes and provenance for byte-level verification; historical outputs may need regeneration or supplemental manifests before release-level replay claims.
 
 ## How it works
 
 **In plain terms:** treat a state as a map of small census-tract neighborhoods. Two tracts are connected if they share a border; the connection is *stronger* the longer that border is. The algorithm cuts the map in half by snipping the weakest set of connections that produces two equal-population halves — which naturally avoids long, jagged borders. Repeat recursively until you have exactly N districts.
 
-Formally: tracts are nodes; edge weight = shared boundary length. Minimising the total weight of edges cut directly minimises total district perimeter, so **Polsby–Popper compactness goes up automatically** — without ever being told to optimise it.
+Formally: tracts are nodes; edge weight = shared boundary length. Minimising the total weight of edges cut minimises cut-boundary length, which is the mechanism behind the observed **Polsby–Popper compactness gains** without directly optimising Polsby–Popper.
 
-**No political or racial data enters the algorithm at any stage.** VRA mode uses demographics only for edge weighting; it is mutually exclusive with partisan-weighted mode per *Louisiana v. Callais* (2026).
+In the default geographic mode, **no political or racial data enters the algorithm**. VRA mode uses demographics only for edge weighting; it is mutually exclusive with partisan-weighted mode per the project’s post-*Callais* legal model.
 
 ### Bisection rounds — Minnesota (8 districts, 3 rounds)
 
@@ -30,11 +30,11 @@ Formally: tracts are nodes; edge weight = shared boundary length. Minimising the
 
 ## Why it's fair
 
-Bisection is fair because it **eliminates the choice**. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by equal-population geometry, not by who benefits. Repeating that recursively means every district is the product of a series of neutral halvings, not a single optimised design.
+Bisection is procedurally fair because it **reduces discretionary choice**. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by equal-population geometry, not by who benefits. Repeating that recursively means every district is the product of a series of neutral halvings, not a single optimised design.
 
 It's also **transparent**. You can watch each round in the dashboard and see exactly how a 52-district California map emerges from 6 rounds of bisection. No black box — just a sequence of cuts.
 
-**Procedural fairness is a stronger claim than substantive fairness.** "This map is fair" is contested; "this map is the byte-identical output of running this published algorithm on these published inputs" is verifiable.
+**Procedural fairness is a stronger claim than substantive fairness.** "This map is fair" is contested; "this map is the output of running this published algorithm on these published inputs" is a verification claim that can be checked through the recorded config, hashes, manifests, and reports.
 
 ---
 
@@ -81,7 +81,7 @@ cargo build --release
 # Download 2020 census data
 bisect fetch --year 2020
 
-# Draw all 50 congressional maps (~15 seconds)
+# Draw all 50 congressional maps (runtime depends on hardware and data cache)
 bisect build official_2020 --year 2020 --workers 8
 
 # Analyze: compactness, VRA, partisan lean, splits
@@ -143,6 +143,8 @@ North Carolina ($k=14=7\times 2$): ApportionRegions gives **7D/7R** vs. standard
 
 **[View all dashboards →](https://giodl73-repo.github.io/BISECT/)** — 2020, 2010, VRA results, round-by-round bisection maps.
 
+**Evidence status:** these headline metrics are empirical research claims, not legal conclusions. Treat them as current-paper/dashboard claims tied to the cited reports and paper index; rerun `bisect label-verify`, inspect manifests, and check `docs/papers/PAPER-QUALITY-REVIEW.md` / `docs/papers/ALGORITHM-PAPER-SCORECARD.md` before citing them as release-final numbers.
+
 ---
 
 ## Track record
@@ -155,7 +157,7 @@ The same algorithm, unchanged, on 2010 data: Polsby–Popper **0.320** — only 
 
 *Rucho v. Common Cause* (2019) closed the federal-court door on partisan gerrymandering. Roberts' opinion explicitly invited Congress to act.
 
-This project's thesis ([B.02](docs/papers/B.02+one-federal-law.pdf)): the gap can be closed by a statute structurally analogous to **2 U.S.C. § 2a** (Huntington-Hill apportionment). Congress prescribes the algorithm; states execute it; any citizen can verify the output byte-identically. **ApportionRegions** is the algorithmic proposal — the only redistricting method derivable from the existing apportionment statute.
+This project's thesis ([B.02](docs/papers/B.02+one-federal-law.pdf)): the gap can be closed by a statute structurally analogous to **2 U.S.C. § 2a** (Huntington-Hill apportionment). Congress prescribes the algorithm; states execute it; any citizen can verify the output from published inputs and manifests. **ApportionRegions** is the project's algorithmic proposal for extending the apportionment-statute logic inside states, not an enacted legal rule.
 
 Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and state-court companion ([`FAIRNESS_DOCTRINE.md`](docs/legal/FAIRNESS_DOCTRINE.md)).
 

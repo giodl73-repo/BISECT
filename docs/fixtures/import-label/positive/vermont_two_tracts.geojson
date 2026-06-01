@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "GEOID": "50001000100",
+        "district": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "GEOID": "50001000200",
+        "district": 2
+      }
+    }
+  ]
+}

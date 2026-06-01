@@ -248,6 +248,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "sha2",
+ "shapefile",
  "tempfile",
  "thiserror 2.0.18",
  "url",
@@ -1064,6 +1065,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "slice-core",
  "thiserror 2.0.18",
 ]
 
@@ -2090,7 +2092,6 @@ dependencies = [
 [[package]]
 name = "metis-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/METIS-CORE.git?branch=master#e1a769bbcafef3dd7ed3107aa2e3e1712eead7fc"
 dependencies = [
  "rand",
  "rand_pcg",
@@ -3426,6 +3427,15 @@ name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
+
+[[package]]
+name = "slice-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
 
 [[package]]
 name = "slotmap"

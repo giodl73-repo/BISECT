@@ -18,7 +18,7 @@ cargo build --release --manifest-path Cargo.toml
 #   target/release/bisect        (Linux/macOS)
 #   target/release/bisect.exe    (Windows)
 
-# Optional: add to PATH so you can run `BISECT` from anywhere
+# Optional: add to PATH so you can run `bisect` from anywhere
 # Windows PowerShell:
 $env:PATH += ";$PWD\BISECT\target\release"
 ```
@@ -36,11 +36,14 @@ conda install -c conda-forge metis
 # Download Vermont data (small state, good for testing)
 bisect fetch --states VT --year 2020
 
-# Run Vermont redistricting
+# Run a single-state development smoke test
 bisect state --state VT --year 2020 --version V3
 
-# Run all 50 states (8 workers, ~15 seconds with .adj.bin files)
-bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+# Build, analyze, report, and verify a labeled plan
+bisect build official_2020 --year 2020 --workers 8
+bisect label-analyze official_2020 --year 2020 --types all
+bisect label-report official_2020 --year 2020 --format html json
+bisect label-verify official_2020 --year 2020
 ```
 
 ---
@@ -172,13 +175,13 @@ to override.
 
 ---
 
-### `BISECT run` — Multi-year orchestrator
+### `bisect run` — Multi-year orchestrator
 
 Runs one or all three census years sequentially, each with full 50-state parallel
 processing.
 
 ```
-BISECT run [OPTIONS]
+bisect run [OPTIONS]
 ```
 
 | Flag | Default | Description |
@@ -197,13 +200,13 @@ BISECT run [OPTIONS]
 
 ```bash
 # All 50 states, all 3 years (production run)
-BISECT run --version V3 --workers 12
+bisect run --version V3 --workers 12
 
 # Single year
-BISECT run --year 2020 --version V3
+bisect run --year 2020 --version V3
 
 # Two states, one year (quick test)
-BISECT run --year 2020 --version test --states VT DE --workers 2
+bisect run --year 2020 --version test --states VT DE --workers 2
 ```
 
 ---
@@ -291,7 +294,7 @@ bisect state --state VT --year 2020 --label vt_test
 
 # 3. Compute partisan metrics + render colored map (Rust)
 bisect analyze --label vt_test --types political
-BISECT map --label vt_test --types political
+bisect map --label vt_test --types political
 
 # Download all 3 years
 bisect fetch --year all --workers 8
@@ -335,12 +338,12 @@ python scripts/data/generate_adj_bin.py --year 2020
 
 ---
 
-## `BISECT aggregate` — Merge state analysis into national datasets
+## `bisect aggregate` — Merge state analysis into national datasets
 
 Walks all present states in `outputs/{version}/states/*/analysis/` and merges per-type JSON files into national datasets at `outputs/{version}/national/`.
 
 ```
-BISECT aggregate [OPTIONS]
+bisect aggregate [OPTIONS]
 ```
 
 | Flag | Default | Description |
@@ -353,15 +356,15 @@ BISECT aggregate [OPTIONS]
 **Examples**:
 ```bash
 # Aggregate all analyzer types
-BISECT aggregate --version V3 --types all --csv
+bisect aggregate --version V3 --types all --csv
 
 # Just demographic national dataset
-BISECT aggregate --version V3 --types demographic
+bisect aggregate --version V3 --types demographic
 
 # After running all 50 states + analyze:
 bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 # (then for each state: bisect analyze --state XX --types all)
-BISECT aggregate --version V3 --types all --csv
+bisect aggregate --version V3 --types all --csv
 ```
 
 **Output files** (under `outputs/{version}/national/`):
@@ -379,16 +382,16 @@ All JSON files include `state_count`, `district_count`, `scope: "national"`, and
 
 ---
 
-## `BISECT map --scope national` — National map with AK/HI insets
+## `bisect map --scope national` — National map with AK/HI insets
 
 Renders all present states onto one canvas using an inset projection: continental US in top 75%, Alaska inset bottom-left, Hawaii inset next to Alaska.
 
-Add `--scope national` to any `BISECT map` call (omit `--state`):
+Add `--scope national` to any `bisect map` call (omit `--state`):
 
 ```bash
-BISECT map --scope national --version V3 --types districts
-BISECT map --scope national --version V3 --types political --dpi 300
-BISECT map --scope national --version V3 --types districts political demographic compactness
+bisect map --scope national --version V3 --types districts
+bisect map --scope national --version V3 --types political --dpi 300
+bisect map --scope national --version V3 --types districts political demographic compactness
 ```
 
 **Output files** (under `outputs/{version}/national/maps/`):
@@ -461,12 +464,12 @@ bisect analyze --state VT --year 2020 --version V3 --allow-imbalance
 
 ---
 
-## `BISECT map` — PNG map rendering
+## `bisect map` — PNG map rendering
 
 Renders district maps to PNG using the native Rust SVG→PNG pipeline (no Python, no matplotlib).
 
 ```
-BISECT map --state <CODE> [OPTIONS]
+bisect map --state <CODE> [OPTIONS]
 ```
 
 | Flag | Default | Description |
@@ -484,19 +487,19 @@ BISECT map --state <CODE> [OPTIONS]
 
 ```bash
 # Categorical district map (colored regions)
-BISECT map --state VT --year 2020 --version V3 --types districts
+bisect map --state VT --year 2020 --version V3 --types districts
 
 # Partisan choropleth (red-white-blue by Dem %)
-BISECT map --state AL --year 2020 --version V3 --types political
+bisect map --state AL --year 2020 --version V3 --types political
 
 # Minority % choropleth (yellow-brown sequential)
-BISECT map --state TX --year 2020 --version V3 --types demographic
+bisect map --state TX --year 2020 --version V3 --types demographic
 
 # All map types, publication quality
-BISECT map --state CA --year 2020 --version V3 --types all --dpi 300
+bisect map --state CA --year 2020 --version V3 --types all --dpi 300
 
 # Bisection round progression maps
-BISECT map --state AL --year 2020 --version V3 --types rounds
+bisect map --state AL --year 2020 --version V3 --types rounds
 ```
 
 **Output files** (under `outputs/{version}/states/{state}/maps/`):
@@ -545,30 +548,28 @@ BISECT_PYTHON="C:/miniconda3/envs/BISECT/python.exe" bisect state --state VT --y
 
 ---
 
-## Provenance and `BISECT doctor --verify-manifest`
+## Provenance and `bisect label-verify`
 
-Every `bisect state` run writes a `provenance.json` sidecar in the output `data/` directory containing the binary's `BISECT_version`, `BISECT_build_commit` (with `-dirty` suffix when the working tree had uncommitted changes), `BISECT_build_date`, and `rustc_version`. This is written atomically alongside `final_assignments.json` regardless of whether `--manifest` is set, so every plan has an audit trail to the binary that produced it.
+Every label build writes manifests and per-state provenance including the binary's `BISECT_version`, `BISECT_build_commit` (with `-dirty` suffix when the working tree had uncommitted changes), `BISECT_build_date`, `rustc_version`, and binary SHA evidence where available.
 
-When `--manifest` is set, `manifest.json` additionally records the binary version, input adjacency hash, and other run parameters. The `BISECT doctor --verify-manifest <PATH>` subcommand reads the manifest and:
+`bisect label-verify <LABEL> --year <YEAR>` replays the label evidence chain and reports whether the recorded inputs and artifacts match the current registry state. Use it before relying on a generated report.
 
-- Prints the running binary's `BISECT_version`, `BISECT_build_commit` (with `-dirty` suffix if the working tree had uncommitted changes), `BISECT_build_date`, and `rustc_version`
-- Prints the recorded `binary_version`, `binary_sha256`, `adjacency_sha256`, and `created_at`
-- Asserts that the recorded version matches the running binary (FAIL if not)
-- Reports the adjacency file referenced (informational; does not re-hash)
-- Warns if the running binary was built outside a git checkout or from a dirty tree
+- Checks label registry and manifest links
+- Recomputes recorded hashes where the source artifact is available
+- Reports broken or missing chain links as failures
+- Leaves legal or official certification to the human review process
 
 **Exit codes:**
-- `0` — version matches (or manifest had no version field, in which case a WARN is emitted)
-- `1` — version mismatch
-- `2` — manifest cannot be read or parsed
+- `0` — verification passed
+- non-zero — label evidence could not be verified
 
 Example:
 
 ```bash
-BISECT doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
+bisect label-verify official_2020 --year 2020
 ```
 
-Use this when independently verifying that a court-submitted plan was produced by a published `BISECT` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
+Use this when independently verifying that a submitted label can be tied back to its recorded build artifacts. It is audit evidence, not a court or state certification by itself.
 
 ## Researcher Toolkit (partial — diagnostics + notebooks + paper-mode renderer wired)
 
@@ -580,11 +581,11 @@ The Researcher Toolkit plan is partial. Today (2026-04-30):
 - **`scripts/research/paper_mode_template/REPRODUCE.sh`** (Task 8 / D-05): AEA-compliant replication-script template with platform check (target `linux-x86_64-glibc-2.35`), Cargo.lock + rust-toolchain.toml + requirements.lock SHA verification, locked cargo build, output-checksum verification via jq, cross-platform reviewer note (use WSL / Docker `ubuntu:22.04`).
 - **`bisect analyze --paper-mode`** (Task 8.1) — emits a `paper_mode/` subdirectory containing 9 files: `REPRODUCE.sh` (template substituted with the recorded `BISECT_build_commit` + lockfile SHAs + verbatim analyze invocation), `inputs.sha256.json` + `expected_outputs.sha256.json` (deterministic file-walks + canonical BTreeMap key ordering), `environment.json` (rustc + target_platform + OS), `seeds.json`, `CITATION.bib` + `CITATION.apa.txt` + `CITATION.chicago.txt` (per `docs/file-formats/citation-strings.md` §3.3), and a `README.md` walkthrough. `--paper-mode-citation-style {bluebook|apa|chicago}` defaults to `apa` per citation-strings.md §1. Implementation in `bisect-cli/src/paper_mode.rs`; 8 module unit tests + 4 args-parse tests.
 
-- **`BISECT research validate-ensemble`** (Task 5 / M-02): consumes per-chain JSONL files (one chain per file, lines are `{step, metrics: {name: value}}`), computes Gelman-Rubin R-hat + pooled Effective Sample Size per metric using `bisect-analysis::ensemble_diagnostics`. Emits `validate-ensemble v1` JSON report with per-metric pass/fail against `--rhat-threshold` (default 1.05) + `--ess-min` (default 100). Optional `--enacted <metrics.json>` records per-metric `enacted_percentile_rank` against the pooled ensemble distribution. `--strict` propagates convergence failures as non-zero exit. Input validation rejects fewer than 4 chains (S-03), unequal chain lengths, and missing-metric-in-some-chain with `[INPUT]` actionable errors. 8 unit tests including well-mixed pass / unmixed flag-failure / enacted percentile-rank position / `*.jsonl` extension filter.
+- **`bisect research validate-ensemble`** (Task 5 / M-02): consumes per-chain JSONL files (one chain per file, lines are `{step, metrics: {name: value}}`), computes Gelman-Rubin R-hat + pooled Effective Sample Size per metric using `bisect-analysis::ensemble_diagnostics`. Emits `validate-ensemble v1` JSON report with per-metric pass/fail against `--rhat-threshold` (default 1.05) + `--ess-min` (default 100). Optional `--enacted <metrics.json>` records per-metric `enacted_percentile_rank` against the pooled ensemble distribution. `--strict` propagates convergence failures as non-zero exit. Input validation rejects fewer than 4 chains (S-03), unequal chain lengths, and missing-metric-in-some-chain with `[INPUT]` actionable errors. 8 unit tests including well-mixed pass / unmixed flag-failure / enacted percentile-rank position / `*.jsonl` extension filter.
 
 **Deferred (next session pickup):**
 - **Notebook BODY content** — beyond cell-1 metadata + cell-2 attestation; depends on the `bisect_py` PyO3 binding stabilizing.
-- **`BISECT research check-compat`** (Task 3) — actual round-trip property test against installed GerryChain.
+- **`bisect research check-compat`** (Task 3) — actual round-trip property test against installed GerryChain.
 - **`scripts/research/mcmc_ensemble.py`** (Task 6) — GerryChain wrapper.
 - **`.github/workflows/notebooks.yml`** (Task 1.5) — runtime-budget-enforcing CI.
 - **L0 paper-mode acceptance test** running `bash REPRODUCE.sh` from a clean ubuntu:22.04 container + asserting byte-identical `expected_outputs.sha256.json` matches (Task 8.4).
@@ -608,9 +609,9 @@ The Deposition Prep plan is partial. Today (2026-04-30):
 - **28 new L0 tests**: whitelist coverage (3), parse_param_kv (8 cases), overrides_hash (3), canonical JSON (3), log writer (5: GENESIS, chain, recovery, sidecar update, close+final_sha), verify-log (4: valid, single-byte tamper detection, seq-skip detection, empty), bytes-direct (1), build-commit env override.
 
 **Deferred (next session pickup):**
-- **CLI dispatch** (`BISECT depo recompute`, `BISECT depo eval`, `BISECT depo verify-log`, etc.) — the depo module is library-only today; no `Commands::Depo` variant in `args.rs`. The dispatch ships with the daemon (Task 4) since the daemon needs the log writer + recompute logic anyway.
+- **CLI dispatch** (`bisect depo recompute`, `bisect depo eval`, `bisect depo verify-log`, etc.) — the depo module is library-only today; no `Commands::Depo` variant in `args.rs`. The dispatch ships with the daemon (Task 4) since the daemon needs the log writer + recompute logic anyway.
 - **Task 3** (IPC abstraction): Unix domain socket vs Windows named pipe (PP-26).
-- **Task 4** (`BISECT deposition-server` daemon): warm in-memory plan, accept loop, signal handling, two-phase shutdown drain (PP-24).
+- **Task 4** (`bisect deposition-server` daemon): warm in-memory plan, accept loop, signal handling, two-phase shutdown drain (PP-24).
 - **Task 7** (`--enforce-build-commit` + `--case-mode` defaults, BD-N2): build-commit binding when starting the daemon against an existing report.
 - **Task 9** (p99 benchmark methodology, B-03): N=5 warm-up + N=50 measured; pinned runner.
 - **Task 10** (`examples/deposition-checklist.ipynb`): pre-deposition sweep + bookmark notebook.
@@ -620,7 +621,7 @@ The Deposition Prep plan is partial. Today (2026-04-30):
 The Civic Bidirectional Input plan is partial. Today (2026-04-30):
 
 **Shipped (`bisect-cli/src/civic.rs`):**
-- `BISECT civic` subcommand group with five subcommands: `ingest`, `add-candidate-race`, `list`, `show`, `conflicts`. Wired into `main.rs::Commands::Civic`.
+- `bisect civic` subcommand group with five subcommands: `ingest`, `add-candidate-race`, `list`, `show`, `conflicts`. Wired into `main.rs::Commands::Civic`.
 - `civic-coi v1` `CivicManifest` schema (matches `docs/file-formats/manifests.md` §3.8).
 - **BOM-tolerant CSV reader + canonicalization** (Task 2 / PP-27 / DATUM): UTF-8 BOM stripped silently; UTF-16 rejected with documented remediation; LF line endings + sorted by `(geoid, comment_id)` + GEOIDs always quoted + `# civic-coi-csv v1` schema header line. Re-running the canonicalizer on the same input produces byte-identical output.
 - **GEOID typo + leading-zero detection** (Task 3 / PP-28): length-9-or-10 GEOIDs trigger the Excel "leading zero stripped — re-export with column-format = Text" message; length-11-not-in-tract-set triggers a typo hint; non-numeric / wrong-length errors are categorized.
@@ -629,7 +630,7 @@ The Civic Bidirectional Input plan is partial. Today (2026-04-30):
 - **`ValidateMode`** parsing for `--validate {strict|lenient|advisory}`. Strict surfaces the first error; lenient/advisory record warnings in the manifest.
 - **`run_ingest`** end-to-end happy path: reads CSV, canonicalizes, validates GEOIDs + URLs, writes `outputs/{version}/civic_inputs/{label}/{original.csv, normalized.csv, validation_log.txt, manifest.json}`. Atomic via direct `std::fs::write` (PlanDirGuard integration is the next session's pickup).
 - **URL snapshot** (Task 5 / PP-30 / C-02): `BISECT civic ingest --snapshot-urls` archives every unique non-empty `source_url` into `snapshots/<sha8>.body` + `<sha8>.headers.txt` under the civic input dir. Bounded-fetch policy: 5 MB max body, 10 s timeout, ≤3 redirects, `User-Agent: BISECT-civic-snapshot/<version>`. Each URL gets a `UrlSnapshotRecord` in `manifest.url_snapshots` (status, content_type, length, truncated, body SHA-256, snapshot path). Network failures and non-2xx statuses produce `[WARN]` entries in `validation_log.txt` rather than aborting (link rot is data, not a fatal error). 5 unit tests against a localhost `TcpListener` test server.
-- **Candidate-race CLI integration** (Task 8): `BISECT civic add-candidate-race <CSV> --year --state --submitter --attestation-doc [--label] [--output-base] [--version]` calls `BISECT_analysis::race_of_candidate::parse_race_of_candidate_csv` (which validates schema + BD-R2 attestation_doc_format + computes per-row attestation SHA-256s), copies the CSV + master attestation document into `outputs/{version}/civic_inputs/{label}/`, and writes `annotations.json` + `provenance.json` + `manifest.json` with the new `candidate-race v1` schema (carries n_annotations, n_curators, n_disputes, annotations_independently_verified, all SHA-256 chain links). Default label is `candidate_race_<year>_<state-lowercased>`. 5 unit tests cover full output + default-label derivation + missing-CSV / missing-attestation rejection + unverified-caveat propagation.
+- **Candidate-race CLI integration** (Task 8): `bisect civic add-candidate-race <CSV> --year --state --submitter --attestation-doc [--label] [--output-base] [--version]` calls `BISECT_analysis::race_of_candidate::parse_race_of_candidate_csv` (which validates schema + BD-R2 attestation_doc_format + computes per-row attestation SHA-256s), copies the CSV + master attestation document into `outputs/{version}/civic_inputs/{label}/`, and writes `annotations.json` + `provenance.json` + `manifest.json` with the new `candidate-race v1` schema (carries n_annotations, n_curators, n_disputes, annotations_independently_verified, all SHA-256 chain links). Default label is `candidate_race_<year>_<state-lowercased>`. 5 unit tests cover full output + default-label derivation + missing-CSV / missing-attestation rejection + unverified-caveat propagation.
 - **56 L0 tests** including BOM stripping, UTF-16 rejection, byte-stable round-trip, every URL predicate, every GEOID error case, B-08 boundary policy (below / at / above threshold), conflict-detection coverage, URL snapshot success/truncation/404/unreachable, candidate-race full-output / default-label / missing-CSV / missing-attestation / unverified-caveat.
 
 **Deferred (next session pickup):**
@@ -649,9 +650,9 @@ The Plan Comparison & Narrative plan is partial. Today (2026-04-30):
 - `bisect-report::comparison` (Task 2): `ComparisonReport` + `PlanSide` + `DiffSummary` data structures with both `from_loaded()` constructor AND from-disk assembler (`load_plan_side_from_dir`, `diff_from_assignments`). Flexible serde_json::Value parsing handles multiple JSON shapes (per_district_dem_share array vs nested districts; mean_polsby_popper field vs computed mean from districts). `AssembleError` is a `thiserror`-derived enum with `[INPUT]`-prefixed messages.
 - `bisect-report::narrative` (Tasks 3+5): direct-Rust narrative renderer. Civic-friendly framing first, `[DRAFT]` gate per paragraph, `--approved-by` sign-off, civic-counter-proposal framing label, threshold disclosure, close-call flagging, MoE suppression integration. ASCII-only output (PP-34). 16 L0 tests including all 4 value-correctness anchors.
 - `bisect-report::narrative_manifest` (M-04 + PP-31 + COVENANT C-3 / Task 9): `narrative-manifest v1` schema with plan SHAs (NOT just labels), template SHA, threshold values, MoE inputs, approved_by + approved_at, civic-counter-proposal attribution, baseline plan reference. Reproducible via `build_narrative_manifest_with_clock()` (env-free, parallel-test-safe). BTreeMap canonical key ordering. 13 L0 tests.
-- **CLI dispatch (Task 11)**: `BISECT compare --format narrative` and `--format both` write `narrative.md` + `narrative_manifest.json` end-to-end. `--format both` also prints the legacy table to stdout. Output dir defaults to `outputs/{version}/comparisons/{plan_a}_vs_{plan_b}/` and is overridable via `--report-dir`. `template_sha256` records the SHA of the embedded `narrative.rs` source (the renderer IS the template). `SOURCE_DATE_EPOCH` propagates to `approved_at` for byte-stable manifests. 4 L1 integration tests in `compare_narrative_l1.rs` cover DRAFT-mode default, approved-mode prefix removal, `--format both` dual-output, and `--enacted`-only rejection.
-- **HTML side-by-side (Task 7)**: `BISECT compare --format html` writes `comparison.html` alongside the narrative + manifest. Self-contained HTML5 with embedded CSS — no external resources. Layout: civic-counter-proposal banner when applicable, DRAFT/APPROVED badge header, side-by-side metrics table (Districts, Dem-leaning seats, MM count, mean Polsby-Popper, total population with thousands separators), diff scope, inline narrative as paragraphs, chain-of-custody footer with plan-A/plan-B/template SHAs + reproducibility command. All user-controlled fields escaped via `escape_html()`. Print stylesheet preserves color on paper. 16 module unit tests + 1 L1 integration test.
-- `BISECT compare --leaning-threshold` / `--close-call-band` / `--approved-by` / `--report-dir` CLI flags wired into `args.rs`.
+- **CLI dispatch (Task 11)**: `bisect compare --format narrative` and `--format both` write `narrative.md` + `narrative_manifest.json` end-to-end. `--format both` also prints the legacy table to stdout. Output dir defaults to `outputs/{version}/comparisons/{plan_a}_vs_{plan_b}/` and is overridable via `--report-dir`. `template_sha256` records the SHA of the embedded `narrative.rs` source (the renderer IS the template). `SOURCE_DATE_EPOCH` propagates to `approved_at` for byte-stable manifests. 4 L1 integration tests in `compare_narrative_l1.rs` cover DRAFT-mode default, approved-mode prefix removal, `--format both` dual-output, and `--enacted`-only rejection.
+- **HTML side-by-side (Task 7)**: `bisect compare --format html` writes `comparison.html` alongside the narrative + manifest. Self-contained HTML5 with embedded CSS — no external resources. Layout: civic-counter-proposal banner when applicable, DRAFT/APPROVED badge header, side-by-side metrics table (Districts, Dem-leaning seats, MM count, mean Polsby-Popper, total population with thousands separators), diff scope, inline narrative as paragraphs, chain-of-custody footer with plan-A/plan-B/template SHAs + reproducibility command. All user-controlled fields escaped via `escape_html()`. Print stylesheet preserves color on paper. 16 module unit tests + 1 L1 integration test.
+- `bisect compare --leaning-threshold` / `--close-call-band` / `--approved-by` / `--report-dir` CLI flags wired into `args.rs`.
 
 **Deferred (next pickup):**
 - Diff PNG visualization (Task 6): requires extending `bisect-map` with a diff-renderer (third map, color-coded by destination district).
@@ -667,15 +668,15 @@ The State Staff Interop plan is partial. Today (2026-04-30):
 
 **Shipped:**
 - `bisect-report::manifest::PlanDirGuard` (PP-22): atomic-import infrastructure. Builds plans into `{label}.tmp/`, renames to `{label}/` on `commit()`, deletes tmp on drop without commit. Refuses to overwrite without `force=true` (label-collision check). 6 L0 tests covering commit/drop/collision/force/stale-cleanup/mid-run-race.
-- `bisect-report::manifest::callais_preflight` (BOUNDARY): inspects a `PlanManifest` for the simultaneous presence of VRA-aware (`metis-vra` OR `cvap` population source) AND partisan-weighted markers; returns `[BOUNDARY]` error when both. Wired into `bisect analyze` so any plan whose manifest carries both markers refuses analysis. Wired into `BISECT import` as a forward guard. 5 L0 tests covering clean/VRA-only/partisan-only/blocked/error-message.
+- `bisect-report::manifest::callais_preflight` (BOUNDARY): inspects a `PlanManifest` for the simultaneous presence of VRA-aware (`metis-vra` OR `cvap` population source) AND partisan-weighted markers; returns `[BOUNDARY]` error when both. Wired into `bisect analyze` so any plan whose manifest carries both markers refuses analysis. Wired into `bisect label-import` as a forward guard. 5 L0 tests covering clean/VRA-only/partisan-only/blocked/error-message.
 - `bisect-report::canonical` (spec §6 round-trip equality): `canonicalize_assignments()` re-numbers districts by ascending min-GEOID; `diff_assignments()` returns a structured `AssignmentDiff`; `assert_canonical_equal()` returns `[INPUT]`-categorized error with the offending GEOIDs. 10 L0 tests including label-permutation collapse, three-way permutation, distinguishes-different-partitions.
-- `BISECT import --as-civic-counter-proposal --submitted-by "<org>"` (Task 7, COMMONS): tags the imported plan's manifest with `submission_type = "civic_counter_proposal"`. `--submitted-by` required. `--submitted-at` defaults to import time. Downstream comparison reports surface the civic framing instead of treating it as authoritative.
+- `bisect label-import` imports CSV, GeoJSON, shapefile, and RPLAN assignments into the label layout. CSV, GeoJSON, RPLAN, and shapefile/DBF have public fixtures under `docs/fixtures/import-label/`; shapefile support is bounded to DBF `GEOID`/district assignment attributes. See `docs/vtrace/IMPORT_COMPATIBILITY.md` before making broader interoperability claims. Civic-counter-proposal attribution belongs in downstream narrative/report metadata; imported labels are evidence inputs rather than authoritative state plans by default.
 - `PlanManifest` extended with: `submission_type` (default `"authoritative"`), `submitted_by`, `submitted_at`, `source_tool`, `source_tool_version`, `source_format_fingerprint`, `import_compat_sha256`. All optional / serde-default for backward compat with legacy manifests.
 
 **Deferred:**
 - Full schema-version handshake (Task 5: `import_compat.json` compile-time embed + multi-attribute fingerprint for Districtr + DRA column-set fingerprint). The manifest fields are wired for it; the lookup table + matching code is the next session's pickup.
 - Atomic-import refactor of `run_import` itself (Task 1.2: integrate `PlanDirGuard` into the import flow). The guard is shipped + tested; integrating it requires a careful refactor of the existing 90-line `run_import` body.
-- Native shapefile import (Task 4): existing `is_shapefile_extension` guard still emits the `ogr2ogr` guidance; native read via the `shapefile` crate is the next session's work.
+- Broader external-tool round-trip fixtures: `bisect label-import --format shapefile` reads DBF attributes through the `shapefile` crate and maps GEOID-to-district assignments into the label layout, with committed public shapefile/DBF fixtures. Round-trip fixtures for specific external tools such as DRA/Districtr remain future L2 public-interop evidence.
 - L1 round-trip property tests for Districtr/DRA (Task 8.4-8.7).
 
 ## Court Submission Reports (partial — Typst integration scaffolded, not executable)
@@ -685,7 +686,7 @@ The Court Submission Reports plan is partially implemented. Today (2026-04-30):
 **Shipped:**
 - `docs/file-formats/manifests.md` — canonical manifest field inventory + naming + path-portability + cross-manifest hash-link convention.
 - `docs/file-formats/citation-strings.md` — Bluebook / APA / Chicago templates per source class with worked examples.
-- `BISECT report --format pdf` CLI surface flags: `--expert-name`, `--expert-credentials`, `--expert-affiliation`, `--case-caption-file`, `--jurisdiction`, `--citation-style`, `--expert-config`, `--allow-non-strict-civic`, `--draft`. (Wired into `args.rs`; the legacy HTML→PDF path doesn't consume them yet.)
+- `bisect report --format pdf` CLI surface flags: `--expert-name`, `--expert-credentials`, `--expert-affiliation`, `--case-caption-file`, `--jurisdiction`, `--citation-style`, `--expert-config`, `--allow-non-strict-civic`, `--draft`. (Wired into `args.rs`; the legacy HTML-to-PDF path doesn't consume them yet.)
 - `bisect-report::civic_gate` (BD-R1): when court-mode render detects civic inputs ingested under non-strict validation (`--validate {lenient,advisory}`), refuses unless `--allow-non-strict-civic` is set. 10 L0 tests cover all paths.
 - `BISECT/crates/bisect-report/typst-templates/.typst-version` (`0.12.0`) and `.verapdf-version` (`1.26.2`) version pins.
 - `BISECT/crates/bisect-report/typst-templates/README.md` documents the integration path the next session will execute.
@@ -698,7 +699,7 @@ The Court Submission Reports plan is partially implemented. Today (2026-04-30):
 - L1 + L2 acceptance tests (B-01 P0 PDF-text-extraction, B-10 section-header ordering, the deliberately-malformed-Typst negative test).
 - Reproducibility-zip generator (`reproducibility_package.zip` with deterministic byte output).
 
-**Today's `BISECT report --format pdf` behavior:** falls back to the legacy `try_generate_pdf` path (wkhtmltopdf/pandoc with a `[CONFIG]` error if neither is installed). The new flags are accepted but advisory.
+**Today's `bisect report --format pdf` behavior:** falls back to the legacy `try_generate_pdf` path (wkhtmltopdf/pandoc with a `[CONFIG]` error if neither is installed). The new flags are accepted but advisory.
 
 ## Within-Party Bloc Voting (Callais Evidence Layer)
 
@@ -773,16 +774,16 @@ Every SCALE-block-lifting receipt is enforced by a named L0 test:
 - `test_b02_anchor3_vif_above_5_sets_underpowered_flag` — collinearity catches the underpowered case.
 - `test_b02_anchor4_independently_verified_false_injects_caveat` — un-verified annotations cannot ship without the caveat.
 
-See `BISECT/crates/bisect-analysis/src/bloc_voting.rs` and `bloc_voting_writer.rs`, plus `docs/file-formats/race-of-candidate.md` for the curator-attestation chain.
+See `crates/bisect-analysis/src/bloc_voting.rs` and `bloc_voting_writer.rs`, plus `docs/file-formats/race-of-candidate.md` for the curator-attestation chain.
 
 ---
 
-### `BISECT doctor --check-tutorial-data`
+### `bisect doctor --check-tutorial-data`
 
 Validates that a tutorial walkthrough's pinned data + expected outputs match their `checksums.json`. Catches upstream-data drift (Census re-publishes a TIGER vintage, Fekrazad publishes a new file revision, etc.) before the user wastes a debugging session chasing a phantom bug.
 
 ```bash
-BISECT doctor --check-tutorial-data --tutorial vermont-2020
+bisect doctor --check-tutorial-data --tutorial vermont-2020
 ```
 
 Reads `examples/{tutorial}-walkthrough/checksums.json` (schema: `tutorial-checksums v1`), hashes each pinned input + expected output that exists locally, and reports per-row `[PASS]` / `[FAIL]` / `[MISSING]`.

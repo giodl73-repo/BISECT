@@ -373,12 +373,12 @@ pub enum Commands {
     LabelAnalyze(LabelAnalyzeArgs),
     /// Generate a report for a label across one or more analyzed years (Spec 7 Phase 3)
     LabelReport(LabelReportArgs),
-    /// Import an external plan file (CSV/GeoJSON) into the label-based layout
+    /// Import an external plan file (CSV/GeoJSON/shapefile/RPLAN) into the label-based layout
     /// without running the redistricting algorithm (Spec 7 Phase 5).
-    /// `BISECT import X --from FILE [--year Y] [--format csv|geojson|shapefile|rplan]`
+    /// `bisect label-import X --from FILE [--year Y] [--format csv|geojson|shapefile|rplan]`
     LabelImport(LabelImportArgs),
     /// Compare two label-based plans using existing analysis outputs (Spec 7 Phase 5).
-    /// `BISECT label-compare A B [--year Y] [--json] [--out PATH]`
+    /// `bisect label-compare A B [--year Y] [--json] [--out PATH]`
     LabelCompare(LabelCompareArgs),
     /// Interactive TUI hub — label-aware frontend for the full pipeline (Spec 7 Phase 6).
     /// With no label: shows label picker. With a label: pre-scoped to that label.

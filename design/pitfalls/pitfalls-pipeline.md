@@ -277,3 +277,17 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Status:** SOLVED
 **Proved by:** Pre-commit hook installed by setup_env (Plan 03 Task 1.4) blocks `*.pdf` staging unless `ALLOW_PDF=1` is set in the environment.
 **Test:** `git add some.pdf && git commit` is rejected by the hook; `ALLOW_PDF=1 git commit` succeeds, producing an auditable commit.
+
+---
+
+## PP-18: Pulse completion without trace or risk closure
+
+**Pattern:** A wave pulse marks deliverables complete and records validation commands, but does not name the accepted requirements, package boundaries, code-rigor constraints, risk disposition, pitfall/invariant effects, or public/custody impact. The work looks closed locally while VTRACE evidence remains partial.
+
+**Domain:** Any wave/pulse-managed project where pulses predate a formal systems-engineering trace process. The failure is procedural rather than technical: implementation, tests, and docs may all exist, but downstream reviewers cannot tell which mission/spec IDs were satisfied or which risks were accepted.
+
+**Structural solution:** VTRACE-governed pulses must follow the `context/waves/PHASES.md` closure rules: parent IDs, affected boundaries, validation level, role gates, verification state, risk/pitfall disposition, and public/custody effects are required before closure. Archived pulses are not retroactively rewritten, but future governed pulses cannot close on "implemented" alone.
+
+**Status:** MITIGATED
+**Proved by:** WP-007 updated `context/waves/PHASES.md` and VTRACE closure records.
+**Test:** First future VTRACE-governed pulse should receive L1 checklist review before being treated as the process pattern.

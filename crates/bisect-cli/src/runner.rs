@@ -3097,6 +3097,12 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         let tiger_url = bisect_report::tiger_source_url(&state_fips, &cfg.year);
         let gpmetis_version = crate::bisection_runner::detect_gpmetis_version();
         let created_at = bisect_report::now_iso8601();
+        let binary_sha256 = std::env::current_exe()
+            .map_err(|e| format!("resolve current executable for manifest hash: {e}"))
+            .and_then(|path| {
+                bisect_report::sha256_file(&path)
+                    .map_err(|e| format!("hash current executable {}: {e}", path.display()))
+            })?;
         let adjacency_sha256 = bisect_report::sha256_file(&adj_pkl)
             .map_err(|e| format!("hash adjacency source {}: {e}", adj_pkl.display()))?;
         let tiger_sha256 = runner_tiger_sha256(cfg)?;
@@ -3123,7 +3129,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             partition_mode: cfg.algo.mode_name().to_string(),
             seed: seed.map(|s| s as i64),
             binary_version: env!("CARGO_PKG_VERSION").to_string(),
-            binary_sha256: String::new(), // populated by installer/release only
+            binary_sha256,
             binary_download_url: format!(
                 "https://github.com/owner/BISECT/releases/download/v{}/BISECT",
                 env!("CARGO_PKG_VERSION")
@@ -7820,8 +7826,18 @@ mod label_pipeline_tests {
         let yaml = AlgoYaml::from_file(f.path()).expect("parse YAML");
         let sha = AlgoYaml::file_sha256(f.path()).expect("sha256");
 
-        let index = build_build_index("test_plan", "2020", &sha, &yaml, &[], &[])
-            .expect("build_build_index");
+        let index = build_build_index(
+            "test_plan",
+            "2020",
+            f.path(),
+            &sha,
+            "bisect build test_plan --year 2020",
+            std::path::Path::new("runs/test_plan/2020"),
+            &yaml,
+            &[],
+            &[],
+        )
+        .expect("build_build_index");
 
         // Verify the JSON representation has all required keys.
         let json_val = serde_json::to_value(&index).expect("serialize");
@@ -7832,7 +7848,11 @@ mod label_pipeline_tests {
             "year",
             "created",
             "version",
+            "config_path",
             "config_sha256",
+            "command",
+            "output_dir",
+            "metis_engine",
             "algorithm",
             "states",
             "summary",

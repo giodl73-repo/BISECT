@@ -4,6 +4,8 @@
 
 Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
+Evidence and review labels in this index are internal project status markers. Terms such as "reviewed", "accepted", "golden", or score values refer to local simulated review, paper-quality triage, or evidence-package status; they are not external peer review, venue acceptance, legal certification, or official election certification.
+
 Current atlas-to-paper alignment work is tracked in
 [`docs/papers/ATLAS-ALIGNMENT.md`](papers/ATLAS-ALIGNMENT.md).
 The slower publication-quality review ledger is

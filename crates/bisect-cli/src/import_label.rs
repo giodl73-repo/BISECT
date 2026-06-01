@@ -22,6 +22,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use sha2::{Digest, Sha256};
+use shapefile::dbase::{FieldValue, Record};
 
 use crate::label::{state_runs_dir, validate_label_name, year_runs_dir};
 use crate::run_registry::Registry;
@@ -196,6 +197,37 @@ pub fn parse_csv_assignments(csv_str: &str) -> Result<HashMap<String, usize>, St
     Ok(assignments)
 }
 
+// ── RPLAN parsing ─────────────────────────────────────────────────────────────
+
+/// Parse an RPLAN document into a `GEOID -> district` assignment map.
+///
+/// RPLAN stores canonical district ids as zero-based integers.  BISECT run
+/// assignment files use one-based numeric district ids, so import normalizes
+/// `0..k` to `1..=k`.
+pub fn parse_rplan_assignments(rplan_str: &str) -> Result<HashMap<String, usize>, String> {
+    let document =
+        rplan_io::read_rplan_str(rplan_str).map_err(|e| format!("[INPUT] invalid RPLAN: {e}"))?;
+    let units = &document.plan.units.unit_ids;
+    let assignment = &document.plan.assignment;
+    if units.len() != assignment.len() {
+        return Err(format!(
+            "[INPUT] RPLAN assignment length {} does not match unit count {}",
+            assignment.len(),
+            units.len()
+        ));
+    }
+
+    let mut assignments = HashMap::with_capacity(units.len());
+    for (unit_id, district_id) in units.iter().zip(assignment.iter()) {
+        assignments.insert(unit_id.clone(), (*district_id as usize) + 1);
+    }
+
+    if assignments.is_empty() {
+        return Err("[INPUT] RPLAN contains no unit assignments".to_string());
+    }
+    Ok(assignments)
+}
+
 // ── GeoJSON parsing ───────────────────────────────────────────────────────────
 
 /// Parse a GeoJSON FeatureCollection into a `GEOID → district` assignment map.
@@ -237,6 +269,148 @@ pub fn parse_geojson_assignments(geojson_str: &str) -> Result<HashMap<String, us
     Ok(assignments)
 }
 
+// ── Shapefile parsing ─────────────────────────────────────────────────────────
+
+const GEOID_FIELD_CANDIDATES: &[&str] = &["GEOID", "GEOID20", "GEOID10", "GEOID00", "GEO_ID"];
+const DISTRICT_FIELD_CANDIDATES: &[&str] = &[
+    "DISTRICT",
+    "DISTRICTID",
+    "DISTRICT_I",
+    "DISTRICT_",
+    "DIST_ID",
+    "DIST",
+    "DIST_NUM",
+    "CD",
+];
+
+/// Parse shapefile DBF attributes into a `GEOID -> district` assignment map.
+///
+/// The importer reads attributes from the `.dbf` sidecar through the shapefile
+/// reader and ignores geometry after the record can be read. Field names are
+/// detected case-insensitively from common plan-export names.
+pub fn parse_shapefile_assignments(path: &Path) -> Result<HashMap<String, usize>, String> {
+    if path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.eq_ignore_ascii_case("shp"))
+        .unwrap_or(false)
+    {
+        let dbf_path = path.with_extension("dbf");
+        if !dbf_path.exists() {
+            return Err(format!(
+                "[INPUT] shapefile sidecar DBF is missing: '{}'",
+                dbf_path.display()
+            ));
+        }
+    }
+
+    let mut reader = shapefile::Reader::from_path(path)
+        .map_err(|e| format!("[INPUT] cannot read shapefile '{}': {e}", path.display()))?;
+
+    let mut assignments = HashMap::new();
+    let mut geoid_field: Option<String> = None;
+    let mut district_field: Option<String> = None;
+
+    for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
+        let (_shape, record) = shape_record.map_err(|e| {
+            format!(
+                "[INPUT] cannot read shapefile record {} from '{}': {e}",
+                idx + 1,
+                path.display()
+            )
+        })?;
+
+        if geoid_field.is_none() {
+            geoid_field = detect_dbf_field(&record, GEOID_FIELD_CANDIDATES);
+            district_field = detect_dbf_field(&record, DISTRICT_FIELD_CANDIDATES);
+            if geoid_field.is_none() || district_field.is_none() {
+                let fields = available_dbf_fields(&record);
+                return Err(format!(
+                    "[INPUT] shapefile attributes must include GEOID and district fields. \
+                     GEOID candidates: {}; district candidates: {}; available fields: {}",
+                    GEOID_FIELD_CANDIDATES.join(", "),
+                    DISTRICT_FIELD_CANDIDATES.join(", "),
+                    fields
+                ));
+            }
+        }
+
+        let geoid_name = geoid_field.as_deref().unwrap();
+        let district_name = district_field.as_deref().unwrap();
+        let geoid = parse_geoid_value(record.get(geoid_name)).ok_or_else(|| {
+            format!(
+                "[INPUT] shapefile record {} has empty or invalid GEOID field '{}'",
+                idx + 1,
+                geoid_name
+            )
+        })?;
+        let district = parse_district_value(record.get(district_name)).ok_or_else(|| {
+            format!(
+                "[INPUT] shapefile record {} has empty or non-integer district field '{}'",
+                idx + 1,
+                district_name
+            )
+        })?;
+
+        assignments.insert(geoid, district);
+    }
+
+    if assignments.is_empty() {
+        return Err(
+            "[INPUT] shapefile produced no GEOID->district assignments - check file attributes"
+                .to_string(),
+        );
+    }
+
+    Ok(assignments)
+}
+
+fn detect_dbf_field(record: &Record, candidates: &[&str]) -> Option<String> {
+    let fields = record.as_ref();
+    candidates.iter().find_map(|candidate| {
+        fields
+            .keys()
+            .find(|field| field.eq_ignore_ascii_case(candidate))
+            .cloned()
+    })
+}
+
+fn available_dbf_fields(record: &Record) -> String {
+    let mut fields: Vec<&str> = record.as_ref().keys().map(String::as_str).collect();
+    fields.sort_unstable();
+    if fields.is_empty() {
+        "<none>".to_string()
+    } else {
+        fields.join(", ")
+    }
+}
+
+fn parse_geoid_value(value: Option<&FieldValue>) -> Option<String> {
+    match value {
+        Some(FieldValue::Character(Some(s))) => {
+            let trimmed = s.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed.to_string())
+            }
+        }
+        Some(FieldValue::Numeric(Some(v))) if v.fract() == 0.0 => Some(format!("{v:.0}")),
+        Some(FieldValue::Integer(v)) => Some(v.to_string()),
+        _ => None,
+    }
+}
+
+fn parse_district_value(value: Option<&FieldValue>) -> Option<usize> {
+    match value {
+        Some(FieldValue::Character(Some(s))) => s.trim().parse::<usize>().ok(),
+        Some(FieldValue::Numeric(Some(v))) if *v >= 0.0 && v.fract() == 0.0 => Some(*v as usize),
+        Some(FieldValue::Integer(v)) if *v >= 0 => Some(*v as usize),
+        Some(FieldValue::Double(v)) if *v >= 0.0 && v.fract() == 0.0 => Some(*v as usize),
+        _ => None,
+    }
+}
+
 // ── SHA-256 helper ────────────────────────────────────────────────────────────
 
 /// Compute SHA-256 of `bytes` and return a 64-char lowercase hex string.
@@ -257,7 +431,7 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 /// Steps:
 /// 1. Validate `label`.
 /// 2. Auto-detect `format` from file extension if not given.
-/// 3. Read and parse the file (CSV or GeoJSON; shapefile/rplan → `[CONFIG]` stub).
+/// 3. Read and parse the file (CSV, GeoJSON, Shapefile, or RPLAN).
 /// 4. Group assignments by state FIPS (first 2 chars of GEOID).
 /// 5. Write `runs/{label}/{year}/{state_name}/assignments.json` for each state.
 /// 6. Write `runs/{label}/{year}/index.json` with `algorithm.structure = "external"`.
@@ -287,26 +461,11 @@ pub fn run_label_import(
 
     // ── Step 3: Parse ─────────────────────────────────────────────────────────
     let all_assignments: HashMap<String, usize> = match format_str.as_str() {
-        "shapefile" => {
-            return Err(format!(
-                "[CONFIG] shapefile format is not yet implemented by bisect import X.\n\
-                 Convert to GeoJSON first:\n  \
-                 ogr2ogr -f GeoJSON output.geojson {}\n  \
-                 Then: bisect import {} --from output.geojson --year {}",
-                from.display(),
-                label,
-                year
-            ));
-        }
+        "shapefile" => parse_shapefile_assignments(from)?,
         "rplan" => {
-            return Err(format!(
-                "[CONFIG] rplan format is not yet implemented by bisect import X.\n\
-                 Use the existing `bisect import --file {} --label {} --year {}` command \
-                 for .rplan files.",
-                from.display(),
-                label,
-                year
-            ));
+            let content = std::fs::read_to_string(from)
+                .map_err(|e| format!("[INPUT] cannot read '{}': {e}", from.display()))?;
+            parse_rplan_assignments(&content)?
         }
         "csv" => {
             let content = std::fs::read_to_string(from)
@@ -610,6 +769,7 @@ fn emit_output(text: &str, out: Option<&Path>) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::convert::TryInto;
     use tempfile::TempDir;
 
     // ── Helper ─────────────────────────────────────────────────────────────────
@@ -629,6 +789,21 @@ mod tests {
         // Restore CWD before the TempDir is dropped (important on Windows).
         std::env::set_current_dir(&original).unwrap_or_default();
         dir // returned so it outlives the function; dropped by caller
+    }
+
+    fn public_import_fixture(path: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("docs")
+            .join("fixtures")
+            .join("import-label")
+            .join(path)
+    }
+
+    fn read_expected_assignments(path: &str) -> HashMap<String, usize> {
+        let content = std::fs::read_to_string(public_import_fixture(path)).unwrap();
+        serde_json::from_str(&content).unwrap()
     }
 
     // ── 1. CSV parsing: GEOID,district → assignments map ──────────────────────
@@ -872,23 +1047,95 @@ mod tests {
         assert!(msg.contains("[INPUT]"), "must be [INPUT] error: {msg}");
     }
 
-    // ── 14. shapefile format → [CONFIG] stub error ────────────────────────────
+    fn write_test_shapefile(path: &Path, include_district: bool) {
+        let mut table_builder = shapefile::dbase::TableWriterBuilder::new()
+            .add_character_field("GEOID".try_into().unwrap(), 16);
+        if include_district {
+            table_builder = table_builder.add_numeric_field("DISTRICT".try_into().unwrap(), 8, 0);
+        }
+
+        let mut writer = shapefile::Writer::from_path(path, table_builder).unwrap();
+        let records = [
+            ("50001000100", 1.0, shapefile::Point::new(0.0, 0.0)),
+            ("50001000200", 2.0, shapefile::Point::new(1.0, 1.0)),
+        ];
+        for (geoid, district, point) in records {
+            let mut record = shapefile::dbase::Record::default();
+            record.insert(
+                "GEOID".to_string(),
+                shapefile::dbase::FieldValue::Character(Some(geoid.to_string())),
+            );
+            if include_district {
+                record.insert(
+                    "DISTRICT".to_string(),
+                    shapefile::dbase::FieldValue::Numeric(Some(district)),
+                );
+            }
+            writer.write_shape_and_record(&point, &record).unwrap();
+        }
+    }
+
+    // ── 14. shapefile format → assignments map ────────────────────────────────
 
     #[test]
-    fn test_shapefile_format_returns_config_stub_error() {
+    fn test_shapefile_parsing_geoid_district_fields() {
         let tmp = TempDir::new().unwrap();
         let f = tmp.path().join("plan.shp");
-        std::fs::write(&f, "binary data").unwrap();
-        let _dir = with_tempdir(|| {
-            let result = run_label_import("my_plan", &f, "2020", Some("shapefile"));
-            assert!(result.is_err(), "shapefile must return error");
-            let msg = result.unwrap_err();
-            assert!(msg.contains("[CONFIG]"), "must be [CONFIG] error: {msg}");
+        write_test_shapefile(&f, true);
+
+        let result = parse_shapefile_assignments(&f);
+        assert!(
+            result.is_ok(),
+            "valid shapefile attributes must parse: {:?}",
+            result.err()
+        );
+        let assignments = result.unwrap();
+        assert_eq!(assignments["50001000100"], 1);
+        assert_eq!(assignments["50001000200"], 2);
+    }
+
+    #[test]
+    fn test_shapefile_missing_district_field_returns_input_error() {
+        let tmp = TempDir::new().unwrap();
+        let f = tmp.path().join("plan.shp");
+        write_test_shapefile(&f, false);
+
+        let result = parse_shapefile_assignments(&f);
+        assert!(result.is_err(), "missing district field must fail");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("[INPUT]"), "must be [INPUT] error: {msg}");
+        assert!(
+            msg.contains("district fields"),
+            "must mention district field candidates: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_run_label_import_shapefile_end_to_end() {
+        let dir = with_tempdir(|| {
+            let f = PathBuf::from("plan.shp");
+            write_test_shapefile(&f, true);
+
+            let result = run_label_import("vt_shape", &f, "2020", None);
             assert!(
-                msg.contains("not yet implemented"),
-                "must mention not yet implemented: {msg}"
+                result.is_ok(),
+                "end-to-end shapefile import must succeed: {:?}",
+                result.err()
             );
+
+            let asgn = PathBuf::from("runs/vt_shape/2020/vermont/assignments.json");
+            assert!(
+                asgn.exists(),
+                "assignments.json must be written: {}",
+                asgn.display()
+            );
+
+            let content = std::fs::read_to_string(&asgn).unwrap();
+            let v: serde_json::Value = serde_json::from_str(&content).unwrap();
+            assert_eq!(v["50001000100"].as_u64(), Some(1));
+            assert_eq!(v["50001000200"].as_u64(), Some(2));
         });
+        drop(dir);
     }
 
     // ── 15. Full end-to-end: CSV → assignments.json + index.json + registry ───
@@ -1159,24 +1406,82 @@ mod tests {
         );
     }
 
-    // ── 28. rplan format → [CONFIG] stub error ───────────────────────────────
+    // ── 28. RPLAN format imports canonical assignments ───────────────────────
 
     #[test]
-    fn test_rplan_format_returns_config_stub_error() {
-        let _dir = with_tempdir(|| {
-            let tmp = TempDir::new().unwrap();
-            let f = tmp.path().join("plan.rplan");
-            std::fs::write(&f, "rplan data").unwrap();
+    fn test_run_label_import_rplan_end_to_end() {
+        let dir = with_tempdir(|| {
+            let rplan = r#"{
+              "rplan_version": "0.2",
+              "plan": {
+                "schema_version": "district-plan-v1",
+                "units": {
+                  "unit_kind": "tract",
+                  "state": "WA",
+                  "year": 2020,
+                  "canonical_order": "explicit-unit-ids",
+                  "unit_ids": ["53001000100", "53001000200"],
+                  "unit_universe_hash": "sha256:test"
+                },
+                "assignment": [0, 1],
+                "k": 2,
+                "display_labels": ["1", "2"],
+                "allow_empty_districts": false
+              },
+              "metadata": {
+                "label": "wa_test",
+                "jurisdiction": "WA",
+                "chamber": "congressional",
+                "created_at": "2026-05-10T00:00:00Z"
+              },
+              "provenance": {},
+              "geometry": null,
+              "extensions": {}
+            }"#;
+            let f = PathBuf::from("plan.rplan");
+            std::fs::write(&f, rplan).unwrap();
 
-            let result = run_label_import("my_plan", &f, "2020", Some("rplan"));
-            assert!(result.is_err(), "rplan must return error");
-            let msg = result.unwrap_err();
-            assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+            let result = run_label_import("wa_rplan", &f, "2020", Some("rplan"));
             assert!(
-                msg.contains("not yet implemented"),
-                "must mention not implemented: {msg}"
+                result.is_ok(),
+                "RPLAN end-to-end import must succeed: {:?}",
+                result.err()
             );
+
+            let asgn = PathBuf::from("runs/wa_rplan/2020/washington/assignments.json");
+            assert!(
+                asgn.exists(),
+                "assignments.json must be written: {}",
+                asgn.display()
+            );
+            let assignments: HashMap<String, usize> =
+                serde_json::from_str(&std::fs::read_to_string(&asgn).unwrap()).unwrap();
+            assert_eq!(assignments["53001000100"], 1);
+            assert_eq!(assignments["53001000200"], 2);
+
+            let idx = PathBuf::from("runs/wa_rplan/2020/index.json");
+            let index: serde_json::Value =
+                serde_json::from_str(&std::fs::read_to_string(&idx).unwrap()).unwrap();
+            assert_eq!(index["algorithm"]["format"].as_str(), Some("rplan"));
         });
+        let registry_path = dir.path().join(".bisect");
+        let content = std::fs::read_to_string(registry_path).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&content).unwrap();
+        assert!(
+            v["wa_rplan"]["built"]
+                .as_array()
+                .map(|a| a.iter().any(|y| y.as_str() == Some("2020")))
+                .unwrap_or(false),
+            "registry must mark wa_rplan/2020 built"
+        );
+    }
+
+    #[test]
+    fn test_parse_rplan_unsupported_version_returns_input_error() {
+        let result = parse_rplan_assignments(r#"{"rplan_version":"9.9"}"#);
+        assert!(result.is_err(), "unsupported RPLAN version must fail");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("[INPUT]"), "must be [INPUT] error: {msg}");
     }
 
     // ── 29. detect_format: uppercase extension not matched → None ────────────
@@ -1233,5 +1538,76 @@ mod tests {
                 result
             );
         });
+    }
+
+    #[test]
+    fn test_public_import_fixture_csv_matches_expected_assignments() {
+        let csv = std::fs::read_to_string(public_import_fixture("positive/vermont_two_tracts.csv"))
+            .unwrap();
+        let expected = read_expected_assignments("expected/vermont_two_tracts.assignments.json");
+
+        let assignments = parse_csv_assignments(&csv).unwrap();
+
+        assert_eq!(assignments, expected);
+    }
+
+    #[test]
+    fn test_public_import_fixture_geojson_matches_expected_assignments() {
+        let geojson =
+            std::fs::read_to_string(public_import_fixture("positive/vermont_two_tracts.geojson"))
+                .unwrap();
+        let expected = read_expected_assignments("expected/vermont_two_tracts.assignments.json");
+
+        let assignments = parse_geojson_assignments(&geojson).unwrap();
+
+        assert_eq!(assignments, expected);
+    }
+
+    #[test]
+    fn test_public_import_fixture_rplan_matches_expected_assignments() {
+        let rplan = std::fs::read_to_string(public_import_fixture(
+            "positive/washington_two_tracts.rplan",
+        ))
+        .unwrap();
+        let expected = read_expected_assignments("expected/washington_two_tracts.assignments.json");
+
+        let assignments = parse_rplan_assignments(&rplan).unwrap();
+
+        assert_eq!(assignments, expected);
+    }
+
+    #[test]
+    fn test_public_import_fixture_shapefile_matches_expected_assignments() {
+        let shapefile = public_import_fixture("positive/vermont_two_tracts.shp");
+        let expected = read_expected_assignments("expected/vermont_two_tracts.assignments.json");
+
+        let assignments = parse_shapefile_assignments(&shapefile).unwrap();
+
+        assert_eq!(assignments, expected);
+    }
+
+    #[test]
+    fn test_public_import_fixture_negative_cases_return_input_errors() {
+        let csv = std::fs::read_to_string(public_import_fixture("negative/csv_bad_district.csv"))
+            .unwrap();
+        let geojson = std::fs::read_to_string(public_import_fixture(
+            "negative/geojson_missing_geoid.geojson",
+        ))
+        .unwrap();
+        let rplan = std::fs::read_to_string(public_import_fixture(
+            "negative/rplan_unsupported_version.rplan",
+        ))
+        .unwrap();
+        let shapefile = public_import_fixture("negative/shapefile_missing_district.shp");
+
+        for result in [
+            parse_csv_assignments(&csv),
+            parse_geojson_assignments(&geojson),
+            parse_rplan_assignments(&rplan),
+            parse_shapefile_assignments(&shapefile),
+        ] {
+            let msg = result.expect_err("negative public fixture must fail");
+            assert!(msg.contains("[INPUT]"), "must be [INPUT] error: {msg}");
+        }
     }
 }

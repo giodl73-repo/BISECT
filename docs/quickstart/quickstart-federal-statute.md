@@ -48,19 +48,18 @@ The official configuration reads from `configs/official_proposal.yml`, which set
 bisect build official_2020 --year 2020
 ```
 
-This is equivalent to:
+The corresponding explicit label-pipeline form is:
 ```bash
-BISECT run --year 2020 \
-    --version official_2020 \
-    --partition-mode apportion-regions \
-    --weights county \
+bisect build official_2020 --year 2020 \
+    --structure prime-factor \
+    --weights-override county \
     --search convergence \
     --workers 12
 ```
 
-Expected time: 15–30 minutes on a 4-core laptop (the `BISECT` binary is ~200x faster than the archived Python pipeline).
+Expected time depends on data cache, state count, and worker count (the `bisect` binary is much faster than the archived Python pipeline).
 
-Expected output: `outputs/official_2020/2020/{state}/final_assignments.json` for all 50 states.
+Expected output: `runs/official_2020/2020/{state}/assignments.json` plus label index and registry evidence.
 
 ---
 
@@ -80,9 +79,9 @@ This re-hashes every input file (TIGER shapefiles, PL 94-171 data) and compares 
 
 A failing result means the run is not reproducible from the stated inputs -- which is the core finding the DIA's private right of action would allow any citizen to litigate.
 
-For a single state:
+For a single-state development smoke run:
 ```bash
-BISECT doctor --verify-manifest outputs/official_2020/2020/north_carolina/manifest.json
+bisect state --state NC --year 2020 --version v_test
 ```
 
 ---

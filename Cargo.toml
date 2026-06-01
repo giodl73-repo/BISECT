@@ -52,6 +52,9 @@ license = "MIT"
 metis-core = { git = "https://github.com/giodl73-repo/METIS-CORE.git", branch = "master" }
 metis = "0.2.2"
 
+# Cross-repo tools
+fletch-core = { git = "https://github.com/giodl73-repo/FLETCH.git", package = "fletch-core", branch = "master" }
+
 # Algorithm / data structures
 rayon = "1.10"
 rand  = { version = "0.8", features = ["small_rng"] }
