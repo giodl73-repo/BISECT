@@ -34,7 +34,7 @@ rplan-core       = { path = "../rplan-core" }
 rplan-io         = { path = "../rplan-io" }
 rgraph-core      = { path = "../rgraph-core" }
 rmath-core       = { path = "../rmath-core" }
-fletch-core      = { path = "../../../../tools-infra/fletch/crates/fletch-core" }
+fletch-core      = { workspace = true }
 # metis is only compiled when the c-ffi-engine feature is enabled.
 metis            = { workspace = true, optional = true }
 geo.workspace         = true

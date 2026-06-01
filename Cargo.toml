@@ -50,6 +50,7 @@ license = "MIT"
 [workspace.dependencies]
 # Partitioning
 metis-core = { git = "https://github.com/giodl73-repo/METIS-CORE.git", branch = "master" }
+fletch-core = { git = "https://github.com/giodl73-repo/FLETCH.git", package = "fletch-core", branch = "master" }
 metis = "0.2.2"
 
 # Algorithm / data structures

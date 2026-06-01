@@ -253,3 +253,4 @@ target/
 !data/manifest.json
 !data/location_policy.json
 !data/README.md
+.cargo/config.toml
