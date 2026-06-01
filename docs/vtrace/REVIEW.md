@@ -329,18 +329,18 @@ Gate type: S4/S5 DCR execution baseline review.
 | DCR-001 fixture evidence exists | pass | CSV, GeoJSON, RPLAN, and shapefile/DBF public fixtures plus expected assignments are present and covered by parser tests; broader external-tool round-trip fixtures remain out of scope. |
 | DCR-002 smoke scope exists | partial_pass | `RELEASE_SMOKE_BUNDLE.md` defines fixture and real-state smoke scope; real-state smoke execution remains environment/data dependent. |
 | DCR-003 non-author walkthrough is recorded | partial_pass | L1 role-simulation walkthrough is documented; L2 external-user evidence remains open. |
-| DCR-004 public evidence package contract exists | baseline_pass | `BISECT-EVIDENCE-PACKAGE-v1` is defined; review against a concrete public bundle remains open. |
+| DCR-004 public evidence package contract exists | pass_l1 | `BISECT-EVIDENCE-PACKAGE-v1` is defined with an internal package review checklist; review against a concrete public bundle remains open. |
 | DCR-005 import compatibility matrix exists | pass | Current adapter support, boundaries, fixture status, and unknowns are centralized in `IMPORT_COMPATIBILITY.md`. |
-| DCR-006 legal/court packaging boundary exists | baseline_pass | Court-ready and filing-ready claims are separated from generated evidence packages; legal review remains required before stronger claims. |
+| DCR-006 legal/court packaging boundary exists | pass_l1 | Court-ready and filing-ready claims are separated from generated evidence packages, with an internal boundary checklist; legal review remains required before stronger claims. |
 | DCR-007 reproducibility status is honest | partial_pass | `REPRODUCIBILITY_RUN.md` declares `smoke-only` status and does not claim release-subset or full-scale replay. |
 
 Decision: `pass_with_risk`
 
 Rationale: The DCR execution baseline materially improves release-readiness
-evidence while preserving honest boundaries. It is enough to close DCR-005 at
-L1 and to establish L1/baseline artifacts for the remaining DCRs, but it is not
-L2 public readiness, legal filing readiness, or full-scale reproducibility
-evidence.
+evidence while preserving honest boundaries. It is enough to close DCR-004,
+DCR-005, and DCR-006 at L1 and to establish partial/smoke-only artifacts for the
+remaining DCRs, but it is not L2 public readiness, legal filing readiness, or
+full-scale reproducibility evidence.
 
 ## DCR-001 Fixture Promotion Review
 
@@ -367,3 +367,29 @@ Rationale: DCR-001 is closed at L2 for the named public label-import fixture set
 The closure covers fixture-backed CSV, GeoJSON, RPLAN, and shapefile/DBF
 assignment-table compatibility only; it does not certify arbitrary external-tool
 exports, geometry transformations, or legal plan quality.
+
+## DCR-004/DCR-006 L1 Contract Boundary Review
+
+Date: 2026-06-01
+
+Scope: `docs/vtrace/EVIDENCE_PACKAGE_CONTRACT.md`,
+`docs/legal/COURT_PACKAGING_BOUNDARY.md`, `docs/vtrace/DCRS.md`,
+`docs/vtrace/TRACE.md`, `docs/vtrace/STAGE_EXECUTION.md`, and
+`docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: L1 internal contract and boundary review for DCR-004 and DCR-006.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Evidence-package required layout is explicit | pass | The contract names the package directories, required manifest fields, required artifacts, optional artifacts, compatibility rules, immutability, supersession, and non-claims. |
+| Evidence-package L1 checklist is actionable | pass | The checklist requires layout/field/hash/status/non-claim/custody checks and blocks public-bundle claims until applied to a concrete package. |
+| Legal package classes are separated | pass | Generated evidence packages, legal review packages, and court-ready filing packages remain distinct. |
+| Legal gates are separately owned | pass | Federal, state, chamber, VRA, population, contiguity, subdivision, nesting, custody, and filing-rule checks remain human/legal review items. |
+| Legal-boundary L1 checklist is actionable | pass | The checklist prevents court-ready, filing-ready, certified, approved, or equivalent claims without named external authority review. |
+| L2 claims remain blocked | pass | Both DCRs still require concrete public-bundle/legal review evidence before public contract, filing-ready, or court-ready claims. |
+
+Decision: `pass_l1`
+
+Rationale: DCR-004 and DCR-006 now have enough internal contract/checklist
+evidence to close at L1. They remain intentionally open at L2 until a concrete
+public evidence bundle and jurisdiction-specific legal/public-claim review exist.

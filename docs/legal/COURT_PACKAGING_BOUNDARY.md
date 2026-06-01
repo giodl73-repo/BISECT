@@ -38,6 +38,29 @@ must identify:
 - Known limitations, uncertainty, and non-claims.
 - Reviewing counsel/expert/official and jurisdiction-specific authority.
 
+## L1 boundary review checklist
+
+Before an internal legal-review package may pass the DCR-006 L1 boundary gate,
+reviewers must confirm:
+
+- The package is named as a generated evidence package or legal review package,
+  not as a court-ready filing package.
+- Any references to `label-report`, `label-verify`, dashboards, maps, or
+  package-family audits describe evidence and checks, not legal certification.
+- The jurisdiction, chamber, and governing authority are either named for review
+  or explicitly marked as not yet selected.
+- Federal, state, chamber, VRA, population, contiguity, subdivision, nesting,
+  source-custody, and filing-rule gates are listed as separate human/legal
+  review items.
+- Counsel, expert, court, commission, or official authority remains responsible
+  for legal conclusions and filing decisions.
+- Public-facing text avoids "court-ready", "filing-ready", "certified",
+  "approved", or equivalent language unless the external legal authority review
+  is named and attached.
+
+This checklist closes the internal boundary definition at L1. It does not close
+the L2 legal-boundary gate for a specific jurisdiction or filing.
+
 ## Public-claim rule
 
 `label-report`, `label-verify`, and evidence-package generation can support a

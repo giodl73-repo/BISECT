@@ -13,9 +13,9 @@ These DCRs convert the residual release-readiness risks found during S4 closure 
 | DCR-001 | Golden Interop Fixtures | closed_l2 | high | REQ-003, REQ-013, REQ-014, REQ-031, SPEC-002, SPEC-007, IF-003, IF-008, WP-002, WP-004 | LEDGER / package owners | L2 |
 | DCR-002 | Release Smoke Bundle | partial_l1 | high | REQ-007, REQ-008, REQ-012, REQ-026, REQ-032, SPEC-005, SPEC-010, SPEC-012, WP-003, WP-008 | BENCHMARK / BISECT owners | L1 |
 | DCR-003 | External User Walkthrough | partial_l1 | high | REQ-032, REQ-034, REQ-035, SPEC-012, IF-001, IF-006, WP-008 | COMMONS / operator review | L2 |
-| DCR-004 | Public Evidence Package Contract | baseline_l1 | high | REQ-005, REQ-006, REQ-024, REQ-026, REQ-027, SPEC-004, SPEC-010, IF-006, WP-005, WP-006 | DATUM / SCALE / VAULT | L2 |
+| DCR-004 | Public Evidence Package Contract | closed_l1 | high | REQ-005, REQ-006, REQ-024, REQ-026, REQ-027, SPEC-004, SPEC-010, IF-006, WP-005, WP-006 | DATUM / SCALE / VAULT | L2 |
 | DCR-005 | Import Compatibility Matrix | closed_l1 | medium | REQ-003, REQ-031, SPEC-002, SPEC-NF-007, IF-008, WP-002 | LEDGER / CLI owners | L1 |
-| DCR-006 | Court/Legal Packaging Boundary | baseline_l1 | high | REQ-010, REQ-011, REQ-026, SPEC-006, SPEC-010, IF-006, WP-005, WP-006 | BOUNDARY / WARD / COMMONS | L2 |
+| DCR-006 | Court/Legal Packaging Boundary | closed_l1 | high | REQ-010, REQ-011, REQ-026, SPEC-006, SPEC-010, IF-006, WP-005, WP-006 | BOUNDARY / WARD / COMMONS | L2 |
 | DCR-007 | Full-Scale Reproducibility Run | partial_smoke_only | high | REQ-007, REQ-008, REQ-009, REQ-012, SPEC-005, SPEC-NF-001, IF-001, IF-002, WP-003 | MERIDIAN / COVENANT | L2 |
 
 ## DCR-001: Golden Interop Fixtures
@@ -98,7 +98,7 @@ requires a real non-author operator or external reviewer.
 
 ## DCR-004: Public Evidence Package Contract
 
-Status: baseline_l1.
+Status: closed_l1.
 
 Problem: Public evidence outputs are discussed across reports, dashboards, papers, manifests, and VTRACE docs, but the stable public artifact layout and required fields for downstream consumers are not yet locked as a release contract.
 
@@ -121,7 +121,8 @@ Residual risk until closed: Public artifacts remain reviewable by current docs b
 Execution evidence: `docs/vtrace/EVIDENCE_PACKAGE_CONTRACT.md` defines
 `BISECT-EVIDENCE-PACKAGE-v1`, required layout, required manifest fields,
 optional artifacts, compatibility rules, immutability, supersession, and
-non-claims. L2 closure requires review against a concrete public bundle.
+non-claims, plus an L1 checklist for internal contract conformance. L2 closure
+requires review against a concrete public bundle.
 
 ## DCR-005: Import Compatibility Matrix
 
@@ -151,7 +152,7 @@ claimed.
 
 ## DCR-006: Court/Legal Packaging Boundary
 
-Status: baseline_l1.
+Status: closed_l1.
 
 Problem: BISECT produces algorithmic evidence packages and legal-analysis materials, but a court-ready or filing-ready package requires separate jurisdictional gates and human/legal review beyond generated reports.
 
@@ -173,7 +174,8 @@ Residual risk until closed: Current docs are bounded against certification claim
 Execution evidence: `docs/legal/COURT_PACKAGING_BOUNDARY.md` distinguishes
 generated evidence packages, legal review packages, and court-ready filing
 packages; names required legal gates; and states that BISECT supplies evidence
-and checklists, not legal authority. L2 closure requires public-claim/legal
+and checklists, not legal authority. It now includes an L1 boundary checklist for
+internal legal-review package screening. L2 closure requires public-claim/legal
 review before any filing-ready language is used.
 
 ## DCR-007: Full-Scale Reproducibility Run

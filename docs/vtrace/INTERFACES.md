@@ -176,7 +176,7 @@ WP-002 current snapshot: implemented BISECT external plan adapters include GeoJS
 | IF-Q-001 | Which CLI command namespace is canonical for current production docs: legacy `state/states/run` or label pipeline `build/label-*`? | Could confuse non-author workflows and compatibility claims. | WP-002 records both as current binary surfaces; label pipeline is the reproducible-run path, while legacy command compatibility remains command-specific. |
 | IF-Q-002 | Are all RPLAN/RCOUNT/RCTX/RHIST schemas sufficiently versioned today? | Package compatibility claims may be premature. | WP-004 verifies current schema/audit tests; DCR-001 controls public golden fixture promotion. |
 | IF-Q-003 | Which external adapters are implemented versus claimed in docs/papers? | Interoperability claims could overreach. | WP-002 records implemented/stubbed import/export surfaces; DCR-005 is closed at L1 through `docs/vtrace/IMPORT_COMPATIBILITY.md`; DCR-001 remains the fixture-promotion gate for stronger public claims. |
-| IF-Q-004 | What artifacts need durable evidence indexes versus transient development outputs? | Publication policy and trace coverage may be incomplete. | DCR-004 now has the L1 `BISECT-EVIDENCE-PACKAGE-v1` baseline in `docs/vtrace/EVIDENCE_PACKAGE_CONTRACT.md`; L2 closure requires review against a concrete public bundle. |
+| IF-Q-004 | What artifacts need durable evidence indexes versus transient development outputs? | Publication policy and trace coverage may be incomplete. | DCR-004 is closed at L1 through `BISECT-EVIDENCE-PACKAGE-v1` and its internal checklist in `docs/vtrace/EVIDENCE_PACKAGE_CONTRACT.md`; L2 closure requires review against a concrete public bundle. |
 
 ## IF-05 Interface Gate
 
