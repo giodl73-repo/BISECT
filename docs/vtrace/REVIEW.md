@@ -327,20 +327,20 @@ Gate type: S4/S5 DCR execution baseline review.
 | Check | Result | Disposition |
 |---|---|---|
 | DCR-001 fixture evidence exists | pass | CSV, GeoJSON, RPLAN, and shapefile/DBF public fixtures plus expected assignments are present and covered by parser tests; broader external-tool round-trip fixtures remain out of scope. |
-| DCR-002 smoke scope exists | partial_pass | `RELEASE_SMOKE_BUNDLE.md` defines fixture and real-state smoke scope; real-state smoke execution remains environment/data dependent. |
+| DCR-002 smoke scope exists | pass_l1 | `RELEASE_SMOKE_BUNDLE.md` defines fixture and real-state smoke scope and now records a passing VT `official_proposal/2020` build/analyze/report/verify smoke. |
 | DCR-003 non-author walkthrough is recorded | partial_pass | L1 role-simulation walkthrough is documented; L2 external-user evidence remains open. |
 | DCR-004 public evidence package contract exists | pass_l1 | `BISECT-EVIDENCE-PACKAGE-v1` is defined with an internal package review checklist; review against a concrete public bundle remains open. |
 | DCR-005 import compatibility matrix exists | pass | Current adapter support, boundaries, fixture status, and unknowns are centralized in `IMPORT_COMPATIBILITY.md`. |
 | DCR-006 legal/court packaging boundary exists | pass_l1 | Court-ready and filing-ready claims are separated from generated evidence packages, with an internal boundary checklist; legal review remains required before stronger claims. |
-| DCR-007 reproducibility status is honest | partial_pass | `REPRODUCIBILITY_RUN.md` declares `smoke-only` status and does not claim release-subset or full-scale replay. |
+| DCR-007 reproducibility status is honest | partial_pass | `REPRODUCIBILITY_RUN.md` declares `release-subset-smoke` status and does not claim clean L2 release-subset or full-scale replay. |
 
 Decision: `pass_with_risk`
 
 Rationale: The DCR execution baseline materially improves release-readiness
-evidence while preserving honest boundaries. It is enough to close DCR-004,
-DCR-005, and DCR-006 at L1 and to establish partial/smoke-only artifacts for the
-remaining DCRs, but it is not L2 public readiness, legal filing readiness, or
-full-scale reproducibility evidence.
+evidence while preserving honest boundaries. It is enough to close DCR-002,
+DCR-004, DCR-005, and DCR-006 at L1 and to establish partial artifacts for the
+remaining DCRs, but it is not L2 public readiness, legal filing readiness,
+external-user readiness, or full-scale reproducibility evidence.
 
 ## DCR-001 Fixture Promotion Review
 
@@ -367,6 +367,32 @@ Rationale: DCR-001 is closed at L2 for the named public label-import fixture set
 The closure covers fixture-backed CSV, GeoJSON, RPLAN, and shapefile/DBF
 assignment-table compatibility only; it does not certify arbitrary external-tool
 exports, geometry transformations, or legal plan quality.
+
+## DCR-002 L1 Release Smoke Review
+
+Date: 2026-06-01
+
+Scope: `crates/bisect-cli/src/build_cmd.rs`,
+`docs/vtrace/RELEASE_SMOKE_BUNDLE.md`,
+`docs/vtrace/REPRODUCIBILITY_RUN.md`, `runs/official_proposal/2020/`,
+`analysis/official_proposal/2020/`, and `reports/official_proposal/2020/`.
+
+Gate type: L1 release-smoke review for DCR-002.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Real-state scope is declared | pass | The recorded smoke is `official_proposal/2020`, state `VT`, using pre-provisioned local `data/2020/`. |
+| Build produced label-pipeline artifacts | pass | The build wrote `runs/official_proposal/2020/index.json`, `runs/official_proposal/2020/vermont/final_assignments.json`, and `runs/official_proposal/2020/vermont/provenance.json`. |
+| Build/analyze artifact contract is fixed | pass | `build_cmd.rs` promotes successful state runner artifacts into the label root path expected by `label-analyze`; the first smoke failure is covered by a targeted unit test. |
+| Analyze/report/verify sequence passes | pass | `label-analyze`, `label-report --format html`, and `label-verify` completed; verification reported config, build-index, and analysis-index SHA matches with verdict `VERIFIED`. |
+| Claim boundary remains explicit | pass | The evidence closes DCR-002 at L1 only; it does not claim L2 public release readiness, all-state health, or clean reproducibility. |
+
+Decision: `pass_l1`
+
+Rationale: DCR-002 now has a real-state smoke with command evidence and a fixed
+artifact contract across build, analyze, report, and verify. The closure is
+limited to the declared VT smoke scope and does not replace external-user or L2
+reproducibility gates.
 
 ## DCR-004/DCR-006 L1 Contract Boundary Review
 

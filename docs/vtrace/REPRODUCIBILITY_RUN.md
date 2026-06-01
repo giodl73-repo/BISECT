@@ -2,15 +2,14 @@
 
 ## DCR-007 declared scope
 
-Current reproducibility class: `smoke-only`.
+Current reproducibility class: `release-subset-smoke`.
 
-Full-scale and release-subset reproducibility remain blocked until a selected
-source-data cache, release config, clean checkout/environment, and artifact
-storage target are available.
+Full-scale and L2 release-subset reproducibility remain blocked until a clean
+checkout/environment replay and artifact storage target are selected.
 
-Environment check recorded 2026-06-01: no release config under `configs/*.yml`
-and no `data/2020/` source cache were present in this checkout, so no
-release-subset or full-scale replay scope can be honestly declared here.
+Environment update recorded 2026-06-01: local `configs/official_proposal.yml`
+and `data/2020/` became available, enabling the VT real-state smoke recorded
+below. This does not constitute a clean-environment replay or full-scale run.
 
 ## Smoke-only evidence
 
@@ -23,9 +22,23 @@ release-subset or full-scale replay scope can be honestly declared here.
 | Output comparison | Parser assignments compared against committed expected-assignment JSON. |
 | Replay class | smoke-only; not a real-state or full-scale redistricting replay. |
 
-## Required release-subset record
+## Release-subset smoke evidence
 
-Before DCR-007 can close at release-subset or full-scale level, record:
+| Field | Value |
+|---|---|
+| Scope | `official_proposal/2020`, state `VT`, pre-provisioned local `data/2020/`. |
+| Build command | `.\target\debug\bisect.exe build official_proposal --year 2020 --states VT --workers 1 --force --no-interactive` |
+| Analyze command | `.\target\debug\bisect.exe label-analyze official_proposal --year 2020 --types all` |
+| Report command | `.\target\debug\bisect.exe label-report official_proposal --year 2020 --format html` |
+| Verify command | `.\target\debug\bisect.exe label-verify official_proposal --year 2020` |
+| Build artifact paths | `runs/official_proposal/2020/index.json`; `runs/official_proposal/2020/vermont/final_assignments.json`; `runs/official_proposal/2020/vermont/provenance.json` |
+| Analysis/report paths | `analysis/official_proposal/2020/index.json`; `analysis/official_proposal/2020/vermont/all.json`; `reports/official_proposal/2020/index.json`; `reports/official_proposal/2020/official_proposal_2020_report.html` |
+| Verification result | Config, build-index, and analysis-index SHA chain reported `MATCH`; verdict `VERIFIED`. |
+| Replay class | release-subset-smoke; single-state smoke only, not a clean replay or full-scale reproducibility run. |
+
+## Required L2 release-subset/full-scale record
+
+Before DCR-007 can close at L2 release-subset or full-scale level, record:
 
 - Clean checkout commit and working-tree status.
 - Rust toolchain, target, OS, CPU class, and build features.
@@ -39,6 +52,6 @@ Before DCR-007 can close at release-subset or full-scale level, record:
 
 ## Current disposition
 
-DCR-007 is not closed for full-scale or release-subset reproducibility. Public
-claims may cite only smoke-only fixture replay until a selected data-backed run
-is executed and reviewed.
+DCR-007 is not closed for L2 full-scale or clean release-subset reproducibility.
+Public claims may cite only the declared fixture and VT release-subset smoke
+scopes until a selected clean data-backed replay is executed and reviewed.

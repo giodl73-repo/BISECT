@@ -324,6 +324,8 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
             );
         }
 
+        promote_label_state_artifacts(&configs, &results)?;
+
         // ── 4f: Write runs/{label}/{year}/index.json ───────────────────────────
         let index = build_build_index(
             label,
@@ -365,6 +367,71 @@ fn is_year_built(label: &str, year: &str) -> Result<bool, String> {
         None => Ok(false),
         Some(entry) => Ok(entry.built.contains(&year.to_string())),
     }
+}
+
+fn promote_label_state_artifacts(
+    configs: &[StateConfig],
+    results: &[crate::runner::StateResult],
+) -> Result<(), String> {
+    let result_map: HashMap<&str, &crate::runner::StateResult> =
+        results.iter().map(|r| (r.state_code.as_str(), r)).collect();
+
+    for cfg in configs {
+        let Some(result) = result_map.get(cfg.state_code.as_str()) else {
+            continue;
+        };
+        if !result.success {
+            continue;
+        }
+
+        let nested_data_dir = cfg
+            .output_dir
+            .join(&cfg.year)
+            .join("states")
+            .join(&cfg.state_name)
+            .join("data");
+        promote_label_artifact(
+            &nested_data_dir.join("final_assignments.json"),
+            &cfg.output_dir.join("final_assignments.json"),
+        )?;
+
+        let nested_provenance = nested_data_dir.join("provenance.json");
+        if nested_provenance.exists() {
+            promote_label_artifact(&nested_provenance, &cfg.output_dir.join("provenance.json"))?;
+        }
+    }
+
+    Ok(())
+}
+
+fn promote_label_artifact(source: &Path, dest: &Path) -> Result<(), String> {
+    if !source.exists() {
+        return Err(format!(
+            "[INTERNAL] build: expected state artifact missing at '{}'",
+            source.display()
+        ));
+    }
+
+    let parent = dest.parent().ok_or_else(|| {
+        format!(
+            "[INTERNAL] build: cannot resolve parent for '{}'",
+            dest.display()
+        )
+    })?;
+    std::fs::create_dir_all(parent).map_err(|e| {
+        format!(
+            "[INTERNAL] build: failed to create '{}': {e}",
+            parent.display()
+        )
+    })?;
+    std::fs::copy(source, dest).map_err(|e| {
+        format!(
+            "[INTERNAL] build: failed to copy '{}' to '{}': {e}",
+            source.display(),
+            dest.display()
+        )
+    })?;
+    Ok(())
 }
 
 /// Construct the `BuildIndex` from run results.
@@ -549,7 +616,7 @@ fn days_to_ymd(days: u64) -> (u64, u64, u64) {
 mod tests {
     use super::*;
     use std::io::Write;
-    use tempfile::NamedTempFile;
+    use tempfile::{tempdir, NamedTempFile};
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -868,6 +935,54 @@ years: ["2020"]
             index.states["california"].error.as_deref(),
             Some("oops"),
             "failed state must record the error message"
+        );
+    }
+
+    #[test]
+    fn test_promote_label_state_artifacts_copies_runner_outputs_to_label_root() {
+        use crate::runner::StateResult;
+
+        let tmp = tempdir().unwrap();
+        let state_root = tmp
+            .path()
+            .join("runs")
+            .join("lbl")
+            .join("2020")
+            .join("vermont");
+        let nested_data = state_root
+            .join("2020")
+            .join("states")
+            .join("vermont")
+            .join("data");
+        std::fs::create_dir_all(&nested_data).unwrap();
+        std::fs::write(nested_data.join("final_assignments.json"), r#"{"1":1}"#).unwrap();
+        std::fs::write(nested_data.join("provenance.json"), r#"{"ok":true}"#).unwrap();
+
+        let cfg = StateConfig::new_bulk(
+            "VT".into(),
+            "vermont".into(),
+            1,
+            "2020".into(),
+            "lbl".into(),
+            state_root.clone(),
+            1,
+        );
+        let result = StateResult {
+            state_code: "VT".into(),
+            success: true,
+            error: None,
+            elapsed_ms: 1,
+        };
+
+        promote_label_state_artifacts(&[cfg], &[result]).unwrap();
+
+        assert_eq!(
+            std::fs::read_to_string(state_root.join("final_assignments.json")).unwrap(),
+            r#"{"1":1}"#
+        );
+        assert_eq!(
+            std::fs::read_to_string(state_root.join("provenance.json")).unwrap(),
+            r#"{"ok":true}"#
         );
     }
 

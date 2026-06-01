@@ -11,12 +11,12 @@ These DCRs convert the residual release-readiness risks found during S4 closure 
 | ID | Title | Status | Priority | Primary Parent IDs | Owner / Lane | Target Level |
 |---|---|---|---|---|---|---|
 | DCR-001 | Golden Interop Fixtures | closed_l2 | high | REQ-003, REQ-013, REQ-014, REQ-031, SPEC-002, SPEC-007, IF-003, IF-008, WP-002, WP-004 | LEDGER / package owners | L2 |
-| DCR-002 | Release Smoke Bundle | partial_l1 | high | REQ-007, REQ-008, REQ-012, REQ-026, REQ-032, SPEC-005, SPEC-010, SPEC-012, WP-003, WP-008 | BENCHMARK / BISECT owners | L1 |
+| DCR-002 | Release Smoke Bundle | closed_l1 | high | REQ-007, REQ-008, REQ-012, REQ-026, REQ-032, SPEC-005, SPEC-010, SPEC-012, WP-003, WP-008 | BENCHMARK / BISECT owners | L1 |
 | DCR-003 | External User Walkthrough | partial_l1 | high | REQ-032, REQ-034, REQ-035, SPEC-012, IF-001, IF-006, WP-008 | COMMONS / operator review | L2 |
 | DCR-004 | Public Evidence Package Contract | closed_l1 | high | REQ-005, REQ-006, REQ-024, REQ-026, REQ-027, SPEC-004, SPEC-010, IF-006, WP-005, WP-006 | DATUM / SCALE / VAULT | L2 |
 | DCR-005 | Import Compatibility Matrix | closed_l1 | medium | REQ-003, REQ-031, SPEC-002, SPEC-NF-007, IF-008, WP-002 | LEDGER / CLI owners | L1 |
 | DCR-006 | Court/Legal Packaging Boundary | closed_l1 | high | REQ-010, REQ-011, REQ-026, SPEC-006, SPEC-010, IF-006, WP-005, WP-006 | BOUNDARY / WARD / COMMONS | L2 |
-| DCR-007 | Full-Scale Reproducibility Run | partial_smoke_only | high | REQ-007, REQ-008, REQ-009, REQ-012, SPEC-005, SPEC-NF-001, IF-001, IF-002, WP-003 | MERIDIAN / COVENANT | L2 |
+| DCR-007 | Full-Scale Reproducibility Run | partial_l1_release_subset_smoke | high | REQ-007, REQ-008, REQ-009, REQ-012, SPEC-005, SPEC-NF-001, IF-001, IF-002, WP-003 | MERIDIAN / COVENANT | L2 |
 
 ## DCR-001: Golden Interop Fixtures
 
@@ -48,7 +48,7 @@ required.
 
 ## DCR-002: Release Smoke Bundle
 
-Status: partial_l1.
+Status: closed_l1.
 
 Problem: S4 closure verified targeted code, docs, and package tests, but no single release-smoke command proves that a small end-to-end BISECT bundle can fetch or use prepared data, build, analyze, report, verify, and produce expected evidence artifacts.
 
@@ -64,13 +64,14 @@ Acceptance criteria:
 
 Validation and review: L1 release-smoke review by BENCHMARK and BISECT owners; L2 only if used as a public release gate.
 
-Residual risk until closed: Release health remains composed from targeted tests and inspections rather than one reproducible release smoke.
+Residual risk after L1 closure: VT release-smoke health does not prove all-state, all-year, public-release, or clean-environment reproducibility.
 
 Execution evidence: `docs/vtrace/RELEASE_SMOKE_BUNDLE.md` declares the canonical
-smoke scope, fixture smoke command, real-state command sequence, expected
-artifacts, verification state, runtime class, and known failure modes. Real-state
-execution remains blocked until the selected data/config environment is present;
-the current checkout lacks `configs/*.yml` and `data/2020/`.
+smoke scope and records a VT real-state smoke on `official_proposal/2020` with
+pre-provisioned `data/2020/`: build, label-analyze, label-report, and
+label-verify all passed. The smoke also exposed and fixed the build/analyze
+artifact contract mismatch in `crates/bisect-cli/src/build_cmd.rs`; a targeted
+unit test now covers artifact promotion into the label pipeline path.
 
 ## DCR-003: External User Walkthrough
 
@@ -180,7 +181,7 @@ review before any filing-ready language is used.
 
 ## DCR-007: Full-Scale Reproducibility Run
 
-Status: partial_smoke_only.
+Status: partial_l1_release_subset_smoke.
 
 Problem: S4 improved provenance and targeted verification, but release-level reproducibility still requires a selected full-scale or release-subset run with source data, environment, build features, search metadata, reports, and verification chain captured together.
 
@@ -201,10 +202,10 @@ Validation and review: L2 reproducibility review by MERIDIAN and COVENANT; VAULT
 Residual risk until closed: The project should not claim full release reproducibility beyond targeted tests and documented L0/L1 evidence.
 
 Execution evidence: `docs/vtrace/REPRODUCIBILITY_RUN.md` declares the current
-reproducibility class as `smoke-only`, records fixture replay evidence, and lists
-the required release-subset/full-scale fields. Full-scale and release-subset
-closure remain open until a clean data-backed replay is executed and reviewed;
-the current checkout lacks a release config and source-data cache.
+reproducibility class as `release-subset-smoke`, records fixture replay evidence
+and the VT `official_proposal/2020` build/analyze/report/verify SHA-chain smoke,
+and lists the required full release-subset/full-scale fields. L2 closure remains
+open until a clean data-backed replay is executed and reviewed.
 
 ## Change Control
 

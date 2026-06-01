@@ -2,12 +2,12 @@
 
 ## DCR-002 canonical scope
 
-Status: defined as an L1 smoke contract; data-backed execution is blocked until
-the selected census/source cache is available in the execution environment.
+Status: closed at L1 for the declared VT real-state smoke on the local
+`official_proposal` release-candidate config.
 
 | Field | Value |
 |---|---|
-| Label/config | `official_2020` from `configs/official_2020.yml` when present; otherwise the release candidate label named by the release manager. |
+| Label/config | `official_proposal` from `configs/official_proposal.yml` for the recorded local smoke; otherwise the release candidate label named by the release manager. |
 | Year | `2020` |
 | State/scope | `VT` for the smallest real-state smoke; fixture-only parser smoke uses `docs/fixtures/import-label/`. |
 | Data provisioning | Real-state smoke requires pre-provisioned `data/2020/` and adjacency/source cache or a successful `bisect fetch --year 2020`. Fixture smoke requires no census data. |
@@ -28,26 +28,39 @@ does not prove a full state build, analysis, report, or verification chain.
 
 ```bash
 bisect fetch --year 2020 --workers 8
-bisect build official_2020 --year 2020 --workers 8
-bisect label-analyze official_2020 --year 2020 --types all
-bisect label-report official_2020 --year 2020 --format html json
-bisect label-verify official_2020 --year 2020
+bisect build official_proposal --year 2020 --states VT --workers 1 --no-interactive
+bisect label-analyze official_proposal --year 2020 --types all
+bisect label-report official_proposal --year 2020 --format html
+bisect label-verify official_proposal --year 2020
 ```
+
+The recorded run used pre-provisioned local `data/2020/` instead of running
+`bisect fetch`.
 
 Known failure modes:
 
 - Missing or incomplete `data/2020/` source cache.
-- Missing `configs/official_2020.yml` or release-selected config.
+- Missing `configs/official_proposal.yml` or release-selected config.
 - METIS engine build/runtime mismatch.
 - Population/contiguity/source validation failure.
 - Hash-chain mismatch after artifacts are modified.
 
 ## Current disposition
 
-DCR-002 is partially satisfied at L1 by a predeclared smoke scope and executable
-fixture smoke. It is not closed as release-ready until the real-state sequence is
-run and its command output, artifact paths, and verification result are recorded.
+DCR-002 is closed at L1 for the declared VT smoke scope. It is not L2 public
+release readiness and does not prove all-state or all-year health.
 
-Environment check recorded 2026-06-01: `configs/official_2020.yml`,
-`configs/*.yml`, and `data/2020/` were not present in the working checkout, so
-the real-state smoke sequence is blocked in this environment rather than failed.
+Execution recorded 2026-06-01:
+
+| Command / Check | Result | Evidence |
+|---|---|---|
+| `.\target\debug\bisect.exe build official_proposal --year 2020 --states VT --workers 1 --force --no-interactive` | pass | `runs/official_proposal/2020/index.json`; `runs/official_proposal/2020/vermont/final_assignments.json`; `runs/official_proposal/2020/vermont/provenance.json` |
+| `.\target\debug\bisect.exe label-analyze official_proposal --year 2020 --types all` | pass | `analysis/official_proposal/2020/index.json`; `analysis/official_proposal/2020/vermont/all.json` |
+| `.\target\debug\bisect.exe label-report official_proposal --year 2020 --format html` | pass | `reports/official_proposal/2020/index.json`; `reports/official_proposal/2020/official_proposal_2020_report.html` |
+| `.\target\debug\bisect.exe label-verify official_proposal --year 2020` | pass | Config, build-index, and analysis-index SHA chain reported `MATCH`; verdict `VERIFIED`. |
+
+Implementation note: the first smoke attempt exposed a build/analyze artifact
+contract mismatch. `crates/bisect-cli/src/build_cmd.rs` now promotes successful
+state runner artifacts from the runner's nested legacy output path into
+`runs/{label}/{year}/{state}/final_assignments.json`, which is the label-analyze
+contract path.
