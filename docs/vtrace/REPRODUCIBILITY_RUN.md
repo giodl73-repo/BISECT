@@ -2,7 +2,7 @@
 
 ## DCR-007 declared scope
 
-Current reproducibility class: `release-subset-smoke`.
+Current reproducibility class: `release-subset-candidate-data-dirty`.
 
 Full-scale and L2 release-subset reproducibility remain blocked until a clean
 checkout/environment replay and artifact storage target are selected.
@@ -35,6 +35,21 @@ below. This does not constitute a clean-environment replay or full-scale run.
 | Analysis/report paths | `analysis/official_proposal/2020/index.json`; `analysis/official_proposal/2020/vermont/all.json`; `reports/official_proposal/2020/index.json`; `reports/official_proposal/2020/official_proposal_2020_report.html` |
 | Verification result | Config, build-index, and analysis-index SHA chain reported `MATCH`; verdict `VERIFIED`. |
 | Replay class | release-subset-smoke; single-state smoke only, not a clean replay or full-scale reproducibility run. |
+
+## Candidate data-dirty release-subset replay evidence
+
+| Field | Value |
+|---|---|
+| Scope | `official_proposal/2020`, state `VT`, pre-provisioned local `data/2020/`. |
+| Source commit | `af11004a78e654f09cc1f01ca186b3f4487e02a3`. |
+| Source policy | `--allow-dirty-data`; source tree was clean except modified local `data/manifest.json`, so this is not L2 clean replay evidence. |
+| Config SHA-256 | `efc30a5bbd76692f0b12fea5b1a2395dfcef4ee17b840e350f2ce25cda162212`. |
+| Data manifest SHA-256 | `9837e5cd0dfd4b9fad6e6802475d2186ed1b9316bd75d5e577bedb0f74c6dc6e`. |
+| Algorithm/search | `apportion-regions`, `county`, `alpha_county=2.0`, `convergence`, `convergence_threshold=600`, `balance_tolerance=0.5`, `metis_engine=c-ffi`. |
+| Commands | Harness ran `cargo build`, `bisect build`, `bisect label-analyze`, `bisect label-report`, and `bisect label-verify`; all exited 0. |
+| Artifact hashes | 9 run, analysis, and report artifacts hashed by the replay harness. |
+| Verification result | Config, build-index, and analysis-index SHA chain reported `MATCH`; verdict `VERIFIED`. |
+| Replay class | release-subset candidate with dirty-data allowance; not clean L2 release-subset or full-scale reproducibility evidence. |
 
 ## Required L2 release-subset/full-scale record
 
@@ -75,7 +90,8 @@ record must include:
 ## Current disposition
 
 DCR-007 is not closed for L2 full-scale or clean release-subset reproducibility.
-Public claims may cite only the declared fixture and VT release-subset smoke
-scopes until a selected clean data-backed replay is executed and reviewed. The
-current local checkout has a dirty `data/manifest.json`, so preflight may use
-`--allow-dirty-data` only as tooling evidence; it is not clean replay evidence.
+Public claims may cite only the declared fixture, smoke, and candidate replay
+scopes with their stated dirty-data limitation until a selected clean data-backed
+replay is executed and reviewed. The current local checkout has a dirty
+`data/manifest.json`, so `--allow-dirty-data` evidence is useful as tooling and
+candidate replay evidence, but it is not clean replay evidence.

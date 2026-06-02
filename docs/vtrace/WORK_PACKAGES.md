@@ -210,7 +210,7 @@ V closure:
 | V Area | IDs / Evidence | Status | Notes |
 |---|---|---|---|
 | Need / CONOPS | M-07, M-08, CO-04 | partial | Label pipeline provides a SHA chain and inspectable run/report locations; full replay still depends on source data and environment evidence. |
-| Requirements | REQ-007..REQ-012 | partial | Config label/year/scope/output, config hash, command, output directory, METIS engine, executable hash, adjacency hash, seed, and legal-boundary separation are present or improved; build commit/features/environment and full candidate replay remain gaps. |
+| Requirements | REQ-007..REQ-012 | partial | Config label/year/scope/output, config hash, command, output directory, METIS engine, executable hash, adjacency hash, seed, and legal-boundary separation are present or improved; a data-dirty VT candidate replay now captures tool versions and artifact hashes, while clean data-backed replay remains a gap. |
 | Specification | SPEC-005, SPEC-006 | partial | Reproducibility metadata is materially present for new label builds, but not complete enough for release-level replay claims. |
 | Architecture / Interface | PKG-007..PKG-010, IF-001, IF-002 | partial | Build index, per-state manifest, analysis/report index, and label verification surfaces are identified. |
 | Design / Code Rigor | DES-004, DES-005, DES-010, CR-001, CR-002, CR-004, CR-006, CR-007 | partial | Run completion remains separate from legal readiness; replay gaps are recorded instead of treated as success. |

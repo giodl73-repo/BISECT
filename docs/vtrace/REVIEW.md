@@ -332,7 +332,7 @@ Gate type: S4/S5 DCR execution baseline review.
 | DCR-004 public evidence package contract exists | pass_l1 | `BISECT-EVIDENCE-PACKAGE-v1` is defined with an internal package review checklist; review against a concrete public bundle remains open. |
 | DCR-005 import compatibility matrix exists | pass | Current adapter support, boundaries, fixture status, and unknowns are centralized in `IMPORT_COMPATIBILITY.md`. |
 | DCR-006 legal/court packaging boundary exists | pass_l1 | Court-ready and filing-ready claims are separated from generated evidence packages, with an internal boundary checklist; legal review remains required before stronger claims. |
-| DCR-007 reproducibility status is honest | partial_pass | `REPRODUCIBILITY_RUN.md` declares `release-subset-smoke` status and does not claim clean L2 release-subset or full-scale replay. |
+| DCR-007 reproducibility status is honest | partial_pass | `REPRODUCIBILITY_RUN.md` declares `release-subset-candidate-data-dirty` status and does not claim clean L2 release-subset or full-scale replay. |
 
 Decision: `pass_with_risk`
 
@@ -434,17 +434,19 @@ Gate type: DCR-007 reproducibility tooling review.
 | Check | Result | Disposition |
 |---|---|---|
 | Replay scope is declared before execution | pass | The harness defaults to `official_proposal/2020`, state `VT`, and records label, year, states, worker count, analysis type, and report formats. |
-| Clean-source policy is explicit | pass | The harness blocks dirty-source replay by default and records status entries; `--allow-dirty-data` is documented as preflight/tooling evidence only. |
+| Clean-source policy is explicit | pass | The harness blocks dirty-source replay by default and records status entries; `--allow-dirty-data` is documented as preflight/candidate evidence only, not clean replay evidence. |
 | Environment and input hashes are captured | pass | The harness records OS, Python, Rust/Cargo tool paths and versions, git commit/status, config SHA-256, algorithm/search parameters, resolved METIS engine, data-manifest SHA-256, and binary hashes. |
 | Replay commands and artifact hashes are captured | pass | Full runs record cargo/build/analyze/report/verify command output and SHA-256 values for generated run, analysis, and report artifacts. |
 | L2 reproducibility remains unclaimed | pass | The current docs state that the dirty local `data/manifest.json` blocks clean replay closure and that DCR-007 remains open until a clean data-backed replay is reviewed. |
 
-Decision: `tooling_ready`
+Decision: `candidate_data_dirty`
 
 Rationale: The project now has a repeatable DCR-007 capture mechanism, reducing
-operator ambiguity for the future clean replay. This does not close DCR-007 at
-L2 because the current environment is not a clean checkout and no reviewed
-clean-environment replay artifact has been promoted.
+operator ambiguity for the future clean replay, and a local candidate replay
+passed build/analyze/report/verify with 9 artifact hashes. This does not close
+DCR-007 at L2 because the run used `--allow-dirty-data` for a locally modified
+`data/manifest.json` and no reviewed clean-environment replay artifact has been
+promoted.
 
 ## DCR-003 External Operator Packet Review
 

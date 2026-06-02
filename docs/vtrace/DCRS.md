@@ -16,7 +16,7 @@ These DCRs convert the residual release-readiness risks found during S4 closure 
 | DCR-004 | Public Evidence Package Contract | closed_l1 | high | REQ-005, REQ-006, REQ-024, REQ-026, REQ-027, SPEC-004, SPEC-010, IF-006, WP-005, WP-006 | DATUM / SCALE / VAULT | L2 |
 | DCR-005 | Import Compatibility Matrix | closed_l1 | medium | REQ-003, REQ-031, SPEC-002, SPEC-NF-007, IF-008, WP-002 | LEDGER / CLI owners | L1 |
 | DCR-006 | Court/Legal Packaging Boundary | closed_l1 | high | REQ-010, REQ-011, REQ-026, SPEC-006, SPEC-010, IF-006, WP-005, WP-006 | BOUNDARY / WARD / COMMONS | L2 |
-| DCR-007 | Full-Scale Reproducibility Run | partial_l1_release_subset_smoke | high | REQ-007, REQ-008, REQ-009, REQ-012, SPEC-005, SPEC-NF-001, IF-001, IF-002, WP-003 | MERIDIAN / COVENANT | L2 |
+| DCR-007 | Full-Scale Reproducibility Run | partial_l1_release_subset_candidate_data_dirty | high | REQ-007, REQ-008, REQ-009, REQ-012, SPEC-005, SPEC-NF-001, IF-001, IF-002, WP-003 | MERIDIAN / COVENANT | L2 |
 
 ## DCR-001: Golden Interop Fixtures
 
@@ -183,7 +183,7 @@ review before any filing-ready language is used.
 
 ## DCR-007: Full-Scale Reproducibility Run
 
-Status: partial_l1_release_subset_smoke.
+Status: partial_l1_release_subset_candidate_data_dirty.
 
 Problem: S4 improved provenance and targeted verification, but release-level reproducibility still requires a selected full-scale or release-subset run with source data, environment, build features, search metadata, reports, and verification chain captured together.
 
@@ -204,15 +204,19 @@ Validation and review: L2 reproducibility review by MERIDIAN and COVENANT; VAULT
 Residual risk until closed: The project should not claim full release reproducibility beyond targeted tests and documented L0/L1 evidence.
 
 Execution evidence: `docs/vtrace/REPRODUCIBILITY_RUN.md` declares the current
-reproducibility class as `release-subset-smoke`, records fixture replay evidence
-and the VT `official_proposal/2020` build/analyze/report/verify SHA-chain smoke,
-and lists the required full release-subset/full-scale fields. The maintenance
+reproducibility class as `release-subset-candidate-data-dirty`, records fixture
+replay evidence, the VT `official_proposal/2020` build/analyze/report/verify
+SHA-chain smoke, and lists the required full release-subset/full-scale fields.
+The maintenance
 harness `scripts/maintenance/dcr007_release_subset_replay.py` now captures a
 candidate replay record with environment/tool versions, clean-source policy,
 config/data hashes, algorithm/search parameters, resolved METIS engine, command
-outputs, and artifact hashes. L2 closure remains open until that harness, or an
-equivalent reviewed procedure, is executed from a clean data-backed checkout and
-reviewed.
+outputs, and artifact hashes. A 2026-06-02 local candidate replay at commit
+`af11004a78e654f09cc1f01ca186b3f4487e02a3` passed build, analyze, report, and
+verify for `official_proposal/2020` VT and hashed 9 artifacts, but used
+`--allow-dirty-data` with local `data/manifest.json` modified. L2 closure remains
+open until an equivalent procedure is executed from a clean data-backed checkout
+and reviewed.
 
 ## Change Control
 
