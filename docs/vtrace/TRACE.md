@@ -1,7 +1,7 @@
 # BISECT VTRACE Trace Control Spine
 
-**Status**: S5 integration control started, accepted with controlled gaps
-**Stage**: S5 Integration
+**Status**: S6 internal engineering baseline only, release readiness blocked
+**Stage**: S6 Readiness / Transition
 **Last updated**: 2026-06-01
 
 This file is the trace-control spine for the BISECT VTRACE adaptation. It maps accepted mission, CONOPS, requirements, specification, S2 design, S3 code-rigor, S4 work-package, and filed DCR IDs to verification/validation obligations or explicit dispositions.
@@ -89,6 +89,14 @@ TRACE is control-plane evidence. It proves that the accepted baseline is mapped 
 | Work-package closure integrated | WP-001..WP-008 in `WORK_PACKAGES.md`; S4 evidence in `STAGE_EXECUTION.md` | S4 closure evidence is integrated for control-plane use; release-level claims remain bounded by DCR status. |
 | DCR posture integrated | DCR-001..DCR-007 in `DCRS.md`; `INTEGRATION.md` DCR posture matrix | DCR-001 is L2 fixture-closed; DCR-002, DCR-004, DCR-005, and DCR-006 are L1-closed; DCR-003 and DCR-007 remain open for L2. |
 | Claim and custody gates integrated | `EVIDENCE_PACKAGE_CONTRACT.md`; `COURT_PACKAGING_BOUNDARY.md`; `REPRODUCIBILITY_RUN.md` | S5 may support internal engineering baseline claims, but public release, legal/court, clean replay, and non-author readiness claims remain blocked until selected evidence exists. |
+
+## S6 Readiness Trace
+
+| Transition control | Source evidence | Current disposition |
+|---|---|---|
+| Internal engineering baseline | `READINESS_DECISION.md`; `INTEGRATION.md`; S4/S5 ledgers | Approved as `internal_engineering_baseline_only` with L1 residual risks recorded. |
+| Public release readiness | DCR-003, DCR-004, DCR-006, DCR-007; VAULT/public-claim review | Blocked until external-user, public-bundle, legal-boundary, clean replay, and custody gates selected for the release scope are satisfied. |
+| Claim posture | `READINESS_DECISION.md` allowed and blocked S6 statements | Public, legal, court-ready, non-author validated, and clean reproducibility claims remain explicitly blocked. |
 
 ## Change Control
 

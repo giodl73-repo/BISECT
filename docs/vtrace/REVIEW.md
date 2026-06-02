@@ -513,10 +513,35 @@ Gate type: S5 integration-control review.
 | S4 evidence is integrated | pass | The record ties WP-001 through WP-008, DCR artifacts, validation classes, claim posture, and custody posture into one S5 control surface. |
 | DCR status is not overclaimed | pass | DCR-001 is L2 fixture-closed, DCR-002/DCR-004/DCR-005/DCR-006 are L1-closed, and DCR-003/DCR-007 remain open for L2 evidence. |
 | S6 blocked claims are explicit | pass | Public release readiness, legal/court certification, clean full/release-subset reproducibility, non-author validation, and universal interoperability are blocked. |
-| Transition choices are bounded | pass | S6 requires a selected target before any readiness decision: internal baseline, public evidence candidate, clean replay, or external-user readiness. |
+| Transition choices are bounded | pass | S6 selected only the internal engineering baseline target; public evidence, clean replay, and external-user readiness targets remain blocked. |
 
-Decision: `in_progress_l1_control`
+Decision: `complete_l1_control_for_internal_baseline`
 
 Rationale: S5 now has a control record that integrates completed S4 evidence and
-current DCR posture. It does not authorize S6 readiness because no transition
-target has been selected and DCR-003/DCR-007 L2 gates remain open.
+current DCR posture. It authorizes only an internal engineering baseline and
+does not authorize public/release readiness because DCR-003/DCR-007 L2 gates
+and public/custody gates remain open.
+
+## S6 Readiness / Transition Review
+
+Date: 2026-06-01
+
+Scope: `docs/vtrace/READINESS_DECISION.md`, `docs/vtrace/INTEGRATION.md`,
+`docs/vtrace/STAGE_EXECUTION.md`, `docs/vtrace/TRACE.md`, and
+`docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: S6 readiness/transition review.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Transition target is selected | pass | The only selected target is internal engineering baseline with L1 residual risks accepted. |
+| Stronger readiness is blocked | pass | Public release, legal/court, non-author usability, clean reproducibility, and public evidence-package readiness remain blocked. |
+| Residual DCR gates are explicit | pass | DCR-003, DCR-004, DCR-006, DCR-007, and VAULT/public-claim review are named as required for stronger readiness. |
+| Allowed statements are bounded | pass | The decision permits only internal VTRACE baseline and scoped DCR evidence statements. |
+
+Decision: `internal_engineering_baseline_only`
+
+Rationale: S6 can transition the repo into a controlled internal engineering
+baseline because S4/S5 evidence is integrated and residual risks are documented.
+It cannot transition to public or release readiness until the named L2 DCR,
+custody, and public-claim gates pass.

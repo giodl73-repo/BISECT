@@ -6,11 +6,12 @@ This record starts VTRACE S5 integration for BISECT. It integrates the S4
 work-package closures, DCR execution artifacts, validation evidence, public-claim
 posture, and custody posture into one release-scope control point.
 
-Current decision: `in_progress_l1_control`.
+Current decision: `complete_l1_control_for_internal_baseline`.
 
-This is not a release-readiness decision. S6 remains blocked until the selected
-release scope has accepted DCR evidence at the required validation level and all
-public/custody claims are dispositioned.
+This is not a release-readiness decision. S6 has selected only the internal
+engineering baseline target; public/release scope remains blocked until accepted
+DCR evidence at the required validation level and all public/custody claims are
+dispositioned.
 
 ## Integrated evidence set
 
@@ -63,14 +64,16 @@ public/custody claims are dispositioned.
 - Do not claim non-author usability validation.
 - Do not claim universal external-tool interoperability beyond named fixtures.
 
-## Required next action
+## S6 transition target
 
-Select an S6 transition target before any readiness decision:
+Selected target: internal engineering baseline with L1 residual risks accepted.
 
-1. Internal engineering baseline with L1 residual risks accepted.
-2. Public evidence-package candidate requiring VAULT/DATUM/SCALE/COMMONS review.
-3. Clean release-subset reproducibility run requiring DCR-007 L2 evidence.
-4. External-user readiness run requiring DCR-003 L2 evidence.
+Blocked stronger targets:
 
-Until one target is selected, S5 remains `in_progress_l1_control` and S6 remains
-blocked.
+1. Public evidence-package candidate requiring VAULT/DATUM/SCALE/COMMONS review.
+2. Clean release-subset reproducibility run requiring DCR-007 L2 evidence.
+3. External-user readiness run requiring DCR-003 L2 evidence.
+
+S5 is complete only for the internal baseline transition. Public release,
+external-user readiness, legal/court readiness, and clean reproducibility remain
+blocked in S6.
