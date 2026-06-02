@@ -100,6 +100,7 @@ boundaries before following individual trace rows.
 | Internal engineering baseline | `READINESS_DECISION.md`; `INTEGRATION.md`; S4/S5 ledgers | Approved as `internal_engineering_baseline_only` with L1 residual risks recorded. |
 | Baseline navigation | `INDEX.md`; `STAGE_EXECUTION.md`; `TRACE.md` | Maintainers have a single entry point for reading order, evidence ledgers, and blocked claims. |
 | Baseline handoff | `BASELINE_HANDOFF.md`; `READINESS_DECISION.md` transition controls | Maintainers may continue controlled internal work only while preserving DCR stop gates and claim boundaries. |
+| First live VTRACE-governed wave | `context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`; `context/waves/PHASES.md` | DREQ-003 selection evidence exists for internal baseline maintenance; it does not upgrade release readiness. |
 | Public release readiness | DCR-003, DCR-004, DCR-006, DCR-007; VAULT/public-claim review | Blocked until external-user, public-bundle, legal-boundary, clean replay, and custody gates selected for the release scope are satisfied. |
 | Claim posture | `READINESS_DECISION.md` allowed and blocked S6 statements | Public, legal, court-ready, non-author validated, and clean reproducibility claims remain explicitly blocked. |
 

@@ -609,3 +609,28 @@ Decision: `bounded_discoverability_control`
 Rationale: Main documentation now exposes the VTRACE control baseline without
 converting internal evidence into release, legal, usability, or reproducibility
 claims.
+
+## First Live VTRACE-Governed Wave Review
+
+Date: 2026-06-01
+
+Scope: `context/waves/PHASES.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/pulses/01+baseline-maintenance-wave-activation.md`,
+`docs/vtrace/REQUIREMENTS.md`, `docs/vtrace/STAGE_EXECUTION.md`,
+`docs/vtrace/TRACE.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: DREQ-003 selection review.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Active wave selected | pass | `context/waves/PHASES.md` marks VTRACE Baseline Maintenance active. |
+| Pulse names VTRACE controls | pass | Pulse 01 names DREQ-003, WP-007, CR-011, CR-012, CR-013, validation level, claim boundary, and validation commands. |
+| Readiness posture unchanged | pass | The wave is internal maintenance only and does not close DCR-003 or DCR-007 at L2. |
+| Deferred trigger addressed | pass | `REQUIREMENTS.md` records the selected first live VTRACE-governed wave. |
+
+Decision: `active_internal_maintenance_wave`
+
+Rationale: DREQ-003 required selecting the first live wave/pulse governed by the
+new VTRACE baseline before such work proceeded. The selected wave exercises the
+process standard while preserving the S6 internal-only claim boundary.
