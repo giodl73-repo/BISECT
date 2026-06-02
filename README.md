@@ -145,6 +145,12 @@ North Carolina ($k=14=7\times 2$): ApportionRegions gives **7D/7R** vs. standard
 
 **Evidence status:** these headline metrics are empirical research claims, not legal conclusions. Treat them as current-paper/dashboard claims tied to the cited reports and paper index; rerun `bisect label-verify`, inspect manifests, and check `docs/papers/PAPER-QUALITY-REVIEW.md` / `docs/papers/ALGORITHM-PAPER-SCORECARD.md` before citing them as release-final numbers.
 
+**VTRACE status:** the control baseline starts at
+[`docs/vtrace/INDEX.md`](docs/vtrace/INDEX.md). Current posture is
+`internal_engineering_baseline_only`: maintainers may continue controlled
+internal work, but public release, legal/court, external-user, and clean
+reproducibility readiness remain blocked until the named VTRACE DCR gates pass.
+
 ---
 
 ## Track record

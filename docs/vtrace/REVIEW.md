@@ -589,3 +589,23 @@ Decision: `internal_navigation_control`
 
 Rationale: The index improves maintainability of the VTRACE baseline without
 changing any DCR, readiness, custody, or public-claim status.
+
+## Public Documentation VTRACE Pointer Review
+
+Date: 2026-06-01
+
+Scope: `README.md`, `docs/BISECT_CLI.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: documentation discoverability review.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Main docs point to VTRACE | pass | README and CLI reference direct maintainers to `docs/vtrace/INDEX.md`. |
+| Posture is explicit | pass | Both pointers state `internal_engineering_baseline_only`. |
+| Readiness is not upgraded | pass | The pointers keep public release, legal/court, external-user, and clean reproducibility readiness blocked pending DCR gates. |
+
+Decision: `bounded_discoverability_control`
+
+Rationale: Main documentation now exposes the VTRACE control baseline without
+converting internal evidence into release, legal, usability, or reproducibility
+claims.

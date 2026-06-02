@@ -6,6 +6,12 @@ the core redistricting work.
 
 **Built from**: `BISECT/crates/bisect-cli/`
 
+**VTRACE control baseline**: start at `docs/vtrace/INDEX.md`. The current
+posture is `internal_engineering_baseline_only`; CLI evidence can support
+controlled internal engineering work, but public release, legal/court,
+external-user, and clean reproducibility readiness remain blocked until the
+named VTRACE DCR gates pass.
+
 ---
 
 ## Installation
