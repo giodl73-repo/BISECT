@@ -80,7 +80,7 @@ TRACE is control-plane evidence. It proves that the accepted baseline is mapped 
 | Architecture IDs mapped | fixed in WP-001 | ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005 are now mapped. |
 | CR-003 mapped | fixed in WP-001 | CR-003 maps to WP-002 because version-unknown compatibility and explicit error posture are interface/boundary verification obligations. |
 | Implementation compliance | not claimed | Downstream WPs must validate, fix, gap, or risk-record implementation behavior. |
-| Release-readiness DCR coverage | partially executed | DCR-001 is closed at L2; DCR-002, DCR-004, DCR-005, and DCR-006 are closed at L1; DCR-003 and DCR-007 retain bounded partial evidence without external-user or L2 reproducibility closure claims; DCR-007 now has a reusable replay-capture harness for the future clean replay. |
+| Release-readiness DCR coverage | partially executed | DCR-001 is closed at L2; DCR-002, DCR-004, DCR-005, and DCR-006 are closed at L1; DCR-003 and DCR-007 retain bounded partial evidence without external-user or L2 reproducibility closure claims; DCR-003 now has an external-operator packet and DCR-007 has a reusable replay-capture harness for future closure evidence. |
 
 ## Change Control
 

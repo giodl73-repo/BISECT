@@ -445,3 +445,28 @@ Rationale: The project now has a repeatable DCR-007 capture mechanism, reducing
 operator ambiguity for the future clean replay. This does not close DCR-007 at
 L2 because the current environment is not a clean checkout and no reviewed
 clean-environment replay artifact has been promoted.
+
+## DCR-003 External Operator Packet Review
+
+Date: 2026-06-01
+
+Scope: `docs/vtrace/EXTERNAL_WALKTHROUGH.md`, `docs/vtrace/DCRS.md`,
+`docs/vtrace/TRACE.md`, `docs/vtrace/STAGE_EXECUTION.md`, and
+`docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: DCR-003 external-walkthrough readiness review.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Reviewer independence is required | pass | The packet requires the reviewer role and independence statement before the run starts. |
+| Scope is declared before execution | pass | The packet requires commit, environment, quickstart, workflow, data/config scope, and selected persona path. |
+| Observer behavior avoids coaching | pass | The packet tells the observer to record blockers rather than work around them silently. |
+| Friction taxonomy is actionable | pass | Findings must be classified as doc fix, command fix, accepted limitation, environment blocker, output confusion, or legal/claim confusion. |
+| Legal/certification misunderstanding is tested | pass | The packet explicitly asks whether `label-verify` is legal certification and requires the correct boundary. |
+| L2 evidence remains unclaimed | pass | The current disposition is `ready_for_external_run`, not closed; L2 still requires a real non-author record and friction disposition. |
+
+Decision: `ready_for_external_run`
+
+Rationale: DCR-003 now has a repeatable external-walkthrough packet that can
+produce reviewable evidence without maintainer improvisation. The gate remains
+open for L2 because no real non-author has completed the packet.

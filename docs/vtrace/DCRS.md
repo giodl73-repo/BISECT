@@ -12,7 +12,7 @@ These DCRs convert the residual release-readiness risks found during S4 closure 
 |---|---|---|---|---|---|---|
 | DCR-001 | Golden Interop Fixtures | closed_l2 | high | REQ-003, REQ-013, REQ-014, REQ-031, SPEC-002, SPEC-007, IF-003, IF-008, WP-002, WP-004 | LEDGER / package owners | L2 |
 | DCR-002 | Release Smoke Bundle | closed_l1 | high | REQ-007, REQ-008, REQ-012, REQ-026, REQ-032, SPEC-005, SPEC-010, SPEC-012, WP-003, WP-008 | BENCHMARK / BISECT owners | L1 |
-| DCR-003 | External User Walkthrough | partial_l1 | high | REQ-032, REQ-034, REQ-035, SPEC-012, IF-001, IF-006, WP-008 | COMMONS / operator review | L2 |
+| DCR-003 | External User Walkthrough | partial_l1_ready_for_external_run | high | REQ-032, REQ-034, REQ-035, SPEC-012, IF-001, IF-006, WP-008 | COMMONS / operator review | L2 |
 | DCR-004 | Public Evidence Package Contract | closed_l1 | high | REQ-005, REQ-006, REQ-024, REQ-026, REQ-027, SPEC-004, SPEC-010, IF-006, WP-005, WP-006 | DATUM / SCALE / VAULT | L2 |
 | DCR-005 | Import Compatibility Matrix | closed_l1 | medium | REQ-003, REQ-031, SPEC-002, SPEC-NF-007, IF-008, WP-002 | LEDGER / CLI owners | L1 |
 | DCR-006 | Court/Legal Packaging Boundary | closed_l1 | high | REQ-010, REQ-011, REQ-026, SPEC-006, SPEC-010, IF-006, WP-005, WP-006 | BOUNDARY / WARD / COMMONS | L2 |
@@ -94,8 +94,10 @@ Validation and review: L2 user-workflow review by COMMONS and operator-review la
 Residual risk until closed: Docs are internally aligned but not externally proven as usable.
 
 Execution evidence: `docs/vtrace/EXTERNAL_WALKTHROUGH.md` records the L1
-role-simulation path, expected user understanding, and L2 blocker. L2 closure
-requires a real non-author operator or external reviewer.
+role-simulation path, expected user understanding, L2 operator packet,
+observation-record template, promotion rule, and remaining external-run blocker.
+The gate is ready for an external run, but L2 closure still requires a real
+non-author operator or external reviewer.
 
 ## DCR-004: Public Evidence Package Contract
 
