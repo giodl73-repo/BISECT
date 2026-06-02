@@ -660,3 +660,29 @@ Rationale: DREQ-005 needed an operator-facing routing surface for release-grade
 work so future pulses do not infer readiness from filed DCRs or L1 control
 artifacts. The register names the gates, review lanes, and claim unlocks while
 preserving the internal-only S6 posture.
+
+## Artifact Publication Policy Review
+
+Date: 2026-06-02
+
+Scope: `docs/vtrace/ARTIFACT_PUBLICATION_POLICY.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/pulses/03+artifact-publication-policy.md`,
+`docs/vtrace/REQUIREMENTS.md`, `docs/vtrace/TRACE.md`,
+`docs/vtrace/STAGE_EXECUTION.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: DREQ-001 artifact custody/publication control.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Artifact classes are explicit | pass | Source docs, research source, paper PDFs, generated maps/figures, run outputs, dashboards, package evidence, public evidence packages, raw data, and local environment files have default dispositions. |
+| Promotion record is specified | pass | Promotion requires path/root, source inputs, command/procedure, SHA-256 or manifest, claim status, limitations, non-claims, and review lane decision. |
+| Generated artifacts remain local by default | pass | The policy does not promote run outputs, dashboards, maps, reports, raw data, or evidence bundles. |
+| Readiness posture unchanged | pass | The policy does not close DCR-004 L2, DCR-007 L2, public custody review, or S6 release readiness. |
+
+Decision: `artifact_publication_policy_active`
+
+Rationale: DREQ-001 needed exact commit/publication rules for artifact classes
+without turning local/generated outputs into release evidence. The policy gives
+maintainers a custody control surface while preserving DCR-004 and release-gate
+requirements for any concrete public bundle.

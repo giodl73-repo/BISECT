@@ -65,7 +65,7 @@ First-class controlled interfaces for this VTRACE baseline are BISECT configs/CL
 
 | ID | Reason Deferred | Revisit Trigger |
 |---|---|---|
-| DREQ-001 | Exact public artifact commit policy is not yet specified for every report, dashboard, paper PDF, package, or evidence bundle. | Verification/validation planning for CO-09 and REQ-026/REQ-027. |
+| DREQ-001 | Exact public artifact commit policy is controlled by `ARTIFACT_PUBLICATION_POLICY.md` for reports, dashboards, paper PDFs, packages, evidence bundles, raw data, and generated artifacts. | Verification/validation planning for CO-09 and REQ-026/REQ-027. |
 | DREQ-002 | Complete paper-by-paper evidence completeness inventory is not yet part of this baseline. | Trace matrix and research claim review stage for CO-08 and REQ-024/REQ-025. |
 | DREQ-003 | The first live wave/pulse governed by the new VTRACE baseline is selected as `context/waves/2026-06-01-vtrace-baseline-maintenance`; Pulse 01 is the activation/control slice. | Before any stronger readiness claim or before closing the active wave. |
 | DREQ-004 | Exact package schemas and canonicalization algorithms are controlled by their package specs rather than fully restated here. | Interface-control or package-spec stage for RPLAN/RCOUNT/RCTX/RHIST. |

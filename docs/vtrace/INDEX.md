@@ -39,6 +39,7 @@ record, clean reproducibility certificate, or official certification.
 | `EVIDENCE_PACKAGE_CONTRACT.md` | Public evidence package contract and L1 checklist; not a concrete public bundle acceptance. |
 | `REPRODUCIBILITY_RUN.md` | Release-subset smoke/candidate replay posture and DCR-007 clean replay packet. |
 | `RELEASE_GATE_REGISTER.md` | Operator-facing register for remaining release-grade gates; routing control only, not release evidence. |
+| `ARTIFACT_PUBLICATION_POLICY.md` | Commit/publication rules for source, generated, package, paper, dashboard, and evidence artifacts. |
 
 ## Current stage summary
 

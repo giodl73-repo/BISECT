@@ -102,6 +102,7 @@ boundaries before following individual trace rows.
 | Baseline handoff | `BASELINE_HANDOFF.md`; `READINESS_DECISION.md` transition controls | Maintainers may continue controlled internal work only while preserving DCR stop gates and claim boundaries. |
 | First live VTRACE-governed wave | `context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`; `context/waves/PHASES.md` | DREQ-003 selection evidence exists for internal baseline maintenance; it does not upgrade release readiness. |
 | Release gate register | `RELEASE_GATE_REGISTER.md`; DCR-003, DCR-004, DCR-006, DCR-007; VAULT/public-claim review | DREQ-005 routing evidence exists for the remaining release-grade gates; it does not close the gates or upgrade S6 posture. |
+| Artifact publication policy | `ARTIFACT_PUBLICATION_POLICY.md`; DCR-004; VAULT/DATUM/SCALE/COMMONS review | DREQ-001 control evidence exists for commit/publication rules; no generated artifact or evidence bundle is promoted by the policy itself. |
 | Public release readiness | DCR-003, DCR-004, DCR-006, DCR-007; VAULT/public-claim review | Blocked until external-user, public-bundle, legal-boundary, clean replay, and custody gates selected for the release scope are satisfied. |
 | Claim posture | `READINESS_DECISION.md` allowed and blocked S6 statements | Public, legal, court-ready, non-author validated, and clean reproducibility claims remain explicitly blocked. |
 
