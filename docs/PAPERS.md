@@ -12,6 +12,8 @@ The slower publication-quality review ledger is
 [`docs/papers/PAPER-QUALITY-REVIEW.md`](papers/PAPER-QUALITY-REVIEW.md).
 The portfolio-wide algorithm-paper triage scorecard is
 [`docs/papers/ALGORITHM-PAPER-SCORECARD.md`](papers/ALGORITHM-PAPER-SCORECARD.md).
+VTRACE evidence posture for indexed papers is controlled in
+[`docs/vtrace/PAPER_EVIDENCE_INVENTORY.md`](vtrace/PAPER_EVIDENCE_INVENTORY.md).
 
 ---
 

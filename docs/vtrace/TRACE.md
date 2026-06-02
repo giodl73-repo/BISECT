@@ -103,6 +103,7 @@ boundaries before following individual trace rows.
 | First live VTRACE-governed wave | `context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`; `context/waves/PHASES.md` | DREQ-003 selection evidence exists for internal baseline maintenance; it does not upgrade release readiness. |
 | Release gate register | `RELEASE_GATE_REGISTER.md`; DCR-003, DCR-004, DCR-006, DCR-007; VAULT/public-claim review | DREQ-005 routing evidence exists for the remaining release-grade gates; it does not close the gates or upgrade S6 posture. |
 | Artifact publication policy | `ARTIFACT_PUBLICATION_POLICY.md`; DCR-004; VAULT/DATUM/SCALE/COMMONS review | DREQ-001 control evidence exists for commit/publication rules; no generated artifact or evidence bundle is promoted by the policy itself. |
+| Paper evidence inventory | `PAPER_EVIDENCE_INVENTORY.md`; `docs/PAPERS.md`; CO-08, REQ-024, REQ-025 | DREQ-002 control evidence exists for paper-index posture and declared gaps; it does not recompute paper claims or assert external review. |
 | Public release readiness | DCR-003, DCR-004, DCR-006, DCR-007; VAULT/public-claim review | Blocked until external-user, public-bundle, legal-boundary, clean replay, and custody gates selected for the release scope are satisfied. |
 | Claim posture | `READINESS_DECISION.md` allowed and blocked S6 statements | Public, legal, court-ready, non-author validated, and clean reproducibility claims remain explicitly blocked. |
 

@@ -686,3 +686,31 @@ Rationale: DREQ-001 needed exact commit/publication rules for artifact classes
 without turning local/generated outputs into release evidence. The policy gives
 maintainers a custody control surface while preserving DCR-004 and release-gate
 requirements for any concrete public bundle.
+
+## Paper Evidence Inventory Review
+
+Date: 2026-06-02
+
+Scope: `docs/vtrace/PAPER_EVIDENCE_INVENTORY.md`, `docs/PAPERS.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/pulses/04+paper-evidence-inventory.md`,
+`docs/vtrace/REQUIREMENTS.md`, `docs/vtrace/TRACE.md`,
+`docs/vtrace/STAGE_EXECUTION.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: DREQ-002 paper evidence posture control.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Paper index rows are counted | pass | The inventory records 146 indexed paper rows from `docs/PAPERS.md`, with 134 PDF-linked rows and 12 planned/source-only rows. |
+| Track coverage is explicit | pass | A through V track counts are recorded from the current index. |
+| Evidence posture mapping is bounded | pass | PDF links, planned rows, internal review markers, package/fixture claims, and gap language map to controlled postures and claim boundaries. |
+| Declared gaps are surfaced | pass | Planned, pending, required, and missing-real-evidence rows are listed with the required evidence before stronger claims. |
+| Readiness posture unchanged | pass | The inventory does not recompute paper claims, assert external peer review, publish artifacts, or upgrade S6 readiness. |
+
+Decision: `paper_evidence_inventory_active`
+
+Rationale: DREQ-002 needed a paper-by-paper evidence posture surface so indexed
+papers could be cited without confusing PDF presence, internal review markers,
+package evidence, planned rows, or explicit evidence gaps. The inventory gives
+maintainers that control while leaving quantitative recomputation and
+release-grade claim review to future selected gates.

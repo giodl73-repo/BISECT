@@ -38,6 +38,7 @@ evidence-package publication readiness unless the named DCR and custody gates in
 | 01 - Baseline maintenance wave activation | DONE | `pulses/01+baseline-maintenance-wave-activation.md`; DREQ-003 selection recorded in VTRACE ledgers |
 | 02 - Release gate register | DONE | `pulses/02+release-gate-register.md`; `docs/vtrace/RELEASE_GATE_REGISTER.md` records remaining release-grade gates without upgrading S6 |
 | 03 - Artifact publication policy | DONE | `pulses/03+artifact-publication-policy.md`; `docs/vtrace/ARTIFACT_PUBLICATION_POLICY.md` records commit/publication rules without promoting artifacts |
+| 04 - Paper evidence inventory | DONE | `pulses/04+paper-evidence-inventory.md`; `docs/vtrace/PAPER_EVIDENCE_INVENTORY.md` classifies indexed paper evidence posture without recomputing claims |
 
 ## Validation Gate
 
@@ -54,6 +55,6 @@ the pulse file before closure.
 
 ## Next
 
-Pulse 01 through Pulse 03 are complete. Add concrete maintenance pulses only
+Pulse 01 through Pulse 04 are complete. Add concrete maintenance pulses only
 when future work has a specific VTRACE parent ID, validation level, claim
 boundary, and custody/public disposition.
