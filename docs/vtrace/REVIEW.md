@@ -634,3 +634,29 @@ Decision: `active_internal_maintenance_wave`
 Rationale: DREQ-003 required selecting the first live wave/pulse governed by the
 new VTRACE baseline before such work proceeded. The selected wave exercises the
 process standard while preserving the S6 internal-only claim boundary.
+
+## Release Gate Register Review
+
+Date: 2026-06-02
+
+Scope: `docs/vtrace/RELEASE_GATE_REGISTER.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/pulses/02+release-gate-register.md`,
+`docs/vtrace/TRACE.md`, `docs/vtrace/STAGE_EXECUTION.md`, and
+`docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: S6 release-gate routing control.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Remaining gates are named | pass | External-user usability, clean reproducibility, concrete public evidence bundle, legal/court boundary, and expanded interoperability are listed with current evidence and next evidence. |
+| Review lanes are explicit | pass | COMMONS/operator review, MERIDIAN/COVENANT/VAULT, DATUM/SCALE/COMMONS/VAULT, BOUNDARY/WARD/COMMONS, and LEDGER/package-owner lanes are mapped. |
+| Claim unlocks are bounded | pass | Each row states the claim that remains blocked until the gate passes and limits any future unlock to the declared reviewed scope. |
+| Readiness posture unchanged | pass | The register is a routing/control artifact and does not close DCR-003, DCR-004, DCR-006, DCR-007, or S6 public/release readiness. |
+
+Decision: `release_gate_register_active`
+
+Rationale: DREQ-005 needed an operator-facing routing surface for release-grade
+work so future pulses do not infer readiness from filed DCRs or L1 control
+artifacts. The register names the gates, review lanes, and claim unlocks while
+preserving the internal-only S6 posture.

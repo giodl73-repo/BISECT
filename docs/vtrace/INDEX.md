@@ -38,6 +38,7 @@ record, clean reproducibility certificate, or official certification.
 | `EXTERNAL_WALKTHROUGH.md` | DCR-003 external-operator packet; not L2 evidence until a real non-author run is accepted. |
 | `EVIDENCE_PACKAGE_CONTRACT.md` | Public evidence package contract and L1 checklist; not a concrete public bundle acceptance. |
 | `REPRODUCIBILITY_RUN.md` | Release-subset smoke/candidate replay posture and DCR-007 clean replay packet. |
+| `RELEASE_GATE_REGISTER.md` | Operator-facing register for remaining release-grade gates; routing control only, not release evidence. |
 
 ## Current stage summary
 

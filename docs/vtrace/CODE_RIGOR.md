@@ -66,6 +66,7 @@ Language/toolchain: Rust workspace crates, Python support scripts, LaTeX/researc
 | EVID-CR-017 | CR-011, CR-012, CR-013 | VTRACE baseline index. | internal_navigation_control | `docs/vtrace/INDEX.md` provides the reading order, evidence/control artifact map, current stage summary, and blocked-claim list for maintainers. It is an entry point only and does not upgrade readiness posture. |
 | EVID-CR-018 | CR-011, CR-012, CR-013 | Public documentation pointers to VTRACE baseline. | bounded_discoverability_control | `README.md` and `docs/BISECT_CLI.md` now point maintainers to `docs/vtrace/INDEX.md` and state the `internal_engineering_baseline_only` posture. The pointers improve discoverability without claiming public release, legal/court, external-user, or clean reproducibility readiness. |
 | EVID-CR-019 | CR-011, CR-012, CR-013 | First live VTRACE-governed wave selection. | active_internal_maintenance_wave | `context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md` and Pulse 01 select the first live VTRACE-governed wave after S6. This closes DREQ-003 selection only; it does not close release-readiness DCRs or upgrade S6 posture. |
+| EVID-CR-020 | CR-011, CR-012, CR-013 | Release gate register. | release_gate_register_active | `docs/vtrace/RELEASE_GATE_REGISTER.md` and Pulse 02 route remaining release-grade work through named DCR evidence and review lanes. This is L1 control evidence only; it does not close DCR-003, DCR-004, DCR-006, DCR-007, public custody review, or S6 release readiness. |
 
 ## S3 Gate
 

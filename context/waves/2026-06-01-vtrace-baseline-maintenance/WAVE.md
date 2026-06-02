@@ -36,6 +36,7 @@ evidence-package publication readiness unless the named DCR and custody gates in
 | Pulse | Status | Evidence |
 |---|---|---|
 | 01 - Baseline maintenance wave activation | DONE | `pulses/01+baseline-maintenance-wave-activation.md`; DREQ-003 selection recorded in VTRACE ledgers |
+| 02 - Release gate register | DONE | `pulses/02+release-gate-register.md`; `docs/vtrace/RELEASE_GATE_REGISTER.md` records remaining release-grade gates without upgrading S6 |
 
 ## Validation Gate
 
@@ -43,7 +44,8 @@ Documentation/control pulses must run:
 
 ```powershell
 git --no-pager diff --check
-git grep -n -E "Future readiness record|not_started|in_progress_l1_control|S6 remains blocked until|no transition target" -- docs/vtrace context/waves
+$stale = git grep -n -E "Future readiness record|not_started|in_progress_l1_control|S6 remains blocked until|no transition target" -- docs/vtrace context/waves | Select-String -NotMatch "git grep -n -E"
+if ($stale) { $stale; exit 1 } else { "stale-status-search: pass" }
 ```
 
 Code-changing pulses must additionally name and run package-specific tests in
@@ -51,6 +53,6 @@ the pulse file before closure.
 
 ## Next
 
-Pulse 01 is complete. Add concrete maintenance pulses only when future work has
-a specific VTRACE parent ID, validation level, claim boundary, and custody/public
-disposition.
+Pulse 01 and Pulse 02 are complete. Add concrete maintenance pulses only when
+future work has a specific VTRACE parent ID, validation level, claim boundary,
+and custody/public disposition.
