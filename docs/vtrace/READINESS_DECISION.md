@@ -66,6 +66,10 @@ controls:
 4. Any readiness upgrade must update `INTEGRATION.md`, `READINESS_DECISION.md`,
    `STAGE_EXECUTION.md`, `TRACE.md`, `REVIEW.md`, and `CODE_RIGOR.md` together.
 
+Operational handoff: `BASELINE_HANDOFF.md` gives maintainers the allowed actions,
+stop gates, and continuation checklist for using this internal baseline without
+upgrading readiness claims.
+
 ## Next release-grade gates
 
 The shortest paths to stronger S6 decisions are:

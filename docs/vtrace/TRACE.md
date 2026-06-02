@@ -95,6 +95,7 @@ TRACE is control-plane evidence. It proves that the accepted baseline is mapped 
 | Transition control | Source evidence | Current disposition |
 |---|---|---|
 | Internal engineering baseline | `READINESS_DECISION.md`; `INTEGRATION.md`; S4/S5 ledgers | Approved as `internal_engineering_baseline_only` with L1 residual risks recorded. |
+| Baseline handoff | `BASELINE_HANDOFF.md`; `READINESS_DECISION.md` transition controls | Maintainers may continue controlled internal work only while preserving DCR stop gates and claim boundaries. |
 | Public release readiness | DCR-003, DCR-004, DCR-006, DCR-007; VAULT/public-claim review | Blocked until external-user, public-bundle, legal-boundary, clean replay, and custody gates selected for the release scope are satisfied. |
 | Claim posture | `READINESS_DECISION.md` allowed and blocked S6 statements | Public, legal, court-ready, non-author validated, and clean reproducibility claims remain explicitly blocked. |
 
