@@ -448,6 +448,26 @@ DCR-007 at L2 because the run used `--allow-dirty-data` for a locally modified
 `data/manifest.json` and no reviewed clean-environment replay artifact has been
 promoted.
 
+## DCR-007 Clean Replay Packet Review
+
+Date: 2026-06-01
+
+Scope: `docs/vtrace/REPRODUCIBILITY_RUN.md`.
+
+Gate type: DCR-007 clean-replay readiness review.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Operator tasks are explicit | pass | The packet names checkout, data provisioning, clean-status check, harness command, JSON-field checks, verification-output checks, and custody preservation. |
+| L2 promotion rule is bounded | pass | DCR-007 can move beyond candidate status only after MERIDIAN/COVENANT review accepts a clean replay record and VAULT reviews public artifact promotion. |
+| Candidate evidence remains bounded | pass | The packet states that it is a procedure and review template, not closure evidence by itself. |
+
+Decision: `ready_for_clean_run`
+
+Rationale: DCR-007 now has a repeatable clean replay packet that a future
+operator and reviewer can execute without maintainer-only context. This does not
+close DCR-007 at L2 because no clean data-backed replay record has been accepted.
+
 ## DCR-003 External Operator Packet Review
 
 Date: 2026-06-01

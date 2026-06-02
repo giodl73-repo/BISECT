@@ -75,6 +75,53 @@ Typical clean release-subset replay command:
 python scripts/maintenance/dcr007_release_subset_replay.py
 ```
 
+## L2 clean replay packet
+
+This packet is the required script for a future DCR-007 L2 release-subset or
+full-scale replay. It is a procedure and review template, not closure evidence
+by itself.
+
+Declared replay fields:
+
+| Field | Value |
+|---|---|
+| Replay class | release-subset or full-scale. |
+| Label | `official_proposal` unless a release manager declares a different label. |
+| Year(s) | `2020` for the current VT release-subset packet; all selected years for full-scale replay. |
+| State scope | `VT` for the current release-subset packet; all selected states for broader replay. |
+| Source checkout | Clean `git status --short` with no data, output, doc, source, or config modifications. |
+| Data custody | `data/manifest.json` hash, data source provenance, and any externally stored source-data hash manifest. |
+| Output custody | Ignored local `reports/vtrace/*.json` replay record plus promoted evidence-package location if reviewed for release. |
+
+Operator tasks:
+
+1. Start from a clean checkout at the declared commit.
+2. Provision the declared source data without modifying tracked files.
+3. Run `git --no-pager status --short` and confirm there is no output.
+4. Run `python scripts/maintenance/dcr007_release_subset_replay.py` without `--allow-dirty-data`.
+5. Confirm the JSON record reports `clean_for_l2_replay: true`, `candidate_command_allowed: true`, `result: replay_pass`, and all command exit codes are 0.
+6. Inspect `label-verify` output and confirm the config, build-index, and analysis-index SHA links are `MATCH` with verdict `VERIFIED`.
+7. Preserve the replay JSON and any promoted evidence package under the declared custody rule.
+
+Reviewer checklist:
+
+| Check | Required result |
+|---|---|
+| Source cleanliness | `clean_for_l2_replay: true`; no dirty tracked or untracked source/data entries. |
+| Scope match | Record label, year, states, workers, report formats, and replay class match the declared scope. |
+| Toolchain provenance | OS, Python, Rust/Cargo paths and versions, binary SHA-256, and resolved METIS engine are present. |
+| Input provenance | Config SHA-256, data-manifest SHA-256, and data custody pointer are present. |
+| Algorithm/search metadata | Structure, weights, tolerance, search strategy, convergence threshold, and engine are present. |
+| Command replay | Build, analyze, report, and verify commands all exit 0 or each failure has explicit disposition. |
+| Artifact custody | Run, analysis, report, and replay JSON hashes are retained or intentionally not promoted with reason. |
+| Claim boundary | Public claims name only the replay class, state/year scope, data custody, and reviewed artifact set. |
+
+Promotion rule: DCR-007 may move beyond
+`partial_l1_release_subset_candidate_data_dirty` only after MERIDIAN/COVENANT
+review accepts a clean replay record and dispositions every divergence as fixed,
+accepted limitation, or environment blocker. VAULT review is required before
+promoting artifacts as a public release evidence package.
+
 Before DCR-007 can close at L2 release-subset or full-scale level, the generated
 record must include:
 

@@ -206,9 +206,9 @@ Residual risk until closed: The project should not claim full release reproducib
 Execution evidence: `docs/vtrace/REPRODUCIBILITY_RUN.md` declares the current
 reproducibility class as `release-subset-candidate-data-dirty`, records fixture
 replay evidence, the VT `official_proposal/2020` build/analyze/report/verify
-SHA-chain smoke, and lists the required full release-subset/full-scale fields.
-The maintenance
-harness `scripts/maintenance/dcr007_release_subset_replay.py` now captures a
+SHA-chain smoke, and now includes an L2 clean replay packet with operator tasks,
+reviewer checklist, custody fields, and promotion rule. The maintenance harness
+`scripts/maintenance/dcr007_release_subset_replay.py` now captures a
 candidate replay record with environment/tool versions, clean-source policy,
 config/data hashes, algorithm/search parameters, resolved METIS engine, command
 outputs, and artifact hashes. A 2026-06-02 local candidate replay at commit
