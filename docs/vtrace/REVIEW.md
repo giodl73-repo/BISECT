@@ -475,7 +475,8 @@ been accepted.
 
 Date: 2026-06-01
 
-Scope: `docs/vtrace/EXTERNAL_WALKTHROUGH.md`, `docs/vtrace/DCRS.md`,
+Scope: `docs/vtrace/EXTERNAL_WALKTHROUGH.md`,
+`scripts/maintenance/dcr003_walkthrough_record.py`, `docs/vtrace/DCRS.md`,
 `docs/vtrace/TRACE.md`, `docs/vtrace/STAGE_EXECUTION.md`, and
 `docs/vtrace/CODE_RIGOR.md`.
 
@@ -485,6 +486,7 @@ Gate type: DCR-003 external-walkthrough readiness review.
 |---|---|---|
 | Reviewer independence is required | pass | The packet requires the reviewer role and independence statement before the run starts. |
 | Scope is declared before execution | pass | The packet requires commit, environment, quickstart, workflow, data/config scope, and selected persona path. |
+| Observation record is generated consistently | pass | The helper pre-fills commit, working-tree status, environment, selected quickstart, workflow, and data/config scope into the review template. |
 | Observer behavior avoids coaching | pass | The packet tells the observer to record blockers rather than work around them silently. |
 | Friction taxonomy is actionable | pass | Findings must be classified as doc fix, command fix, accepted limitation, environment blocker, output confusion, or legal/claim confusion. |
 | Legal/certification misunderstanding is tested | pass | The packet explicitly asks whether `label-verify` is legal certification and requires the correct boundary. |
@@ -492,6 +494,7 @@ Gate type: DCR-003 external-walkthrough readiness review.
 
 Decision: `ready_for_external_run`
 
-Rationale: DCR-003 now has a repeatable external-walkthrough packet that can
-produce reviewable evidence without maintainer improvisation. The gate remains
-open for L2 because no real non-author has completed the packet.
+Rationale: DCR-003 now has a repeatable external-walkthrough packet and record
+helper that can produce reviewable evidence without maintainer improvisation.
+The gate remains open for L2 because no real non-author has completed the
+packet.

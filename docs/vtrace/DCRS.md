@@ -96,8 +96,10 @@ Residual risk until closed: Docs are internally aligned but not externally prove
 Execution evidence: `docs/vtrace/EXTERNAL_WALKTHROUGH.md` records the L1
 role-simulation path, expected user understanding, L2 operator packet,
 observation-record template, promotion rule, and remaining external-run blocker.
-The gate is ready for an external run, but L2 closure still requires a real
-non-author operator or external reviewer.
+The helper `scripts/maintenance/dcr003_walkthrough_record.py` now generates a
+prefilled observation record for the selected quickstart and workflow. The gate
+is ready for an external run, but L2 closure still requires a real non-author
+operator or external reviewer.
 
 ## DCR-004: Public Evidence Package Contract
 

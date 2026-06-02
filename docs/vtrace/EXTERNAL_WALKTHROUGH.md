@@ -101,6 +101,20 @@ or under ignored `reports/vtrace/` if it contains raw console logs. Do not
 include private personal data; identify reviewers by role or approved public
 name only.
 
+The controlled helper
+`scripts/maintenance/dcr003_walkthrough_record.py` can generate a prefilled
+observation record with the current commit, working-tree status, environment,
+selected quickstart, workflow, and data scope:
+
+```bash
+python scripts/maintenance/dcr003_walkthrough_record.py
+```
+
+The helper writes to ignored `reports/vtrace/dcr003_external_walkthrough_record.txt`
+by default. The generated record is a starting template only; it is not L2
+evidence until a real non-author completes it and COMMONS/operator-review
+dispositions each friction item.
+
 ```text
 DCR-003 external walkthrough record
 
