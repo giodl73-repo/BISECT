@@ -43,6 +43,7 @@ record, clean reproducibility certificate, or official certification.
 | `PAPER_EVIDENCE_INVENTORY.md` | Paper-index evidence posture classifier and declared gap rows for DREQ-002. |
 | `PACKAGE_SPEC_REGISTER.md` | Package-family schema/canonicalization routing register for DREQ-004. |
 | `COMMUNICATIONS_STRATEGY.md` | Audience, channel, allowed-message, blocked-language, and review-lane strategy for public/operator communications. |
+| `COMMUNICATIONS_IMPLEMENTATION_AUDIT.md` | L1 audit applying the communications strategy to current public/operator documentation surfaces. |
 | `../../context/waves/2026-06-01-vtrace-baseline-maintenance/CLOSE.md` | Closure record for the first live VTRACE-governed internal maintenance wave. |
 
 ## Current stage summary

@@ -5,7 +5,14 @@
 **Date:** 2026-04-30
 **Spec:** `docs/superpowers/specs/2026-04-30-court-submission-reports.md`
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
-**Goal:** Ship `BISECT report --format pdf` producing a PDF/A-2b court-ready expert-witness document driven by Typst, validated by `verapdf`, accompanied by a deterministic reproducibility-package zip whose every embedded path, citation, and provenance field is auditable. Court-mode output refuses to embed civic inputs ingested under non-strict validation unless an explicit override flag is set.
+**Goal:** Ship `BISECT report --format pdf` producing a PDF/A-2b legal-review
+expert-witness draft driven by Typst, validated by `verapdf`, accompanied by a
+deterministic reproducibility-package zip whose every embedded path, citation,
+and provenance field is auditable. Court-oriented output refuses to embed civic
+inputs ingested under non-strict validation unless an explicit override flag is
+set. This plan does not by itself create a court-ready filing package; that
+claim remains governed by `docs/legal/COURT_PACKAGING_BOUNDARY.md` and
+`docs/vtrace/COMMUNICATIONS_STRATEGY.md`.
 
 **Depends on:**
 - Existing `bisect-report` HTML pipeline (`BISECT/crates/bisect-report/`) and `report_cmd.rs` dispatch in `bisect-cli`.
@@ -87,7 +94,7 @@ This doc must land before any of Task 5+ runs because the Typst template, the ci
 - [ ] **3.1** Pin Typst to a specific minor (e.g., `0.12.x`); record the pin in `BISECT/crates/bisect-report/typst-templates/.typst-version` (single-line file, parsed by the wrapper at runtime to assert).
 - [ ] **3.2** Pin `verapdf` to a specific release; record similarly under `BISECT/crates/bisect-report/typst-templates/.verapdf-version`.
 - [ ] **3.3** CI install steps: install Typst (curl release tarball; verify SHA-256), install Java + verapdf zip; cache both. Document the install commands in `docs/REPRODUCIBLE_BUILD.md` under a new "External tooling for PDF reports" section.
-- [ ] **3.4** `BISECT report --format pdf` preflight: at startup, exec `typst --version` and `verapdf --version`, parse, and assert against the pinned strings. On mismatch, fail with `[CONFIG]` actionable error naming the expected version and install URL — do not silently produce a non-court-ready PDF.
+- [ ] **3.4** `BISECT report --format pdf` preflight: at startup, exec `typst --version` and `verapdf --version`, parse, and assert against the pinned strings. On mismatch, fail with `[CONFIG]` actionable error naming the expected version and install URL — do not silently produce a PDF that appears to have passed the legal-review packaging checks.
 
 **Exit:** Two pinned external tools, one place to update each, CI green with both installed; preflight catches version drift before render.
 

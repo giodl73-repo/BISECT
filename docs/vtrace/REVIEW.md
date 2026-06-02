@@ -793,3 +793,28 @@ Rationale: Docs support made the VTRACE baseline more visible, so the repository
 needed one operator-facing communication surface that keeps README, papers,
 quickstarts, legal docs, generated artifacts, and wave/pulse records aligned
 with the accepted claim boundary.
+
+## Communications Implementation Audit Review
+
+Date: 2026-06-02
+
+Scope: `docs/vtrace/COMMUNICATIONS_IMPLEMENTATION_AUDIT.md`,
+`docs/superpowers/plans/2026-04-30-court-submission-reports.md`,
+`docs/superpowers/specs/2026-04-30-court-submission-reports.md`,
+`docs/vtrace/INDEX.md`, `docs/vtrace/TRACE.md`,
+`docs/vtrace/STAGE_EXECUTION.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: L1 communications implementation audit.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Public/operator surfaces searched | pass | README, CLI docs, quickstarts, legal docs, journals, VTRACE docs, and superpower planning/spec docs were checked for strategy-blocked wording. |
+| Blocked-language examples preserved | pass | Existing VTRACE/legal/journal uses of risky terms are accepted where they describe non-claims, stop rules, or blocked review gates. |
+| Unsupported affirmative wording remediated | pass | Older court-submission plan/spec language now says legal-review draft/package-check language instead of asserting court-ready output. |
+| Readiness posture unchanged | pass | The audit does not publish a release, certify legal readiness, validate non-authors, select a public bundle, or claim clean reproducibility. |
+
+Decision: `communications_strategy_applied_l1`.
+
+Rationale: The strategy is now not just documented; it has been applied to the
+current public/operator communications set with one concrete remediation where
+legacy planning language outran the accepted VTRACE claim boundary.
