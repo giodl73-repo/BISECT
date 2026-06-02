@@ -568,3 +568,24 @@ Decision: `internal_handoff_control`
 Rationale: The handoff makes the S6 internal baseline actionable for future
 maintainer work while preserving blocked public/release/legal/external-user and
 clean reproducibility claims.
+
+## VTRACE Baseline Index Review
+
+Date: 2026-06-01
+
+Scope: `docs/vtrace/INDEX.md`, `docs/vtrace/STAGE_EXECUTION.md`,
+`docs/vtrace/TRACE.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: navigation/control review.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Entry point is explicit | pass | The index provides a reading order from mission through S6 handoff. |
+| Evidence map is bounded | pass | The index separates control/evidence artifacts and marks DCR-003/DCR-007 materials as not L2 closure. |
+| Stage posture is unchanged | pass | S6 remains `internal_engineering_baseline_only`. |
+| Blocked claims are repeated | pass | Public release, legal/court, external-user, clean reproducibility, universal interoperability, and public publication claims remain blocked. |
+
+Decision: `internal_navigation_control`
+
+Rationale: The index improves maintainability of the VTRACE baseline without
+changing any DCR, readiness, custody, or public-claim status.

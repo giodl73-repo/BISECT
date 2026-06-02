@@ -63,6 +63,7 @@ Language/toolchain: Rust workspace crates, Python support scripts, LaTeX/researc
 | EVID-CR-014 | CR-011, CR-012, CR-013 | S5 integration control record. | complete_l1_control_for_internal_baseline | `docs/vtrace/INTEGRATION.md` integrates S4 work-package evidence, DCR posture, validation classes, claim boundaries, custody gates, and blocked S6 claims. It supports only the selected internal engineering baseline and is not public release-readiness evidence. |
 | EVID-CR-015 | CR-011, CR-012, CR-013 | S6 readiness/transition decision. | internal_engineering_baseline_only | `docs/vtrace/READINESS_DECISION.md` approves only an internal engineering baseline and blocks public release, legal/court, external-user, clean reproducibility, and public evidence-package readiness claims until the named DCR and custody gates pass. |
 | EVID-CR-016 | CR-011, CR-012, CR-013 | Internal baseline handoff controls. | internal_handoff_control | `docs/vtrace/BASELINE_HANDOFF.md` operationalizes the S6 internal baseline by naming allowed maintainer actions, stop gates, and a continuation checklist. It is not a release artifact and does not upgrade any DCR to L2. |
+| EVID-CR-017 | CR-011, CR-012, CR-013 | VTRACE baseline index. | internal_navigation_control | `docs/vtrace/INDEX.md` provides the reading order, evidence/control artifact map, current stage summary, and blocked-claim list for maintainers. It is an entry point only and does not upgrade readiness posture. |
 
 ## S3 Gate
 
