@@ -328,7 +328,7 @@ Gate type: S4/S5 DCR execution baseline review.
 |---|---|---|
 | DCR-001 fixture evidence exists | pass | CSV, GeoJSON, RPLAN, and shapefile/DBF public fixtures plus expected assignments are present and covered by parser tests; broader external-tool round-trip fixtures remain out of scope. |
 | DCR-002 smoke scope exists | pass_l1 | `RELEASE_SMOKE_BUNDLE.md` defines fixture and real-state smoke scope and now records a passing VT `official_proposal/2020` build/analyze/report/verify smoke. |
-| DCR-003 non-author walkthrough is recorded | partial_pass | L1 role-simulation walkthrough is documented; L2 external-user evidence remains open. |
+| DCR-003 non-author walkthrough is recorded | ready_for_external_run | L1 role-simulation walkthrough and L2 operator packet are documented; L2 external-user evidence remains open. |
 | DCR-004 public evidence package contract exists | pass_l1 | `BISECT-EVIDENCE-PACKAGE-v1` is defined with an internal package review checklist; review against a concrete public bundle remains open. |
 | DCR-005 import compatibility matrix exists | pass | Current adapter support, boundaries, fixture status, and unknowns are centralized in `IMPORT_COMPATIBILITY.md`. |
 | DCR-006 legal/court packaging boundary exists | pass_l1 | Court-ready and filing-ready claims are separated from generated evidence packages, with an internal boundary checklist; legal review remains required before stronger claims. |

@@ -71,7 +71,7 @@ S4 WP-001 through WP-008 are closed at their recorded validation levels. The ite
 |---|---|---|---|
 | DCR-001 | Golden interop fixtures for public import/package compatibility. | WP-002, WP-004 | Public interoperability claims. |
 | DCR-002 | Release smoke bundle for a small representative build/analyze/report/verify path. | WP-003, WP-008 | Release-health claims. |
-| DCR-003 | External-user walkthrough of non-author docs. | WP-008 | Public user-readiness claims. |
+| DCR-003 | External-user walkthrough of non-author docs; operator packet now ready. | WP-008 | Public user-readiness claims. |
 | DCR-004 | Public evidence package contract. | WP-005, WP-006 | Stable downstream evidence-package use. |
 | DCR-005 | Import compatibility matrix. | WP-002 | Central external-adapter documentation. |
 | DCR-006 | Court/legal packaging boundary. | WP-005, WP-006 | Court-ready or filing-ready package language. |
