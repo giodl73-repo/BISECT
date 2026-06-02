@@ -41,6 +41,7 @@ record, clean reproducibility certificate, or official certification.
 | `RELEASE_GATE_REGISTER.md` | Operator-facing register for remaining release-grade gates; routing control only, not release evidence. |
 | `ARTIFACT_PUBLICATION_POLICY.md` | Commit/publication rules for source, generated, package, paper, dashboard, and evidence artifacts. |
 | `PAPER_EVIDENCE_INVENTORY.md` | Paper-index evidence posture classifier and declared gap rows for DREQ-002. |
+| `PACKAGE_SPEC_REGISTER.md` | Package-family schema/canonicalization routing register for DREQ-004. |
 
 ## Current stage summary
 

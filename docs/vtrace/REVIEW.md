@@ -714,3 +714,31 @@ papers could be cited without confusing PDF presence, internal review markers,
 package evidence, planned rows, or explicit evidence gaps. The inventory gives
 maintainers that control while leaving quantitative recomputation and
 release-grade claim review to future selected gates.
+
+## Package Spec Register Review
+
+Date: 2026-06-02
+
+Scope: `docs/vtrace/PACKAGE_SPEC_REGISTER.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/pulses/05+package-spec-register.md`,
+`docs/vtrace/REQUIREMENTS.md`, `docs/vtrace/TRACE.md`,
+`docs/vtrace/STAGE_EXECUTION.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: DREQ-004 package schema/canonicalization routing control.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Package families are mapped | pass | RPLAN, RCOUNT, RCTX, and RHIST are mapped to PKG/IF IDs and package-owned specs/crates. |
+| Version identities are visible | pass | The register names current package/schema/audit version constants where they exist. |
+| Hash shapes are visible | pass | Domain-separated hash prefixes or canonical package hash shapes are listed for each family. |
+| Verifier paths are visible | pass | CLI commands and library verifier functions are named so operators know where package checks live. |
+| Readiness posture unchanged | pass | The register does not restate schemas, create package versions, publish package artifacts, expand public interoperability claims, or upgrade S6 readiness. |
+
+Decision: `package_spec_register_active`.
+
+Rationale: DREQ-004 needed a single operator-facing surface for package schema
+and canonicalization ownership. The register gives maintainers a route from
+VTRACE requirements to package specs and verifiers while keeping exact schema
+definitions, public package promotion, and L2 interoperability evidence under
+their existing package/DCR gates.

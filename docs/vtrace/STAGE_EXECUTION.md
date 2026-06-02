@@ -53,6 +53,7 @@ This board records VTRACE adoption progress for the existing repo. It is a contr
 | Remaining release-grade gates need a single routing surface. | S6 | Maintainers / role lanes | `RELEASE_GATE_REGISTER.md` now routes external-user, clean reproducibility, public evidence bundle, legal/court, and expanded interoperability gates to their required DCR evidence and review lanes without upgrading S6 posture. |
 | Public artifact commit/publication policy needed exact class rules. | S6 / DREQ-001 | Maintainers / VAULT / DATUM / SCALE / COMMONS | `ARTIFACT_PUBLICATION_POLICY.md` now names source, research, paper PDF, generated figure, run output, dashboard, package evidence, public evidence package, raw data, and local environment dispositions without promoting any artifact. |
 | Paper evidence completeness needed a paper-index posture inventory. | S6 / DREQ-002 | DATUM / SCALE / PRECINCT / COMMONS | `PAPER_EVIDENCE_INVENTORY.md` now classifies the 146 indexed `docs/PAPERS.md` rows, track counts, PDF/planned counts, evidence posture mapping, and declared planned/pending/missing-real-evidence rows without recomputing paper claims. |
+| Package schemas and canonicalization controls needed an operator-facing routing register. | S6 / DREQ-004 | LEDGER / CANVASS / CONTOUR / BENCHMARK / VAULT | `PACKAGE_SPEC_REGISTER.md` now maps RPLAN, RCOUNT, RCTX, and RHIST to package specs, version identities, hash shapes, verifier paths, evidence posture, and change-control triggers without restating schemas or promoting package artifacts. |
 
 ## S3 Gate
 
