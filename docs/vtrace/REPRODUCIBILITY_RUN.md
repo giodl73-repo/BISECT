@@ -59,10 +59,11 @@ capture a candidate release-subset replay record. It writes an ignored JSON
 evidence file under `reports/vtrace/` by default, records environment/tool
 versions, git status, config and data-manifest hashes, resolved algorithm/search
 parameters, resolved METIS engine, planned command lines, command outputs, and
-generated artifact hashes, and refuses clean replay unless the source status
-policy is satisfied.
+generated artifact hashes. The replay record separates `clean_for_l2_replay`
+from `candidate_command_allowed` so data-dirty candidate execution cannot be
+mistaken for clean replay evidence.
 
-Typical preflight while local data manifests are dirty:
+Typical candidate preflight while local data manifests are dirty:
 
 ```bash
 python scripts/maintenance/dcr007_release_subset_replay.py --preflight-only --allow-dirty-data
@@ -86,6 +87,7 @@ record must include:
 - Seed/search metadata and convergence settings.
 - Artifact paths and SHA-256 values.
 - Clean replay comparison result or divergence disposition.
+- `clean_for_l2_replay: true`; data-dirty candidate runs are not sufficient.
 
 ## Current disposition
 

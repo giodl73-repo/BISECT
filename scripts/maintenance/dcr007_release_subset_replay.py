@@ -112,6 +112,14 @@ def non_data_status_entries(entries: list[str]) -> list[str]:
     ]
 
 
+def data_status_entries(entries: list[str]) -> list[str]:
+    return [
+        entry
+        for entry in entries
+        if status_path(entry).startswith(DATA_PREFIXES)
+    ]
+
+
 def default_binary_path(repo: Path) -> Path:
     executable = "bisect.exe" if os.name == "nt" else "bisect"
     return repo / "target" / "debug" / executable
@@ -236,8 +244,8 @@ def parse_args() -> argparse.Namespace:
         "--allow-dirty-data",
         action="store_true",
         help=(
-            "allow data/ changes in the clean-source preflight. This is not an "
-            "L2 clean replay claim."
+            "allow data/ changes for candidate/preflight execution. This is not "
+            "an L2 clean replay claim."
         ),
     )
     return parser.parse_args()
@@ -260,8 +268,10 @@ def main() -> int:
     metis_engine = simple_yaml_value(config, "algorithm.engine") or "c-ffi"
     data_manifest = repo / "data" / "manifest.json"
     status_entries = source_status(repo)
+    data_status = data_status_entries(status_entries)
+    non_data_status = non_data_status_entries(status_entries)
     blocking_status = (
-        non_data_status_entries(status_entries)
+        non_data_status
         if args.allow_dirty_data
         else status_entries
     )
@@ -293,11 +303,16 @@ def main() -> int:
             "commit": git_lines(repo, "rev-parse", "HEAD")[0],
             "status": status_entries,
             "status_policy": (
-                "data_changes_allowed_for_preflight_only"
+                "data_changes_allowed_for_candidate_only"
                 if args.allow_dirty_data
                 else "fully_clean_required"
             ),
-            "clean_for_replay": not blocking_status,
+            "source_clean": not status_entries,
+            "clean_for_replay": not status_entries,
+            "clean_for_l2_replay": not status_entries,
+            "candidate_command_allowed": not blocking_status,
+            "data_status": data_status,
+            "non_data_status": non_data_status,
             "blocking_status": blocking_status,
         },
         "inputs": {
