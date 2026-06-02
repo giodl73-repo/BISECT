@@ -742,3 +742,28 @@ and canonicalization ownership. The register gives maintainers a route from
 VTRACE requirements to package specs and verifiers while keeping exact schema
 definitions, public package promotion, and L2 interoperability evidence under
 their existing package/DCR gates.
+
+## VTRACE Baseline Maintenance Wave Close Review
+
+Date: 2026-06-02
+
+Scope: `context/waves/2026-06-01-vtrace-baseline-maintenance/CLOSE.md`,
+`context/waves/2026-06-01-vtrace-baseline-maintenance/WAVE.md`,
+`context/waves/PHASES.md`, `docs/vtrace/REQUIREMENTS.md`,
+`docs/vtrace/TRACE.md`, `docs/vtrace/STAGE_EXECUTION.md`, and
+`docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: DREQ-003 wave close and internal-control closure.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Selected pulses are complete | pass | Pulses 01 through 05 are done and point to committed control artifacts. |
+| Deferred routing gaps are controlled | pass | DREQ-001 through DREQ-005 each point to a concrete register, policy, inventory, or wave close record. |
+| PHASES status is no longer active | pass | The VTRACE Baseline Maintenance wave is archived after closure. |
+| Readiness posture unchanged | pass | The close record preserves public release, legal/court, external-user, clean-replay, and public evidence-package blockers. |
+
+Decision: `complete_internal_control_wave`.
+
+Rationale: The wave was scoped to internal VTRACE baseline maintenance and
+deferred routing/control cleanup. Closing it records completion of that scope
+without treating routing controls as release evidence or changing S6 posture.

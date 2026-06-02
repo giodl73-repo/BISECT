@@ -1,12 +1,15 @@
 ---
 wave: vtrace-baseline-maintenance
 date_open: 2026-06-01
-status: active
+date_closed: 2026-06-02
+status: complete
 source_goal: docs/vtrace/INDEX.md
 vtrace_posture: internal_engineering_baseline_only
 ---
 
 # VTRACE Baseline Maintenance
+
+Close record: `CLOSE.md`.
 
 ## Mission
 
@@ -54,8 +57,13 @@ if ($stale) { $stale; exit 1 } else { "stale-status-search: pass" }
 Code-changing pulses must additionally name and run package-specific tests in
 the pulse file before closure.
 
-## Next
+## Close
 
 Pulse 01 through Pulse 05 are complete. Add concrete maintenance pulses only
 when future work has a specific VTRACE parent ID, validation level, claim
 boundary, and custody/public disposition.
+
+Closure decision: `complete_internal_control_wave`. This wave closes the
+DREQ-001 through DREQ-005 routing/control scope selected for internal baseline
+maintenance. It does not upgrade S6 readiness beyond
+`internal_engineering_baseline_only`.

@@ -54,7 +54,7 @@
 | 2026-05-14 | RGRAPH Subset Connectivity Kernel | Extract reusable node-subset connectivity checks from pricing, SMC, Pareto, and CLI evidence helpers | archived |
 | 2026-05-14 | RGRAPH Mask Edge Cut Consumer | Route bitmask edge-cut counting through `rgraph-core` adapter without adding new API | archived |
 | 2026-05-14 | CLI Weighted Cut Scoring Cleanup | Consolidate repeated weighted edge-cut scoring locally without promoting it to `rgraph-core` | archived |
-| 2026-06-01 | VTRACE Baseline Maintenance | First live VTRACE-governed maintenance wave after S6 internal baseline selection | active |
+| 2026-06-01 | VTRACE Baseline Maintenance | First live VTRACE-governed maintenance wave after S6 internal baseline selection | archived |
 
 ## Operating Model
 
