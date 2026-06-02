@@ -435,7 +435,7 @@ Gate type: DCR-007 reproducibility tooling review.
 |---|---|---|
 | Replay scope is declared before execution | pass | The harness defaults to `official_proposal/2020`, state `VT`, and records label, year, states, worker count, analysis type, and report formats. |
 | Clean-source policy is explicit | pass | The harness blocks dirty-source replay by default and records status entries; `--allow-dirty-data` is documented as preflight/tooling evidence only. |
-| Environment and input hashes are captured | pass | The harness records OS, Python, tool paths, git commit/status, config SHA-256, data-manifest SHA-256, and binary hashes. |
+| Environment and input hashes are captured | pass | The harness records OS, Python, Rust/Cargo tool paths and versions, git commit/status, config SHA-256, algorithm/search parameters, resolved METIS engine, data-manifest SHA-256, and binary hashes. |
 | Replay commands and artifact hashes are captured | pass | Full runs record cargo/build/analyze/report/verify command output and SHA-256 values for generated run, analysis, and report artifacts. |
 | L2 reproducibility remains unclaimed | pass | The current docs state that the dirty local `data/manifest.json` blocks clean replay closure and that DCR-007 remains open until a clean data-backed replay is reviewed. |
 

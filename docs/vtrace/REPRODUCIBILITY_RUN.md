@@ -41,9 +41,10 @@ below. This does not constitute a clean-environment replay or full-scale run.
 The maintenance harness
 `scripts/maintenance/dcr007_release_subset_replay.py` is the controlled way to
 capture a candidate release-subset replay record. It writes an ignored JSON
-evidence file under `reports/vtrace/` by default, records environment, git
-status, config and data-manifest hashes, planned command lines, command outputs,
-and generated artifact hashes, and refuses clean replay unless the source status
+evidence file under `reports/vtrace/` by default, records environment/tool
+versions, git status, config and data-manifest hashes, resolved algorithm/search
+parameters, resolved METIS engine, planned command lines, command outputs, and
+generated artifact hashes, and refuses clean replay unless the source status
 policy is satisfied.
 
 Typical preflight while local data manifests are dirty:
@@ -62,9 +63,9 @@ Before DCR-007 can close at L2 release-subset or full-scale level, the generated
 record must include:
 
 - Clean checkout commit and working-tree status.
-- Rust toolchain, target, OS, CPU class, and build features.
-- Binary SHA-256 and METIS engine.
-- Config path and SHA-256.
+- Rust toolchain versions, target, OS, CPU class, and build features.
+- Binary SHA-256 and resolved METIS engine.
+- Config path, SHA-256, and algorithm/search parameters.
 - Source-data custody and hash pointers.
 - Exact command lines for build, analyze, report, and verify.
 - Seed/search metadata and convergence settings.

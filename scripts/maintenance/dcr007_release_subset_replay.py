@@ -53,6 +53,23 @@ def git_lines(repo: Path, *args: str) -> list[str]:
     return [line for line in result.stdout.splitlines() if line.strip()]
 
 
+def command_output(repo: Path, *args: str) -> str | None:
+    try:
+        result = subprocess.run(
+            [*args],
+            cwd=repo,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except FileNotFoundError:
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip()
+
+
 def file_sha256(path: Path) -> str | None:
     if not path.is_file():
         return None
@@ -102,6 +119,27 @@ def default_binary_path(repo: Path) -> Path:
 
 def command_line(command: list[str]) -> str:
     return " ".join(command)
+
+
+def simple_yaml_value(path: Path, dotted_key: str) -> str | None:
+    if not path.is_file():
+        return None
+    current_section: str | None = None
+    wanted_section, wanted_key = dotted_key.split(".", 1)
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if not raw_line.startswith(" ") and line.endswith(":"):
+            current_section = line[:-1].strip()
+            continue
+        if current_section != wanted_section:
+            continue
+        stripped = line.strip()
+        prefix = f"{wanted_key}:"
+        if stripped.startswith(prefix):
+            return stripped[len(prefix) :].strip()
+    return None
 
 
 def build_replay_commands(args: argparse.Namespace, binary: Path) -> list[list[str]]:
@@ -219,6 +257,7 @@ def main() -> int:
     binary = (args.binary or default_binary_path(repo)).resolve()
     output = (repo / args.output).resolve()
     config = repo / "configs" / f"{args.label}.yml"
+    metis_engine = simple_yaml_value(config, "algorithm.engine") or "c-ffi"
     data_manifest = repo / "data" / "manifest.json"
     status_entries = source_status(repo)
     blocking_status = (
@@ -246,7 +285,9 @@ def main() -> int:
             "machine": platform.machine(),
             "processor": platform.processor(),
             "rustc": shutil.which("rustc"),
+            "rustc_version": command_output(repo, "rustc", "--version"),
             "cargo": shutil.which("cargo"),
+            "cargo_version": command_output(repo, "cargo", "--version"),
         },
         "source": {
             "commit": git_lines(repo, "rev-parse", "HEAD")[0],
@@ -262,6 +303,20 @@ def main() -> int:
         "inputs": {
             "config_path": config.relative_to(repo).as_posix(),
             "config_sha256": file_sha256(config),
+            "algorithm": {
+                "structure": simple_yaml_value(config, "algorithm.structure"),
+                "weights": simple_yaml_value(config, "algorithm.weights"),
+                "alpha_county": simple_yaml_value(config, "algorithm.alpha_county"),
+                "search": simple_yaml_value(config, "algorithm.search"),
+                "convergence_threshold": simple_yaml_value(
+                    config, "algorithm.convergence_threshold"
+                ),
+                "balance_tolerance": simple_yaml_value(
+                    config, "algorithm.balance_tolerance"
+                ),
+                "engine": metis_engine,
+            },
+            "metis_engine": metis_engine,
             "data_manifest_path": data_manifest.relative_to(repo).as_posix(),
             "data_manifest_sha256": file_sha256(data_manifest),
         },

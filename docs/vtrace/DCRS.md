@@ -75,7 +75,7 @@ unit test now covers artifact promotion into the label pipeline path.
 
 ## DCR-003: External User Walkthrough
 
-Status: partial_l1.
+Status: partial_l1_ready_for_external_run.
 
 Problem: WP-008 repaired non-author workflow documentation at L0, but no non-author has yet followed the special-master, state-staff, researcher, or public-reviewer paths and recorded friction.
 
@@ -208,9 +208,11 @@ reproducibility class as `release-subset-smoke`, records fixture replay evidence
 and the VT `official_proposal/2020` build/analyze/report/verify SHA-chain smoke,
 and lists the required full release-subset/full-scale fields. The maintenance
 harness `scripts/maintenance/dcr007_release_subset_replay.py` now captures a
-candidate replay record with environment, clean-source policy, command outputs,
-and artifact hashes. L2 closure remains open until that harness, or an equivalent
-reviewed procedure, is executed from a clean data-backed checkout and reviewed.
+candidate replay record with environment/tool versions, clean-source policy,
+config/data hashes, algorithm/search parameters, resolved METIS engine, command
+outputs, and artifact hashes. L2 closure remains open until that harness, or an
+equivalent reviewed procedure, is executed from a clean data-backed checkout and
+reviewed.
 
 ## Change Control
 
