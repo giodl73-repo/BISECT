@@ -63,6 +63,12 @@ generated artifact hashes. The replay record separates `clean_for_l2_replay`
 from `candidate_command_allowed` so data-dirty candidate execution cannot be
 mistaken for clean replay evidence.
 
+The strict L2 launcher
+`scripts/maintenance/dcr007_clean_replay.py` performs the operator cleanliness
+gate before invoking the harness. It refuses any non-empty `git status
+--short`, rejects `--allow-dirty-data`, and then delegates to
+`dcr007_release_subset_replay.py` only when the checkout is clean.
+
 Typical candidate preflight while local data manifests are dirty:
 
 ```bash
@@ -72,7 +78,7 @@ python scripts/maintenance/dcr007_release_subset_replay.py --preflight-only --al
 Typical clean release-subset replay command:
 
 ```bash
-python scripts/maintenance/dcr007_release_subset_replay.py
+python scripts/maintenance/dcr007_clean_replay.py
 ```
 
 ## L2 clean replay packet
@@ -98,7 +104,7 @@ Operator tasks:
 1. Start from a clean checkout at the declared commit.
 2. Provision the declared source data without modifying tracked files.
 3. Run `git --no-pager status --short` and confirm there is no output.
-4. Run `python scripts/maintenance/dcr007_release_subset_replay.py` without `--allow-dirty-data`.
+4. Run `python scripts/maintenance/dcr007_clean_replay.py`; the strict launcher must reject dirty checkouts before the replay harness starts.
 5. Confirm the JSON record reports `clean_for_l2_replay: true`, `candidate_command_allowed: true`, `result: replay_pass`, and all command exit codes are 0.
 6. Inspect `label-verify` output and confirm the config, build-index, and analysis-index SHA links are `MATCH` with verdict `VERIFIED`.
 7. Preserve the replay JSON and any promoted evidence package under the declared custody rule.

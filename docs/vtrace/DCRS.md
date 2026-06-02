@@ -216,7 +216,7 @@ outputs, and artifact hashes. A 2026-06-02 local candidate replay at commit
 verify for `official_proposal/2020` VT and hashed 9 artifacts, but used
 `--allow-dirty-data` with local `data/manifest.json` modified. L2 closure remains
 open until an equivalent procedure is executed from a clean data-backed checkout
-and reviewed.
+through `scripts/maintenance/dcr007_clean_replay.py` and reviewed.
 
 ## Change Control
 

@@ -69,7 +69,7 @@ TRACE is control-plane evidence. It proves that the accepted baseline is mapped 
 | DCR-004 | Stable public evidence package contract. | REQ-005, REQ-006, REQ-024, REQ-026, REQ-027, SPEC-004, SPEC-010, IF-006, DES-013, WP-005, WP-006 | Closed L1 via `EVIDENCE_PACKAGE_CONTRACT.md` and its internal package checklist; L2 public artifact and custody review remain required before downstream contract claims. |
 | DCR-005 | Central import compatibility matrix. | REQ-003, REQ-031, SPEC-002, SPEC-NF-007, IF-008, DES-013, WP-002 | Closed L1 via `IMPORT_COMPATIBILITY.md`; L2 still required if used as public interoperability evidence. |
 | DCR-006 | Court/legal packaging boundary. | REQ-010, REQ-011, REQ-026, SPEC-006, SPEC-010, IF-006, DES-013, WP-005, WP-006 | Closed L1 via `COURT_PACKAGING_BOUNDARY.md` and its internal boundary checklist; L2 legal-boundary review remains required before court-ready or filing-ready language. |
-| DCR-007 | Full-scale or declared-subset reproducibility run. | REQ-007, REQ-008, REQ-009, REQ-012, SPEC-005, SPEC-NF-001, IF-001, IF-002, DES-013, WP-003 | Partial L1 release-subset candidate evidence plus an L2 clean replay packet via `REPRODUCIBILITY_RUN.md`; `scripts/maintenance/dcr007_release_subset_replay.py` captured a data-dirty VT candidate replay, but L2 clean replay review remains required before full-release or clean release-subset reproducibility claims. |
+| DCR-007 | Full-scale or declared-subset reproducibility run. | REQ-007, REQ-008, REQ-009, REQ-012, SPEC-005, SPEC-NF-001, IF-001, IF-002, DES-013, WP-003 | Partial L1 release-subset candidate evidence plus an L2 clean replay packet via `REPRODUCIBILITY_RUN.md`; `scripts/maintenance/dcr007_release_subset_replay.py` captured a data-dirty VT candidate replay, and `scripts/maintenance/dcr007_clean_replay.py` now enforces the clean-run operator gate, but L2 clean replay review remains required before full-release or clean release-subset reproducibility claims. |
 
 ## Current Orphan And Gap Status
 
@@ -80,7 +80,7 @@ TRACE is control-plane evidence. It proves that the accepted baseline is mapped 
 | Architecture IDs mapped | fixed in WP-001 | ARCH-001, ARCH-002, ARCH-003, ARCH-004, ARCH-005 are now mapped. |
 | CR-003 mapped | fixed in WP-001 | CR-003 maps to WP-002 because version-unknown compatibility and explicit error posture are interface/boundary verification obligations. |
 | Implementation compliance | not claimed | Downstream WPs must validate, fix, gap, or risk-record implementation behavior. |
-| Release-readiness DCR coverage | partially executed | DCR-001 is closed at L2; DCR-002, DCR-004, DCR-005, and DCR-006 are closed at L1; DCR-003 and DCR-007 retain bounded partial evidence without external-user or L2 reproducibility closure claims; DCR-003 now has an external-operator packet and DCR-007 has a reusable replay-capture harness, data-dirty VT candidate replay, and clean replay packet for future closure evidence. |
+| Release-readiness DCR coverage | partially executed | DCR-001 is closed at L2; DCR-002, DCR-004, DCR-005, and DCR-006 are closed at L1; DCR-003 and DCR-007 retain bounded partial evidence without external-user or L2 reproducibility closure claims; DCR-003 now has an external-operator packet and DCR-007 has a reusable replay-capture harness, data-dirty VT candidate replay, clean replay packet, and strict clean-run launcher for future closure evidence. |
 
 ## Change Control
 
