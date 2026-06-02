@@ -150,6 +150,9 @@ North Carolina ($k=14=7\times 2$): ApportionRegions gives **7D/7R** vs. standard
 `internal_engineering_baseline_only`: maintainers may continue controlled
 internal work, but public release, legal/court, external-user, and clean
 reproducibility readiness remain blocked until the named VTRACE DCR gates pass.
+Use
+[`docs/vtrace/COMMUNICATIONS_STRATEGY.md`](docs/vtrace/COMMUNICATIONS_STRATEGY.md)
+before changing public/operator wording or claim posture.
 
 ---
 

@@ -59,6 +59,8 @@ Before closing a future VTRACE-governed change, confirm:
   or L2 external/golden/clean replay evidence.
 - Public-facing language avoids unsupported release, certification, court-ready,
   clean-replay, universal-compatibility, and non-author validation claims.
+- Public/operator communications follow `COMMUNICATIONS_STRATEGY.md` when they
+  change audience, channel, claim class, or review posture.
 - Generated artifacts remain ignored/local unless custody review promotes them.
 - `STAGE_EXECUTION.md`, `TRACE.md`, `CODE_RIGOR.md`, and `REVIEW.md` are updated
   when the change alters evidence posture.

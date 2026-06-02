@@ -600,7 +600,7 @@ Gate type: documentation discoverability review.
 
 | Check | Result | Disposition |
 |---|---|---|
-| Main docs point to VTRACE | pass | README and CLI reference direct maintainers to `docs/vtrace/INDEX.md`. |
+| Main docs point to VTRACE | pass | README and CLI reference direct maintainers to `docs/vtrace/INDEX.md` and route public/operator wording changes to `docs/vtrace/COMMUNICATIONS_STRATEGY.md`. |
 | Posture is explicit | pass | Both pointers state `internal_engineering_baseline_only`. |
 | Readiness is not upgraded | pass | The pointers keep public release, legal/court, external-user, and clean reproducibility readiness blocked pending DCR gates. |
 
@@ -767,3 +767,29 @@ Decision: `complete_internal_control_wave`.
 Rationale: The wave was scoped to internal VTRACE baseline maintenance and
 deferred routing/control cleanup. Closing it records completion of that scope
 without treating routing controls as release evidence or changing S6 posture.
+
+## Communications Strategy Review
+
+Date: 2026-06-02
+
+Scope: `docs/vtrace/COMMUNICATIONS_STRATEGY.md`, `docs/vtrace/INDEX.md`,
+`docs/vtrace/BASELINE_HANDOFF.md`, `docs/vtrace/TRACE.md`,
+`docs/vtrace/STAGE_EXECUTION.md`, and `docs/vtrace/CODE_RIGOR.md`.
+
+Gate type: communications-control review for public/operator wording and claim
+boundaries.
+
+| Check | Result | Disposition |
+|---|---|---|
+| Audiences are explicit | pass | Maintainers, researchers, operators, civic reviewers, officials/auditors, and legal readers each have approved posture and caveats. |
+| Message classes are bounded | pass | Internal baseline, research, algorithm explanation, public artifact, reproducibility, usability, and legal framing classes each list allowed and blocked wording. |
+| Channels are routed | pass | README, quickstarts, papers, journals, legal docs, generated artifacts, and wave/pulse records each name review triggers. |
+| Claim packet is defined | pass | Public-facing changes must record claim text, audience/channel, evidence pointer, validation level, limitations, and review lane. |
+| Readiness posture unchanged | pass | The strategy does not publish a release, select a public bundle, close DCRs, validate non-authors, certify legal readiness, or upgrade S6 posture. |
+
+Decision: `bounded_communications_control`.
+
+Rationale: Docs support made the VTRACE baseline more visible, so the repository
+needed one operator-facing communication surface that keeps README, papers,
+quickstarts, legal docs, generated artifacts, and wave/pulse records aligned
+with the accepted claim boundary.

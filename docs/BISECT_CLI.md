@@ -10,7 +10,8 @@ the core redistricting work.
 posture is `internal_engineering_baseline_only`; CLI evidence can support
 controlled internal engineering work, but public release, legal/court,
 external-user, and clean reproducibility readiness remain blocked until the
-named VTRACE DCR gates pass.
+named VTRACE DCR gates pass. Use `docs/vtrace/COMMUNICATIONS_STRATEGY.md`
+before changing public/operator wording or claim posture.
 
 ---
 
