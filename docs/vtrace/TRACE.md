@@ -1,8 +1,8 @@
 # BISECT VTRACE Trace Control Spine
 
-**Status**: S4 WP-001 baseline, accepted with controlled gaps
-**Stage**: S4 Work Package Execution
-**Last updated**: 2026-05-31
+**Status**: S5 integration control started, accepted with controlled gaps
+**Stage**: S5 Integration
+**Last updated**: 2026-06-01
 
 This file is the trace-control spine for the BISECT VTRACE adaptation. It maps accepted mission, CONOPS, requirements, specification, S2 design, S3 code-rigor, S4 work-package, and filed DCR IDs to verification/validation obligations or explicit dispositions.
 
@@ -81,6 +81,14 @@ TRACE is control-plane evidence. It proves that the accepted baseline is mapped 
 | CR-003 mapped | fixed in WP-001 | CR-003 maps to WP-002 because version-unknown compatibility and explicit error posture are interface/boundary verification obligations. |
 | Implementation compliance | not claimed | Downstream WPs must validate, fix, gap, or risk-record implementation behavior. |
 | Release-readiness DCR coverage | partially executed | DCR-001 is closed at L2; DCR-002, DCR-004, DCR-005, and DCR-006 are closed at L1; DCR-003 and DCR-007 retain bounded partial evidence without external-user or L2 reproducibility closure claims; DCR-003 now has an external-operator packet and prefilled record helper, while DCR-007 has a reusable replay-capture harness, data-dirty VT candidate replay, clean replay packet, and strict clean-run launcher for future closure evidence. |
+
+## S5 Integration Trace
+
+| Integration control | Source evidence | Current disposition |
+|---|---|---|
+| Work-package closure integrated | WP-001..WP-008 in `WORK_PACKAGES.md`; S4 evidence in `STAGE_EXECUTION.md` | S4 closure evidence is integrated for control-plane use; release-level claims remain bounded by DCR status. |
+| DCR posture integrated | DCR-001..DCR-007 in `DCRS.md`; `INTEGRATION.md` DCR posture matrix | DCR-001 is L2 fixture-closed; DCR-002, DCR-004, DCR-005, and DCR-006 are L1-closed; DCR-003 and DCR-007 remain open for L2. |
+| Claim and custody gates integrated | `EVIDENCE_PACKAGE_CONTRACT.md`; `COURT_PACKAGING_BOUNDARY.md`; `REPRODUCIBILITY_RUN.md` | S5 may support internal engineering baseline claims, but public release, legal/court, clean replay, and non-author readiness claims remain blocked until selected evidence exists. |
 
 ## Change Control
 
