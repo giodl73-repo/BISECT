@@ -113,6 +113,29 @@ RPLAN factoring and U.20 audit contract:
 
 ---
 
+## Track Y -- Bio-Symmetry Spatial Factorization
+
+Track Y is source-only research for cohesion-weighted, symmetry-aware spatial
+factorization. It studies whether local graph cycles, approximate tract
+symmetries, bridge-like separators, and bio-inspired network reinforcement can
+improve BISECT edge weighting and fairness-invariance validation.
+
+| Code | Title | Status |
+|------|-------|--------|
+| Y.0 | Bio-Symmetry Spatial Factorization Overview | planned; [plan](../research/tracks/Y-bio-symmetry-spatial-factorization/Y.0+bio-symmetry-spatial-factorization-overview/plan.md) |
+| Y.1 | Cohesion-Weighted Bisection | planned; [plan](../research/tracks/Y-bio-symmetry-spatial-factorization/Y.1+cohesion-weighted-bisection/plan.md) |
+| Y.2 | Local Symmetry And Tract Orbits | planned; [plan](../research/tracks/Y-bio-symmetry-spatial-factorization/Y.2+local-symmetry-and-tract-orbits/plan.md) |
+| Y.3 | Cycle-Supported Cut Weighting | planned; [plan](../research/tracks/Y-bio-symmetry-spatial-factorization/Y.3+cycle-supported-cut-weighting/plan.md) |
+| Y.4 | Biological Network Analogues For Spatial Districting | planned; [plan](../research/tracks/Y-bio-symmetry-spatial-factorization/Y.4+biological-network-analogues/plan.md) |
+| Y.5 | Fairness Invariance Harness For Redistricting Modes | planned; [plan](../research/tracks/Y-bio-symmetry-spatial-factorization/Y.5+fairness-invariance-harness/plan.md) |
+
+Track folder:
+[`research/tracks/Y-bio-symmetry-spatial-factorization/`](../research/tracks/Y-bio-symmetry-spatial-factorization/).
+Implementation spec:
+[`docs/specs/2026-06-06-y1-cohesion-weighted-bisection.md`](specs/2026-06-06-y1-cohesion-weighted-bisection.md).
+
+---
+
 ## Track V — Vote Counting, Certification, And Public Verification
 
 The election-counting fixed point. RPLAN verifies the plan; RCOUNT verifies the

@@ -62,11 +62,38 @@ pub struct AlgorithmSection {
     pub structure: String,
 
     /// Layer 2: edge weight mode.
-    /// Values: unweighted | geographic | county | vra-aligned | proportional
+    /// Values: unweighted | geographic | county | vra-aligned | proportional | cohesion
     pub weights: Option<String>,
 
     /// County stickiness factor (T.3). Required when weights == "county".
     pub alpha_county: Option<f64>,
+
+    /// Cohesion cycle-support factor. Only used when weights == "cohesion".
+    pub cohesion_alpha_cycle: Option<f64>,
+
+    /// Cohesion module-affinity factor. Reserved; module affinity is disabled
+    /// in the current implementation.
+    pub cohesion_alpha_module: Option<f64>,
+
+    /// Cohesion geography-affinity factor. Reserved; physical geography is
+    /// disabled in the current default profile.
+    pub cohesion_alpha_geo: Option<f64>,
+
+    /// Cohesion bridge-likeness penalty factor.
+    pub cohesion_alpha_bridge: Option<f64>,
+
+    /// Cohesion barrier-penalty factor. Reserved; physical geography is disabled
+    /// in the current default profile.
+    pub cohesion_alpha_barrier: Option<f64>,
+
+    /// Minimum clamped population mass factor.
+    pub cohesion_min_mass: Option<f64>,
+
+    /// Maximum clamped population mass factor.
+    pub cohesion_max_mass: Option<f64>,
+
+    /// Bounded alternate-path search depth for cycle support.
+    pub cohesion_max_cycle_depth: Option<usize>,
 
     /// Layer 3: seed search strategy.
     /// Values: single | multi | convergence | short-burst
@@ -255,10 +282,16 @@ impl AlgoYaml {
                     geographic: true,
                     ..WeightSpec::default()
                 },
+                "cohesion" => WeightSpec {
+                    geographic: true,
+                    cohesion: true,
+                    cohesion_params: Some(cohesion_params_from_section(sec)),
+                    ..WeightSpec::default()
+                },
                 other => {
                     return Err(format!(
                         "[CONFIG] config: unknown weights '{}'. \
-                         Valid values: unweighted | geographic | county | vra-aligned | proportional",
+                         Valid values: unweighted | geographic | county | vra-aligned | proportional | cohesion",
                         other
                     ));
                 }
@@ -386,6 +419,22 @@ impl AlgoYaml {
     }
 }
 
+fn cohesion_params_from_section(sec: &AlgorithmSection) -> bisect_core::CohesionParams {
+    let defaults = bisect_core::CohesionParams::default();
+    bisect_core::CohesionParams {
+        alpha_cycle: sec.cohesion_alpha_cycle.unwrap_or(defaults.alpha_cycle),
+        alpha_module: sec.cohesion_alpha_module.unwrap_or(defaults.alpha_module),
+        alpha_geo: sec.cohesion_alpha_geo.unwrap_or(defaults.alpha_geo),
+        alpha_bridge: sec.cohesion_alpha_bridge.unwrap_or(defaults.alpha_bridge),
+        alpha_barrier: sec.cohesion_alpha_barrier.unwrap_or(defaults.alpha_barrier),
+        min_mass: sec.cohesion_min_mass.unwrap_or(defaults.min_mass),
+        max_mass: sec.cohesion_max_mass.unwrap_or(defaults.max_mass),
+        max_cycle_depth: sec
+            .cohesion_max_cycle_depth
+            .unwrap_or(defaults.max_cycle_depth),
+    }
+}
+
 // ---------------------------------------------------------------------------
 // `BISECT config new` — write a template YAML to configs/X.yml
 // ---------------------------------------------------------------------------
@@ -415,6 +464,14 @@ pub fn write_template_config(
         structure: structure.to_string(),
         weights: weights.map(|s| s.to_string()),
         alpha_county,
+        cohesion_alpha_cycle: None,
+        cohesion_alpha_module: None,
+        cohesion_alpha_geo: None,
+        cohesion_alpha_bridge: None,
+        cohesion_alpha_barrier: None,
+        cohesion_min_mass: None,
+        cohesion_max_mass: None,
+        cohesion_max_cycle_depth: None,
         search: search.map(|s| s.to_string()),
         convergence_threshold,
         seeds,
@@ -1371,6 +1428,56 @@ algorithm:
             algo.weights.geographic,
             "vra-aligned must also set geographic=true"
         );
+    }
+
+    #[test]
+    fn test_weights_cohesion_enables_cohesion_signal() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  weights: cohesion
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert!(
+            algo.weights.geographic,
+            "cohesion must keep geographic base"
+        );
+        assert!(
+            algo.weights.cohesion,
+            "weights: cohesion must enable the cohesion signal"
+        );
+    }
+
+    #[test]
+    fn test_weights_cohesion_accepts_non_default_params() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  weights: cohesion
+  cohesion_alpha_cycle: 0.75
+  cohesion_alpha_bridge: 0.10
+  cohesion_min_mass: 0.80
+  cohesion_max_mass: 1.50
+  cohesion_max_cycle_depth: 4
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        let params = algo
+            .weights
+            .cohesion_params
+            .expect("cohesion params should be present for weights: cohesion");
+        assert_eq!(params.alpha_cycle, 0.75);
+        assert_eq!(params.alpha_bridge, 0.10);
+        assert_eq!(params.min_mass, 0.80);
+        assert_eq!(params.max_mass, 1.50);
+        assert_eq!(params.max_cycle_depth, 4);
     }
 
     // ── Test 29: search "multi" with no seeds → defaults to 50 ───────────────

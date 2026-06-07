@@ -1,0 +1,41 @@
+{
+  "adjacency": null,
+  "adjacency_override": null,
+  "candidate_paths": [
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\outputs\\data\\2020\\adjacency\\ca.adj.bin",
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\outputs\\data\\2020\\adjacency\\CA.adj.bin",
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\outputs\\data\\2020\\adjacency\\ca_adjacency_2020.adj.bin",
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\outputs\\data\\2020\\adjacency\\CA_adjacency_2020.adj.bin",
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\data\\2020\\adjacency\\ca.adj.bin",
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\data\\2020\\adjacency\\CA.adj.bin",
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\outputs\\V3\\data\\2020\\adjacency\\ca_adjacency_2020.pkl",
+    "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\outputs\\V3\\data\\2020\\adjacency\\CA_adjacency_2020.pkl"
+  ],
+  "error": "No California adjacency artifact found.",
+  "fetch_attempt": {
+    "checked_releases": {
+      "giodl73-repo/BISECT": [],
+      "giodl73-repo/REDIST": []
+    },
+    "command": "cargo run -p bisect-cli -- fetch --year 2020 --states CA --type adjacency --release",
+    "exit_code": 1,
+    "manifest_release": "data-inputs-v1",
+    "manifest_repo": "giodl73-repo/REDIST",
+    "stderr_summary": "gh release download failed: release not found"
+  },
+  "manifest": {
+    "data_inputs_release": "data-inputs-v1",
+    "github_repo": "giodl73-repo/REDIST",
+    "local_data_dir": "data",
+    "local_outputs_dir": "outputs",
+    "source_path": "C:\\src\\TRACKER\\repos\\election-systems\\bisect\\data\\manifest.json"
+  },
+  "next_command": "cargo run -p bisect-cli -- fetch --year 2020 --states CA --type adjacency --release",
+  "next_step": "fetch_or_supply_adjacency_artifact",
+  "ready": false,
+  "release_check_command": "gh release view data-inputs-v1 --repo giodl73-repo/REDIST",
+  "repo_root": "C:\\src\\TRACKER\\repos\\election-systems\\bisect",
+  "schema": "bisect.track_y.ca_subset_preflight.v1",
+  "state": "CA",
+  "year": 2020
+}

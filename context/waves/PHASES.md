@@ -55,6 +55,7 @@
 | 2026-05-14 | RGRAPH Mask Edge Cut Consumer | Route bitmask edge-cut counting through `rgraph-core` adapter without adding new API | archived |
 | 2026-05-14 | CLI Weighted Cut Scoring Cleanup | Consolidate repeated weighted edge-cut scoring locally without promoting it to `rgraph-core` | archived |
 | 2026-06-01 | VTRACE Baseline Maintenance | First live VTRACE-governed maintenance wave after S6 internal baseline selection | archived |
+| 2026-06-06 | Track Y Bio-Symmetry Spatial Factorization | Cohesion-weighted bisection research track, Layer 2 design, fixtures, and implementation plan | active |
 
 ## Operating Model
 

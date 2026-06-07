@@ -420,6 +420,94 @@ impl EdgeWeighter for HousingCharacterWeighter {
 }
 
 // ---------------------------------------------------------------------------
+// Step 5c -- Track Y cohesion weights
+// ---------------------------------------------------------------------------
+
+/// Multiplies existing edge weights by local cycle/population cohesion factors.
+///
+/// The factor is computed with unit boundary weights, so the weighter preserves
+/// the upstream base signal while adding the Track Y structural signal:
+/// cycle-supported edges get stronger, bridge-like edges get weaker, and dense
+/// local population neighborhoods contribute more mass.
+pub struct CohesionWeighter {
+    factors: HashMap<(usize, usize), f64>,
+}
+
+impl CohesionWeighter {
+    pub fn try_new(
+        adjacency: Vec<Vec<usize>>,
+        vertex_weights: Vec<i64>,
+        params: bisect_core::CohesionParams,
+    ) -> Result<Self, String> {
+        Self::try_new_with_geography(
+            adjacency,
+            vertex_weights,
+            bisect_core::CohesionGeography::default(),
+            params,
+        )
+    }
+
+    pub fn try_new_with_geography(
+        adjacency: Vec<Vec<usize>>,
+        vertex_weights: Vec<i64>,
+        geography: bisect_core::CohesionGeography,
+        params: bisect_core::CohesionParams,
+    ) -> Result<Self, String> {
+        let graph = bisect_core::Graph::new(adjacency, vertex_weights)
+            .map_err(|e| format!("invalid graph: {e}"))?;
+        let unit_weights = unit_edge_weights(&graph);
+        let terms = bisect_core::cohesion_edge_terms_with_geography(
+            &graph,
+            &unit_weights,
+            &geography,
+            params,
+        )
+        .map_err(|e| e.to_string())?;
+        let factors = terms
+            .into_iter()
+            .map(|term| ((term.u, term.v), term.cohesion_weight))
+            .collect();
+        Ok(Self { factors })
+    }
+}
+
+impl EdgeWeighter for CohesionWeighter {
+    fn apply(&self, weights: EdgeMap) -> EdgeMap {
+        weights
+            .into_iter()
+            .map(|((u, v), w)| {
+                let key = canonical_edge(u, v);
+                let factor = self.factors.get(&key).copied().unwrap_or(1.0);
+                (key, w * factor)
+            })
+            .collect()
+    }
+}
+
+fn unit_edge_weights(graph: &bisect_core::Graph) -> EdgeMap {
+    graph
+        .adjacency
+        .iter()
+        .enumerate()
+        .flat_map(|(u, neighbors)| {
+            neighbors
+                .iter()
+                .copied()
+                .filter(move |&v| u < v)
+                .map(move |v| ((u, v), 1.0))
+        })
+        .collect()
+}
+
+fn canonical_edge(u: usize, v: usize) -> (usize, usize) {
+    if u < v {
+        (u, v)
+    } else {
+        (v, u)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Step 6 — COI (Community of Interest) file-based weights
 // ---------------------------------------------------------------------------
 
@@ -1026,6 +1114,83 @@ mod tests {
             (out[&(0, 1)] - 300.0).abs() < 1e-9,
             "3/6 zones shared, alpha=1.0 must give weight * 1.5 = 300.0, got {}",
             out[&(0, 1)]
+        );
+    }
+
+    // ── CohesionWeighter L0 tests ──────────────────────────────────────────
+
+    #[test]
+    fn cohesion_weighter_boosts_cycle_edge_over_bridge_edge() {
+        let adjacency = vec![
+            vec![1, 3],
+            vec![0, 2, 4],
+            vec![1, 3],
+            vec![0, 2],
+            vec![1, 5],
+            vec![4],
+        ];
+        let populations = vec![100, 100, 100, 100, 100, 100];
+        let weighter = CohesionWeighter::try_new(
+            adjacency,
+            populations,
+            bisect_core::CohesionParams::default(),
+        )
+        .expect("cohesion weighter must build for a valid graph");
+        let out = weighter.apply(edge_map(&[((0, 1), 10.0), ((4, 5), 10.0)]));
+
+        assert!(
+            out[&(0, 1)] > out[&(4, 5)],
+            "cycle-supported edges should score above bridge-like edges"
+        );
+    }
+
+    #[test]
+    fn cohesion_weighter_accepts_declared_geography_terms() {
+        let adjacency = vec![vec![1], vec![0, 2], vec![1]];
+        let populations = vec![100, 100, 100];
+        let mut geography = bisect_core::CohesionGeography::default();
+        geography.geo_affinity.insert((0, 1), 1.0);
+        geography.barrier_penalty.insert((1, 2), 1.0);
+        let params = bisect_core::CohesionParams {
+            alpha_cycle: 0.0,
+            alpha_bridge: 0.0,
+            alpha_geo: 0.50,
+            alpha_barrier: 0.50,
+            ..bisect_core::CohesionParams::default()
+        };
+        let weighter =
+            CohesionWeighter::try_new_with_geography(adjacency, populations, geography, params)
+                .expect("cohesion weighter must build with declared geography");
+        let out = weighter.apply(edge_map(&[((0, 1), 10.0), ((1, 2), 10.0)]));
+
+        assert!(
+            out[&(0, 1)] > out[&(1, 2)],
+            "declared corridor edge should score above declared barrier edge"
+        );
+    }
+
+    #[test]
+    fn cohesion_weighter_boosts_dense_core_over_sparse_peer() {
+        let adjacency = vec![
+            vec![1, 2],
+            vec![0, 2],
+            vec![0, 1],
+            vec![4, 5],
+            vec![3, 5],
+            vec![3, 4],
+        ];
+        let populations = vec![1_000, 1_000, 1_000, 10, 10, 10];
+        let weighter = CohesionWeighter::try_new(
+            adjacency,
+            populations,
+            bisect_core::CohesionParams::default(),
+        )
+        .expect("cohesion weighter must build for matched synthetic triangles");
+        let out = weighter.apply(edge_map(&[((0, 1), 10.0), ((3, 4), 10.0)]));
+
+        assert!(
+            out[&(0, 1)] > out[&(3, 4)],
+            "dense local population mass should make matched mesh edges costlier"
         );
     }
 

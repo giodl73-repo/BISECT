@@ -1,0 +1,20 @@
+{
+  "accepted_for_pulse_05": false,
+  "artifacts": {
+    "comparison": null,
+    "fixture": null,
+    "preflight": "research\\tracks\\Y-bio-symmetry-spatial-factorization\\Y.1+cohesion-weighted-bisection\\ca-subset-preflight.json",
+    "run_plan": "research\\tracks\\Y-bio-symmetry-spatial-factorization\\Y.1+cohesion-weighted-bisection\\ca-subset-run-plan.json"
+  },
+  "base_dir": "research\\tracks\\Y-bio-symmetry-spatial-factorization\\Y.1+cohesion-weighted-bisection",
+  "blocking_reasons": [
+    "No California adjacency artifact found.",
+    "preflight is not ready",
+    "fixture is missing",
+    "preflight has no adjacency path"
+  ],
+  "claim_boundary": "workflow status only; not statewide, legal, or fairness evidence",
+  "next_step": "fetch_or_supply_adjacency_artifact",
+  "schema": "bisect.track_y.pulse05_status.v1",
+  "stage": "run_plan"
+}

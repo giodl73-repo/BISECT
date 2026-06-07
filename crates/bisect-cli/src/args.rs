@@ -1499,6 +1499,9 @@ pub enum WeightMode {
     /// and EIA Form 861. Download: bisect fetch --type school-districts --type eia-861
     #[value(name = "zone-membership")]
     ZoneMembership,
+    /// Geographic + local cycle/population cohesion signal (Track Y).
+    #[value(name = "cohesion")]
+    Cohesion,
 }
 
 /// Layer 3 compositor: how to search the seed space.
@@ -1737,7 +1740,8 @@ pub struct StateArgs {
     pub structure: Option<StructureMode>,
 
     /// COMPOSITOR Layer 2 — override the edge/vertex weight signal.
-    /// Possible values: unweighted, geographic, county, vra-aligned, proportional.
+    /// Possible values: unweighted, geographic, county, vra-aligned, proportional,
+    /// economic-character, housing-character, zone-membership, cohesion.
     /// Example: --partition-mode apportion-regions --weights county --alpha-county 3.0
     #[arg(long)]
     pub weights_override: Option<WeightMode>,
@@ -3109,6 +3113,7 @@ mod tests {
             ("economic-character", WeightMode::EconomicCharacter),
             ("housing-character", WeightMode::HousingCharacter),
             ("zone-membership", WeightMode::ZoneMembership),
+            ("cohesion", WeightMode::Cohesion),
         ];
         for (s, expected) in cases {
             let parsed = WeightMode::from_str(s, true)

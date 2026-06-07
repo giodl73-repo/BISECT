@@ -119,6 +119,11 @@ pub struct PlanManifest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edge_cut: Option<f64>,
 
+    /// Relative path to the cohesion sidecar (`bisect.cohesion.v1`) when the
+    /// cohesion weight profile was used.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cohesion_sidecar_path: Option<String>,
+
     // ── Spectral partitioning audit fields ───────────────────────────────────
     /// Spectral smoothing iterations per recursive bisection node.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1179,6 +1184,22 @@ mod tests {
         assert!(
             json.get("edge_cut").is_none(),
             "edge_cut=None must be absent from serialized JSON (skip_serializing_if)"
+        );
+    }
+
+    #[test]
+    fn test_manifest_cohesion_sidecar_path_round_trip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            cohesion_sidecar_path: Some("data/cohesion.json".to_string()),
+            ..make_test_manifest("50")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(
+            parsed.cohesion_sidecar_path.as_deref(),
+            Some("data/cohesion.json")
         );
     }
 

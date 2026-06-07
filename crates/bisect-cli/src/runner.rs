@@ -344,6 +344,10 @@ pub struct WeightSpec {
     /// Boost factor for zone co-membership weighter. Default 1.0.
     /// score=1 (all zones shared) → w * (1 + zone_alpha). score=0 → w unchanged.
     pub zone_alpha: f64,
+    /// Enable Track Y local cycle/population cohesion weighting.
+    pub cohesion: bool,
+    /// Optional non-default cohesion parameters.
+    pub cohesion_params: Option<bisect_core::CohesionParams>,
 }
 
 impl Default for WeightSpec {
@@ -364,6 +368,8 @@ impl Default for WeightSpec {
             econ_alpha: 0.5,
             zone_membership: false,
             zone_alpha: 1.0,
+            cohesion: false,
+            cohesion_params: None,
         }
     }
 }
@@ -793,6 +799,11 @@ impl AlgorithmConfig {
                     geographic: true,
                     zone_membership: true,
                     zone_alpha: 1.0,
+                    ..WeightSpec::default()
+                },
+                WM::Cohesion => WeightSpec {
+                    geographic: true,
+                    cohesion: true,
                     ..WeightSpec::default()
                 },
             };
@@ -3058,6 +3069,14 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // 6. Write outputs atomically (rename-from-tmp pattern)
     write_state_outputs(&data_dir, &assignments, vra.as_ref())
         .map_err(|e| format!("output write failed: {e}"))?;
+    if cfg.algo.weights.cohesion {
+        write_cohesion_sidecar(
+            &data_dir,
+            &graph,
+            &assignments,
+            cfg.algo.weights.cohesion_params.unwrap_or_default(),
+        )?;
+    }
 
     // 6b. Compute edge-cut of the final partition.
     // Sum edge weights for all edges (u, v) whose endpoints are in different districts.
@@ -3186,6 +3205,11 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             source_format_fingerprint: None,
             import_compat_sha256: None,
             edge_cut: Some(edge_cut),
+            cohesion_sidecar_path: if cfg.algo.weights.cohesion {
+                Some("data/cohesion.json".to_string())
+            } else {
+                None
+            },
             spectral_iters: match &cfg.algo.split {
                 SplitStrategy::Spectral { max_iters } => Some(*max_iters),
                 _ => None,
@@ -3393,6 +3417,128 @@ fn count_ilp_solve_reports(intermediate_dir: &std::path::Path) -> usize {
         }
     }
     count
+}
+
+fn write_cohesion_sidecar(
+    data_dir: &std::path::Path,
+    graph: &crate::adjacency_loader::LoadedGraph,
+    assignments: &HashMap<usize, usize>,
+    params: bisect_core::CohesionParams,
+) -> Result<(), String> {
+    let core_graph = bisect_core::Graph::new(graph.adjacency.clone(), graph.vertex_weights.clone())
+        .map_err(|e| format!("cohesion sidecar graph construction failed: {e}"))?;
+    let terms = bisect_core::cohesion_edge_terms(&core_graph, &graph.edge_weights, params)
+        .map_err(|e| format!("cohesion sidecar term calculation failed: {e}"))?;
+
+    let edge_count = terms.len();
+    let cycle_supported_edges = terms.iter().filter(|term| term.cycle_support > 0.0).count();
+    let zero_cycle_edges = terms
+        .iter()
+        .filter(|term| term.cycle_support == 0.0)
+        .count();
+    let mut mass_factors: Vec<f64> = terms.iter().map(|term| term.mass_factor).collect();
+    let mass_factor_min = mass_factors
+        .iter()
+        .copied()
+        .min_by(f64::total_cmp)
+        .unwrap_or(0.0);
+    let mass_factor_max = mass_factors
+        .iter()
+        .copied()
+        .max_by(f64::total_cmp)
+        .unwrap_or(0.0);
+    let mass_factor_median = median_f64(&mut mass_factors);
+    let cut_terms: Vec<&bisect_core::CohesionEdgeTerms> = terms
+        .iter()
+        .filter(|term| {
+            assignments.get(&term.u).copied().unwrap_or(0)
+                != assignments.get(&term.v).copied().unwrap_or(0)
+        })
+        .collect();
+    let cut_edges = cut_terms.len();
+    let cut_edges_low_cycle = cut_terms
+        .iter()
+        .filter(|term| term.cycle_support == 0.0)
+        .count();
+    let cut_edges_low_cycle_share = if cut_edges == 0 {
+        None
+    } else {
+        Some(cut_edges_low_cycle as f64 / cut_edges as f64)
+    };
+    let cut_edges_avg_bridge_likeness = if cut_edges == 0 {
+        None
+    } else {
+        Some(
+            cut_terms
+                .iter()
+                .map(|term| term.bridge_likeness)
+                .sum::<f64>()
+                / cut_edges as f64,
+        )
+    };
+
+    let sidecar = serde_json::json!({
+        "schema": "bisect.cohesion.v1",
+        "weights": "cohesion",
+        "params": {
+            "alpha_cycle": params.alpha_cycle,
+            "alpha_module": params.alpha_module,
+            "alpha_geo": params.alpha_geo,
+            "alpha_bridge": params.alpha_bridge,
+            "alpha_barrier": params.alpha_barrier,
+            "min_mass": params.min_mass,
+            "max_mass": params.max_mass,
+            "max_cycle_depth": params.max_cycle_depth,
+            "module_affinity": "disabled",
+            "population_mass": "common-neighborhood-log-clamped",
+            "geo_affinity": "disabled",
+            "barrier_penalty": "disabled"
+        },
+        "edge_count": edge_count,
+        "cycle_supported_edges": cycle_supported_edges,
+        "zero_cycle_edges": zero_cycle_edges,
+        "exact_bridge_edges": null,
+        "geo_layers_used": [],
+        "mass_factor_min": mass_factor_min,
+        "mass_factor_median": mass_factor_median,
+        "mass_factor_max": mass_factor_max,
+        "cut_edges": cut_edges,
+        "cut_edges_low_cycle": cut_edges_low_cycle,
+        "cut_edges_low_cycle_share": cut_edges_low_cycle_share,
+        "cut_edges_avg_bridge_likeness": cut_edges_avg_bridge_likeness,
+        "forbidden_fields_used": []
+    });
+
+    let tmp_path = data_dir.join(".cohesion.tmp.json");
+    let final_path = data_dir.join("cohesion.json");
+    let json = serde_json::to_string_pretty(&sidecar)
+        .map_err(|e| format!("cohesion sidecar serialization failed: {e}"))?;
+    std::fs::write(&tmp_path, json).map_err(|e| {
+        format!(
+            "cohesion sidecar temp write failed {}: {e}",
+            tmp_path.display()
+        )
+    })?;
+    std::fs::rename(&tmp_path, &final_path).map_err(|e| {
+        format!(
+            "cohesion sidecar rename failed {}: {e}",
+            final_path.display()
+        )
+    })?;
+    Ok(())
+}
+
+fn median_f64(values: &mut [f64]) -> f64 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    values.sort_by(f64::total_cmp);
+    let mid = values.len() / 2;
+    if values.len() % 2 == 1 {
+        values[mid]
+    } else {
+        (values[mid - 1] + values[mid]) / 2.0
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -4229,8 +4375,8 @@ fn build_edge_weights(
     position: i32,
 ) -> Result<HashMap<(usize, usize), f64>, String> {
     use crate::edge_weights::{
-        ComposedWeighter, GeographicWeighter, MinorityOverrideWeighter, PartisanOverrideWeighter,
-        SubdivisionWeighter,
+        CohesionWeighter, ComposedWeighter, GeographicWeighter, MinorityOverrideWeighter,
+        PartisanOverrideWeighter, SubdivisionWeighter,
     };
 
     let edges: Vec<(usize, usize)> = graph
@@ -4297,6 +4443,22 @@ fn build_edge_weights(
             graph.n_vertices,
             spec.alpha_county,
         ));
+    }
+
+    // Step 4b: Track Y cohesion signal -- local cycle support, bridge likeness,
+    // and common-neighborhood population mass.
+    if spec.cohesion {
+        status(
+            position,
+            &format!("{state_code}: cohesion -- computing local edge terms"),
+        );
+        let cohesion = CohesionWeighter::try_new(
+            graph.adjacency.clone(),
+            graph.vertex_weights.clone(),
+            spec.cohesion_params.unwrap_or_default(),
+        )
+        .map_err(|e| format!("cohesion weight construction failed: {e}"))?;
+        composer = composer.push(cohesion);
     }
 
     // Step 5: Economic character similarity (M.9/M.1).
@@ -4568,6 +4730,43 @@ mod tests {
             .collect(),
             n_vertices: 5,
             n_edges: 4,
+            tract_centroids: Vec::new(),
+        }
+    }
+
+    fn cohesion_fixture_loaded_graph() -> crate::adjacency_loader::LoadedGraph {
+        crate::adjacency_loader::LoadedGraph {
+            adjacency: vec![
+                vec![1, 3],
+                vec![0, 2, 4],
+                vec![1, 3],
+                vec![0, 2],
+                vec![1, 5],
+                vec![4],
+            ],
+            vertex_weights: vec![100; 6],
+            edge_weights: [
+                ((0, 1), 10.0),
+                ((0, 3), 10.0),
+                ((1, 2), 10.0),
+                ((1, 4), 10.0),
+                ((2, 3), 10.0),
+                ((4, 5), 10.0),
+            ]
+            .into_iter()
+            .collect(),
+            index_to_geoid: [
+                (0, "53001000100".to_string()),
+                (1, "53001000200".to_string()),
+                (2, "53001000300".to_string()),
+                (3, "53001000400".to_string()),
+                (4, "53001000500".to_string()),
+                (5, "53001000600".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+            n_vertices: 6,
+            n_edges: 6,
             tract_centroids: Vec::new(),
         }
     }
@@ -5409,6 +5608,65 @@ mod tests {
             (ew - expected).abs() < 1e-9,
             "missing GEOID should default to w=1.0, got {ew:.4}"
         );
+    }
+
+    #[test]
+    fn build_edge_weights_cohesion_prefers_cycle_edge_over_bridge_edge() {
+        let graph = cohesion_fixture_loaded_graph();
+        let spec = WeightSpec {
+            cohesion: true,
+            ..WeightSpec::default()
+        };
+        let weights = build_edge_weights(
+            &spec,
+            &graph,
+            "WA",
+            "washington",
+            "2020",
+            &PathBuf::from("/tmp/test"),
+            999,
+        )
+        .expect("cohesion weights should build for synthetic graph");
+
+        assert!(
+            weights[&(0, 1)] > weights[&(4, 5)],
+            "runner cohesion path should make cycle-supported edge costlier than bridge-like edge"
+        );
+    }
+
+    #[test]
+    fn write_cohesion_sidecar_emits_v1_summary() {
+        let tmp = TempDir::new().unwrap();
+        let graph = cohesion_fixture_loaded_graph();
+        let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 1), (4, 2), (5, 1)]
+            .into_iter()
+            .collect();
+        let params = bisect_core::CohesionParams {
+            alpha_cycle: 0.75,
+            max_cycle_depth: 4,
+            ..bisect_core::CohesionParams::default()
+        };
+
+        write_cohesion_sidecar(tmp.path(), &graph, &assignments, params)
+            .expect("cohesion sidecar should write for synthetic graph");
+
+        let sidecar_path = tmp.path().join("cohesion.json");
+        assert!(sidecar_path.exists(), "cohesion sidecar must be written");
+        let value: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(sidecar_path).unwrap()).unwrap();
+        assert_eq!(value["schema"], "bisect.cohesion.v1");
+        assert_eq!(value["weights"], "cohesion");
+        assert_eq!(value["params"]["alpha_cycle"], 0.75);
+        assert_eq!(value["params"]["max_cycle_depth"], 4);
+        assert_eq!(value["edge_count"], 6);
+        assert_eq!(value["cycle_supported_edges"], 4);
+        assert_eq!(value["zero_cycle_edges"], 2);
+        assert_eq!(value["cut_edges"], 2);
+        assert_eq!(value["cut_edges_low_cycle"], 2);
+        assert_eq!(value["cut_edges_low_cycle_share"], 1.0);
+        assert_eq!(value["cut_edges_avg_bridge_likeness"], 1.0);
+        assert_eq!(value["geo_layers_used"].as_array().unwrap().len(), 0);
+        assert_eq!(value["forbidden_fields_used"].as_array().unwrap().len(), 0);
     }
 
     #[test]
@@ -7469,6 +7727,23 @@ mod tests {
         assert!(
             algo.weights.minority_weighting,
             "--weights-override vra-aligned must set minority_weighting=true"
+        );
+    }
+
+    #[test]
+    fn weights_override_cohesion_enables_cohesion_signal() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        let args =
+            StateArgs::parse_from(["state", "--state", "VT", "--weights-override", "cohesion"]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(
+            algo.weights.geographic,
+            "--weights-override cohesion must keep geographic base weights enabled"
+        );
+        assert!(
+            algo.weights.cohesion,
+            "--weights-override cohesion must enable the Track Y cohesion signal"
         );
     }
 

@@ -1,0 +1,14 @@
+{
+  "acceptance_reasons": [
+    "preflight is not ready",
+    "fixture is missing",
+    "preflight has no adjacency path"
+  ],
+  "accepted_for_pulse_05": false,
+  "base_dir": "research\\tracks\\Y-bio-symmetry-spatial-factorization\\Y.1+cohesion-weighted-bisection",
+  "claim_boundary": "command plan only; not a statewide, legal, or fairness claim",
+  "commands": {},
+  "comparison_command": "python scripts/research/track_y_compare_subset_runs.py --geographic-dir \"outputs/track-y-ca-subset/geographic\" --cohesion-dir \"outputs/track-y-ca-subset/cohesion\" --write-json \"research\\tracks\\Y-bio-symmetry-spatial-factorization\\Y.1+cohesion-weighted-bisection\\ca-subset-comparison.json\"",
+  "next_step": "fetch_or_supply_adjacency_artifact",
+  "schema": "bisect.track_y.subset_run_plan.v1"
+}
