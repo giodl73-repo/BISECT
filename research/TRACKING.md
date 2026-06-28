@@ -1,5 +1,10 @@
 # Research Paper Portfolio - Status Tracking
 
+> **STALE / ARCHIVED (2026-02-08 snapshot).** This file tracks the retired
+> 10-paper "gerry-*" portfolio and does NOT reflect the current 24-track (A–X)
+> program with 170+ compiled PDFs. For current research status see
+> [`docs/PAPERS.md`](../docs/PAPERS.md). Kept for historical reference only.
+
 **Last Updated**: February 8, 2026 (Auto-detected)
 **Total Papers**: 10
 **Quick Status**: Run `python research/check_paper_status.py` for live status

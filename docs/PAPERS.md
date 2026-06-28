@@ -1,6 +1,6 @@
 # Research Papers
 
-190+ papers across active tracks (A–G, I–V). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Some later-track drafts remain source-only and do not yet have PDFs in this index.
+190+ papers across active tracks (A–V). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. A few later-track drafts remain source-only (V.11–V.21 audit-algorithm papers, plus tracks W and X) and do not yet have PDFs in this index.
 
 Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
@@ -341,6 +341,98 @@ Operationalizing communities of interest as METIS edge weights. Each paper defin
 | M.9 | Economic Character Edge Weights via LODES — community similarity as edge modifier | [PDF](papers/M.9+economic-character-weights.pdf) | **Accepted** |
 | M.3 | Housing Character Edge Weights via ACS | [PDF](papers/M.3+housing-character-acs.pdf) | ACS housing smoke package added |
 | M.6 | Administrative Zone Co-membership (School/Fire/Electric Districts) | [PDF](papers/M.6+administrative-zone-membership.pdf) | **Accepted** |
+| M.2 | Land Use Edge Weights via NLCD: Residential-Commercial Transition Detection | [PDF](papers/M.2+land-use-nlcd.pdf) | compiled |
+| M.4 | Commuting Shed Similarity via LODES Origin-Destination Data | [PDF](papers/M.4+commuting-shed-lodes-od.pdf) | compiled |
+| M.5 | Topographic Feature Edge Weights via USGS 3DEP Elevation Data | [PDF](papers/M.5+topographic-features-srtm.pdf) | compiled |
+| M.7 | Transit Accessibility Edge Weights via GTFS Feed Data | [PDF](papers/M.7+transit-accessibility-gtfs.pdf) | compiled |
+| M.8 | Composite Community Character Index: Economic, Physical, Administrative, and Transit Signals | [PDF](papers/M.8+composite-community-index.pdf) | compiled |
+
+---
+
+## Track N — Population Counting (6 papers)
+
+Who counts, and where, before any line is drawn. Each paper treats one contested population-counting question and its effect on apportionment and district balance.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| N.0 | The Balance Metric: Who Counts in Congressional Redistricting? | [PDF](papers/N.0+population-counting-overview.pdf) |
+| N.1 | Prison Gerrymandering: Rural Inflation and Algorithmic Correction | [PDF](papers/N.1+prison-gerrymandering.pdf) |
+| N.2 | College Students and the Campus-vs.-Home Counting Problem | [PDF](papers/N.2+college-student-counting.pdf) |
+| N.3 | Noncitizen Populations and Citizen VAP Redistricting | [PDF](papers/N.3+noncitizen-vap.pdf) |
+| N.4 | Military and Overseas Populations in Redistricting | [PDF](papers/N.4+military-overseas.pdf) |
+| N.5 | Total Population vs. Citizen VAP: A 50-State Empirical Comparison | [PDF](papers/N.5+total-vs-citizen-vap-comparison.pdf) |
+
+---
+
+## Track O — Outcomes and Representation (6 papers)
+
+Downstream democratic outcomes of algorithmic maps: competitiveness, turnout, polarization, constituent distance, and a composite representation-quality index.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| O.0 | Redistricting and Democratic Outcomes: A Framework | [PDF](papers/O.0+outcomes-overview.pdf) |
+| O.1 | Electoral Competitiveness Under Algorithmic Redistricting | [PDF](papers/O.1+electoral-competitiveness.pdf) |
+| O.2 | Voter Turnout and Redistricting: Does Compactness Help? | [PDF](papers/O.2+voter-turnout.pdf) |
+| O.3 | Legislative Polarization Under Algorithmic vs. Enacted Plans | [PDF](papers/O.3+legislative-polarization.pdf) |
+| O.4 | Constituent-Representative Geographic Distance | [PDF](papers/O.4+constituent-distance.pdf) |
+| O.5 | A Composite Representation Quality Index | [PDF](papers/O.5+representation-quality-index.pdf) |
+
+---
+
+## Track P — Reform Pathways (6 papers)
+
+How algorithmic redistricting gets enacted — the political economy of reform plus federal, ballot-initiative, commission, and court-ordered adoption pathways.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| P.0 | The Political Economy of Redistricting Reform | [PDF](papers/P.0+reform-landscape.pdf) |
+| P.1 | The Districting Integrity Act: Legislative History and Constitutional Authority | [PDF](papers/P.1+federal-legislation.pdf) |
+| P.2 | State Ballot Initiative Pathways: California, Colorado, and Michigan | [PDF](papers/P.2+ballot-initiatives.pdf) |
+| P.3 | Integrating Algorithms into Commission Redistricting: The Iowa Model | [PDF](papers/P.3+commission-integration.pdf) |
+| P.4 | Court-Ordered Algorithmic Remedies: Procedure, Precedent, and Model Orders | [PDF](papers/P.4+court-remedies.pdf) |
+| P.5 | Implementation Costs, Administrative Law, and Audit Requirements | [PDF](papers/P.5+implementation-costs.pdf) |
+
+---
+
+## Track Q — Forward to 2030 (5 papers)
+
+Looking ahead to the 2030 cycle: demographic projections, Sun Belt/Rust Belt shifts, data-infrastructure needs, and reapportionment stability.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| Q.0 | Planning for 2030: Why Redistricting Infrastructure Must Begin Now | [PDF](papers/Q.0+2030-planning-overview.pdf) |
+| Q.1 | Demographic Projections for 2030 Congressional Redistricting | [PDF](papers/Q.1+demographic-projections.pdf) |
+| Q.2 | Sun Belt Growth and Rust Belt Decline: 2030 Implications | [PDF](papers/Q.2+sunbelt-rustbelt.pdf) |
+| Q.3 | Data Infrastructure for 2030: When Tracts Are No Longer Adequate | [PDF](papers/Q.3+data-infrastructure-2030.pdf) |
+| Q.4 | 2030 Reapportionment Projections and Algorithmic Stability | [PDF](papers/Q.4+reapportionment-projections.pdf) |
+
+---
+
+## Track R — Adversarial Robustness (5 papers)
+
+A taxonomy of gaming vectors (parameter, input-data, geography) and the audit chain that defends against them.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| R.0 | A Taxonomy of Gaming Vectors in Algorithmic Redistricting | [PDF](papers/R.0+gaming-taxonomy.pdf) |
+| R.1 | Parameter Gaming: Can Parameter Tuning Produce Partisan Plans? | [PDF](papers/R.1+parameter-gaming.pdf) |
+| R.2 | Input Data Manipulation: Census, GEOID, and Shapefile Integrity | [PDF](papers/R.2+input-data-manipulation.pdf) |
+| R.3 | Geographic Gaming: Resolution and Adjacency Choices | [PDF](papers/R.3+geography-gaming.pdf) |
+| R.4 | The Audit Chain as a Gaming Defense | [PDF](papers/R.4+audit-mechanisms.pdf) |
+
+---
+
+## Track S — Statistical Inference (5 papers)
+
+Statistical inference for gerrymandering detection: hypothesis testing, Bayesian methods, power analysis, and multiple-testing control.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| S.0 | Statistical Inference in Redistricting: Challenges and Framework | [PDF](papers/S.0+statistical-inference-overview.pdf) |
+| S.1 | Hypothesis Testing for Partisan Gerrymandering | [PDF](papers/S.1+hypothesis-testing.pdf) |
+| S.2 | Bayesian Redistricting: Prior Specification and Posterior Interpretation | [PDF](papers/S.2+bayesian-redistricting.pdf) |
+| S.3 | Power Analysis for Gerrymandering Detection | [PDF](papers/S.3+power-analysis.pdf) |
+| S.4 | Multiple Testing in Redistricting Analysis: FDR Control | [PDF](papers/S.4+multiple-testing.pdf) |
 
 ---
 
