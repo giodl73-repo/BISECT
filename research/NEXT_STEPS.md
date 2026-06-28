@@ -1,3 +1,9 @@
+> **STALE / ARCHIVED (early-2026 snapshot).** This document describes the
+> retired Python pipeline and a 7-paper plan. It does NOT reflect the current
+> state (the Rust `bisect` binary; 135+ compiled PDFs across 24 research
+> tracks). For current research status see `docs/PAPERS.md`. Kept for
+> historical reference only.
+
 # Research Portfolio: Immediate Next Steps
 
 ## Status Summary

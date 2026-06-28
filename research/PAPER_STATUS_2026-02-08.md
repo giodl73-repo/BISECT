@@ -1,4 +1,10 @@
 # Research Paper Portfolio Status
+
+> **STALE / ARCHIVED (2026-02-08 snapshot).** This 7-paper status predates the
+> Rust port and the full research program. It does NOT reflect the current
+> state (135+ compiled PDFs across 24 tracks). For current research status see
+> `docs/PAPERS.md`. Kept for historical reference only.
+
 **Updated**: 2026-02-08
 **Status Check**: Post-disconnection review of all active work threads
 
