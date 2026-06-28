@@ -1,0 +1,26 @@
+\section{Intended Fixtures}
+
+The fixtures for this paper follow the four-role W-series pattern defined by
+W.01. They are intended fixtures for later implementation, not existing code.
+Each method family needs the same roles with method-specific content.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Role & Change-point fixture & Discrepancy-clustering fixture \\
+\midrule
+No anomaly & A stable reporting sequence with no planted regime shift. & Audit discrepancies, if any, scattered according to the stated random baseline. \\
+Injected anomaly & A planted abrupt change in the ordered series. & A planted concentration of discrepancies in one scanner, batch, or source. \\
+Innocent structure & Mail-first or otherwise grouped reporting that creates a legitimate shift. & One high-volume scanner or batch with more observations because it processed more ballots. \\
+False-positive boundary & A high statistic whose investigation note points to the reporting workflow. & A high concentration score whose note points to operational volume or audit design. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The no-anomaly role checks that the method does not manufacture an
+investigation queue from ordinary variation. The injected-anomaly role checks
+that the statistic can surface the planted signal. The innocent-structure role
+checks that the feature design preserves known operational explanations. The
+false-positive boundary role is the most important: it verifies that the report
+can carry a high score and still say, plainly, that the score is not proof.

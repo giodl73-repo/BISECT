@@ -1,6 +1,6 @@
 # Research Papers
 
-190+ papers across active tracks (A–X). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Only track W (election forensics) remains source-only and does not yet have PDFs in this index.
+190+ papers across active tracks (A–X). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Every active track now has compiled PDFs in this index.
 
 Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
@@ -458,6 +458,21 @@ The reusable substrate beneath RCOUNT and RPLAN. X.1 and X.2 document shipped ba
 | X.4 | RCASE Boundary: Public Evidence-Bundle Composition | [PDF](papers/X.4+case-composition-boundary.pdf) |
 | X.5 | RSTAT/RROLL Boundary: Analysis and Eligibility Universes | [PDF](papers/X.5+statistics-and-roll-boundary.pdf) |
 | X.6 | RAUDIT/RCERT Boundary: Audit Transcripts and Certification Actions | [PDF](papers/X.6+audit-cert-boundary.pdf) |
+
+---
+
+## Track W — Election Forensics and Anomaly Analytics (6 papers)
+
+Adjacent to RCOUNT but with a deliberately different claim boundary: W-series methods produce **investigative** anomaly analytics (outlier scores, residuals, digit tests, batch/scanner effects, spatial outliers, change points, discrepancy clustering) that **prioritize review but do not certify outcomes or prove fraud**. W.01 fixes the shared report contract and boundary; W.02-W.06 develop one analytic family each. These are method/framework papers — the report contract is specified and the methods are established, but no forensics crate is implemented yet.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| W.01 | Election Forensic Analytics for RCOUNT Packages (framework + report contract) | [PDF](papers/W.01+election-forensic-analytics.pdf) |
+| W.02 | Turnout and Vote-Share Residuals | [PDF](papers/W.02+turnout-vote-share-residuals.pdf) |
+| W.03 | Batch and Scanner Effects | [PDF](papers/W.03+batch-scanner-effects.pdf) |
+| W.04 | Digit and Benford-Style Tests (a weak-signal screen) | [PDF](papers/W.04+digit-benford-tests.pdf) |
+| W.05 | Spatial Outliers and Neighbor Anomalies | [PDF](papers/W.05+spatial-outliers.pdf) |
+| W.06 | Change-Point Tests and Audit-Discrepancy Clustering | [PDF](papers/W.06+change-point-discrepancy-clustering.pdf) |
 
 ---
 

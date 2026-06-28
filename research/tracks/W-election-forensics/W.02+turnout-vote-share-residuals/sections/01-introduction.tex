@@ -1,0 +1,24 @@
+\section{Introduction}
+
+Forensic analytics can prioritize investigation. They do not prove fraud,
+certify outcomes, or replace risk-limiting audits. That boundary comes first
+because residual methods are easy to overread: a large residual can be a useful
+triage signal, but it is not a finding about intent, legality, or correctness.
+
+This paper covers two W-series analytic families. Turnout residuals ask whether
+a reporting unit's turnout is unusual after comparison with its own history,
+nearby or similar units, and public covariates such as population composition or
+registration patterns. Candidate-share residuals ask whether a contest share is
+unusual relative to comparable units, previous contests, or cast vote record
+features where those records are available. In both cases, a residual means
+observed minus model-predicted: the reported value for a unit less the value a
+baseline model would have expected from the comparison population.
+
+The separation from the V-series is structural. V-series work verifies canvass
+and audit claims under explicit evidence contracts. W-series residual reports
+produce an investigation queue. They may help an analyst decide which precinct,
+batch, scanner, or contest deserves review, but they cannot certify the election
+and must not be stored or read as certification evidence. The W.01 overview
+fixes that claim boundary and the common forensic report contract
+\citep{wseries-overview-2026}; this paper instantiates the contract for turnout
+and vote-share residuals.

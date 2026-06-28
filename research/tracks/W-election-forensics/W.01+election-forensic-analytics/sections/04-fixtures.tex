@@ -1,0 +1,31 @@
+\section{Fixture Pattern}
+
+The W-series is validated by a small, deliberately shaped fixture family rather
+than by claims about any particular election. Four fixture roles recur across
+methods and define what a forensic report must and must not say.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & Role \\
+\midrule
+No-anomaly & A synthetic package with clean, well-behaved features. A correct method returns low scores and an empty or low-priority queue. \\
+Injected outlier & A package with one planted anomalous unit (for example an outlying precinct). The method must surface that unit near the top of the queue. \\
+Batch/scanner effect & A package with a systematic batch- or scanner-level deviation. The method must attribute the effect to the right grouping rather than to individual units. \\
+False-positive boundary & A package whose pattern is unusual but has an innocent explanation. The report must show why a high score is not proof, exercising the investigation-note and caveat fields. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The fixtures separate two things a forensic method must get right: detecting a
+genuinely planted anomaly, and refusing to escalate an unusual-but-explainable
+pattern into a fraud claim. The false-positive boundary fixture is the most
+important of the four, because it is where the report contract earns its keep:
+the same machinery that produces a high score must also produce the caveat that
+keeps the score from being read as certification evidence.
+
+These fixtures describe the intended evidence pattern for the track. As with the
+report contract, building them is downstream work that depends on normalized
+RCOUNT inputs; this paper fixes their roles so that later method papers and any
+implementation share one definition of success.

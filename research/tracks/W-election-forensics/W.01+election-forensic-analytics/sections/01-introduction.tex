@@ -1,0 +1,26 @@
+\section{Introduction}
+
+Election forensic analytics ask whether reported results contain unusual
+patterns: precinct swings that do not fit their history, turnout or vote-share
+residuals far from comparable units, batch and scanner effects, leading- or
+last-digit distributions that look improbable, neighbors that diverge
+unexpectedly, abrupt change points across time or batches, and audit
+discrepancies that cluster by machine or source. These analytics are useful for
+prioritizing where humans should look. They do not, by themselves, certify an
+outcome or prove that anything went wrong.
+
+That distinction is the reason for a separate W-series. The V-series verifies
+canvass and audit claims with explicit evidence contracts: a passing V-series
+transcript means a declared count or audit claim was replayed from public
+inputs. A W-series report makes no such claim. It produces an investigation
+queue --- a ranked set of units, batches, scanners, or contests that merit more
+review --- and it must say so in plain language on its face.
+
+This paper leads with that boundary and then builds the shared scaffolding the
+rest of the track depends on. It surveys the analytic families that clean RCOUNT
+inputs can feed, specifies a single forensic report contract every method must
+satisfy, and lays out the fixture pattern that lets a report be reproduced from
+hash-bound inputs. It is a framework paper. The analytic methods it names are
+established in the forensics literature; the contribution here is the
+RCOUNT-grounded report contract and the strict separation that keeps anomaly
+scores from being read as certification evidence.

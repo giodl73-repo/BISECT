@@ -1,0 +1,47 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Turnout And Vote-Share Residuals:
+A Method Framework For Investigative Election Forensic Reports}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Forensic analytics can prioritize investigation. They do not prove fraud,
+certify outcomes, or replace risk-limiting audits. This paper applies that
+W-series boundary to two residual families: turnout residuals and candidate
+vote-share residuals. A residual is the difference between an observed value and
+a model-predicted value for a reporting unit, where the prediction is fitted
+from comparable units, history, demographics, or other public features. The
+method is deliberately modest: fit a baseline, compute standardized or
+studentized residuals, rank units by magnitude, and attach caveats explaining
+why an outlier may be innocent. The paper instantiates the W.01 forensic report
+contract for residual methods with method identity, feature set, baseline
+population, model identity, unit scores, calibration by rank or p-value, and an
+investigation note, all bound to source package hashes. It is a method and
+framework paper only. No forensics crate, fixture suite, or shipped test is
+claimed here.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-method}
+\input{sections/03-rcount-inputs}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,wseries-overview-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

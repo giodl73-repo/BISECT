@@ -1,0 +1,38 @@
+\section{Method}
+
+The spatial-outlier method starts with reporting units, unit-level features, and
+a neighbor graph. Two units are neighbors when their geographic polygons share a
+boundary segment. The same general reporting-unit adjacency discipline used by
+the redistricting side of the repository is the right kind of input here, but
+this paper does not claim a forensics implementation over that machinery.
+
+Let $x_i$ be the feature for unit $i$, such as turnout rate, candidate share, a
+model residual, or an audit-discrepancy rate. Let $N(i)$ be the set of neighbors
+that share a boundary with $i$, and let $w_{ij}$ be normalized neighbor weights.
+A spatial-lag comparison computes
+\[
+  \ell_i = \sum_{j \in N(i)} w_{ij} x_j,
+\]
+and scores the gap between $x_i$ and $\ell_i$. A simple neighbor-difference
+z-score uses
+\[
+  z_i = \frac{x_i - \mu_{N(i)}}{\sigma_{N(i)}},
+\]
+with a stated rule for small or zero-variance neighbor sets. A local
+spatial-lag residual first fits a baseline model and then compares each unit's
+residual to the residuals around it.
+
+Local Moran's I and related LISA statistics ask whether the value at one unit is
+unusual relative to the local spatial pattern. They can flag high-low and
+low-high outliers, as well as clusters where adjacent units jointly depart from
+the wider field. A W.05 report may therefore identify both local outlier units
+and spatial-outlier clusters. The statistic used must be recorded in
+\texttt{model\_id}, and the variables used must be recorded in
+\texttt{feature\_set}.
+
+The method must also preserve the ordinary geography of elections. Urban-rural
+edges, college towns, military bases, reservation boundaries, retirement
+communities, precinct splits, and county or municipal borders can create real
+spatial discontinuities. A good W.05 report flags the discontinuity for review
+and carries the caveat that sharp neighbor differences can be legitimate.
+

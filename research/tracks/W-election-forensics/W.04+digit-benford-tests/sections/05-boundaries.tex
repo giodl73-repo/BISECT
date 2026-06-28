@@ -1,0 +1,21 @@
+\section{Boundaries}
+
+Digit and Benford-style tests are weak forensic screens. They are easy to run,
+easy to rank, and easy to misread. A high score can justify asking why a count
+table has a particular digit pattern; it cannot answer that question by itself.
+It is not proof of fraud, not a certification failure, and not a substitute for
+risk-limiting audits or ordinary canvass reconciliation.
+
+The main technical boundary is the Benford assumption. Many election-count
+tables do not span the orders of magnitude needed for leading-digit behavior.
+Precincts are often intentionally similar in size; contests impose upper bounds;
+turnout, registration, and reporting-unit rules shape the available numbers.
+Second-digit tests add another layer of fragility and should be treated with
+particular caution. Last-digit tests avoid the Benford premise but remain
+sensitive to aggregation, rounding, transcription, and reporting conventions.
+
+Accordingly, W.04 reports should never be used alone. They should be a
+low-weight signal in a broader investigation queue, read alongside source
+hashes, lineage, audit records, batch information, geography, and human review.
+The lead boundary from W.01 remains controlling: W-series outputs prioritize
+investigation; they do not prove fraud, certify correctness, or replace audits.

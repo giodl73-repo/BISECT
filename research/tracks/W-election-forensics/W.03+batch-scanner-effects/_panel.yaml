@@ -1,0 +1,23 @@
+paper: W.03+batch-scanner-effects
+title: "Batch And Scanner Effects In Election Forensic Analytics"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] State the investigative-not-certifying claim boundary up front."
+  - "[x] Keep W-series anomaly reports separate from V-series certification evidence."
+  - "[x] Define batch/scanner effects as group-level signals, not ballot-level claims."
+  - "[x] Specify fixed/random-effect modeling over vote share or residuals."
+  - "[x] Instantiate the W.01 forensic report contract for model_id=batch-effect."
+  - "[x] Define the four intended fixture roles, including innocent batch effects and false-positive boundary."
+  - "[x] Avoid claiming any shipped forensics crate, fixture, function, or test."

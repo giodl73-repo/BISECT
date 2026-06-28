@@ -1,0 +1,45 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Change-Point Tests And Audit-Discrepancy Clustering For RCOUNT Packages:
+A Method Contract For Investigative, Non-Certifying Sequence Analytics}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Change-point tests and audit-discrepancy clustering are investigative election
+forensic methods. They can prioritize review by flagging abrupt shifts in
+reported-result sequences and by asking whether audit discrepancies concentrate
+by scanner, batch, or source. They do not prove fraud, certify correctness, or
+replace risk-limiting audits. This paper instantiates the W.01 forensic report
+contract for two sequence-oriented analytic families: change-point detection on
+RCOUNT status-event and batch-order series, and concentration tests over
+V-series audit observation discrepancies. The contribution is a method
+framework and report shape, not shipped software: no forensics crate, code
+fixture, function, or test is claimed here. The methods are established, the
+contract is defined in W.01, and the fixtures described below are intended
+roles for later implementation.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-method}
+\input{sections/03-rcount-inputs}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,w01-election-forensics-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

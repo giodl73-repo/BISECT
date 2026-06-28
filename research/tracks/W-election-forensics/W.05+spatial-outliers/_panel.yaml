@@ -1,0 +1,22 @@
+paper: W.05+spatial-outliers
+title: "Spatial Outliers And Neighbor Anomalies"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] State the investigative-not-certifying claim boundary up front."
+  - "[x] Define spatial neighbors by shared reporting-unit boundaries."
+  - "[x] Instantiate the W.01 forensic report contract for spatial outliers."
+  - "[x] Specify intended four-role fixtures including false-positive boundaries."
+  - "[ ] Implement a spatial-outlier forensic report schema with source package hashes."
+  - "[ ] Build synthetic and boundary fixtures after W-series implementation placement is decided."

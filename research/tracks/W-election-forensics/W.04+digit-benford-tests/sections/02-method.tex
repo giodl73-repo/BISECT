@@ -1,0 +1,47 @@
+\section{Method}
+
+A digit-test report begins with a table of nonnegative reported counts and a
+chosen unit of analysis: contest, jurisdiction, reporting unit, batch, or a
+larger count table. The method extracts a digit feature and compares its
+observed distribution to a stated reference distribution. The comparison may be
+summarized by a chi-square statistic, an absolute or squared distance, a
+ranked-residual score, or another predeclared distance measure. The statistic is
+an anomaly score, not a verdict.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Family & Reference and caveat \\
+\midrule
+First digit & Compare leading digits 1 through 9 with the Benford reference,
+$P(d)=\log_{10}(1+1/d)$. Use only where the count table plausibly spans broad
+magnitudes; many precinct tables do not. \\
+Second digit & Compare digits 0 through 9 with the corresponding Benford-style
+second-digit reference. Treat results as especially weak for vote counts,
+because modest range restriction and precinct design can move the distribution. \\
+Last digit & Compare terminal digits 0 through 9 with a uniform reference, or
+with a predeclared administrative baseline if rounding or reporting rules affect
+final digits. Last-digit concentration can be a screen, but it can also reflect
+aggregation, batch construction, or data-entry conventions. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For an observed count $O_d$ and expected count $E_d$ in digit bin $d$, a common
+summary is
+\[
+  X^2 = \sum_d \frac{(O_d-E_d)^2}{E_d},
+\]
+provided the expected counts are large enough for the approximation to be
+meaningful. A simpler distance score such as $\sum_d |O_d-E_d|$ may be reported
+instead when the goal is ranking rather than calibration. If a p-value is
+reported, the transcript must state the reference distribution, exclusions, and
+baseline population that make the calibration meaningful.
+
+The central diagnostic warning is part of the method. Vote counts often violate
+Benford assumptions for innocent reasons: bounded electorates, similar precinct
+sizes, contest-specific turnout ceilings, truncation by reporting-unit design,
+and pooling choices that mix unlike jurisdictions. A high statistic may indicate
+a data feature worth explaining, but it is weak evidence by itself and must be
+read with the structure of the count table.

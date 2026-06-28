@@ -1,0 +1,39 @@
+\section{RCOUNT Inputs And Report Contract}
+
+Residual reports use RCOUNT records only as normalized, hash-bound inputs. For
+turnout residuals, the primary inputs are reporting-unit summaries and precinct
+lineage: registered or eligible population where available, ballots cast, units
+that split or merged, and the mapping needed to compare a unit with its history.
+For vote-share residuals, the primary inputs are summaries and, where public and
+normalized, cast vote records. Summaries supply contest totals and candidate
+shares; CVRs can support ballot-style, batch, or scanner covariates without
+turning the residual score into certification evidence.
+
+The W.01 contract defines the shared forensic report shape
+\citep{wseries-overview-2026}. For this method, the per-record fields are
+instantiated as follows.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Residual-method meaning \\
+\midrule
+\texttt{method\_id} & Turnout residual or vote-share residual analytic. \\
+\texttt{feature\_set} & History, demographic covariates, comparable-unit shares, CVR-derived covariates, or other public inputs used by the model. \\
+\texttt{baseline\_population} & Units and time window used for comparison. \\
+\texttt{model\_id} & \texttt{residual}. \\
+\texttt{unit\_id} & Reporting unit, contest, batch, or scanner-associated unit scored by the model. \\
+\texttt{score} & Standardized residual, studentized residual, robust residual score, or absolute residual rank statistic. \\
+\texttt{p\_value\_or\_rank} & Optional p-value, empirical tail probability, or rank in the investigation queue. \\
+\texttt{investigation\_note} & Machine-readable caveat, including baseline limits or known benign explanations. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The report must also carry the source package hashes from which the features
+were derived. Hash binding lets another analyst rerun the same registered method
+against the same RCOUNT package and determine whether the same residual queue is
+obtained. This paper defines the intended contract use for residuals; it does
+not claim that a crate, function, report fixture, or test currently implements
+it.

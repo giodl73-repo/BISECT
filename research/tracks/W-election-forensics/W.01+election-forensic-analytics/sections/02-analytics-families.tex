@@ -1,0 +1,37 @@
+\section{Analytic Families}
+
+RCOUNT packages provide clean, hash-bound inputs: source hashes, reporting-unit
+lineage, normalized summaries, batch manifests, cast vote records, and audit
+results. The W-series computes reproducible anomaly reports over those records.
+The pipeline is uniform across families:
+
+\begin{center}
+certified/public results $\rightarrow$ normalized features $\rightarrow$
+anomaly score $\rightarrow$ investigation queue.
+\end{center}
+
+The families differ in the question they ask and the RCOUNT records they
+consume.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXl}
+\toprule
+Family & What it asks & RCOUNT input \\
+\midrule
+Turnout residuals & Is turnout unusual after accounting for history and demographics? & summaries, precinct lineage \\
+Vote-share residuals & Are candidate shares unusual relative to comparable units? & summaries, CVRs \\
+Batch/scanner effects & Do batches or scanners show systematic deviations? & batch manifests, CVRs \\
+Digit tests & Do reported numbers show suspicious digit patterns? & summaries \\
+Benford-style checks & Are leading-digit distributions unusual where applicable? & large count tables \\
+Spatial outliers & Are neighboring units unexpectedly different? & reporting units, geography \\
+Change-point tests & Did patterns shift abruptly across time or batches? & status events, batches \\
+Audit discrepancy clustering & Do discrepancies cluster by source, machine, or batch? & audit observations \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Each family is the subject of a later W-series paper. What unifies them is not a
+single statistic but a shared input discipline and a shared output contract: the
+features are derived from hash-bound RCOUNT records, and the result is an
+anomaly report, never a pass or fail.

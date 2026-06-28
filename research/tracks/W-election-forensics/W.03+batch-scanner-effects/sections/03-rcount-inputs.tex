@@ -1,0 +1,37 @@
+\section{RCOUNT Inputs And Report Contract}
+
+The intended inputs are RCOUNT batch manifests, cast vote records, and normalized
+summaries. Batch manifests identify the operational grouping: batch, scanner,
+drop box, upload, or equivalent source. Cast vote records and summaries provide
+the contest totals or ballot-level records from which vote shares and residuals
+are derived. Source package hashes bind the report to the exact RCOUNT package
+used to compute it.
+
+W.03 instantiates the W-series report contract defined in W.01. The per-record
+fields are:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & W.03 value or meaning \\
+\midrule
+\texttt{method\_id} & Registered batch/scanner-effect analytic. \\
+\texttt{feature\_set} & Variables used for vote share, residuals, grouping, and baseline adjustment. \\
+\texttt{baseline\_population} & Comparable contests, units, modes, times, or groups used for calibration. \\
+\texttt{model\_id} & \texttt{batch-effect}. \\
+\texttt{unit\_id} & Batch, scanner, drop box, upload, or other operational group. \\
+\texttt{score} & Group-level anomaly score or standardized effect estimate. \\
+\texttt{p\_value\_or\_rank} & Optional calibration or rank within the baseline population. \\
+\texttt{investigation\_note} & Caveat explaining the grouping, comparison, and plausible benign boundary. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The report is about the group, not individual ballots. A scanner effect should
+be attributed to the scanner only when the inputs support that grouping. A mail
+batch effect should not be described as a precinct effect merely because the
+batch contains precinct-coded records. The central discipline is attribution:
+identify the level at which the deviation is measured, bind it to source package
+hashes, and keep the result in the W-series investigative transcript rather than
+V-series certification evidence.

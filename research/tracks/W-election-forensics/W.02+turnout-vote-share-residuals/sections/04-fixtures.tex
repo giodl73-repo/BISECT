@@ -1,0 +1,23 @@
+\section{Fixture Pattern}
+
+The residual family should follow the four fixture roles defined for W-series
+analytics. These are intended fixture patterns, not claims about shipped tests.
+They describe what later implementation work should exercise.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & Residual-method role \\
+\midrule
+No-anomaly & A synthetic package whose turnout and candidate shares are drawn from the fitted baseline. A residual method should return low scores or an empty low-priority queue. \\
+Injected outlier precinct & A package with one planted reporting unit whose turnout or candidate share is shifted away from comparable units. The method should surface that unit near the top of the queue. \\
+Batch/scanner-correlated residual & A package where several high residuals share a batch or scanner grouping. The report should preserve the grouping signal instead of treating each unit as unrelated. \\
+False-positive boundary & A package where an unusual residual has a benign explanation, such as a new development, a college dormitory, or a changed reporting-unit boundary. The investigation note should prevent the score from being read as proof. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The false-positive boundary is central. A residual method succeeds only if it can
+rank unusual units while carrying enough context to show that unusual is not the
+same as fraudulent, incorrect, or certifying.

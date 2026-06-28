@@ -1,0 +1,33 @@
+\section{Fixture Pattern}
+
+The intended fixture family follows the four-role W-series pattern. These are
+defined roles for later implementation, not a claim that fixture files or tests
+already exist.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & Role \\
+\midrule
+No-anomaly & A synthetic count table drawn from a plausible election-count
+distribution with no planted digit manipulation. A cautious method should return
+low priority or explain ordinary sampling variation. \\
+Injected tampered digit & A table with a planted digit-pattern distortion, such
+as excess repeated final digits or altered leading digits in a subset. The
+method should surface the affected unit while still labeling the result as
+investigative. \\
+Innocent digit deviation & A bounded precinct-size table that deviates from a
+Benford-style reference for structural reasons. This exercises the false-positive
+warning and should not be described as suspicious by itself. \\
+Boundary failure & A table that formally ``fails'' a digit test but is fully
+explained by precinct-size design, turnout ceilings, or pooling choices. The
+report must carry the explanation in \texttt{investigation\_note}. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The last two fixtures are as important as the planted one. A digit method that
+only finds the injected distortion is incomplete; it must also demonstrate that
+ordinary administrative structure can produce high statistics and that the
+report language keeps those statistics in their proper, weak-signal role.

@@ -1,0 +1,27 @@
+\section{Method}
+
+The residual method has four steps. First, choose a baseline population: prior
+elections for the same unit, comparable reporting units in the current election,
+neighboring units, demographic or registration covariates, or a combination of
+those sources. Second, fit a baseline model that predicts turnout or candidate
+share for each unit. Third, compute the residual
+\[
+  r_i = y_i - \widehat{y}_i,
+\]
+where $y_i$ is the observed turnout rate or vote share for unit $i$ and
+$\widehat{y}_i$ is the model prediction. Fourth, standardize the residuals and
+rank units by magnitude.
+
+The statistic can be reported as a standardized residual, a studentized
+residual, a robust score, or a rank within the baseline population. A simple
+implementation might divide by an estimated residual standard deviation; a more
+careful one can use robust regression, cross-validation, heavy-tailed errors,
+or leave-one-out studentization so that one extreme unit does not define the
+baseline that judges it. The report should identify the model as a residual
+model and name the feature set rather than present the score as self-evident.
+
+A unit can be a residual outlier for innocent reasons. New housing, a college
+dormitory, a changed precinct boundary, a local uncontested race, language
+access changes, weather, ballot style, or a mobilization campaign can all move
+turnout or vote share away from what history predicted. The method therefore
+ranks units for review; it does not explain the residual by itself.

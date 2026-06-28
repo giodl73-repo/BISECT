@@ -1,0 +1,42 @@
+\section{RCOUNT Inputs And Report Contract}
+
+Change-point tests consume RCOUNT status events and batches. Status events give
+the reported-results timeline; batch manifests give an alternate sequence order
+when the analytic question is about tabulation or upload batches rather than
+wall-clock time. The scored unit is usually a time segment, batch interval, or
+candidate boundary between adjacent segments.
+
+Discrepancy-clustering tests consume V-series audit observations and derived
+discrepancy records. The scored unit is usually a scanner, batch, source, or
+other operational grouping. This is the point where W-series analytics may use
+V-series outputs, but only as inputs to an investigative report. The W-series
+artifact must not recast those observations as certification evidence.
+
+Both methods instantiate the W.01 report contract, which requires source hashes,
+feature set, baseline population, model identity, unit-level scores, caveats,
+and an investigative-not-certifying statement. For these two families the
+per-record transcript is:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Instantiation \\
+\midrule
+\texttt{method\_id} & Registered W.06 analytic: change-point or discrepancy-cluster. \\
+\texttt{feature\_set} & Time/batch reporting features, or V-series discrepancy fields and grouping variables. \\
+\texttt{baseline\_population} & Comparison window, segment set, audit-observation universe, and grouping universe. \\
+\texttt{model\_id} & \texttt{change-point} or \texttt{discrepancy-cluster}. \\
+\texttt{unit\_id} & \texttt{time-segment} for sequence boundaries, or scanner, batch, or source for discrepancy groups. \\
+\texttt{score} & Change-point statistic, segmentation score, concentration statistic, or clustering score. \\
+\texttt{p\_value\_or\_rank} & Optional calibration or rank under the stated baseline. \\
+\texttt{investigation\_note} & Caveat describing reporting order, operational grouping, or audit-design constraint. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The report also binds the source package hashes used to compute the features.
+That binding is part of the method: another analyst with the same package,
+feature definition, and model identity should be able to reproduce the same
+score table. This paper defines that contract instantiation; it does not claim
+that a forensics crate, function, fixture, or test already exists.

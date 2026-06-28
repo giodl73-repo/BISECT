@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+Batch and scanner effects are useful forensic signals because many election
+records are organized by operational grouping. They are also easy to overread.
+This paper defines the W.03 method framework for treating those effects as
+investigative, group-level deviations: model vote share or residuals with a
+batch/scanner factor, estimate group-level effects, rank groups relative to
+within-group and baseline variation, and report the result through the W.01
+contract.
+
+The contribution is not a shipped implementation. No forensics crate, fixture,
+function, or test is asserted here. The contribution is the method boundary and
+report discipline: bind the analysis to RCOUNT source hashes, attribute the
+score to the correct grouping, disclose the baseline, and state plainly that the
+output is an investigation queue rather than proof or certification.

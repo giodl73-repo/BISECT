@@ -1,0 +1,23 @@
+paper: W.04+digit-benford-tests
+title: "Digit And Benford-Style Tests For Election Forensic Analytics"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] State the investigative-not-certifying claim boundary up front."
+  - "[x] State the field's skepticism about Benford tests for vote counts."
+  - "[x] Define first-digit, second-digit, and last-digit test families."
+  - "[x] Instantiate the W.01 report contract for digit-test outputs."
+  - "[x] Define four intended fixture roles including false-positive boundaries."
+  - "[ ] Define forensic report schema in code with source package hash."
+  - "[ ] Decide implementation placement: rcount-audit reports vs rcount-forensics crate."

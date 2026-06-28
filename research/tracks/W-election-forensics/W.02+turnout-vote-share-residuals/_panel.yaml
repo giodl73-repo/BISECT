@@ -1,0 +1,23 @@
+paper: W.02+turnout-vote-share-residuals
+title: "Turnout And Vote-Share Residuals"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] State the investigative-not-certifying claim boundary up front."
+  - "[x] Define residuals as observed minus model-predicted values."
+  - "[x] Cover turnout residuals and vote-share residuals as distinct families."
+  - "[x] Instantiate the W.01 forensic report contract for residual methods."
+  - "[x] Define the four-role intended fixture pattern incl. false-positive boundary."
+  - "[ ] Implement residual report schema with source package hashes."
+  - "[ ] Decide implementation placement: rcount-audit reports vs rcount-forensics crate."

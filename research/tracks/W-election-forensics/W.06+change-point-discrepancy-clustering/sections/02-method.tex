@@ -1,0 +1,38 @@
+\section{Method}
+
+\subsection{Change-Point Tests}
+
+A change-point test takes a reported-results series ordered by time or batch
+position and asks whether one or more locations split the sequence into regimes
+with meaningfully different behavior. The feature may be a cumulative margin,
+per-batch vote share, turnout rate, residual from a comparison model, or another
+normalized RCOUNT-derived quantity. Candidate statistics include CUSUM scores,
+segmentation costs, and likelihood-ratio change-point statistics.
+
+The statistic is not interpreted alone. The report must record the ordering
+rule, the feature set, the baseline population, and the operational note that
+reporting order often creates benign changes. For example, mail ballots or
+early-vote batches may be reported before election-day precincts; central-count
+batches may arrive in blocks; small late batches may have different composition
+than earlier high-volume batches. A flagged change point is therefore an
+investigation item: it identifies the segment boundary and the observed shift,
+then asks whether the reporting workflow explains it.
+
+\subsection{Audit-Discrepancy Clustering}
+
+A discrepancy-clustering test takes audit observations from the V-series side of
+an RCOUNT package and asks whether discrepancies concentrate in operational
+groups. The grouping variable may be scanner, batch, source file, tabulator,
+audit board, or another unit preserved by the package.
+The null is random scatter conditional on the relevant audit design and group
+sizes. Candidate statistics include chi-square tests over grouped counts,
+concentration indices, maximum-cell overrepresentation scores, and permutation
+or rank-based clustering statistics.
+
+The method consumes discrepancies as observations, not as certification
+findings. It asks whether the pattern of discrepancies is more concentrated
+than expected under the selected random-scatter baseline. A high score should
+name the grouping unit, the observed concentration, the comparison population,
+and the caveat. It should not say that the scanner, batch, or source caused the
+problem, and it should not convert an audit discrepancy into proof of outcome
+error or fraud.

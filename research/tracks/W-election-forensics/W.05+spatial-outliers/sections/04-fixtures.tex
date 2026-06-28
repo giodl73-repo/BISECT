@@ -1,0 +1,23 @@
+\section{Fixture Pattern}
+
+The intended W.05 fixtures follow the four-role W-series pattern. They are
+specified here as design requirements, not as shipped tests.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & Role \\
+\midrule
+No-anomaly smooth field & A synthetic package where neighboring units vary smoothly. The method should return low scores or an empty low-priority queue. \\
+Injected spatial outlier & A package with one planted unit that sharply departs from its neighbors. The method should surface that unit near the top of the queue. \\
+Innocent discontinuity & A package with a real boundary discontinuity that looks unusual but is known to be benign, exercising the false-positive caveat. \\
+Explained demographic edge & A boundary fixture where a sharp neighbor difference is fully explained by a known demographic edge, such as an urban-rural or college-town boundary. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+These fixtures test two behaviors at once. The method should notice a planted
+local anomaly, and the report should refuse to convert an explainable spatial
+edge into a fraud claim. The false-positive fixtures are therefore not secondary;
+they are the part of the method that protects the investigative boundary.

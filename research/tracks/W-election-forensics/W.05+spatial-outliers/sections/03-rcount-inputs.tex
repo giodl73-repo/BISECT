@@ -1,0 +1,35 @@
+\section{RCOUNT Inputs And Report Contract}
+
+The required inputs are RCOUNT reporting units, normalized election features,
+and geography sufficient to define shared-boundary adjacency. The input package
+also supplies source hashes, reporting-unit lineage, and any feature provenance
+needed to reproduce the score. If a jurisdiction supplies geography at a
+different level than results, the lineage and aggregation rule are part of the
+feature set, not an informal preprocessing step.
+
+W.05 instantiates the W.01 forensic report contract with spatial-outlier
+semantics:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & W.05 meaning \\
+\midrule
+\texttt{method\_id} & Registered W.05 spatial-outlier analytic. \\
+\texttt{feature\_set} & Unit features scored, such as turnout, vote share, residuals, or discrepancy rates. \\
+\texttt{baseline\_population} & The neighbor set, plus any wider comparison population or time window. \\
+\texttt{model\_id} & \texttt{spatial-outlier}, with the specific statistic or residual model named. \\
+\texttt{unit\_id} & Reporting unit being scored. \\
+\texttt{score} & Local outlier statistic, residual, or neighbor-difference score. \\
+\texttt{p\_value\_or\_rank} & Optional calibration, permutation p-value, percentile, or queue rank. \\
+\texttt{investigation\_note} & Machine-readable caveat, including edge effects or known boundary explanations. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The report metadata binds the output to source package hashes, geography hashes,
+feature definitions, adjacency construction rules, and model parameters. That
+binding is essential: a second analyst with the same RCOUNT package and the same
+registered method should be able to recompute the same investigation queue. The
+contract is defined in W.01; W.05 only specializes it for neighbor anomalies.

@@ -1,0 +1,22 @@
+paper: W.01+election-forensic-analytics
+title: "Election Forensic Analytics For RCOUNT Packages"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] State the investigative-not-certifying claim boundary up front."
+  - "[x] Survey the forensic analytic families and their RCOUNT inputs."
+  - "[x] Specify the shared forensic report contract bound to source hashes."
+  - "[x] Define the four-role fixture pattern incl. false-positive boundary."
+  - "[ ] Define forensic report schema in code with source package hash."
+  - "[ ] Decide implementation placement: rcount-audit reports vs rcount-forensics crate."

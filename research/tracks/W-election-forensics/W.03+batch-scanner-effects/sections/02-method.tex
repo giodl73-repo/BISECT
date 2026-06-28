@@ -1,0 +1,29 @@
+\section{Method}
+
+The method models reported results with a batch/scanner grouping factor. The
+response can be a vote share, a transformed vote share, or a residual from a
+baseline model that already accounts for contest, jurisdiction, ballot style,
+mode, time, or comparable historical information. The grouping factor is the
+batch, scanner, drop box, upload, or other operational unit being evaluated.
+
+A fixed-effect version estimates a separate coefficient for each group. A
+random-effect version treats group effects as draws from a common distribution
+and estimates the degree to which each group departs from the population of
+comparable groups. Either form asks the same forensic question: is the estimated
+group effect large relative to the variation observed within and across groups?
+A report may rank groups by standardized effect size, posterior or empirical
+shrinkage estimate, residual dispersion, or a calibrated tail probability.
+
+The score is not a fraud finding. Legitimate operational differences routinely
+produce real batch effects. Vote-by-mail batches can have different candidate
+shares than in-person precinct batches. Early batches can differ from
+election-day batches. A scanner assigned to one geography or ballot style can
+inherit that geography or style. For that reason, the preferred baseline makes
+the comparison population explicit and includes the operational variables needed
+to avoid treating ordinary election administration as an anomaly.
+
+The method flags groups whose effect remains large after that comparison. It
+also records the scale on which the score was computed, the baseline population,
+and an investigation note describing the most likely benign grouping explanation
+when one is visible from the inputs. The statistical machinery is established;
+this paper fixes the W-series framing and report shape for this analytic family.

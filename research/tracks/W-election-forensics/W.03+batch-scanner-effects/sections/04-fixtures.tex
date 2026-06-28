@@ -1,0 +1,24 @@
+\section{Intended Fixture Pattern}
+
+The fixture family is intended, not claimed as implemented. It follows the
+four-role pattern from W.01 and adapts it to batch and scanner effects.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & Role \\
+\midrule
+No-anomaly & A synthetic package whose groups differ only by ordinary noise after the declared baseline. A correct method returns low scores and no urgent queue. \\
+Single planted anomalous batch & One batch or scanner is given a planted group-level deviation. The method should rank that group near the top and attribute the signal to the planted grouping. \\
+Real-but-innocent batch effect & A package contains a legitimate operational split, such as mail versus in-person voting. The method may detect the effect, but the report note must present it as an expected process difference rather than proof. \\
+False-positive boundary & A package is unusual under a weak baseline but explainable under the correct grouping or comparison population. The method should expose the sensitivity and keep the caveat attached to the score. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+These roles test two requirements at once. The method should find a planted
+group-level deviation when the data support one. It should also avoid promoting
+a legitimate operational difference into an allegation. The fixtures therefore
+exercise scoring, attribution, baseline disclosure, and the investigation-note
+field, not just numerical detection.

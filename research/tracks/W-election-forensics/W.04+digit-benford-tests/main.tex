@@ -1,0 +1,47 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Digit And Benford-Style Tests For Election Forensic Analytics:
+A Weak-Signal Method For Investigative, Non-Certifying Review}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Digit-distribution tests compare reported election counts to simple reference
+patterns: first-digit Benford frequencies, second-digit frequencies,
+last-digit uniformity, and related distance or chi-square summaries. This paper
+places those tests inside the W-series forensic report contract defined by the
+RCOUNT election-forensics overview. The boundary is deliberately strict. Digit
+and Benford-style tests can prioritize investigation, but they cannot prove
+fraud, certify correctness, or replace risk-limiting audits. They are also among
+the weakest forensic screens for election counts. Precinct totals often have
+bounded ranges and similar magnitudes, so the assumptions behind Benford's law
+are commonly absent; deviations are expected and weakly diagnostic. The method
+defined here treats digit tests as low-weight, caveated anomaly screens over
+hash-bound RCOUNT summaries and large count tables, with fixtures that include
+both planted digit manipulation and innocent failures caused by precinct-size
+structure.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-method}
+\input{sections/03-rcount-inputs}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,w01-forensic-analytics-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

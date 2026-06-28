@@ -1,0 +1,24 @@
+\section{Introduction}
+
+Forensic analytics prioritize investigation. They do not prove fraud, certify
+outcomes, or replace risk-limiting audits. A batch/scanner effect is a
+systematic deviation associated with a tabulation batch, scanner, drop box,
+upload, or similar operational grouping. It is a grouping-level signal: the
+question is whether units processed through the same group move together after
+ordinary comparisons are accounted for, not whether any single ballot is
+suspicious.
+
+This boundary also separates the W-series from the V-series. V-series work
+replays audit or canvass evidence and can support certification-style claims
+when its assumptions are met. W-series work produces investigative analytics:
+outlier scores, residuals, digit checks, batch effects, spatial anomalies, and
+discrepancy clustering. The output is an investigation queue with caveats, never
+a pass/fail certification result.
+
+Batch and scanner effects are a natural W-series family because election data
+often arrive in operational groups. Vote-by-mail batches may differ from
+election-day batches. Early-vote uploads may differ from precinct uploads.
+Scanners may serve different locations, times, or ballot styles. Some group
+differences are therefore real and innocent. The method in this paper is meant
+to identify groups whose deviations deserve review while preserving that
+interpretive boundary.

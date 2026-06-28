@@ -1,0 +1,23 @@
+\section{Introduction}
+
+Forensic analytics can prioritize investigation. They cannot prove fraud,
+certify correctness, or replace risk-limiting audits. This boundary is not a
+footnote for the W-series; it is the first claim every method must make. A
+score from this paper is a reason to ask a question, not an answer to that
+question.
+
+This method paper covers two time- and sequence-oriented signals. The first is
+an abrupt shift in a reported-results series: turnout, vote share, margin,
+residuals, or other normalized features ordered by reporting time or by batch
+sequence. Such a shift may be a change point worth review. The second is a set
+of audit discrepancies that cluster by source, scanner, batch, or similar
+operational unit instead of scattering as the null model would expect.
+
+Both signals are useful because RCOUNT packages preserve the record structure
+needed to replay them: status events, batch manifests, source hashes, and audit
+observations. Both are also easy to overread. Mail batches reported first,
+late-arriving provisional ballots, one high-volume scanner, or a local reporting
+workflow can create legitimate discontinuities and clusters. The purpose here is
+therefore narrow: instantiate the W.01 forensic report contract for these two
+families and keep the result investigative, reproducible, and separate from
+certification evidence.

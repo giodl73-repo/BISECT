@@ -1,0 +1,39 @@
+\section{Report Contract}
+
+Every W-series method emits the same report shape so that any analytic can be
+reproduced from public inputs and read with its caveats attached. The per-record
+transcript fields are:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Registered forensic analytic. \\
+\texttt{feature\_set} & Variables used by the model. \\
+\texttt{baseline\_population} & Comparison units and time window. \\
+\texttt{model\_id} & Residual, digit test, spatial model, change-point, etc. \\
+\texttt{unit\_id} & Reporting unit, batch, scanner, or contest scored. \\
+\texttt{score} & Anomaly score or test statistic. \\
+\texttt{p\_value\_or\_rank} & Optional statistical calibration. \\
+\texttt{investigation\_note} & Machine-readable caveat for the scored unit. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A report is also bound to its inputs. Every W-series report must carry the
+source package hashes it was computed from, the feature set and baseline
+population that define the comparison, the model and method identity, the
+unit-level scores, the caveats and false-positive boundary, and a plain
+statement that the output is investigative and not certifying. Binding the
+report to source package hashes is what makes it reproducible: a second analyst
+with the same RCOUNT package and the same registered method should recompute the
+same scores.
+
+The report contract is specified here; its implementation placement is an open
+decision. The analytics could live as RCOUNT audit-style reports beside the
+existing transcripts, or in a later dedicated forensics crate. Either way, the
+W-series transcript must remain a distinct artifact from V-series certification
+evidence, so that an anomaly score is never stored or surfaced as a pass or
+fail.

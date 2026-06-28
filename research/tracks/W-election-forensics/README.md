@@ -14,7 +14,18 @@ certify election outcomes and do not prove fraud.
 
 | Code | Working title | Status |
 |------|---------------|--------|
-| W.01 | Election Forensic Analytics For RCOUNT Packages | atlas scaffold landed |
+| W.01 | Election Forensic Analytics For RCOUNT Packages | framework + report contract |
+| W.02 | Turnout And Vote-Share Residuals | method (framework) |
+| W.03 | Batch And Scanner Effects | method (framework) |
+| W.04 | Digit And Benford-Style Tests | method (framework) |
+| W.05 | Spatial Outliers And Neighbor Anomalies | method (framework) |
+| W.06 | Change-Point Tests And Audit-Discrepancy Clustering | method (framework) |
+
+The W.01 overview fixes the shared report contract and claim boundary; W.02-W.06
+develop one analytic family each. These are method/framework papers: the report
+contract is specified and the methods are established, but no forensics crate is
+implemented yet (placement in `rcount-audit` reports vs a later
+`rcount-forensics` crate remains an open decision).
 
 ## Implementation Contract
 

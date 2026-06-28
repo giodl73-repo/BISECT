@@ -1,0 +1,24 @@
+paper: W.06+change-point-discrepancy-clustering
+title: "Change-Point Tests And Audit-Discrepancy Clustering For RCOUNT Packages"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] State the investigative-not-certifying claim boundary up front."
+  - "[x] Instantiate the W.01 forensic report contract for both methods."
+  - "[x] Define change-point inputs from status events and batch order."
+  - "[x] Define discrepancy-clustering inputs from V-series audit observations."
+  - "[x] Describe the intended four-role fixture pattern for each family."
+  - "[ ] Define forensic report schema in code with source package hash."
+  - "[ ] Build change-point and discrepancy-clustering fixtures."
+  - "[ ] Decide implementation placement: rcount-audit reports vs rcount-forensics crate."

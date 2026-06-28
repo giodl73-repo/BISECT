@@ -1,0 +1,26 @@
+\section{Introduction}
+
+Digit-distribution tests ask whether reported election counts have unusual
+leading, second, or final digits. They are attractive because they are simple:
+a count table can be reduced to a reference distribution, a test statistic, and
+a ranked list of contests or jurisdictions that deserve a closer look. In the
+W-series, that is all they are allowed to do. They can prioritize
+investigation. They cannot prove fraud, certify correctness, or replace a
+risk-limiting audit.
+
+This paper also leads with a second boundary specific to this method family.
+The election-forensics literature is skeptical of Benford's law for vote
+counts. Benford behavior depends on measurements that span several orders of
+magnitude and are not tightly bounded by administrative design. Precinct vote
+counts often do the opposite: jurisdictions build precincts to be similar in
+size, contests are bounded by registration and turnout, and many tables cover a
+narrow range of magnitudes. First-digit tests are therefore fragile, and
+second-digit tests are especially easy to misread. Deviations from Benford-style
+references are expected in many innocent election tables.
+
+The purpose of W.04 is to define a cautious method wrapper for these weak
+screens. Following the W.01 framework contract \citep{w01-forensic-analytics-2026},
+it specifies the digit-test families, the RCOUNT inputs they consume, the
+transcript fields they must emit, and the fixture roles that keep both planted
+anomalies and innocent failures visible. It is a method and framework paper. No
+forensics crate, function, fixture, or test is claimed to exist here.

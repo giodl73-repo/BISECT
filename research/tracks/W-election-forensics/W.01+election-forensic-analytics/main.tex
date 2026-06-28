@@ -1,0 +1,49 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Election Forensic Analytics For RCOUNT Packages:
+A Report Contract For Investigative, Non-Certifying Anomaly Analysis}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Election forensic analytics look for unusual patterns in reported results:
+outlying precinct swings, turnout and vote-share residuals, batch and scanner
+discontinuities, suspicious digit distributions, spatial outliers, abrupt
+change points, and clustered audit discrepancies. These methods are valuable
+for triage, but they cannot certify an outcome or prove fraud. This paper
+defines the W-series, a family adjacent to the RCOUNT count-verification track
+but with a deliberately different claim boundary. It surveys the analytic
+families that hash-bound RCOUNT packages can feed, specifies a common forensic
+report contract every W-series method must satisfy --- source package hashes,
+feature set and baseline population, model identity, unit-level scores,
+explicit caveats, and a plain investigative-not-certifying statement --- and
+fixes the rule that anomaly scores must never masquerade as certification
+evidence. It is a framework and contract paper: the analytic methods are
+established, the report contract is specified here, and implementation
+placement (RCOUNT audit reports versus a later forensics crate) is left as an
+explicit open decision.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-analytics-families}
+\input{sections/03-report-contract}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v7-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

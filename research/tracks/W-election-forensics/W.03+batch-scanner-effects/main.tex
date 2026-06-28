@@ -1,0 +1,46 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Batch And Scanner Effects In Election Forensic Analytics:\
+A Method Framework For Investigative, Non-Certifying Group-Level Signals}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Forensic analytics prioritize investigation. They do not prove fraud, certify
+outcomes, or replace risk-limiting audits. This paper defines the W.03 method
+framework for batch and scanner effects: systematic deviations associated with a
+tabulation batch, scanner, drop box, or upload. The signal is group-level, not a
+claim about an individual ballot. The method models vote share or residuals with
+a batch/scanner grouping factor, estimates group-level fixed or random effects,
+and flags groups whose effects are large relative to within-group variation.
+RCOUNT batch manifests, cast vote records, and summaries provide the intended
+hash-bound inputs. Reports instantiate the W.01 forensic report contract with
+\texttt{model\_id=batch-effect}, source package hashes, unit-level scores, and
+plain caveats. This is a method and framework paper: the report contract is
+specified in W.01, the statistics are established, and no forensics crate,
+fixture, function, or test is claimed to exist.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-method}
+\input{sections/03-rcount-inputs}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,w-series-forensics-contract-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

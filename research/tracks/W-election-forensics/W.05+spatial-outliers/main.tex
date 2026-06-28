@@ -1,0 +1,45 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Spatial Outliers And Neighbor Anomalies:
+A Method For Investigative, Non-Certifying Election Forensics}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Neighboring reporting units often resemble one another because they share local
+geography, administration, demography, and political context. A reporting unit
+that diverges sharply from its geographic neighbors can therefore be a useful
+candidate for review. It is not, by itself, evidence of fraud, proof of error,
+or certification evidence. This W.05 method paper instantiates the W.01
+forensic report contract for spatial outliers: neighbors are defined by shared
+boundaries, features are derived from hash-bound RCOUNT reporting units and
+geography, scores may come from local Moran's I/LISA statistics, spatial-lag
+residuals, or neighbor-difference z-scores, and every output remains an
+investigation queue. The paper defines the method, input contract, intended
+fixture roles, and false-positive boundary. It does not claim a shipped
+forensics crate, function, fixture, or test.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-method}
+\input{sections/03-rcount-inputs}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,w-series-spatial-outliers-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

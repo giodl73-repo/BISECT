@@ -1,0 +1,40 @@
+\section{RCOUNT Inputs And Report Contract}
+
+RCOUNT can feed this method with normalized summaries and large count tables:
+contest totals by reporting unit, jurisdiction, candidate, batch, or other
+publicly reproducible grouping. The method must bind every report to the source
+package hashes so that a second analyst using the same RCOUNT package and the
+same registered method recomputes the same extracted digits and scores
+\citep{rcount-overview-2026}.
+
+W.04 instantiates the W.01 transcript fields as follows.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & W.04 instantiation \\
+\midrule
+\texttt{method\_id} & Registered digit-distribution screen. \\
+\texttt{feature\_set} & Count column, digit position, exclusions, pooling rule,
+and any minimum-count threshold. \\
+\texttt{baseline\_population} & Contest, jurisdiction set, election, time window,
+and comparable count table used for the reference. \\
+\texttt{model\_id} & \texttt{digit-test/benford}, with subtype for first digit,
+second digit, last digit, or declared distance family. \\
+\texttt{unit\_id} & Contest, jurisdiction, reporting unit, batch, or aggregate
+count table being scored. \\
+\texttt{score} & Test statistic or distance from the declared reference. \\
+\texttt{p\_value\_or\_rank} & Optional p-value, percentile, or queue rank, reported
+only with its assumptions. \\
+\texttt{investigation\_note} & Required weak-signal caveat: digit tests are
+low-weight screens, deviations are expected under bounded or similar precinct
+sizes, and the result is not evidence of fraud. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The source hashes, feature definition, baseline population, and model identity
+are part of the evidence. Changing any of them changes the question. The
+investigation note is not optional boilerplate; it is the field that prevents a
+large digit statistic from being circulated as a certification or fraud claim.
