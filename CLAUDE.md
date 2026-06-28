@@ -9,7 +9,7 @@ Congressional and state legislative redistricting via METIS recursive bisection.
 ## Key directories
 
 ```
-crates/              # Rust workspace (bisect-cli, bisect-core, bisect-data, bisect-analysis,
+crates/              # Rust workspace (bisect-cli, bisect-core, bisect-data, bisect-runner, bisect-analysis,
                         #   bisect-map, bisect-report, bisect-apportion, bisect-metis, bisect-ensemble)
 docs/                   # Human-facing docs (BISECT_CLI.md, PAPERS.md, concepts/, quickstart/, legal/)
 docs/papers/            # 63+ compiled PDFs (committed)

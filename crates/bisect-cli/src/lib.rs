@@ -1,10 +1,13 @@
-pub mod adjacency_loader;
+// Engine modules extracted into the `bisect-runner` crate. Re-exported so the
+// existing `crate::{adjacency_loader, bisection_runner, geosection_orientation,
+// ilp_audit}` paths across the CLI continue to resolve unchanged.
+pub use bisect_runner::{adjacency_loader, bisection_runner, geosection_orientation, ilp_audit};
+
 pub mod aggregate;
 pub mod algo_config;
 pub mod analyze;
 pub mod analyze_label;
 pub mod args;
-pub mod bisection_runner;
 pub mod build_cmd;
 pub mod civic;
 pub mod compare;
@@ -18,10 +21,8 @@ pub mod export_cmd;
 pub mod fetch;
 pub mod fletch;
 pub mod geometry;
-pub mod geosection_orientation;
 pub mod housing;
 pub mod housing_evidence;
-pub mod ilp_audit;
 pub mod import_cmd;
 pub mod import_label;
 pub mod improve_cmd;

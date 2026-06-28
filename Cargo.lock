@@ -232,6 +232,7 @@ dependencies = [
  "bisect-multiscale",
  "bisect-pareto",
  "bisect-report",
+ "bisect-runner",
  "bisect-smc",
  "clap",
  "csv",
@@ -442,6 +443,30 @@ dependencies = [
  "tempfile",
  "tera",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "bisect-runner"
+version = "0.1.0"
+dependencies = [
+ "bisect-core",
+ "bisect-data",
+ "bisect-ensemble",
+ "bisect-ilp",
+ "bisect-multiscale",
+ "bisect-report",
+ "bisect-smc",
+ "clap",
+ "metis",
+ "metis-core",
+ "rand",
+ "rayon",
+ "rgraph-core",
+ "rmath-core",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
 ]
 
 [[package]]

@@ -18,6 +18,7 @@ use crate::vertex_weights::{build_vertex_weights, VertexConstraintKind};
 use bisect_analysis::analyze_mm_districts;
 use bisect_core::{state_code_to_fips, Partition};
 use bisect_report;
+pub use bisect_runner::runner::{validate_multiscale_levels, AreaSectionInit};
 /// Multi-state Rayon parallel runner + single-state implementation.
 ///
 /// `run_states_parallel` dispatches states across Rayon threads.
@@ -182,21 +183,6 @@ impl Default for SeedCompositor {
     fn default() -> Self {
         Self::Multi { seeds: 50 }
     }
-}
-
-/// Warm-start strategy for AreaSection (T.2) ratio selection.
-///
-/// `RatioOptimal` uses the existing internal Lorenz-filtered ratio heuristic.
-/// `MovingKnife` calls `split_subgraph_mka_direction()` first to obtain theta*
-/// (the Reock-maximising cut angle), then converts it to a directional penalty
-/// applied to edge weights before the METIS ratio search. Requires tract centroids;
-/// falls back to `RatioOptimal` with a warning if centroid data is absent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AreaSectionInit {
-    /// Current default — internal Lorenz heuristic, no directional pre-bias.
-    RatioOptimal,
-    /// Use MKA theta* as the directional penalty angle for the METIS ratio search.
-    MovingKnife,
 }
 
 /// Layer 1 (structure): what tree of splits?
@@ -1530,33 +1516,6 @@ fn resolve_adjacency_path(
          Run: bisect fetch --type adjacency --states {state_upper} --year {year}\n\
          Then: bisect state --state {state_upper} --year {year} ..."
     ))
-}
-
-/// Validate --multiscale-fine / --multiscale-coarse ordering.
-///
-/// Valid pairs (fine must be strictly finer than coarse):
-///   (bg, tract), (bg, county), (tract, county)
-///
-/// Returns Ok(()) for valid pairs; Err with a descriptive message for invalid ones.
-pub fn validate_multiscale_levels(fine: &str, coarse: &str) -> Result<(), String> {
-    let rank = |level: &str| match level {
-        "bg" | "block_group" => Ok(0usize),
-        "tract" => Ok(1usize),
-        "county" => Ok(2usize),
-        other => Err(format!(
-            "unknown multiscale level '{other}'. Valid values: bg, tract, county"
-        )),
-    };
-    let fr = rank(fine)?;
-    let cr = rank(coarse)?;
-    if fr < cr {
-        Ok(())
-    } else {
-        Err(format!(
-            "--multiscale-fine {fine} is not finer than --multiscale-coarse {coarse}.\n\
-             Valid orderings (fine -> coarse): bg->tract, bg->county, tract->county."
-        ))
-    }
 }
 
 /// Check CVAP data availability and warn + fall back to total if missing.

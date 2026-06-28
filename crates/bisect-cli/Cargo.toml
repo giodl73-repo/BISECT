@@ -26,6 +26,7 @@ bisect-smc       = { path = "../bisect-smc" }
 rand.workspace = true
 # default-features = false: c-ffi inclusion is controlled by our own feature below.
 bisect-apportion = { path = "../bisect-apportion", default-features = false }
+bisect-runner    = { path = "../bisect-runner", default-features = false }
 bisect-analysis  = { path = "../bisect-analysis" }
 bisect-map       = { path = "../bisect-map" }
 bisect-report    = { path = "../bisect-report" }
@@ -61,7 +62,7 @@ fs2            = "0.4"
 # c-ffi-engine: enables C METIS (bundled via vendored feature — requires C compiler
 # at build time but produces a standalone binary with no runtime lib dependency).
 # Disable with --no-default-features for a fully pure-Rust build (no C toolchain needed).
-c-ffi-engine = ["dep:metis", "bisect-apportion/c-ffi"]
+c-ffi-engine = ["dep:metis", "bisect-apportion/c-ffi", "bisect-runner/c-ffi-engine"]
 default = ["c-ffi-engine"]
 
 [dev-dependencies]

@@ -22,6 +22,7 @@ members = [
     "crates/bisect-core",
     "crates/bisect-data",
     "crates/bisect-apportion",
+    "crates/bisect-runner",
     "crates/bisect-cli",
     "crates/bisect-analysis",
     "crates/bisect-map",

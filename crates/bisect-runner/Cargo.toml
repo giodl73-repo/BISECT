@@ -1,0 +1,36 @@
+[package]
+name = "bisect-runner"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "bisect redistricting engine — recursive bisection runner extracted from the CLI"
+
+[dependencies]
+bisect-core      = { path = "../bisect-core" }
+bisect-data      = { path = "../bisect-data" }
+bisect-ensemble  = { path = "../bisect-ensemble" }
+bisect-ilp       = { path = "../bisect-ilp" }
+bisect-multiscale = { path = "../bisect-multiscale" }
+bisect-report    = { path = "../bisect-report" }
+bisect-smc       = { path = "../bisect-smc" }
+metis-core       = { workspace = true }
+rgraph-core      = { path = "../rgraph-core" }
+rmath-core       = { path = "../rmath-core" }
+# metis is only compiled when the c-ffi-engine feature is enabled.
+metis            = { workspace = true, optional = true }
+rand.workspace        = true
+rayon.workspace       = true
+serde.workspace       = true
+serde_json.workspace  = true
+sha2           = "0.10"
+clap           = { version = "4", features = ["derive"] }
+
+[features]
+# c-ffi-engine: enables C METIS (the `metis` FFI crate). Disable with
+# --no-default-features for a fully pure-Rust build (no C toolchain needed).
+c-ffi-engine = ["dep:metis"]
+default = ["c-ffi-engine"]
+
+[dev-dependencies]
+tempfile = "3"
