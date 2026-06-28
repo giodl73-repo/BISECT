@@ -1,0 +1,23 @@
+\section{Introduction}
+
+SHANGRLA is useful because it changes the unit of an election audit claim. A
+contest outcome is no longer treated as one opaque stopping rule. It is reduced
+to assertions, and each assertion is evaluated by an assorter: a bounded value
+assigned to a ballot, CVR, comparison record, batch, or other sampled unit. When
+the assorter mean is greater than $1/2$, the assertion supports the reported
+outcome.
+
+That abstraction is deliberately broader than any one audit method. BRAVO,
+Kaplan-Markov comparison audits, ALPHA betting martingales, and some ranked
+choice audit paths can all be described as tests over assertion-level evidence.
+The RCOUNT V.16 slice therefore focuses on the assertion and assorter contract
+itself. A package should say which assertion is being tested, which assorter is
+being used, which sample unit received which assorter value, and what declared
+risk evidence or decision is attached to that sequence.
+
+The implemented claim is modest. RCOUNT does not yet recompute a SHANGRLA mean
+test from this method id, and it does not claim that a reported outcome has been
+risk-limited by V.16 alone. It verifies that the declared assertion and assorter
+record is reproducible as a public record shape: ids are linked, values are
+bounded, and the half-average layer is ready for a later ALPHA or other mean
+replay.

@@ -1,0 +1,39 @@
+\section{Implemented Surface}
+
+The method id is defined in \texttt{rcount-core} as
+\texttt{SHANGRLA\_ASSORTER\_METHOD\_ID = "shangrla-assorter-v1"}. The generic
+method registry accepts that id in \texttt{is\_supported\_audit\_algorithm\_method}.
+The design verifier is \texttt{verify\_audit\_algorithm\_runs}; it is also the
+baseline package verifier surface that emits the pass id
+\texttt{audit\_algorithm\_transcript}.
+
+The SHANGRLA slice is not a statistical replay branch in \texttt{rcount-audit}.
+The replay dispatcher has explicit branches for BRAVO, ALPHA, Minerva,
+Kaplan-Markov, batch comparison, and several documented boundary methods, but
+no SHANGRLA branch. A \texttt{shangrla-assorter-v1} run therefore falls through
+to the generic boundary transcript, \texttt{method does not yet have statistical
+replay}. The real implemented guarantee is the core record-shape and design
+contract.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{is\_supported\_audit\_algorithm\_method} & Unsupported method ids before any assertion record is trusted. \\
+\texttt{risk\_limit\_ppm} in \texttt{verify\_audit\_algorithm\_runs} & Zero or million-and-above risk limits when a risk limit is declared. \\
+Duplicate run and assertion checks & Reused \texttt{run\_id} or repeated \texttt{assertion\_id} values. \\
+Assertion-link check & Sample step naming an assertion that is not declared in the run. \\
+Assorter-bound check & Empty \texttt{assorter\_id} or nonpositive \texttt{assorter\_upper\_bound}. \\
+Sample-step uniqueness & Repeated \texttt{assertion\_id}, \texttt{step\_index} pairs. \\
+Assorter-value check & Negative values, nonpositive denominators, or values above the assertion bound. \\
+Optional evidence checks & Invalid bet denominator, negative statistic, or \texttt{p\_value\_ppm} greater than 1,000,000. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Errors in this family are mapped by \texttt{rcount-audit} to the public check
+name \texttt{audit\_algorithm\_transcript}. That keeps SHANGRLA boundary-design
+failures on the same transcript surface as the other audit algorithm records
+without claiming that the SHANGRLA p-value has been numerically replayed.

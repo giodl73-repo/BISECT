@@ -1,0 +1,37 @@
+\section{Ownership Contract}
+
+The ownership contract separates two kinds of process evidence. RLOG is about
+records emitted by election systems or administrative processes. It can
+normalize what a source log records and bind that normalization to source
+bytes, parser transcripts, caveats, and optional RCOUNT identifiers. RCHAIN is
+about physical custody records. It can normalize what a custody source records:
+seals, transfers, observers, storage locations, retrieval sheets, and gaps.
+
+Neither layer is allowed to convert count reconciliation into process proof.
+The distinction is small but important. A reconciled count package can be an
+input to a larger public evidence bundle, but it is not a custody record and it
+is not an event log.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+Layer & May assert & Must not assert \\
+\midrule
+RLOG & A source log records an event, status, timestamp, device identifier,
+operator label, export, upload, adjudication step, parser caveat, or link to a
+count artifact. & Physical custody, ballot security, legal compliance, or count
+correctness unless those facts are explicitly present in the source log and
+stated only as source-record claims. \\
+RCHAIN & A custody source records a seal, transfer, observer note, storage
+location, retrieval sheet, custody gap, or caveat. & Count correctness,
+certification, or an unrecorded custody fact inferred from successful RCOUNT
+reconciliation, statistics, or absence of a discrepancy. \\
+RCOUNT & Count, manifest, CVR, audit, and reconciliation facts that follow from
+public count evidence. & Custody continuity, physical handling, device-event
+completeness, or administrative intent. \\
+\bottomrule
+\end{tabularx}
+\caption{Reserved ownership boundaries for process evidence.}
+\end{table}

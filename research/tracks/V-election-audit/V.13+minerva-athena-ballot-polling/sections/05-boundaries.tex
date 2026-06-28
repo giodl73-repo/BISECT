@@ -1,0 +1,23 @@
+\section{Boundaries}
+
+This slice verifies a ballot-polling outcome assertion under the sampling and
+round-planning assumptions already encoded in the audit record. It checks that
+a declared Minerva stop-or-continue transcript follows from reported
+two-candidate totals, a risk limit, round boundaries, and winner/loser ballot
+observations. It does not verify ballot custody, voter eligibility, manifest
+construction, public-seed sampling, or ballot-level CVR comparison; those are
+separate RCOUNT contracts.
+
+The method boundary is equally important. The implemented Minerva path is the
+scoped two-candidate ballot-polling replay in \texttt{rcount-stats}. Athena is
+currently a record-shape and method-preservation boundary only. RCOUNT may say
+that an Athena audit record was carried through the package and identified by
+method id, but it must not claim Athena risk replay until the required
+method-specific inputs and tolerance rules are implemented.
+
+The public-evidence boundary remains with the artifact. The Rhode Island Rep.
+28 adapter records \texttt{MINERVA} metadata and emits a package-level
+Minerva run, but the plan explicitly keeps that source as boundary-only until
+public rows expose enough per-round ballot evidence to replay the source risk
+measurement. Missing evidence is therefore reported as a boundary, not upgraded
+to a trusted pass.

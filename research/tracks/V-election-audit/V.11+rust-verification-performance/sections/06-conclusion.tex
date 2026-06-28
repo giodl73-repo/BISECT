@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+RCOUNT now has a first parallel verifier slice with an explicit serial
+equivalence contract. \texttt{verify\_package\_parallel} parallelizes the
+selection-sum loop with Rayon, collects the resulting \texttt{EquationPass}
+records, and then appends the rest of the verifier surface in the same order as
+\texttt{verify\_package}. The fixture suite compares complete reports for
+accepted packages and compares the serial and parallel errors for a bad
+selection-sum package.
+
+That is the right first claim for public election evidence. Before measuring
+throughput, the verifier must prove that parallel execution is not a semantic
+change. The remaining work is to add real package-size and timing benchmarks,
+then extend parallelism to source-hash, batch, and accounting families only
+where the same deterministic transcript rule can be maintained.

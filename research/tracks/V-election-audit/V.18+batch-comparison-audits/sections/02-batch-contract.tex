@@ -1,0 +1,33 @@
+\section{Batch Contract}
+
+The package-level record is \texttt{BatchComparisonAudit}. It carries the fields
+needed to compare one audited batch against the batch summary and hand tally:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{audit\_id} & Stable id for the batch comparison record. \\
+\texttt{contest\_id} & Contest whose batch subtotals are being checked. \\
+\texttt{batch\_id} & Audited batch; it must exist in the package batch manifest. \\
+\texttt{declared\_batch\_ballots} & Declared batch size, checked against \texttt{counted\_ballots}. \\
+\texttt{winner\_selection\_id}, \texttt{loser\_selection\_id} & Pairwise plurality assertion. \\
+\texttt{reported\_totals} & Reported batch subtotals for the assertion selections. \\
+\texttt{hand\_totals} & Hand-tallied batch subtotals for the same selections. \\
+\texttt{declared\_reported\_margin} & Reported winner-minus-loser margin in the batch. \\
+\texttt{declared\_hand\_margin} & Hand-tallied winner-minus-loser margin in the batch. \\
+\texttt{declared\_overstatement} & Reported margin minus hand margin. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For the positive synthetic fixture, the reported assertion margin is five votes
+and the hand margin is three votes, so the declared overstatement is two votes.
+The derived algorithm run stores this as the rational taint $2/5$ in the
+corresponding \texttt{AuditSampleStep.assorter\_value}. The replay surface then
+passes the ordered taints to the shared Kaplan-Markov taint-product routine.
+That routine validates the risk limit, requires at least one taint, rejects
+taints greater than or equal to one, multiplies the running product by
+$1-\text{taint}$, and emits the running p-value in integer parts per million.

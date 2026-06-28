@@ -1,0 +1,38 @@
+\section{Fixtures}
+
+The package-level positive fixture is
+\texttt{synthetic\_batch\_comparison\_package}. It extends the mail-batch
+fixture with one \texttt{BatchComparisonAudit} for
+\texttt{batch:P-001:election-day}. The record declares 70 batch ballots,
+reported totals of 35 for \texttt{cand-a} and 30 for \texttt{cand-b}, hand
+totals of 34 and 31, a reported margin of five, a hand margin of three, and an
+overstatement of two. The package passes with a
+\texttt{batch\_comparison\_overstatement} check.
+
+The algorithm positive fixture is
+\texttt{synthetic\_batch\_comparison\_algorithm\_package}. It calls
+\texttt{derive\_batch\_comparison\_algorithm\_run} with the sampled batch order
+containing \texttt{batch:P-001:election-day}, risk limit \texttt{300000}, and a
+\texttt{Continue} decision. The derived sample step carries taint $2/5$ and
+source references from the batch comparison audit and its hand-tally source. The
+fixture exercises both the package verifier linkage check and the CLI
+\texttt{replay-audit-algorithms} path.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & What it catches \\
+\midrule
+\texttt{synthetic\_bad\_batch\_comparison\_package} & Edits \texttt{declared\_overstatement}; the recomputed reported-minus-hand margin disagrees. \\
+\texttt{synthetic\_missing\_hand\_tally\_batch\_comparison\_package} & Removes the loser hand tally; the overstatement cannot be computed from public hand evidence. \\
+\texttt{synthetic\_batch\_size\_drift\_comparison\_package} & Changes \texttt{declared\_batch\_ballots}; the check fails before overstatement arithmetic. \\
+\texttt{synthetic\_bad\_batch\_comparison\_algorithm\_package} & Edits the declared sample-step taint; linkage recomputes the taint from the batch record and fails. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The derivation tests also reject an empty sampled-batch list and a sampled batch
+with no matching comparison evidence. These are not statistical disagreements;
+they are evidence-boundary failures that prevent a replayable transcript from
+being derived.

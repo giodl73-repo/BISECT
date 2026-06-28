@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Parallel RCOUNT Verification with Serial Equivalence}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Public RCOUNT packages should be checkable outside election offices, including
+when full-election packages are large enough that verification work should be
+parallelized. This paper documents the first parallel verifier slice in
+\texttt{rcount-core}. The claim is not a benchmark result. It is an equivalence
+contract: for the implemented parallelized check family, \texttt{verify\_package\_parallel}
+must produce the same \texttt{VerificationReport} as \texttt{verify\_package}.
+The current surface parallelizes contest selection-sum checks with Rayon while
+preserving the serial order of \texttt{EquationPass} records, then appends the
+remaining verifier checks in the same order as the serial entry point. The
+fixtures cover both accepted packages and a failed selection-sum package, so the
+parallel path is constrained to keep transcript semantics rather than merely to
+return a matching boolean.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-equivalence-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v11-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

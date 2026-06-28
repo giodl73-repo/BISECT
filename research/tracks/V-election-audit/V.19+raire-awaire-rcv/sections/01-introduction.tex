@@ -1,0 +1,21 @@
+\section{Introduction}
+
+Instant-runoff voting (IRV) changes the audit problem. A plurality audit can
+usually name a reported winner, a reported loser, and one outcome assertion. In
+an IRV contest, later-round transfers and eliminations mean that a simple
+winner-loser plurality assertion does not by itself imply the reported winner.
+The audit must instead explain why the reported elimination path and final
+winner are forced by the ranked ballots under the declared rule.
+
+RAIRE addresses that problem by generating a set of assertions for the reported
+IRV outcome. The usual assertion families are ``not eliminated before'' (NEB)
+and ``not eliminated next'' (NEN). Their joint truth is chosen so that, if all
+assertions pass under the audit evidence, the reported IRV winner follows.
+AWAIRE targets the same ranked-choice setting but adaptively weights assertions
+as audit evidence accumulates.
+
+RCOUNT V.19 is not yet a full RAIRE or AWAIRE implementation. It lands the
+record surface needed before that math can be replayed: method identity, the
+reported IRV elimination order, ranked sample choices, and ranked-choice
+assertion records. The current verifier checks that this evidence is shaped
+well enough to preserve and replay as a boundary transcript.

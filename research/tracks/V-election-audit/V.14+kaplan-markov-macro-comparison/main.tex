@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Kaplan-Markov MACRO Comparison Audit Replay}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Kaplan-Markov comparison audits turn CVR-versus-hand discrepancies into
+bounded overstatement evidence. In the MACRO form, the sampled unit contributes
+an overstatement category and the replay updates a Kaplan-Markov product whose
+bound depends on the ballot count, reported margin, and gamma. This paper
+documents the RCOUNT contract for the implemented comparison method
+\texttt{kaplan-markov-comparison-v1}. A verifier reads the risk limit, optional
+MACRO design fields, and ordered sample steps from an audit record; dispatches
+the run through \texttt{replay\_kaplan\_markov\_run}; and recomputes the declared
+per-step P-value and stop decision. The contract is limited to reproducible
+transcripts from declared public inputs. It does not prove CVR-to-ballot
+linkage, custody, or voter eligibility.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-kaplan-markov-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v12-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

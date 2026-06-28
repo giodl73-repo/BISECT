@@ -1,0 +1,39 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{RAUDIT / RCERT Boundary: Audit Transcripts and Certification Actions}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+RAUDIT and RCERT are reserved civic-evidence layers above the RCOUNT count
+ledger. RAUDIT names reusable audit, recount, and risk-limiting-audit transcript
+bundles; RCERT names certification actions, signoffs, evidence matrices, and
+scope caveats. Neither layer is currently a standalone implementation boundary:
+RAUDIT remains embedded in RCOUNT through the V-series audit-algorithm replay
+contracts, and RCERT is not built. This paper records the reservation boundary.
+Audit methods may be replayed from public evidence, and official actions may be
+recorded against verified evidence, but neither layer owns the base count ledger
+or silently changes RCOUNT verifier results.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-ownership-contract}
+\input{sections/03-deferral-and-boundary}
+\input{sections/04-conclusion}
+
+\nocite{rcount-overview-2026,civic-evidence-boundaries-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

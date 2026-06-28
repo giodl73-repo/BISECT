@@ -1,0 +1,22 @@
+\section{Boundaries}
+
+The implemented claim is a comparison-audit replay claim. RCOUNT verifies that
+the declared Kaplan-Markov taint product or MACRO product follows from the audit
+record fields and sample-step categories. It does not prove that a jurisdiction
+retrieved the correct physical ballot, that a CVR-to-ballot link was trustworthy,
+or that a batch was handled under a valid chain of custody.
+
+The method is also not ballot polling. BRAVO and Minerva consume ballot
+observations as votes for a reported winner, loser, or other choice. The
+Kaplan-Markov comparison surface consumes overstatement evidence derived from a
+CVR or reported total and a hand interpretation of the same unit. If that link
+is missing, the statistical replay can still be syntactically present but the
+external audit claim is outside this contract.
+
+The MACRO path is deliberately field-gated. RCOUNT uses the published-formula
+MACRO replay only when the package declares $N$, $V$, and gamma together. Without
+those fields, \texttt{kaplan-markov-comparison-v1} falls back to the older
+taint-product replay surface. The project plan therefore leaves one validation
+boundary open: compare the MACRO package path against external public audit
+fixtures when a source exposes the ballot count, reported margin, gamma, and
+ordered overstatement categories.

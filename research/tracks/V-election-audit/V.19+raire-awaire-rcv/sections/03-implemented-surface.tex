@@ -1,0 +1,38 @@
+\section{Implemented Surface}
+
+The core verifier names the ranked-choice design check
+\texttt{verify\_ranked\_choice\_audit\_design}. It is called for every
+\texttt{AuditAlgorithmRun}. For non-ranked methods, the check rejects stray
+\texttt{rcv\_elimination\_order} values or nonempty
+\texttt{ranked\_choices}; ranked evidence must not leak into unrelated audit
+methods. For \texttt{RAIRE\_IRV\_METHOD\_ID} and
+\texttt{AWAIRE\_IRV\_METHOD\_ID}, whose string values are
+\texttt{raire-irv-v1} and \texttt{awaire-irv-v1}, the check requires a ranked
+surface rather than a plurality surface.
+
+The ranked method must have at least two candidates in the elimination order,
+at least one assertion, and every assertion must have kind
+\texttt{RankedChoiceAssertion}. The elimination order cannot contain duplicate
+candidates. Each sample step must carry nonempty ranked choices, and each choice
+must name a candidate from the elimination order without duplication within the
+sampled ranking. The generic audit-run verifier then continues with ordinary
+assertion id, sample-step id, rational-value, and source-reference checks.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{is\_supported\_audit\_algorithm\_method} & Unknown method ids before ranked-choice design is considered. \\
+\texttt{verify\_ranked\_choice\_audit\_design} & Missing or duplicate elimination-order candidates, missing ranked assertions, wrong assertion kind, missing ranked choices, unknown ranked choices, and duplicate choices within one ranking. \\
+\texttt{audit\_algorithm\_transcript} & Accepted boundary records for RAIRE and AWAIRE method identity and evidence shape. \\
+\texttt{replay\_audit\_algorithm\_statistics} & Boundary transcripts stating that RAIRE assertion replay and AWAIRE adaptive replay are recorded but not statistically replayed. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+In \texttt{rcount-audit}, \texttt{replay\_audit\_algorithm\_statistics}
+dispatches both ranked methods to boundary transcripts. The RAIRE message says
+that IRV assertion replay is recorded but not replayed. The AWAIRE message says
+that IRV adaptive replay is recorded but not replayed.

@@ -1,0 +1,39 @@
+\section{Fixtures}
+
+The L0 positive fixture is \texttt{l0-rename}. It is a one-event package whose
+\texttt{LineageEventKind::Rename} must be one-to-one. The core test
+\texttt{l0\_rename\_fixture\_verifies} checks that the lineage unit references
+and lineage cardinality reports are present.
+
+\texttt{l0-missing-unit} is the stale-unit negative fixture. It declares a
+lineage event that references a unit not present in the relevant cycle context.
+\texttt{rhist-core} rejects it with \texttt{LineageMissingUnit}, and
+\texttt{rhist-io} surfaces the same core error when loading the directory.
+
+\texttt{l1-split-merge} is the split/merge positive package. It contains two
+lineage events and four crosswalk rows. The verifier checks both
+\texttt{crosswalk\_unit\_refs} and \texttt{crosswalk\_weight\_sum}, proving
+that the synthetic split and merge can be carried with exhaustive rational
+weights.
+
+\texttt{l1-bad-weights} is the bad-weight negative package. Its unit and
+lineage references are shaped like the L1 case, but the exhaustive crosswalk
+weights do not sum to one. The expected failure is
+\texttt{RhistCoreError::CrosswalkWeightSum}.
+
+\texttt{l2-three-cycle} is the three-cycle positive package. The tests assert
+that it has three cycles, seven lineage events, and nine crosswalk rows, and
+that its event kinds include rename, split, and merge. It is also the fixture
+used by the RCOUNT RHIST-reference consumer test and by
+\texttt{SYN\_RHIST\_L2\_PACKAGE\_HASH}.
+
+\texttt{real-ri-tract-unchanged} is the real-source pressure fixture. It has
+three cycles, two lineage events, and two crosswalk rows. The verifier checks
+source reference resolution and \texttt{rhist-io} verifies that the preserved
+source bytes match \path{sources/source-index.json}.
+
+The hash tests cover the package substrate itself. One test confirms that
+\texttt{package\_content\_hash} starts with \texttt{sha256:}, uses the RHIST
+prefix, and ignores the declared hash field. Another changes a lineage
+explanation and requires the hash to change; a third edits the manifest hash
+and expects \texttt{PackageHashMismatch}.

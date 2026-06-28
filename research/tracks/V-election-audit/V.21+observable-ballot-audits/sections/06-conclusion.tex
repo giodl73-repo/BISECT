@@ -1,0 +1,14 @@
+\section{Conclusion}
+
+RCOUNT now has a narrow SOBA observable-ballot boundary. The core verifier
+recognizes \texttt{soba-observable-ballot-audit-v1}, requires observable
+ballot linkage assertions and sample steps, checks that every sampled opening
+exists as an inclusion proof, and rejects openings that publish choices or
+voter identity. The audit replay surface then reports SOBA as documented
+linkage rather than as completed comparison-risk replay.
+
+This is intentionally modest. It is the public-evidence precondition for a
+full ballot-level comparison audit, not the full audit. The useful claim is
+that the observable record and opening linkage are present, well formed, and
+privacy bounded, so later work can attach CVR mismatch and statistical
+comparison checks without weakening the secrecy boundary.

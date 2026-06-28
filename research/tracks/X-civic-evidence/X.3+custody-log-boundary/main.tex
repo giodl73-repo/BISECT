@@ -1,0 +1,41 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{RCHAIN/RLOG Boundary: Custody and Event-Log Evidence}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Election count reconciliation can show that declared arithmetic is internally
+consistent, but it cannot prove the physical history of ballots, devices,
+media, seals, or rooms. This paper reserves two downstream civic-evidence
+layers for those process records without implementing either one. RLOG is the
+future owner of normalized event and status logs: what source logs record.
+RCHAIN is the future owner of chain-of-custody evidence: what custody sources
+record. Both layers are deliberately deferred until public source artifacts
+such as EMS logs, tabulator logs, seal logs, custody forms, and observer
+records force concrete schemas. The boundary rule is simple: RLOG can say what
+a source log records; RCHAIN can say what a custody source records; neither can
+infer custody or correctness from count reconciliation alone.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-ownership-contract}
+\input{sections/03-deferral-and-boundary}
+\input{sections/04-conclusion}
+
+\nocite{rcount-overview-2026,civic-evidence-boundaries-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,19 @@
+\section{Introduction}
+
+RCOUNT count packages and RPLAN district plans answer different questions.
+RCOUNT verifies count summaries and their reconciliation evidence. RPLAN records
+a district assignment and owns the plan hash for that assignment. RCTX records
+shared context and crosswalk identity. A district vote table needs all three
+claims, but it should not blur them.
+
+The V.8 bridge is therefore optional. It takes an RCOUNT package whose summaries
+already verify, an RPLAN plan whose assignment validates under \texttt{rplan-core},
+and, when supplied, an RCTX context or crosswalk. It emits a transcript that
+binds the RCOUNT package content hash, the RPLAN plan hash, and the relevant
+RCTX hashes before reporting district totals.
+
+This paper covers that bridge. It does not claim that RCOUNT validates a plan,
+that RPLAN validates count evidence, or that RCTX decides which assignment is
+lawful. It claims only that the implemented bridge composes those artifacts and
+that the district totals follow from the verified summaries, the assignment, and
+any explicit crosswalk rows used for projection.

@@ -1,0 +1,22 @@
+\section{Introduction}
+
+Ballot-polling RLAs are often described by their stopping rule, but the public
+record also has to support replay. BRAVO, documented in V.12, is per-draw:
+each sampled ballot updates a sequential likelihood ratio. Minerva moves the
+same ballot-polling idea to audit rounds. The replay question is therefore not
+only whether a final stop was declared, but whether each declared round boundary
+and round statistic follows from the reported totals, risk limit, and observed
+ballots.
+
+RCOUNT treats this as a transcript contract. The verifier does not accept a
+vendor-exported risk value as authoritative. It partitions sample steps into
+rounds, recomputes the Minerva binomial-tail ratio with exact rational
+arithmetic in \texttt{rcount-stats}, and compares the computed round statistic,
+p-value in parts per million, and stop decision to the declared audit record.
+
+This paper covers that Minerva slice and the related Athena method surface.
+It does not claim that Rhode Island Rep. 28 or any other public audit has
+enough released ballot evidence to recompute its Minerva risk value. It claims
+that synthetic two-candidate Minerva records with sufficient observations are
+replayable, and that Athena records are preserved as method-specific boundaries
+rather than silently treated as generic unsupported methods.

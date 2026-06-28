@@ -1,6 +1,6 @@
 # Research Papers
 
-190+ papers across active tracks (A–V). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. A few later-track drafts remain source-only (V.11–V.21 audit-algorithm papers, plus tracks W and X) and do not yet have PDFs in this index.
+190+ papers across active tracks (A–X). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Only track W (election forensics) remains source-only and does not yet have PDFs in this index.
 
 Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
@@ -122,18 +122,28 @@ RCOUNT specs:
 
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
-| V.0 | RCOUNT Overview — reproducible election count packages | — | planned |
-| V.1 | Canvass Arithmetic — unofficial returns to certified totals | — | planned |
-| V.2 | Precinct Lineage Across Elections — splits, merges, renames, movement | — | planned |
-| V.3 | Tamper-Evident Precinct And Batch Hashing — public roots and proofs | — | planned |
-| V.4 | Privacy-Safe Voter Inclusion Proofs — inclusion without coercion receipts | — | planned |
-| V.5 | Ballot Manifest Verification — batch/container accounting | — | planned |
-| V.6 | CVR-To-Summary Reconciliation — cast vote records to public summaries | — | planned |
-| V.7 | Replayable Risk-Limiting Audits — public seed, sample replay, stopping rules | — | planned |
-| V.8 | District Vote Aggregation With RPLAN — count hashes plus plan hashes | — | planned |
-| V.9 | Count-System Interoperability — vendor exports to RCOUNT | — | planned |
-| V.10 | Certification Evidence Matrix — law, systems, and public data availability | — | planned |
-| V.11 | Performance And Parallel Verification In Rust — full-election verification | — | planned |
+| V.0 | RCOUNT Overview — reproducible election count packages | [PDF](papers/V.0+rcount-overview.pdf) | draft |
+| V.1 | Canvass Arithmetic — unofficial returns to certified totals | [PDF](papers/V.1+canvass-arithmetic.pdf) | draft |
+| V.2 | Precinct Lineage Across Elections — splits, merges, renames, movement | [PDF](papers/V.2+precinct-lineage.pdf) | draft |
+| V.3 | Tamper-Evident Precinct And Batch Hashing — public roots and proofs | [PDF](papers/V.3+tamper-evident-hashing.pdf) | draft |
+| V.4 | Privacy-Safe Voter Inclusion Proofs — inclusion without coercion receipts | [PDF](papers/V.4+privacy-safe-inclusion-proofs.pdf) | draft |
+| V.5 | Ballot Manifest Verification — batch/container accounting | [PDF](papers/V.5+ballot-manifest-verification.pdf) | draft |
+| V.6 | CVR-To-Summary Reconciliation — cast vote records to public summaries | [PDF](papers/V.6+cvr-summary-reconciliation.pdf) | draft |
+| V.7 | Replayable Risk-Limiting Audits — public seed, sample replay, stopping rules | [PDF](papers/V.7+rla-sampler-replay.pdf) | draft |
+| V.8 | District Vote Aggregation With RPLAN — count hashes plus plan hashes | [PDF](papers/V.8+district-vote-aggregation.pdf) | draft |
+| V.9 | Count-System Interoperability — vendor exports to RCOUNT | [PDF](papers/V.9+count-system-interoperability.pdf) | draft |
+| V.10 | Certification Evidence Matrix — law, systems, and public data availability | [PDF](papers/V.10+certification-evidence-matrix.pdf) | draft |
+| V.11 | Parallel RCOUNT Verification With Serial Equivalence | [PDF](papers/V.11+rust-verification-performance.pdf) | draft |
+| V.12 | Replayable BRAVO Ballot-Polling Audit Transcripts | [PDF](papers/V.12+bravo-ballot-polling.pdf) | draft |
+| V.13 | Replayable Minerva And Athena Ballot-Polling RLA Transcripts | [PDF](papers/V.13+minerva-athena-ballot-polling.pdf) | draft |
+| V.14 | Kaplan-Markov MACRO Comparison Audit Replay | [PDF](papers/V.14+kaplan-markov-macro-comparison.pdf) | draft |
+| V.15 | Replayable ALPHA Betting-Martingale Audit Transcripts | [PDF](papers/V.15+alpha-betting-martingales.pdf) | draft |
+| V.16 | SHANGRLA Assertion And Assorter Audit Contracts | [PDF](papers/V.16+shangrla-assorters.pdf) | draft |
+| V.17 | Stratified And Hybrid Risk-Limiting Audit Structures | [PDF](papers/V.17+stratified-hybrid-rlas.pdf) | draft |
+| V.18 | Replayable Batch-Comparison Audit Transcripts | [PDF](papers/V.18+batch-comparison-audits.pdf) | draft |
+| V.19 | RAIRE And AWAIRE IRV Ranked-Choice Audit Boundaries | [PDF](papers/V.19+raire-awaire-rcv.pdf) | draft |
+| V.20 | Bayesian Tabulation Audit Boundary Contracts | [PDF](papers/V.20+bayesian-tabulation-audits.pdf) | draft |
+| V.21 | SOBA Observable Public-Evidence Ballot Audits | [PDF](papers/V.21+observable-ballot-audits.pdf) | draft |
 
 ---
 
@@ -433,6 +443,21 @@ Statistical inference for gerrymandering detection: hypothesis testing, Bayesian
 | S.2 | Bayesian Redistricting: Prior Specification and Posterior Interpretation | [PDF](papers/S.2+bayesian-redistricting.pdf) |
 | S.3 | Power Analysis for Gerrymandering Detection | [PDF](papers/S.3+power-analysis.pdf) |
 | S.4 | Multiple Testing in Redistricting Analysis: FDR Control | [PDF](papers/S.4+multiple-testing.pdf) |
+
+---
+
+## Track X — Civic Evidence Package Family (6 papers)
+
+The reusable substrate beneath RCOUNT and RPLAN. X.1 and X.2 document shipped base dimensions (RHIST unit lineage, RCTX shared machine context); X.3-X.6 are deliberate boundary/reservation papers that record ownership rules and the decision to defer downstream layers (custody/log, case composition, statistics/roll, audit/cert) until real source artifacts or a second consumer demands them.
+
+| Code | Title | PDF |
+|------|-------|-----|
+| X.1 | Reusable Reporting-Unit Lineage Packages (RHIST) | [PDF](papers/X.1+rhist-unit-history.pdf) |
+| X.2 | RCTX/RMAP Boundary: Shared Machine-Context Identity | [PDF](papers/X.2+rctx-rmap-boundary.pdf) |
+| X.3 | RCHAIN/RLOG Boundary: Custody and Event-Log Evidence | [PDF](papers/X.3+custody-log-boundary.pdf) |
+| X.4 | RCASE Boundary: Public Evidence-Bundle Composition | [PDF](papers/X.4+case-composition-boundary.pdf) |
+| X.5 | RSTAT/RROLL Boundary: Analysis and Eligibility Universes | [PDF](papers/X.5+statistics-and-roll-boundary.pdf) |
+| X.6 | RAUDIT/RCERT Boundary: Audit Transcripts and Certification Actions | [PDF](papers/X.6+audit-cert-boundary.pdf) |
 
 ---
 

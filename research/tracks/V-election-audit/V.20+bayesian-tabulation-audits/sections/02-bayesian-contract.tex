@@ -1,0 +1,31 @@
+\section{Bayesian Contract}
+
+The implemented record is an \path{AuditAlgorithmRun} whose method id is
+\texttt{bayesian-tabulation-audit-v1}. Its Bayesian fields are explicit and are
+kept out of non-Bayesian audit methods.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned method name. Current value: \texttt{bayesian-tabulation-audit-v1}. \\
+\texttt{bayesian\_prior\_id} & Non-empty identifier for the declared prior specification. \\
+\texttt{bayesian\_likelihood\_id} & Non-empty identifier for the declared likelihood or evidence model. \\
+\texttt{posterior\_winner\_probability\_ppm} & Declared posterior probability, in parts per million, that the reported winner remains the winner. \\
+\texttt{posterior\_risk\_ppm} & Declared posterior upset probability, in parts per million. \\
+\texttt{simulation\_seed} & Optional seed metadata for a posterior computation performed outside this verifier. \\
+\texttt{posterior\_draws} & Optional positive count of posterior draws. \\
+\texttt{calibrated\_risk\_limit\_ppm} & Optional declared calibration threshold; the current verifier only checks its shape. \\
+\texttt{assertions} & Non-empty list whose assertion kinds must be \texttt{bayesian-outcome}. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The contract is intentionally a record-shape and design boundary. The prior and
+likelihood identifiers make the posterior claim attributable. The posterior
+winner and upset-risk fields are bounded probability fields. The optional
+calibration field records a possible bridge to risk-limiting language, but it
+is not treated as a valid frequentist risk limit unless a later calibrated rule
+is implemented.

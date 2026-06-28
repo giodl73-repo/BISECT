@@ -1,0 +1,31 @@
+\section{Observable Contract}
+
+The implemented record is an audit algorithm run whose method id is
+\texttt{soba-observable-ballot-audit-v1}. It carries observable ballot linkage
+assertions and sample steps that point to public openings. In the synthetic
+fixture, the opening is represented by an inclusion proof id; the sample step
+names that proof as its \texttt{sample\_unit\_id}.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned SOBA boundary method. Current value: \texttt{soba-observable-ballot-audit-v1}. \\
+\texttt{assertions} & Non-empty list of \texttt{ObservableBallotLinkage} assertions. \\
+\texttt{assorter\_id} & Fixture vocabulary for the observable opening, currently \texttt{soba-commitment-opening-v1}. \\
+\texttt{sample\_steps} & Non-empty ordered list of sampled observable records. \\
+\texttt{sample\_unit\_id} & Proof id of the public opening or commitment-opening record. \\
+\texttt{source\_refs} & Source evidence for the SOBA run and the sampled opening. \\
+\texttt{inclusion\_proofs} & Package-level proof records, keyed by \texttt{proof\_id}. \\
+\texttt{candidate\_selections} & Must be empty on the linked proof; the opening must not publish choices. \\
+\texttt{voter\_id} & Must be absent on the linked proof; the opening must not identify a voter. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The contract is therefore about observable comparison fields and privacy-safe
+openings, not about performing the comparison statistic. It verifies that the
+public record contains the declared opening and that the opening keeps the same
+receipt-safety boundary as the V.4 inclusion-proof vocabulary.

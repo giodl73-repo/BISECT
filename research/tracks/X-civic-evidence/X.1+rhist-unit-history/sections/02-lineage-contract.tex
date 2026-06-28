@@ -1,0 +1,40 @@
+\section{Lineage Contract}
+
+The core package type is \texttt{RhistPackage}. Its manifest declares the
+RHIST version, package id, jurisdiction, cycle ids, producer, creation time, and
+\texttt{package\_content\_hash}. The unit surface is represented by
+\texttt{ContextIndexEntry}: each context has a \texttt{context\_hash}, an
+\texttt{rctx\_version}, a unit kind, a cycle id, and the unit ids available in
+that cycle. \texttt{CycleRecord} then binds each cycle to one context id and
+context hash.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Record or field & Meaning \\
+\midrule
+\texttt{CycleRecord} & Cycle id, jurisdiction, \texttt{CycleKind}, effective date, context id, context hash, and source refs. \\
+\texttt{ContextIndexEntry.unit\_ids} & Reporting-unit identities available for one cycle and unit kind. \\
+\texttt{LineageEvent} & Event id, \texttt{LineageEventKind}, from and to cycles, from and to unit ids, effective date, authority, confidence, source refs, and explanation. \\
+\texttt{CrosswalkRecord} & From and to cycles, context hashes, unit ids, rational \texttt{weight}, \texttt{CrosswalkWeightKind}, exhaustive flag, and source refs. \\
+\texttt{SourceIndexEntry} & Source id, package-relative source path, SHA-256 digest, media type, and description. \\
+\texttt{ClaimBoundary} & Package id, what the package proves, what it does not prove, and caveats. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The implemented package directory mirrors those records:
+\path{manifest.json}, \path{sources/source-index.json},
+\path{contexts/context-index.ndjson}, \path{units/cycles.ndjson},
+\path{units/lineage-events.ndjson}, optional
+\path{units/crosswalks.ndjson}, and
+\path{claims/claim-boundary.json}. The writer also emits
+\path{proofs/package-hashes.json} and
+\path{transcripts/verify-transcript.json}.
+
+The package hash is canonical. \texttt{package\_content\_hash} removes the
+declared hash from the manifest, serializes the remaining package fields in
+canonical JSON order, prefixes the bytes with \texttt{RHIST\_PACKAGE\_V1}, and
+returns a \texttt{sha256:} digest. Source bytes are separately checked against
+the source index by \texttt{rhist-io}.

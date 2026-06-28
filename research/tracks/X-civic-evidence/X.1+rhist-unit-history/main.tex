@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Reusable Reporting-Unit Lineage Packages}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Precinct and reporting-unit history is a shared public-evidence dimension, not
+a private attachment to one plan or count package. RHIST makes that dimension a
+small package: cycles name the time slices, context indexes name the units
+available in each cycle, lineage events declare unchanged, rename, split, and
+merge relationships, and crosswalk rows carry rational weights between unit
+sets. The implemented verifier checks source references, cycle and context
+links, lineage unit references, split/merge/rename cardinality, exhaustive
+crosswalk weight sums, claim-boundary presence, and a canonical package content
+hash. RCOUNT can map its existing lineage records into RHIST events and can
+declare RHIST package-hash references, so counts and plans can point to a
+stable lineage substrate without absorbing ownership of it.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-lineage-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rctx-context-packages-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

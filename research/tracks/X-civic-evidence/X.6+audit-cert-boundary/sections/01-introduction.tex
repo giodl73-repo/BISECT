@@ -1,0 +1,26 @@
+\section{Introduction}
+
+The count ledger is the center of the RCOUNT package. It carries the declared
+election totals, CVRs, manifests, source hashes, reconciliation transcripts, and
+verifier results that answer one narrow question: do the public count records
+reconcile under the declared package rules?
+
+Two other kinds of public evidence sit naturally above that ledger. Audit and
+recount methods produce transcripts: assertions, sample observations, risk
+limits, replay statistics, stopping decisions, and boundary notes. Certification
+processes produce official actions: board minutes, motions, signoffs, dates,
+evidence matrices, and legal caveats. Both are reusable enough to deserve names.
+The reserved names are RAUDIT for audit transcript bundles and RCERT for
+certification actions.
+
+The reservation is intentionally conservative. Pulling audit transcripts out of
+RCOUNT too early would fragment the verifier before there is a second production
+consumer for the same transcript records. Building RCERT before real public
+certification source artifacts are identified would model a legal process in the
+abstract instead of binding actions to evidence. For now, RAUDIT remains embedded
+in RCOUNT as the V-series audit-algorithm replay contracts, and RCERT remains an
+unbuilt boundary.
+
+This paper records that boundary. It does not introduce a standalone RAUDIT
+crate or a standalone RCERT crate. It defines what each layer would own, what it
+must read, and what it must not change.

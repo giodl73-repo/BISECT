@@ -1,0 +1,53 @@
+\section{Implemented Surface}
+
+\texttt{rhist-core} owns record validation. \texttt{verify\_package} checks the
+manifest cycle references, source reference resolution, context cycle links,
+unique context unit ids, cycle-to-context links, lineage unit references,
+lineage cardinality, crosswalk unit references, exhaustive crosswalk weight
+sums, and claim-boundary presence. Cardinality is type-specific:
+\texttt{Rename}, \texttt{Unchanged}, and \texttt{AdministrativeRecode} are
+one-to-one; \texttt{Split} is one-to-many; \texttt{Merge} is many-to-one;
+\texttt{Create}, \texttt{Close}, and \texttt{BoundaryChange} have their own
+declared shapes.
+
+\texttt{rhist-io} owns package directories. \texttt{read\_package\_dir} loads
+the manifest, source index, contexts, cycles, lineage events, optional
+crosswalks, and claim boundary; verifies source files; verifies the package
+hash; and then calls the core verifier. \texttt{write\_package\_dir} emits the
+same directory shape, including \path{proofs/package-hashes.json}.
+\texttt{refresh\_package\_hashes} regenerates computed package hashes for
+fixtures.
+
+\texttt{rhist-cli verify} is the command surface. It reads a package directory
+through \texttt{rhist-io}, returns \texttt{pass} or \texttt{fail}, and can write
+a JSON or pretty JSON transcript containing the package id, computed package
+content hash, check ids, and error text.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{manifest\_cycle\_refs} & Unsupported RHIST version, empty package id, invalid or mismatched package hash, and manifest cycles missing from cycle records. \\
+\texttt{source\_refs\_resolve} & Duplicate or invalid source ids and source references not declared in the source index. \\
+\texttt{context\_cycle\_refs} and \texttt{context\_unit\_ids\_unique} & Contexts pointing at missing cycles, invalid context hashes, empty unit lists, or duplicate unit ids. \\
+\texttt{cycle\_context\_refs} & Cycles pointing at missing contexts or mismatched context hashes. \\
+\texttt{lineage\_unit\_refs} and \texttt{lineage\_cardinality} & Lineage events pointing at missing cycles or units, duplicate event ids, and invalid split, merge, or rename shapes. \\
+\texttt{crosswalk\_unit\_refs} and \texttt{crosswalk\_weight\_sum} & Crosswalks pointing at missing cycles, context hashes, or units; duplicate rows; invalid rational weights; and exhaustive weights that do not sum to one. \\
+\texttt{claim\_boundary\_present} & Missing proves or does-not-prove declarations, or a claim boundary for the wrong package id. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+RCOUNT already has compatible seed material. \texttt{rcount-rhist} maps
+\texttt{ReportingUnitLineage} records to RHIST \texttt{LineageEvent} records
+with \texttt{map\_lineage\_event} and \texttt{map\_package\_lineage}; missing
+cycle effective dates raise \texttt{RcountRhistError::MissingEffectiveDate}.
+On the consumer side, \texttt{RhistReference} lets an RCOUNT package declare a
+RHIST package hash, package path, cycle ids, role, and note. The RCOUNT
+verifier accepts only \texttt{unit-lineage}, \texttt{aggregation-crosswalk}, or
+\texttt{context-lineage} roles and reports
+\texttt{rhist\_reference\_declared}; the synthetic base package references
+\texttt{docs/fixtures/rhist/l2-three-cycle} through
+\texttt{SYN\_RHIST\_L2\_PACKAGE\_HASH}.

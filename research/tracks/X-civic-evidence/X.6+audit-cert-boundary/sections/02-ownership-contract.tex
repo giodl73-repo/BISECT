@@ -1,0 +1,44 @@
+\section{Ownership Contract}
+
+RAUDIT is the reserved owner of reusable audit, recount, and RLA transcript
+bundles when those transcripts need to stand outside a full RCOUNT package. The
+current embedded form is the V-series audit replay surface: BRAVO, Minerva,
+Kaplan-Markov, ALPHA, SHANGRLA, stratified audit, batch comparison, RAIRE,
+Bayesian, and SOBA contracts each preserve method evidence and report whether
+the method can be replayed, fails, or remains at a boundary.
+
+RCERT is the reserved owner of certification actions. It would record what an
+official body did, when it did it, who signed or voted, what evidence was cited,
+and what legal or administrative caveats limit the action. RCERT reads count,
+audit, log, and custody evidence by reference. It does not recompute count
+arithmetic as an independent source of truth.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Layer & Owns & Must not do \\
+\midrule
+RCOUNT & Base count ledger, source hashes, reconciliation transcripts, and count
+verifier results. & Transfer ledger ownership to downstream audit or
+certification records. \\
+RAUDIT & Reusable method transcripts: method ids, assertions, samples, risk
+limits, replay statistics, stopping decisions, and boundary fields. & Mutate
+RCOUNT ledgers, certify an election by itself, or hide method assumptions in
+prose. \\
+RCERT & Official actions, signoffs, minutes, evidence matrices, dates,
+signatories, and scope caveats. & Recompute count arithmetic without binding to
+RCOUNT, or turn audit or statistical records into official findings by
+implication. \\
+RLOG/RCHAIN & Event logs, machine or administrative status records, seals,
+transfers, observers, and custody caveats. & Replace count verification or
+certification action records. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The resulting dependency direction is simple. RAUDIT may read RCOUNT, RCTX, and
+optionally RHIST when a method depends on units, strata, or geography. RCERT may
+read RCOUNT, RAUDIT, RLOG, and RCHAIN. Neither downstream layer writes the base
+count ledger, and neither layer is allowed to silently revise an RCOUNT verifier
+result.

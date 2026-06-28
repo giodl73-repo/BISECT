@@ -1,0 +1,27 @@
+\section{Boundaries}
+
+The claim boundary is the central V.15 point: a martingale value alone is not an
+independently replayable audit claim. The transcript must record the betting
+rule or, in the current implementation, the actual bet sequence. It must also
+record the assorter identity, the assertion upper bound, the sampling mode, and
+the draw order. Without those fields, RCOUNT can preserve the evidence but
+cannot regenerate the statistical claim.
+
+The implemented recurrence is a bounded-mean betting martingale. It is not a
+BRAVO ballot-polling likelihood ratio, a Minerva or Athena round calculation, a
+Kaplan-Markov comparison audit, a batch-comparison taint product, or a
+stratified combined-risk calculation. Those methods have separate method ids or
+separate boundary records in the audit replay dispatcher.
+
+The bet-selection boundary is equally important. ALPHA can support adaptive
+betting strategies, but the current replay does not infer such a strategy from
+the observations. It verifies the declared transcript: each per-step bet must
+be present, and the verifier recomputes what follows from that bet. A future
+adaptive fixture must therefore declare enough deterministic bet-selection state
+for the same replay principle to hold.
+
+Finally, this slice does not prove sample selection, ballot custody, CVR
+interpretation, or legal compliance. It assumes the ordered sample stream and
+assorter values are the public evidence being checked by this method. Sampler
+replay, summary reconciliation, and source hashing remain separate RCOUNT
+contracts.

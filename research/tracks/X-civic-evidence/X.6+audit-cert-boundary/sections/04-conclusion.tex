@@ -1,0 +1,14 @@
+\section{Conclusion}
+
+RAUDIT and RCERT are useful names, but they are not yet standalone
+implementation layers. RAUDIT is reserved for reusable audit, recount, and RLA
+transcripts; today those transcripts remain embedded in RCOUNT through the
+V-series replay contracts. RCERT is reserved for certification actions,
+signoffs, evidence matrices, and scope caveats; it should wait until public
+certification source artifacts are identified.
+
+The boundary protects the verifier. RCOUNT continues to own the base count
+ledger and count-verification result. Future RAUDIT records may replay method
+evidence, and future RCERT records may cite that evidence in official actions,
+but neither layer may rewrite count facts or turn a downstream action into a
+silent change in verifier outcome.

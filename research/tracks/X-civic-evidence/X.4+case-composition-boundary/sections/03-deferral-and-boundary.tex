@@ -1,0 +1,22 @@
+\section{Deferral and Boundary}
+
+RCASE is deliberately deferred. The downstream-boundary specification defines
+RCASE as the owner of public evidence bundles and claim matrices, while the
+layer-access specification places it after the child packages whose hashes and
+claim boundaries it reads. That order matters: a composition package cannot
+state its own schema honestly until the child packages have stable ways to say
+what they prove, what they do not prove, and what their verifiers could not
+check.
+
+The first implementation step should therefore not be a broad report generator.
+It should be a tiny composition fixture after RCOUNT and RHIST claim boundaries
+are stable. That fixture can exercise the child-package index and
+\texttt{claims/claim-boundary.json} without pretending that RCASE owns count
+arithmetic, unit lineage, or audit method replay.
+
+The boundary rule is the useful part now: RCASE may organize, cite, and
+summarize child package claims. It must preserve child hashes, caveats,
+conflicts, and unsupported checks. If a child package reports a failed verifier,
+a missing source, an unresolved conflict, or a scoped claim, the case layer must
+carry that condition forward instead of laundering it into a clean public
+sentence.

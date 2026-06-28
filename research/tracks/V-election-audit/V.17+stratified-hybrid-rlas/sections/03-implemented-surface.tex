@@ -1,0 +1,35 @@
+\section{Implemented Surface}
+
+The core verifier calls \texttt{verify\_stratified\_hybrid\_design} for every
+audit algorithm run. For non-stratified methods, the function rejects stray
+stratified fields: \texttt{combining\_rule\_id},
+\texttt{nuisance\_parameter}, or a nonempty \texttt{strata} list. For the
+stratified method id, it enforces the coordinator shape before the general
+sample-step checks continue.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{STRATIFIED\_HYBRID\_RLA\_METHOD\_ID} & Unsupported or misspelled coordinator method ids are rejected by the audit-algorithm method registry. \\
+\texttt{combining\_rule\_id} & Missing or blank combining rule on a stratified coordinator. \\
+\texttt{nuisance\_parameter} & Missing nuisance parameter or rational value without a positive denominator. \\
+\texttt{strata.len()} & Flattened or empty coordinator with fewer than two strata. \\
+\texttt{assertions}, \texttt{sample\_steps} & Coordinator incorrectly carrying direct assertion/sample-step evidence instead of component references. \\
+\texttt{stratum\_id} & Empty or duplicate stratum ids. \\
+\texttt{component\_run\_id} & Self-reference or reference to a missing component run. \\
+\texttt{method\_id} & Unsupported stratum methods and recursive stratified stratum methods. \\
+\texttt{ballot\_count} & Zero ballot count when a count is declared. \\
+\texttt{allocation\_ppm} & Missing, zero, oversized, or non-partitioning allocations; the sum must be \texttt{1000000}. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The audit replay crate exposes the same method id through
+\path{replay_audit_algorithm_statistics}. Its current behavior is an
+explicit boundary transcript: \texttt{stratified/hybrid combined-risk replay is
+recorded but not replayed}. That surface is important because it lets a public
+artifact name the intended combined-risk method without implying that RCOUNT
+has recomputed the SUITE or hybrid risk calculation.

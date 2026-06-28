@@ -1,0 +1,37 @@
+\section{Implemented Surface}
+
+The BRAVO replay is dispatched by method id alongside the other RCOUNT audit
+algorithms. When an audit record names \texttt{bravo-ballot-polling-v1}, the
+algorithm-replay surface routes it to \texttt{replay\_bravo\_run} in
+\texttt{rcount-audit}. That function enforces the contract before any statistic
+is computed: a missing risk limit, missing reported winner votes, or missing
+reported loser votes each produces a boundary transcript that preserves the
+declared claim without replaying it. The same boundary outcome is produced when
+a sample step cannot be reduced to a valid BRAVO observation.
+
+Once the inputs are present, \texttt{replay\_bravo\_run} maps every declared
+sample step to a winner, loser, or other observation and calls
+\texttt{replay\_bravo\_ballot\_polling} in \texttt{rcount-stats}. The statistics
+crate owns the sequential likelihood-ratio recurrence and returns, for each
+draw, the running statistic, a risk estimate in parts per million, and whether
+the audit has stopped. The audit crate then zips those computed steps back
+against the declared steps to build the replay transcript.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{audit\_algorithm\_run} & Unsupported method id, or BRAVO record missing risk limit, reported winner votes, or reported loser votes. \\
+\texttt{bravo\_replay} & Declared per-draw likelihood ratio, risk estimate, or stop decision drifts from the recomputed transcript. \\
+\texttt{cvr\_summary\_total} & Reported contest totals still reconcile to the public summaries that anchor the assertion. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Because BRAVO shares the algorithm-replay dispatch, its failures surface through
+the same command and transcript shape as sampler replay, stopping checks, and
+the other ballot-polling and comparison methods. An observer sees the declared
+and recomputed statistics side by side rather than a single trusted verdict.

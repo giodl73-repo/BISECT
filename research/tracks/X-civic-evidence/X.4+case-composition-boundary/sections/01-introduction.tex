@@ -1,0 +1,18 @@
+\section{Introduction}
+
+A public election case should be able to cite more than one evidence package.
+Counts may live in RCOUNT, unit lineage in RHIST, audit transcripts in a later
+audit package, and public exhibits in source citations or custody records. A
+reader still needs one place to ask which child package supports which public
+claim.
+
+RCASE is the reserved place for that public bundle. Its purpose is composition,
+not fact creation. It can order exhibits, point to child package hashes, and
+summarize what those packages say. It must not turn a count reconciliation into
+a custody finding, turn a lineage crosswalk into an election total, or make a
+weak child claim look stronger by placing it in a polished report.
+
+This paper covers the X.4 reservation. It does not claim that an RCASE crate,
+verifier, schema, fixture, or command exists. It records the intended ownership
+boundary so the earlier packages can finish their own claim surfaces without
+accidentally absorbing the public-case role.

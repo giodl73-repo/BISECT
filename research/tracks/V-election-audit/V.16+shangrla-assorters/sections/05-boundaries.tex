@@ -1,0 +1,23 @@
+\section{Boundaries}
+
+The plan boundary is explicit: SHANGRLA defines the assertion layer. It does not
+replace source hashing, sampler replay, ballot manifests, or CVR linkage. A
+valid V.16 record can say which assertion and assorter values were declared;
+other RCOUNT contracts must still prove where the sampled records came from and
+whether the source bytes, manifests, CVRs, and public summaries are reproducible.
+
+The implementation boundary is just as important. In the current code,
+\texttt{shangrla-assorter-v1} is a record-shape and boundary-design contract,
+not a full numeric replay. The core verifier checks ids, links, bounds, optional
+p-value ranges, and assorter values. The audit replay crate does not recompute a
+SHANGRLA assertion p-value for that method id. V.15 ALPHA can replay a bounded
+mean martingale for an ALPHA method id, but the plan still lists wiring ALPHA to
+consume explicit SHANGRLA assorter values as future work.
+
+SHANGRLA also reduces contests to assertions; it does not by itself decide the
+correct assertion set for every election rule. A two-candidate plurality outcome
+can be represented as a winner-loser assertion. Multi-winner, approval, scoring,
+comparison, and ranked-choice audits require the reported outcome to be reduced
+to the right assertion family before the half-average test is meaningful. That
+reduction is the bridge V.16 prepares, not something the current verifier
+infers from arbitrary contest semantics.

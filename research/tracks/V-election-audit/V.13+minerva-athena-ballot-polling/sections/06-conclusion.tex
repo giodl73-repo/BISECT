@@ -1,0 +1,14 @@
+\section{Conclusion}
+
+RCOUNT now has a replayable Minerva ballot-polling contract for synthetic
+two-candidate records with sufficient ballot observations. The verifier reads
+reported winner and loser totals, the risk limit, optional round indices, and
+sample-step observations; recomputes each cumulative round statistic in
+\texttt{rcount-stats}; and compares the declared likelihood ratio, p-value, and
+stop decision against the recomputed transcript. Missing Minerva fields and all
+Athena records produce explicit method-specific boundaries.
+
+This extends the BRAVO paper by moving from a per-draw sequential transcript to
+a round-based transcript. The statistical machinery differs, but the public
+contract is the same: a named audit method should be either replayed from its
+declared evidence or bounded as unreplayable, never silently trusted.

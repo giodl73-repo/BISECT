@@ -1,0 +1,22 @@
+paper: X.6+audit-cert-boundary
+title: "RAUDIT / RCERT Boundary: Audit Transcripts and Certification Actions"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Define RAUDIT as reusable audit/recount/RLA transcript bundles."
+  - "[x] Define RCERT as certification actions, signoffs, and evidence matrices."
+  - "[x] Record that RAUDIT remains embedded in RCOUNT until it has a second production consumer."
+  - "[x] Record that RCERT reads RCOUNT/RAUDIT/RLOG/RCHAIN instead of recomputing count arithmetic."
+  - "[ ] Identify public certification source artifacts before RCERT schema work."
+  - "[ ] Decide whether V-series audit transcripts need standalone RAUDIT packages."

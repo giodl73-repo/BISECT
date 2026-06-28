@@ -1,0 +1,41 @@
+\section{Implemented Surface}
+
+The public entry point is
+\texttt{aggregate\_package\_dir\_with\_plan\_path}. It reads an RCOUNT package
+directory, an RPLAN document, an optional RCTX context, and an optional explicit
+crosswalk path, then calls \texttt{aggregate\_package\_districts}. The latter is
+the bridge function: it runs \texttt{verify\_package}, validates the plan,
+checks that any supplied context validates and has the same unit universe as the
+plan, computes the package and plan hashes, resolves a matching RCOUNT RCTX
+reference, and emits the transcript fields.
+
+Aggregation has two paths. \texttt{aggregate\_direct} indexes summaries whose
+reporting unit ids are also plan unit ids. \texttt{aggregate\_with\_crosswalk}
+indexes all matching summaries, reads \texttt{rctx-core} crosswalk rows, maps
+each row's target unit to the RPLAN district assignment, and accumulates
+weighted totals. The weighted path refuses to round: \texttt{weighted\_i64}
+raises \texttt{NonIntegralCrosswalkAllocation} if votes, undervotes, overvotes,
+blank contests, or counted ballots cannot be allocated integrally.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{verify\_package} & RCOUNT package failures before district aggregation, including invalid declared RCTX references. \\
+\texttt{plan.validate} & Invalid RPLAN plan structure or assignment before any count totals are summed. \\
+\texttt{validate\_context\_matches\_plan} & RCTX context hash drift or a context unit universe that does not match the plan. \\
+\texttt{validate\_crosswalk\_path} & Explicit crosswalk without context, declared crosswalk hash drift, or RCTX crosswalk verification failure. \\
+\texttt{aggregate\_direct} & Missing or duplicate plan-unit summaries for the requested contest and status. \\
+\texttt{aggregate\_with\_crosswalk} & Missing source summaries and non-integral weighted allocations. \\
+\texttt{verify\_lineage\_conservation} & Broken synthetic multi-election split/merge lineage before per-cycle district aggregation. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The multi-election helper \texttt{verify\_synthetic\_multi\_election\_harness}
+uses the same bridge after package verification, jurisdiction-total
+verification, and lineage conservation checks. Its cycle transcript records the
+package content hash, the RPLAN plan hash, current reporting units, lineage
+event count, district count, and pass status for each synthetic cycle.

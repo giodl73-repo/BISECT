@@ -1,0 +1,35 @@
+\section{Assorter Contract}
+
+The landed record surface is the package-level \texttt{AuditAlgorithmRun}. For
+SHANGRLA the method id is the real RCOUNT constant
+\texttt{SHANGRLA\_ASSORTER\_METHOD\_ID}, whose value is
+\texttt{shangrla-assorter-v1}. The run contains one or more assertions and an
+ordered set of sample steps. Each step names the assertion it belongs to and the
+assorter value assigned to that sampled unit.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{run\_id} & Stable id for the audit-algorithm transcript. \\
+\texttt{contest\_id} & Contest whose outcome assertion is being represented. \\
+\texttt{method\_id} & Versioned algorithm id; for this slice, \texttt{shangrla-assorter-v1}. \\
+\texttt{risk\_limit\_ppm} & Optional risk limit in parts per million, checked when present. \\
+\texttt{assertion\_id} & Stable assertion id, such as \texttt{assertion:cand-a-over-cand-b}. \\
+\texttt{kind} & Assertion kind, including \texttt{plurality-winner-loser} or \texttt{assorter-mean}. \\
+\texttt{assorter\_id} & Registered assorter formula or function id, such as \texttt{plurality-winner-loser-v1}. \\
+\texttt{assorter\_upper\_bound} & Positive rational bound for all values in the assertion. \\
+\texttt{sample\_unit\_id} & Ballot, CVR, batch, or other sampled unit being assigned a value. \\
+\texttt{assorter\_value} & Nonnegative rational value used by the future mean test. \\
+\texttt{statistic}, \texttt{p\_value\_ppm}, \texttt{decision} & Declared audit evidence and outcome fields; shape-checked here, not recomputed as SHANGRLA. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The half-average framing is the design boundary. The assertion is written so
+that the reported outcome is supported when the assorter mean exceeds one half
+of its normalized scale. The current verifier checks the declared bounded values
+that such a test would consume; it does not yet run ALPHA or any other
+sequential test under the SHANGRLA method id.

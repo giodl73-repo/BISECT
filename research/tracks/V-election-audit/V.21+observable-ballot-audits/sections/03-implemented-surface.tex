@@ -1,0 +1,40 @@
+\section{Implemented Surface}
+
+The core verifier calls
+\texttt{verify\_soba\_observable\_ballot\_design} for every audit algorithm
+run. The method id is exported as
+\texttt{SOBA\_OBSERVABLE\_BALLOT\_AUDIT\_METHOD\_ID} and has the value
+\texttt{soba-observable-ballot-audit-v1}.
+
+The function enforces the boundary exactly. If a non-SOBA run contains any
+\texttt{ObservableBallotLinkage} assertion, it is rejected as an invalid
+observable-ballot design. If a SOBA run has no assertions, no sample steps, or
+any assertion whose kind is not \texttt{ObservableBallotLinkage}, it is also
+rejected. The verifier then indexes \texttt{package.inclusion\_proofs} by
+\texttt{proof\_id}. For each sample step, \texttt{sample\_unit\_id} must name
+an existing proof. A missing proof raises
+\texttt{MissingObservableBallotOpening} with the run id, step index, and proof
+id. Finally, each linked proof must have empty \texttt{candidate\_selections}
+and no \texttt{voter\_id}; otherwise the run is rejected as an invalid
+observable-ballot design.
+
+The audit crate exposes the same method id through
+\texttt{replay\_audit\_algorithm\_statistics}. That surface returns a boundary
+transcript saying that SOBA observable-ballot linkage is recorded but not
+comparison-risk replay. This is intentional: the implemented code verifies the
+observable record and opening linkage, not full ballot-level comparison audit
+statistics.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{audit\_algorithm\_transcript} & SOBA run has no assertions, no sample steps, non-observable assertions, invalid assorter bounds, invalid sample values, or invalid p-values. \\
+\texttt{verify\_soba\_observable\_ballot\_design} & Observable linkage appears under the wrong method id, the named opening is missing, or the linked proof publishes choices or voter identity. \\
+\texttt{replay\_audit\_algorithm\_statistics} & SOBA is reported as a documented boundary rather than as comparison-risk replay. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the declared source index before the audit record is trusted. \\
+\bottomrule
+\end{tabularx}
+\end{center}

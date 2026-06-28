@@ -1,0 +1,21 @@
+\section{Introduction}
+
+Batch-comparison audits sit between ballot-level comparison and aggregate
+manual checks. The sampled unit is a whole reported batch: a precinct, scanner
+batch, mail batch, or other tabulation unit whose reported contest subtotals can
+be compared with a hand tally of the same batch. This is useful when ballots are
+only counted or retrievable in batches and ballot-level CVR linkage is not
+available.
+
+RCOUNT treats this as a replay contract. The verifier does not accept a free
+text statement that a batch was checked. It confirms that the reported winner
+and loser subtotals match the canvassed batch summary, that hand-tallied totals
+exist for the same selections, and that the declared overstatement equals the
+difference between the reported and hand margins. A derived algorithm transcript
+then carries the batch overstatement as a taint, encoded as overstatement divided
+by reported margin.
+
+This paper covers the implemented V.18 slice. Its claim is deliberately narrow:
+when a package publishes trustworthy batch subtotals, hand tallies, and sampled
+batch order, the taint-product transcript for \texttt{batch-comparison-v1} can
+be regenerated from those public records.

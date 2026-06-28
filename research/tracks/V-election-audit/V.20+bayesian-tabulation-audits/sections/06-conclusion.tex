@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+RCOUNT V.20 adds a narrow Bayesian tabulation audit boundary. The method id
+\texttt{bayesian-tabulation-audit-v1} is supported, the Bayesian-only fields
+are excluded from other audit methods, and a Bayesian run must carry non-empty
+prior and likelihood identifiers, bounded posterior probability fields, a valid
+optional draw count and calibration threshold, and at least one
+\texttt{bayesian-outcome} assertion.
+
+That is a useful but modest contract. It makes posterior audit analytics public
+and structurally verifiable, and it prevents those analytics from being
+misreported as frequentist risk-limiting replay. The remaining work is the work
+named in the plan: a tiny hand-computable posterior fixture and a calibrated
+risk boundary fixture. Until then, the implemented surface should be read as a
+record-shape and reporting-safety contract, not as a full Bayesian audit engine.

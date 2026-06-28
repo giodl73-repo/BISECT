@@ -1,0 +1,39 @@
+\section{Implemented Surface}
+
+The serial verifier, \texttt{verify\_package}, first validates contests, then
+walks \texttt{package.summaries}. For each summary it looks up the contest,
+runs \texttt{verify\_contest\_selection\_sum}, and pushes an
+\texttt{EquationPass} with equation id \texttt{contest\_selection\_sum}.
+After that opening loop, it extends the report with status-event, batch,
+lineage, reference, privacy, CVR-summary, audit, RLA, jurisdiction-adapter, and
+manual-audit checks.
+
+The parallel verifier, \texttt{verify\_package\_parallel}, keeps the same
+contest validation and the same later extension sequence. Only the summary loop
+is replaced. It calls \texttt{par\_iter()} over \texttt{package.summaries},
+performs the same contest lookup and selection-sum equation check, collects the
+result as \texttt{Result<Vec<EquationPass>, RcountCoreError>}, and then extends
+the report with that vector before running the remaining serial checks.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught or preserved \\
+\midrule
+\texttt{contest\_selection\_sum} & First parallelized family; edited summary
+selection totals fail in both entry points with the same error. \\
+\texttt{EquationPass} ordering & Parallel summary checks are collected before
+the later verifier families are appended, preserving the public report order. \\
+\texttt{verify\_package} & Baseline serial transcript and error behavior. \\
+\texttt{verify\_package\_parallel} & Parallel entry point that must equal the
+serial \texttt{VerificationReport} on accepted fixtures. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+This is intentionally the smallest useful parallelization boundary. It exposes
+Rayon in \texttt{rcount-core} through \texttt{rayon::prelude}, but it does not
+move source-hash, batch-accounting, or audit checks into parallel execution.
+Those checks remain part of the equivalence report because the parallel entry
+point still runs them in serial after the collected selection-sum passes.

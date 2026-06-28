@@ -1,0 +1,30 @@
+\section{Assertion Contract}
+
+A full RAIRE/AWAIRE audit record must make the implication from assertion set to
+IRV winner public. RCOUNT currently records the first layer of that contract:
+which ranked-choice method is being claimed, which candidates appear in the
+reported elimination order, which assertions the package declares, and which
+ranked choices support each sampled assertion value.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned ranked-choice audit method. Current ids are \texttt{raire-irv-v1} and \texttt{awaire-irv-v1}. \\
+\texttt{rcv\_elimination\_order} & Reported IRV elimination order, with the reported winner last in the synthetic boundary fixture. \\
+\texttt{assertions} & Declared ranked-choice assertions. The current kind is \texttt{ranked-choice-assertion}. \\
+\texttt{assorter\_id} & Assertion family or replay id, such as an NEB-style RAIRE id or an AWAIRE adaptive id. \\
+\texttt{sample\_steps} & Sampled ranked ballots or CVRs tied to an assertion id and an assorter value. \\
+\texttt{ranked\_choices} & Ordered candidate choices observed for the sampled unit. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The intended mathematical contract is stronger than the implemented one. A
+RAIRE record should identify NEN and NEB assertions and show that their joint
+truth implies the reported IRV winner. An AWAIRE record should additionally
+make the adaptive weighting and assertion-risk path replayable. V.19 records
+those claims as explicit boundary evidence, but it does not yet prove the
+IRV-winner implication or recompute assertion statistics.

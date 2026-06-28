@@ -1,0 +1,55 @@
+\section{Implemented Surface}
+
+The real shared crate is \texttt{crates/rctx-core}. Its public surface includes
+\texttt{RctxPackage}, \texttt{RctxManifest}, \texttt{RctxSourceIndexEntry},
+\texttt{ContextUnitIndex}, \texttt{GraphRecord}, \texttt{CrosswalkRecord},
+\texttt{RationalWeight}, \texttt{CrosswalkWeightKind},
+\texttt{CrosswalkVerificationInput}, \texttt{ClaimBoundary}, and
+\texttt{VerificationReport}. The consumer-facing functions include
+\texttt{verify\_package}, \texttt{verify\_crosswalk\_input},
+\texttt{package\_content\_hash}, \texttt{crosswalk\_record\_hash},
+\texttt{crosswalk\_set\_hash}, and \texttt{is\_sha256\_hash}.
+
+\texttt{verify\_package} first checks the manifest, derives the source set,
+verifies crosswalk input, verifies graph context and source references, and
+then verifies the claim boundary. Its reports expose named checks such as
+\texttt{manifest\_package\_hash}, \texttt{context\_unit\_index},
+\texttt{source\_index}, \texttt{crosswalk\_unit\_refs},
+\texttt{crosswalk\_weight\_sum}, \texttt{crosswalk\_source\_refs},
+\texttt{graph\_context\_refs}, \texttt{graph\_source\_refs}, and
+\texttt{claim\_boundary\_present}.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Surface & Implemented check \\
+\midrule
+\texttt{ContextUnitIndex} & Context hashes must be valid \texttt{sha256:} values; unit lists must be non-empty and duplicate-free. \\
+\texttt{RctxSourceIndexEntry} & Source ids must be unique; source hashes must be valid \texttt{sha256:} values. \\
+\texttt{GraphRecord} & Graph records must reference known contexts, carry valid graph hashes, and reference known sources. \\
+\texttt{CrosswalkRecord} & Endpoint contexts and units must exist; weights must be non-negative rationals with positive denominators; duplicate rows are rejected; exhaustive groups must sum exactly to one. \\
+\texttt{ClaimBoundary} & The boundary package id must match the manifest, and both \texttt{proves} and \texttt{does\_not\_prove} must be present. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The crate is already shared with sibling products. RHIST depends on
+\texttt{rctx-core} for crosswalk verification, RCOUNT records RCTX references
+through \texttt{normalized/rctx-refs.ndjson}, and district aggregation code can
+bind RCOUNT reporting units, an RPLAN assignment, an RCTX context hash, and RCTX
+crosswalk records by hash. Those uses do not make RCOUNT or RHIST owners of the
+base context.
+
+The synthetic fixture in \texttt{rctx-core} is small but representative. It
+constructs \texttt{syn-rctx-l0-shared-context} with one source-index entry, one
+context unit index, one graph record, two identity crosswalk rows, and a claim
+boundary that proves only declared unit uniqueness, graph/crosswalk references,
+and exhaustive crosswalk sums. It explicitly does not prove legal geography,
+source completeness, vote totals, district assignments, or rendered maps.
+
+Two surfaces are deliberately deferred. RMAP is not a built crate in this
+repository; it is a reserved ownership boundary for future rendered map
+products. A standalone \texttt{rctx-io} loader is also deferred until a second
+consumer needs independent package-directory I/O rather than the current helper
+and fixture shape.

@@ -1,0 +1,40 @@
+\section{Implemented Surface}
+
+The method id is \texttt{batch-comparison-v1}. In \texttt{rcount-audit}, the
+algorithm dispatcher routes that id to
+\texttt{replay\_comparison\_taint\_product\_run}. The same replay function is
+also used by the Kaplan-Markov taint-product path when the MACRO fields are not
+present. For batch comparison, a missing \texttt{risk\_limit\_ppm} produces the
+explicit boundary message ``batch-comparison taint-product replay requires
+risk\_limit\_ppm'' rather than a trusted replay.
+
+The core verifier runs two separate checks. First,
+\texttt{verify\_batch\_comparison\_audits} verifies the batch evidence:
+unique audit ids, existing batch ids, stable batch size, reported totals against
+canvassed batch summaries, hand totals for both assertion selections, reported
+margin, hand margin, and overstatement. The helper
+\texttt{check\_reported\_batch\_total} is the narrow reconciliation check for
+reported winner and loser subtotals.
+
+Second, \texttt{verify\_audit\_algorithm\_runs} adds
+\texttt{batch\_comparison\_algorithm\_linkage} when a
+\texttt{batch-comparison-v1} run appears with matching batch comparison audits.
+That linkage check recomputes each sampled batch taint as
+\texttt{declared\_overstatement / declared\_reported\_margin} and compares it
+to the declared sample-step assorter value. The helper
+\texttt{derive\_batch\_comparison\_algorithm\_run} builds that run from verified
+batch comparison records and a supplied sampled-batch order.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{batch\_comparison\_overstatement} & Missing batch, batch-size drift, reported-total drift, missing hand tally, or declared margin and overstatement drift. \\
+\texttt{batch\_comparison\_algorithm\_linkage} & Missing sampled-batch evidence, invalid reported margin, assertion mismatch, empty sample, or taint drift between the batch record and algorithm step. \\
+\texttt{audit\_algorithm\_transcript} & Unsupported method id, invalid risk limit or p-value fields, and the replayable algorithm-run envelope. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the declared source index before audit records rely on them. \\
+\bottomrule
+\end{tabularx}
+\end{center}

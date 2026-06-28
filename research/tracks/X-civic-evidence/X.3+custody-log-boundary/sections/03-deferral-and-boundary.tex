@@ -1,0 +1,29 @@
+\section{Deferral and Boundary}
+
+The decision for X.3 is to defer both RLOG and RCHAIN. No RLOG crate, RCHAIN
+crate, production type, parser, fixture ladder, or verifier command is claimed
+here. The downstream-boundary and civic-evidence access-pattern specifications
+both place these packages after the base evidence layers and state that RLOG and
+RCHAIN should be added only when real log and custody source artifacts demand
+them \citep{civic-evidence-boundaries-2026}.
+
+That order matters. Public EMS logs, scanner logs, tabulator logs, upload logs,
+adjudication logs, seal logs, custody forms, ballot retrieval sheets, and
+observer records vary by jurisdiction and vendor. A schema written before those
+artifacts are collected would mostly encode guesses. X.3 therefore requires L0
+source-pressure fixtures before any crate work: small positive and negative
+examples based on real public record shapes, with source bytes or source-like
+records, expected normalizations, and explicit caveats.
+
+The boundary rule is the central contribution: RLOG can say what a source log
+records. RCHAIN can say what a custody source records. Neither can infer
+custody or correctness from count reconciliation alone. If an RCOUNT package
+balances perfectly, that is evidence about the count contract. It is not by
+itself evidence that a seal was intact, that a room was continuously observed,
+that every machine event was exported, or that no custody gap occurred.
+
+The same rule also limits future composition. A later RCASE bundle may cite
+RCOUNT, RLOG, and RCHAIN together, and RCERT may reference them when an official
+action depends on process evidence. But composition must preserve the child
+claim boundaries. It may say which package supports which public claim; it must
+not let a count verifier silently become a custody verifier.

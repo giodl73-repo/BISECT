@@ -1,0 +1,41 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{RSTAT and RROLL Boundary: Analysis and Eligibility Universes}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+RSTAT and RROLL are reserved civic-evidence layers, not implemented packages.
+RSTAT is reserved for statistical and forensic analysis outputs: anomaly
+scores, uncertainty intervals, diagnostics, model transcripts, and caveats over
+normalized count, history, plan, and context inputs. RROLL is reserved for
+aggregate registration, eligibility, and ballot-style universes, with source
+hashes and privacy caveats. The boundary is intentionally conservative. RSTAT
+can identify patterns that need explanation. RROLL can declare aggregate
+eligibility universes. Neither certifies an election. This paper records the
+ownership contract, the two hard invariants, and the deferral decision: RSTAT
+must not change verifier pass/fail results, and RROLL must not publish private
+voter-level rolls.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-ownership-contract}
+\input{sections/03-deferral-and-boundary}
+\input{sections/04-conclusion}
+
+\nocite{rcount-overview-2026,civic-evidence-boundaries-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

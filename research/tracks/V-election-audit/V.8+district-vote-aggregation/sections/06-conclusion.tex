@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+V.8 adds a narrow district vote aggregation bridge. The implemented
+\texttt{rcount-district} crate verifies the RCOUNT package, validates the RPLAN
+plan, optionally binds an RCTX context and crosswalk, and emits a transcript
+that carries the RCOUNT package content hash, RPLAN plan hash, optional RCTX
+context hash, optional RCTX reference id, optional crosswalk hash, district
+totals, and per-district aggregation checks.
+
+That surface is deliberately modest. It composes public identities and count
+summaries; it does not transfer plan validation into RCOUNT or count validation
+into RPLAN. With explicit crosswalk projection and integral-allocation rejection
+in place, the remaining work is to add realistic public crosswalk fixtures,
+record non-exhaustive caveats, and introduce rational output where integer
+district summaries are the wrong target.

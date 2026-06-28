@@ -1,0 +1,41 @@
+\section{Ownership Contract}
+
+The downstream boundary specification assigns RSTAT and RROLL separate owners
+because their evidence has different risks \citep{civic-evidence-boundaries-2026}.
+RSTAT owns analysis outputs over other packages. RROLL owns aggregate eligibility
+universes from registration and ballot-style sources. Neither layer owns the
+count ledger, audit method, certification action, custody record, or public case
+bundle.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Layer & May assert & Must not assert or publish \\
+\midrule
+RSTAT &
+Model id and version; input package hashes; anomaly scores; uncertainty
+intervals; diagnostics; caveats; reproducible model transcripts; patterns that
+need explanation. &
+Certification pass/fail; changed verifier outcomes; official findings by
+implication; privacy-sensitive small-cell outputs without a disclosure policy.
+Hard invariant: RSTAT cannot change verifier pass/fail results. \\
+\addlinespace
+RROLL &
+Aggregate registration snapshots; aggregate eligibility universes; ballot-style
+universe records; source hashes; privacy caveats; derived aggregate eligibility
+summaries. &
+Private voter-level rolls; voter-roll custody or access-control claims; count
+certification; individual eligibility determinations. Hard invariant: RROLL
+cannot publish private voter-level rolls. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The access-pattern specification gives the intended read direction
+\citep{civic-evidence-boundaries-2026}. RSTAT reads normalized RCOUNT totals and
+CVR summaries, RHIST unit lineage for time series, and RPLAN or RCTX records for
+spatial and district features. RROLL reads registration, eligibility, and
+ballot-style sources, with optional RCTX unit universes when aggregate records
+need geography alignment. These reads are references to evidence owned
+elsewhere; they do not transfer ownership of those facts into RSTAT or RROLL.

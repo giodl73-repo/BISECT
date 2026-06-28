@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{District Vote Aggregation Bridge}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+District vote aggregation is an optional bridge from verified RCOUNT count
+summaries to RPLAN district assignments. The bridge does not make RCOUNT a
+district-plan validator. Instead, it composes independently owned artifacts:
+the RCOUNT package content hash, the RPLAN plan hash, the optional RCTX context
+hash, and the optional RCTX crosswalk hash used to project reporting units into
+plan units. The implemented \texttt{rcount-district} crate verifies the count
+package, validates the RPLAN plan, checks any supplied RCTX context against the
+plan unit universe, matches declared RCOUNT RCTX references, rejects crosswalk
+hash drift, and refuses non-integral weighted vote allocations. The result is a
+district aggregation transcript whose fields can be checked without collapsing
+RCOUNT, RPLAN, and RCTX into one authority.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-bridge-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rplan-substrate-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

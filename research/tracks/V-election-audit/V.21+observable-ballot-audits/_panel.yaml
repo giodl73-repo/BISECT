@@ -1,0 +1,21 @@
+paper: V.21+observable-ballot-audits
+title: "SOBA Observable Public-Evidence Ballot Audits"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Add toy commitment/opening fixture."
+  - "[x] Add missing-opening negative fixture."
+  - "[ ] Add CVR mismatch fixture that can feed V.14 comparison math."
+  - "[x] Add privacy-boundary checks for what RCOUNT must not publish."
+  - "[x] Align with V.4 privacy-safe inclusion proof vocabulary."

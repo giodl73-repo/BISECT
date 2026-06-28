@@ -1,0 +1,31 @@
+\section{Minerva Contract}
+
+The audit record carries the public inputs the implemented Minerva replay
+consumes:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned method name: \texttt{minerva-ballot-polling-v1} or \texttt{athena-ballot-polling-v1}. \\
+\texttt{risk\_limit\_ppm} & Risk limit in parts per million, used to form the stopping threshold. \\
+\texttt{reported\_winner\_votes} & Reported votes for the winner of the two-candidate assertion. \\
+\texttt{reported\_loser\_votes} & Reported votes for the loser of the assertion. \\
+\texttt{sample\_steps} & Ballot observations. Assorter value \texttt{1/1} is a winner ballot and \texttt{0/1} is a loser ballot. \\
+\texttt{round\_index} & Optional zero-based round marker on each sample step. If any step has it, every step must have it and the sequence must be nondecreasing. \\
+\texttt{statistic}, \texttt{p\_value\_ppm}, \texttt{decision} & Declared round outputs checked against the replay. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+When no \texttt{round\_index} values are present, the run is treated as one
+round and the final sample step is the declared round step. When explicit
+rounds are present, the final sample step in each round carries the declared
+round statistic. For each round, RCOUNT adds that round's observations to the
+cumulative sample, counts winner ballots, computes the binomial upper tail
+under the reported winner share and under the null share $1/2$, divides those
+tails to obtain the likelihood ratio, converts the inverse statistic to a
+conservative parts-per-million p-value, and stops when the ratio reaches
+$1/\alpha$ for the declared risk limit $\alpha$.

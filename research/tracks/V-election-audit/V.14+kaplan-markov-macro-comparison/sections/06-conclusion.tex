@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+RCOUNT now has a replayable Kaplan-Markov comparison contract with a MACRO path.
+The verifier reads a \texttt{kaplan-markov-comparison-v1} audit run, checks that
+required fields are present, recomputes the taint-product or MACRO running
+P-value in exact rational arithmetic, and compares the computed transcript with
+the declared per-step values and decision. Missing or inconsistent design fields
+produce explicit boundary or validation failures rather than a trusted verdict.
+
+This is the comparison-audit counterpart to the ballot-polling replay papers. It
+keeps the statistical transcript reproducible while leaving custody, eligibility,
+and CVR-to-ballot linkage to source artifacts and jurisdictional procedures. The
+remaining work is external validation against public MACRO audit artifacts that
+publish the same design inputs and ordered overstatement categories required by
+the implemented replay surface.

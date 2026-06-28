@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+X.2 fixes the RCTX/RMAP boundary in the direction the code now supports. RCTX
+is the shared machine-context identity layer: unit identity, canonical order,
+context hashes, graph identity, source hashes, aligned attributes, and
+crosswalks. RMAP is the separate owner of rendered and cartographic
+presentation, and remains reserved rather than implemented.
+
+The implemented surface is narrower and more useful than a premature full
+split. \texttt{rctx-core} gives sibling products a shared package and verifier
+surface for context unit indexes, source references, graph records, exact
+rational crosswalks, package content hashes, and explicit claim boundaries.
+RPLAN keeps the current \texttt{.rctx} implementation until another full-context
+producer needs it. That preserves the working plan pipeline while giving RCOUNT,
+RHIST, and later packages a common base dimension to reference.

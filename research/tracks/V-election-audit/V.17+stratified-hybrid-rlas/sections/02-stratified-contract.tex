@@ -1,0 +1,47 @@
+\section{Stratified Contract}
+
+The coordinator is an \texttt{AuditAlgorithmRun} whose method id is
+\texttt{stratified-hybrid-rla-v1}. It is a boundary-only record: the component
+runs carry their own audit method evidence, while the coordinator records how
+those components are meant to be interpreted as one stratified audit.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned coordinator name. Current value: \texttt{stratified-hybrid-rla-v1}. \\
+\texttt{combining\_rule\_id} & Declared rule for combining independent stratum evidence, such as the synthetic \texttt{suite-nuisance-boundary-v1} fixture rule. \\
+\texttt{nuisance\_parameter} & Rational nuisance value or optimization transcript anchor required by the declared design. \\
+\texttt{risk\_limit\_ppm} & Contest-level risk limit, stored in parts per million when present. \\
+\texttt{strata} & Ordered stratum records. The implemented verifier requires at least two strata. \\
+\texttt{decision} & Boundary decision for the coordinator until combined-risk replay is implemented. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Each stratum record carries the public link from the coordinator to one
+component audit run:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{stratum\_id} & Stable, nonempty stratum name. Stratum ids must be unique within the coordinator. \\
+\texttt{method\_id} & Non-stratified audit method used by the component run. \\
+\texttt{component\_run\_id} & Existing audit algorithm run that supplies the stratum-level evidence. \\
+\texttt{ballot\_count} & Optional stratum sampling-frame size; if present it must be positive. \\
+\texttt{allocation\_ppm} & Required positive allocation share. The coordinator allocations must sum to \texttt{1000000}. \\
+\texttt{source\_refs} & Optional evidence references for the stratum. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The partition rule implemented today is therefore structural. The strata must
+remain distinct, must refer to existing component runs, must not recursively
+name another stratified coordinator as their method, and must allocate the
+entire one-million-parts risk budget. The statistical combination is preserved
+as declared metadata rather than recomputed.

@@ -1,0 +1,23 @@
+\section{Boundaries}
+
+This slice verifies a single ballot-polling outcome assertion under sampling
+assumptions. BRAVO confirms that a declared stop-or-continue transcript follows
+from reported two-candidate totals, a risk limit, and an ordered list of ballot
+observations. It does not verify ballot custody, voter eligibility, or any
+ballot-level CVR comparison claim; those live in other RCOUNT contracts.
+
+The statistical boundary is also deliberate. The implemented recurrence is the
+classic two-candidate BRAVO likelihood ratio in integer parts-per-million. It is
+not Minerva, ALPHA, Kaplan-Markov, or a stratified or comparison risk measure,
+and it does not decide whether a jurisdiction's legal RLA method permits
+replacement sampling, round-by-round planning, or multi-candidate assertions.
+Multi-candidate contests must be reduced to the relevant pairwise assertions
+before this contract applies.
+
+Finally, BRAVO replay assumes the sample order is already accounted for. It
+checks that the observed marks support the declared decision, not that the
+ballots were the ones a public seed should have selected; that reproducibility
+claim is the separate sampler-replay contract of V.7. As with every RCOUNT audit
+slice, the public-evidence privacy boundary remains with the jurisdiction:
+publishing per-ballot observations can expose rare ballot styles, so small-batch
+publication rules are an external responsibility.

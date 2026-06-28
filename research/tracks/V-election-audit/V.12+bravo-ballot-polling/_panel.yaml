@@ -1,0 +1,23 @@
+paper: V.12+bravo-ballot-polling
+title: "Replayable BRAVO Ballot-Polling Audit Transcripts"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Define BRAVO method id and transcript record."
+  - "[x] Add tiny two-candidate positive fixture."
+  - "[x] Add observation-drift negative fixture."
+  - "[x] Add boundary fixture that does not stop."
+  - "[x] Add missing-field boundary fixture for unreplayable public evidence."
+  - "[x] Expose BRAVO replay through rcount replay-audit-algorithms."
+  - "[ ] Decide whether BRAVO replay should join baseline rcount verify."

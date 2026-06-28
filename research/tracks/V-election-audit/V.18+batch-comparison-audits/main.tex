@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Replayable Batch-Comparison Audit Transcripts}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Batch-comparison audits are useful when ballots are tabulated and hand-tallied
+as batches rather than linked ballot by ballot. RCOUNT's V.18 surface verifies
+that a sampled batch's reported subtotals reconcile to the package batch
+summary, that hand-tallied subtotals are present, that the declared plurality
+margin overstatement follows from reported and hand totals, and that a derived
+algorithm run carries the matching overstatement taint. The replay layer then
+routes \texttt{batch-comparison-v1} through the shared Kaplan-Markov taint
+product transcript in integer parts-per-million arithmetic. The result is a
+narrow public-evidence contract: whole-batch reported subtotals and hand tallies
+must support the declared taint-product transcript, while ballot-level linkage
+and legal audit sufficiency remain outside this slice.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-batch-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v18-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

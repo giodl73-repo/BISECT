@@ -1,0 +1,39 @@
+\section{Kaplan-Markov Contract}
+
+The audit record carries the public inputs the comparison replay needs:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned method name. Current value: \texttt{kaplan-markov-comparison-v1}. \\
+\texttt{risk\_limit\_ppm} & Risk limit in integer parts per million. Required for both replay paths. \\
+\texttt{sample\_unit\_id} & Ballot or batch identifier for the sampled comparison unit. \\
+\texttt{assorter\_value} & In the taint-product path, the declared taint as a rational value; in the MACRO path, an integer overstatement category. \\
+\texttt{macro\_ballot\_count} & MACRO ballot count $N$, present only when the published MACRO product is replayed. \\
+\texttt{macro\_reported\_margin} & MACRO reported margin $V$, present with $N$ and gamma. \\
+\texttt{macro\_gamma} & MACRO gamma parameter, required to be greater than one when present. \\
+\texttt{p\_value\_ppm} & Optional declared running P-value that must match the recomputed transcript. \\
+\texttt{decision} & Declared pass, continue, or boundary decision for the run. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The lower-level plurality comparison primitive assigns margin contributions of
+$+1$ for the reported winner, $-1$ for the loser, and $0$ for another selection.
+The overstatement is the CVR contribution minus the hand-count contribution, so
+winner-to-loser disagreement can contribute a two-vote overstatement and
+loser-to-winner disagreement can be negative. The taint helper normalizes the
+overstatement by the reported margin and rejects nonpositive margins.
+
+When no MACRO design fields are present, RCOUNT replays a narrow taint-product
+path: each sample step supplies a taint, negative taints are bounded at zero for
+product updates, and the running P-value is multiplied by one minus the bounded
+taint. When all MACRO fields are present, RCOUNT instead uses
+\texttt{replay\_kaplan\_markov\_macro\_bound}. That path computes the upper
+bound from $2\gamma N/V$, applies the no-error factor to categories from $-2$
+through $0$, and applies the one- and two-vote overstatement factors to
+categories $1$ and $2$. The stop check compares the running P-value with
+\texttt{risk\_limit\_ppm} after each sampled unit.

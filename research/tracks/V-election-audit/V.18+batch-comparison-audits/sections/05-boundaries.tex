@@ -1,0 +1,19 @@
+\section{Boundaries}
+
+The implemented claim boundary is the one stated in the V.18 plan: batch
+comparison is useful when ballot-level linkage is unavailable, but large batches
+weaken localization and can increase audit workload. RCOUNT can verify that the
+batch records are internally consistent and that the taint-product transcript
+matches those records. It does not make a ballot-level comparison claim.
+
+The boundary also depends on input trust. The verifier needs reported batch
+subtotals that correspond to the canvassed batch summary and hand tallies that
+come from the same physical batch. If those records are absent, mislabeled, or
+not trustworthy, the replay surface cannot repair them. The missing-hand-tally,
+batch-size-drift, missing-sampled-batch, and missing-risk-limit cases therefore
+fail or produce explicit boundary transcripts rather than statistical comfort.
+
+Finally, this slice does not call the derivation helper from public source
+adapters. The plan keeps that item open until audit reports provide sampled-batch
+order. V.18 therefore documents the core replay and verification surface, not a
+complete jurisdiction-specific ingestion pipeline.

@@ -1,0 +1,36 @@
+\section{Implemented Surface}
+
+The algorithm-replay dispatcher in \texttt{rcount-audit} routes
+\texttt{ALPHA\_MARTINGALE\_METHOD\_ID} to \texttt{replay\_alpha\_run}. That
+function first enforces the public contract: \texttt{risk\_limit\_ppm} must be
+present, exactly one assertion must be declared, the assertion upper bound must
+be a valid rational value, and every sample step must carry a \texttt{bet}.
+Missing bets produce a boundary transcript rather than a statistical verdict.
+
+When those fields are present, \texttt{replay\_alpha\_run} converts each sample
+step to a \texttt{BoundedMeanMartingaleObservation} and calls
+\texttt{replay\_fixed\_bet\_bounded\_mean\_martingale} in \texttt{rcount-stats}.
+The statistics crate owns the bounded-mean recurrence, exact rational update
+factors, running martingale, integer-ppm $p$-value conversion, and stop
+threshold. The audit crate then compares the computed statistic, $p$-value, and
+stop flag with any declared per-step values and reports drift through the common
+algorithm transcript.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{audit\_algorithm\_run} & Unsupported method id, missing ALPHA risk limit, multiple or absent assertions, invalid assertion bound, or missing per-step bets. \\
+\texttt{alpha\_replay} & Declared martingale statistic, $p$-value, or stop decision drifts from the recomputed bounded-mean transcript. \\
+\texttt{bounded\_mean\_martingale} & Assorter values outside the declared range, invalid null mean or upper bound, invalid risk limit, or a negative martingale update factor. \\
+\texttt{cvr\_summary\_total} & Public summaries still reconcile before audit-algorithm replay is interpreted with the rest of the package. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+This is a fixed-bet surface. The bet can vary by step because it is recorded in
+the transcript, but the current code replays the declared sequence; it does not
+choose an adaptive betting strategy for the verifier.

@@ -1,0 +1,35 @@
+\section{Fixtures}
+
+The positive fixture is
+\path{synthetic_stratified_hybrid_package}. It starts from the synthetic
+batch-comparison algorithm package, adds the synthetic Minerva multi-round
+ballot-polling run, and then adds a coordinator run named
+\path{audit-run:stratified-hybrid-boundary}. The coordinator uses
+\path{stratified-hybrid-rla-v1}, declares the combining rule
+\path{suite-nuisance-boundary-v1}, records nuisance parameter $1/2$, and
+sets the decision to \texttt{Boundary}.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & Role \\
+\midrule
+\texttt{synthetic\_stratified\_hybrid\_package} & Positive two-stratum coordinator: one batch-comparison stratum with 80 ballots and one Minerva ballot-polling stratum with 60 ballots. Each stratum receives a \texttt{500000} ppm allocation and points to an existing component run. \\
+\texttt{synthetic\_bad\_stratified\_hybrid\_package} & Missing-component negative fixture. It edits the ballot-polling stratum to reference \texttt{audit-run:missing-stratum}, causing \texttt{MissingStratifiedHybridComponent}. \\
+\texttt{synthetic\_flattened\_stratified\_hybrid\_package} & Flattening negative fixture. It truncates the coordinator to one stratum and gives that stratum the full \texttt{1000000} ppm allocation, causing \texttt{InvalidStratifiedHybridDesign}. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The core tests check the same contract directly. The positive test confirms
+that the package verifies, that the stratified run has two strata, that the
+combining rule and nuisance parameter are present, and that both allocations
+are \texttt{500000}. The negative tests confirm that a missing component and a
+flattened one-stratum coordinator are rejected.
+
+The audit crate adds a replay-surface test for the positive package. It finds
+the \path{stratified-hybrid-rla-v1} run, calls
+\path{replay_audit_algorithm_statistics}, and confirms that the transcript
+status is \texttt{Boundary} with a message containing \texttt{combined-risk
+replay}.

@@ -1,0 +1,22 @@
+\section{Boundaries}
+
+The plan boundary is the governing claim: Bayesian outputs are analytic unless
+explicitly calibrated to a risk limit. The implementation follows that line. It
+verifies a declared Bayesian audit record, but it does not perform a full
+posterior computation and does not certify that the posterior upset probability
+has frequentist risk-limiting coverage.
+
+Prior dependence is part of the public contract. The same tabulation evidence
+can produce different posterior upset probabilities under different priors or
+likelihood models, so the verifier requires non-empty identifiers for both. It
+still treats those identifiers as declared metadata. A future implementation
+could bind them to executable posterior code, hand-computable fixtures, or an
+external calibration proof; V.20 does not yet do that.
+
+Bayesian audits are therefore not risk-limiting in the frequentist sense merely
+because they report a small upset probability. RCOUNT keeps the field
+\texttt{calibrated\_risk\_limit\_ppm} optional and shape-checked only. Until a
+calibration rule is added, that field is a boundary marker, not a certificate.
+This is also why the replay transcript reports Bayesian tabulation as recorded
+posterior analytics rather than as BRAVO, Kaplan-Markov, ALPHA, or another RLA
+stopping calculation.

@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+V.19 gives RAIRE and AWAIRE a named place in RCOUNT without overstating the
+implementation. The core verifier accepts \texttt{raire-irv-v1} and
+\texttt{awaire-irv-v1} only when the ranked-choice evidence surface is well
+formed: a reported elimination order, ranked-choice assertions, and sampled
+rankings over the declared candidates. The audit crate then reports method
+specific boundary transcripts rather than pretending to replay RAIRE or AWAIRE
+statistics.
+
+The next work is clear from the boundary. RCOUNT needs ranked contest and CVR
+semantics, an IRV tabulation fixture, RAIRE assertion generation, and
+assertion-level risk replay before it can claim more than preservation of the
+ranked-choice audit record. This paper therefore records the contract that
+exists now and the exact line it does not cross.

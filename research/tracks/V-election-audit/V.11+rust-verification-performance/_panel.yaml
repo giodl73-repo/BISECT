@@ -1,0 +1,22 @@
+paper: V.11+rust-verification-performance
+title: "Parallel RCOUNT Verification with Serial Equivalence"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Add first rcount-core parallel verifier slice."
+  - "[x] Preserve serial report ordering for parallel selection-sum checks."
+  - "[x] Add serial/parallel equivalence tests for pass and failure cases."
+  - "[ ] Add package-size and timing benchmarks for larger summary fixtures."
+  - "[ ] Parallelize source-hash checks and batch/accounting checks where ordering remains deterministic."
+  - "[ ] Add a benchmark-tier RCOUNT package with public CVR or summary data."

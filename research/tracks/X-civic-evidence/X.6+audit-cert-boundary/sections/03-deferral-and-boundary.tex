@@ -1,0 +1,31 @@
+\section{Deferral and Boundary}
+
+The downstream evidence boundary specification reserves RAUDIT and RCERT but
+does not implement them. The civic-evidence access-pattern specification gives
+the read direction, and the RCOUNT audit-algorithm roadmap shows why the current
+audit work still belongs inside RCOUNT \citep{civic-evidence-boundaries-2026}.
+The V-series contracts are still proving the common transcript shape: method
+ids, assertion ids, sample or batch references, risk limits, per-step statistics,
+final decisions, and explicit boundary outcomes.
+
+RAUDIT should therefore stay embedded until a second production consumer needs
+the same audit transcript independently of an RCOUNT package. That consumer
+might be a public case bundle, a cross-jurisdiction audit library, or a
+certification record that wants to cite a transcript package by hash. Until that
+pressure exists, extracting RAUDIT would create another package boundary without
+making the evidence more verifiable.
+
+RCERT has a different deferral reason. Certification is source-artifact driven.
+Before schema work begins, the project needs real public certification
+artifacts: board minutes, canvass reports, motions, official certificates,
+signatory records, evidence checklists, legal caveats, and any referenced audit,
+log, or custody exhibits. Without those artifacts, RCERT would risk inventing a
+generic workflow rather than preserving what officials actually publish.
+
+One decision remains open: whether the V-series audit-algorithm transcripts need
+standalone RAUDIT packages at all. Some methods may remain most useful as
+embedded RCOUNT replay contracts. Others may become reusable exhibits that a
+certification or public-case layer should reference directly. The boundary rule
+does not answer that packaging question. It only fixes ownership: RAUDIT can
+replay method evidence. RCERT can record official actions. Neither owns the base
+count ledger, and neither should silently change RCOUNT verifier results.

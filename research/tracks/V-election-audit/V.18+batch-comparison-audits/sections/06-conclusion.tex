@@ -1,0 +1,16 @@
+\section{Conclusion}
+
+RCOUNT now has a concrete batch-comparison audit contract. Package verification
+checks reported batch totals against canvassed batch summaries, requires hand
+winner and loser tallies, recomputes reported and hand margins, and verifies the
+declared overstatement. Algorithm-run verification then links each sampled batch
+to a taint equal to overstatement divided by reported margin, while
+\texttt{replay\_comparison\_taint\_product\_run} replays the resulting
+\texttt{batch-comparison-v1} transcript in integer parts-per-million arithmetic.
+
+The result is intentionally modest. It makes whole-batch comparison evidence
+replayable when trustworthy batch subtotals, hand tallies, and sampled-batch
+order are present. It does not infer ballot-level evidence, certify statutory
+sufficiency, or hide missing public records behind a pass. Those limits are the
+point: V.18 turns batch-comparison audits into a checkable public transcript
+without pretending that the transcript is more granular than the evidence.

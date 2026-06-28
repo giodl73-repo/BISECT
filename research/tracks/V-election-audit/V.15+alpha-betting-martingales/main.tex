@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Replayable ALPHA Betting-Martingale Audit Transcripts}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+ALPHA treats a risk-limiting audit as a test-supermartingale for a bounded-mean
+assertion. Rather than trusting a reported risk value, RCOUNT replays the
+published assorter values and betting parameters, recomputes the nonnegative
+martingale in exact rational arithmetic, converts the running statistic to a
+parts-per-million $p$-value, and checks the declared stop-or-continue decision.
+This paper documents the implemented V.15 slice: a single-assertion,
+with-replacement, fixed-bet bounded-mean martingale exposed through
+\texttt{alpha-martingale-v1}. The claim is narrow but useful: when the public
+audit record declares the assorter, upper bound, risk limit, ordered sample
+values, and per-step bets, an independent verifier can regenerate the ALPHA
+transcript from package evidence.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-alpha-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,stark-alpha-2022}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

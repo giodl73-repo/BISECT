@@ -1,0 +1,27 @@
+\section{Boundaries}
+
+The claim boundary is the one stated in the V.8 plan. RCOUNT owns count
+summaries and reconciliation. RPLAN owns assignments and plan hashes.
+\texttt{rplan-core} validates the plan and computes the assignment-bearing plan
+hash. RCTX owns context and crosswalk identity; \texttt{rctx-core} verifies the
+crosswalk record set and computes its hash. The bridge composes these hashes
+and sums counts. It does not make RCOUNT a plan-validity verifier.
+
+The implemented crosswalk path is intentionally conservative. It can use
+explicit RCTX crosswalk rows and reject declared hash drift, but the transcript
+does not yet record non-exhaustive crosswalk caveats. Rows whose target unit is
+not in the plan are ignored by the current aggregation path, so a future public
+fixture should make the non-exhaustive boundary visible rather than treating it
+as a silent policy choice.
+
+Fractional allocation is also bounded. The bridge accepts rational crosswalk
+weights only when every affected count field allocates to an integer. That is
+appropriate for a count transcript that emits integer RCOUNT summaries, but it
+is not a general fractional redistricting report. A rational-output transcript
+mode remains future work for genuinely fractional population, area, or vote
+allocation records.
+
+Finally, the implemented fixtures are synthetic. They prove artifact binding,
+lineage failure, stale-plan failure, explicit-crosswalk projection, and
+crosswalk-hash drift. They do not yet prove a real public precinct-to-district
+crosswalk ingestion path.

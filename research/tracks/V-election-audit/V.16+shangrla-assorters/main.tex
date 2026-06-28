@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{SHANGRLA Assertion And Assorter Audit Contracts}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+SHANGRLA reframes many risk-limiting audits as tests of assertion means. An
+outcome claim is reduced to one or more assertions; each assertion supplies an
+assorter, a bounded function whose average must exceed one half under the
+reported outcome. This paper documents the RCOUNT V.16 surface that has landed:
+not a full SHANGRLA or ALPHA numerical replay, but a record-shape and design
+contract for assertion and assorter transcripts. The verifier accepts a named
+\texttt{shangrla-assorter-v1} audit run, checks assertion ids, registered
+assorter ids, bounds, sample-step links, p-values, and declared assorter values,
+and exposes failures through the common audit-algorithm transcript check. The
+contract makes the assertion layer reproducible before later work attaches a
+sequential mean test.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-assorter-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,stark-shangrla-2020}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

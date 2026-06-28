@@ -1,0 +1,45 @@
+\section{Fixtures}
+
+The basic positive fixture is exercised by
+\texttt{aggregates\_summary\_basic\_into\_rplan\_districts}. It builds the
+synthetic summary package, pairs it with
+\texttt{synthetic\_summary\_basic\_rplan\_document}, and verifies that the
+package summaries aggregate into two RPLAN districts.
+
+The declared-reference fixture is
+\texttt{aggregation\_transcript\_records\_matching\_rctx\_reference}. It adds an
+RCOUNT \texttt{rctx\_refs} entry whose context hash matches the supplied
+context. The transcript records both \texttt{rctx\_reference\_id} and
+\texttt{rctx\_crosswalk\_hash}.
+
+The explicit-crosswalk path is covered by
+\texttt{aggregation\_validates\_explicit\_crosswalk\_hash} and
+\texttt{aggregation\_uses\_explicit\_crosswalk\_projection}. The first test
+writes identity RCTX crosswalk rows, computes their set hash, and requires the
+transcript to carry that hash. The second writes rows that project both
+synthetic source precincts to one plan unit, proving that district totals are
+driven by the explicit crosswalk rather than by direct id equality.
+
+The RCTX fixture path is
+\texttt{aggregation\_consumes\_minimal\_rctx\_fixture\_crosswalk}. It consumes
+the minimal RCTX package fixture through stable context and crosswalk hashes and
+records the matching RCTX reference in the district transcript.
+
+The crosswalk-hash negative fixture is
+\texttt{aggregation\_rejects\_declared\_crosswalk\_hash\_drift}. It supplies an
+explicit crosswalk file while the RCOUNT reference declares a different
+crosswalk hash. The bridge rejects the aggregation with
+\texttt{CrosswalkHashMismatch}.
+
+The multi-election positive fixture is
+\texttt{verifies\_multi\_election\_harness\_across\_lineage\_and\_districts}.
+It verifies the synthetic 2024, 2026, and 2028 cycles, including a split lineage
+event and a merge lineage event, before aggregating each cycle by district.
+
+The stale-plan-unit negative fixture is
+\texttt{rejects\_multi\_election\_harness\_with\_stale\_plan\_unit}. The 2028
+plan names a unit that has no current matching summary, and the bridge fails
+with \texttt{MissingPlanUnitSummary}. The broken-lineage negative fixture is
+\texttt{rejects\_multi\_election\_harness\_with\_bad\_lineage}. It edits the
+current unit in the 2028 merge lineage and fails before aggregation under the
+RCOUNT lineage-conservation check.

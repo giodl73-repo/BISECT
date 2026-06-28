@@ -1,0 +1,32 @@
+\section{Fixtures}
+
+The round-one positive fixture is
+\texttt{synthetic\_minerva\_round\_one\_package}. It starts from the synthetic
+summary package, adds one \texttt{minerva-ballot-polling-v1} run for
+\texttt{syn-2024-mayor}, reports winner and loser votes as three and one, sets
+a ten percent risk limit, and supplies six winner observations with no explicit
+round index. The test
+\texttt{minerva\_round\_one\_algorithm\_statistics\_replay\_passes\_fixture}
+checks that the replay emits one round step on sample step 5, computes the
+fixture statistic, and stops.
+
+The multi-round fixture is
+\texttt{synthetic\_minerva\_multi\_round\_package}. It reuses the same sample
+steps but marks steps 0 through 4 as round 0 and step 5 as round 1. The test
+\texttt{minerva\_multi\_round\_algorithm\_statistics\_replays\_round\_boundaries}
+checks that round 0 continues and round 1 stops, proving that the statistics
+crate uses cumulative observations across explicit round boundaries.
+
+The Athena boundary fixture is
+\texttt{synthetic\_athena\_boundary\_package}. It changes the multi-round run's
+method id to \texttt{athena-ballot-polling-v1}, sets the decision to
+\texttt{Boundary}, and verifies through
+\texttt{athena\_algorithm\_statistics\_reports\_documented\_boundary} that the
+method-specific boundary text is preserved.
+
+The drift case is covered by the CLI test
+\texttt{replay\_audit\_algorithms\_exits\_one\_on\_minerva\_declared\_drift}.
+It edits the declared \texttt{p\_value\_ppm} on the final round-one sample
+step while leaving the observations fixed. The replay exits nonzero and reports
+a declared p-value mismatch, separating a reproducible non-stop from a declared
+transcript that no longer matches its public inputs.

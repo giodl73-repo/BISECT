@@ -1,0 +1,32 @@
+\section{Ownership Contract}
+
+RCASE owns child-package composition and a claim matrix. A case bundle is
+allowed to say, for each public claim, which child packages are being cited,
+what their hashes are, and which child verifier results, caveats, conflicts, or
+unsupported checks remain attached to the claim. The planned shapes are
+\texttt{claims/claim-boundary.json} and a child-package index, but those are
+reserved interfaces rather than implemented schemas.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{XX}
+\toprule
+RCASE may & RCASE must not \\
+\midrule
+Organize child packages into a public evidence bundle. & Create facts that are
+not available in the cited children. \\
+Cite child package hashes and external citations. & Replace child hashes with a
+case-level assertion that cannot be traced back. \\
+Summarize child package claims in a claim matrix. & Loosen caveats, hide
+unsupported checks, or make an inconclusive child result look conclusive. \\
+Preserve conflicts between child packages. & Merge conflicting claims without
+recording the conflict metadata. \\
+Order exhibits for a public reader. & Move ownership of counts, lineage,
+audits, custody, maps, or certification into the case layer. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The contract is intentionally narrow. RCASE can make a case easier to read and
+easier to cite, but the evidence remains owned by the child packages that
+declared or derived it.

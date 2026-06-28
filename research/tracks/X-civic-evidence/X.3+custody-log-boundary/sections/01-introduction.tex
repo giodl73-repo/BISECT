@@ -1,0 +1,22 @@
+\section{Introduction}
+
+Custody and event-log evidence matter because public trust is not only a count
+arithmetic question. Voters and observers also ask when equipment was used,
+which files were exported, whether media moved through expected hands, whether
+seals and containers matched the records, and whether an observed process fits
+the official explanation. Those are real election-administration questions, but
+they are physical-process claims.
+
+RCOUNT is not the right owner for those claims. A count-reconciliation verifier
+can check that declared totals, subtotals, manifests, cast vote records, audit
+records, and package hashes reconcile under named rules. It cannot conclude
+from that reconciliation that ballots were always in proper custody, that a
+seal was never broken, that a tabulator log is complete, or that an operator
+performed an action for a stated reason.
+
+This paper therefore reserves two downstream layers. RLOG is reserved for
+normalized event and status logs. RCHAIN is reserved for physical
+chain-of-custody evidence. The reservation is not an implementation claim. It
+is a boundary claim: RCOUNT should remain honest about count evidence, and the
+future custody and log layers should wait for source artifacts before they
+harden schemas.

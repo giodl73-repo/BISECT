@@ -1,0 +1,45 @@
+\section{Implemented Surface}
+
+The core check is \path{verify_bayesian_audit_design} in
+\path{crates/rcount-core/src/verify_audit.rs}. It is called from the generic
+audit-algorithm verifier after method-id support and generic risk-limit shape
+checks. The method id is the constant
+\path{BAYESIAN_TABULATION_AUDIT_METHOD_ID}, whose value is
+\texttt{bayesian-tabulation-audit-v1}.
+
+For non-Bayesian methods, \path{verify_bayesian_audit_design} rejects any run
+that carries Bayesian-only fields: prior id, likelihood id, posterior winner
+probability, posterior risk, simulation seed, posterior draw count, or
+calibrated risk limit. This prevents a BRAVO, Kaplan-Markov, ALPHA, or other
+record from smuggling posterior analytics into a risk-limiting method.
+
+For the Bayesian method, the function checks exactly this design boundary: the
+prior id is present and not blank; the likelihood id is present and not blank;
+the posterior winner probability is present and no greater than 1,000,000 ppm;
+the posterior risk is present and no greater than 1,000,000 ppm; an optional
+posterior draw count is not zero; an optional calibrated risk limit is greater
+than zero and less than 1,000,000 ppm; at least one assertion is present; and
+every assertion has kind \texttt{bayesian-outcome}. The function does not run a
+posterior simulation, recompute the upset probability, or prove calibration to
+a frequentist risk limit.
+
+The audit crate preserves the same boundary in replay. In
+\path{crates/rcount-audit/src/lib.rs}, Bayesian tabulation dispatch returns a
+boundary transcript with the message that posterior analytics are recorded but
+are not risk-limiting replay.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{audit\_algorithm\_transcript} & Unsupported method ids, duplicate run ids, malformed generic audit records, and Bayesian records that fail the design boundary. \\
+\texttt{verify\_bayesian\_audit\_design} & Missing or blank prior/likelihood ids, missing or out-of-range posterior probability fields, zero posterior draws, invalid calibrated risk threshold, missing assertions, or non-Bayesian assertion kinds. \\
+\texttt{non-Bayesian Bayesian-field guard} & Any non-Bayesian audit method carrying Bayesian-only posterior fields. \\
+\texttt{algorithm replay boundary} & A Bayesian record being reported as posterior analytics rather than as BRAVO, Kaplan-Markov, ALPHA, or another risk-limiting replay. \\
+\texttt{cvr\_summary\_total} & Public CVR rows and summaries still reconcile before audit records are trusted. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
+\bottomrule
+\end{tabularx}
+\end{center}

@@ -1,0 +1,19 @@
+\section{Boundaries}
+
+This paper is an equivalence and determinism note. It is not a performance
+benchmark. The plan for this slice explicitly leaves package-size and timing
+benchmarks as future work, so this paper reports no timings, no speedups, and
+no package-size thresholds. Performance is the motivation for the interface,
+not an empirical result claimed here.
+
+The implementation boundary is also narrow. The first parallelized family is
+\texttt{contest\_selection\_sum}. Source-hash checks, batch and accounting
+checks, audit-algorithm replay, RLA checks, jurisdiction adapters, and manual
+audit checks still run through the same serial functions after the collected
+selection-sum pass vector. Parallelizing those families is future work only
+where their transcript order can remain deterministic.
+
+The contract does not change RCOUNT's evidence model. It does not make a package
+more correct than the serial verifier would. It only says that the parallel
+entry point is allowed to exist when it preserves the exact public transcript
+semantics of the serial entry point for the implemented check family.

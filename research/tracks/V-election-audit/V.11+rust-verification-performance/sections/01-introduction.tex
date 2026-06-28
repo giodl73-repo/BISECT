@@ -1,0 +1,21 @@
+\section{Introduction}
+
+RCOUNT packages are meant to be public evidence, not office-only artifacts.
+Anyone who receives the package should be able to run the verifier and recover
+the same transcript that an election office would see. For full-election
+packages, that goal creates an ordinary engineering pressure: independent checks
+over many public records should eventually run in parallel.
+
+Parallel verification is only useful if it does not change what is being
+verified. A faster verifier that reorders reports, hides a failing equation, or
+returns a coarser pass/fail result would weaken the audit surface. The public
+object is the transcript: the ordered list of equations that passed, plus the
+same error behavior when a package fails.
+
+This paper documents the first RCOUNT parallel verifier slice. The serial entry
+point is \texttt{verify\_package}; the parallel entry point is
+\texttt{verify\_package\_parallel}. The implementation uses Rayon through
+\texttt{rayon::prelude} and parallelizes the contest selection-sum family first.
+The research claim is deliberately narrow: the parallel verifier preserves the
+serial transcript semantics for the implemented surface. It does not yet claim
+measured speedups.

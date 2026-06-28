@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+\emergencystretch=3em
+
+\title{Stratified And Hybrid Risk-Limiting Audit Structures}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Stratified and hybrid risk-limiting audits are needed when one contest spans
+more than one evidence surface. A contest may have ballot-level CVRs in one
+stratum, only ballot-polling evidence in another, or batch-level comparison
+evidence in a third. RCOUNT now records that SUITE-style coordination layer as
+a replayable structure: a stratified coordinator names its combining rule,
+nuisance parameter, component runs, stratum methods, ballot counts, source
+references, and risk allocations. The implemented verifier checks that the
+strata are not flattened, that allocations form a full partition of the risk
+budget, and that every stratum points to an existing non-stratified component
+run. It deliberately reports the combined statistical risk replay as a
+boundary, not as implemented math.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-stratified-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v7-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

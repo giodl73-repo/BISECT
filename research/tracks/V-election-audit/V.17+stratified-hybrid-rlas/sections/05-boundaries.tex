@@ -1,0 +1,20 @@
+\section{Boundaries}
+
+The V.17 claim boundary is narrow. RCOUNT preserves the stratum structure,
+component run links, combining-rule id, nuisance parameter, and allocation
+partition. It rejects malformed structures that would make a hybrid audit look
+like one homogeneous sampler or one unsupported statistical run.
+
+It does not yet replay the combined statistical risk. The plan states this
+directly: the combined risk claim depends on correct stratum definitions and
+sampling frames, and RCOUNT now preserves strata and component run references,
+but still does not claim combined-risk replay. The audit crate mirrors that
+boundary by returning a method-specific boundary transcript instead of a pass
+or fail statistical transcript for the combined risk.
+
+This also means that SUITE, SHANGRLA/ALPHA, Fisher combination, and any
+state-specific hybrid formula remain outside the implemented result unless
+they are present in the component methods that already replay. V.17 is the
+coordinator substrate on which those calculations can be added without losing
+the public record of which ballots, batches, or jurisdictions belonged to
+which evidence surface.

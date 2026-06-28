@@ -1,0 +1,36 @@
+\section{Fixtures}
+
+The positive boundary fixture is
+\texttt{synthetic\_soba\_observable\_ballot\_boundary\_package}. It starts from
+the privacy-safe inclusion-proof package and adds one audit algorithm run:
+\texttt{audit-run:soba-observable-ballot-boundary}. The run uses
+\texttt{soba-observable-ballot-audit-v1}, sets
+\texttt{sampling\_mode} to \texttt{BoundaryOnly}, declares one
+\texttt{ObservableBallotLinkage} assertion with
+\texttt{soba-commitment-opening-v1}, and adds one sample step whose
+\texttt{sample\_unit\_id} is \texttt{proof:accepted-token-001}. That proof
+exists in the package and has no candidate selections and no voter id, so the
+package verifies and records an \texttt{audit\_algorithm\_transcript} pass.
+
+The negative fixture is
+\texttt{synthetic\_missing\_soba\_opening\_package}. It starts from the same
+boundary package but changes the sample step to
+\texttt{proof:missing-token}. The verifier can still parse the run, assertion,
+and step, but it cannot find the named opening in \texttt{inclusion\_proofs}.
+The package is rejected with \texttt{MissingObservableBallotOpening}.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Fixture & Boundary exercised \\
+\midrule
+\texttt{synthetic\_soba\_observable\_ballot\_boundary\_package} & Present opening, observable linkage assertion, privacy-safe proof contents. \\
+\texttt{synthetic\_missing\_soba\_opening\_package} & Sample step references an opening that is not in the package. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The corresponding tests assert both sides: the boundary package verifies and
+the linked proof remains choice-free, while the missing-opening package fails
+with the specific missing-opening error.

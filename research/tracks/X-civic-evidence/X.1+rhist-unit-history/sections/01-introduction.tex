@@ -1,0 +1,20 @@
+\section{Introduction}
+
+Precinct and reporting-unit histories recur across election evidence systems.
+A count package needs to say why a precinct total in one election cannot be
+joined directly to a later precinct id. A plan package needs to compare
+assignments across census or administrative cycles. Neither package should
+permanently embed the whole unit-history substrate.
+
+RHIST therefore treats reporting-unit lineage as a reusable package. RPLAN and
+RCOUNT can reference the same lineage artifact by content hash, while RHIST
+owns the narrower question of which units existed in which cycles and how
+declared unit identities changed between those cycles. The package is small
+enough to audit directly and stable enough to be reused by later count,
+context, and plan artifacts.
+
+This paper documents the first implemented RHIST slice. It does not assert
+that any jurisdiction drew legally correct boundaries or that every historical
+source is complete. It claims only that the declared cycle, unit, lineage, and
+crosswalk records are replayable from a package directory and that downstream
+packages can bind to that replayable lineage by hash.

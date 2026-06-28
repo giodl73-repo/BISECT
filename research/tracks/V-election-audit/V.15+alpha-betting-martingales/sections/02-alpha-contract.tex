@@ -1,0 +1,37 @@
+\section{ALPHA Contract}
+
+The audit record carries the public inputs the ALPHA replay needs:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned method name. Current value: \texttt{alpha-martingale-v1}. \\
+\texttt{risk\_limit\_ppm} & Risk limit in parts per million. The stop threshold is $1/\alpha$. \\
+\texttt{sampling\_mode} & Declared sampling mode, currently recorded as package evidence while the implemented replay exercises the fixed-bet bounded-mean path. \\
+\texttt{assertions} & The implemented replay requires exactly one bounded-mean assertion. \\
+\texttt{assertion\_id} & Identifier binding each sample step to the assertion under test. \\
+\texttt{assorter\_id} & Identifier for the function that maps sampled evidence to a bounded value. \\
+\texttt{assorter\_upper\_bound} & Upper bound $u$ for every declared assorter value. \\
+\texttt{sample\_steps} & Ordered sample stream. \\
+\texttt{assorter\_value} & Rational observation $x_i$ for a sample step. \\
+\texttt{bet} & Rational betting parameter $\lambda_i$ used at that step. \\
+\texttt{statistic} & Optional declared martingale value to check against replay. \\
+\texttt{p\_value\_ppm} & Optional declared $p$-value in parts per million to check against replay. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The implemented null mean is half the declared assorter upper bound,
+$m_0=u/2$. Starting from $M_0=1$, RCOUNT replays each step by exact rational
+arithmetic:
+\[
+  F_i = 1 + \lambda_i\frac{x_i-m_0}{u}, \qquad
+  M_i = M_{i-1}F_i.
+\]
+The update factor must not be negative, and each $x_i$ must lie in
+$[0,u]$. The replayed $p$-value is the ceiling, in integer parts per million,
+of $1/M_i$. The computed decision is \texttt{pass} once $M_i \ge 1/\alpha$ and
+\texttt{continue} otherwise.

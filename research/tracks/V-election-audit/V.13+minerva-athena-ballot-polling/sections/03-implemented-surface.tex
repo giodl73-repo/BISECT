@@ -1,0 +1,36 @@
+\section{Implemented Surface}
+
+The algorithm dispatcher in \texttt{rcount-audit} routes
+\texttt{minerva-ballot-polling-v1} to \texttt{replay\_minerva\_run}. That
+function requires \texttt{risk\_limit\_ppm}, \texttt{reported\_winner\_votes},
+\texttt{reported\_loser\_votes}, and at least one sample step before it calls
+\texttt{replay\_minerva\_ballot\_polling\_rounds} in \texttt{rcount-stats}.
+The statistics crate owns the cumulative round replay and returns one computed
+round step per declared round.
+
+The same dispatcher routes \texttt{athena-ballot-polling-v1} to a documented
+boundary transcript: ``Athena round risk calculation is recorded but not
+replayed.'' Minerva records also become boundaries, rather than failures or
+passes, when required fields are missing, explicit round indices are incomplete
+or decreasing, a round is empty, reported vote totals are invalid, or a sample
+step contains an observation outside the implemented winner/loser surface.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{audit\_algorithm\_run} & Unsupported method id, Athena replay request, or Minerva record missing risk limit, reported winner votes, reported loser votes, or sample steps. \\
+\texttt{minerva\_rounds\_from\_steps} & Partial or decreasing explicit \texttt{round\_index} values, and sample steps that cannot be reduced to winner or loser observations. \\
+\texttt{minerva\_replay} & Declared round likelihood ratio, p-value, or stop decision drifts from the recomputed cumulative round transcript. \\
+\texttt{cvr\_summary\_total} & Reported contest totals still reconcile to the public summaries that anchor the assertion. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the declared source index. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The result is deliberately narrow. A passing Minerva transcript means that the
+declared two-candidate round transcript follows from the record RCOUNT was
+given. It does not expand Athena into Minerva, and it does not infer missing
+round evidence from a public report.

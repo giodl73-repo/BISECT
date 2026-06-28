@@ -1,0 +1,38 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{RCASE Boundary: Public Evidence-Bundle Composition}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Public election evidence often arrives as several bounded packages: count
+reconciliation, unit lineage, audit transcripts, custody records, and public
+citations. RCASE is reserved for the later layer that can put those materials
+into one citable case without changing what any child package proves. This paper
+does not describe implemented code. It records the ownership definition, the
+reason RCASE is deferred until child claim boundaries are stable, and the rule
+that a case bundle may organize, cite, and summarize child claims only while
+preserving child hashes, caveats, conflicts, and unsupported checks.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-ownership-contract}
+\input{sections/03-deferral-and-boundary}
+\input{sections/04-conclusion}
+
+\nocite{rcount-overview-2026,civic-evidence-boundaries-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

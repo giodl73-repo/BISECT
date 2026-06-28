@@ -1,0 +1,21 @@
+\section{Introduction}
+
+Some election audits are not homogeneous. One part of a contest may have
+ballot-level CVRs and support ballot comparison. Another part may only support
+ballot polling. A third part may be naturally audited as a batch comparison.
+The public risk statement still concerns one contest outcome, so the audit
+record needs a coordinator that preserves the stratum boundaries and combines
+the independent stratum evidence under a declared rule.
+
+RCOUNT now records that coordinator for the SUITE and hybrid RLA layer. The
+implemented object is not a combined-risk calculator. It is a structure
+contract: the package must show which component audit run belongs to each
+stratum, which method that stratum uses, what allocation was assigned, and
+which combining and nuisance-parameter fields define the intended statistical
+surface.
+
+This paper covers the implemented V.17 slice. It claims that a record with
+method id \path{stratified-hybrid-rla-v1} is well formed, replayable as a
+declared structure, and protected against flattening into a false single-frame
+audit. It does not claim that RCOUNT has implemented the final SUITE P-value
+combination or any other combined statistical risk calculation.

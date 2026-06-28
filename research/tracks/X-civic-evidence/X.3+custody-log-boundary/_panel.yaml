@@ -1,0 +1,21 @@
+paper: X.3+custody-log-boundary
+title: "RCHAIN/RLOG Boundary: Custody and Event-Log Evidence"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - BOUNDARY
+  - LEDGER
+  - CANVASS
+  - VAULT
+  - MERIDIAN
+p1_items:
+  - "[x] Define RLOG as normalized event/status logs."
+  - "[x] Define RCHAIN as physical chain-of-custody evidence."
+  - "[x] Record that both are deferred until real source artifacts demand schemas."
+  - "[ ] Collect public examples of EMS logs, tabulator logs, seal logs, custody forms, and observer records."
+  - "[ ] Write L0 source-pressure fixtures before any crate work."

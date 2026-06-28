@@ -1,0 +1,43 @@
+\section{Fixtures}
+
+The package-level positive fixture is exercised by
+\texttt{replay\_audit\_algorithms\_outputs\_alpha\_transcript}. It builds an
+audit run named \texttt{audit-run:alpha-toy} with method
+\texttt{alpha-martingale-v1}, one assorter-mean assertion, four sample steps
+with assorter value $1$, four declared bets of $1$, and a 250000 ppm risk
+limit. The CLI replay reports \texttt{status} \texttt{pass}, computed decision
+\texttt{pass}, final statistic $81/16$, and final $p$-value 197531 ppm.
+
+The package-level drift fixture is
+\texttt{replay\_audit\_algorithms\_exits\_one\_on\_alpha\_declared\_drift}.
+It uses the same toy run shape under \texttt{audit-run:alpha-drift}, but edits
+the declared final $p$-value to 999999 ppm. The recomputed transcript disagrees
+and the command exits with failure while exposing the declared $p$-value
+mismatch.
+
+The audit-crate drift unit test is
+\texttt{alpha\_algorithm\_statistics\_replay\_detects\_declared\_drift}. It
+constructs \texttt{audit-run:alpha-toy} directly and checks that the fourth
+step carries a \texttt{p-value mismatch} error when the declared value is
+edited.
+
+The boundary fixture is
+\texttt{replay\_audit\_algorithms\_outputs\_alpha\_boundary\_when\_bets\_are\_missing}.
+It names \texttt{audit-run:alpha-boundary} and omits the per-step bet. The
+package remains readable, but ALPHA replay returns a boundary transcript with
+the message \texttt{ALPHA replay requires bet on every sample step}. The
+matching audit-crate unit test is
+\texttt{alpha\_algorithm\_statistics\_reports\_boundary\_when\_bets\_are\_missing}.
+
+The numerical positive fixture is
+\texttt{fixed\_bet\_bounded\_mean\_martingale\_replays\_exactly} in
+\texttt{rcount-stats}. It checks the shared primitive directly: null mean
+$1/2$, upper bound $1$, risk limit 250000 ppm, four observations of value $1$
+and bet $1$, stop threshold $4$, final martingale $81/16$, and final $p$-value
+197531 ppm. The numerical boundary fixture
+\texttt{fixed\_bet\_bounded\_mean\_martingale\_rejects\_out\_of\_range\_values}
+confirms that an observation outside the declared bound is rejected.
+
+There is not yet a named ALPHA continue fixture in the implementation. The plan
+also leaves adaptive-bet and without-replacement fixtures unchecked, so this
+paper does not describe them as implemented evidence.

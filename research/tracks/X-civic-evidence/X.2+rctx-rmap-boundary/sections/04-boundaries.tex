@@ -1,0 +1,28 @@
+\section{Boundaries}
+
+RCTX is a bridge, not an ownership transfer. It provides a shared base
+dimension that domain packages can reference. It does not own plan assignments,
+vote totals, ballot records, audit samples, lineage events, certification
+claims, court records, or rendered maps. Those facts remain with RPLAN, RCOUNT,
+RHIST, RCERT, RCASE, or RMAP according to the package-family boundary.
+
+The claim boundary is encoded in code as well as prose. \texttt{ClaimBoundary}
+requires a package id, a \texttt{proves} list, a \texttt{does\_not\_prove}
+list, and optional caveats. \texttt{verify\_package} rejects a package whose
+claim boundary names the wrong package or omits either side of the claim. That
+shape is modest, but it prevents a shared context package from silently
+becoming a legal or cartographic certification.
+
+RMAP is reserved, not implemented. The specs assign RMAP rendered maps,
+styling, symbols, labels, layer composition, display projections, tile
+products, and map-image hashes. The repository does not currently contain a
+standalone RMAP crate, and this paper does not claim one exists. The correct
+near-term relationship is that a future RMAP product may reference an RCTX
+\texttt{context\_hash}; it should not invent canonical unit identity on its own.
+
+The split decision is also explicit. The plan and boundary spec say not to move
+full \texttt{.rctx} read/write out of RPLAN until a second production consumer
+needs direct full-context construction or validation. \texttt{rctx-core} exists
+because crosswalks, source refs, context unit indexes, graph records, content
+hashes, and claim boundaries already have cross-product pressure. That is a
+different decision from splitting all RPLAN context I/O.

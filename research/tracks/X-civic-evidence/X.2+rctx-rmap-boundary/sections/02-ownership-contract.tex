@@ -1,0 +1,61 @@
+\section{Ownership Contract}
+
+The RCTX boundary spec records the dependency rule: RPLAN, RCOUNT, RHIST, and
+RMAP may depend on RCTX concepts, but RCTX must not depend on those domain
+packages \citep{rctx-boundary-2026}. The civic evidence package family spec
+uses the same split: RCTX is the canonical machine context, and RMAP is the
+public map presentation layer.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Owner & Contract \\
+\midrule
+RCTX & Stable unit ids, unit namespace, canonical order, context hash, unit-universe hash, graph identity, source hashes, aligned non-domain attributes, and crosswalks. \\
+RMAP & Rendered maps, styling, symbols, colors, labels, layer composition, display projections, raster/vector tiles, and public map image hashes. \\
+RPLAN & District assignments, plan metadata, plan audit certificates, and the current \texttt{.rctx} read/write path until another full-context producer needs extraction. \\
+RCOUNT & Election totals, CVRs, canvass records, ballot manifests, audit evidence, and references to RCTX context or crosswalk hashes through count-package metadata. \\
+RHIST & Unit lineage across cycles: splits, merges, renames, boundary edits, and historical cross-cycle relationships. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The implemented \texttt{rctx-core} record shape follows that ownership line.
+\texttt{RctxPackage} contains a \texttt{RctxManifest}, a source index, context
+unit indexes, graph records, crosswalk records, and a claim boundary.
+\texttt{RctxManifest} names the RCTX version, package id, jurisdiction,
+producer, creation time, and \texttt{package\_content\_hash}. A
+\texttt{ContextUnitIndex} binds a \texttt{context\_hash} to ordered
+\texttt{unit\_ids}. A \texttt{GraphRecord} binds graph identity to a context
+hash, graph hash, and source references. A \texttt{CrosswalkRecord} binds
+source and target contexts, endpoint units, an exact rational weight, a weight
+kind, an exhaustiveness flag, and source references.
+
+The existing RPLAN context maps directly onto the shared boundary:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+RCTX concept & Existing \texttt{rplan\_core::RplanContext} field \\
+\midrule
+Schema version & \texttt{rctx\_version} \\
+Context digest & \texttt{context\_hash} \\
+Canonical unit universe & \texttt{units: PlanUnitIndex} \\
+Unit kind, state, year, order, source id & \texttt{PlanUnitIndex} fields \\
+Unit-universe hash & \texttt{unit\_universe\_hash} \\
+Adjacency graph & \texttt{graph: Option<UnitGraph>} \\
+Aligned population vector & \texttt{populations: Option<Vec<i64>>} \\
+Aligned subdivision ids & \texttt{subdivisions: Option<SubdivisionContext>} \\
+Aligned demographic vectors & \texttt{demographics: Option<DemographicContext>} \\
+Geometry identity references & \texttt{geometry: Option<GeometryContext>} \\
+Source registry & \texttt{source\_hashes: SourceHashes} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+That mapping is why X.2 does not move the full \texttt{.rctx} implementation.
+The as-built RPLAN context already carries the fields needed by the shared
+contract; the extraction point is the cross-product verification primitive, not
+a rewrite of working plan context I/O.

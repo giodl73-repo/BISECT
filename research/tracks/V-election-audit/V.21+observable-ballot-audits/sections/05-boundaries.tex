@@ -1,0 +1,21 @@
+\section{Boundaries}
+
+This slice is a record-shape and observable-opening contract. It verifies that
+a SOBA audit run declares the right method id, uses observable ballot linkage
+assertions, includes sample steps, links every sampled unit to a package proof,
+and keeps those proofs from publishing candidate selections or voter identity.
+It does not verify a cryptographic commitment scheme, compare CVRs to ballot
+interpretations, or compute a risk-limiting comparison statistic.
+
+That boundary matches the implementation plan. RCOUNT can verify commitments
+and transcript consistency only to the extent those fields exist in the public
+package and are linked by stable ids. The current fixture lands the opening
+linkage and the missing-opening negative case. The planned CVR mismatch fixture
+that can feed later comparison math is not yet implemented here.
+
+The privacy boundary is equally important. Public observability is valuable
+because it lets observers check the audit path without trusting the auditor,
+but ballot secrecy limits what can be published. RCOUNT therefore rejects
+linked openings that carry candidate selections or voter identity. It also does
+not attempt to infer voter identity, expose secret ballot order, or turn a
+public opening into a vote receipt.

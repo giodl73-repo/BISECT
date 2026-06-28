@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{SOBA Observable Public-Evidence Ballot Audits}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Stylish Observable Ballot-level Audit (SOBA) evidence makes the comparison
+between cast vote records and ballot-card interpretations publicly observable,
+usually by publishing commitments and later opening the sampled records without
+revealing voter identity. RCOUNT implements the first boundary of that idea as
+a record-shape and observable-opening contract. A SOBA audit run must use the
+versioned method id \texttt{soba-observable-ballot-audit-v1}, carry observable
+ballot linkage assertions, name at least one sampled opening, and link every
+sample step to a privacy-safe inclusion proof. The verifier checks that each
+referenced opening exists and that the proof does not publish candidate choices
+or voter identity. Statistical comparison-risk replay is deliberately outside
+this slice; the audit crate records SOBA linkage as a documented boundary
+transcript.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-observable-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v4-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

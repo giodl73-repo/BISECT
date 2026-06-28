@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Bayesian Tabulation Audit Boundary Contracts}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Bayesian tabulation audits, in the Rivest-Shen tradition, estimate the posterior
+probability that a full hand count would overturn the reported outcome. Unlike
+frequentist risk-limiting audits, they report an upset probability under a
+prior rather than a distribution-free risk limit. This paper documents the
+RCOUNT V.20 boundary contract for that surface. The implemented verifier does
+not run a posterior simulation. It verifies that a declared Bayesian audit
+record is shaped as Bayesian evidence, that prior and likelihood identifiers are
+present, that declared posterior winner and upset-risk fields are bounded, and
+that any calibrated risk limit is only a declared field unless a separate
+calibration rule is implemented. The result is a deliberately narrow contract:
+posterior analytics can be recorded and replayed as public evidence without
+being confused with risk-limiting certification.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-bayesian-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v20-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

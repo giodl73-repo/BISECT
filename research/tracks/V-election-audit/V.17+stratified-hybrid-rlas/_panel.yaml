@@ -1,0 +1,24 @@
+paper: V.17+stratified-hybrid-rlas
+title: "Stratified And Hybrid Risk-Limiting Audit Structures"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Define stratum records and stratum method ids."
+  - "[x] Add two-stratum synthetic fixture."
+  - "[x] Add combining-rule transcript field."
+  - "[x] Verify stratum component run references and reject missing components."
+  - "[x] Expose stratified-hybrid-rla-v1 through replay-audit-algorithms as an explicit combined-risk boundary."
+  - "[x] Add nuisance-parameter and allocation transcript fields."
+  - "[x] Add negative fixture for flattened-stratum misuse."
+  - "[ ] Add combined-risk replay once the combining rule math is selected and validated."

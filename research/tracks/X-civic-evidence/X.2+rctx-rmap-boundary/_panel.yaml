@@ -1,0 +1,22 @@
+paper: X.2+rctx-rmap-boundary
+title: "RCTX/RMAP Boundary: Shared Machine-Context Identity"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - BOUNDARY
+  - LEDGER
+  - CANVASS
+  - VAULT
+  - MERIDIAN
+p1_items:
+  - "[x] Document RCTX as the owner of unit identity, context hashes, graph identity, source hashes, aligned attributes, and crosswalks."
+  - "[x] Document RMAP as the owner of rendered/cartographic presentation."
+  - "[x] Map the existing rplan_core::RplanContext fields to the shared RCTX boundary."
+  - "[x] Record the decision not to split rctx-core until there is a second production consumer."
+  - "[x] Add crosswalk structs and verifier checks when RCOUNT or RHIST needs them for a real workflow."
+  - "[x] Decide whether the first crosswalk implementation belongs in rplan-core, rcount-core, or a new rctx-core."

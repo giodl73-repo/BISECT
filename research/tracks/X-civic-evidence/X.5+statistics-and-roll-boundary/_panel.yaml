@@ -1,0 +1,22 @@
+paper: X.5+statistics-and-roll-boundary
+title: "RSTAT and RROLL Boundary: Analysis and Eligibility Universes"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Define RSTAT as statistical and forensic analysis outputs."
+  - "[x] Define RROLL as aggregate registration, eligibility, and ballot-style universes."
+  - "[x] Record that RSTAT must not change verifier pass/fail results."
+  - "[x] Record that RROLL must not publish private voter-level rolls."
+  - "[ ] Define privacy/disclosure thresholds before fixtures."
+  - "[ ] Build RSTAT only after enough normalized RCOUNT/RHIST inputs exist."

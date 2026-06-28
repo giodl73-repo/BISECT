@@ -1,0 +1,28 @@
+\section{Deferral and Boundary}
+
+Both layers are deferred. The downstream evidence specification explicitly says
+not to implement RSTAT, RROLL, or the other downstream packages until their
+access patterns and claim boundaries keep earlier packages from absorbing their
+responsibilities \citep{civic-evidence-boundaries-2026}. That deferral is part
+of the design, not a missing implementation note.
+
+RSTAT should be built only after enough normalized RCOUNT and RHIST inputs exist
+to make statistical analysis reproducible rather than anecdotal. A forensic
+report over unstable or one-off inputs would encourage readers to treat a model
+output as stronger than the evidence beneath it. RSTAT therefore waits for
+stable package hashes, normalized time series, and claim-boundary language that
+keeps a statistic from becoming certification.
+
+RROLL has a different reason to wait. Aggregate eligibility universes are useful
+only if the disclosure boundary is known before fixtures exist. The fixture
+ladder should not teach future implementers to publish rare ballot styles,
+small cells, or private voter-level rows. RROLL therefore waits for privacy and
+disclosure thresholds, plus source-hash and caveat rules, before any positive or
+negative fixture is written.
+
+The operational boundary is simple. RSTAT can identify patterns that need
+explanation. RROLL can declare aggregate eligibility universes. Neither
+certifies an election. Certification belongs to the packages and legal actions
+that bind count verification, audit evidence, and official signoff. Analysis and
+eligibility universes may inform those conversations, but they do not replace
+them.

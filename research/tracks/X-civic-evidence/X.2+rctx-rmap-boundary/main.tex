@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{RCTX/RMAP Boundary: Shared Machine-Context Identity}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The civic evidence package family needs a shared machine-context layer, but that
+layer should not absorb every use of geography. This paper documents the X.2
+boundary between RCTX and RMAP. RCTX owns canonical unit identity, context
+hashes, graph identity, source hashes, aligned attributes, and exact rational
+crosswalks. RMAP is reserved for rendered and cartographic presentation:
+styling, layer composition, projections for display, tiles, images, and public
+map hashes. The implemented surface is deliberately narrower than the concept.
+The existing RPLAN \texttt{.rctx} implementation remains RCTX-compatible
+phase-1 infrastructure, while \texttt{rctx-core} exposes the shared package,
+crosswalk, graph-reference, source-reference, content-hash, and claim-boundary
+checks needed by sibling products. A standalone RMAP crate and full
+\texttt{rctx-io} loader remain deferred until a second production consumer
+requires them.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-ownership-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-boundaries}
+\input{sections/05-conclusion}
+
+\nocite{rcount-overview-2026,rctx-boundary-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

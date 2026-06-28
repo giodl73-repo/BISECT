@@ -1,0 +1,21 @@
+\section{Introduction}
+
+ALPHA and related betting-martingale audits are usually presented as a flexible
+statistical framework: encode an election assertion as a bounded mean, observe a
+sample stream, choose a betting parameter, and update a test statistic until the
+risk limit is met. The public-verification question is lower level. An observer
+must be able to ask whether the declared martingale transcript follows from the
+declared assorter values and bets.
+
+RCOUNT therefore treats ALPHA as a replay contract. The verifier does not trust
+a reported martingale value or a vendor-exported $p$-value. It reads the audit
+record, reconstructs the bounded-mean observations, and recomputes the
+nonnegative martingale. Under the null, that martingale never grows in
+expectation; large realized values are evidence against the null, and the
+running inverse statistic supplies the replayed $p$-value.
+
+This paper covers the implemented V.15 slice. It does not claim to implement
+every ALPHA audit design, adaptive bet selector, or sampling mode. It claims
+that the current fixed-bet bounded-mean transcript is reproducible when the
+package records the assertion, sample order, assorter values, risk limit, and
+bet sequence.

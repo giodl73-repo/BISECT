@@ -1,0 +1,32 @@
+\section{Fixtures}
+
+The positive fixture is a tiny two-candidate run. It reports the winner ahead
+three to one, sets the risk limit to ten percent, and supplies a short sequence
+of winner observations. The likelihood ratio climbs past the
+risk-limit threshold and the replay reports a stop; the declared per-draw
+statistics match the recomputed transcript, so the package passes. This is the
+toy run exercised by the \texttt{bravo\_algorithm\_statistics\_replay\_passes\_toy\_run}
+test.
+
+The continue fixture uses the same reported totals but a sequence of
+observations that does not accumulate enough evidence. The likelihood ratio
+never reaches the threshold, so the transcript reports continue rather than
+stop, and the declared statistic must agree with that non-stopping path. This is
+the case covered by
+\texttt{bravo\_algorithm\_statistics\_replay\_continues\_when\_threshold\_is\_not\_met}.
+
+The drift negative fixture keeps the observations and totals fixed but edits a
+declared per-draw statistic or stop decision. The recomputed transcript diverges
+from the declared one, and the package fails: the transcript exposes the
+declared and computed values for the offending draw.
+
+The missing-field boundary fixture omits a required reported vote total or the
+risk limit. The audit record is preserved, but the BRAVO claim is not replayed:
+the verifier emits a boundary transcript that explicitly records the public
+evidence as insufficient to recompute the statistic, rather than silently
+passing or failing.
+
+Each fixture pair separates the two failure modes that matter for a
+ballot-polling audit: an audit that does not actually stop under its declared
+observations, and an audit that cannot be replayed at all from the public
+record.

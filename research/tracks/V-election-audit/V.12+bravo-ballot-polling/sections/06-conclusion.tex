@@ -1,0 +1,17 @@
+\section{Conclusion}
+
+RCOUNT now has a replayable BRAVO ballot-polling contract. The verifier reads
+the reported two-candidate totals and risk limit, reconstructs each ballot
+observation from the declared sample steps, and recomputes the sequential
+likelihood ratio in integer parts-per-million, so the published stop-or-continue
+transcript can be regenerated from public evidence. Required-field gaps produce
+an explicit boundary transcript rather than a trusted verdict, and the method is
+exposed through the same algorithm-replay surface as the other RCOUNT audit
+checks.
+
+BRAVO is the simplest statistically meaningful step from sampled observations to
+a risk-limit transcript, and it establishes the pattern that the round-based
+(Minerva/Athena), betting-martingale (ALPHA), and comparison (Kaplan-Markov,
+batch, SHANGRLA) methods extend. With ballot-polling replay in place, later work
+can focus on the distinct statistical machinery of those methods without again
+re-establishing how a declared transcript is tied back to public inputs.

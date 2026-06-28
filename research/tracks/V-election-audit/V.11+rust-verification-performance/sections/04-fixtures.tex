@@ -1,0 +1,37 @@
+\section{Fixtures}
+
+The positive equivalence test is
+\texttt{parallel\_verifier\_matches\_serial\_reports}. It builds a list of
+synthetic packages that exercise the broader verifier surface:
+\texttt{synthetic\_summary\_basic\_package},
+\texttt{synthetic\_canvass\_correction\_package},
+\texttt{synthetic\_mail\_batch\_added\_package},
+\texttt{synthetic\_precinct\_split\_lineage\_package},
+\texttt{synthetic\_privacy\_inclusion\_package},
+\texttt{synthetic\_cvr\_summary\_package},
+\texttt{synthetic\_rla\_replay\_package},
+\texttt{synthetic\_rla\_stopping\_package},
+\texttt{synthetic\_rla\_margin\_package},
+\texttt{synthetic\_rla\_statistical\_package},
+\texttt{synthetic\_colorado\_rla\_package},
+\texttt{synthetic\_california\_rla\_package}, and
+\texttt{synthetic\_manual\_audit\_package}. For each package, it runs
+\texttt{verify\_package} and \texttt{verify\_package\_parallel}, then asserts
+\texttt{assert\_eq!(parallel, serial)}.
+
+That assertion is the important fixture shape. It compares the whole
+\texttt{VerificationReport}, not just the number of passed checks. Since the
+report derives equality over its \texttt{passed} vector and \texttt{failed}
+vector, the fixture catches ordering drift as well as missing or extra
+\texttt{EquationPass} records.
+
+The failure equivalence test is
+\texttt{parallel\_verifier\_matches\_serial\_error\_for\_bad\_selection\_sum}.
+It uses \texttt{synthetic\_bad\_selection\_sum\_package} and compares
+\texttt{verify\_package\_parallel(\&package).expect\_err(...)} with
+\texttt{verify\_package(\&package).expect\_err(...)}. This pins the negative
+case to the same error value for the first parallelized check family.
+
+Together, the two tests make the first parallel surface a transcript-equivalent
+implementation detail: accepted fixtures must produce identical reports, and a
+known bad selection sum must fail as the serial verifier fails.

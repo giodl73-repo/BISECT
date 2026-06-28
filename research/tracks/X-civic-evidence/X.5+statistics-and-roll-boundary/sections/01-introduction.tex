@@ -1,0 +1,22 @@
+\section{Introduction}
+
+Statistical and forensic analysis is valuable public evidence. It can find
+patterns in counts, histories, plans, or spatial context that deserve
+explanation. Aggregate eligibility universes are also valuable. They can say
+which registration, eligibility, or ballot-style populations a count record was
+compared against.
+
+Those two kinds of evidence are not count certification. If analysis is treated
+as proof, a model score can be laundered into an official verdict without the
+ledger, audit, or certification record doing that work. If eligibility evidence
+is published at the wrong level, a transparency artifact can become a private
+voter-roll disclosure. The civic-evidence boundary therefore reserves two
+layers and keeps both narrow.
+
+RSTAT is the reserved layer for statistical and forensic analysis outputs.
+RROLL is the reserved layer for aggregate registration, eligibility, and
+ballot-style universes. This paper does not describe implemented crates,
+functions, fixtures, or command-line surfaces for either layer. It records the
+ownership definitions, the deferral decision, and the rule that governs later
+implementation: RSTAT can identify patterns that need explanation. RROLL can
+declare aggregate eligibility universes. Neither certifies an election.

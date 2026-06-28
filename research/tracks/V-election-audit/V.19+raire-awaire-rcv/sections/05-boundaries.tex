@@ -1,0 +1,20 @@
+\section{Boundaries}
+
+The plan states the claim boundary directly: RAIRE/AWAIRE audit an RCV outcome
+under a reported rule and ballot record. RCOUNT now preserves ranked-choice
+audit evidence and reports both methods as explicit boundaries, but it does not
+yet generate or replay RAIRE/AWAIRE assertions.
+
+That boundary matters because design shape and audit statistics are different
+claims. The implemented code can say that a RAIRE or AWAIRE record has a known
+method id, a nonduplicated reported elimination order, ranked-choice assertions,
+and sampled rankings over the declared candidates. It cannot yet say that the
+assertion set is sufficient, that every NEN or NEB assertion was generated
+correctly, that AWAIRE weights were updated correctly, or that any assertion met
+a risk limit.
+
+The IRV reduction assumptions are also outside this slice. The package does not
+yet contain a verified ranked-choice contest model, a ranked CVR fixture, or an
+IRV tabulation replay proving the elimination order. Until those layers exist,
+V.19 should be read as a record-shape and method-identity contract, not as an
+RCV tabulator or a ranked-choice audit certification claim.

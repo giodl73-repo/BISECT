@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{RAIRE And AWAIRE IRV Ranked-Choice Audit Boundaries}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Instant-runoff voting outcomes are not audited by replaying one plurality
+winner-loser margin. RAIRE constructs a set of NEN and NEB assertions whose
+joint truth implies the reported IRV winner; AWAIRE studies adaptive weighting
+of such assertions during an IRV audit. This paper documents the current RCOUNT
+V.19 surface. The implementation records a RAIRE or AWAIRE method id, a reported
+IRV elimination order, ranked sample choices, and ranked-choice assertion
+records, then verifies that this declared evidence is well formed and
+replayable as a boundary contract. It does not yet generate RAIRE assertions,
+run AWAIRE adaptive logic, replay assertion-level risk, or certify an IRV
+tabulation. The result is a small but explicit record-shape contract for later
+ranked-choice audit math.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-assertion-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v19-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+RCOUNT now has a replayable structure contract for stratified and hybrid RLAs.
+The verifier recognizes \texttt{stratified-hybrid-rla-v1}, requires a declared
+combining rule and nuisance parameter, verifies that at least two strata remain
+distinct, checks that each stratum points to an existing non-stratified
+component run, and requires allocation shares to form a complete
+\texttt{1000000} ppm partition.
+
+The implementation is intentionally understated. It protects the public audit
+record from missing components and flattened-stratum misuse, and it exposes the
+method through algorithm replay as a documented combined-risk boundary. The
+next statistical layer can implement the selected SUITE or hybrid combination
+rule on top of that structure; until then, RCOUNT claims structure
+verification, not combined-risk replay.

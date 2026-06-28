@@ -1,0 +1,20 @@
+\section{Introduction}
+
+Comparison risk-limiting audits are not ballot-polling audits. They do not ask
+only whether a sampled paper ballot supports the reported winner. They compare a
+voting system record with a human interpretation of the same sampled ballot or
+batch and measure how much that discrepancy could have overstated the reported
+margin.
+
+RCOUNT treats the Kaplan-Markov comparison method as a replay contract. The
+public record declares the risk limit, the ordered sampled units, and either a
+sequence of taints or the MACRO design fields needed to replay the published
+product shape. The verifier recomputes the running P-value and the stop decision
+from those fields rather than accepting a vendor transcript.
+
+This paper covers the implemented MACRO comparison slice of
+\texttt{kaplan-markov-comparison-v1}. MACRO means Maximum Across Contests
+Relative Overstatement: each sampled unit is reduced to a bounded relative
+overstatement category, and the Kaplan-Markov product is updated from that
+category. The claim is reproducibility of that transcript, not proof that the
+physical ballot was retrieved correctly.

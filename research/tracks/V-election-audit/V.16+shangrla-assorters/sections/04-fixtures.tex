@@ -1,0 +1,37 @@
+\section{Fixtures}
+
+There is not yet a committed golden package named for V.16 in
+\texttt{crates/rcount-core/src/fixtures.rs}. That file contains several audit
+algorithm fixtures with assorter fields, including
+\texttt{synthetic\_kaplan\_markov\_macro\_package},
+\texttt{synthetic\_minerva\_round\_one\_package},
+\texttt{synthetic\_bayesian\_tabulation\_boundary\_package},
+\texttt{synthetic\_ranked\_choice\_boundary\_package}, and
+\texttt{synthetic\_soba\_observable\_ballot\_boundary\_package}. Those are real
+assorter-bearing records, but they are not SHANGRLA golden fixtures.
+
+The exact SHANGRLA fixture now present is the inline test helper
+\texttt{synthetic\_shangrla\_algorithm\_run} in
+\texttt{crates/rcount-core/src/tests.rs}. It builds
+\texttt{audit-run:shangrla-toy} for \texttt{syn-2024-mayor} with method id
+\texttt{shangrla-assorter-v1}. The assertion is
+\texttt{assertion:cand-a-over-cand-b}, kind \texttt{PluralityWinnerLoser}, with
+assorter id \texttt{plurality-winner-loser-v1}, upper bound $1/1$, winner
+\texttt{cand-a}, and loser \texttt{cand-b}. Its two sample steps assign
+\texttt{cvr:P-001:001} value $1/1$ and \texttt{cvr:P-001:002} value $1/2$.
+
+The positive test is
+\texttt{audit\_algorithm\_transcript\_accepts\_shangrla\_assorter\_steps}. It
+attaches the helper run to \texttt{synthetic\_summary\_basic\_package} and
+expects an \texttt{audit\_algorithm\_transcript} pass for
+\texttt{audit-run:shangrla-toy}.
+
+The negative tests are also shape tests. The test
+\texttt{audit\_algorithm\_transcript\_rejects\_missing\_assertion\_step} edits a
+sample step to name \texttt{assertion:missing} and expects
+\texttt{MissingAuditAssertion}. The test
+\texttt{audit\_algorithm\_transcript\_rejects\_out\_of\_bound\_assorter\_value}
+changes the first assorter value to $3/2$ against an upper bound of $1/1$ and
+expects \texttt{InvalidAuditAssorterValue}. The adjacent macro-design tests reuse
+the same helper after changing the method id to Kaplan-Markov; they are not
+SHANGRLA numeric replay fixtures.

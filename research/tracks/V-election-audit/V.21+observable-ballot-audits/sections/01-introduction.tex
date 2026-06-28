@@ -1,0 +1,20 @@
+\section{Introduction}
+
+Ballot-level audits are most useful to the public when the comparison can be
+checked without trusting the auditor's private software or notes. In a
+SOBA-style audit, an observer should be able to see that a sampled cast vote
+record has a corresponding ballot-card interpretation, and that the comparison
+was made against a committed public record rather than a record chosen after
+the fact.
+
+RCOUNT implements the first public-evidence layer of that idea. The current
+contract is not a full SOBA statistical audit and does not recompute a
+comparison risk measure. It asks a narrower question: does the audit record
+declare an observable ballot-linkage method, and does each sampled unit name a
+privacy-safe opening that is actually present in the package?
+
+This matters because observability and secrecy pull in opposite directions.
+The record must be open enough for a public observer to check the CVR-to-ballot
+comparison path, but not so open that it publishes a vote receipt or a voter
+identifier. The implemented slice therefore treats SOBA as a boundary contract
+for record shape, opening linkage, and privacy-safe proof contents.

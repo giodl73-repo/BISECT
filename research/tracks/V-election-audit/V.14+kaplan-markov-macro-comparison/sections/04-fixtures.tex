@@ -1,0 +1,34 @@
+\section{Fixtures}
+
+The reusable package fixture is
+\texttt{synthetic\_kaplan\_markov\_macro\_package} in \texttt{rcount-core}. It
+builds a synthetic summary package with one audit run named
+\texttt{audit-run:kaplan-markov-macro-pass}. The run uses
+\texttt{kaplan-markov-comparison-v1}, supplies the MACRO fields
+\texttt{macro\_ballot\_count}, \texttt{macro\_reported\_margin}, and
+\texttt{macro\_gamma}, declares a comparison-overstatement assertion, and records
+a sequence of zero-overstatement sample steps. The run declares pass.
+
+That fixture is exercised at three package boundaries. The core test
+\texttt{kaplan\_markov\_macro\_package\_verifies\_algorithm\_transcript} checks
+that package verification records an \texttt{audit\_algorithm\_transcript} pass
+for the run. The IO test
+\texttt{round\_trips\_synthetic\_kaplan\_markov\_macro\_package} writes and reads
+the package and confirms that the MACRO design fields survive the round trip.
+The CLI test \texttt{replay\_audit\_algorithms\_outputs\_kaplan\_markov\_macro\_pass}
+checks that \texttt{rcount replay-audit-algorithms} reports a pass, a computed
+pass decision, and a stopping MACRO transcript.
+
+The negative fixtures are also code-level and method-specific. Core validation
+has \texttt{audit\_algorithm\_transcript\_rejects\_partial\_macro\_design} and
+\texttt{audit\_algorithm\_transcript\_rejects\_invalid\_macro\_gamma}. The CLI
+has \texttt{verify\_kaplan\_markov\_macro\_partial\_design\_exits\_one}, which
+surfaces the invalid-design error through \texttt{rcount verify}. For the
+non-MACRO fallback, CLI tests cover taint-product continue and pass runs,
+declared-drift failure, and the boundary emitted when the risk limit is missing.
+
+The statistics crate supplies the arithmetic fixtures underneath those package
+checks. It tests exact plurality overstatement values, taint normalization,
+conservative handling of negative taints, rejection of empty or unit-taint input,
+the MACRO published product shape, stopping on a no-error MACRO sample, and
+rejection of empty, zero-count, invalid-gamma, and out-of-range MACRO inputs.

@@ -1,0 +1,19 @@
+\section{Boundaries}
+
+RHIST owns reporting-unit lineage identity. It records which unit ids are in
+scope for each cycle, which declared lineage events connect them, which
+crosswalk weights bridge unit sets, and which source hashes support those
+records. It does not own vote totals, candidate totals, CVR rows, audit
+transcripts, or count reconciliation; those remain RCOUNT claims.
+
+RHIST also does not own district assignments or plan legality. RPLAN can use
+RHIST when a plan assignment crosses census or administrative unit changes, but
+the assignment and any plan-quality or legal claim remain outside the lineage
+package. RHIST is a shared base dimension for other artifacts, not an ownership
+transfer from those artifacts.
+
+The source boundary is equally narrow. \texttt{verify\_source\_files} checks
+that bytes in a package match the declared SHA-256 source index. It does not
+prove that the public archive was complete, that an official chose the correct
+historical source, or that every boundary change was legally valid. Those are
+external evidence and governance questions.

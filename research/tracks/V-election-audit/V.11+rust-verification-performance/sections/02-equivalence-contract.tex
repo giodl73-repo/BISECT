@@ -1,0 +1,34 @@
+\section{Equivalence Contract}
+
+The contract is serial equivalence, not approximate agreement. For a package in
+the current implemented surface, the two verifier entry points must satisfy:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Property & Meaning \\
+\midrule
+Same pass records & The \texttt{passed} vector contains the same
+\texttt{EquationPass} records. \\
+Same order & Those records appear in the same order that
+\texttt{verify\_package} would have emitted. \\
+Same failure behavior & A package rejected by the parallelized check family is
+rejected with the same \texttt{RcountCoreError} as the serial verifier. \\
+Same remaining surface & Checks not yet parallelized are appended by the
+parallel entry point in the same sequence as the serial entry point. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+In code, an \texttt{EquationPass} contains an equation id, contest id, and
+reporting-unit id. Transcript equality therefore means more than both verifiers
+returning success. It means the public report names the same equations for the
+same contests and reporting units in the same deterministic sequence.
+
+The selection-sum checks may execute concurrently, but their reports are
+collected into a vector before the rest of the verifier surface is appended.
+That vector is the boundary where parallel work is converted back into the
+serial transcript order. The remaining checks continue to run through the same
+serial functions, so the first parallel slice is constrained to be a drop-in
+replacement for the opening selection-sum loop.

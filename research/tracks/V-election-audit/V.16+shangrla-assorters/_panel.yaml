@@ -1,0 +1,23 @@
+paper: V.16+shangrla-assorters
+title: "SHANGRLA Assertion And Assorter Audit Contracts"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Add assertion ids and registered assorter ids to rcount-core."
+  - "[x] Add optional package-level audit algorithm transcript records."
+  - "[x] Add verifier checks for duplicate assertions, missing assertion links, invalid risk limits, invalid p-values, and out-of-bound assorter values."
+  - "[ ] Add plurality winner-loser assorter fixture."
+  - "[ ] Add multi-assertion fixture where one assertion fails."
+  - "[ ] Wire V.15 ALPHA to consume explicit assorter values."
+  - "[ ] Use the assertion model as the bridge to V.19 RCV audits."

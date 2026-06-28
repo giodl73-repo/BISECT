@@ -1,0 +1,30 @@
+\section{Fixtures}
+
+The positive RAIRE fixture is
+\texttt{synthetic\_raire\_boundary\_package}. It is built by
+\texttt{synthetic\_ranked\_choice\_boundary\_package} with method id
+\texttt{raire-irv-v1}, run id \texttt{audit-run:raire-irv-boundary}, and
+assorter id \texttt{raire-neb-not-eliminated-before-v1}. The synthetic reported
+elimination order is \texttt{cand-c}, \texttt{cand-b}, \texttt{cand-a}. It has
+one ranked-choice assertion, two ranked sample steps, and decision
+\texttt{boundary}. The corresponding unit test verifies that the package passes
+and preserves the elimination order.
+
+The positive AWAIRE fixture is
+\texttt{synthetic\_awaire\_boundary\_package}. It reuses the same helper and
+ranked evidence but names method id \texttt{awaire-irv-v1}, run id
+\texttt{audit-run:awaire-irv-boundary}, and assorter id
+\texttt{awaire-adaptive-irv-v1}. Its test checks that the package verifies and
+that the method id is the AWAIRE id.
+
+The negative ranked-choice fixture is
+\texttt{synthetic\_bad\_raire\_boundary\_package}. It starts from the RAIRE
+boundary package and appends \texttt{cand-a} a second time to the first sampled
+ranking. The ranked-choice verifier rejects the package as
+\texttt{InvalidRankedChoiceSample}, proving that duplicate ranked choices are
+not accepted as replayable boundary evidence.
+
+These fixtures are intentionally small. They test method identity, elimination
+order preservation, ranked sample shape, assertion kind, and malformed ranked
+ballot rejection. They do not test IRV tabulation, RAIRE assertion generation,
+assertion-level risk replay, or a real ranked CVR adapter.

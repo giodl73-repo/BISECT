@@ -1,0 +1,21 @@
+\section{Introduction}
+
+Ballot-polling risk-limiting audits are usually presented as a statistical test:
+sample ballots at random, update a likelihood ratio, and stop when the reported
+winner is supported at the chosen risk limit. As with sampler replay (V.7), a
+large part of public trust sits one layer below that test. An observer should be
+able to ask whether the declared per-draw statistic and stop decision actually
+follow from the reported totals, the risk limit, and the sequence of observed
+ballots.
+
+RCOUNT therefore treats BRAVO as a replay contract rather than a number to be
+trusted. The verifier does not re-run a vendor audit tool or accept an exported
+risk value. It reconstructs each observation from the public audit record and
+recomputes the BRAVO likelihood ratio in integer arithmetic, so the published
+transcript can be regenerated from public evidence.
+
+This paper covers the BRAVO ballot-polling slice. It does not claim that any
+particular election was audited correctly, nor that BRAVO is the right method
+for a given jurisdiction. It claims that, when an artifact contains ballot-polling
+observations and reported two-candidate totals, the resulting stop-or-continue
+transcript is reproducible.

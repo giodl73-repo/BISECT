@@ -1,0 +1,34 @@
+\section{Fixtures}
+
+The positive fixture is
+\path{synthetic_bayesian_tabulation_boundary_package} in
+\path{crates/rcount-core/src/fixtures.rs}. It builds on the synthetic summary
+package and adds one audit algorithm run named
+\texttt{audit-run:bayesian-tabulation-boundary}. The run uses method id
+\texttt{bayesian-tabulation-audit-v1}, sampling mode \texttt{boundary-only}, a
+Dirichlet-multinomial toy prior id, a without-replacement likelihood id, a
+declared posterior winner probability of \texttt{958000} ppm, a declared
+posterior risk of \texttt{42000} ppm, simulation metadata, and one
+\texttt{bayesian-outcome} assertion. Its decision is \texttt{boundary}, not
+\texttt{pass}.
+
+The matching core test is
+\path{bayesian_tabulation_boundary_package_verifies_analytic_surface}. It
+verifies the package and checks that the audit-algorithm transcript pass is
+recorded for \texttt{audit-run:bayesian-tabulation-boundary}. The test also
+asserts the declared posterior winner and risk fields, making the fixture a
+stable record-shape example rather than an implicit posterior recomputation.
+
+The negative fixture is
+\path{synthetic_bad_bayesian_tabulation_boundary_package}. It starts from the
+positive package and edits \texttt{posterior\_risk\_ppm} to \texttt{1000001}.
+That value is outside the one-million-parts-per-million probability range, so
+\path{verify_bayesian_audit_design} returns
+\path{InvalidBayesianAuditDesign}. The corresponding test is
+\path{bayesian_tabulation_boundary_package_rejects_invalid_posterior_risk}.
+
+The audit crate has the parallel replay test
+\path{bayesian_algorithm_statistics_reports_documented_boundary}. It runs the
+positive fixture through \path{replay_audit_algorithm_statistics} and expects an
+\texttt{AlgorithmReplayStatus::Boundary} transcript whose text says the record
+is not risk-limiting replay.

@@ -1,0 +1,16 @@
+\section{Conclusion}
+
+RCOUNT now has the first SHANGRLA assertion and assorter record contract. The
+method id \texttt{shangrla-assorter-v1} is registered, audit algorithm runs can
+carry assertion records and bounded rational assorter values, and the verifier
+checks that sample steps link to declared assertions without exceeding their
+bounds. The current positive and negative tests show the intended public
+failure modes: a valid toy assertion passes the transcript-shape check, a
+missing assertion link fails, and an out-of-bound assorter value fails.
+
+The result should be read narrowly. V.16 does not yet replay SHANGRLA risk math
+or certify a contest outcome. It establishes the reproducible assertion layer
+that later ALPHA, comparison, and ranked-choice work can consume. That is the
+right order: make the declared assertion and assorter record inspectable first,
+then attach the statistical replay that turns those values into a stopping
+claim.

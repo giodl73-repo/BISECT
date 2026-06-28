@@ -1,0 +1,45 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Replayable BRAVO Ballot-Polling Audit Transcripts}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+BRAVO is the classic ballot-polling risk-limiting audit: it samples paper
+ballots, records whether each observation supports the reported winner or
+loser, and updates a sequential likelihood ratio until the reported outcome has
+enough evidence to stop or the audit escalates. This paper documents the RCOUNT
+BRAVO contract, which separates the statistical claim from its public evidence.
+A verifier reads the reported two-candidate totals and risk limit from an audit
+record, reconstructs each ballot observation from declared sample steps, replays
+the BRAVO likelihood ratio in integer parts-per-million arithmetic, and confirms
+that the declared per-draw statistic and stop decision follow from the public
+inputs. The contract is the simplest statistically meaningful bridge from
+sampled ballot observations to a replayable risk-limit transcript, and it is
+exposed through the same algorithm-replay surface as the other RCOUNT audit
+methods.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-bravo-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v7-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

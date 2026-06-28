@@ -1,0 +1,33 @@
+\section{BRAVO Contract}
+
+The audit record carries the public inputs the BRAVO replay needs:
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{method\_id} & Versioned method name. Current value: \texttt{bravo-ballot-polling-v1}. \\
+\texttt{risk\_limit\_ppm} & Risk limit in parts per million, avoiding floating-point drift. \\
+\texttt{reported\_winner\_votes} & Reported votes for the winner of the two-candidate assertion. \\
+\texttt{reported\_loser\_votes} & Reported votes for the loser of the assertion. \\
+\texttt{sample\_steps} & Ordered ballot observations, each a rational mark used to classify the draw. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Each sample step is reduced to one of three BRAVO observations for the audited
+assertion. A mark of $1/1$ is a vote for the winner, $0/1$ is a vote for the
+loser, and any other value with a positive denominator is a non-vote or
+other-candidate ballot that carries no evidence for the two-candidate test.
+
+The replay walks the observations in order. From the reported totals it forms
+the winner and loser shares of the two-candidate population and updates the
+sequential likelihood ratio after each draw: a winner observation multiplies the
+statistic by twice the reported winner share, a loser observation multiplies it
+by twice the reported loser share, and an other observation leaves it unchanged.
+The audit stops the first time the likelihood ratio reaches the risk-limit
+threshold $1/\alpha$, where $\alpha$ is the declared risk limit. All comparisons
+are carried in integer parts-per-million so that two independent verifiers reach
+the same per-draw statistic and the same stop index.

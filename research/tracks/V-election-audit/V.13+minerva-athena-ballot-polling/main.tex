@@ -1,0 +1,44 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{tabularx}
+
+\title{Replayable Minerva And Athena Ballot-Polling RLA Transcripts}
+\author{Gio Della-Libera}
+\date{Draft --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Minerva is a round-based ballot-polling risk-limiting audit: it groups sampled
+ballots into audit rounds, recomputes a binomial-tail likelihood ratio from
+cumulative observations, and stops when the round statistic reaches the risk
+limit threshold. Athena is the related public-method surface that RCOUNT now
+records without claiming risk replay. This paper documents the RCOUNT
+Minerva/Athena contract. A verifier reads the method id, reported two-candidate
+totals, risk limit, optional round boundaries, and ballot observations from an
+audit record; routes Minerva records to the exact round replay in
+\texttt{rcount-stats}; and emits an explicit boundary transcript for Athena or
+for Minerva records missing required inputs. The claim is one layer below the
+statistical policy question: when sufficient public evidence exists, the
+declared round transcript is reproducible from the declared record.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-minerva-contract}
+\input{sections/03-implemented-surface}
+\input{sections/04-fixtures}
+\input{sections/05-boundaries}
+\input{sections/06-conclusion}
+
+\nocite{rcount-overview-2026,rcount-v12-2026}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

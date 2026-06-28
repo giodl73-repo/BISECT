@@ -1,0 +1,14 @@
+\section{Conclusion}
+
+RHIST now has a reusable reporting-unit lineage package surface. The first
+slice defines cycles, context unit indexes, lineage events, crosswalk weights,
+source indexes, claim boundaries, and a canonical package content hash. The
+implemented verifier catches missing units, invalid split/merge/rename
+cardinality, bad exhaustive crosswalk weights, source-reference drift, and
+package-hash drift.
+
+The result is a bridge layer. RCOUNT can map its embedded lineage records into
+RHIST events and can reference RHIST packages by hash; RPLAN can later use the
+same lineage substrate when assignments cross unit changes. Counts and plans
+keep their own claims, while RHIST gives both a stable way to name how reporting
+units changed across cycles.

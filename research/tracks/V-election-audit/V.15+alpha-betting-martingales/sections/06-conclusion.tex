@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+RCOUNT now has a replayable first ALPHA surface. The verifier reads a single
+bounded-mean assertion, its upper bound, a risk limit, ordered assorter values,
+and declared bets; then it recomputes the fixed-bet martingale, integer-ppm
+$p$-values, and pass-or-continue decision through the shared
+\texttt{rcount-stats} primitive. Missing bets and invalid numerical inputs
+produce explicit boundary or failure evidence rather than a trusted statistical
+verdict.
+
+The implementation is deliberately smaller than the full ALPHA design space. It
+establishes the transcript discipline that later adaptive, without-replacement,
+stratified, and SHANGRLA-style work will need: the public record must contain
+enough information to replay the bet/statistic path, not merely the final risk
+number.

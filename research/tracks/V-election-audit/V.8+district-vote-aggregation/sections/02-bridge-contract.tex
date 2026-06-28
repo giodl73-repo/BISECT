@@ -1,0 +1,41 @@
+\section{Bridge Contract}
+
+The bridge contract is a transcript over artifact identities and district
+totals. Its core fields are implemented by
+\texttt{DistrictAggregationTranscript} in \texttt{rcount-district}.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Field & Meaning \\
+\midrule
+\texttt{aggregation\_version} & Version string for the bridge transcript. Current value: \texttt{0.1-draft}. \\
+\texttt{rcount\_package\_content\_hash} & Content hash of the verified RCOUNT package. \\
+\texttt{rplan\_plan\_hash} & Hash of the RPLAN district plan and assignment, computed by \texttt{rplan-core}. \\
+\texttt{rctx\_context\_hash} & Optional RCTX context hash, present when a context is supplied and matches the plan unit universe. \\
+\texttt{rctx\_reference\_id} & Optional RCOUNT reference id whose context hash matches the supplied context. \\
+\texttt{rctx\_crosswalk\_hash} & Optional RCTX crosswalk hash, either from a matching RCOUNT reference or from an explicit crosswalk file. \\
+\texttt{contest\_id} & Contest whose summaries are aggregated. \\
+\texttt{status} & Count status, such as canvassed, used to select the summaries. \\
+\texttt{unit\_universe\_hash} & Unit universe hash from the RPLAN plan unit index. \\
+\texttt{district\_totals} & One RCOUNT-style summary per district, with source reporting unit ids. \\
+\texttt{checks} & Per-district \texttt{district\_aggregation\_total} checks. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Without an explicit crosswalk, the bridge treats each RPLAN unit id as an RCOUNT
+reporting unit id and sums the matching summaries into the assigned district.
+With an explicit crosswalk, it reads RCTX crosswalk NDJSON rows, verifies the
+set with \texttt{rctx-core}, and projects source reporting units to plan units
+before summing by district. The crosswalk path is accepted only with a supplied
+RCTX context, so the projection has a context identity rather than a loose file
+name.
+
+RCOUNT references are used only as consumer bindings. The core package verifier
+checks \texttt{rctx\_refs} through \texttt{verify\_rctx\_references}: reference
+ids must be unique, context and crosswalk hashes must be SHA-256-shaped, and the
+role must be \texttt{unit-context}, \texttt{aggregation-crosswalk}, or
+\texttt{plan-context}. The bridge then matches the supplied context hash to a
+declared reference, preferring the aggregation-crosswalk role.

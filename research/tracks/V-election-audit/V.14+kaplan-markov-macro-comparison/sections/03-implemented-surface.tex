@@ -1,0 +1,38 @@
+\section{Implemented Surface}
+
+The method id \texttt{KAPLAN\_MARKOV\_COMPARISON\_METHOD\_ID} is the string
+\texttt{kaplan-markov-comparison-v1}. The shared audit-algorithm dispatcher in
+\texttt{rcount-audit} routes that method id to
+\texttt{replay\_kaplan\_markov\_run}. The dispatcher therefore exposes
+Kaplan-Markov comparison replay through the same
+\texttt{replay-audit-algorithms} surface as BRAVO, ALPHA, Minerva, batch
+comparison, and boundary-only methods.
+
+\texttt{replay\_kaplan\_markov\_run} selects between two implemented paths. If
+\texttt{macro\_ballot\_count}, \texttt{macro\_reported\_margin}, and
+\texttt{macro\_gamma} are all present, it calls
+\texttt{replay\_kaplan\_markov\_macro\_run}. If all three are absent, it calls
+the comparison taint-product replay. If only some MACRO fields are present, it
+returns a boundary transcript explaining that the three MACRO fields must appear
+together.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Check & Failure caught \\
+\midrule
+\texttt{audit\_algorithm\_run} & Unsupported method id, missing risk limit, or partial MACRO design fields. \\
+\texttt{Kaplan-Markov taint product} & Empty taint list, invalid taint at or above one, declared P-value drift, or declared decision drift. \\
+\texttt{Kaplan-Markov MACRO replay} & Missing risk limit, invalid gamma, zero ballot count or margin, non-integer overstatement category, out-of-range category, declared P-value drift, or declared decision drift. \\
+\texttt{audit\_macro\_design} & Core package validation rejects MACRO design fields unless $N$, $V$, and gamma are present together and gamma is greater than one. \\
+\texttt{source\_hash\_match} & Source evidence bytes still match the package source index before the audit transcript is trusted. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The MACRO replay converts each sample step's \texttt{assorter\_value} to an
+integer category before calling the statistics crate. The computed steps are
+then zipped back to the declared sample steps, so a mismatch in declared
+\texttt{p\_value\_ppm}, statistic, or stop flag appears at the offending draw
+rather than as a single opaque failure.

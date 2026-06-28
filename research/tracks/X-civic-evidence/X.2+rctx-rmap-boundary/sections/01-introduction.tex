@@ -1,0 +1,24 @@
+\section{Introduction}
+
+RCTX is the shared machine-context contract for the civic evidence package
+family. Its job is to say which units exist, in which canonical order, under
+which context hash, with which graph identity, source hashes, aligned
+attributes, and crosswalks. That contract lets RPLAN, RCOUNT, RHIST, and later
+packages refer to the same base dimension without making each package invent a
+private geography model.
+
+The boundary is intentionally conservative. RPLAN already has an implemented
+\texttt{.rctx} artifact in \texttt{rplan-core} and \texttt{rplan-io}. X.2 does
+not replace that path. It treats the current \texttt{rplan\_core::RplanContext}
+shape as RCTX-compatible phase-1 infrastructure and keeps full context
+construction where it already works. The shared extraction is limited to the
+parts that sibling products already need: context unit indexes, source
+references, graph records, exact rational crosswalks, package hashing, and
+claim-boundary checks.
+
+RMAP is a separate owner concept. It is reserved for rendered or cartographic
+presentation: maps, layers, styling, labels, projections for display, tiles,
+images, and map-image hashes. RMAP may reference an RCTX context hash, but RCTX
+must remain useful without a rendered map. This is the central X.2 claim:
+machine context should be shared, while cartographic presentation should not be
+mistaken for canonical unit identity.

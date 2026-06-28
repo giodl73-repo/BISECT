@@ -1,0 +1,22 @@
+paper: V.13+minerva-athena-ballot-polling
+title: "Replayable Minerva And Athena Ballot-Polling RLA Transcripts"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Add synthetic Minerva positive fixture with known risk."
+  - "[x] Add published-risk drift negative fixture."
+  - "[x] Add package schema for explicit round boundaries when multiple Minerva rounds are present."
+  - "[x] Add multi-round continue/stop fixture."
+  - "[ ] Replace RI Rep. 28 boundary replay with computed risk once public source rows expose sufficient per-round ballot evidence."
+  - "[x] Add Athena replay fixture or retain a documented Athena boundary fixture if the method inputs remain absent."

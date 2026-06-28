@@ -1,0 +1,33 @@
+paper: X.1+rhist-unit-history
+title: "Reusable Reporting-Unit Lineage Packages"
+type: publication
+stage: draft
+round: 0
+content_mode: draft
+venue: technical report
+review_date: 2026-06-28
+review_notice: AI-generated quality-improvement simulation, not real peer review.
+reviewers:
+  - TALLY
+  - BENCHMARK
+  - CANVASS
+  - VAULT
+  - LEDGER
+p1_items:
+  - "[x] Define rhist-core records for cycles, units, lineage events, and crosswalk weights."
+  - "[x] Define a minimal RHIST package directory shape."
+  - "[x] Add source-index hashing and package content hash."
+  - "[x] Add verifier checks for split/merge/rename cardinality."
+  - "[x] Add crosswalk weight-sum check."
+  - "[x] Add L1 split/merge synthetic positive package."
+  - "[x] Add one stale/missing-unit negative package."
+  - "[x] Add L1 bad-weight negative package."
+  - "[x] Add minimal rhist-core verifier over L0 fixtures."
+  - "[x] Add rhist-io package directory loader/writer."
+  - "[x] Add RCOUNT-to-RHIST mapping test."
+  - "[x] Add RHIST canonical package hash implementation."
+  - "[x] Add fixture regeneration command for computed package hashes."
+  - "[x] Add one three-cycle synthetic positive package."
+  - "[x] Add tiny rhist-cli verify command."
+  - "[x] Add real-source pressure fixture."
+  - "[x] Add RCOUNT consumer reference to RHIST package hashes."

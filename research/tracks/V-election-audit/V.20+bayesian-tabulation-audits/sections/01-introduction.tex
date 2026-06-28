@@ -1,0 +1,21 @@
+\section{Introduction}
+
+Bayesian tabulation audits answer a different question from frequentist
+risk-limiting audits. In the Rivest-Shen tradition, the audit treats the
+reported tabulation and the observed evidence as inputs to a posterior model
+and reports the probability that a full hand count would overturn the reported
+outcome. That number is useful for explanation and comparison, but it is
+conditional on the declared prior and likelihood.
+
+RCOUNT therefore records the Bayesian surface as an analytic boundary. The
+verifier does not accept an exported posterior value as a risk limit, and it
+does not convert posterior upset probability into frequentist certification.
+Instead, it checks that a record naming the Bayesian tabulation method carries
+the fields needed to describe the analysis: prior identity, likelihood identity,
+posterior winner probability, posterior upset risk, and any declared simulation
+or calibration metadata.
+
+This paper covers that implemented V.20 slice. It claims only that the Bayesian
+audit record is well formed and kept separate from risk-limiting replay. It
+does not claim that RCOUNT currently recomputes a posterior distribution or that
+a Bayesian upset probability is itself an RLA risk limit.
