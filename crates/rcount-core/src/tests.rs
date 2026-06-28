@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn synthetic_shangrla_algorithm_run() -> AuditAlgorithmRun {
