@@ -294,6 +294,18 @@ fn main() {
                     std::process::exit(1);
                 });
 
+            if let Err(e) = bisect_cli::args::validate_court_profile(
+                args.profile,
+                args.partition_mode,
+                None,
+                None,
+                args.search,
+                &None,
+            ) {
+                eprintln!("ERROR: {e}");
+                std::process::exit(1);
+            }
+
             let all = load_all_states(&args.year.to_string()).unwrap_or_else(|e| {
                 eprintln!("ERROR: {e}");
                 std::process::exit(1);
@@ -1084,6 +1096,15 @@ fn main() {
 
         // ── bisect build: label-based run orchestration (Spec 7 Phase 2) ────────
         Commands::Build(cli_args) => {
+            if cli_args.profile == bisect_cli::args::RunProfile::Court {
+                let cfg = cli_args.config.clone().unwrap_or_else(|| {
+                    std::path::PathBuf::from("configs").join(format!("{}.yml", cli_args.label))
+                });
+                if let Err(e) = bisect_cli::algo_config::validate_config_court(&cfg) {
+                    eprintln!("ERROR: {e}");
+                    std::process::exit(1);
+                }
+            }
             let build_args = cli_args.into_build_args();
             run_build(build_args).unwrap_or_else(|e| {
                 eprintln!("ERROR: {e}");

@@ -531,6 +531,30 @@ pub fn write_template_config(
 ///
 /// Prints a summary of the resolved algorithm configuration if valid.
 /// Returns `[CONFIG]` error for parse or validation failures.
+/// Reject a build config that is not court-defensible. ASCII-only messages.
+pub fn validate_config_court(path: &Path) -> Result<(), String> {
+    let yaml = AlgoYaml::from_file(path)?;
+    let a = &yaml.algorithm;
+    let s = a.structure.to_lowercase();
+    let w = a.weights.as_deref().unwrap_or("").to_lowercase();
+    let sr = a.search.as_deref().unwrap_or("single").to_lowercase();
+    if s.contains("proportional") || w == "proportional" || w == "partisan" {
+        return Err(format!(
+            "profile=court rejects config '{}': partisan/proportional algorithm. \
+             Use a neutral config or --profile open.",
+            path.display()
+        ));
+    }
+    if !matches!(sr.as_str(), "single" | "convergence") {
+        return Err(format!(
+            "profile=court rejects config '{}': search '{sr}' is not deterministic. \
+             Use single or convergence, or --profile open.",
+            path.display()
+        ));
+    }
+    Ok(())
+}
+
 pub fn validate_config(path: &Path) -> Result<String, String> {
     let yaml = AlgoYaml::from_file(path)?;
     let algo = yaml.to_algorithm_config()?;

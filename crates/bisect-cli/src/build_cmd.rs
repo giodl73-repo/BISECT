@@ -92,6 +92,11 @@ pub struct BuildCliArgs {
     /// Disable interactive confirmation prompts (for CI environments).
     #[arg(long)]
     pub no_interactive: bool,
+
+    /// Defensibility profile (open|court). court/bulletproof rejects any
+    /// partisan/proportional/experimental algorithm config in the label's YAML.
+    #[arg(long, default_value = "open")]
+    pub profile: crate::args::RunProfile,
 }
 
 impl BuildCliArgs {
@@ -1044,6 +1049,7 @@ years: ["2020"]
             dry_run: false,
             force: false,
             no_interactive: false,
+            profile: crate::args::RunProfile::Open,
         };
         let build_args = cli.into_build_args();
         assert_eq!(
@@ -1201,6 +1207,7 @@ years: ["2020"]
             dry_run: false,
             force: true,
             no_interactive: true,
+            profile: crate::args::RunProfile::Open,
         };
         let args = cli.into_build_args();
         assert_eq!(

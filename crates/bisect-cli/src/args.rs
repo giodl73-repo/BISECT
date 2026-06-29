@@ -1805,6 +1805,11 @@ pub struct StatesArgs {
     #[arg(short = 'm', long = "partition-mode", default_value = "edge-weighted")]
     pub partition_mode: PartitionMode,
 
+    /// Defensibility profile (open|court). court/bulletproof rejects partisan and
+    /// experimental configs for every state. See `validate_court_profile`.
+    #[arg(long, default_value = "open")]
+    pub profile: RunProfile,
+
     /// Specific states to process (default: all)
     #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
     pub states: Vec<String>,
