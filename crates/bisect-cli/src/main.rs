@@ -43,6 +43,18 @@ fn main() {
             let state_code = args.state.to_uppercase();
             let registry = LocationRegistry::load();
 
+            if let Err(e) = bisect_cli::args::validate_court_profile(
+                args.profile,
+                args.partition_mode,
+                args.structure,
+                args.weights_override,
+                args.search,
+                &args.partisan_shares,
+            ) {
+                eprintln!("ERROR: {e}");
+                std::process::exit(1);
+            }
+
             // Validate year against the registry for known locations.
             // Unknown locations with --adjacency bypass get any year.
             let year = if registry.has_location(&state_code) {

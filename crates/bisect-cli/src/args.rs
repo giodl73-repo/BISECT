@@ -17,6 +17,71 @@ use clap::{Parser, Subcommand, ValueEnum};
 // Shared enums (used by multiple subcommands)
 // ---------------------------------------------------------------------------
 
+/// Defensibility profile for a redistricting run.
+///
+/// `Open` is the research default: every compositor variant, partisan mode, and
+/// experimental algorithm is allowed. `Court` (bulletproof) locks the run to the
+/// neutral, deterministic, court-defensible subset and refuses any partisan or
+/// experimental configuration. See [`validate_court_profile`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum RunProfile {
+    /// Research mode: all variants allowed (default).
+    #[value(name = "open")]
+    Open,
+    /// Court-defensible mode: neutral, deterministic, partisan-blind only.
+    #[value(name = "court", alias = "bulletproof")]
+    Court,
+}
+
+/// Reject any configuration that is not court-defensible.
+///
+/// Court mode permits only neutral structures, partisan-blind weights, and
+/// deterministic seed selection. Partisan inputs, partisan/proportional modes,
+/// and unbounded experimental baselines are refused so a submitted plan cannot
+/// be attacked as partisan-tuned. Returns Ok(()) for `Open`.
+pub fn validate_court_profile(
+    profile: RunProfile,
+    partition_mode: PartitionMode,
+    structure: Option<StructureMode>,
+    weights: Option<WeightMode>,
+    search: Option<SearchMode>,
+    partisan_shares: &Option<String>,
+) -> Result<(), String> {
+    if profile != RunProfile::Court {
+        return Ok(());
+    }
+    let bad = |what: &str, val: &str| {
+        Err(format!(
+            "profile=court rejects {what} '{val}': it is partisan or experimental \
+             and is not court-defensible. Use a neutral configuration or --profile open."
+        ))
+    };
+    if partisan_shares.is_some() {
+        return bad("--partisan-shares", "<set>");
+    }
+    match partition_mode {
+        PartitionMode::PartisanWeighted
+        | PartitionMode::Proportional
+        | PartitionMode::ProportionalSection => {
+            return bad("--partition-mode", &partition_mode.to_string())
+        }
+        _ => {}
+    }
+    if let Some(w) = weights {
+        if matches!(w, WeightMode::Proportional) {
+            return bad("--weights-override", "proportional");
+        }
+    }
+    let _ = structure;
+    if let Some(sr) = search {
+        // Deterministic strategies only: single/convergence pin a reproducible result.
+        if !matches!(sr, SearchMode::Single | SearchMode::Convergence) {
+            return bad("--search", "non-deterministic search");
+        }
+    }
+    Ok(())
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum Year {
     #[value(name = "2020")]
@@ -1342,6 +1407,13 @@ pub struct StateArgs {
     #[arg(short = 'm', long = "partition-mode", default_value = "edge-weighted")]
     pub partition_mode: PartitionMode,
 
+    /// Defensibility profile. `open` (default) allows every experimental and
+    /// partisan variant; `court` (a.k.a. bulletproof) restricts the run to the
+    /// neutral, deterministic, court-defensible compositor and rejects any
+    /// partisan or experimental configuration. See `validate_court_profile`.
+    #[arg(long, default_value = "open")]
+    pub profile: RunProfile,
+
     /// Target majority-minority districts (VRA mode only)
     #[arg(long)]
     pub target_mm_districts: Option<usize>,
@@ -2196,6 +2268,74 @@ mod tests {
     fn test_force_flag_default_false() {
         let args = parse_state_args(&[]);
         assert!(!args.force);
+    }
+
+    #[test]
+    fn test_profile_defaults_open_and_allows_partisan() {
+        let args = parse_state_args(&[]);
+        assert_eq!(args.profile, RunProfile::Open);
+        assert!(super::validate_court_profile(
+            args.profile,
+            PartitionMode::PartisanWeighted,
+            None,
+            None,
+            None,
+            &Some("shares.tsv".to_string())
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn test_court_profile_rejects_partisan_inputs_and_modes() {
+        assert!(super::validate_court_profile(
+            RunProfile::Court,
+            PartitionMode::EdgeWeighted,
+            None,
+            None,
+            None,
+            &Some("shares.tsv".to_string())
+        )
+        .is_err());
+        assert!(super::validate_court_profile(
+            RunProfile::Court,
+            PartitionMode::PartisanWeighted,
+            None,
+            None,
+            None,
+            &None
+        )
+        .is_err());
+        assert!(super::validate_court_profile(
+            RunProfile::Court,
+            PartitionMode::Proportional,
+            None,
+            None,
+            None,
+            &None
+        )
+        .is_err());
+        assert!(super::validate_court_profile(
+            RunProfile::Court,
+            PartitionMode::EdgeWeighted,
+            None,
+            None,
+            Some(SearchMode::ShortBurst),
+            &None
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn test_court_profile_accepts_neutral_config() {
+        assert!(super::validate_court_profile(
+            RunProfile::Court,
+            PartitionMode::EdgeWeighted,
+            None,
+            None,
+            Some(SearchMode::Convergence),
+            &None
+        )
+        .is_ok());
     }
 
     #[test]
