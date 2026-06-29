@@ -23,13 +23,17 @@
 
 3. **Sweep N seeds** with the same parameters, keep the top-K by a metric:
    ```bash
-   BISECT sweep --state VT --year 2020 --n 50 --keep 5 --metric polsby_popper --label-prefix vt_sweep
+   for SEED in $(seq 1 50); do
+       LABEL="vt_sweep_${SEED}"
+       bisect build "$LABEL" --year 2020 --search single --workers 4
+       bisect label-analyze "$LABEL" --year 2020 --types all
+   done
    ```
    Expected: 50 plans run; 5 best by mean Polsby-Popper retained under `outputs/v1/2020/plans/vt_sweep_*`.
 
 4. **Aggregate the results** for off-line analysis:
    ```bash
-   BISECT aggregate --year 2020 --version v1 --states VT
+   bisect label-report vt_sweep_1 --year 2020 --format html json
    ```
    Produces `outputs/v1/2020/aggregated/{state_summary.csv, district_summary.csv, ...}` — one row per plan or district, ready to load in pandas.
 
@@ -50,29 +54,28 @@ for P in 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9; do
 done
 ```
 
-Then aggregate:
+Then analyze and report each label:
 ```bash
-BISECT aggregate --year 2020 --version v1 --states NC \
-    --labels nc_pct_00 nc_pct_01 nc_pct_02 nc_pct_03 nc_pct_04 \
-             nc_pct_05 nc_pct_06 nc_pct_07 nc_pct_08 nc_pct_09
+for LABEL in nc_pct_00 nc_pct_01 nc_pct_02 nc_pct_03 nc_pct_04 \
+             nc_pct_05 nc_pct_06 nc_pct_07 nc_pct_08 nc_pct_09; do
+    bisect label-analyze "$LABEL" --year 2020 --types all
+    bisect label-report "$LABEL" --year 2020 --format html json
+done
 ```
 
 The resulting `district_summary.csv` gives you a 10-row table: edge-cut (proxy for compactness) and Democratic-seat count per percentile. Typical finding: the compactness-to-partisan tradeoff is largely flat between `0.0` and `0.4`, then the partisan composition shifts as the solver departs the compact extremum.
 
-**Best-K aggregate shortcut:** Run the percentile sweep with `--keep 3` and let `BISECT aggregate` find the best plan per percentile level automatically:
+**Best-K note:** Keep/export filtering is experiment-specific. In the current label pipeline, preserve labels explicitly and compare their reports or downstream CSV extracts:
 ```bash
-BISECT sweep --state NC --year 2020 \
-    --n 200 --keep 5 \
-    --metric polsby_popper \
-    --percentile 0.5 \
-    --label-prefix nc_pct50_sweep
+bisect show nc_pct_05
+bisect label-report nc_pct_05 --year 2020 --format html json
 ```
 
 ---
 
 ## Section: Ensemble diagnostics — characterising the feasible space
 
-Before reporting a plan's partisan composition as a finding, use the ensemble command to characterise where that plan sits in the feasible space. The `bisect ensemble` command generates multiple independent MCMC chains, computes Gelman-Rubin R-hat and ESS, and produces the `diagnostics/` artifact directory required by `BISECT research validate-ensemble`.
+Before reporting a plan's partisan composition as a finding, use the ensemble command to characterise where that plan sits in the feasible space. The `bisect ensemble` command generates multiple independent MCMC chains, computes Gelman-Rubin R-hat and ESS, and produces the `diagnostics/` artifact directory required by `bisect research validate-ensemble`.
 
 ```bash
 # Generate a 4-chain ensemble for NC (5000 steps each)
@@ -96,7 +99,7 @@ outputs/v1/ensembles/nc_ensemble_2020/
 
 Then compare your target plan against the ensemble:
 ```bash
-BISECT research validate-ensemble \
+bisect research validate-ensemble \
     --plan-label vt_baseline \
     --ensemble-label nc_ensemble_2020
 ```
@@ -133,9 +136,8 @@ What this does:
 
 ```bash
 # After running BisectionEnsemble, aggregate across all 200 plans
-BISECT aggregate --year 2020 --version v1 --states NC \
-    --ensemble-label nc_bisect_ensemble \
-    --output outputs/v1/2020/aggregated/nc_bisect_ensemble_summary.csv
+bisect label-analyze nc_bisect_ensemble --year 2020 --types all
+bisect label-report nc_bisect_ensemble --year 2020 --format html json
 ```
 
 ---
@@ -149,11 +151,11 @@ BISECT aggregate --year 2020 --version v1 --states NC \
 
 ## Where to go next
 
-- Sweep tuning: `BISECT sweep --help` (metric choices, parallelism)
+- Sweep tuning: use explicit labeled runs with `bisect build`, then compare `bisect label-report` outputs
 - Ensemble diagnostics reference: `docs/research/ensemble-diagnostics.md`
 - Reproducibility for publication: `bisect analyze --paper-mode` (AEA-compliant replication package)
 - Statistical rigour on bloc voting: `bisect analyze --types bloc-voting` (Callais Evidence Layer)
-- GerryChain interop: `BISECT research check-compat` then notebook `04_gerrychain_interop.ipynb`
+- GerryChain interop: `bisect research check-compat` then notebook `04_gerrychain_interop.ipynb`
 
 ## Performance notes
 

@@ -57,6 +57,7 @@ sha2           = "0.10"
 serde_yaml     = "0.9"
 url            = "2"
 fs2            = "0.4"
+shapefile      = "0.6"
 
 [features]
 # c-ffi-engine: enables C METIS (bundled via vendored feature — requires C compiler

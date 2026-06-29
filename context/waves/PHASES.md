@@ -54,6 +54,7 @@
 | 2026-05-14 | RGRAPH Subset Connectivity Kernel | Extract reusable node-subset connectivity checks from pricing, SMC, Pareto, and CLI evidence helpers | archived |
 | 2026-05-14 | RGRAPH Mask Edge Cut Consumer | Route bitmask edge-cut counting through `rgraph-core` adapter without adding new API | archived |
 | 2026-05-14 | CLI Weighted Cut Scoring Cleanup | Consolidate repeated weighted edge-cut scoring locally without promoting it to `rgraph-core` | archived |
+| 2026-06-01 | VTRACE Baseline Maintenance | First live VTRACE-governed maintenance wave after S6 internal baseline selection | archived |
 
 ## Operating Model
 
@@ -70,7 +71,17 @@ Each active wave keeps:
 
 - A pulse must be independently testable.
 - Every pulse names governing roles and validation commands.
+- VTRACE-governed pulses name parent `REQ-*`, `SPEC-*`, `IF-*`, `PKG-*`,
+  `DES-*`, applicable `CR-*`, validation level, and affected package
+  boundaries either in pulse frontmatter/body or in the materialized fork.
 - Boundary claims must be explicit: replay, preservation, analytic report, or
   future work.
+- Closure must distinguish pass, fail, blocked, partial, deferred, and
+  not-applicable states; "implemented" alone is not sufficient.
+- Public-claim or generated-artifact effects must carry claim and custody
+  disposition before pulse or wave close.
+- Closure notes must record risk and pitfall/invariant disposition when the
+  pulse changes public evidence, pipeline behavior, package schemas, or
+  workflow controls.
 - Completed pulses keep their checkboxes checked; future pulses remain open.
 - Wave status only advances after docs and tests agree.

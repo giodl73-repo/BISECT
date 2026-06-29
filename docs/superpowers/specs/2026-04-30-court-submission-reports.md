@@ -16,7 +16,11 @@ A practitioner who has finished their analysis still has to take our HTML output
 
 ### In scope
 
-1. **PDF rendering pipeline** — `BISECT report --format pdf` produces a court-ready document from the same data the HTML report uses.
+1. **PDF rendering pipeline** — `BISECT report --format pdf` produces a
+   court-formatted legal-review draft from the same data the HTML report uses.
+   It does not by itself create a court-ready filing package; that claim remains
+   governed by `docs/legal/COURT_PACKAGING_BOUNDARY.md` and
+   `docs/vtrace/COMMUNICATIONS_STRATEGY.md`.
 
 2. **Standard sections (v2 expanded per SURVEY)** — cover page, executive summary, methodology, results, **expert qualifications (CV attachment)**, **declaration of conflicts of interest**, **prior-testimony list (last 5 years per FRCP 26(a)(2)(B))**, **Daubert-readiness self-assessment**, reproducibility appendix, signature block. Each section is templated and pulls from the analysis JSON or expert-config.
 
@@ -59,7 +63,8 @@ A practitioner who has finished their analysis still has to take our HTML output
 All generated PDFs target **PDF/A-2b** for federal court archival permanence. Implementation:
 - Use Typst's PDF/A export mode (Typst ≥ 0.12 supports this)
 - Validate every generated PDF with `verapdf` (open-source PDF/A validator) before reporting success
-- If validation fails, report the violation and refuse to mark the file as court-ready
+- If validation fails, report the violation and refuse to mark the file as having
+  passed the PDF/A legal-review packaging check.
 
 A non-PDF/A `--draft` mode is available for iteration but warns that the output is not court-admissible.
 

@@ -47,17 +47,15 @@
    ```
    Produces `analysis/bloc_voting.json` with WLS+HC3 coefficients, cluster-bootstrap CIs, Holm-corrected p-values, robustness across 3 baselines, VIF diagnostic, and the `ecology_caveat`.
 
-6. **Generate the court PDF** (Court Submission Reports plan — when implemented):
+6. **Generate the report evidence package**:
    ```bash
-   BISECT report --label la_2020_callais --format pdf \
-       --jurisdiction "EDLA" \
-       --expert-config expert.toml
+   bisect label-report la_2020_callais --year 2020 --format html json
    ```
-   Outputs PDF/A-2b validated against `verapdf`; reproducibility zip with attestation chain.
+   Outputs an HTML/JSON evidence package with the manifest fields currently implemented by the label pipeline. Treat PDF/A court packaging as a separate downstream publication step unless your local branch implements it.
 
-7. **Provenance receipt:** verify the manifest matches your binary, and embed the result in your Daubert disclosures:
+7. **Provenance receipt:** verify the label chain and embed the result in your Daubert disclosures:
    ```bash
-   BISECT doctor --verify-manifest outputs/v1/2020/plans/la_2020_callais/manifest.json
+   bisect label-verify la_2020_callais --year 2020
    ```
 
 ---
@@ -66,13 +64,13 @@
 
 - **Step 4:** `final_assignments.json` for LA (~1100 tracts), exit 0
 - **Step 5:** `bloc_voting.json` schema validates; `regression.specification` reads `"WLS weighted by precinct vote count; HC3 robust SE; cluster-bootstrap by county B=10000"`
-- **Step 6:** PDF/A-2b certified by `verapdf`; refuses to mark non-compliant output as court-ready
+- **Step 6:** HTML/JSON report package written with provenance fields; it is not legal certification by itself
 
 ## Where to go next
 
 - Callais legal grounding: `docs/legal/CALLAIS_REFERENCE.md`
 - Race-of-candidate provenance protocol: `docs/file-formats/race-of-candidate.md` (when shipped)
-- Deposition prep: `BISECT depo` (Deposition Prep plan — fast iterative re-analysis daemon)
+- Deposition prep: use the label pipeline first; deposition-specific daemon workflows are separate planned tooling
 - AEA-compliant replication package for paper publication: `bisect analyze --paper-mode`
 
 ## Daubert warnings

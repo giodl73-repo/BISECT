@@ -12,7 +12,7 @@ use std::collections::HashMap;
 /// analysis/{label}/{year}/         ← cascade-invalidated on --force
 /// reports/{label}/{year}/          ← cascade-invalidated on --force
 /// ```
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::algo_config::AlgoYaml;
 use crate::label::{
@@ -145,7 +145,11 @@ pub struct BuildIndex {
     pub year: String,
     pub created: String,
     pub version: String,
+    pub config_path: String,
     pub config_sha256: String,
+    pub command: String,
+    pub output_dir: String,
+    pub metis_engine: String,
     /// Snapshot of the `algorithm:` block from the YAML config.
     pub algorithm: serde_json::Value,
     pub states: HashMap<String, StateIndexEntry>,
@@ -179,6 +183,7 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
     validate_label_name(&args.label)?;
 
     // ── Step 2: Load + validate config ───────────────────────────────────────
+    let command = std::env::args().collect::<Vec<_>>().join(" ");
     let yaml = AlgoYaml::from_file(&args.config)?;
 
     // Validate config converts to AlgorithmConfig without errors.
@@ -319,8 +324,20 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
             );
         }
 
+        promote_label_state_artifacts(&configs, &results)?;
+
         // ── 4f: Write runs/{label}/{year}/index.json ───────────────────────────
-        let index = build_build_index(label, year, &config_sha256, &yaml, &configs, &results)?;
+        let index = build_build_index(
+            label,
+            year,
+            &args.config,
+            &config_sha256,
+            &command,
+            &year_dir,
+            &yaml,
+            &configs,
+            &results,
+        )?;
         let index_path = year_dir.join("index.json");
         let index_json = serde_json::to_string_pretty(&index)
             .map_err(|e| format!("[INTERNAL] build: failed to serialize index.json: {e}"))?;
@@ -352,11 +369,79 @@ fn is_year_built(label: &str, year: &str) -> Result<bool, String> {
     }
 }
 
+fn promote_label_state_artifacts(
+    configs: &[StateConfig],
+    results: &[crate::runner::StateResult],
+) -> Result<(), String> {
+    let result_map: HashMap<&str, &crate::runner::StateResult> =
+        results.iter().map(|r| (r.state_code.as_str(), r)).collect();
+
+    for cfg in configs {
+        let Some(result) = result_map.get(cfg.state_code.as_str()) else {
+            continue;
+        };
+        if !result.success {
+            continue;
+        }
+
+        let nested_data_dir = cfg
+            .output_dir
+            .join(&cfg.year)
+            .join("states")
+            .join(&cfg.state_name)
+            .join("data");
+        promote_label_artifact(
+            &nested_data_dir.join("final_assignments.json"),
+            &cfg.output_dir.join("final_assignments.json"),
+        )?;
+
+        let nested_provenance = nested_data_dir.join("provenance.json");
+        if nested_provenance.exists() {
+            promote_label_artifact(&nested_provenance, &cfg.output_dir.join("provenance.json"))?;
+        }
+    }
+
+    Ok(())
+}
+
+fn promote_label_artifact(source: &Path, dest: &Path) -> Result<(), String> {
+    if !source.exists() {
+        return Err(format!(
+            "[INTERNAL] build: expected state artifact missing at '{}'",
+            source.display()
+        ));
+    }
+
+    let parent = dest.parent().ok_or_else(|| {
+        format!(
+            "[INTERNAL] build: cannot resolve parent for '{}'",
+            dest.display()
+        )
+    })?;
+    std::fs::create_dir_all(parent).map_err(|e| {
+        format!(
+            "[INTERNAL] build: failed to create '{}': {e}",
+            parent.display()
+        )
+    })?;
+    std::fs::copy(source, dest).map_err(|e| {
+        format!(
+            "[INTERNAL] build: failed to copy '{}' to '{}': {e}",
+            source.display(),
+            dest.display()
+        )
+    })?;
+    Ok(())
+}
+
 /// Construct the `BuildIndex` from run results.
 pub fn build_build_index(
     label: &str,
     year: &str,
+    config_path: &Path,
     config_sha256: &str,
+    command: &str,
+    output_dir: &Path,
     yaml: &AlgoYaml,
     configs: &[StateConfig],
     results: &[crate::runner::StateResult],
@@ -428,7 +513,15 @@ pub fn build_build_index(
         year: year.to_string(),
         created,
         version: env!("CARGO_PKG_VERSION").to_string(),
+        config_path: config_path.to_string_lossy().to_string(),
         config_sha256: config_sha256.to_string(),
+        command: command.to_string(),
+        output_dir: output_dir.to_string_lossy().to_string(),
+        metis_engine: yaml
+            .algorithm
+            .engine
+            .clone()
+            .unwrap_or_else(|| "c-ffi".to_string()),
         algorithm: algo_section,
         states: state_entries,
         summary: BuildSummary {
@@ -523,7 +616,7 @@ fn days_to_ymd(days: u64) -> (u64, u64, u64) {
 mod tests {
     use super::*;
     use std::io::Write;
-    use tempfile::NamedTempFile;
+    use tempfile::{tempdir, NamedTempFile};
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -668,7 +761,10 @@ years: ["2020"]
         let index = build_build_index(
             "my_plan",
             "2020",
+            f.path(),
             &sha,
+            "bisect build my_plan --year 2020",
+            Path::new("runs/my_plan/2020"),
             &yaml,
             &[], // no states — empty run
             &[], // no results
@@ -739,7 +835,18 @@ years: ["2020"]
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
         let sha = AlgoYaml::file_sha256(f.path()).unwrap();
 
-        let index = build_build_index("official_proposal", "2020", &sha, &yaml, &[], &[]).unwrap();
+        let index = build_build_index(
+            "official_proposal",
+            "2020",
+            f.path(),
+            &sha,
+            "bisect build official_proposal --year 2020",
+            Path::new("runs/official_proposal/2020"),
+            &yaml,
+            &[],
+            &[],
+        )
+        .unwrap();
 
         assert_eq!(index.label, "official_proposal");
         assert_eq!(index.year, "2020");
@@ -804,7 +911,18 @@ years: ["2020"]
             ),
         ];
 
-        let index = build_build_index("lbl", "2020", &sha, &yaml, &cfgs, &results).unwrap();
+        let index = build_build_index(
+            "lbl",
+            "2020",
+            f.path(),
+            &sha,
+            "bisect build lbl --year 2020",
+            Path::new("runs/lbl/2020"),
+            &yaml,
+            &cfgs,
+            &results,
+        )
+        .unwrap();
 
         assert_eq!(index.summary.total, 2);
         assert_eq!(index.summary.succeeded, 1);
@@ -817,6 +935,54 @@ years: ["2020"]
             index.states["california"].error.as_deref(),
             Some("oops"),
             "failed state must record the error message"
+        );
+    }
+
+    #[test]
+    fn test_promote_label_state_artifacts_copies_runner_outputs_to_label_root() {
+        use crate::runner::StateResult;
+
+        let tmp = tempdir().unwrap();
+        let state_root = tmp
+            .path()
+            .join("runs")
+            .join("lbl")
+            .join("2020")
+            .join("vermont");
+        let nested_data = state_root
+            .join("2020")
+            .join("states")
+            .join("vermont")
+            .join("data");
+        std::fs::create_dir_all(&nested_data).unwrap();
+        std::fs::write(nested_data.join("final_assignments.json"), r#"{"1":1}"#).unwrap();
+        std::fs::write(nested_data.join("provenance.json"), r#"{"ok":true}"#).unwrap();
+
+        let cfg = StateConfig::new_bulk(
+            "VT".into(),
+            "vermont".into(),
+            1,
+            "2020".into(),
+            "lbl".into(),
+            state_root.clone(),
+            1,
+        );
+        let result = StateResult {
+            state_code: "VT".into(),
+            success: true,
+            error: None,
+            elapsed_ms: 1,
+        };
+
+        promote_label_state_artifacts(&[cfg], &[result]).unwrap();
+
+        assert_eq!(
+            std::fs::read_to_string(state_root.join("final_assignments.json")).unwrap(),
+            r#"{"1":1}"#
+        );
+        assert_eq!(
+            std::fs::read_to_string(state_root.join("provenance.json")).unwrap(),
+            r#"{"ok":true}"#
         );
     }
 
@@ -936,7 +1102,18 @@ years: ["2020"]
             1,
         )];
 
-        let index = build_build_index("lbl", "2020", &sha, &yaml, &cfgs, &results).unwrap();
+        let index = build_build_index(
+            "lbl",
+            "2020",
+            f.path(),
+            &sha,
+            "bisect build lbl --year 2020",
+            Path::new("runs/lbl/2020"),
+            &yaml,
+            &cfgs,
+            &results,
+        )
+        .unwrap();
         assert_eq!(index.states["texas"].status, "failed");
         assert_eq!(
             index.states["texas"].error.as_deref(),
@@ -953,7 +1130,18 @@ years: ["2020"]
         let yaml = AlgoYaml::from_file(f.path()).unwrap();
         let sha = AlgoYaml::file_sha256(f.path()).unwrap();
 
-        let index = build_build_index("lbl", "2020", &sha, &yaml, &[], &[]).unwrap();
+        let index = build_build_index(
+            "lbl",
+            "2020",
+            f.path(),
+            &sha,
+            "bisect build lbl --year 2020",
+            Path::new("runs/lbl/2020"),
+            &yaml,
+            &[],
+            &[],
+        )
+        .unwrap();
         assert_eq!(index.summary.total, 0);
         assert_eq!(index.summary.succeeded, 0);
         assert_eq!(index.summary.failed, 0);

@@ -18,25 +18,23 @@
 
 2. **Draw a map** in Districtr against your state's 2020 tracts. Save as JSON via Districtr's "Save Plan" -> "Download as JSON".
 
-3. **Import into `BISECT`:**
+3. **Import into `bisect`:**
    ```bash
-   BISECT import --format districtr senate_proposal_v3.json \
-       --plan-label senate_proposal_v3 \
-       --state VT --year 2020
+   bisect label-import senate_proposal_v3 --from senate_proposal_v3.rplan --year 2020 --format rplan
    ```
-   Expected: `outputs/v1/2020/plans/senate_proposal_v3/{manifest.json, final_assignments.json, translation_log.txt}` written. The translation log records any block-to-tract aggregation decisions if your Districtr plan was at block resolution.
+   Expected: `runs/senate_proposal_v3/2020/{state}/assignments.json` plus label index and registry evidence. For CSV, GeoJSON, or shapefile exports, use `--format csv`, `--format geojson`, or `--format shapefile`.
 
 4. **Run analysis:**
    ```bash
-   bisect analyze --plan-label senate_proposal_v3 --year 2020 --types all
+   bisect label-analyze senate_proposal_v3 --year 2020 --types all
    ```
    Wall-clock: under 30 s for VT, under 5 min for the largest states.
 
 5. **Generate a report:**
    ```bash
-   BISECT report --plan-label senate_proposal_v3 --year 2020 --format html
+   bisect label-report senate_proposal_v3 --year 2020 --format html json
    ```
-   Or `--format pdf` for court-ready PDF/A-2b output.
+   Treat generated reports as evidence packages; legal/court filing status depends on your review and any downstream PDF packaging.
 
 6. **Iterate.** Edit in Districtr, bump the label suffix (`senate_proposal_v4`), repeat steps 3-5.
 
@@ -87,11 +85,11 @@ bisect state --state WA --year 2020 \
 ```
 
 What happens:
-1. `BISECT` draws 98 house districts using METIS on census tracts (block-group resolution auto-applied)
+1. `bisect` draws 98 house districts using METIS on census tracts (block-group resolution auto-applied)
 2. It builds a new adjacency graph where nodes are house districts
 3. METIS runs on the house-district graph with k=49
 4. Each senate district is defined as exactly 2 whole house districts -- nesting is guaranteed by construction
-5. `BISECT` validates the nesting before writing output
+5. `bisect` validates the nesting before writing output
 
 Expected output:
 ```
@@ -104,7 +102,7 @@ outputs/v1/2020/plans/wa_bicameral_v1/
 
 Validate after drawing:
 ```bash
-BISECT suite validate --name wa_bicameral_v1 --year 2020 --version v1
+bisect suite validate --name wa_bicameral_v1 --year 2020 --version v1
 ```
 
 Output confirms nesting or lists violations:
@@ -132,7 +130,7 @@ See `docs/guides/nesting-guide.md` for per-state constitutional nesting requirem
 
 ## Expected output at each step
 
-- **Step 3:** plan label visible via `BISECT doctor --label senate_proposal_v3`
+- **Step 3:** plan label visible via `bisect show senate_proposal_v3`
 - **Step 4:** five JSON files under `analysis/`, exit 0
 - **Step 5:** `report.html` viewable in any browser; no external network calls
 - **State legislative run:** `final_assignments.json` with district IDs 1..k, plus `manifest.json` tagging `chamber` and `resolution`
@@ -140,17 +138,17 @@ See `docs/guides/nesting-guide.md` for per-state constitutional nesting requirem
 
 ## Where to go next
 
-- DRA round-trip: `BISECT import --format dra <CSV>` and `BISECT export --format dra --plan-label <LABEL>`
-- Shapefile from QGIS: `BISECT import --format shapefile <DIR>` (must have a `district` column)
-- Plan-vs-plan comparison: `BISECT compare --plan-a senate_v3 --plan-b senate_v4 --format both`
-- Compare against the currently enacted map: `BISECT compare --plan-a senate_v3 --baseline ENACTED`
+- CSV round-trip: `bisect label-import <LABEL> --from <CSV> --format csv`
+- Shapefile from QGIS: `bisect label-import <LABEL> --from <SHP> --format shapefile` (must have GEOID and district DBF fields)
+- Plan-vs-plan comparison: `bisect label-compare senate_v3 senate_v4 --year 2020`
+- Compare against the currently enacted map by importing it as a label, then use `bisect label-compare`
 - Nesting guide: `docs/guides/nesting-guide.md`
 
 ## Format notes
 
-- Districtr tract-level plans round-trip exactly. Block-level plans use a Census-published Block Assignment File (cached on first use); split blocks are recorded in `translation_log.txt`.
-- DRA exports vary in column order; the importer auto-detects `GEOID,DISTRICT` and `DISTRICT,GEOID` and headerless variants.
-- Shapefile imports require a `district` integer column. Export goes via GeoJSON + `ogr2ogr` (writing valid shapefiles natively requires geometry; we don't always have it).
+- RPLAN tract-level plans round-trip through `rplan-io`.
+- CSV exports vary in column order; the importer auto-detects `GEOID,DISTRICT` and `DISTRICT,GEOID` and headerless variants.
+- Shapefile imports read DBF attributes from `.shp` sidecars and require a GEOID field plus a district integer field.
 
 ## Civic groups submitting counter-proposals
 
