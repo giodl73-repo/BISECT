@@ -89,6 +89,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "IA",
+      "districts": 4,
+      "block_count": 175199,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
+    },
+    {
       "state": "ID",
       "districts": 2,
       "block_count": 81879,
@@ -336,7 +347,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 22,
+  "built_count": 23,
   "failed_count": 4,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
