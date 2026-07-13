@@ -287,6 +287,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "TN",
+      "districts": 9,
+      "block_count": 179717,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
+    },
+    {
       "state": "UT",
       "districts": 4,
       "block_count": 71207,
@@ -347,7 +358,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 23,
+  "built_count": 24,
   "failed_count": 4,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
