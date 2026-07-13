@@ -14,6 +14,7 @@ use sha2::{Digest, Sha256};
 ///   alpha_county: 2.0
 ///   search: convergence            # maps to SeedCompositor
 ///   convergence_threshold: 600
+///   seed: 42                        # fixed METIS seed for reproducibility
 ///   balance_tolerance: 0.5
 /// workers: 6
 /// years: ["2020", "2010", "2000"]
@@ -78,6 +79,10 @@ pub struct AlgorithmSection {
 
     /// Fixed seed count for search == "multi".
     pub seeds: Option<usize>,
+
+    /// METIS random seed. Required by profiles that claim assignment-level
+    /// reproducibility across independent executions.
+    pub seed: Option<u64>,
 
     /// ReCom steps per burst for search == "short-burst". Default: 20.
     pub burst_length: Option<usize>,
@@ -340,6 +345,7 @@ impl AlgoYaml {
             seeds,
             metis: MetisParams {
                 engine,
+                seed: sec.seed,
                 ..MetisParams::default()
             },
             mode_label: None,
@@ -418,6 +424,7 @@ pub fn write_template_config(
         search: search.map(|s| s.to_string()),
         convergence_threshold,
         seeds,
+        seed: None,
         burst_length: None,
         n_bursts: None,
         percentile: None,
@@ -737,6 +744,23 @@ algorithm:
             "apportion-regions must map to SplitStrategy::ApportionRegions, got: {:?}",
             algo.split
         );
+    }
+
+    #[test]
+    fn test_fixed_seed_maps_to_metis_params() {
+        let yaml = r#"
+name: reference
+algorithm:
+  structure: standard-bisect
+  weights: geographic
+  search: single
+  seed: 424242
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert_eq!(doc.algorithm.seed, Some(424242));
+        assert_eq!(algo.metis.seed, Some(424242));
     }
 
     #[test]

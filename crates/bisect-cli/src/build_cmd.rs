@@ -560,6 +560,9 @@ fn algorithm_section_to_json(yaml: &AlgoYaml) -> serde_json::Value {
     if let Some(seeds) = sec.seeds {
         map.insert("seeds".to_string(), serde_json::json!(seeds));
     }
+    if let Some(seed) = sec.seed {
+        map.insert("seed".to_string(), serde_json::json!(seed));
+    }
     if let Some(tol) = sec.balance_tolerance {
         map.insert("balance_tolerance".to_string(), serde_json::json!(tol));
     }
@@ -1187,10 +1190,28 @@ years: ["2020"]
             "convergence_threshold must be absent"
         );
         assert!(!obj.contains_key("seeds"), "seeds must be absent");
+        assert!(!obj.contains_key("seed"), "seed must be absent");
         assert!(
             !obj.contains_key("balance_tolerance"),
             "balance_tolerance must be absent"
         );
+    }
+
+    #[test]
+    fn test_algorithm_section_json_records_fixed_seed() {
+        let f = write_yaml(
+            r#"
+name: reference
+algorithm:
+  structure: standard-bisect
+  weights: geographic
+  search: single
+  seed: 424242
+"#,
+        );
+        let yaml = AlgoYaml::from_file(f.path()).unwrap();
+        let val = algorithm_section_to_json(&yaml);
+        assert_eq!(val["seed"], serde_json::json!(424242_u64));
     }
 
     // ── Test 19: BuildCliArgs with explicit config path ───────────────────────

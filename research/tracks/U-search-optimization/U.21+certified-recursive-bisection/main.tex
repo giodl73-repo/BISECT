@@ -1,0 +1,47 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\title{Certified Recursive Bisection:\\
+Proof-Carrying Cuts for Algorithmic Redistricting}
+\author{Gio Della-Libera}
+\date{Draft --- July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Recursive graph bisection offers a transparent construction rule for
+redistricting, but practical partitioners ordinarily return heuristic cuts
+without proving that a better permitted cut does not exist. We present
+\emph{certified recursive bisection}, a proof-carrying formulation that
+preserves the enacted binary district-count tree while selecting one unique
+connected cut at every node. The objective is lexicographic: population
+deviation, weighted boundary cut, and canonical assignment. Split
+certificates bind parent and child unit universes into a complete tree whose
+one-seat leaves define the final plan. A bounded Rust implementation produces
+optimality and infeasibility artifacts, hostile tamper fixtures, RPLAN/RCTX
+packages, and deterministic pseudo-Boolean proof requests. A connected
+Rhode Island input with 25,649 Census blocks demonstrates data readiness but
+also identifies the unresolved scalability frontier: compact connectivity
+encoding, production discovery, and external proof generation and checking.
+The contribution is therefore a verified methods architecture, not a claim of
+nationwide exact readiness or superior political outcomes.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-model}
+\input{sections/03-certificates}
+\input{sections/04-proof-backend}
+\input{sections/05-evidence}
+\input{sections/06-claims}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

@@ -823,6 +823,114 @@ See `docs/quickstart/quickstart-{persona}.md` for persona-specific next steps.
 
 ---
 
+## `bisect exact`
+
+Run an exact-method family against an RCTX graph/population context.
+
+### Bounded Exact Canonical Reference
+
+```powershell
+bisect exact `
+  --method canonical-exhaustive `
+  --context fixture.rctx `
+  --out-dir exact-output `
+  --districts 2 `
+  --exact-fixture-limit 24
+```
+
+Outputs:
+
+- `exact-canonical-instance.json`
+- `exact-canonical-certificate.json`
+- `exact-canonical-proof.json`
+- `exact-package-manifest.json`
+- `exact.rplan`, `exact.rctx`, and `audit-certificate.json` when feasible
+
+This method implements the four-level Exact Canonical Benchmark objective for
+small `k=2` instances. It emits either an optimal feasible-assignment
+certificate or an exact infeasibility certificate. It is bounded E0 reference
+infrastructure, not the national production solver. The certificate binds a
+deterministic proof transcript committing to every enumerated candidate.
+
+### Certified Recursive Bisection
+
+```powershell
+bisect exact `
+  --method certified-recursive `
+  --context fixture.rctx `
+  --out-dir certified-output `
+  --districts 4 `
+  --exact-fixture-limit 24
+```
+
+Outputs:
+
+- `certified-bisection-tree.json`
+- `certified-tree-package-manifest.json`
+- `exact.rplan`
+- `exact.rctx`
+- `audit-certificate.json`
+
+This method exactly certifies every sequential `standard-bisect` cut for a
+bounded instance. The tree preserves the enacted floor/ceiling seat schedule,
+parent-derived child universes, and canonical one-seat leaf order. It proves
+the recursive BISECT result, not global optimality among unrestricted maps.
+
+Verify a received package, including tree-to-RPLAN assignment binding, RCTX,
+audit certificate, and manifest hashes:
+
+```powershell
+cargo run -p bisect-ilp --example certified_recursive -- verify-package `
+  certified-output
+```
+
+### Certified Discovery
+
+```powershell
+bisect exact `
+  --method certified-discovery `
+  --context state-blocks.rctx `
+  --out-dir discovery-output `
+  --districts 2 `
+  --discovery-seed 1 `
+  --discovery-refinement full
+```
+
+Outputs:
+
+- `certified-split-instance.json`
+- `certified-discovery.json`
+- `certified-discovery-manifest.json`
+
+This method uses deterministic METIS to produce an incumbent and then
+independently rejects it unless both children satisfy the certified
+connectivity predicate. Equal-seat discovery additionally enables METIS
+connectivity/minimum-connection options. The exact integer objective is
+recomputed from raw certified weights. The manifest status is always
+`unproved-incumbent`.
+Solver metadata and deterministic replay do not establish optimality.
+Use `--discovery-refinement metis|population|fast|full` to separate inexpensive
+multi-seed METIS screening from expensive local boundary refinement. Every mode
+still applies exact objective and connectivity validation before emission.
+After METIS, discovery applies deterministic articulation-safe boundary moves
+that improve population balance without disconnecting either child. Rhode
+Island's current seed-4 incumbent reaches the exact 548,689 / 548,690
+arithmetic floor in four moves before boundary refinement.
+
+### Branch And Price
+
+```powershell
+bisect exact `
+  --method branch-and-price `
+  --context fixture.rctx `
+  --out-dir exact-output `
+  --districts 2
+```
+
+Branch-and-price remains a separate U.17 method and certificate posture.
+
+---
+
 ## Performance
 
 Benchmarks on Windows 11, 8 workers, 2020 census:
@@ -857,15 +965,16 @@ count matches adjacency graph, population balance ≤ 0.5%.
 : The state code is not recognized. Use two-letter USPS codes: `VT`, `CA`, `TX`.
 
 **`ERROR: adjacency file not found`**
-: Run `bisect fetch --release` to download adjacency files, then
-  `python scripts/data/generate_adj_bin.py` to convert them.
+: Run `bisect fetch --type adjacency --release` to download the adjacency
+  pickle, binary graph, and GEOID index.
 
 **`gpmetis: command not found`**
 : Install METIS: `conda install -c conda-forge metis`
 
 **`WARNING: falling back to pkl shim`**
-: The `.adj.bin` file is missing. Run `generate_adj_bin.py` to create it, or
-  ignore the warning — the pkl shim works correctly, just ~10% slower.
+: The `.adj.bin` file is missing. Re-run
+  `bisect fetch --type adjacency --release --force`; the pkl shim remains a
+  compatibility path but is not the preferred evidence workflow.
 
 **`ERROR: unsupported year 'X'`**
 : Valid years are `2020`, `2010`, `2000`, and (for `run`/`fetch`) `all`.

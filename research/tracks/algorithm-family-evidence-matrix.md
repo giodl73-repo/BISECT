@@ -20,6 +20,7 @@ all empirical results are complete.
 | U.18 Large-Neighborhood Search | validity-preserving improvement | `bisect-local-search`, `bisect-cli::improve_cmd` | `bisect improve`; staged `--search lns`/`tabu` | one-move L0; CLI/RPLAN sidecar L1 | empirical improvement distribution vs no-op cases |
 | U.19 Evolutionary Search Comparison | validity-preserving evolutionary comparison | `bisect-pareto`, `bisect-cli::pareto_cmd` | `bisect pareto`, selected-frontier flags | crossover/mutation validity; selected package verification | compare frontier behavior across seeds/objectives |
 | U.20 Plan Audit Certificates | fixed-point audit contract | `rplan-core`, `rplan-io`, `rplan-audit`, `bisect verify` | `rplan audit`, `bisect verify`, sidecar emission | schema specs, audit certificates, verifier tests | public-facing examples and failure-mode catalog |
+| U.21 Certified Recursive Bisection | proof-carrying canonical construction | `bisect-ilp::{certified_split,certified_tree,proof_backend}` | `bisect exact --method certified-recursive` | bounded tree packages, hostile corpus, OPB requests, RI connected block RCTX | scalable discovery, compact connectivity, RoundingSat/VeriPB State proof |
 
 ## Shared Figures
 

@@ -2,6 +2,11 @@
 
 This document provides a detailed explanation of the recursive bisection algorithm used for congressional redistricting.
 
+> **Certification frontier:** The maintained Rust implementation now includes
+> bounded exact per-cut certificates, recursive certificate trees, hostile
+> verification fixtures, and an OPB proof-request prototype. See
+> [Certified Recursive Bisection](concepts/certified-recursive-bisection.md).
+
 ## Core Concept
 
 **Problem**: Partition N tracts into K districts with equal population.

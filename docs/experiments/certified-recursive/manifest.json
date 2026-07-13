@@ -1,0 +1,18 @@
+{
+  "schema_version": "certified-recursive-ri-frontier-package-v1",
+  "package_id": "ri-2020-certified-root-frontier",
+  "status": "blocked",
+  "files": [
+    {
+      "path": "ri-2020-root-frontier.json",
+      "sha256": "018bc9130c7db75c12f52d1663b76dd4d73055a9e9b46a8d390c54575d907ba8"
+    }
+  ],
+  "builder_path": "scripts/research/build_ri_block_rctx.py",
+  "builder_sha256": "ca0621f32fa7a2d19f56a150cbedeb02fe44dc3339af122da60a63dd3fffac97",
+  "verification_commands": [
+    "python scripts/research/build_ri_block_rctx.py verify docs/experiments/certified-recursive/manifest.json",
+    "python scripts/research/build_ri_block_rctx.py verify docs/experiments/certified-recursive/manifest.json --check-rctx"
+  ],
+  "claim_boundary": "Local uncommitted county-bridged RCTX custody using the established BISECT island rule and a quantified proof frontier; not a certified split or scalable proof."
+}

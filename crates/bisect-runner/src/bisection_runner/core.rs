@@ -82,7 +82,14 @@ pub(crate) fn select_compact_split(
 /// Return the METIS version string.
 /// libmetis is vendored at compile time via the metis-rs crate; no external binary needed.
 pub fn detect_gpmetis_version() -> String {
-    "METIS 5.1.0 (vendored via metis-rs 0.2)".to_string()
+    #[cfg(feature = "c-ffi-engine")]
+    {
+        "METIS 5.1.0 (vendored C FFI via metis-rs 0.2)".to_string()
+    }
+    #[cfg(not(feature = "c-ffi-engine"))]
+    {
+        "metis-core (pure Rust workspace engine)".to_string()
+    }
 }
 
 /// METIS is now embedded via the metis-rs FFI crate — no external gpmetis binary needed.

@@ -1,72 +1,88 @@
 \section{Recursive Bisection Method}
 
-Recursive graph bisection, originally developed for distributing computational workloads across parallel processors~\cite{karypis1998metis}, adapts naturally to redistricting. The method represents a state's geography as a mathematical graph: census tracts become nodes, geographic adjacency defines edges. An algorithm then partitions this graph into $k$ districts of equal population by recursively splitting it in two.
+Recursive graph bisection, originally developed for distributing computational
+workloads across parallel processors~\cite{karypis1998metis}, can produce a
+reproducible geographic benchmark for redistricting. The method represents a
+state as a graph, balances population while partitioning the graph, and records
+the resulting assignments and parameters for independent review.
 
-\subsection{Algorithm Overview}
+\subsection{Benchmark Execution}
 
-The process begins with 85,000 census tracts (2020 data) forming a single connected graph. To create $k$ districts, the algorithm performs $\lceil \log_2 k \rceil$ rounds of bisection:
+The historical national pipeline used census tracts as graph nodes and tract
+population as the vertex weight. Edges connect units that share a published
+geographic boundary. In the default geographic profile, the edge weight is the
+shared-boundary length from the applicable TIGER/Line vintage. METIS minimizes
+the weighted cut while recursively allocating the required number of districts.
 
-\begin{enumerate}
-\item \textbf{Graph construction}: Census tracts become nodes weighted by population; edges connect adjacent tracts based on shared boundaries (queen contiguity).
-\item \textbf{Edge weighting}: Each edge $(i,j)$ connecting adjacent tracts receives weight:
-\[
-w(i,j) = \frac{\alpha \cdot s_{demo}(i,j)}{d(i,j) + \epsilon}
-\]
-where $d(i,j)$ is centroid distance (km), $s_{demo}(i,j) \in [0,1]$ measures demographic similarity via cosine similarity of racial/ethnic composition vectors, $\alpha$ is a scaling parameter balancing VRA objectives with compactness, and $\epsilon = 0.1$ prevents division by zero for adjacent tracts. Higher weights between demographically similar tracts preserve communities of interest, addressing Voting Rights Act requirements without explicit racial targeting. Full specification and weight distribution statistics provided in Supplementary Materials.
-\item \textbf{Bisection}: The METIS graph partitioning library~\cite{karypis1998metis} splits the graph into two balanced parts, minimizing the total weight of cut edges. This optimization produces compact districts by preferring cuts that separate dissimilar communities over those that split cohesive neighborhoods.
-\item \textbf{Recursion}: Each resulting partition becomes input for the next round until reaching the target number of districts.
-\end{enumerate}
+This profile excludes election results, party registration, incumbency,
+candidate identity, race, and community-of-interest submissions from benchmark
+generation. That exclusion is auditable from the configuration and manifest,
+but it does not make the profile value-free. Tract resolution, recursive
+structure, boundary weighting, population tolerance, random seed, and engine
+version can all affect the output.
 
-The method runs in near-linear time $O(n \log k)$ for $n$ census tracts and $k$ districts, enabling rapid iteration essential for ensemble analysis~\cite{deluca2026recursive}.
+Race-conscious VRA-aligned weighting and partisan-weighted analysis are
+separate research or case-specific profiles. They are not part of the default
+geographic benchmark and must not be used to describe that benchmark as both
+race-blind and VRA-compliant.
 
-\subsection{Algorithmic Parameters and Performance}
+\subsection{Reproducibility And Configuration}
 
-To ensure reproducibility and enable independent validation, we specify all algorithmic parameters, convergence criteria, and computational requirements.
-
-\subsubsection{METIS Configuration}
-
-The METIS graph partitioning library (version 5.1.0) performs bisection with the following configuration:
-
-\begin{itemize}
-\item \textbf{Partitioning method}: Recursive bisection (METIS\_PTYPE\_RB)
-\item \textbf{Objective}: Edge-cut minimization (METIS\_OBJTYPE\_CUT)
-\item \textbf{Number of bisection attempts} (\texttt{ncuts}): 10 independent runs per bisection, selecting the partition with minimum edge-cut. Multiple attempts reduce sensitivity to initial seed and improve solution quality.
-\item \textbf{Refinement iterations} (\texttt{niter}): 10 iterations of Kernighan-Lin refinement per bisection to locally optimize partition boundaries.
-\item \textbf{Imbalance tolerance} (\texttt{ufactor}): 1.005 (0.5\% maximum population deviation). Congressional districts require stricter tolerances than the METIS default (3\%) to satisfy \emph{Karcher v. Daggett} (1983) standards.
-\item \textbf{Random seed}: Fixed seed (42) for deterministic results across runs. Varying seeds produces ensemble distributions for robustness analysis.
-\item \textbf{Coarsening scheme}: Heavy-edge matching (default) to reduce graph size before partitioning.
-\end{itemize}
-
-These parameters balance solution quality (multiple attempts, refinement iterations) with computational efficiency (coarsening, near-linear complexity). The 0.5\% imbalance tolerance ensures constitutional population equality while permitting METIS sufficient flexibility for edge-cut optimization~\cite{deluca2026recursive}.
-
-\subsubsection{Convergence Criteria}
-
-Bisection terminates when one of the following criteria is met:
+A reproducible run must identify:
 
 \begin{itemize}
-\item \textbf{Population balance achieved}: Both partitions within ±0.5\% of target population (primary criterion)
-\item \textbf{Maximum iterations reached}: 10 refinement iterations (prevents infinite loops on pathological graphs)
-\item \textbf{No improvement threshold}: Edge-cut reduction $< 0.1\%$ over 3 consecutive iterations (early stopping when refinement saturates)
+\item census and TIGER/Line releases;
+\item geographic-unit index and adjacency definition;
+\item district count and population source;
+\item structure, edge-weight, search, and engine profiles;
+\item balance settings and seed;
+\item source commit, compiler, dependency lock, and binary provenance; and
+\item canonical hashes linking assignments, analysis, and reports.
 \end{itemize}
 
-In practice, 99.7\% of bisections achieve population balance within 0.5\% tolerance, with mean actual deviation of 0.12\%. The remaining 0.3\% require post-processing adjustment: tracts near partition boundaries are reassigned to achieve strict equality while minimizing edge-cut perturbation~\cite{deluca2026recursive}.
+The current project supports several structures, weight signals, and search
+modes. Results from one profile do not establish properties of another. The
+candidate national-standard decision record selects standard recursive
+bisection, geographic boundary weights, and one precommitted content-derived
+seed as a comparison benchmark. That seed path and block-level conformance
+remain implementation work; the historical tract outputs analyzed here should
+therefore be treated as research artifacts, not as completed national-standard
+certificates.
 
-\subsubsection{Computational Complexity}
+\subsection{Population And Contiguity}
 
-Table~\ref{tab:computational-performance} presents runtime and memory requirements across representative states, demonstrating scalability from small (Vermont, 1 district, 255 tracts) to large (California, 52 districts, 9,163 tracts).
+Population equality is reported as an observed property of each output, not as
+a claim that one configured tolerance is always legally sufficient. For
+congressional districts, the controlling legal principle is equality as nearly
+exact as practicable. A complete evidence package must report ideal population,
+maximum and total deviation, and any post-partition repair.
 
-\input{tables/table_computational_performance}
+Contiguity is evaluated against the published adjacency graph. Water, islands,
+point contacts, slivers, and bridge corrections can alter that graph and must be
+versioned rather than silently repaired.
 
-\textbf{Runtime scaling}: The algorithm exhibits near-linear empirical complexity $O(n^{1.12})$, close to theoretical $O(n \log k)$. California (9,163 tracts, 52 districts) partitions in 8.3 seconds, while Vermont (255 tracts, 1 district) completes in 0.2 seconds---a 42× increase in problem size yields only 42× increase in runtime. Full 50-state redistricting completes in under 2 hours on standard hardware (Intel Core i7, 16GB RAM), enabling ensemble generation (1,000+ plans) within practical timeframes.
+\subsection{Performance And Evidence Scope}
 
-\textbf{Memory scaling}: Peak memory usage grows linearly with tract count, ranging from 12MB (Vermont) to 387MB (California). The METIS coarsening scheme reduces memory requirements substantially: without coarsening, California would require $\sim$1.8GB for adjacency matrices. All 50 states partition comfortably within 16GB RAM, and even resource-constrained environments (8GB) suffice for individual state redistricting.
+The Rust implementation makes national experimentation practical, but runtime
+depends on state size, engine, data cache, profile, and search mode. Historical
+benchmark tables in this paper are engineering measurements tied to their named
+environment; they are not universal runtime guarantees.
 
-\textbf{Parallelization}: State-level partitioning is embarrassingly parallel---states share no dependencies. Distributing 50 states across 12 CPU cores reduces wall-clock time from 112 minutes (sequential) to 18 minutes (parallel), with near-linear speedup (6.2× on 12 cores). Within-state parallelization provides marginal benefit due to algorithm's recursive structure.
+Ensemble generation is distinct from producing one benchmark plan. A single
+run can be reproduced and compared, but it cannot define the distribution of
+valid alternatives. Ensemble percentile claims require archived real traces,
+multiple chains, convergence diagnostics, immutable election inputs, and
+uncertainty reporting.
 
-\textbf{Practical implications}: Computational efficiency enables (1) rapid iteration during commission deliberations (parameter adjustments complete in minutes), (2) ensemble analysis for uncertainty quantification (thousands of alternative plans), and (3) real-time transparency (public observers can regenerate plans during hearings). This accessibility contrasts with black-box proprietary software or month-long human mapmaking processes~\cite{deluca2026recursive}.
+\subsection{Input-Exclusion Defense}
 
-\subsection{The Impossibility Defense}
+The defensible procedural claim is narrow: a run whose manifest binds only
+population and geographic inputs cannot directly target partisan outcomes
+during execution using partisan data that it never receives. This is an
+input-exclusion defense, not an impossibility defense.
 
-Critically, the algorithm operates on population and geographic data only---it cannot access partisan information. While human mapmakers can gerrymander by splitting cities or packing opposition voters, recursive bisection lacks the input data required to identify partisan targets. This ``impossibility defense'' provides stronger protection against gerrymandering than intent-based tests: the algorithm cannot be instructed to gerrymander because it structurally cannot distinguish Democratic from Republican neighborhoods. Compact neutral maps can still reflect geographic voter concentration, as shown in Track C.5.
-
-The edge-weighting scheme permits human values to guide optimization---preserving minority communities, favoring compactness---while maintaining the impossibility defense. Parameters affect district characteristics but cannot target partisan outcomes without partisan data. This separation of normative goals from technical implementation parallels how Huntington-Hill apportionment embeds equality principles in a formula immune to partisan manipulation.
+Partisan consequences may still arise from political geography, and upstream
+choices can be manipulated if they are selected after observing outcomes. A
+credible standard therefore precommits assignment-affecting profiles, publishes
+the benchmark, reports sensitivity, and discloses every baseline-to-final
+modification. Human legal and community judgment remains necessary.

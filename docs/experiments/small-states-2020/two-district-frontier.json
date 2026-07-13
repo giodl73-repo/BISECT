@@ -1,0 +1,59 @@
+{
+  "schema_version": "certified-two-district-frontier-2020-v1",
+  "status": "operational-complete-population-proved",
+  "states": [
+    {
+      "state": "HI",
+      "unit_count": 14732,
+      "bridge_edge_count": 7633,
+      "max_population_deviation_scaled": 1,
+      "weighted_boundary_cut": 427181336,
+      "operational_package": "verified",
+      "population_proof": {
+        "status": "verified-unsat",
+        "model_variables": 706781,
+        "model_constraints": 941715,
+        "opb_sha256": "1e4d35868491bb4cf10abf36feeec709054dda00f96b6bd5f4047647930e3047",
+        "proof_bytes": 1963991,
+        "proof_sha256": "6e7d00c5d53593dc12dc5770cb2c1a779cf2c673fd8e5f65605f6e8641bffcaa"
+      },
+      "boundary_proof": {
+        "status": "timelimit",
+        "time_limit_seconds": 120,
+        "log_sha256": "a48f8d943e8742e33a2208a55d2b63b4eebd9068181f3e8ecba40df5d6509c18",
+        "decisions": 1767134,
+        "conflicts": 23542
+      },
+      "canonical_proof": "blocked-by-boundary",
+      "discovery_id": "sha256:efd3d83802ce72388cbbdb4ec27ae7a55654ab6cd5b75c30b5b8be40cbd06d16",
+      "audit_certificate_id": "sha256:0356471270f8fa670b4cc8135f266d8408e6b097084db4ccb54ee611fca21917"
+    },
+    {
+      "state": "NH",
+      "unit_count": 31948,
+      "bridge_edge_count": 0,
+      "max_population_deviation_scaled": 1,
+      "weighted_boundary_cut": 701295623,
+      "operational_package": "verified",
+      "population_proof": {
+        "status": "verified-unsat",
+        "model_variables": 1512580,
+        "model_constraints": 1773251,
+        "opb_sha256": "34ee1242db47d07c28eb0b5dbd273cdc73e7e11959b3e4cb7d153d22b4c8e8ee",
+        "proof_bytes": 4224397,
+        "proof_sha256": "b58c50a17414885b91f4a7a58229566c1a27321619b64147c77fbe339d64220d"
+      },
+      "boundary_proof": {
+        "status": "timelimit",
+        "time_limit_seconds": 120,
+        "log_sha256": "48b47380d1f7e391b390280d2d8a5c721da09b2c5dbc11fb604bad703156bc8f",
+        "decisions": 2728531,
+        "conflicts": 11222
+      },
+      "canonical_proof": "blocked-by-boundary",
+      "discovery_id": "sha256:44f5b3208fa3d073244c9f6ecb190286bde52db3e0b717c77ea552448f78b259",
+      "audit_certificate_id": "sha256:6fc7953135a6bd8efc4cdc007981ecbb5f5f5f00b9f065239c30ffc70f042664"
+    }
+  ],
+  "claim_boundary": "HI and NH have connected wall-to-wall operational roots and verified population optimality. Boundary and canonical optimality are not claimed."
+}

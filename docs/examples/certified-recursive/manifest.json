@@ -1,0 +1,83 @@
+{
+  "schema_version": "certified-recursive-fixture-manifest-v1",
+  "package_id": "certified-recursive-bounded-fixtures",
+  "status": "active",
+  "files": [
+    {
+      "path": "negative-corpus/false-root-optimum/certified-bisection-tree.json",
+      "sha256": "3dbce31520cc1642d9a0fae5923144562a7d7abcffb9d6630a8365c75a8c7b10"
+    },
+    {
+      "path": "negative-corpus/false-root-optimum/expected.json",
+      "sha256": "a1de5e91efee6f7cb9b31852a34cba52aaa1917f474faae338a48526af662e27"
+    },
+    {
+      "path": "negative-corpus/leaf-universe-tamper/certified-bisection-tree.json",
+      "sha256": "48e665db6aac64e07f11f2f53ffbaba5d39178565b88442faa10d22ede3a826b"
+    },
+    {
+      "path": "negative-corpus/leaf-universe-tamper/expected.json",
+      "sha256": "7849d57d868cc03e8458024be52198d0d1b6a21bb7da5a126e8e74965d501b4e"
+    },
+    {
+      "path": "negative-corpus/missing-leaf/certified-bisection-tree.json",
+      "sha256": "4d3d37bf1bb19dc01f2d187de7d9e37b3f0dcd3526f652637ed339e530e5a9a6"
+    },
+    {
+      "path": "negative-corpus/missing-leaf/expected.json",
+      "sha256": "6a405b7883b2cc77914295842ce70ba5a0d8c21bea2f32478b6ef360220cdbf6"
+    },
+    {
+      "path": "negative-corpus/node-order-tamper/certified-bisection-tree.json",
+      "sha256": "966b44e7b7a03ecf0117a442c399dcb6f6e443d981b6561fc7dd8c27a23e3566"
+    },
+    {
+      "path": "negative-corpus/node-order-tamper/expected.json",
+      "sha256": "481cd848030645b2c311ce247d0d2b478df8e2e3d4784686ef854ef1f89c8949"
+    },
+    {
+      "path": "negative-corpus/tree-id-tamper/certified-bisection-tree.json",
+      "sha256": "f68944e4abb0ee466f16aebecaab5b773ffd1407cf0077e9329eb1de81b8ee95"
+    },
+    {
+      "path": "negative-corpus/tree-id-tamper/expected.json",
+      "sha256": "c39df431429cb970a421d3da7176b36ed6a83e28d6a705bf693d6e6bf0d4dde1"
+    },
+    {
+      "path": "path8-k4/input.rctx",
+      "sha256": "44fac6757410fab22a35161cb345ee470f8a791ac5d42860d50341885a78d994"
+    },
+    {
+      "path": "path8-k4/output/audit-certificate.json",
+      "sha256": "c4105dc0a6e5198c955089635e45a7bfd53408f1c8a92bf446bf8f46e128a499"
+    },
+    {
+      "path": "path8-k4/output/certified-bisection-tree.json",
+      "sha256": "eda5af5314f1c4bcdd4cca122bb1639170fc15081939e0015f608c1d51f9001e"
+    },
+    {
+      "path": "path8-k4/output/certified-tree-package-manifest.json",
+      "sha256": "00f82362b756ed110891f7311fde808f580f8c3f54c106b60f32e99a47b19331"
+    },
+    {
+      "path": "path8-k4/output/exact.rctx",
+      "sha256": "e978f630f11d0d09a8e50af894df272c6727927b60ffb7e329ba9d2100f3776f"
+    },
+    {
+      "path": "path8-k4/output/exact.rplan",
+      "sha256": "3413bd0fb5d84127db859e014b33fdd8648bcd9a2ee11c2e886b4eb3d6370aad"
+    },
+    {
+      "path": "README.md",
+      "sha256": "3d71cdccdb24d648f24ebd10c8c8a4062c1b8649079c093d6df494e79b630ebb"
+    }
+  ],
+  "builder_path": "scripts/research/build_certified_recursive_fixtures.py",
+  "verifier_path": "crates/bisect-ilp/examples/certified_recursive.rs",
+  "verification_commands": [
+    "python scripts/research/verify_certified_recursive_fixtures.py",
+    "cargo test -p bisect-ilp --test certified_recursive_negative_corpus -- --test-threads=1",
+    "cargo run -p bisect-ilp --example certified_recursive -- verify-package docs/examples/certified-recursive/path8-k4/output"
+  ],
+  "claim_boundary": "Bounded synthetic recursive certification only; not unrestricted-map optimality, production proof solving, or block-scale readiness."
+}

@@ -1,0 +1,259 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 8d024a3f..7386b8fa 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -1228,6 +1228,7 @@ dependencies = [
+ [[package]]
+ name = "fletch-core"
+ version = "0.1.0"
++source = "git+https://github.com/giodl73-repo/FLETCH.git?branch=master#7c7aacd4fbc8753299e2fc3181368d2cc6d90337"
+ dependencies = [
+  "reqwest",
+  "serde",
+@@ -2311,6 +2312,7 @@ dependencies = [
+ [[package]]
+ name = "metis-core"
+ version = "0.1.0"
++source = "git+https://github.com/giodl73-repo/METIS-CORE.git?branch=master#78ae34090e043e79a206f2daffaa3889389b4790"
+ dependencies = [
+  "rand",
+  "rand_pcg",
+diff --git a/crates/bisect-cli/src/algo_config.rs b/crates/bisect-cli/src/algo_config.rs
+index 83ea4e6c..48d8ad38 100644
+--- a/crates/bisect-cli/src/algo_config.rs
++++ b/crates/bisect-cli/src/algo_config.rs
+@@ -14,6 +14,7 @@ use sha2::{Digest, Sha256};
+ ///   alpha_county: 2.0
+ ///   search: convergence            # maps to SeedCompositor
+ ///   convergence_threshold: 600
++///   seed: 42                        # fixed METIS seed for reproducibility
+ ///   balance_tolerance: 0.5
+ /// workers: 6
+ /// years: ["2020", "2010", "2000"]
+@@ -79,6 +80,10 @@ pub struct AlgorithmSection {
+     /// Fixed seed count for search == "multi".
+     pub seeds: Option<usize>,
+ 
++    /// METIS random seed. Required by profiles that claim assignment-level
++    /// reproducibility across independent executions.
++    pub seed: Option<u64>,
++
+     /// ReCom steps per burst for search == "short-burst". Default: 20.
+     pub burst_length: Option<usize>,
+ 
+@@ -340,6 +345,7 @@ impl AlgoYaml {
+             seeds,
+             metis: MetisParams {
+                 engine,
++                seed: sec.seed,
+                 ..MetisParams::default()
+             },
+             mode_label: None,
+@@ -418,6 +424,7 @@ pub fn write_template_config(
+         search: search.map(|s| s.to_string()),
+         convergence_threshold,
+         seeds,
++        seed: None,
+         burst_length: None,
+         n_bursts: None,
+         percentile: None,
+@@ -739,6 +746,23 @@ algorithm:
+         );
+     }
+ 
++    #[test]
++    fn test_fixed_seed_maps_to_metis_params() {
++        let yaml = r#"
++name: reference
++algorithm:
++  structure: standard-bisect
++  weights: geographic
++  search: single
++  seed: 424242
++"#;
++        let f = write_yaml(yaml);
++        let doc = AlgoYaml::from_file(f.path()).unwrap();
++        let algo = doc.to_algorithm_config().unwrap();
++        assert_eq!(doc.algorithm.seed, Some(424242));
++        assert_eq!(algo.metis.seed, Some(424242));
++    }
++
+     #[test]
+     fn test_structure_spectral_maps_correctly() {
+         use crate::runner::SplitStrategy;
+diff --git a/crates/bisect-cli/src/build_cmd.rs b/crates/bisect-cli/src/build_cmd.rs
+index 0ad5871f..6f014c08 100644
+--- a/crates/bisect-cli/src/build_cmd.rs
++++ b/crates/bisect-cli/src/build_cmd.rs
+@@ -560,6 +560,9 @@ fn algorithm_section_to_json(yaml: &AlgoYaml) -> serde_json::Value {
+     if let Some(seeds) = sec.seeds {
+         map.insert("seeds".to_string(), serde_json::json!(seeds));
+     }
++    if let Some(seed) = sec.seed {
++        map.insert("seed".to_string(), serde_json::json!(seed));
++    }
+     if let Some(tol) = sec.balance_tolerance {
+         map.insert("balance_tolerance".to_string(), serde_json::json!(tol));
+     }
+@@ -1187,12 +1190,30 @@ years: ["2020"]
+             "convergence_threshold must be absent"
+         );
+         assert!(!obj.contains_key("seeds"), "seeds must be absent");
++        assert!(!obj.contains_key("seed"), "seed must be absent");
+         assert!(
+             !obj.contains_key("balance_tolerance"),
+             "balance_tolerance must be absent"
+         );
+     }
+ 
++    #[test]
++    fn test_algorithm_section_json_records_fixed_seed() {
++        let f = write_yaml(
++            r#"
++name: reference
++algorithm:
++  structure: standard-bisect
++  weights: geographic
++  search: single
++  seed: 424242
++"#,
++        );
++        let yaml = AlgoYaml::from_file(f.path()).unwrap();
++        let val = algorithm_section_to_json(&yaml);
++        assert_eq!(val["seed"], serde_json::json!(424242_u64));
++    }
++
+     // ── Test 19: BuildCliArgs with explicit config path ───────────────────────
+ 
+     #[test]
+diff --git a/crates/bisect-cli/src/fetch.rs b/crates/bisect-cli/src/fetch.rs
+index 2973369a..55988701 100644
+--- a/crates/bisect-cli/src/fetch.rs
++++ b/crates/bisect-cli/src/fetch.rs
+@@ -185,7 +185,8 @@ pub fn build_fetch_list(
+ 
+         // PL 94-171 redistricting file
+         if want_pl {
+-            if let Some(url) = state.pl94171.get(year) {
++            if let Some(manifest_url) = state.pl94171.get(year) {
++                let url = pl94171_url(code, &state.name, year, manifest_url);
+                 let raw = url.split('/').last().unwrap_or("data.zip");
+                 let filename = raw.split('?').next().unwrap_or(raw);
+                 let local_path = data_dir
+@@ -198,7 +199,7 @@ pub fn build_fetch_list(
+                     state_code: code.clone(),
+                     year: year.to_string(),
+                     kind: "pl94171".to_string(),
+-                    url: Some(url.clone()),
++                    url: Some(url),
+                     available_locally: local_path.exists(),
+                     local_path,
+                     done_marker,
+@@ -365,6 +366,17 @@ B25035_001E,NAME&for=tract:*&in=state:{fips}"
+     items
+ }
+ 
++fn pl94171_url(code: &str, state_name: &str, year: &str, manifest_url: &str) -> String {
++    if year == "2020" {
++        let census_dir = state_name.replace(' ', "_");
++        return format!(
++            "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/{census_dir}/{}2020.pl.zip",
++            code.to_lowercase()
++        );
++    }
++    manifest_url.to_string()
++}
++
+ // ---------------------------------------------------------------------------
+ // Print check-only report
+ // ---------------------------------------------------------------------------
+@@ -473,7 +485,7 @@ pub fn download_items(
+                         release_tag,
+                         "--pattern",
+                         &format!(
+-                            "{}_adjacency_{}.pkl",
++                            "{}_adjacency_{}*",
+                             item.state_code.to_lowercase(),
+                             item.year
+                         ),
+@@ -1092,6 +1104,20 @@ mod tests {
+             "VT TIGER URL"
+         );
+         assert!(vt.pl94171["2020"].contains("vermont"), "VT PL URL");
++        assert_eq!(
++            pl94171_url("VT", &vt.name, "2020", &vt.pl94171["2020"]),
++            "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Vermont/vt2020.pl.zip"
++        );
++    }
++
++    #[test]
++    fn test_rhode_island_2020_pl_url_uses_current_census_naming() {
++        let manifest = load_manifest().unwrap();
++        let ri = manifest.states.get("RI").expect("RI must exist");
++        assert_eq!(
++            pl94171_url("RI", &ri.name, "2020", &ri.pl94171["2020"]),
++            "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Rhode_Island/ri2020.pl.zip"
++        );
+     }
+ 
+     #[test]
+diff --git a/crates/bisect-cli/src/output.rs b/crates/bisect-cli/src/output.rs
+index 39e6995b..5b0765e8 100644
+--- a/crates/bisect-cli/src/output.rs
++++ b/crates/bisect-cli/src/output.rs
+@@ -8,7 +8,7 @@
+ /// BOUNDARY invariant: both files are written together or neither is.
+ /// This eliminates the vra_mode premature-clear class of bugs where
+ /// vra_analysis.pkl was not written.
+-use std::collections::HashMap;
++use std::collections::{BTreeMap, HashMap};
+ use std::fs;
+ use std::path::{Path, PathBuf};
+ use thiserror::Error;
+@@ -76,8 +76,12 @@ pub fn write_state_outputs(
+     }
+ 
+     // Write assignments to temp file
+-    let assignments_json =
+-        serde_json::to_string_pretty(assignments).map_err(|e| OutputError::Json(e.to_string()))?;
++    let canonical_assignments: BTreeMap<String, usize> = assignments
++        .iter()
++        .map(|(&unit, &district)| (unit.to_string(), district))
++        .collect();
++    let assignments_json = serde_json::to_string_pretty(&canonical_assignments)
++        .map_err(|e| OutputError::Json(e.to_string()))?;
+     fs::write(&tmp_assignments, &assignments_json).map_err(|e| OutputError::Io {
+         path: tmp_assignments.clone(),
+         source: e,
+@@ -400,6 +404,21 @@ mod tests {
+         assert_eq!(parsed.len(), orig.len());
+     }
+ 
++    #[test]
++    fn test_assignments_json_has_canonical_key_order() {
++        let tmp = TempDir::new().unwrap();
++        let assignments: HashMap<usize, usize> = [(10, 2), (2, 1), (1, 1)].into_iter().collect();
++        write_state_outputs(tmp.path(), &assignments, None).unwrap();
++        let content = std::fs::read_to_string(tmp.path().join("final_assignments.json")).unwrap();
++        let one = content.find("\"1\"").unwrap();
++        let two = content.find("\"2\"").unwrap();
++        let ten = content.find("\"10\"").unwrap();
++        assert!(
++            one < ten && ten < two,
++            "assignment keys must be sorted lexicographically"
++        );
++    }
++
+     // ── 20 additional L0 tests ───────────────────────────────────────────────
+ 
+     // -- write_state_outputs error cases -------------------------------------
+diff --git a/rust-toolchain.toml b/rust-toolchain.toml
+index 452a5c88..caaad122 100644
+--- a/rust-toolchain.toml
++++ b/rust-toolchain.toml
+@@ -1,4 +1,4 @@
+ [toolchain]
+-channel = "stable"
++channel = "1.95.0"
+ components = ["rustfmt", "clippy"]
+ profile = "default"

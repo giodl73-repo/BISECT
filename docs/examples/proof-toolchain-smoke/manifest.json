@@ -1,0 +1,19 @@
+{
+  "schema_version": "certified-proof-toolchain-smoke-package-v1",
+  "package_id": "roundingsat-veripb-smoke",
+  "status": "verified",
+  "files": {
+    "compact-boundary.opb": "c8fb9a5c14c5c28b0046e899c6956ecdda8f51d864c25266494d50533ba4203e",
+    "compact-boundary.pbp": "d6962503eed6fdfe6b8d96b195a19d9fab2c88b76c261d9159d0a72827a072c6",
+    "population.opb": "0467c50312e430df1fed2fae0dfc0af5daffa3bbc44a127a8ebfb4a29d1a672b",
+    "population.pbp": "c06c749431db6eb871fd80b91e55446598581e3869cf0acab113ad2185971fb2",
+    "provenance.json": "fda201284e44af7976265b44a65b210af91b3fc64897af2d3e569d51e2810d91",
+    "README.md": "5d582a6441c5c44cc1ef7b6e4a4c4a441d114f114709cec9ae1c087363763e84"
+  },
+  "verifier_path": "scripts/research/verify_proof_toolchain_smoke.py",
+  "verification_commands": [
+    "python scripts/research/verify_proof_toolchain_smoke.py",
+    "veripb --requireUnsat --stats population.opb population.pbp"
+  ],
+  "claim_boundary": "One bounded UNSAT proof smoke test; not State-scale certification."
+}

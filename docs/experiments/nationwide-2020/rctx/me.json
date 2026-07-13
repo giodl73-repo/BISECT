@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "maine",
+  "state_code": "ME",
+  "state_fips": "23",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/me_blocks_2020.rctx",
+  "rctx_bytes": 12450113,
+  "rctx_sha256": "cbcae291c238bb09807fb1447372ea4da499f5527d8f6b9ce9a1653e564b344a",
+  "context_hash": "sha256:50d9eb63df53d3d1e72b5c64c3a633581ae32e53e0bc60fb848632d92f05fa1a",
+  "unit_universe_hash": "sha256:a460f20c69dba7ebba8ab32737c9ca4ff7fa0c491b5a4dc6c20a8aac3b0679db",
+  "unit_count": 47138,
+  "population_total": 1362359,
+  "land_edge_count": 116322,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

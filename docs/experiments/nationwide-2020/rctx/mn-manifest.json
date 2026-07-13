@@ -1,0 +1,14 @@
+{
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "package_id": "mn-2020-block-rctx",
+  "status": "ready",
+  "files": [
+    {
+      "path": "mn.json",
+      "sha256": "ebe817dbe22c245bdaa867692e6c7069f34f3607d4950eab0e3b79e3d8a5bcfa"
+    }
+  ],
+  "builder_path": "scripts/research/build_state_block_rctx.py",
+  "builder_sha256": "9bee87dca1fae9eb8d0752f31dfd24ec278b222373e9cc932ab07326e476d54a",
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

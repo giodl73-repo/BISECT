@@ -1,0 +1,18 @@
+{
+  "schema_version": "ri-certified-discovery-frontier-package-v1",
+  "package_id": "ri-2020-root-discovery-frontier",
+  "status": "unproved-incumbent",
+  "files": [
+    {
+      "path": "ri-discovery-frontier.json",
+      "sha256": "6435ea264bbc949461dc6ebc8dd80d43fded8af570ad2f67fc83f70fd451143e"
+    }
+  ],
+  "analyzer_path": "scripts/research/analyze_ri_certified_discovery.py",
+  "analyzer_sha256": "7856f79efb4de4b23c0b6050a2b046443a7ba942cc147b0d105e6cfe79fd4e93",
+  "verification_commands": [
+    "python scripts/research/analyze_ri_certified_discovery.py verify docs/experiments/scalable-certified/manifest.json",
+    "python scripts/research/analyze_ri_certified_discovery.py verify docs/experiments/scalable-certified/manifest.json --check-local"
+  ],
+  "claim_boundary": "Hash-bound deterministic METIS discovery with exact objective and connectivity validation; not an optimality proof or certified Rhode Island split."
+}

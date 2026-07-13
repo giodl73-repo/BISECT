@@ -176,3 +176,17 @@ DCR-003 is satisfied only at L1 role-simulation level and is now
 defined. L2 closure requires a real non-author reviewer or operator to follow
 one path end to end or to a documented blocker, with friction dispositioned by
 COMMONS/operator-review.
+
+## NRS challenge-bundle automated non-author run
+
+On 2026-07-10, a fresh non-author automated operator reconstructed the
+Rhode Island reference source from the base commit plus overlay, acquired the
+public Census and adjacency inputs, reproduced both assignment hashes, obtained
+`label-verify: VERIFIED`, and passed the G.1--G.3 package verifiers.
+
+Record:
+`docs/external/nrs-v0.1-challenge-bundle/replication-record-2026-07-10-agent.md`.
+
+This is useful external-style reproducibility evidence, but it does not replace
+the desired human DCR-003 walkthrough. DCR-003 remains open for a real human
+operator and COMMONS disposition.

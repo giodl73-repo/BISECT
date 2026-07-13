@@ -15,11 +15,11 @@ Source index: `docs/PAPERS.md`.
 
 | Measure | Count | Evidence |
 |---|---:|---|
-| Indexed paper rows | 146 | Rows matching `\| CODE.NUM \|` in `docs/PAPERS.md`. |
-| Rows with PDF links | 134 | Indexed rows whose artifact column links a PDF. |
-| Planned/source-only rows | 12 | Indexed rows whose artifact column has no PDF link; currently V.0 through V.11. |
-| Committed PDFs under `docs/papers/` | 135 | File inventory, not all necessarily linked from the paper index. |
-| Research `.tex` files | 1569 | Source inventory across `research/`. |
+| Indexed paper rows | 206 | Rows matching `\| CODE.NUM \|` in `docs/PAPERS.md`. |
+| Rows with PDF links | 206 | Every current indexed row links a PDF. |
+| Planned/source-only rows | 0 | Source-only work may exist outside the current paper index. |
+| Committed PDFs under `docs/papers/` | 207 | File inventory; one PDF is not represented by a distinct indexed row. |
+| Research `.tex` files | 1728 | Source inventory across `research/`. |
 
 ## Track coverage
 
@@ -36,10 +36,18 @@ Source index: `docs/PAPERS.md`.
 | J | 7 |
 | K | 8 |
 | L | 7 |
-| M | 5 |
+| M | 10 |
+| N | 6 |
+| O | 6 |
+| P | 6 |
+| Q | 5 |
+| R | 5 |
+| S | 5 |
 | T | 17 |
 | U | 21 |
-| V | 12 |
+| V | 22 |
+| W | 6 |
+| X | 6 |
 
 ## Evidence posture mapping
 
@@ -53,7 +61,7 @@ and note fields:
 | `Accepted` or `reviewed draft` | `internal_review_marker` | Internal project review only; not external peer review or venue acceptance. |
 | `package`, `fixture`, or `verified` | `package_or_fixture_evidence_claimed` | Evidence exists only within the named package/fixture scope. |
 | `pending`, `required`, or `missing real-evidence` | `evidence_gap_declared` | The row itself blocks final or release-grade reliance on the affected claim. |
-| `planned` | `planned_gap_declared` | The paper is not yet PDF-backed in the index. |
+| `planned` or `protocol` | `planned_gap_declared` | A PDF may document a proposed method without completed empirical evidence. |
 
 ## Declared gap rows
 
@@ -68,23 +76,14 @@ or missing-real-evidence language:
 | U.5 | adaptive alpha-trace smoke package added; state convergence archive pending | State convergence archive before final adaptive-MCMC claims. |
 | U.6 | solver package required | Solver package before exact-redistricting certificate claims. |
 | U.11 | resolution mapping smoke package added; autocorrelation archive pending | Autocorrelation archive before final resolution-sensitivity claims. |
-| V.0 | planned | PDF/source evidence required before paper-backed claims. |
-| V.1 | planned | PDF/source evidence required before paper-backed claims. |
-| V.2 | planned | PDF/source evidence required before paper-backed claims. |
-| V.3 | planned | PDF/source evidence required before paper-backed claims. |
-| V.4 | planned | PDF/source evidence required before paper-backed claims. |
-| V.5 | planned | PDF/source evidence required before paper-backed claims. |
-| V.6 | planned | PDF/source evidence required before paper-backed claims. |
-| V.7 | planned | PDF/source evidence required before paper-backed claims. |
-| V.8 | planned | PDF/source evidence required before paper-backed claims. |
-| V.9 | planned | PDF/source evidence required before paper-backed claims. |
-| V.10 | planned | PDF/source evidence required before paper-backed claims. |
-| V.11 | planned | PDF/source evidence required before paper-backed claims. |
-| G.1 | active synthetic plus missing real-evidence packages | Archived real trace, election/metric inputs, diagnostics, and RPLAN/RCTX packages before final real-ensemble claims. |
-| G.2 | active synthetic plus missing real-evidence packages | Archived real trace, election/metric inputs, diagnostics, and RPLAN/RCTX packages before final real-ensemble claims. |
-| G.3 | active synthetic plus missing real-evidence packages | Archived real trace, election/metric inputs, diagnostics, and RPLAN/RCTX packages before final real-ensemble claims. |
+| G.1 | active three-state real package plus retained synthetic/missing-evidence history | RI/IA/NC cut-fraction claims may cite the real package with ESS, metric-identity, and cross-tool caveats; former six-state percentiles remain withdrawn. |
+| G.2 | active three-state real package | 2020 presidential seat percentiles may cite the package; 2016 and cross-election claims remain blocked by tract-universe mismatch. |
+| G.3 | active three-state cut-fraction package | Tract-graph cut-fraction positions are supported; Polsby--Popper, Reock, and polygon compactness percentiles remain unsupported. |
 | G.6 | endpoint/seed smoke package added; production CLI pending | Production CLI evidence before production short-burst claims. |
 | G.12 | seed-stream and diagnostic smoke package added; production CLI pending | Production CLI evidence before calibrated-chain production claims. |
+| A.0 | bounded synthesis; inherits source-track gaps | Recompute or remove any headline claim whose underlying track remains synthetic, preliminary, or package-incomplete. |
+| B.02 | candidate advocacy proposal | Canonical-spec alignment, full seed/structure evidence, and external constitutional review before legislative reliance. |
+| C.6 | preregistered protocol with synthetic illustrative outputs | Real registration, recruitment, de-identified data, analysis code, and ethics documentation before empirical public-opinion claims. |
 
 ## Use rules
 

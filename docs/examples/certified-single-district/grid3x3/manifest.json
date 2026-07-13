@@ -1,0 +1,12 @@
+{
+  "schema_version": "certified-single-district-package-v1",
+  "package_id": "sha256:cd8efab3ffe67b789fce6586f088529921399dca1f7e5b4e2f92a2edc401993f",
+  "status": "verified",
+  "instance_hash": "sha256:3e541233bb4ff51c272af2dce1eac4219fedf73a2fc0874bdeaf08b494cd3e1d",
+  "certificate_id": "sha256:cd8efab3ffe67b789fce6586f088529921399dca1f7e5b4e2f92a2edc401993f",
+  "files": {
+    "single-district-certificate.json": "662aba276233013f48731941575a0b85bb3660ec790e64065f52533314a11c02",
+    "single-district-instance.json": "8e87358f25ce445ffef7b4f50a65141cf6967c3c2adf4755f1f6c28a98442b23"
+  },
+  "claim_boundary": "Complete connected wall-to-wall one-district assignment; no nontrivial boundary optimization exists."
+}

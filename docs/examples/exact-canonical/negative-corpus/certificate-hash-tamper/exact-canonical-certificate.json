@@ -1,0 +1,41 @@
+{
+  "schema_version": "exact-canonical-certificate-v1",
+  "certificate_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "instance_hash": "sha256:5e49ddf32402692abe4608873db8b105566d53fede804050f423b6aceba24524",
+  "model_id": "exact-canonical-k2-exhaustive-v1",
+  "result": {
+    "result": "optimal",
+    "assignment": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "objective": {
+      "primary": {
+        "max_population_deviation_scaled": 0,
+        "total_population_deviation_scaled": 0,
+        "weighted_boundary_cut": 1
+      },
+      "canonical_assignment": [
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  },
+  "proof": {
+    "proof_kind": "label-fixed-exhaustive-enumeration",
+    "fixed_label_unit": 0,
+    "enumerated_assignments": 7,
+    "feasible_assignments": 3,
+    "primary_objective_ties": 1,
+    "lower_bound": {
+      "max_population_deviation_scaled": 0,
+      "total_population_deviation_scaled": 0,
+      "weighted_boundary_cut": 1
+    },
+    "transcript_id": "sha256:67aaf58b1df44481f4984c99a2b1eece12bf030fa6cc996d7431e917aea8f7f0"
+  }
+}

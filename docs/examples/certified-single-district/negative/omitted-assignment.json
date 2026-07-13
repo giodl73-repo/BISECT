@@ -1,0 +1,21 @@
+{
+  "schema_version": "certified-single-district-certificate-v1",
+  "certificate_id": "sha256:cd8efab3ffe67b789fce6586f088529921399dca1f7e5b4e2f92a2edc401993f",
+  "instance_hash": "sha256:3e541233bb4ff51c272af2dce1eac4219fedf73a2fc0874bdeaf08b494cd3e1d",
+  "unit_universe_hash": "sha256:b65a11c8b91e967046a7a926b535ffc75c40b966d6e24c257fc04252bf63ed7b",
+  "assignment": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "unit_count": 9,
+  "population_total": 900,
+  "weighted_boundary_cut": 0,
+  "connected": true,
+  "proof_kind": "trivial-wall-to-wall-k1"
+}

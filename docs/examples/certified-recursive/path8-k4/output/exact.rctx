@@ -1,0 +1,112 @@
+{
+  "rctx_version": "0.1",
+  "context_hash": "sha256:4d1a232f1b455af0df304293660358017721d5ba6bf0515e6db2cb58a74df86b",
+  "units": {
+    "unit_kind": "imported",
+    "state": "TT",
+    "year": 2020,
+    "canonical_order": "explicit-unit-ids",
+    "unit_ids": [
+      "u00",
+      "u01",
+      "u02",
+      "u03",
+      "u04",
+      "u05",
+      "u06",
+      "u07"
+    ],
+    "unit_universe_hash": "sha256:d10bce1e7767f2acf674e23dba884baef92a23ccbbcd0c68789611011579a8fe",
+    "source_id": "certified-recursive-path8"
+  },
+  "graph": {
+    "edge_semantics": "undirected",
+    "adjacency": [
+      [
+        {
+          "to": 1,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 0,
+          "kind": "boundary"
+        },
+        {
+          "to": 2,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 1,
+          "kind": "boundary"
+        },
+        {
+          "to": 3,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 2,
+          "kind": "boundary"
+        },
+        {
+          "to": 4,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 3,
+          "kind": "boundary"
+        },
+        {
+          "to": 5,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 4,
+          "kind": "boundary"
+        },
+        {
+          "to": 6,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 5,
+          "kind": "boundary"
+        },
+        {
+          "to": 7,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 6,
+          "kind": "boundary"
+        }
+      ]
+    ]
+  },
+  "populations": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+  ],
+  "source_hashes": {
+    "fixture": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  }
+}

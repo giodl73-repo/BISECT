@@ -61,8 +61,8 @@
 
 \title{%
   \textbf{Where Does the Algorithmic Map Fall?}\\
-  \textbf{\ar{} vs.\ \gc{} Ensemble for Six States}\\[0.4em]
-  \large A State-by-State Percentile Analysis\\[0.8em]
+  \textbf{BISECT vs.\ \gc{} Ensembles in Three States}\\[0.4em]
+  \large Real Traces, Diagnostics, and Cross-Tool Disagreement\\[0.8em]
   \normalsize\textit{G.1 --- GerryChain Congressional Comparison}%
 }
 
@@ -80,42 +80,24 @@
 
 \begin{abstract}
 \noindent
-The most important missing comparison in algorithmic redistricting research
-is the direct placement of a deterministic algorithmic plan within a
-Markov-chain ensemble.  This paper gives that comparison protocol for six
-congressional delegation states using \gc{} \recom{} ensembles: North Carolina
-($k=14$), Wisconsin ($k=8$), Georgia ($k=14$), Pennsylvania ($k=17$), Texas
-($k=38$), and California ($k=52$).
-
-The comparison metric is \emph{normalised edge-cut fraction}---the fraction
-of census-tract boundaries that cross district lines, the quantity METIS
-directly minimises.  The central finding is structural, not incidental: the
-\ar{} algorithm minimises edge cut by design, so the \ar{} plan is expected
-to fall at the \emph{low end} of the cut-fraction distribution, corresponding
-to the \emph{high end} of compactness.  Any numerical percentile claim requires
-the archived ensemble traces, sample definition, diagnostics, and metric version
-that produced it; without those artifacts, the examples are calibration targets
-rather than final external-validation evidence.
-
-The legal implication is reframed accordingly.  The \ar{} plan is defensible
-not because it is \emph{typical} but because it is produced by a declared
-compactness-minimizing rule.  Any stronger courtroom claim must travel with the
-plan package and ensemble diagnostics.
+We compare the tract-level NRS v0.1 BISECT benchmark with four-chain,
+2,000-step Rust ReCom and GerryChain ensembles in Rhode Island, Iowa, and North
+Carolina.  All inputs, traces, RPLAN/RCTX baselines, diagnostics, and hashes are
+archived.  Rhode Island's benchmark cut fraction falls at the 1.35th percentile
+in Rust and 1.81st in GerryChain.  Iowa falls at 0.33rd and 0.88th percentiles,
+but effective sample sizes are too small for a stable sub-1\% tail claim.
+North Carolina falls at 0--0.2\%, yet pooled ESS is only 87--109 and the two
+implementations produce materially different cut distributions. Wisconsin was
+removed before sampling because its benchmark contained a disconnected
+district. These results replace the earlier unsupported six-state percentile
+tables and demonstrate why trace custody, diagnostics, and cross-tool
+comparison are prerequisites for any extremum claim.
 \end{abstract}
 
 \tableofcontents
 \newpage
 
-\input{sections/01-introduction}
-\input{sections/02-states-studied}
-\input{sections/03-methodology}
-\input{sections/04-nc}
-\input{sections/05-wi-ga-pa}
-\input{sections/06-tx-ca}
-\input{sections/07-summary-table}
-\input{sections/08-legal-argument}
-\input{sections/08b-current-boundary}
-\input{sections/09-conclusion}
+\input{sections/10-real-evidence}
 
 \bibliographystyle{plainnat}
 \bibliography{references}

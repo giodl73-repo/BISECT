@@ -1,0 +1,79 @@
+{
+  "schema_version": "exact-canonical-independent-verifier-report-v1",
+  "verifier_id": "python-exact-canonical-independent-v1",
+  "verifier_path": "scripts/research/verify_exact_canonical_independent.py",
+  "verifier_sha256": "13856288b36c2409cd41e36b93e855f446ec1008be220b28ae1bb8cfef2c9310",
+  "positive_cases": [
+    {
+      "case": "path4-optimal",
+      "result": "accepted",
+      "artifact_sha256": [
+        "604e11284632ee195d09d4dea529dfdf200e20572e557ebd9d0153819a8d8e3b",
+        "8c40eed9de8a42fd83112b4f1644816edc6d04e08d4494f41ed2fe121084e6a4",
+        "982aa1f66d918b6a3a0fa021fea1e3b48090b3ec539a6cf169350418818e2715"
+      ]
+    },
+    {
+      "case": "three-islands-infeasible",
+      "result": "accepted",
+      "artifact_sha256": [
+        "3d7f2d8f3fbb788cb36a53a2d0b0c0fc76fea72a0742e32250751a50dc04657e",
+        "1bd334fb3e90f79d77df940f8ceaf375c0e54ba7179a1dd63c926cc30663acaf",
+        "8c99b55c9389eda6944cc15c2834b6e3e0e7f135cf219f1febd5df8018e8d455"
+      ]
+    }
+  ],
+  "negative_cases": [
+    {
+      "case": "certificate-hash-tamper",
+      "result": "rejected",
+      "error": "certificate-id-mismatch",
+      "artifact_sha256": [
+        "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb",
+        "428f8608de5db0953c39b4eeba1956961489a2e7cc6c7437ca2ed973530472d4",
+        "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+      ]
+    },
+    {
+      "case": "disconnected-assignment",
+      "result": "rejected",
+      "error": "result-mismatch",
+      "artifact_sha256": [
+        "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb",
+        "37a570658456835bbdb3b38e002b3b06da3fcb615c378ec971b8be242289fac6",
+        "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+      ]
+    },
+    {
+      "case": "false-infeasibility",
+      "result": "rejected",
+      "error": "result-mismatch",
+      "artifact_sha256": [
+        "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb",
+        "61d01e30b882fcb284a4ea92c8ad5ceceeea80d77b502883e6e704b9ea36cb83",
+        "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+      ]
+    },
+    {
+      "case": "false-optimum",
+      "result": "rejected",
+      "error": "result-mismatch",
+      "artifact_sha256": [
+        "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb",
+        "58e812b667747a365b7ed15991d2b40eb2ec5b3ddd08935736615c0c9c241c79",
+        "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+      ]
+    },
+    {
+      "case": "noncanonical-tie",
+      "result": "rejected",
+      "error": "result-mismatch",
+      "artifact_sha256": [
+        "9266d6b7c1fa260071619269e2eafb2eea943898a8def4b5c38cb7681dee1ad6",
+        "c32d0b0b6eba589f54237e7da874633e2eb5f8d35c5d8753fb5b34d4c13a3b65",
+        "63dc7467cc01080971306d881d116b1feadff60bf694ba623d72d357456412e3"
+      ]
+    }
+  ],
+  "claim_boundary": "Independent Python exhaustive verification of bounded E0 JSON artifacts; not national-scale exactness or production-solver validation."
+}

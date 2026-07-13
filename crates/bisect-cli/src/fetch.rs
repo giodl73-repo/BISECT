@@ -185,7 +185,8 @@ pub fn build_fetch_list(
 
         // PL 94-171 redistricting file
         if want_pl {
-            if let Some(url) = state.pl94171.get(year) {
+            if let Some(manifest_url) = state.pl94171.get(year) {
+                let url = pl94171_url(code, &state.name, year, manifest_url);
                 let raw = url.split('/').last().unwrap_or("data.zip");
                 let filename = raw.split('?').next().unwrap_or(raw);
                 let local_path = data_dir
@@ -198,7 +199,7 @@ pub fn build_fetch_list(
                     state_code: code.clone(),
                     year: year.to_string(),
                     kind: "pl94171".to_string(),
-                    url: Some(url.clone()),
+                    url: Some(url),
                     available_locally: local_path.exists(),
                     local_path,
                     done_marker,
@@ -365,6 +366,17 @@ B25035_001E,NAME&for=tract:*&in=state:{fips}"
     items
 }
 
+fn pl94171_url(code: &str, state_name: &str, year: &str, manifest_url: &str) -> String {
+    if year == "2020" {
+        let census_dir = state_name.replace(' ', "_");
+        return format!(
+            "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/{census_dir}/{}2020.pl.zip",
+            code.to_lowercase()
+        );
+    }
+    manifest_url.to_string()
+}
+
 // ---------------------------------------------------------------------------
 // Print check-only report
 // ---------------------------------------------------------------------------
@@ -473,7 +485,7 @@ pub fn download_items(
                         release_tag,
                         "--pattern",
                         &format!(
-                            "{}_adjacency_{}.pkl",
+                            "{}_adjacency_{}*",
                             item.state_code.to_lowercase(),
                             item.year
                         ),
@@ -1092,6 +1104,20 @@ mod tests {
             "VT TIGER URL"
         );
         assert!(vt.pl94171["2020"].contains("vermont"), "VT PL URL");
+        assert_eq!(
+            pl94171_url("VT", &vt.name, "2020", &vt.pl94171["2020"]),
+            "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Vermont/vt2020.pl.zip"
+        );
+    }
+
+    #[test]
+    fn test_rhode_island_2020_pl_url_uses_current_census_naming() {
+        let manifest = load_manifest().unwrap();
+        let ri = manifest.states.get("RI").expect("RI must exist");
+        assert_eq!(
+            pl94171_url("RI", &ri.name, "2020", &ri.pl94171["2020"]),
+            "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Rhode_Island/ri2020.pl.zip"
+        );
     }
 
     #[test]

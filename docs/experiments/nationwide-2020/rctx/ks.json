@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "kansas",
+  "state_code": "KS",
+  "state_fips": "20",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/ks_blocks_2020.rctx",
+  "rctx_bytes": 44270256,
+  "rctx_sha256": "b97d42329955aa1b7e328b86a355c670d9681e4ef483d3584bd77ae0af3fe9b1",
+  "context_hash": "sha256:9d321d3bea375bd8a1603a651d612d737707fafcd248626545e9eed961865811",
+  "unit_universe_hash": "sha256:98cae48f00f8864c68e01e53f94c3d63b4fe414aae44ff93d45da6b4c07a55b3",
+  "unit_count": 172529,
+  "population_total": 2937880,
+  "land_edge_count": 408475,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

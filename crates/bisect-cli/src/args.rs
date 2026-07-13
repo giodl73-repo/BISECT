@@ -598,9 +598,31 @@ pub struct ImproveArgs {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, clap::ValueEnum)]
 pub enum ExactMethodArg {
+    /// Exact Canonical Benchmark E0 reference solver for bounded k=2 instances.
+    #[value(name = "canonical-exhaustive")]
+    CanonicalExhaustive,
+    /// Bounded exact certification of the complete standard-bisect tree.
+    #[value(name = "certified-recursive")]
+    CertifiedRecursive,
+    /// Deterministic METIS incumbent for subsequent certified proof requests.
+    #[value(name = "certified-discovery")]
+    CertifiedDiscovery,
     /// U.17 branch-and-price / column-generation report.
     #[value(name = "branch-and-price")]
     BranchAndPrice,
+}
+
+#[derive(Clone, Copy, Debug, Default, clap::ValueEnum, PartialEq, Eq)]
+pub enum DiscoveryRefinementArg {
+    /// Emit the raw METIS candidate after exact validation.
+    Metis,
+    /// Apply articulation-safe population repair only.
+    Population,
+    /// Apply population repair and bounded 0-, 1-, and 1-to-2 boundary moves.
+    Fast,
+    /// Apply all deterministic neighborhoods, including bounded 2-to-2 search.
+    #[default]
+    Full,
 }
 
 #[derive(Debug, clap::Args)]
@@ -609,7 +631,7 @@ pub struct ExactArgs {
     /// Input .rctx context file with graph and population data.
     #[arg(long)]
     pub context: std::path::PathBuf,
-    /// Output directory for branch-price-report.json and algorithm-lineage.json.
+    /// Output directory for exact reports, certificates, and plan packages.
     #[arg(long)]
     pub out_dir: std::path::PathBuf,
     /// Exact method.
@@ -627,6 +649,15 @@ pub struct ExactArgs {
     /// Maximum unit count for deterministic tiny exact solving.
     #[arg(long, default_value_t = 12usize)]
     pub exact_fixture_limit: usize,
+    /// Fixed timestamp for reproducible package artifacts.
+    #[arg(long)]
+    pub generated_at: Option<String>,
+    /// Seed for deterministic certified-discovery incumbent generation.
+    #[arg(long, default_value_t = 1u64)]
+    pub discovery_seed: u64,
+    /// Deterministic local refinement applied after METIS discovery.
+    #[arg(long, value_enum, default_value_t = DiscoveryRefinementArg::Full)]
+    pub discovery_refinement: DiscoveryRefinementArg,
 }
 
 // ---------------------------------------------------------------------------

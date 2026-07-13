@@ -1,0 +1,18 @@
+{
+  "schema_version": "ri-compact-proof-model-frontier-package-v1",
+  "package_id": "ri-2020-root-proof-model-frontier",
+  "status": "partial-proof",
+  "files": [
+    {
+      "path": "ri-model-frontier.json",
+      "sha256": "737f949e4ec31787f98a628c806ead9a833fe6470d57ffa31555fadc13565f47"
+    }
+  ],
+  "analyzer_path": "scripts/research/analyze_ri_model_package.py",
+  "analyzer_sha256": "e66d66845abb7f312caa1b313e37c2b6b45ccf9d7f24c0f036719942c015b017",
+  "verification_commands": [
+    "python scripts/research/analyze_ri_model_package.py verify docs/experiments/scalable-certified/model-manifest.json",
+    "python scripts/research/analyze_ri_model_package.py verify docs/experiments/scalable-certified/model-manifest.json --check-local"
+  ],
+  "claim_boundary": "Hash-bound compact RI proof inputs and a timed solver probe; not a proof result or certified split."
+}

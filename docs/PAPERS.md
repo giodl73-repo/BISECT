@@ -1,6 +1,9 @@
 # Research Papers
 
-190+ papers across active tracks (A–X). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory. Every active track now has compiled PDFs in this index.
+207 indexed papers across 23 active tracks (A--X, excluding H). PDFs open
+directly from the links below. LaTeX sources are in
+[`research/tracks/`](../research/tracks/), with each series in its own track
+subdirectory. Every indexed row currently links a compiled PDF.
 
 Papers are organised by the question they answer. Each paper's series code is shown for cross-reference. To recompile: `cd research && make docs`
 
@@ -97,9 +100,10 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | [PDF](papers/U.18+large-neighborhood-search.pdf) | reviewed draft; public lineage and benchmark packages |
 | U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | [PDF](papers/U.19+evolutionary-search-comparison.pdf) | reviewed draft; public selected-frontier package |
 | U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | [PDF](papers/U.20+plan-audit-certificates.pdf) | reviewed draft; public package corpus and audit benchmark |
+| U.21 | Certified Recursive Bisection — proof-carrying cuts and recursive certificate trees | [PDF](papers/U.21+certified-recursive-bisection.pdf) | bounded implementation and RI input frontier; State proof pending |
 
-U.0 and U.12-U.20 are reviewed drafts with PDFs and paper-level simulated
-review/revision artifacts. Search/optimization additions through U.20 are
+U.0 and U.12-U.21 are reviewed or evidence-bounded drafts with PDFs and paper-level simulated
+review/revision artifacts. Search/optimization additions through U.21 are
 implemented as audited vertical slices where they touch final plans. U.16-U.20
 now have public RPLAN package evidence through the golden, method, and benchmark package corpora and
 the `rplan verify-certificate` / `bisect verify --manifest` bridge. Writing goal:
@@ -158,9 +162,9 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
 | G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | package/diagnostic framing updated |
-| G.1 | GerryChain Congressional Comparison — 6 key states | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | active synthetic + missing real-evidence packages |
-| G.2 | Partisan Outcome Distributions | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | active synthetic + missing real-evidence packages |
-| G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | active synthetic + missing real-evidence packages |
+| G.1 | Real ReCom Comparison — RI/IA/NC, Rust vs GerryChain | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | active real package; WI eligibility failure retained |
+| G.2 | 2020 Presidential Seat Distributions — RI/IA/NC | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | active real package; 2016 excluded for tract mismatch |
+| G.3 | Tract Cut-Fraction Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | active real package; polygon compactness claims withdrawn |
 | G.4 | Ensemble Diagnostics — R-hat, ESS, Hamming | [PDF](papers/G.4+ensemble-diagnostics-paper.pdf) | |
 | G.5 | Convergence and Mixing Time Analysis | [PDF](papers/G.5+convergence-mixing-analysis.pdf) | diagnostic, not proof of mixing |
 | G.6 | Short-Burst Optimization for Minimum-Edge-Cut Redistricting | [PDF](papers/G.6+short-burst.pdf) | endpoint/seed smoke package added; production CLI pending |
@@ -192,7 +196,7 @@ Validation: does the algorithm produce robust results across resolutions, census
 | C.3 | Cross-Census Temporal Stability | [PDF](papers/C.3+temporal-stability.pdf) |
 | C.4 | Twenty Years of Congressional Redistricting | [PDF](papers/C.4+longitudinal-analysis.pdf) |
 | C.5 | Efficiency Gap Analysis — near-zero EG as byproduct | [PDF](papers/C.5+efficiency-gap-analysis.pdf) |
-| C.6 | User Study — algorithmic maps rated fairer by public | [PDF](papers/C.6+user-study.pdf) |
+| C.6 | User Study Protocol — planned survey with synthetic illustrative outputs | [PDF](papers/C.6+user-study.pdf) |
 | C.7 | Uncertainty Quantification — 95% CI for +22% improvement: [+15%, +29%] | [PDF](papers/C.7+uncertainty-quantification.pdf) |
 
 ---
@@ -253,7 +257,7 @@ Federal statute, state adoption pathways, court-ordered remedies, competitive el
 
 | Code | Title | PDF |
 |------|-------|-----|
-| B.02 | ApportionRegions as Geographic Completion of Huntington-Hill (the one-sentence law) | [PDF](papers/B.02+one-federal-law.pdf) |
+| B.02 | Federal benchmark-and-disclosure proposal aligned to NRS v0.1 | [PDF](papers/B.02+one-federal-law.pdf) |
 | D.4 | Legal Implementation Framework — 50-state adoption pathways + model statute | [PDF](papers/D.4+legal-implementation.pdf) |
 | C.8 | Competitive Elections — algorithmic maps produce 30% more swing districts | [PDF](papers/C.8+competitive-elections.pdf) |
 | C.9 | Adoption Case Studies — Arizona, California, North Carolina | [PDF](papers/C.9+adoption-case-studies.pdf) |
@@ -268,12 +272,12 @@ Synthesis, guides, and practitioner materials.
 
 | Code | Title | PDF |
 |------|-------|-----|
-| A.0 | National-Scale Demonstration — 50 states, 3 census decades | [PDF](papers/A.0+synthesis-metapaper.pdf) |
+| A.0 | National-Scale Demonstration — bounded synthesis with declared evidence gaps | [PDF](papers/A.0+synthesis-metapaper.pdf) |
 | A.1 | Research Portfolio Guide | [PDF](papers/A.1+portfolio-guide.pdf) |
 | A.2 | Portfolio Summary | [PDF](papers/A.2+portfolio-summary.pdf) |
 | A.3 | Portfolio Visualization — visual guide for non-technical audiences | [PDF](papers/A.3+portfolio-visualization.pdf) |
 | A.4 | Replication Materials — AEA-compliant reproducibility package | [PDF](papers/A.4+replication-materials.pdf) |
-| A.5 | Policy Brief — 4 pages for legislative staff and commissioners | [PDF](papers/A.5+policy-brief.pdf) |
+| A.5 | Policy Brief — evidence standard now, exact canonical benchmark next | [PDF](papers/A.5+policy-brief.pdf) |
 
 ---
 

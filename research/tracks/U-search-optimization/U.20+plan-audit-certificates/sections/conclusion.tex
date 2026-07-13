@@ -13,3 +13,9 @@ profile-scoped and tied to verifiable package semantics rather than broad legal
 or political conclusions. U.20 therefore turns the algorithm family into an
 inspectable artifact pipeline: method evidence first, fixed-point package next,
 downstream report last.
+
+Certified recursive bisection adds a model-optimality layer above this fixed
+point. The recursive tree proves which assignment the enacted optimization
+selects; U.20 then verifies that the emitted RPLAN/RCTX package faithfully
+contains that assignment and satisfies its declared audit profile. Neither
+artifact substitutes for the other.

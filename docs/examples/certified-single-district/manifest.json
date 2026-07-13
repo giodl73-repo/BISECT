@@ -1,0 +1,19 @@
+{
+  "schema_version": "certified-single-district-fixture-package-v1",
+  "package_id": "certified-single-district-grid3x3",
+  "status": "verified",
+  "files": {
+    "grid3x3/single-district-certificate.json": "662aba276233013f48731941575a0b85bb3660ec790e64065f52533314a11c02",
+    "grid3x3/single-district-instance.json": "8e87358f25ce445ffef7b4f50a65141cf6967c3c2adf4755f1f6c28a98442b23",
+    "negative/disconnected-instance.json": "fbfb80e770de2b145acbf5276e401d3a4267fb9871a4a335d910dcb072e30332",
+    "negative/nonzero-assignment.json": "57e2893a3959940807e718a72c7ad68dccb7eac5b660f8f21e64f760d8bc86b0",
+    "negative/omitted-assignment.json": "a7cdbb755caf3a9a9e967203f62e078265c75793a438d55dc2ca0d4e54593f9d",
+    "README.md": "ee5c0c870bd00fed209976b5894f287930e03102acacbe100097f3f4599170d2"
+  },
+  "verifier_path": "scripts/research/verify_certified_single_fixtures.py",
+  "verification_commands": [
+    "python scripts/research/verify_certified_single_fixtures.py",
+    "cargo run -p bisect-ilp --example certified_single_district -- verify-package docs/examples/certified-single-district/grid3x3"
+  ],
+  "claim_boundary": "Synthetic wall-to-wall one-district certificate and hostile verifier corpus."
+}

@@ -3,15 +3,33 @@
 
 Americans across partisan lines have long condemned gerrymandering. Surveys consistently find that majorities of Democrats, Republicans, and independents view partisan manipulation of district lines as unfair \citep{pew2017redistricting,gallup2019gerrymander}. Yet the gap between public disapproval and institutional reform is wide and persistent. As of the 2020 redistricting cycle, most states continued to assign line-drawing authority to legislatures with undisguised partisan interests in the outcome. The Supreme Court's decision in \textit{Rucho v.\ Common Cause} \citeyearpar{rucho2019} removed the federal judiciary as a check on partisan gerrymandering, leaving structural reform to state legislatures, citizen initiatives, and state courts---all of which move slowly.
 
-One structural alternative has received increasing scholarly and journalistic attention: algorithmic redistricting. Under this approach, a computer program draws district boundaries by optimizing objective criteria---population equality, geographic contiguity, and compactness---without accessing any data about voters' party affiliation, race, or voting history. The algorithm is open-source, reproducible, and structurally incapable of implementing partisan strategy because it cannot see partisan data \citep{dellaLibera2026recursive}. Where human mapmakers can exploit every census tract's partisan lean to engineer favorable outcomes, algorithmic mapmakers cannot. The impossibility of manipulation is not a normative aspiration but a mathematical property of the process.
+One structural alternative has received increasing scholarly and journalistic
+attention: an algorithmic geographic benchmark. The benchmark can exclude
+partisan data from execution and publish its inputs and parameters, but it is
+not value-free or structurally immune to manipulation. Profile selection,
+geographic resolution, data construction, and downstream modifications remain
+human choices \citep{dellaLibera2026recursive}.
 
 Despite growing technical validation of algorithmic approaches, a critical question remains unanswered: \textit{do ordinary citizens find algorithmic maps legitimate?} Algorithmic redistricting carries a different kind of risk than legislative or even commission-based redistricting---not the risk of partisan manipulation, but the risk of algorithm aversion, a well-documented tendency for people to discount or distrust algorithmic judgments even when those judgments demonstrably outperform human alternatives \citep{dietvorst2015algorithm}. If the public perceives algorithmic maps as cold, opaque, or undemocratic---as decisions ``made by a machine'' rather than by accountable humans---then technical superiority may not translate into political feasibility.
 
-This paper addresses the legitimacy gap directly with a large-scale survey experiment. We recruited $N = 2{,}400$ respondents from the MTurk and Lucid platforms, pre-registered our hypotheses and analysis plan on the Open Science Framework, and randomly assigned participants to view one of three types of congressional district maps---algorithmic, commission-drawn, or enacted---in one of three information conditions: no description of the process, a plain-language description of how the map was produced, or both the description and an explicit comparison to the alternative. We then measured perceived fairness, trust in the redistricting process, partisan bias perceptions, and willingness to accept the map's outcomes.
+This paper proposes a large-scale survey experiment with $N=2{,}400$
+respondents recruited from two panel sources. Before recruitment, the research
+team would register the hypotheses, stimuli, exclusions, stopping rule,
+analysis code, and interpretation rules. Participants would view algorithmic,
+commission-drawn, or enacted maps under one of three information conditions.
 
-Our results challenge several priors simultaneously. First, we find robust positive public perceptions of algorithmic maps: respondents rated them $0.41$ standard deviations fairer than enacted maps, an effect that is large by the standards of survey experiments on redistricting \citep{bonneau2021,elmendorf2019}: Second, we find that process description substantially amplifies this advantage, adding $0.22$ SD to perceived fairness ratings. This transparency-as-legitimacy finding echoes procedural fairness theory \citep{thibaut1975procedural,tyler2006legitimacy}: knowing \textit{how} a decision was made shapes perceptions of \textit{whether} it is fair, independent of the outcome. Third, partisan heterogeneity is smaller than expected. Democrats rated algorithmic maps higher than Republicans by $0.18$ SD---a statistically significant but substantively modest difference---suggesting that the appeal of algorithmic redistricting crosses party lines when process information is provided. Fourth, and perhaps most policy-relevant, we find no significant difference between algorithmic and commission-drawn maps in perceived fairness. If the public treats these two reform alternatives as equivalent in legitimacy, then algorithmic redistricting passes the democratic acceptance threshold already established by the independent commission model.
+The protocol tests whether map provenance, plain-language process information,
+partisanship, and commission comparison affect perceived fairness, process
+trust, and willingness to accept an unfavorable outcome. The numerical examples
+in the results section are synthetic and demonstrate only how the preregistered
+analysis would be reported under one hypothetical outcome.
 
-The paper proceeds as follows. Section~\ref{sec:related} reviews the literatures on redistricting opinion, procedural fairness, and algorithm aversion that motivate our hypotheses. Section~\ref{sec:design} describes the 2$\times$3 experimental design, sampling strategy, and pre-registration. Section~\ref{sec:measures} presents the outcome measures and their validation. Section~\ref{sec:results} reports the main experimental findings, including heterogeneous effects by partisanship, education, and political knowledge. Section~\ref{sec:discussion} discusses implications for reform politics and compares our findings to prior work. Section~\ref{sec:conclusion} concludes with policy recommendations.
+The paper proceeds as follows. Section~\ref{sec:related} reviews the motivating
+literatures. Section~\ref{sec:design} describes the proposed design, sampling,
+and registration. Section~\ref{sec:measures} defines planned outcomes.
+Section~\ref{sec:results} provides a synthetic reporting template.
+Sections~\ref{sec:discussion} and~\ref{sec:conclusion} define interpretation
+boundaries and the evidence required before policy conclusions.
 
 \subsection{The Legitimacy Problem in Redistricting Reform}
 
@@ -21,4 +39,5 @@ American redistricting reform efforts have focused heavily on process legitimacy
 
 Algorithmic redistricting addresses process legitimacy in a structurally different way. Rather than substituting one set of human decision-makers for another, it substitutes a mathematical procedure for human line-drawing. The algorithm cannot be captured by partisan interests because it has no access to partisan data. Its outputs are reproducible---the same inputs always produce the same map---which enables independent verification in a way that commission deliberations cannot. Its decision process is fully documented in open-source code, not in meeting minutes or commissioner testimony.
 
-Whether these procedural properties translate into public perceived legitimacy is the empirical question this paper answers.
+Whether these procedural properties translate into perceived legitimacy is the
+empirical question this protocol is designed to test.

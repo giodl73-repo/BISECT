@@ -1,0 +1,6 @@
+{
+  "schema_version": "certified-recursive-negative-fixture-v1",
+  "case": "false-root-optimum",
+  "expected_error": "split-result-mismatch",
+  "description": "Changes the certified root objective and refreshes certificate and tree IDs."
+}

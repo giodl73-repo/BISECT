@@ -388,4 +388,16 @@ mod tests {
 
         assert_eq!(manifest.validate_referenced_file_hashes(root), Ok(()));
     }
+
+    #[test]
+    fn real_g1_g3_package_validates() {
+        let manifest: GEnsembleEvidenceManifest = serde_json::from_str(include_str!(
+            "../../../docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020/manifest.json"
+        ))
+        .expect("fixture must parse");
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020");
+
+        assert_eq!(manifest.validate_referenced_file_hashes(root), Ok(()));
+    }
 }

@@ -1,0 +1,403 @@
+{
+  "schema_version": "certified-recursive-bisection-tree-v1",
+  "tree_id": "sha256:b83468213da40df2fd808ef8cb15798ee8768fb992343f7035ef9d71fa531117",
+  "root_unit_universe_hash": "sha256:b509a4c14d4ddcf33e3306720c5f582f15afbbe57b630ce0c310e360eee49faa",
+  "k": 4,
+  "nodes": [
+    {
+      "instance": {
+        "schema_version": "certified-recursive-bisection-split-instance-v1",
+        "model_id": "certified-standard-bisect-split-v1",
+        "node_path": "",
+        "parent_certificate_id": null,
+        "unit_universe_hash": "sha256:b509a4c14d4ddcf33e3306720c5f582f15afbbe57b630ce0c310e360eee49faa",
+        "unit_ids": [
+          "u00",
+          "u01",
+          "u02",
+          "u03",
+          "u04",
+          "u05",
+          "u06",
+          "u07"
+        ],
+        "populations": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "edges": [
+          {
+            "left": 0,
+            "right": 1,
+            "weight": 1
+          },
+          {
+            "left": 1,
+            "right": 2,
+            "weight": 1
+          },
+          {
+            "left": 2,
+            "right": 3,
+            "weight": 1
+          },
+          {
+            "left": 3,
+            "right": 4,
+            "weight": 1
+          },
+          {
+            "left": 4,
+            "right": 5,
+            "weight": 1
+          },
+          {
+            "left": 5,
+            "right": 6,
+            "weight": 1
+          },
+          {
+            "left": 6,
+            "right": 7,
+            "weight": 1
+          }
+        ],
+        "k_parent": 4,
+        "k_left": 2,
+        "k_right": 2,
+        "orientation_rule": "equal-seats-unit-zero-left"
+      },
+      "certificate": {
+        "schema_version": "certified-recursive-bisection-split-certificate-v1",
+        "certificate_id": "sha256:6b2e2a4596564f3717af8ed2cb9f01d328a8577cc51a5161c2316d4b2f6772e1",
+        "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+        "model_id": "certified-standard-bisect-split-v1",
+        "result": {
+          "result": "optimal",
+          "assignment": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1
+          ],
+          "objective": {
+            "primary": {
+              "max_population_deviation_scaled": 0,
+              "total_population_deviation_scaled": 0,
+              "weighted_boundary_cut": 1
+            },
+            "canonical_assignment": [
+              0,
+              0,
+              0,
+              0,
+              1,
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "proof": {
+          "proof_kind": "bounded-exhaustive-enumeration",
+          "feasible_assignments": 5,
+          "primary_objective_ties": 1,
+          "lower_bound": {
+            "max_population_deviation_scaled": 0,
+            "total_population_deviation_scaled": 0,
+            "weighted_boundary_cut": 1
+          },
+          "proof_id": "sha256:12ff6833d530a5fc142eb83f5a3b3eb2975c4b1a4631e090b8f780bb8f0cb572"
+        }
+      },
+      "proof": {
+        "schema_version": "certified-recursive-bisection-split-proof-v1",
+        "proof_id": "sha256:12ff6833d530a5fc142eb83f5a3b3eb2975c4b1a4631e090b8f780bb8f0cb572",
+        "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+        "model_id": "certified-standard-bisect-split-v1",
+        "enumeration_order": "equal-seats; unit-0-fixed-left; nonzero reduced masks ascending",
+        "candidate_count": 127,
+        "feasible_count": 5,
+        "primary_objective_ties": 1,
+        "lower_bound": {
+          "max_population_deviation_scaled": 0,
+          "total_population_deviation_scaled": 0,
+          "weighted_boundary_cut": 1
+        },
+        "canonical_assignment": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        "search_commitment": "sha256:bea492ef0c823e2a9f1c9f297cde03663ef0463c91a8b1bb5bc37749e26ac087"
+      }
+    },
+    {
+      "instance": {
+        "schema_version": "certified-recursive-bisection-split-instance-v1",
+        "model_id": "certified-standard-bisect-split-v1",
+        "node_path": "0",
+        "parent_certificate_id": "sha256:6b2e2a4596564f3717af8ed2cb9f01d328a8577cc51a5161c2316d4b2f6772e1",
+        "unit_universe_hash": "sha256:e060bc7f48afbdbb1b1044136134ccf7f5aa1e38258404119e671f96edf5cf20",
+        "unit_ids": [
+          "u00",
+          "u01",
+          "u02",
+          "u03"
+        ],
+        "populations": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "edges": [
+          {
+            "left": 0,
+            "right": 1,
+            "weight": 1
+          },
+          {
+            "left": 1,
+            "right": 2,
+            "weight": 1
+          },
+          {
+            "left": 2,
+            "right": 3,
+            "weight": 1
+          }
+        ],
+        "k_parent": 2,
+        "k_left": 1,
+        "k_right": 1,
+        "orientation_rule": "equal-seats-unit-zero-left"
+      },
+      "certificate": {
+        "schema_version": "certified-recursive-bisection-split-certificate-v1",
+        "certificate_id": "sha256:ec6d818a176dcae19b9358f129a7f56a4e5ffccebbe0b19e64660b6637919b47",
+        "instance_hash": "sha256:30ac351de92a28647b4d6ad8dc7f2804ca59a0008ae1a062e4347793dfcc6c48",
+        "model_id": "certified-standard-bisect-split-v1",
+        "result": {
+          "result": "optimal",
+          "assignment": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "objective": {
+            "primary": {
+              "max_population_deviation_scaled": 0,
+              "total_population_deviation_scaled": 0,
+              "weighted_boundary_cut": 1
+            },
+            "canonical_assignment": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        },
+        "proof": {
+          "proof_kind": "bounded-exhaustive-enumeration",
+          "feasible_assignments": 3,
+          "primary_objective_ties": 1,
+          "lower_bound": {
+            "max_population_deviation_scaled": 0,
+            "total_population_deviation_scaled": 0,
+            "weighted_boundary_cut": 1
+          },
+          "proof_id": "sha256:8a3eeb5d08f41400a5ae349ef9f0966c370152841703261d703a505236fefa96"
+        }
+      },
+      "proof": {
+        "schema_version": "certified-recursive-bisection-split-proof-v1",
+        "proof_id": "sha256:8a3eeb5d08f41400a5ae349ef9f0966c370152841703261d703a505236fefa96",
+        "instance_hash": "sha256:30ac351de92a28647b4d6ad8dc7f2804ca59a0008ae1a062e4347793dfcc6c48",
+        "model_id": "certified-standard-bisect-split-v1",
+        "enumeration_order": "equal-seats; unit-0-fixed-left; nonzero reduced masks ascending",
+        "candidate_count": 7,
+        "feasible_count": 3,
+        "primary_objective_ties": 1,
+        "lower_bound": {
+          "max_population_deviation_scaled": 0,
+          "total_population_deviation_scaled": 0,
+          "weighted_boundary_cut": 1
+        },
+        "canonical_assignment": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "search_commitment": "sha256:9bf0df8c5abcad178dd169d690ebda54fc59ed3e99737a529e0cef6d05c43dfa"
+      }
+    },
+    {
+      "instance": {
+        "schema_version": "certified-recursive-bisection-split-instance-v1",
+        "model_id": "certified-standard-bisect-split-v1",
+        "node_path": "1",
+        "parent_certificate_id": "sha256:6b2e2a4596564f3717af8ed2cb9f01d328a8577cc51a5161c2316d4b2f6772e1",
+        "unit_universe_hash": "sha256:7c6d3e7e95d3963557d167a93cf517ce134dec1e1e47d22d8aef3fe7f000a9db",
+        "unit_ids": [
+          "u04",
+          "u05",
+          "u06",
+          "u07"
+        ],
+        "populations": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "edges": [
+          {
+            "left": 0,
+            "right": 1,
+            "weight": 1
+          },
+          {
+            "left": 1,
+            "right": 2,
+            "weight": 1
+          },
+          {
+            "left": 2,
+            "right": 3,
+            "weight": 1
+          }
+        ],
+        "k_parent": 2,
+        "k_left": 1,
+        "k_right": 1,
+        "orientation_rule": "equal-seats-unit-zero-left"
+      },
+      "certificate": {
+        "schema_version": "certified-recursive-bisection-split-certificate-v1",
+        "certificate_id": "sha256:7a4e41b44cd7a05156940b248d8295f0c49214ab4c4123eb88a8953f92fee784",
+        "instance_hash": "sha256:7d4738f6e1afbdd50499afff97c81d74b7c86e39e3cc76485bf735a0d67ad014",
+        "model_id": "certified-standard-bisect-split-v1",
+        "result": {
+          "result": "optimal",
+          "assignment": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "objective": {
+            "primary": {
+              "max_population_deviation_scaled": 0,
+              "total_population_deviation_scaled": 0,
+              "weighted_boundary_cut": 1
+            },
+            "canonical_assignment": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        },
+        "proof": {
+          "proof_kind": "bounded-exhaustive-enumeration",
+          "feasible_assignments": 3,
+          "primary_objective_ties": 1,
+          "lower_bound": {
+            "max_population_deviation_scaled": 0,
+            "total_population_deviation_scaled": 0,
+            "weighted_boundary_cut": 1
+          },
+          "proof_id": "sha256:634dfa50132d20e2e9584119b2271b7b18e8795326233027b33577d286a1c009"
+        }
+      },
+      "proof": {
+        "schema_version": "certified-recursive-bisection-split-proof-v1",
+        "proof_id": "sha256:634dfa50132d20e2e9584119b2271b7b18e8795326233027b33577d286a1c009",
+        "instance_hash": "sha256:7d4738f6e1afbdd50499afff97c81d74b7c86e39e3cc76485bf735a0d67ad014",
+        "model_id": "certified-standard-bisect-split-v1",
+        "enumeration_order": "equal-seats; unit-0-fixed-left; nonzero reduced masks ascending",
+        "candidate_count": 7,
+        "feasible_count": 3,
+        "primary_objective_ties": 1,
+        "lower_bound": {
+          "max_population_deviation_scaled": 0,
+          "total_population_deviation_scaled": 0,
+          "weighted_boundary_cut": 1
+        },
+        "canonical_assignment": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "search_commitment": "sha256:16fb29dac357286128f91f468e300a4b2c956ee75875587ec6a7cbf19d3c9ed4"
+      }
+    }
+  ],
+  "leaves": [
+    {
+      "leaf_id": "sha256:1d24a09d6ac185886df032709cd27528a369185890072b94ef3f56ce9da7060f",
+      "node_path": "00",
+      "parent_certificate_id": "sha256:ec6d818a176dcae19b9358f129a7f56a4e5ffccebbe0b19e64660b6637919b47",
+      "unit_universe_hash": "sha256:95444e58567b85a39a663c7d6474ded38d7b0d6db82e397517970f2ef21dade1",
+      "unit_ids": [
+        "u00",
+        "u01"
+      ],
+      "district_index": 0
+    },
+    {
+      "leaf_id": "sha256:70b72b194c3a9a595c33289c43b213dafedfb342824d51549e718b917c1bb1e1",
+      "node_path": "01",
+      "parent_certificate_id": "sha256:ec6d818a176dcae19b9358f129a7f56a4e5ffccebbe0b19e64660b6637919b47",
+      "unit_universe_hash": "sha256:70ce44393a31ddadfaf5b9fcd0a004f4d8d0a840bc3f77cc5e719980d4fa33f6",
+      "unit_ids": [
+        "u02",
+        "u03"
+      ],
+      "district_index": 1
+    },
+    {
+      "leaf_id": "sha256:1e668b4f8917b565241ee8088c380788a7609b316a2bc73621c62949fdc2ca01",
+      "node_path": "10",
+      "parent_certificate_id": "sha256:7a4e41b44cd7a05156940b248d8295f0c49214ab4c4123eb88a8953f92fee784",
+      "unit_universe_hash": "sha256:f58383e6d83260b2ec4effb2f979c35de68326bbb4ff0ffe8219ae4a6e33d224",
+      "unit_ids": [
+        "u04",
+        "u05"
+      ],
+      "district_index": 2
+    },
+    {
+      "leaf_id": "sha256:c0794ae87b9ecefb914a415dd6ba8ac0fe67ec2d580c12ae9699c13ccc9b7fe2",
+      "node_path": "11",
+      "parent_certificate_id": "sha256:7a4e41b44cd7a05156940b248d8295f0c49214ab4c4123eb88a8953f92fee784",
+      "unit_universe_hash": "sha256:5ed756aee79d67dfa61847232620b15c47ad66ba42035dedf82afe8d344b1bc6",
+      "unit_ids": [
+        "u06",
+        "u07"
+      ],
+      "district_index": 3
+    }
+  ]
+}

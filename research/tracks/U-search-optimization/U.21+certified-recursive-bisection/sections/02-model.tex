@@ -1,0 +1,36 @@
+\section{Fixed Recursive Model}
+
+For a parent region requiring $k\geq2$ districts, define
+\[
+k_L=\left\lfloor\frac{k}{2}\right\rfloor,\qquad k_R=k-k_L.
+\]
+Every unit is assigned to exactly one child, both children are nonempty and
+connected, and each child contains at least as many units as eventual
+districts. The solver may choose the cut; it may not alter $(k_L,k_R)$.
+
+Let $P$ be parent population and $P_L$ left-child population. The
+seat-ratio-scaled deviation is
+\[
+\Delta_L=\left|kP_L-k_LP\right|.
+\]
+The right-child expression is algebraically equal. We retain maximum and total
+deviation fields for schema continuity, although total deviation is twice the
+maximum for a binary split.
+
+Among feasible assignments, the procedure minimizes lexicographically:
+\begin{enumerate}[label=(\arabic*)]
+  \item maximum scaled population deviation;
+  \item total scaled population deviation;
+  \item weighted boundary cut; and
+  \item the canonical binary assignment.
+\end{enumerate}
+
+Equal-seat splits have label symmetry, removed by placing canonical unit zero
+in the left child. Unequal-seat splits are already oriented by the floor/ceiling
+seat counts; forcing unit zero left could exclude the ratio-correct solution
+and is therefore prohibited.
+
+Island components use the project's deterministic rule: each non-main-
+component unit connects to its nearest same-county unit in the main component,
+with statewide fallback. Synthetic bridge edges receive the median
+land-boundary weight.

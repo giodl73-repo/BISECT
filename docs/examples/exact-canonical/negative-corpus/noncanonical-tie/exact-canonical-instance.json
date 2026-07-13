@@ -1,0 +1,39 @@
+{
+  "schema_version": "exact-canonical-instance-v1",
+  "model_id": "exact-canonical-k2-exhaustive-v1",
+  "unit_ids": [
+    "u0",
+    "u1",
+    "u2",
+    "u3"
+  ],
+  "populations": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "edges": [
+    {
+      "left": 0,
+      "right": 1,
+      "weight": 1
+    },
+    {
+      "left": 0,
+      "right": 3,
+      "weight": 1
+    },
+    {
+      "left": 1,
+      "right": 2,
+      "weight": 1
+    },
+    {
+      "left": 2,
+      "right": 3,
+      "weight": 1
+    }
+  ],
+  "k": 2
+}

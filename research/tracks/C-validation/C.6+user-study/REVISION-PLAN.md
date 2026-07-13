@@ -1,5 +1,11 @@
 # REVISION-PLAN — C.6 User Study
-**Paper**: Public Perceptions of Algorithmic vs. Human-Drawn Congressional Districts: A Survey Experiment
+**Current status (2026-07-09): protocol only.** No survey was registered or
+fielded. Numerical results in the earlier draft were synthetic and have been
+withdrawn. The internal simulated-review scores below evaluate manuscript
+structure only; they are not evidence of completed research, peer review, or
+acceptance.
+
+**Paper**: Public Perceptions of Algorithmic vs. Human-Drawn Congressional Districts: A Preregistered Survey Protocol
 **Round 1 Review Date**: 2026-05-05
 **Round 2 Review Date**: 2026-05-05
 **Target**: Avg ≥ 2.5/4 | R1 Achieved: 3.0/4 | R2 Achieved: 4.0/4 (all five reviewers: 4/4 Accept)

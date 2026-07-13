@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "wisconsin",
+  "state_code": "WI",
+  "state_fips": "55",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/wi_blocks_2020.rctx",
+  "rctx_bytes": 53486728,
+  "rctx_sha256": "34e1485b05ac8d6489fab2f49da194069587de6a48bbaf363d5bd71d8f2a88d5",
+  "context_hash": "sha256:56d047f92ac16a0f8a962f363a6560f3c6b70381ffe507dde0f896179a33b86c",
+  "unit_universe_hash": "sha256:694d0bbd28f15184f1207720c9c687bbf97e9f69c15b3ac3ba727c7462dbefa7",
+  "unit_count": 203059,
+  "population_total": 5893718,
+  "land_edge_count": 494598,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

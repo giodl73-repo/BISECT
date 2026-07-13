@@ -1,102 +1,186 @@
-# Reproducible Build of `BISECT`
+# Reproducible Build And Reference Replay
 
-**Status:** v1 (2026-04-29) — Plan 01 Task 7 deliverable.
+**Status:** v2 candidate, 2026-07-09
+**Claim posture:** Functional assignment reproducibility; not byte-identical
+executable reproduction, legal certification, or full national-standard
+conformance
 
-This document defines the procedure for building the `BISECT` Rust binary from source in a way that can be independently verified. Required for court admissibility (a special master must be able to reproduce the binary that produced a contested map) and for the binary-provenance block embedded in output files.
+This document defines how to build the `bisect` Rust binary and reproduce a
+named reference assignment from public source, pinned tools, and hashed inputs.
 
-## Inputs
+## 1. Pinned Inputs
 
-| Input | Source | Verification |
+| Input | Pin | Verification |
 |---|---|---|
-| Source code | This repository at a tagged commit | `git rev-parse HEAD` |
-| Rust toolchain | Pinned via `BISECT/rust-toolchain.toml` (if absent, use the version recorded in CI) | `rustc --version` must match |
-| Cargo lockfile | `BISECT/Cargo.lock` (committed) | `--locked` build flag fails on lockfile mismatch |
-| METIS C library | System install (apt/brew/winget); subprocess'd at run time, not linked | `gpmetis --version` |
+| Source | Named git commit | `git rev-parse HEAD` |
+| Rust toolchain | `rust-toolchain.toml`, exact `1.95.0` | `rustc --version` |
+| Dependencies | Committed `Cargo.lock` | `cargo build --locked` |
+| Default METIS engine | Vendored/static C FFI through the Rust workspace | Manifest engine field and source/dependency lock |
+| Portable engine | `bisect-metis` / pure Rust | Explicit engine selection; comparative output unless named by the profile |
+| Census and geography | `data/manifest.json` plus replay-record hashes | SHA-256 and source URLs |
+| Algorithm profile | Committed YAML under `configs/` | Raw-file SHA-256 |
 
-## Build
+The default `c-ffi` engine is embedded in the built binary. Production runs do
+not invoke a system `gpmetis` subprocess. The reserved `gpmetis` engine is not
+implemented and must not be described as an available verification path.
 
-```bash
-git clone <repo-url>
-cd apportionment
-git checkout <tag-or-commit>
-cd <repo-root>
-cargo build --release --locked
-# Binary: target/release/BISECT (or BISECT.exe on Windows)
+## 2. Build
+
+From a clean checkout at the declared commit:
+
+```powershell
+rustc --version
+cargo --version
+cargo build --release --locked -p bisect-cli --bin bisect
 ```
 
-The `--locked` flag ensures `Cargo.lock` is honored exactly. If the lockfile is missing or stale, the build fails rather than silently resolving newer versions.
+Expected compiler family for this version:
 
-## Verification
-
-### Same source → same binary?
-
-Rust binaries are not byte-deterministic by default. Three sources of nondeterminism on most platforms:
-
-1. **Build timestamps** in debug info or PE/ELF headers
-2. **Path-dependent debug info** (absolute paths to source files baked in)
-3. **Parallel-compilation order** affecting code-section ordering in some cases
-
-To get byte-identical builds, either:
-
-- Build in a clean container with a fixed source path (e.g., `/build`) and `SOURCE_DATE_EPOCH=0` set
-- Strip non-determinism after build with `strip` + `--remap-path-prefix` flags
-
-For most court purposes, **functional equivalence** is sufficient: two binaries produced from the same source + lockfile produce identical outputs for identical inputs. Verify by running `bisect state --state VT --year 2020` from each binary and comparing `final_assignments.json` byte-for-byte (METIS is deterministic given the same edge weights and seed; the Rust kernel is deterministic given the same input).
-
-### Verifying a published release
-
-A release commit is tagged `v0.X.Y`. To verify a released binary matches its source:
-
-```bash
-# 1. Build from source at the tag
-git checkout v0.X.Y
-cargo build --release --locked
-
-# 2. Run the binary on a known input
-./target/release/bisect state --state VT --year 2020 --output-dir /tmp/verify
-
-# 3. Compare to a reference output (if published) or to the official release binary
-diff /tmp/verify/v1/states/vermont/data/final_assignments.json \
-     reference/vt_final_assignments.json
+```text
+rustc 1.95.0
+cargo 1.95.0
 ```
 
-## Provenance Block
+The executable is:
 
-Every output JSON file produced by `BISECT` SHOULD embed a provenance block (TODO: implement, currently a spec-level requirement only):
-
-```json
-{
-  "BISECT_version": "0.1.2",
-  "BISECT_build_commit": "<git sha>",
-  "BISECT_build_date": "2026-04-29T00:00:00Z",
-  "rustc_version": "1.95.0"
-}
+```text
+target\release\bisect.exe
 ```
 
-This is what `BISECT doctor --verify-manifest <output.json>` (planned) will check.
+Use `cargo +1.95.0` explicitly if a shell is outside the repository and does not
+honor `rust-toolchain.toml`.
 
-## Toolchain Pin
+## 3. Build Provenance
 
-`BISECT/rust-toolchain.toml` exists and pins to `1.95.0`. Cargo respects this automatically: `cargo build` from inside `BISECT/` (or any subdir of it) will use rustc 1.95.0 even if a different stable is installed system-wide. If the pinned version is not installed, `rustup` will install it on first use.
+`crates/bisect-cli/build.rs` captures:
 
-```toml
-[toolchain]
-channel = "1.95.0"
-components = ["rustfmt", "clippy"]
-profile = "default"
+- git commit, with `-dirty` when applicable;
+- build timestamp;
+- `rustc --version`; and
+- package version.
+
+`crates/bisect-cli/src/provenance.rs` exposes these values through
+`Provenance::current()`. Plan manifests and provenance sidecars also record the
+running executable SHA-256, algorithm parameters, adjacency hash, TIGER source,
+and related chain fields.
+
+Inspect a generated plan manifest with:
+
+```powershell
+target\release\bisect.exe doctor --verify-manifest <path-to-manifest.json>
 ```
 
-Without this file, builds would use whatever stable rustc the developer has installed, which can cause subtle drift in compiler-emitted code over time. Bump the channel deliberately when you want a newer rustc; do not pin to `stable` (the moving channel).
+This command verifies the manifest structure and available provenance/hash
+links against the running binary. It does not certify the plan's legality,
+fairness, VRA compliance, or external admissibility.
 
-## Linkage
+For label-pipeline runs, verify the config-to-build-to-analysis-to-report chain:
 
-- `BISECT` binary is statically linked Rust dependencies; only system libraries (libc, libm) are dynamic.
-- METIS is invoked as a subprocess (`gpmetis`), not linked. Pin via `gpmetis --version` if reproducibility across machines matters.
-- PyO3 bridge (`bisect_py`) is built separately and is not part of the production binary.
+```powershell
+target\release\bisect.exe label-verify <label> --year 2020
+```
 
-## Open Items
+## 4. Functional Versus Byte Reproducibility
 
-- Pin `rustc` toolchain in a committed `rust-toolchain.toml` (Plan 01 Task 7.1)
-- Embed provenance block in output JSON files (Spec v2 §Provenance)
-- `BISECT doctor --verify-manifest <path>` subcommand (Spec v2 §Provenance)
-- Deterministic-build recipe for byte-identical reproduction (out of scope for v1; functional equivalence sufficient)
+Rust executables are not guaranteed to be byte-identical across operating
+systems, linkers, source paths, or build environments. The current release gate
+therefore uses functional assignment equivalence:
+
+1. build from the same source commit with the pinned toolchain and lockfile;
+2. use the same reference-engine profile and hashed inputs;
+3. run the same command;
+4. canonicalize the assignment JSON; and
+5. compare SHA-256 values.
+
+Matching assignment hashes establish that the tested executions produced the
+same unit-to-district mapping. They do not establish byte-identical binaries.
+
+A future byte-reproducible binary profile would additionally need a fixed
+container image, target triple, linker, source path, `SOURCE_DATE_EPOCH`,
+path-remapping flags, and executable normalization procedure.
+
+## 5. NRS v0.1 Reference Replay
+
+The committed reference profile is:
+
+```text
+configs\nrs_reference_v0_1.yml
+```
+
+Reference scope:
+
+| Field | Value |
+|---|---|
+| State | Rhode Island |
+| Census year | 2020 |
+| District count | 2 |
+| Structure | `standard-bisect` |
+| Weights | `geographic` |
+| Search | `single` |
+| Seed | `424242` |
+| Balance tolerance | `0.5` percent |
+| Engine | `c-ffi` |
+| Resolution | Tract |
+
+Rhode Island is small enough for rapid independent replay but exercises an
+actual two-district METIS partition. Because the candidate national standard
+selects census blocks as normative, this tract fixture is a reproducibility
+reference, not full NRS v0.1 conformance.
+
+Run:
+
+```powershell
+target\release\bisect.exe build nrs_reference_v0_1 `
+  --year 2020 --states RI --workers 1 --force --no-interactive
+```
+
+Then verify:
+
+```powershell
+target\release\bisect.exe label-verify nrs_reference_v0_1 --year 2020
+```
+
+The reference evidence record under `docs/fixtures/nrs-reference-v0.1/`
+contains the declared source commit, compiler, dependency, config, data,
+adjacency, binary, assignment, and manifest hashes.
+
+## 6. Strict Clean Replay Harness
+
+For a release-subset label replay, use:
+
+```powershell
+python scripts\maintenance\dcr007_clean_replay.py `
+  --label nrs_reference_v0_1 --year 2020 --states RI --workers 1
+```
+
+The strict launcher refuses any visible tracked or untracked worktree change.
+Ignored census and generated-output paths may be provisioned in the clean
+checkout, but their source and hashes must appear in the replay record.
+
+`scripts/maintenance/dcr007_release_subset_replay.py` writes the ignored JSON
+execution record under `reports/vtrace/` by default. Promote only a reviewed,
+redacted record whose artifact paths and hashes conform to the applicable
+custody policy.
+
+## 7. Failure Interpretation
+
+| Failure | Meaning |
+|---|---|
+| Compiler version mismatch | Toolchain is not the pinned reference |
+| `--locked` failure | Dependency lock and source do not agree |
+| Config hash mismatch | A different algorithm profile was used |
+| Input/adjacency hash mismatch | The run is not the same data experiment |
+| Assignment hash mismatch | Functional replay diverged and requires investigation |
+| Manifest verifier failure | Provenance or recorded hash links are inconsistent |
+| Binary hash mismatch with matching assignments | Functional match; executable bytes differ |
+
+No mismatch should be silently normalized or reported as success.
+
+## 8. Remaining Gates
+
+- Implement the NRS manifest-derived seed rather than the fixed reference seed.
+- Implement the block-level national benchmark path and block adjacency profile.
+- Publish a fixed container/target profile before claiming byte-reproducible
+  executables.
+- Obtain non-author replay before promoting the reference beyond internal
+  engineering evidence.

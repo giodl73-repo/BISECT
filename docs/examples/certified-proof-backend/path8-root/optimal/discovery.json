@@ -1,0 +1,25 @@
+{
+  "schema_version": "certified-split-discovery-v1",
+  "discovery_id": "sha256:467ec0519f173e6057cbfec3c4ff5b68580169d2ceac8a7a2be7f7498cb9f34d",
+  "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+  "solver_name": "prototype",
+  "solver_version": null,
+  "method": "bounded-oracle-optimum",
+  "objective": {
+    "primary": {
+      "max_population_deviation_scaled": 0,
+      "total_population_deviation_scaled": 0,
+      "weighted_boundary_cut": 1
+    },
+    "canonical_assignment": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1
+    ]
+  }
+}

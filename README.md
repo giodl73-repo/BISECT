@@ -10,11 +10,68 @@ repository-local review panels.
 
 ## How it works
 
-**In plain terms:** treat a state as a map of small census-tract neighborhoods. Two tracts are connected if they share a border; the connection is *stronger* the longer that border is. The algorithm cuts the map in half by snipping the weakest set of connections that produces two equal-population halves — which naturally avoids long, jagged borders. Repeat recursively until you have exactly N districts.
+**In plain terms:** treat a state as a graph of Census units. Two units are
+connected when they share a boundary; longer boundaries receive greater
+weight. A region assigned `k` districts is split into
+`floor(k/2)` and `ceil(k/2)`-district children, with population targets in that
+same ratio. Repeat until every leaf contains one district.
 
 Formally: tracts are nodes; edge weight = shared boundary length. Minimising the total weight of edges cut minimises cut-boundary length, which is the mechanism behind the observed **Polsby–Popper compactness gains** without directly optimising Polsby–Popper.
 
 In the default geographic mode, **no political or racial data enters the algorithm**. VRA mode uses demographics only for edge weighting; it is mutually exclusive with partisan-weighted mode per the project’s post-*Callais* legal model.
+
+### The certified version
+
+The practical nationwide implementation currently uses METIS to find each cut
+quickly. METIS is a heuristic: it can produce a strong cut, but it does not
+prove that no better cut exists.
+
+**Certified Recursive Bisection** preserves the same BISECT tree and replaces
+that unproved choice with a mathematical claim at every node:
+
+1. no connected cut has better population balance;
+2. at that balance, no cut has lower weighted boundary;
+3. at both bounds, no lexicographically earlier cut exists; and
+4. the child certificates chain into one unique final plan.
+
+For California, the enacted tree remains:
+
+```text
+52 -> 26/26 -> 13/13 -> 6/7 -> ... -> one-seat leaves
+```
+
+The solver is not allowed to change that structure. It only proves the best cut
+within each required step.
+
+| Capability | Status |
+|---|---|
+| Exact per-cut objective and canonical tie-break | Implemented |
+| Bounded optimality/infeasibility certificates | Implemented |
+| Recursive certificate tree and RPLAN binding | Implemented |
+| Hostile certificate/tree verification corpus | Implemented |
+| Rhode Island 25,649-block connected RCTX | Implemented |
+| Compact parent/depth OPB proof requests | Implemented; bounded proof verified |
+| RoundingSat proof generation and VeriPB checking | Pinned WSL smoke proof verified |
+| First full State exact certificate | Not yet achieved |
+| Six one-district State certificates | Verified wall-to-wall at block level |
+| HI/NH two-district operational roots | Verified; population optimum proved |
+| NM/NV recursive operational trees | Verified; population optimum proved at every node |
+| Small-State operational coverage sample | 10 States, 17 districts, 494,399 blocks |
+| Rhode Island population-optimality stage | Proved by RoundingSat and VeriPB |
+| Rhode Island boundary/canonical stages | Unresolved after documented timeouts |
+| Rhode Island current connected incumbent | Weighted cut 43,047,238 |
+| Rhode Island zero-population cut cleanup | 36,496 weighted-cut reduction at unchanged population |
+| Rhode Island equal-population swaps | Additional 429,150 cut reduction |
+| Rhode Island 1-to-2 balanced exchanges | Additional 3,844,797 cut reduction |
+
+This is the closest current path to a Huntington--Hill-style rule: Congress
+chooses the inputs, recursive structure, objective order, and island rule once;
+software then executes those choices without line-drawer discretion and proofs
+settle whether execution was correct.
+
+**[Read the plain-language certified BISECT explainer →](docs/concepts/certified-recursive-bisection.md)**
+
+**[Track the autonomous nationwide 2020/2010/2000 roadmap →](context/waves/CERTIFIED_NATIONAL_ROADMAP.md)**
 
 ### Bisection rounds — Minnesota (8 districts, 3 rounds)
 
@@ -28,13 +85,22 @@ In the default geographic mode, **no political or racial data enters the algorit
 | :---: | :---: | :---: |
 | ![](docs/figures/alabama_round_1.png) | ![](docs/figures/alabama_round_2.png) | ![](docs/figures/alabama_round_3.png) |
 
-## Why it's fair
+## What the baseline can establish
 
-Bisection is procedurally fair because it **reduces discretionary choice**. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by equal-population geometry, not by who benefits. Repeating that recursively means every district is the product of a series of neutral halvings, not a single optimised design.
+Bisection provides a **partisan-input-excluded geographic benchmark**. It
+reduces line-drawing discretion by applying a published equal-population
+geographic procedure, but its compactness, structure, resolution, and parameter
+choices still encode values and require public justification.
 
 It's also **transparent**. You can watch each round in the dashboard and see exactly how a 52-district California map emerges from 6 rounds of bisection. No black box — just a sequence of cuts.
 
-**Procedural fairness is a stronger claim than substantive fairness.** "This map is fair" is contested; "this map is the output of running this published algorithm on these published inputs" is a verification claim that can be checked through the recorded config, hashes, manifests, and reports.
+For the heuristic pipeline, the defensible claim remains procedural and
+bounded: “this map is the output of running this published algorithm on these
+published inputs.” For a completed certified pipeline, the stronger claim would
+be: “this is the unique map selected by the enacted recursive objective, and
+independent proof checking confirms that no better permitted cut exists.”
+Neither claim establishes substantive fairness, VRA compliance, community
+preservation, or the absence of partisan effects.
 
 ---
 
@@ -48,7 +114,7 @@ It's also **transparent**. You can watch each round in the dashboard and see exa
 | State legislative staff | [docs/quickstart/quickstart-state-staff.md](docs/quickstart/quickstart-state-staff.md) | 5 min/iteration |
 | Civic advocacy group | [docs/quickstart/quickstart-civic-advocate.md](docs/quickstart/quickstart-civic-advocate.md) | 15–30 min |
 
-**[→ All 190+ research papers across 18 tracks](docs/PAPERS.md)**
+**[→ 207 indexed research papers across 23 tracks](docs/PAPERS.md)**
 
 First time? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Windows) — ≤ 10 minutes from `git clone` to first run.
 
@@ -103,7 +169,7 @@ bisect state --state WA --chamber congressional           # congressional (from 
 bisect states --year 2020 --workers 8                     # all 50 states in parallel
 ```
 
-**Analyse plans** — compactness, VRA compliance, partisan lean, county splits, contiguity:
+**Analyse plans** — compactness, VRA opportunity diagnostics, partisan lean, county splits, contiguity:
 
 ```bash
 bisect label-analyze my_plan --year 2020 --types all
@@ -166,15 +232,31 @@ The same algorithm, unchanged, on 2010 data: Polsby–Popper **0.320** — only 
 
 *Rucho v. Common Cause* (2019) closed the federal-court door on partisan gerrymandering. Roberts' opinion explicitly invited Congress to act.
 
-This project's thesis ([B.02](docs/papers/B.02+one-federal-law.pdf)): the gap can be closed by a statute structurally analogous to **2 U.S.C. § 2a** (Huntington-Hill apportionment). Congress prescribes the algorithm; states execute it; any citizen can verify the output from published inputs and manifests. **ApportionRegions** is the project's algorithmic proposal for extending the apportionment-statute logic inside states, not an enacted legal rule.
+The current thesis ([B.02](docs/papers/B.02+one-federal-law.pdf)) is a
+**benchmark-and-disclosure standard**: every State publishes a precommitted
+geographic benchmark, the final legal plan, every changed unit, alternatives,
+effects, public comments, and reasons. The benchmark is evidence, not the
+mandatory final map. ApportionRegions remains a research comparator rather than
+the canonical statutory profile.
 
 Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and state-court companion ([`FAIRNESS_DOCTRINE.md`](docs/legal/FAIRNESS_DOCTRINE.md)).
+
+**North Star:** an
+[Exact Canonical Benchmark](docs/specs/2026-07-10-exact-canonical-benchmark-north-star.md)
+with enacted axioms, lexicographic optimization, canonical tie-breaking, and
+an independently verified proof certificate. Bounded split/tree certificates,
+hostile verifier corpora, proof-request compilation, and Rhode Island's
+connected block RCTX are implemented. The remaining frontier is scalable
+discovery and external proof generation/checking. The current METIS benchmark
+remains heuristic.
 
 ---
 
 ## Research papers
 
-190+ papers across twenty active tracks. Published PDFs are pre-built; some later-track drafts remain source-only in `research/tracks/`.
+207 indexed papers across 23 active tracks. Every indexed row currently links
+a committed PDF; evidence posture still varies from protocol or synthetic
+fixture to package-backed empirical work.
 **[→ Full index at docs/PAPERS.md](docs/PAPERS.md)**
 
 ### Track A — Synthesis
@@ -188,7 +270,7 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 | | |
 |--|--|
 | [B.0](docs/papers/B.0+algorithm-design-overview.pdf) | Bakeoff: compactness–proportionality paradox across 8 algorithm modes |
-| [B.02](docs/papers/B.02+one-federal-law.pdf) | One federal law: ApportionRegions as the HH intrastate extension |
+| [B.02](docs/papers/B.02+one-federal-law.pdf) | Federal benchmark-and-disclosure proposal |
 | [B.1](docs/papers/B.1+recursive-bisection.pdf) | Recursive bisection baseline (50 states, 2020) |
 | [B.2](docs/papers/B.2+edge-weighted-bisection.pdf) | Edge-weighted bisection: +22% compactness, mean PP 0.361 |
 | [B.3](docs/papers/B.3+multi-vs-edge.pdf) | Single-objective vs. multi-constraint METIS |
@@ -231,11 +313,9 @@ clustering, hierarchical regionalization, and flow-based construction.
 | [U.9](docs/papers/U.9+bisection-ensemble.pdf) | BisectionEnsemble — local ReCom at each bisection node |
 | [U.10](docs/papers/U.10+bisect-ensemble.pdf) | bisect-ensemble — Rust ReCom at 2500× speed |
 | [U.11](docs/papers/U.11+resolution-aware.pdf) | Resolution-aware redistricting |
+| [U.21](docs/papers/U.21+certified-recursive-bisection.pdf) | Certified recursive bisection and proof-carrying cuts |
 
-Planned search/optimization slots: overview, algorithm-selection matrix,
-exact-vs-heuristic certification, multi-objective selection, legal postures,
-branch-and-cut, branch-and-price, large-neighborhood/tabu/matheuristics,
-evolutionary comparison, and RPLAN plan-audit certificates.
+The U-track now includes the full search/certification spine through U.21.
 
 ### Track C — Validation
 | | |
@@ -249,8 +329,8 @@ evolutionary comparison, and RPLAN plan-audit certificates.
 ### Track D — Voting Rights Act
 | | |
 |--|--|
-| [D.0](docs/papers/D.0+vra-compliance.pdf) | VRA compliance via vra-aligned edge weighting |
-| [D.1](docs/papers/D.1+threshold-analysis.pdf) | The 42% threshold: geographic limits of VRA compliance |
+| [D.0](docs/papers/D.0+vra-compliance.pdf) | VRA opportunity diagnostics via vra-aligned edge weighting |
+| [D.1](docs/papers/D.1+threshold-analysis.pdf) | Exploratory demographic threshold for geographic opportunity |
 | [D.2](docs/papers/D.2+nway-vs-recursive-vra.pdf) | N-way vs. recursive for VRA-compliant redistricting |
 | [D.3](docs/papers/D.3+compactness-tradeoff.pdf) | VRA–compactness tradeoff: real but bounded |
 
@@ -361,7 +441,7 @@ docs/quickstart/    # Persona-specific quickstart guides
 ## Documentation
 
 - **[`docs/BISECT_CLI.md`](docs/BISECT_CLI.md)** — complete CLI reference
-- **[`docs/PAPERS.md`](docs/PAPERS.md)** — all 190+ research papers across 18 tracks
+- **[`docs/PAPERS.md`](docs/PAPERS.md)** — 207 indexed research papers across 23 tracks
 - **[`docs/legal/`](docs/legal/)** — model statute, fairness doctrine
 - **[`docs/quickstart/`](docs/quickstart/)** — persona guides
 - **[`docs/CHANGELOG.md`](docs/CHANGELOG.md)** — version history

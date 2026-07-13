@@ -183,14 +183,15 @@ not redistricting algorithm manipulation.
 But the algorithm will apply the correct population equality standard to
 whatever population data the Census Bureau provides.
 
-\paragraph{VRA compliance via the Gingles overlay.}
+\paragraph{Proposed VRA review and opportunity overlay.}
 The \dia{} mandates a separate VRA overlay process for states where the
 Gingles three-prong test is met \citep{b14paper}.
 The overlay, implemented via VRASection, uses geographic alignment scores
 to prefer bisection ratios that allow geographically compact minority
 communities to form majority-minority districts.
 
-This is not racial targeting in the \shaw{}--\miller{} sense.
+Whether this constitutes predominant racial targeting under
+\shaw{}--\miller{} is a legal question; the algorithm cannot resolve it.
 The alignment score measures where minority population is geographically
 concentrated, not how many minority voters the district should contain.
 It is a geographic property of the existing population distribution.
@@ -268,11 +269,10 @@ A civil rights organization, a Democratic advocacy group, or a court
 can independently reproduce the map from the census data and the
 manifest in approximately 30 minutes using the open-source \texttt{bisect}
 binary.
-There is no black box.
-There is no discretion.
-There is no room for the algorithm to be run in a way that produces a
-different output.
-The audit trail is complete and independently verifiable.
+The execution can be audited against its manifest. That audit does not remove
+the discretion embodied in the statute, profile, data vintage, adjacency
+rules, engine, seed rule, or legally required modifications. Current
+release-grade independent replay remains a separate VTRACE gate.
 
 \subsection{The Courts Will Accept It}
 
@@ -339,3 +339,6 @@ outcomes are achievable.
 The toolbox provides both the default map and the VRA-optimized alternative
 in a form that courts can directly compare.
 The \callais{} strong-inference framework is not just satisfied; it is operationalized.
+\noindent\textbf{SUPERSEDED SOURCE --- NOT COMPILED.} This section belongs to
+the former ApportionRegions final-map mandate. See
+\texttt{07-canonical-alignment.tex} and \texttt{REVISION-PLAN.md}.

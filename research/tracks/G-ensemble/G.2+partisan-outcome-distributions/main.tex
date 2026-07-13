@@ -55,8 +55,8 @@
 
 \title{%
   \textbf{Are Algorithmic Maps Partisan?}\\
-  \textbf{Situating \ar{} Within the \recom{} Ensemble}\\[0.4em]
-  \large Partisan Outcome Distributions Across Six States\\[0.8em]
+  \textbf{Situating a BISECT Benchmark Within ReCom Ensembles}\\[0.4em]
+  \large Two Implementations and a Complete 2020 Election Model\\[0.8em]
   \normalsize\textit{G.2 --- Partisan Outcome Distributions}%
 }
 
@@ -74,28 +74,22 @@
 
 \begin{abstract}
 \noindent
-The most frequently asked question about any redistricting algorithm is:
-does it systematically favor one party?  This paper frames how to answer that
-question by situating the algorithm's plans within partisan outcome
-distributions of \recom{} ensembles.  The claim to support with archived traces
-is whether \ar{} is systematically biased or instead falls near the ensemble
-median/corridor for the tested states.  We characterise the ``proportionality
-corridor'' (the fraction of ensemble plans within one seat of proportional) and
-explain why algorithm choice
-determines which tail you land in, connecting the partisan outcome to B.0's
-bakeoff of competing redistricting algorithms.
+We report real tract-level partisan-seat distributions for Rhode Island, Iowa,
+and North Carolina using the 2020 presidential estimates and two ReCom
+implementations. Rhode Island has no seat variation: the two-seat benchmark and
+all sampled plans elect two Democratic-majority districts under this model.
+Iowa's one-Democratic-seat benchmark falls at the 34th--37th percentile.
+North Carolina's five-seat benchmark falls at the 17th--21st percentile, but
+ESS is below 100 for both implementations and the result is not a converged
+tail finding. The locally available 2016 estimates fail current-tract coverage
+and are excluded from the primary results. These findings do not support the
+former six-state ``near median'' generalization.
 \end{abstract}
 
 \tableofcontents
 \newpage
 
-\input{sections/01-introduction}
-\input{sections/02-partisan-distribution}
-\input{sections/03-ar-position}
-\input{sections/04-proportionality-corridor}
-\input{sections/05-algorithm-choice}
-\input{sections/05b-current-boundary}
-\input{sections/06-conclusion}
+\input{sections/07-real-evidence}
 
 \bibliographystyle{plainnat}
 \bibliography{references}

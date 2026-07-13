@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "minnesota",
+  "state_code": "MN",
+  "state_fips": "27",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/mn_blocks_2020.rctx",
+  "rctx_bytes": 51571865,
+  "rctx_sha256": "24b02b7467a93dd6138e07796ba9f3df3f083bcbe0da2626c9c4528f121338cb",
+  "context_hash": "sha256:f9a66ce2752ac25e2028846bf97c5ba5a1d476ee407b5afbb8899f3701554134",
+  "unit_universe_hash": "sha256:d46c223b387c2b0d050f5bc3b2546a87cbe5afdabdbb91bc15125cd6cd947fb0",
+  "unit_count": 198705,
+  "population_total": 5706494,
+  "land_edge_count": 475487,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

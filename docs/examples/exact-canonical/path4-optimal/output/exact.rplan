@@ -1,0 +1,53 @@
+{
+  "rplan_version": "0.2",
+  "plan": {
+    "schema_version": "district-plan-v1",
+    "units": {
+      "unit_kind": "imported",
+      "state": "TT",
+      "year": 2020,
+      "canonical_order": "explicit-unit-ids",
+      "unit_ids": [
+        "u0",
+        "u1",
+        "u2",
+        "u3"
+      ],
+      "unit_universe_hash": "sha256:99d64113e066b263c3d0b2a74557fda93054e7971e62f5b4d97ea1acf9e69a1d",
+      "source_id": "path4-optimal"
+    },
+    "assignment": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "k": 2,
+    "display_labels": [
+      "1",
+      "2"
+    ],
+    "allow_empty_districts": false
+  },
+  "metadata": {
+    "label": "exact-canonical",
+    "jurisdiction": "TT",
+    "chamber": "congressional",
+    "created_at": "2026-07-10T12:00:00Z",
+    "description": "E0 bounded exact canonical benchmark solution"
+  },
+  "provenance": {
+    "producer": {
+      "crate": "bisect-ilp",
+      "exact_certificate_id": "sha256:bf2d9dee4908db9546db7f4ab26605a0ea9c69f341f8b399fae1950df62194a8",
+      "method": "canonical-exhaustive",
+      "name": "bisect exact"
+    },
+    "source_hashes": {
+      "fixture": "sha256:63a4970f3782da2b63bddb05c7c5a96e872ac98d2624ad733a70b25f5a885b00"
+    },
+    "conversion_lineage": []
+  },
+  "geometry": null,
+  "extensions": {}
+}

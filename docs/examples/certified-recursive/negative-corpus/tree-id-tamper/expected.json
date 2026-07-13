@@ -1,0 +1,6 @@
+{
+  "schema_version": "certified-recursive-negative-fixture-v1",
+  "case": "tree-id-tamper",
+  "expected_error": "tree-id-mismatch",
+  "description": "Changes the tree ID without changing canonical tree content."
+}

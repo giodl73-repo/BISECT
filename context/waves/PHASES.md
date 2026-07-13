@@ -2,6 +2,8 @@
 
 > Find the first wave with `status: active`; that is where execution work goes.
 > Waves define a coherent mission. Pulses are the smallest executable slices.
+> The long-horizon autonomous goal is controlled by
+> [`CERTIFIED_NATIONAL_ROADMAP.md`](CERTIFIED_NATIONAL_ROADMAP.md).
 
 ## Waves
 
@@ -55,6 +57,13 @@
 | 2026-05-14 | RGRAPH Mask Edge Cut Consumer | Route bitmask edge-cut counting through `rgraph-core` adapter without adding new API | archived |
 | 2026-05-14 | CLI Weighted Cut Scoring Cleanup | Consolidate repeated weighted edge-cut scoring locally without promoting it to `rgraph-core` | archived |
 | 2026-06-01 | VTRACE Baseline Maintenance | First live VTRACE-governed maintenance wave after S6 internal baseline selection | archived |
+| 2026-07-09 | National Standard Evidence And Specification | Canonical standard, flagship claim integrity, real evidence, reproducibility, legal alignment, and external replication | archived |
+| 2026-07-10 | Exact Canonical Benchmark Foundations | Lexicographic exact objective, certificates, verifiers, and small-State proof frontier | archived |
+| 2026-07-10 | Certified Recursive Bisection | Prove the unique best connected cut at every node of the enacted standard-bisect tree | archived |
+| 2026-07-10 | Scalable Certified Split Solver | Install proof/discovery tooling and certify the Rhode Island root cut with compact connectivity | archived |
+| 2026-07-10 | Rhode Island Boundary Certification | Improve and prove the boundary optimum at exact population balance | archived-partial |
+| 2026-07-12 | Small States 2020 Certification | Wall-to-wall packages and exact proof coverage for one- through four-district States | archived |
+| 2026-07-12 | Nationwide 2020 Operational Certification | Build and verify 50 State trees, 435 leaves, and national proof coverage | active |
 
 ## Operating Model
 

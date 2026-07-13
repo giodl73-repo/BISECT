@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "alaska",
+  "state_code": "AK",
+  "state_fips": "02",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/ak_blocks_2020.rctx",
+  "rctx_bytes": 7454182,
+  "rctx_sha256": "30f630d3a6a63fd9bb87c6e0d197c9921dfd804f04221e7c57a9f9ef257cd874",
+  "context_hash": "sha256:1f9d25ca0da13ecab366bfcf7d7e6f42d61ef9c0ba3d7a323efa352acea4a01d",
+  "unit_universe_hash": "sha256:b1feef87427dc13d4906b9593732ccac2321523dbf303da08078de2bc556740c",
+  "unit_count": 28568,
+  "population_total": 733391,
+  "land_edge_count": 67858,
+  "land_component_count": 50,
+  "bridge_edge_count": 1778,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

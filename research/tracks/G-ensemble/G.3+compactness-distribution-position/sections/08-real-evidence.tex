@@ -1,0 +1,53 @@
+\section{Metric Identity}
+
+The real package records:
+
+\[
+  f_{\mathrm{cut}} =
+  \frac{\text{tract adjacency edges crossing districts}}
+       {\text{all tract adjacency edges}}.
+\]
+
+This metric ignores polygon perimeter, boundary length, projection, coastline,
+and area. It is a graph-topology fragmentation measure. The benchmark itself
+uses shared-boundary weights, so even its optimization objective is not
+identical to the unweighted evaluation metric
+~\citep{polsby1991third,reock1961note}.
+
+\section{Observed Positions}
+
+Rhode Island's benchmark is at the 1.35th percentile in Rust and 1.81st in
+GerryChain. Iowa is at the 0.33rd and 0.88th percentiles, with ESS 257 and 498.
+North Carolina is at 0 and 0.2 percent, with ESS 109 and 87. Under the
+preregistered rule, no sub-1\% claim may be published unless ESS is at least
+1,000. Thus only Rhode Island supports a stable bounded statement: the
+benchmark lies near the low end of the sampled cut-fraction distribution.
+
+\section{Implementation Sensitivity}
+
+The Rust and GerryChain kernels use the same random-weight Kruskal tree method,
+initial plan, population tolerance, and chain length, yet their cut
+distributions differ. The KS effect is small in Rhode Island (0.038), moderate
+in Iowa (0.162), and large in North Carolina (0.471). Proposal details,
+pair reselection, random streams, and implementation behavior therefore matter
+to distributional claims.
+
+\section{Withdrawn Claims}
+
+The package contains no polygon compactness trace. It cannot support:
+
+\begin{itemize}
+\item the former 61st--72nd Polsby--Popper percentile range;
+\item the claim that no benchmark exceeds the 95th compactness percentile;
+\item a compactness--partisan correlation; or
+\item a legal ``optimal compactness position.''
+\end{itemize}
+
+Those questions require archived geometries or per-plan polygon metrics under a
+versioned projection and metric implementation.
+
+\section{Conclusion}
+
+Metric identity is part of evidence identity. A low tract cut fraction is a
+real, reproducible result for this package, but calling it ``Polsby--Popper
+compactness'' would be a category error.

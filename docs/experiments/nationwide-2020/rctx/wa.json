@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "washington",
+  "state_code": "WA",
+  "state_fips": "53",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/wa_blocks_2020.rctx",
+  "rctx_bytes": 41745571,
+  "rctx_sha256": "c58477933b5f0eb07551a3a00b4e00e3e836d34a7413ea1abfeccbafc8ad77a2",
+  "context_hash": "sha256:19059275f42ce5fbabc2077f90e71dc3ef70f966ec377e4fdf3b29519654df5b",
+  "unit_universe_hash": "sha256:2a900345eb5c85cf85489698fef8cc1e5d7d229ee11c13e244bf1255bd35f4d9",
+  "unit_count": 158093,
+  "population_total": 7705281,
+  "land_edge_count": 387766,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

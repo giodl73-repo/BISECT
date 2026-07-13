@@ -1,5 +1,12 @@
 \section*{Supplementary Material A: Edge-Weighting Technical Specification}
 
+\noindent\textbf{Superseded draft warning.} This supplement records an early
+demographic-similarity proposal and is not the method used by the current
+geographic benchmark. It must not be cited as the authoritative BISECT edge
+weight formula or as evidence of VRA compliance. The current default uses
+TIGER shared-boundary length; VRA-aligned weighting is a separate,
+race-conscious profile documented in the current code and concept guide.
+
 \subsection{Edge Weight Formula}
 
 For an edge $(i,j)$ connecting adjacent census tracts $i$ and $j$, the weight is computed as:
@@ -181,7 +188,7 @@ Cosine similarity outperforms alternatives because:
 \item Cosine similarity is threshold-free and proportionally weighted
 \end{itemize}
 
-\subsection{Summary}
+\subsection{Historical Draft Summary}
 
 The edge-weighting scheme $w(i,j) = \alpha \cdot s_{demo}(i,j) / (d(i,j) + \epsilon)$ provides:
 \begin{itemize}
@@ -192,4 +199,5 @@ The edge-weighting scheme $w(i,j) = \alpha \cdot s_{demo}(i,j) / (d(i,j) + \epsi
 \item \textbf{Reproducible}: Static weights + deterministic METIS = reproducible outputs
 \end{itemize}
 
-This specification enables independent verification and replication of our results.
+This superseded formula is preserved only to document an earlier proposal. It
+does not verify or reproduce the current benchmark results.

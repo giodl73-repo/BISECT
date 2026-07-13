@@ -1,0 +1,203 @@
+{
+  "schema_version": "ri-certified-root-proof-frontier-v1",
+  "status": "partial",
+  "instance_hash": "sha256:a02a709f2c54d6877bb9860b17cf46ab2676ccc55efe9eb074b7805bafe1be2d",
+  "discovery_id": "sha256:8011d6d32bafaf565d14df1cb6d526d4e90efa0877ae4d7d1b5d0e8726d8bf66",
+  "compiler": {
+    "path": "crates/bisect-ilp/src/proof_backend.rs",
+    "sha256": "11a2c7d0107be7853d8ae37580612f12d4712a729a4839b1d8836016b1123439"
+  },
+  "population_stage": {
+    "status": "verified-unsat",
+    "input_path": "data/2020/certified/ri-root-models/01-population.opb",
+    "input_bytes": 171152119,
+    "input_sha256": "e149c26f2453f33608db064ce752abb18b177271bb1dfae16980874dbddc72ec",
+    "proof_path": "01-population.pbp",
+    "proof_bytes": 3500023,
+    "proof_sha256": "955f567dcc0fe1e0b34d2aaae861481908560a545c1c950219955a0edb466c8e",
+    "roundingsat_result": "UNSATISFIABLE",
+    "veripb_result": "Verification succeeded.",
+    "claim": "No connected canonical split improves scaled population deviation below 1.",
+    "replay_commands": [
+      "cargo run -p bisect-ilp --example certified_model_package -- data/2020/certified/ri-root-discovery/certified-split-instance.json data/2020/certified/ri-root-discovery/certified-discovery.json data/2020/certified/ri-root-models",
+      "roundingsat --lp=0 --proof-log=01-population.pbp 01-population.opb",
+      "veripb --requireUnsat 01-population.opb 01-population.pbp"
+    ]
+  },
+  "boundary_stage": {
+    "status": "not-run",
+    "input_path": "data/2020/certified/ri-root-models/02-boundary.opb",
+    "input_bytes": 172119842,
+    "input_sha256": "5c76067389c10a029bf9fb619eb6b1a03c8df59f7b91d807bcb835ea4bb25f18",
+    "incumbent_weighted_cut": 43047238,
+    "claim": "Improved boundary model compiled; no SAT or UNSAT conclusion."
+  },
+  "prior_boundary_attempt": {
+    "discovery_id": "sha256:e5acf3761b2e37f6266ea7f30632aed6125d9d61b92addc65df0ec896ca1a9cb",
+    "input_sha256": "c8b66143105037b7711df928afee1f31c9e7b1b036684e0668e0f743cd5fd105",
+    "incumbent_weighted_cut": 102659356,
+    "status": "timelimit",
+    "time_limit_seconds": 300,
+    "reported_cpu_solve_seconds": 127.989,
+    "decisions": 418460,
+    "conflicts": 6064,
+    "propagations": 74994532,
+    "partial_proof_bytes_deleted": 7103207949,
+    "termination_note": "RoundingSat reported TIMELIMIT. Wall time also included writing and deleting a 7.1 GB incomplete proof log; exact wall time was not captured.",
+    "search_without_proof_log": {
+      "status": "timelimit",
+      "time_limit_seconds": 300,
+      "reported_solve_seconds": 294.477,
+      "decisions": 606392,
+      "conflicts": 9387,
+      "propagations": 116612433,
+      "claim": "Historical attempt only; superseded by improved incumbent."
+    },
+    "claim": "No SAT or UNSAT conclusion."
+  },
+  "prior_strengthened_boundary_attempts": [
+    {
+      "right_population": 548689,
+      "input_sha256": "db0ba000b7936d94b1bb23552c277884132dbe8369a288a74bfb9fc8608c96d5",
+      "time_limit_seconds": 120,
+      "reported_solve_seconds": 90.5213,
+      "decisions": 516147,
+      "conflicts": 6210,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548690,
+      "input_sha256": "d7a192c244c1e9bb654c18cdf5767ce3cb519a2248486476a2bd176571a40cfc",
+      "time_limit_seconds": 120,
+      "reported_solve_seconds": 90.7303,
+      "decisions": 556090,
+      "conflicts": 6155,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548689,
+      "connectivity_encoding": "parent-depth-v1",
+      "input_sha256": "125675b1785bafab3e511f86cef3847d669d9035687239623d6a30b0028938ff",
+      "incumbent_weighted_cut": 97994953,
+      "time_limit_seconds": 300,
+      "reported_cpu_seconds": 300.022,
+      "decisions": 14148553,
+      "conflicts": 41258,
+      "propagations": 702755622,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548690,
+      "connectivity_encoding": "parent-depth-v1",
+      "input_sha256": "4226eff3b754077d60e3f64b5cc639448293f2f03a275409506c51ebde12d0ba",
+      "incumbent_weighted_cut": 97994953,
+      "time_limit_seconds": 300,
+      "reported_cpu_seconds": 300.004,
+      "decisions": 6327137,
+      "conflicts": 47182,
+      "propagations": 683536464,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548689,
+      "connectivity_encoding": "parent-depth-v2",
+      "solver_configuration": "lp-disabled",
+      "input_sha256": "c70dff1886786f2b35094f5be39202717839637487dad39eba671dc2884463e0",
+      "incumbent_weighted_cut": 97994953,
+      "time_limit_seconds": 300,
+      "reported_cpu_seconds": 300.0,
+      "decisions": 7582607,
+      "conflicts": 40340,
+      "propagations": 725691348,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548690,
+      "connectivity_encoding": "parent-depth-v2",
+      "solver_configuration": "lp-disabled",
+      "input_sha256": "45c98302dd755adf4d0d1196c87435ee97e73a637a14527a28931acf1ef644c0",
+      "incumbent_weighted_cut": 97994953,
+      "time_limit_seconds": 300,
+      "reported_cpu_seconds": 300.002,
+      "decisions": 4371084,
+      "conflicts": 47720,
+      "propagations": 644858314,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548689,
+      "connectivity_encoding": "parent-depth-v2",
+      "solver_configuration": "lp-default",
+      "input_sha256": "c70dff1886786f2b35094f5be39202717839637487dad39eba671dc2884463e0",
+      "incumbent_weighted_cut": 97994953,
+      "time_limit_seconds": 300,
+      "reported_cpu_seconds": 300.009,
+      "decisions": 1018576,
+      "conflicts": 9309,
+      "propagations": 132691520,
+      "lp_total_seconds": 241.022,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548689,
+      "connectivity_encoding": "parent-depth-v3",
+      "input_sha256": "f50c05dc7c73191b1b47c5291c2ad29fa2d247e07bb06e3ff06559fdc2df6131",
+      "incumbent_weighted_cut": 97994953,
+      "time_limit_seconds": 300,
+      "reported_cpu_seconds": 300.002,
+      "decisions": 8077174,
+      "conflicts": 42367,
+      "propagations": 619967510,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548689,
+      "connectivity_encoding": "parent-depth-v3",
+      "input_sha256": "12be8a41fc106201e4bd7b49033ae6fcb63185b213abaf8f7635f3c03a957d0e",
+      "incumbent_weighted_cut": 64132468,
+      "time_limit_seconds": 600,
+      "reported_cpu_seconds": 600.189,
+      "decisions": 32380156,
+      "conflicts": 90200,
+      "propagations": 1623995217,
+      "status": "timelimit"
+    },
+    {
+      "right_population": 548690,
+      "connectivity_encoding": "parent-depth-v3",
+      "input_sha256": "e99c6a48bd27fdc521c85277c0293645f3d521aed775a881eaeb95dc8e0aa66c",
+      "incumbent_weighted_cut": 64132468,
+      "time_limit_seconds": 600,
+      "reported_cpu_seconds": 600.024,
+      "decisions": 7587778,
+      "conflicts": 65525,
+      "propagations": 1087948296,
+      "status": "timelimit"
+    }
+  ],
+  "current_boundary_branches": [
+    {
+      "right_population": 548689,
+      "connectivity_encoding": "parent-depth-v3",
+      "input_sha256": "43a26131cc744210866e91857abe2fca5f6c783673174e11197df18204ac30dc",
+      "incumbent_weighted_cut": 43047238,
+      "status": "not-run"
+    },
+    {
+      "right_population": 548690,
+      "connectivity_encoding": "parent-depth-v3",
+      "input_sha256": "74a78746c22669b3de7f0eddfae99f5e21310874128682dfd5e60117a1375597",
+      "incumbent_weighted_cut": 43047238,
+      "status": "not-run"
+    }
+  ],
+  "canonical_stage": {
+    "status": "not-run",
+    "claim": "Canonical proof requires a certified boundary optimum first."
+  },
+  "toolchain": {
+    "roundingsat_commit": "d4edbf7908a9bb951fd181940919e0f3ac7ab1ee",
+    "veripb_commit": "409a889bc23413e068af77361925b3d2b8e8cd66"
+  },
+  "claim_boundary": "Rhode Island population optimality is proved; boundary and canonical optimality are not."
+}

@@ -1,0 +1,22 @@
+\section{Split And Tree Certificates}
+
+A split instance binds its tree path, parent-certificate identity, canonical
+unit universe, populations, weighted edges, seat counts, and orientation rule.
+The result is either an optimal connected assignment or exact infeasibility.
+The bounded reference oracle commits to every candidate in deterministic order.
+
+A whole-plan certificate must establish more than the validity of individual
+cuts. The verifier reconstructs both child contexts from each certified parent
+assignment. Submitted child populations, edges, and unit IDs are not trusted.
+Non-leaf nodes must appear in the breadth-first order of the canonical
+bisection schedule. One-seat leaves are ordered by binary path and must
+partition the root universe exactly once.
+
+This construction distinguishes algorithmic proof from plan audit. An RPLAN
+audit can confirm assignment shape, population, contiguity, and provenance.
+The recursive certificate establishes the stronger model-scoped claim that no
+lexicographically better cut exists at each certified node.
+
+The guarantee remains sequential. If a locally optimal parent cut produces a
+child that cannot be split under the same rules, the procedure fails
+explicitly; it does not silently backtrack to a worse parent cut.

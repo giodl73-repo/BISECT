@@ -1,0 +1,114 @@
+{
+  "schema_version": "certified-small-state-scaling-2020-v1",
+  "status": "operational-complete-exact-partial",
+  "state_count": 10,
+  "district_count": 17,
+  "unit_count": 494399,
+  "states": [
+    {
+      "state": "AK",
+      "districts": 1,
+      "unit_count": 28568,
+      "operational_status": "verified",
+      "population_status": "trivial-proved",
+      "boundary_status": "trivial-zero-proved",
+      "canonical_status": "trivial-proved"
+    },
+    {
+      "state": "DE",
+      "districts": 1,
+      "unit_count": 20198,
+      "operational_status": "verified",
+      "population_status": "trivial-proved",
+      "boundary_status": "trivial-zero-proved",
+      "canonical_status": "trivial-proved"
+    },
+    {
+      "state": "HI",
+      "districts": 2,
+      "unit_count": 14732,
+      "operational_status": "verified",
+      "population_status": "verified-unsat",
+      "population_model_variables": 706781,
+      "population_proof_bytes": 1963991,
+      "boundary_status": "timelimit-120s",
+      "canonical_status": "blocked-by-boundary"
+    },
+    {
+      "state": "ND",
+      "districts": 1,
+      "unit_count": 84566,
+      "operational_status": "verified",
+      "population_status": "trivial-proved",
+      "boundary_status": "trivial-zero-proved",
+      "canonical_status": "trivial-proved"
+    },
+    {
+      "state": "NH",
+      "districts": 2,
+      "unit_count": 31948,
+      "operational_status": "verified",
+      "population_status": "verified-unsat",
+      "population_model_variables": 1512580,
+      "population_proof_bytes": 4224397,
+      "boundary_status": "timelimit-120s",
+      "canonical_status": "blocked-by-boundary"
+    },
+    {
+      "state": "NM",
+      "districts": 3,
+      "unit_count": 107215,
+      "operational_status": "verified",
+      "population_status": "arithmetic-proved-all-nodes",
+      "population_node_count": 2,
+      "boundary_status": "unproved",
+      "canonical_status": "blocked-by-boundary"
+    },
+    {
+      "state": "NV",
+      "districts": 4,
+      "unit_count": 57409,
+      "operational_status": "verified",
+      "population_status": "arithmetic-proved-all-nodes",
+      "population_node_count": 3,
+      "boundary_status": "unproved",
+      "canonical_status": "blocked-by-boundary"
+    },
+    {
+      "state": "SD",
+      "districts": 1,
+      "unit_count": 71383,
+      "operational_status": "verified",
+      "population_status": "trivial-proved",
+      "boundary_status": "trivial-zero-proved",
+      "canonical_status": "trivial-proved"
+    },
+    {
+      "state": "VT",
+      "districts": 1,
+      "unit_count": 24611,
+      "operational_status": "verified",
+      "population_status": "trivial-proved",
+      "boundary_status": "trivial-zero-proved",
+      "canonical_status": "trivial-proved"
+    },
+    {
+      "state": "WY",
+      "districts": 1,
+      "unit_count": 53769,
+      "operational_status": "verified",
+      "population_status": "trivial-proved",
+      "boundary_status": "trivial-zero-proved",
+      "canonical_status": "trivial-proved"
+    }
+  ],
+  "coverage": {
+    "operational_state_packages": "10/10",
+    "nontrivial_population_nodes_proved": "7/7",
+    "nontrivial_boundary_nodes_proved": "0/7",
+    "nontrivial_canonical_nodes_proved": "0/7",
+    "trivial_one_district_boundary_proofs": "6/6"
+  },
+  "conclusion": "Wall-to-wall operational certification and population optimality scale across one- through four-district States. Nontrivial exact boundary and canonical proof remains the limiting frontier.",
+  "claim_boundary": "Selected small-State sample, not nationwide 2020 completion."
+}

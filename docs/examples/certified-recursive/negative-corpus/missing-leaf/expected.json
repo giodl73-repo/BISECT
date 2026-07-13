@@ -1,0 +1,6 @@
+{
+  "schema_version": "certified-recursive-negative-fixture-v1",
+  "case": "missing-leaf",
+  "expected_error": "leaf-set-mismatch",
+  "description": "Removes one certified district leaf and recomputes the outer tree ID."
+}

@@ -1,0 +1,190 @@
+{
+  "schema_version": "g-ensemble-evidence-manifest v1",
+  "package_id": "G.1-G.3+real-2020",
+  "status": "active",
+  "papers": [
+    "G.1",
+    "G.2",
+    "G.3"
+  ],
+  "claims": [
+    {
+      "paper": "G.1",
+      "claim": "Three-state cut-fraction percentiles and cross-tool differences are trace-backed with convergence and partition-space diagnostics.",
+      "required_roles": [
+        "external-trace",
+        "metric-output",
+        "bisect-plan",
+        "rctx-context",
+        "diagnostic"
+      ]
+    },
+    {
+      "paper": "G.2",
+      "claim": "Three-state 2020 presidential Democratic-seat percentiles are backed by aligned election inputs, traces, baselines, and diagnostics.",
+      "required_roles": [
+        "external-trace",
+        "election-input",
+        "bisect-plan",
+        "rctx-context",
+        "diagnostic"
+      ]
+    },
+    {
+      "paper": "G.3",
+      "claim": "The package supports tract-graph cut-fraction positions only and explicitly withdraws polygon compactness percentile claims.",
+      "required_roles": [
+        "external-trace",
+        "metric-output",
+        "bisect-plan",
+        "rctx-context"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "design.md",
+      "sha256": "a129324b951ddb32af7cbfc3aff3774e0d2166a8267b1f880e6fa8e1d7913f0a",
+      "role": "other",
+      "description": "Frozen experiment design."
+    },
+    {
+      "path": "deviations.md",
+      "sha256": "f52914e7207559ecb3df74e83badaba0ddaf6d28d6d63d6bb3180cfc6724ad3f",
+      "role": "other",
+      "description": "Eligibility and election-coverage deviations."
+    },
+    {
+      "path": "software.json",
+      "sha256": "d3ed9548a66af8c8837096921f9dc63c666f7be3857260b9e375434b5a5a0beb",
+      "role": "other",
+      "description": "Software versions and source/input hashes."
+    },
+    {
+      "path": "analysis.json",
+      "sha256": "47fd479c61fa6791101eeca2d75abe84e641c58263d57fda6d7f0757c90efbc6",
+      "role": "metric-output",
+      "description": "Regenerated percentiles, diagnostics, and cross-tool comparisons."
+    },
+    {
+      "path": "summary.csv",
+      "sha256": "1c5db4976e526bfd1e401ec91fc5dc4016008bcb83c63e2f5561acf114a019e6",
+      "role": "diagnostic",
+      "description": "Flat summary of state/tool/metric diagnostics."
+    },
+    {
+      "path": "ri/gerrychain-trace.json",
+      "sha256": "5911f142c367c0576319e08b080bb4c448bf6045184c1dfe35ce8e62391c771b",
+      "role": "external-trace",
+      "description": "Independent GerryChain 0.3.2 ReCom trace."
+    },
+    {
+      "path": "ri/rust-trace.json",
+      "sha256": "ec27e1e97967f7af35a23e81209adb6e21b369eb78be5abbd82320048f2d2513",
+      "role": "other",
+      "description": "Rust ReCom trace using the GerryChain-compatible tree kernel."
+    },
+    {
+      "path": "ri/election-input.json",
+      "sha256": "88ededa36d5bf71a81cbf11af2bc032348e28936ce5abd2c1f6fd957e216c83f",
+      "role": "election-input",
+      "description": "Aligned 2016/2020 presidential tract estimates with coverage counts."
+    },
+    {
+      "path": "ri/baseline.rplan",
+      "sha256": "1a3cfe695c556a214e8f9b2f69a5a15a16c0a84a57b66a3bff945285977c4eca",
+      "role": "bisect-plan",
+      "description": "NRS v0.1 tract-level BISECT benchmark in RPLAN v0.2."
+    },
+    {
+      "path": "ri/context.rctx",
+      "sha256": "24eaa5e2f740ad2d2044e9034b0dc4f98d864bb56fc0b7fc5d7941f35084bdaf",
+      "role": "rctx-context",
+      "description": "Hash-bound graph, population, unit, and source context."
+    },
+    {
+      "path": "ri/audit-certificate.json",
+      "sha256": "47ca42803cc221114f72b1df9ac8bea5149831e881203b9a14ac79068ed14ba2",
+      "role": "other",
+      "description": "Plan-shape, population, and contiguity audit certificate."
+    },
+    {
+      "path": "ia/gerrychain-trace.json",
+      "sha256": "07767addb03e81d062e9b2dedb1f5c53a7d5828c2f15bcd834fe29d060b9bdb1",
+      "role": "external-trace",
+      "description": "Independent GerryChain 0.3.2 ReCom trace."
+    },
+    {
+      "path": "ia/rust-trace.json",
+      "sha256": "4d0b5cb24c781be0d44a2828065485e16c7aaf94fc4851576ce619c24ece7532",
+      "role": "other",
+      "description": "Rust ReCom trace using the GerryChain-compatible tree kernel."
+    },
+    {
+      "path": "ia/election-input.json",
+      "sha256": "978d8c4e2a45b263197e8daef7e51a321d3b39cb4315e9e1bceddea70e83b477",
+      "role": "election-input",
+      "description": "Aligned 2016/2020 presidential tract estimates with coverage counts."
+    },
+    {
+      "path": "ia/baseline.rplan",
+      "sha256": "2359e419394e5321108a862eb6732fa6db0071d39b99a10039c07ca9336521a0",
+      "role": "bisect-plan",
+      "description": "NRS v0.1 tract-level BISECT benchmark in RPLAN v0.2."
+    },
+    {
+      "path": "ia/context.rctx",
+      "sha256": "35c6208a2fb81b1346a8a9a21ab0ea4dc2ecf3b75b58e840618cbedb30760809",
+      "role": "rctx-context",
+      "description": "Hash-bound graph, population, unit, and source context."
+    },
+    {
+      "path": "ia/audit-certificate.json",
+      "sha256": "fcea56ad9027e5c8e1cbe733c54059f9380e8bdafb411e4cb831e34c3085019b",
+      "role": "other",
+      "description": "Plan-shape, population, and contiguity audit certificate."
+    },
+    {
+      "path": "nc/gerrychain-trace.json",
+      "sha256": "0540ef4edf9fee006fd65eb138fbc0fdad6968cefd15a0046fabf84450a81d39",
+      "role": "external-trace",
+      "description": "Independent GerryChain 0.3.2 ReCom trace."
+    },
+    {
+      "path": "nc/rust-trace.json",
+      "sha256": "30488d09ce62785d11bc26cd2ed51229378555519dce45892ce2b5c0423c938a",
+      "role": "other",
+      "description": "Rust ReCom trace using the GerryChain-compatible tree kernel."
+    },
+    {
+      "path": "nc/election-input.json",
+      "sha256": "75d1ddd48208c83872b1a411ee36738fba6fb54f933ce8188648932e20322859",
+      "role": "election-input",
+      "description": "Aligned 2016/2020 presidential tract estimates with coverage counts."
+    },
+    {
+      "path": "nc/baseline.rplan",
+      "sha256": "fbb28a1fac83426c7dadf6454ea1f30b1035b1171bfe38a1501431181d40130e",
+      "role": "bisect-plan",
+      "description": "NRS v0.1 tract-level BISECT benchmark in RPLAN v0.2."
+    },
+    {
+      "path": "nc/context.rctx",
+      "sha256": "30ee627932301849faaac020b93146a0b23b74c78e1d74f57552688a1b49deb9",
+      "role": "rctx-context",
+      "description": "Hash-bound graph, population, unit, and source context."
+    },
+    {
+      "path": "nc/audit-certificate.json",
+      "sha256": "0b8ad9551b0ccc805f6556e97af1a1681458fa9ceeb6ea96ed7cdec53f2e471b",
+      "role": "other",
+      "description": "Plan-shape, population, and contiguity audit certificate."
+    }
+  ],
+  "verifier_path": "scripts/research/verify_real_ensemble_package.py",
+  "verification_commands": [
+    "python scripts/research/verify_real_ensemble_package.py docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020",
+    "cargo test -p bisect-ensemble real_g1_g3_package_validates"
+  ],
+  "missing_evidence": []
+}

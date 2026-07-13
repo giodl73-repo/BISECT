@@ -1,0 +1,17 @@
+{
+  "schema_version": "certified-split-proof-request-v5",
+  "request_id": "sha256:8e55b4fd0fb556a55b3ec4c7f0a90516d08cb9e6b691672deb090b889adad07e",
+  "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+  "discovery_id": "sha256:467ec0519f173e6057cbfec3c4ff5b68580169d2ceac8a7a2be7f7498cb9f34d",
+  "stage": "population-lower-bound",
+  "connectivity_encoding": "static-nogoods-v1",
+  "exact_right_population": null,
+  "status": "unsat-proof-required",
+  "opb_sha256": "sha256:0467c50312e430df1fed2fae0dfc0af5daffa3bbc44a127a8ebfb4a29d1a672b",
+  "variable_count": 15,
+  "constraint_count": 146,
+  "proof_format": "veripb",
+  "proof_status": "not-generated",
+  "solver_command_template": "roundingsat --proof-log={proof} {opb}",
+  "claim": "no connected canonical split has max scaled population deviation below 0"
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "certified-recursive-bisection-package-v1",
+  "method": "certified-recursive",
+  "tree_id": "sha256:b83468213da40df2fd808ef8cb15798ee8768fb992343f7035ef9d71fa531117",
+  "root_unit_universe_hash": "sha256:b509a4c14d4ddcf33e3306720c5f582f15afbbe57b630ce0c310e360eee49faa",
+  "districts": 4,
+  "split_count": 3,
+  "leaf_count": 4,
+  "declared_population_tolerance_percent": 1.0,
+  "files": {
+    "audit-certificate.json": "c4105dc0a6e5198c955089635e45a7bfd53408f1c8a92bf446bf8f46e128a499",
+    "certified-bisection-tree.json": "eda5af5314f1c4bcdd4cca122bb1639170fc15081939e0015f608c1d51f9001e",
+    "exact.rctx": "e978f630f11d0d09a8e50af894df272c6727927b60ffb7e329ba9d2100f3776f",
+    "exact.rplan": "3413bd0fb5d84127db859e014b33fdd8648bcd9a2ee11c2e886b4eb3d6370aad"
+  },
+  "claim_boundary": "Bounded exact certification of the sequential standard-bisect tree with at most 8 units per split; not global unrestricted-map optimality or block-scale readiness."
+}

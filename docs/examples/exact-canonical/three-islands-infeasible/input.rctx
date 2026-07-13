@@ -1,0 +1,33 @@
+{
+  "rctx_version": "0.1",
+  "context_hash": "sha256:3225a30031e855073958a3d72fb7e0460519dab140bf632148c98790fb8bde02",
+  "units": {
+    "unit_kind": "imported",
+    "state": "TT",
+    "year": 2020,
+    "canonical_order": "explicit-unit-ids",
+    "unit_ids": [
+      "a",
+      "b",
+      "c"
+    ],
+    "source_id": "three-islands-infeasible",
+    "unit_universe_hash": "sha256:c410da870db476509a55a088a505c02791e27ffbb935cbe154d97e2ed099c843"
+  },
+  "graph": {
+    "edge_semantics": "undirected",
+    "adjacency": [
+      [],
+      [],
+      []
+    ]
+  },
+  "populations": [
+    1,
+    1,
+    1
+  ],
+  "source_hashes": {
+    "fixture": "sha256:a8c0f374c4017092716d25c96e3f34f62297515cce49503b58a3ee5ce6ee41f6"
+  }
+}

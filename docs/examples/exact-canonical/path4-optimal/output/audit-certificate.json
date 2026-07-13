@@ -1,0 +1,81 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:dbe8c00079dca0f2670c6a2a9131f11d70d17ad19a4ba7afbc262ec9fa734422",
+  "generated_at_utc": "2026-07-10T12:00:00Z",
+  "content_hash": "sha256:dbe8c00079dca0f2670c6a2a9131f11d70d17ad19a4ba7afbc262ec9fa734422",
+  "plan_hash": "sha256:9654bda9720c5ccc2139df9cd9788e408014fb2d3ccc10ab0976ed7c72fadbaf",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:82b4997b2d5161d946a8ad2ca4ce9c9fc7a178519727c091695a3988de728d72",
+  "legal_profile_hash": "sha256:2d06fae997471905400dcda633869223bdedd27c42377ad755cae797aa2783a8",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "EXACT_CANONICAL_E0_MODEL_V1",
+    "jurisdiction": "TT",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 1.0
+    },
+    "county_split_rule": {
+      "type": "not-evaluated"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "fixture": "sha256:63a4970f3782da2b63bddb05c7c5a96e872ac98d2624ad733a70b25f5a885b00"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0",
+    "solver": {
+      "name": "bounded-exhaustive-enumeration",
+      "version": "0.1.0",
+      "mode": "exact-canonical-k2",
+      "optimality_gap": 0.0
+    }
+  },
+  "algorithm_lineage": {
+    "producer_crate": "bisect-ilp",
+    "producer_version": "0.1.0",
+    "method": "canonical-exhaustive",
+    "parent_plan_hashes": [],
+    "parameters_hash": "sha256:69414218c585b18574e169c62329a1ebfe1c56a8a55d392d00e2770e73e1ad10",
+    "extra": {
+      "exact_certificate_id": "sha256:bf2d9dee4908db9546db7f4ab26605a0ea9c69f341f8b399fae1950df62194a8",
+      "instance_hash": "sha256:5e49ddf32402692abe4608873db8b105566d53fede804050f423b6aceba24524",
+      "model_id": "exact-canonical-k2-exhaustive-v1"
+    }
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    }
+  ],
+  "warnings": []
+}

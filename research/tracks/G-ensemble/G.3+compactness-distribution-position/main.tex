@@ -55,10 +55,9 @@
 %% -----------------------------------------------------------------------
 
 \title{%
-  \textbf{Compact Without Being an Outlier:}\\
-  \textbf{Algorithmic Plans in the Ensemble Compactness Distribution}\\[0.4em]
-  \large Polsby-Popper Position, Partisan Correlation,\\
-  and Legal Defensibility\\[0.8em]
+  \textbf{What the Real Ensemble Package Measures}\\
+  \textbf{---and What It Does Not}\\[0.4em]
+  \large Cut Fraction Is Not Polsby--Popper\\[0.8em]
   \normalsize\textit{G.3 --- Compactness Distribution Position}%
 }
 
@@ -76,33 +75,20 @@
 
 \begin{abstract}
 \noindent
-Courts have long treated compactness as a proxy for non-gerrymandering:
-a compact plan is presumed to reflect geographic rather than political logic.
-But compactness is not neutral---in geographically sorted states, more compact
-plans tend to produce more Republican seats.  This paper situates the \ar{}
-plan in the compactness distribution of the \recom{} ensemble.  The percentile
-range is an artifact-backed claim: it should be cited only when the ensemble
-trace, compactness metric version, and diagnostics are available.  We document
-the expected right-skewed shape of the \recom{} compactness distribution,
-explain why the \ar{} plan
-is not at the maximum (the METIS objective minimises edge cuts, not
-Polsby-Popper directly), examine the compactness-partisan correlation within
-the ensemble (higher compactness tends to favor Republicans in sorted states---
-the Rodden effect), and argue that the \ar{} plan's compactness is legally
-defensible precisely because it is not at the extreme of any distribution.
+The active real ensemble package measures unweighted tract-graph cut fraction,
+not Polsby--Popper, Reock, perimeter, or the geographic boundary-length
+objective used by the BISECT benchmark. Rhode Island, Iowa, and North Carolina
+show low cut-fraction percentiles, but Iowa and North Carolina lack the ESS
+needed for precise tail claims and the two implementations disagree materially.
+No polygon compactness distribution was generated. The prior 61st--72nd
+Polsby--Popper percentile tables and compactness--partisan correlations are
+therefore withdrawn as empirical findings.
 \end{abstract}
 
 \tableofcontents
 \newpage
 
-\input{sections/01-introduction}
-\input{sections/02-compactness-distribution}
-\input{sections/03-ar-pp-percentile}
-\input{sections/04-outlier-question}
-\input{sections/05-compactness-partisan-correlation}
-\input{sections/06-legal-defensibility}
-\input{sections/06b-current-boundary}
-\input{sections/07-conclusion}
+\input{sections/08-real-evidence}
 
 \bibliographystyle{plainnat}
 \bibliography{references}

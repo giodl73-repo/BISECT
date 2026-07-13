@@ -1,0 +1,6 @@
+{
+  "schema_version": "exact-canonical-negative-fixture-v1",
+  "case": "false-infeasibility",
+  "expected_error": "result-mismatch",
+  "description": "Claims infeasibility for the feasible path-4 instance."
+}

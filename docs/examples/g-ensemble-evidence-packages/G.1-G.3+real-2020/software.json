@@ -1,0 +1,89 @@
+{
+  "software_record_version": "g-real-software v1",
+  "git_commit": "d61a7136d60c27ecdd451067a1c08a063581820f",
+  "git_status_policy": "dirty research worktree; source files individually hash-bound below",
+  "python": "3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26310-SP0",
+  "gerrychain": "0.3.2",
+  "networkx": "3.6.1",
+  "numpy": "2.4.1",
+  "scipy": "1.17.1",
+  "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+  "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+  "source_files": {
+    "crates/bisect-ensemble/examples/real_trace.rs": "bcf5ca8128fd012f2463099b205fa8c1b7ab74e11b42cc7f08e186315f7ca0ff",
+    "crates/bisect-ensemble/src/recom.rs": "d7a6b4ad788037c13f6a75fffc17f716039947b01aac064af7cf9b674b68fdda",
+    "crates/bisect-ensemble/src/spanning.rs": "b1dc39c15d2701820ba4c0969b36d01c74383d00006d90aebef0421a3b39f843",
+    "scripts/research/prepare_real_ensemble_inputs.py": "b116c5e6e6ecffdfddc7e907a17d24944c34f2a9967708f56fe2eec724614aef",
+    "scripts/research/run_gerrychain_real_trace.py": "ecd2b344a9b8e44a7ed23b98fa4c04ae3af4480c10bc1d4ec90ad593cf833380",
+    "scripts/research/analyze_real_ensemble.py": "bd83a767a5ab0e25bac8a6efa5f7071109961aba5f9c50025f87d0f2461c6922",
+    "scripts/research/build_real_ensemble_contexts.py": "d952b67d9fa6582d5417099957aca29ec08ca2e6c31b1f0328900582bab60650",
+    "scripts/research/verify_real_ensemble_package.py": "493df05fda67f21adca485d0a9b24a7c595079fa1742403e4249982fb96994bf"
+  },
+  "config": {
+    "path": "configs/nrs_reference_v0_1.yml",
+    "sha256": "27457b80be6e4b7c01b63d1d43c00519808e7087431d35e7852bbcec8db532da"
+  },
+  "states": {
+    "RI": {
+      "baseline_assignment": {
+        "path": "runs/nrs_reference_v0_1/2020/rhode_island/final_assignments.json",
+        "sha256": "930d3b18024d64ed17f640ac37d16a0204fc318c9df5332f074b5cb0491dac71"
+      },
+      "adjacency_bin": {
+        "path": "outputs/V3/data/2020/adjacency/ri_adjacency_2020.adj.bin",
+        "sha256": "d536d2efa5f6dfd8712b1ad20abadeb859daab48ac19e2f453f73903ca0df5de"
+      },
+      "adjacency_pkl": {
+        "path": "outputs/V3/data/2020/adjacency/ri_adjacency_2020.pkl",
+        "sha256": "cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d"
+      },
+      "geoid_index": {
+        "path": "outputs/V3/data/2020/adjacency/ri_adjacency_2020_geoids.json",
+        "sha256": "0dda6fd8fa8bcdab73186a02a9cf7e1da0f265def0e721859e78b65b3f762c56"
+      }
+    },
+    "IA": {
+      "baseline_assignment": {
+        "path": "runs/nrs_reference_v0_1/2020/iowa/final_assignments.json",
+        "sha256": "af147ef83cbf7e5282974db162151b38276aef287963334c70ff0e0be9553b29"
+      },
+      "adjacency_bin": {
+        "path": "outputs/V3/data/2020/adjacency/ia_adjacency_2020.adj.bin",
+        "sha256": "a31c45608b153c16f0798b00e566a1c0eb0cd9cc72616d7650f4025a6aaabe7b"
+      },
+      "adjacency_pkl": {
+        "path": "outputs/V3/data/2020/adjacency/ia_adjacency_2020.pkl",
+        "sha256": "b5278946b3f314495ced0d75c6584b22c01a52b656668591b78df16fd5c5d068"
+      },
+      "geoid_index": {
+        "path": "outputs/V3/data/2020/adjacency/ia_adjacency_2020_geoids.json",
+        "sha256": "aa9f85fa55b18457eb1b6a675a386638e10e50e43458596817f30bc266d48c8e"
+      }
+    },
+    "NC": {
+      "baseline_assignment": {
+        "path": "runs/nrs_reference_v0_1/2020/north_carolina/final_assignments.json",
+        "sha256": "a9232f7836e26d589bec34d1c5f0a9fcce3a8da56fcfb2548ea45c6791a3a429"
+      },
+      "adjacency_bin": {
+        "path": "outputs/V3/data/2020/adjacency/nc_adjacency_2020.adj.bin",
+        "sha256": "28818b06e4b871278f2d1d377a611b021318b2167d0fddc2402af29c2ff183db"
+      },
+      "adjacency_pkl": {
+        "path": "outputs/V3/data/2020/adjacency/nc_adjacency_2020.pkl",
+        "sha256": "0e8761a4c15ca456a8be79ad2cee5ac55b3d3c2f11b407ebf7447502ba546d92"
+      },
+      "geoid_index": {
+        "path": "outputs/V3/data/2020/adjacency/nc_adjacency_2020_geoids.json",
+        "sha256": "3504d2690108533c1cdc259c10cf618231aaed2b9de50b7cf04c499415075303"
+      }
+    }
+  },
+  "wisconsin_ineligible": {
+    "baseline_assignment_sha256": "c09d3abc0d01e8c5e7977c6eaf06a82ba9d6b0d5df566bea42c7d474bbf0e25e",
+    "district": 1,
+    "tracts": 177,
+    "largest_component": 119
+  }
+}

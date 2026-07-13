@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "new_york",
+  "state_code": "NY",
+  "state_fips": "36",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/ny_blocks_2020.rctx",
+  "rctx_bytes": 77069645,
+  "rctx_sha256": "d553991acc1e9124a38572fec3ba0c080dad62a239b1ba89bcbaaad9c4f41019",
+  "context_hash": "sha256:2ea45d6152084db00b9bbcfbbc4482907a0846f1c00c4a3763ff04e121315b4a",
+  "unit_universe_hash": "sha256:69c5854d6fc5a11262598e57ba7b590117cdbf4333e032865e4819a004f02a39",
+  "unit_count": 288819,
+  "population_total": 20201249,
+  "land_edge_count": 712436,
+  "land_component_count": 3,
+  "bridge_edge_count": 2,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

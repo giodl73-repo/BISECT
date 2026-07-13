@@ -1,0 +1,63 @@
+{
+  "rplan_version": "0.2",
+  "plan": {
+    "schema_version": "district-plan-v1",
+    "units": {
+      "unit_kind": "imported",
+      "state": "TT",
+      "year": 2020,
+      "canonical_order": "explicit-unit-ids",
+      "unit_ids": [
+        "u00",
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07"
+      ],
+      "unit_universe_hash": "sha256:d10bce1e7767f2acf674e23dba884baef92a23ccbbcd0c68789611011579a8fe",
+      "source_id": "certified-recursive-path8"
+    },
+    "assignment": [
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      3,
+      3
+    ],
+    "k": 4,
+    "display_labels": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "allow_empty_districts": false
+  },
+  "metadata": {
+    "label": "certified-recursive-bisection",
+    "jurisdiction": "TT",
+    "chamber": "congressional",
+    "created_at": "2026-07-10T12:00:00Z",
+    "description": "Bounded exact certification of the standard-bisect recursive tree"
+  },
+  "provenance": {
+    "producer": {
+      "certified_tree_id": "sha256:b83468213da40df2fd808ef8cb15798ee8768fb992343f7035ef9d71fa531117",
+      "crate": "bisect-ilp",
+      "method": "certified-recursive",
+      "name": "bisect exact"
+    },
+    "source_hashes": {
+      "fixture": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "conversion_lineage": []
+  },
+  "geometry": null,
+  "extensions": {}
+}

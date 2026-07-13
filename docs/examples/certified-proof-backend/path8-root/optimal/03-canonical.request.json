@@ -1,0 +1,17 @@
+{
+  "schema_version": "certified-split-proof-request-v5",
+  "request_id": "sha256:539f66030f5bf0cc7195b50bda4f864d4837c7f8887f0ece948c3b5f0aa20ae2",
+  "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+  "discovery_id": "sha256:467ec0519f173e6057cbfec3c4ff5b68580169d2ceac8a7a2be7f7498cb9f34d",
+  "stage": "canonical-tie-break",
+  "connectivity_encoding": "static-nogoods-v1",
+  "exact_right_population": null,
+  "status": "unsat-proof-required",
+  "opb_sha256": "sha256:935833e483bea63f84f8d3bc292fb9e4fba355c7eb5ef7651e4f4fc59f895797",
+  "variable_count": 15,
+  "constraint_count": 149,
+  "proof_format": "veripb",
+  "proof_status": "not-generated",
+  "solver_command_template": "roundingsat --proof-log={proof} {opb}",
+  "claim": "at population deviation 0 and weighted cut 1, no lexicographically smaller assignment exists"
+}

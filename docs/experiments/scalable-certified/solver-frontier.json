@@ -1,0 +1,44 @@
+{
+  "schema_version": "ri-boundary-solver-frontier-v1",
+  "state": "rhode_island",
+  "year": 2020,
+  "incumbent_weighted_cut": 43047238,
+  "root_free_opb": {
+    "variables": 91810,
+    "constraints": 264640,
+    "roundingsat": {
+      "commit": "d4edbf7908a9bb951fd181940919e0f3ac7ab1ee",
+      "lp_seconds": 900,
+      "lp_result": "timelimit",
+      "no_lp_seconds": 900,
+      "no_lp_result": "timelimit"
+    },
+    "exact": {
+      "commit": "b921cd1c4e3b6a7b7ba16dfd9c38c419d5e53ee4",
+      "seconds": 300,
+      "result": "unknown"
+    }
+  },
+  "certified_cnf": {
+    "translator": "VeritasPBLib",
+    "translator_commit": "0387da904195c19a40f60864d05a18936a7f20ca",
+    "encoding": "verified-adder",
+    "variables": 1427694,
+    "clauses": 13623141,
+    "bytes": 374691822,
+    "kissat": {
+      "commit": "8af8e56f174b778aef3aa45af9f739b2a5f492c2",
+      "version": "4.0.4",
+      "seconds": 900,
+      "result": "unknown"
+    },
+    "cadical": {
+      "commit": "7b99c07f0bcab5824a5a3ce62c7066554017f641",
+      "version": "3.0.0",
+      "seconds": 900,
+      "result": "unknown"
+    }
+  },
+  "conclusion": "Changing proof-producing solver architecture without further mathematical decomposition did not classify the unrestricted boundary decision.",
+  "claim_boundary": "Timed solver benchmarks only; no SAT, UNSAT, optimality, or certification claim."
+}

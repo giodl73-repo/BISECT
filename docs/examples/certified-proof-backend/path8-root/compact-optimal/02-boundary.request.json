@@ -1,0 +1,17 @@
+{
+  "schema_version": "certified-split-proof-request-v5",
+  "request_id": "sha256:076629663f11633e0147768527ad19b3cb5d3fe125f272487ba0b49855737c3d",
+  "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+  "discovery_id": "sha256:d21af5f85e2d910424e8956b49fdc811f3df74b3f9ddb2e50cfd6d56ce608abe",
+  "stage": "boundary-lower-bound",
+  "connectivity_encoding": "parent-depth-v3",
+  "exact_right_population": null,
+  "status": "proof-required-unclassified",
+  "opb_sha256": "sha256:c8fb9a5c14c5c28b0046e899c6956ecdda8f51d864c25266494d50533ba4203e",
+  "variable_count": 123,
+  "constraint_count": 244,
+  "proof_format": "veripb",
+  "proof_status": "not-generated",
+  "solver_command_template": "roundingsat --proof-log={proof} {opb}",
+  "claim": "at population deviation 0, no connected split has weighted cut below 1"
+}

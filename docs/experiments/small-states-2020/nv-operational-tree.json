@@ -1,0 +1,91 @@
+{
+  "schema_version": "certified-operational-tree-frontier-v1",
+  "status": "operational-complete-population-proved",
+  "state": "NV",
+  "year": 2020,
+  "districts": 4,
+  "unit_count": 57409,
+  "population_total": 3104614,
+  "bridge_edge_count": 0,
+  "tree_sha256": "54aebb30c8235131534581276d6f274d81c341453631be67ea7b0f628fbab27c",
+  "package_manifest_sha256": "b0d16bbc3f7017c188851b2030451191797156590bb90f8613d8fbf16d50f256",
+  "nodes": [
+    {
+      "path": "",
+      "seats": 4,
+      "parent_population": 3104614,
+      "discovery_id": "sha256:3c97343fd59c09fa0ab6a5d2adceafc56155f02b79b8a7c8323eed02378d9684",
+      "objective": {
+        "max_population_deviation_scaled": 0,
+        "total_population_deviation_scaled": 0,
+        "weighted_boundary_cut": 632372237
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 0
+      },
+      "context_sha256": "e6324a63cd65ca9ea94f07019da74b1dbbc076c026341f802940693fe3ded3dc"
+    },
+    {
+      "path": "0",
+      "seats": 2,
+      "parent_population": 1552307,
+      "discovery_id": "sha256:6241f96aae7f78f697ce35459cd1c9876beec7fa5a4e4c00c581678676257a73",
+      "objective": {
+        "max_population_deviation_scaled": 1,
+        "total_population_deviation_scaled": 2,
+        "weighted_boundary_cut": 6936412274
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 1
+      },
+      "context_sha256": "e93827b51377f69f532ecb550cbfcdf70272a0beeaa0e64841f58235120458fe"
+    },
+    {
+      "path": "1",
+      "seats": 2,
+      "parent_population": 1552307,
+      "discovery_id": "sha256:3347add8bc572f4cf4fee18252a46bde655bdcfd19b4155d37d332b1ea1c65e2",
+      "objective": {
+        "max_population_deviation_scaled": 1,
+        "total_population_deviation_scaled": 2,
+        "weighted_boundary_cut": 40705361
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 1
+      },
+      "context_sha256": "600f79d7dba0175646db8076e7a0ae5886263d0c7846244453613440cd4f6b1a"
+    }
+  ],
+  "leaves": [
+    {
+      "path": "00",
+      "district": 0,
+      "unit_count": 27364,
+      "population": 776153
+    },
+    {
+      "path": "01",
+      "district": 1,
+      "unit_count": 15054,
+      "population": 776154
+    },
+    {
+      "path": "10",
+      "district": 2,
+      "unit_count": 7508,
+      "population": 776153
+    },
+    {
+      "path": "11",
+      "district": 3,
+      "unit_count": 7483,
+      "population": 776154
+    }
+  ],
+  "boundary_proof": "not-run",
+  "canonical_proof": "blocked-by-boundary",
+  "claim_boundary": "Complete connected wall-to-wall recursive tree with arithmetic population optimality at every node; boundary and canonical optimality are unproved."
+}

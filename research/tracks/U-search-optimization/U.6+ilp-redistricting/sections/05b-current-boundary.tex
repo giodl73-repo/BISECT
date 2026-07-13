@@ -2,9 +2,12 @@
 
 Exact optimization claims require an explicit solver certificate.  The current
 \texttt{bisect-ilp} crate contains formulation summaries, solver-result and
-certificate types, and tests for the exact-method boundary; full MPS/LP export
-and external solver replay are separate evidence layers that must be present
-before claiming a courtroom-grade optimum for a real state.
+certificate types, bounded exact split/tree certificates, hostile verifier
+corpora, and deterministic OPB proof requests. U.21 integrates those artifacts
+with the fixed recursive bisection schedule. Full State-scale discovery,
+compact proof-loggable connectivity, RoundingSat proof generation, and VeriPB
+checking remain separate evidence layers that must be present before claiming
+a courtroom-grade optimum for a real State.
 
 Accordingly, this paper should distinguish three statuses: formulation-only,
 bounded solve, and proven optimum.  A proven optimum must name the model,

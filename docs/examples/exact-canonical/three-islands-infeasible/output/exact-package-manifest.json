@@ -1,0 +1,15 @@
+{
+  "schema_version": "exact-canonical-package-manifest-v1",
+  "method": "canonical-exhaustive",
+  "result": "infeasible",
+  "instance_hash": "sha256:101d82eb80e238ca7da5853c13cc4e6b2be6ccb652bed337faa28125f2837e73",
+  "exact_certificate_id": "sha256:98b1f84cb51e3f2082028f248393bc721203281ce7bde9568f48233718cb753c",
+  "exact_proof_id": "sha256:cd2e88a27c08bd172ca7fb1489c8830ac8977f90006a50eb21ec21d51d1536c1",
+  "declared_population_tolerance_percent": 1.0,
+  "files": {
+    "exact-canonical-certificate.json": "1bd334fb3e90f79d77df940f8ceaf375c0e54ba7179a1dd63c926cc30663acaf",
+    "exact-canonical-instance.json": "3d7f2d8f3fbb788cb36a53a2d0b0c0fc76fea72a0742e32250751a50dc04657e",
+    "exact-canonical-proof.json": "8c99b55c9389eda6944cc15c2834b6e3e0e7f135cf219f1febd5df8018e8d455"
+  },
+  "claim_boundary": "Bounded E0 k=2 exhaustive certificate with at most 8 units; not national exact readiness or legal certification."
+}

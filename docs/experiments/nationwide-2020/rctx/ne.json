@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "nebraska",
+  "state_code": "NE",
+  "state_fips": "31",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/ne_blocks_2020.rctx",
+  "rctx_bytes": 30710946,
+  "rctx_sha256": "7ea301e08666fbc56fe3d6f5478cf092b706cf536476403dc318c51b5fd151ee",
+  "context_hash": "sha256:b89b19ca2b3624f7e23047d2123f78d85aedc0d72b549c23e708f0d5a7c6b53f",
+  "unit_universe_hash": "sha256:ad25117aedcd9aec0ace839545dd18f2b3e87b106d5ed762bc0fd32cbfc8dfd1",
+  "unit_count": 119103,
+  "population_total": 1961504,
+  "land_edge_count": 285540,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "exact-canonical-small-state-frontier-package-v1",
+  "package_id": "ri-2020-block-exact-frontier",
+  "status": "blocked-real-data-frontier",
+  "files": [
+    {
+      "path": "ri-2020-block-frontier.json",
+      "sha256": "88bf8059aaf0aa5a1b0c01f982617462e4e12dd893bfe6bdcea272f6d99ad864"
+    }
+  ],
+  "analyzer_path": "scripts/research/analyze_small_state_exact_frontier.py",
+  "analyzer_sha256": "bbb1f2bc8557e363fbc24f43cf05f453fb21ce3b89bf712dd05be41e780fd1a2",
+  "verification_commands": [
+    "python scripts/research/analyze_small_state_exact_frontier.py verify-package docs/experiments/exact-canonical/manifest.json",
+    "python scripts/research/analyze_small_state_exact_frontier.py verify-package docs/experiments/exact-canonical/manifest.json --check-sources"
+  ],
+  "claim_boundary": "Hash-bound Rhode Island 2020 block-level blocker report; not an exact certificate or solver result."
+}

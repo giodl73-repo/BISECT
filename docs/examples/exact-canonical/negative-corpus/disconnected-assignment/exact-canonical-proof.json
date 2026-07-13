@@ -1,0 +1,23 @@
+{
+  "schema_version": "exact-canonical-proof-v1",
+  "transcript_id": "sha256:67aaf58b1df44481f4984c99a2b1eece12bf030fa6cc996d7431e917aea8f7f0",
+  "instance_hash": "sha256:5e49ddf32402692abe4608873db8b105566d53fede804050f423b6aceba24524",
+  "model_id": "exact-canonical-k2-exhaustive-v1",
+  "enumeration_order": "unit-0-fixed-label-0; nonzero masks ascending through 2^(n-1)-1",
+  "fixed_label_unit": 0,
+  "candidate_count": 7,
+  "feasible_count": 3,
+  "primary_objective_ties": 1,
+  "lower_bound": {
+    "max_population_deviation_scaled": 0,
+    "total_population_deviation_scaled": 0,
+    "weighted_boundary_cut": 1
+  },
+  "canonical_assignment": [
+    0,
+    0,
+    1,
+    1
+  ],
+  "search_commitment": "sha256:66ce551bad52e0513634c3b94e38017b5806ae8a7db8d8f5ebab1e97cc9f577e"
+}

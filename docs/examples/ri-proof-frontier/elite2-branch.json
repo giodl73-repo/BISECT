@@ -1,0 +1,32 @@
+{
+  "schema_version": "ri-certified-reduced-branch-proof-v1",
+  "status": "verified-unsat-branch-only",
+  "claim": "Within the elite-two fixed-core branch and exact right population 548,689, no assignment has weighted cut below 49,081,395.",
+  "claim_boundary": "The fixed cores come from heuristic METIS consensus. This proof does not cover assignments that move a fixed-core block and therefore does not prove Rhode Island boundary optimality.",
+  "input": {
+    "path": "data/2020/certified/ri-cutset-reduced-elite2-low-49m/round-0000/boundary.opb",
+    "bytes": 518559,
+    "sha256": "e84ebf08a06ccc8a4c264f47cb23dbad401c725d38a2105ded6a6eeae14ca49e",
+    "variable_count": 5388,
+    "constraint_count": 14044,
+    "connectivity_encoding": "cutset-reduced-v1",
+    "fixed_labels_sha256": "2f87f9eeb12aa24249213f1dfb185cbcca924036d8b1ee05d683143860e8cc28"
+  },
+  "proof": {
+    "path": null,
+    "local_available": false,
+    "custody_disposition": "Deleted after successful streamed verification to reclaim storage for nationwide 2020 execution.",
+    "compressed_bytes": 6030597455,
+    "compressed_sha256": "f8b3e147f6c1d824b320d4a720700526107c514faa11a54ddc710daa3e455643",
+    "roundingsat_log_sha256": "e3ae354ccfb724f2e86f13587e37fadc0f6a63dfc8a3fc115fac89ddad9070d8",
+    "veripb_log_sha256": "b284debfad709d4d1708561771e4d228ed7ec150f9ad2520d715356640a68497"
+  },
+  "toolchain": {
+    "roundingsat_commit": "d4edbf7908a9bb951fd181940919e0f3ac7ab1ee",
+    "roundingsat_binary_sha256": "cf115250c7539000b39b950d53ddf9d1dfd4ca0d004caf52038a116e7efe3ed5",
+    "veripb_commit": "b1e507329fcb03efc5b85245d5e203bbfb6e55ef",
+    "veripb_version": "3.0.2",
+    "result": "VERIFIED UNSATISFIABLE"
+  },
+  "replay_note": "The recorded compressed proof hash is retained, but the local artifact is no longer available. Regeneration requires streaming RoundingSat into VeriPB 3.0.2."
+}

@@ -1,0 +1,6 @@
+{
+  "schema_version": "exact-canonical-negative-fixture-v1",
+  "case": "false-optimum",
+  "expected_error": "result-mismatch",
+  "description": "Claims a feasible but population-suboptimal connected assignment as exact."
+}

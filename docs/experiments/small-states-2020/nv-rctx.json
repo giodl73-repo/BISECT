@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "nevada",
+  "state_code": "NV",
+  "state_fips": "32",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/nv_blocks_2020.rctx",
+  "rctx_bytes": 15312080,
+  "rctx_sha256": "e6324a63cd65ca9ea94f07019da74b1dbbc076c026341f802940693fe3ded3dc",
+  "context_hash": "sha256:9655b259373934301f946f655f9fc8b816da48b7c1b074246b1b29d8d3b36f88",
+  "unit_universe_hash": "sha256:624bf077ef9af2790e9443125706745f2a099e32ffbb20839119cc56d569ce14",
+  "unit_count": 57409,
+  "population_total": 3104614,
+  "land_edge_count": 143393,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

@@ -1,0 +1,158 @@
+{
+  "schema_version": "exact-canonical-fixture-manifest-v1",
+  "package_id": "exact-canonical-e0-fixtures",
+  "status": "active",
+  "files": [
+    {
+      "path": "independent-verifier-report.json",
+      "sha256": "167bc93b37bce0e805540b785f8e9e1091bc8e180273bc4839f60bd960088efc"
+    },
+    {
+      "path": "negative-corpus/certificate-hash-tamper/exact-canonical-certificate.json",
+      "sha256": "428f8608de5db0953c39b4eeba1956961489a2e7cc6c7437ca2ed973530472d4"
+    },
+    {
+      "path": "negative-corpus/certificate-hash-tamper/exact-canonical-instance.json",
+      "sha256": "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb"
+    },
+    {
+      "path": "negative-corpus/certificate-hash-tamper/exact-canonical-proof.json",
+      "sha256": "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+    },
+    {
+      "path": "negative-corpus/certificate-hash-tamper/expected.json",
+      "sha256": "a6ceeca54eac91927287e3fdd63d7a54d04b8c41b0ae75a209a3ce069805f4cc"
+    },
+    {
+      "path": "negative-corpus/disconnected-assignment/exact-canonical-certificate.json",
+      "sha256": "37a570658456835bbdb3b38e002b3b06da3fcb615c378ec971b8be242289fac6"
+    },
+    {
+      "path": "negative-corpus/disconnected-assignment/exact-canonical-instance.json",
+      "sha256": "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb"
+    },
+    {
+      "path": "negative-corpus/disconnected-assignment/exact-canonical-proof.json",
+      "sha256": "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+    },
+    {
+      "path": "negative-corpus/disconnected-assignment/expected.json",
+      "sha256": "55e985673555dc1e035fa86d04268cdf021f9ff90997d3e3eeeb4ac5e596fc15"
+    },
+    {
+      "path": "negative-corpus/false-infeasibility/exact-canonical-certificate.json",
+      "sha256": "61d01e30b882fcb284a4ea92c8ad5ceceeea80d77b502883e6e704b9ea36cb83"
+    },
+    {
+      "path": "negative-corpus/false-infeasibility/exact-canonical-instance.json",
+      "sha256": "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb"
+    },
+    {
+      "path": "negative-corpus/false-infeasibility/exact-canonical-proof.json",
+      "sha256": "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+    },
+    {
+      "path": "negative-corpus/false-infeasibility/expected.json",
+      "sha256": "5b995be7113a445609c34a290242b5c854febcb9d7057c96b7fa65b8ba971a11"
+    },
+    {
+      "path": "negative-corpus/false-optimum/exact-canonical-certificate.json",
+      "sha256": "58e812b667747a365b7ed15991d2b40eb2ec5b3ddd08935736615c0c9c241c79"
+    },
+    {
+      "path": "negative-corpus/false-optimum/exact-canonical-instance.json",
+      "sha256": "33008759b8bb128abb029cf651040b9a821e28282f12894a94e5a6049d47fdfb"
+    },
+    {
+      "path": "negative-corpus/false-optimum/exact-canonical-proof.json",
+      "sha256": "a13774b2892e22c786b17654ef34da0464ced3323d0592b68064e4dea29cba45"
+    },
+    {
+      "path": "negative-corpus/false-optimum/expected.json",
+      "sha256": "49753fd1af704118cdbcd907c126e671224804501f6e6b04b6134c7130e8f26a"
+    },
+    {
+      "path": "negative-corpus/noncanonical-tie/exact-canonical-certificate.json",
+      "sha256": "c32d0b0b6eba589f54237e7da874633e2eb5f8d35c5d8753fb5b34d4c13a3b65"
+    },
+    {
+      "path": "negative-corpus/noncanonical-tie/exact-canonical-instance.json",
+      "sha256": "9266d6b7c1fa260071619269e2eafb2eea943898a8def4b5c38cb7681dee1ad6"
+    },
+    {
+      "path": "negative-corpus/noncanonical-tie/exact-canonical-proof.json",
+      "sha256": "63dc7467cc01080971306d881d116b1feadff60bf694ba623d72d357456412e3"
+    },
+    {
+      "path": "negative-corpus/noncanonical-tie/expected.json",
+      "sha256": "2bbdb0f532f6e5ca9b5e72f2f11e66c85fba8a759a2f17cf18e17e3223e57bc4"
+    },
+    {
+      "path": "path4-optimal/input.rctx",
+      "sha256": "c6b0ba66ff8cb99fb8cf3d712af0af029aa685d18501858e4226b3c59ce2bd47"
+    },
+    {
+      "path": "path4-optimal/output/audit-certificate.json",
+      "sha256": "c539e826fd2a44dd902ec45e9abf512152f8ba458dee226413402317a7032a67"
+    },
+    {
+      "path": "path4-optimal/output/exact-canonical-certificate.json",
+      "sha256": "8c40eed9de8a42fd83112b4f1644816edc6d04e08d4494f41ed2fe121084e6a4"
+    },
+    {
+      "path": "path4-optimal/output/exact-canonical-instance.json",
+      "sha256": "604e11284632ee195d09d4dea529dfdf200e20572e557ebd9d0153819a8d8e3b"
+    },
+    {
+      "path": "path4-optimal/output/exact-canonical-proof.json",
+      "sha256": "982aa1f66d918b6a3a0fa021fea1e3b48090b3ec539a6cf169350418818e2715"
+    },
+    {
+      "path": "path4-optimal/output/exact-package-manifest.json",
+      "sha256": "09553cfcbbae478ef654b33e166220fa99333d8a4bd81d4e040f27f5278e7ed5"
+    },
+    {
+      "path": "path4-optimal/output/exact.rctx",
+      "sha256": "bbda31f57f62b7707eee384988a45811e89cf805e6916a850800454242f227f3"
+    },
+    {
+      "path": "path4-optimal/output/exact.rplan",
+      "sha256": "0e28db22bf507fee85b7c997172e68c3b68e2924e2393141d67ce7c6231d2cf2"
+    },
+    {
+      "path": "README.md",
+      "sha256": "0d88a20d05bee4c76139f2207a32dc9e43475e6f55d2220061a8f421cee3516a"
+    },
+    {
+      "path": "three-islands-infeasible/input.rctx",
+      "sha256": "0170b3f46cde9d5bc70013a71352a9f51c8d35bf02b7e11419ed5e953794e3af"
+    },
+    {
+      "path": "three-islands-infeasible/output/exact-canonical-certificate.json",
+      "sha256": "1bd334fb3e90f79d77df940f8ceaf375c0e54ba7179a1dd63c926cc30663acaf"
+    },
+    {
+      "path": "three-islands-infeasible/output/exact-canonical-instance.json",
+      "sha256": "3d7f2d8f3fbb788cb36a53a2d0b0c0fc76fea72a0742e32250751a50dc04657e"
+    },
+    {
+      "path": "three-islands-infeasible/output/exact-canonical-proof.json",
+      "sha256": "8c99b55c9389eda6944cc15c2834b6e3e0e7f135cf219f1febd5df8018e8d455"
+    },
+    {
+      "path": "three-islands-infeasible/output/exact-package-manifest.json",
+      "sha256": "d6593a74e0d8d2dc8e76c2d4f59a004440d5aa537099d7a40144a941487ed32d"
+    }
+  ],
+  "verifier_path": "scripts/research/verify_exact_canonical_fixtures.py",
+  "verification_commands": [
+    "python scripts/research/verify_exact_canonical_fixtures.py",
+    "python scripts/research/verify_exact_canonical_independent.py corpus",
+    "cargo test -p bisect-ilp canonical -- --test-threads=1",
+    "cargo test -p bisect-ilp --test exact_negative_corpus -- --test-threads=1",
+    "cargo test -p bisect-cli exact_cmd --lib -- --test-threads=1"
+  ],
+  "claim_boundary": "Bounded synthetic k=2 exact reference fixtures only.",
+  "builder_path": "scripts/research/build_exact_negative_corpus.py",
+  "independent_verifier_path": "scripts/research/verify_exact_canonical_independent.py"
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": "certified-operational-tree-frontier-v1",
+  "status": "operational-complete-population-proved",
+  "state": "NM",
+  "year": 2020,
+  "districts": 3,
+  "unit_count": 107215,
+  "population_total": 2117522,
+  "bridge_edge_count": 0,
+  "tree_sha256": "31ca38e13ecce6803a92c8e040a78b4467a22876a71eb4f24fae785f4073c18b",
+  "package_manifest_sha256": "9a2129b9440e885b068842b9cb707d27f51926271054f633df0db4af9d3cf19e",
+  "nodes": [
+    {
+      "path": "",
+      "seats": 3,
+      "parent_population": 2117522,
+      "discovery_id": "sha256:6fe039ecf0963122e08f4a9ccaba4b7105015b39ac7a9cbc7e7495afd526c9e4",
+      "objective": {
+        "max_population_deviation_scaled": 1,
+        "total_population_deviation_scaled": 2,
+        "weighted_boundary_cut": 4139262159
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 1
+      },
+      "context_sha256": "6ec8526daac0349be74bcf01119a14b4d37ba3c6d65577d07503cf2ec5d868bc"
+    },
+    {
+      "path": "1",
+      "seats": 2,
+      "parent_population": 1411681,
+      "discovery_id": "sha256:b41b7bbde4475e879a7f4e1e4b76823f49c4b7df08ea6ed0f36eafd4e04915e6",
+      "objective": {
+        "max_population_deviation_scaled": 1,
+        "total_population_deviation_scaled": 2,
+        "weighted_boundary_cut": 4756796920
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 1
+      },
+      "context_sha256": "3013a3da3271cd6cbf10a408109fc2ce48c71e311d9875f8da283310645b81f3"
+    }
+  ],
+  "leaves": [
+    {
+      "path": "0",
+      "district": 0,
+      "unit_count": 23283,
+      "population": 705841
+    },
+    {
+      "path": "10",
+      "district": 1,
+      "unit_count": 51715,
+      "population": 705840
+    },
+    {
+      "path": "11",
+      "district": 2,
+      "unit_count": 32217,
+      "population": 705841
+    }
+  ],
+  "boundary_proof": "not-run",
+  "canonical_proof": "blocked-by-boundary",
+  "claim_boundary": "Complete connected wall-to-wall recursive tree with arithmetic population optimality at every node; boundary and canonical optimality are unproved."
+}

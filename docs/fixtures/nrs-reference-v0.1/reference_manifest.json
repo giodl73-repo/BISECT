@@ -1,0 +1,133 @@
+{
+  "schema_version": "nrs-reference-replay v1",
+  "BISECT_version": "0.1.0",
+  "BISECT_build_commit": "440a47e21992be7651b70de2dbd84401b54d81c5",
+  "BISECT_build_commit_short": "440a47e21992",
+  "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)",
+  "package_id": "nrs-reference-v0.1-ri-2020",
+  "created_at": "2026-07-10T05:20:00Z",
+  "status": "internal_clean_source_snapshot",
+  "claim_boundary": "Tract-level functional assignment replay only; not block-level NRS conformance, byte-identical executable reproduction, legal certification, or external replication.",
+  "scope": {
+    "state": "RI",
+    "state_name": "rhode_island",
+    "year": 2020,
+    "districts": 2,
+    "unit_count": 250,
+    "resolution": "tract"
+  },
+  "source": {
+    "upstream_base_commit": "d61a7136d60c27ecdd451067a1c08a063581820f",
+    "runtime_overlay": "runtime-overlay.patch",
+    "runtime_overlay_sha256": "7afef7e3cf1792b210c099a4848dc61a442432775d5e4f71046312463e2f13b3",
+    "validation_runtime_overlay_bytes_sha256": "7afef7e3cf1792b210c099a4848dc61a442432775d5e4f71046312463e2f13b3",
+    "validation_snapshot_commit": "440a47e21992be7651b70de2dbd84401b54d81c5",
+    "validation_snapshot_note": "The assignment validation snapshot equals the upstream base plus the reference runtime changes and config. The portable overlay also repairs the documented 2020 PL 94-171 acquisition URL and contains only the dependencies required by the reference build.",
+    "cargo_lock_sha256": "82bbf20f627638efb52d76547415386b2dacf4bc54797940783c85f3c8004d1d",
+    "validation_cargo_lock_bytes_sha256": "82bbf20f627638efb52d76547415386b2dacf4bc54797940783c85f3c8004d1d"
+  },
+  "toolchain": {
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "host": "Microsoft Windows 10.0.26310",
+    "profile": "release",
+    "locked": true
+  },
+  "algorithm": {
+    "config_path": "configs/nrs_reference_v0_1.yml",
+    "package_config_path": "config.yml",
+    "config_sha256": "6a2e6577f2d675a0d3716bd74206dbd1e17ba70ab1146351ca9bdb978f4d72bf",
+    "validation_config_bytes_sha256": "27457b80be6e4b7c01b63d1d43c00519808e7087431d35e7852bbcec8db532da",
+    "structure": "standard-bisect",
+    "weights": "geographic",
+    "search": "single",
+    "seed": 424242,
+    "balance_tolerance_pct": 0.5,
+    "metis_engine": "c-ffi"
+  },
+  "inputs": {
+    "data_manifest": {
+      "path": "data/manifest.json",
+      "sha256": "aac84dbd91869a2612d0b43479f241e7144499d8d601300f8df6f1be9ca1f139"
+    },
+    "pl_94_171": [
+      {
+        "path": "data/2020/redistricting/ri2020.pl/ri000012020.pl",
+        "sha256": "a077a305148dd567de66c7ba28e355d62b5b6adde7e72b3bb7a876fefb773657"
+      },
+      {
+        "path": "data/2020/redistricting/ri2020.pl/ri000022020.pl",
+        "sha256": "ed0d1bf19f52a35c12b52ffc2a55fa33ea669084d4be9bbb37e2f137606baf46"
+      },
+      {
+        "path": "data/2020/redistricting/ri2020.pl/ri000032020.pl",
+        "sha256": "967e53fdb03fcb92682f57f8c5b08c524f8b2c7c5839534cd579205037c8226d"
+      },
+      {
+        "path": "data/2020/redistricting/ri2020.pl/rigeo2020.pl",
+        "sha256": "d7236ca05940f50fa1bdb6b35c08435327011af40843f19a3f269503063300fd"
+      }
+    ],
+    "tiger_tract_components": [
+      {
+        "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.cpg",
+        "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+      },
+      {
+        "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.dbf",
+        "sha256": "e2b7b0109bf6409d692ce8b13fa95259855633cf1f902e817febb2f281ff3ee7"
+      },
+      {
+        "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.prj",
+        "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+      },
+      {
+        "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.shp",
+        "sha256": "977bc64c912101776391c4d2a3c50aa95d7eb8efe3235fdeaa341b12c7e78fc5"
+      },
+      {
+        "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.shx",
+        "sha256": "6a60422efdc22303bc6e48269be8622730f9a081ae8145106119afd2842be146"
+      }
+    ],
+    "adjacency": {
+      "pkl_path": "outputs/V3/data/2020/adjacency/ri_adjacency_2020.pkl",
+      "pkl_sha256": "cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d",
+      "bin_path": "outputs/V3/data/2020/adjacency/ri_adjacency_2020.adj.bin",
+      "bin_sha256": "d536d2efa5f6dfd8712b1ad20abadeb859daab48ac19e2f453f73903ca0df5de",
+      "geoids_path": "outputs/V3/data/2020/adjacency/ri_adjacency_2020_geoids.json",
+      "geoids_sha256": "0dda6fd8fa8bcdab73186a02a9cf7e1da0f265def0e721859e78b65b3f762c56"
+    }
+  },
+  "build": {
+    "binary_sha256": "0336ed6551008905a52a04814fdc968be479845bf2298e00c4ae017ed761c208",
+    "command": "cargo build --release --locked -p bisect-cli --bin bisect"
+  },
+  "execution": {
+    "build_command": "target/release/bisect.exe build nrs_reference_v0_1 --year 2020 --states RI --workers 1 --force --no-interactive",
+    "analyze_command": "target/release/bisect.exe label-analyze nrs_reference_v0_1 --year 2020 --types compactness,contiguity,splits,summary",
+    "report_command": "target/release/bisect.exe label-report nrs_reference_v0_1 --year 2020 --format html",
+    "verify_command": "target/release/bisect.exe label-verify nrs_reference_v0_1 --year 2020",
+    "executions": 2,
+    "source_clean_before_each_execution": true,
+    "mapping_differences": 0,
+    "label_verify_verdict": "VERIFIED"
+  },
+  "expected_output": {
+    "canonicalization": "Parse final_assignments.json as a JSON object, sort keys lexicographically, and serialize with UTF-8 and separators ',' and ':' with no insignificant whitespace.",
+    "canonical_assignment_sha256": "6cd96b33ac8fdae2d8e5e4b7bc9674358311eed62becbe624e6913d1507b4822",
+    "run_1_raw_assignment_sha256": "930d3b18024d64ed17f640ac37d16a0204fc318c9df5332f074b5cb0491dac71",
+    "run_2_raw_assignment_sha256": "930d3b18024d64ed17f640ac37d16a0204fc318c9df5332f074b5cb0491dac71",
+    "raw_hash_note": "The writer serializes assignment keys in canonical lexicographic order; raw and parsed mapping comparisons were stable across both executions."
+  },
+  "verification": {
+    "verifier_path": "docs/fixtures/nrs-reference-v0.1/README.md",
+    "verification_commands": [
+      "git apply --check docs/fixtures/nrs-reference-v0.1/runtime-overlay.patch",
+      "cargo test -p bisect-cli algo_config --lib -- --test-threads=1",
+      "cargo test -p bisect-cli build_cmd --lib -- --test-threads=1",
+      "cargo test -p bisect-cli output --lib -- --test-threads=1",
+      "bisect label-verify nrs_reference_v0_1 --year 2020"
+    ]
+  }
+}

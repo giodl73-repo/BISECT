@@ -4,15 +4,28 @@
 **Audience:** litigators preparing redistricting cases, expert witnesses, special masters, journalists evaluating claims about this tool, civic-advocacy groups, opposing counsel.
 **Companion docs:** `docs/legal/CALLAIS_REFERENCE.md` (race-related grounding), `docs/file-formats/manifests.md` (chain of custody), `docs/BISECT_CLI.md` (the user-facing surface).
 
-This document states what the `BISECT` toolchain claims about fairness, what it does not claim, and what a court can verify. It is the citable artifact for the project's neutrality posture.
+> **Candidate-statute boundary:** The current CLI and many historical examples
+> use census tracts and a configured 0.5% tolerance. The candidate federal
+> benchmark in NRS v0.1 is block-level, uses equality as nearly exact as
+> practicable, and requires a manifest-derived seed that is not yet wired.
+> Current tract runs are research and evidence fixtures, not statutory
+> conformance.
+
+This document states what the `BISECT` toolchain claims about fairness, what it
+does not claim, and what a court can verify. It is the citable artifact for the
+project's input-exclusion and reproducibility posture.
 
 If you are arguing that this tool is biased, **read §6 first** — it lists the things this project explicitly does not claim. Many criticisms aimed at "computational redistricting" generally do not apply to this project specifically because we do not assert them.
 
 ---
 
-## 1. The procedural-fairness claim
+## 1. The bounded procedural claim
 
-The `BISECT` recursive-bisection algorithm is **procedurally neutral by construction**: it takes a tract adjacency graph and per-tract population as input, and produces a partition into N districts. Five properties make this neutrality verifiable.
+The default `BISECT` benchmark excludes partisan, racial, candidate,
+incumbency, and community signals from execution inputs. This exclusion is
+verifiable, but it does not make the benchmark value-free or substantively
+neutral. Structure, resolution, adjacency, weights, seed, engine, and legally
+authorized modifications can all affect outcomes.
 
 ### 1.1 Input minimality
 
@@ -30,7 +43,10 @@ It does NOT see:
 - Incumbency, candidate residence, or political-actor preferences
 - Community-of-interest (COI) annotations (those flow through the Plan Comparison overlay, not the bisection)
 
-A reader can confirm this by inspecting the function signature. There is nothing for the algorithm to be biased toward because the data structure does not contain partisan or racial information.
+A reader can confirm which signals are absent by inspecting the function
+signature and manifest. Absence of those signals prevents direct targeting with
+them during execution; it does not establish absence of bias, discriminatory
+effect, or strategic upstream profile selection.
 
 **Caveat:** when an operator runs `bisect state --partition-mode partisan-weighted` (Plan 03, Callais 2026), the algorithm DOES consume per-tract Democratic vote shares. This is opt-in only, NOT the default, and is documented in `docs/superpowers/plans/2026-04-29-partisan-bisection-weighting.md`. The Callais p.36 mutex (enforced at three CLI gates per `bisect-report::manifest::callais_preflight`) prevents combining partisan-weighted mode with VRA-aware mode in the same run.
 
@@ -56,9 +72,15 @@ Every plan written by `bisect state` ships with a `manifest.json` (schema docume
 
 Verification command: `BISECT doctor --verify-manifest path/to/manifest.json` cross-checks every recorded field against the running binary and surfaces any mismatch.
 
-This is the chain-of-custody Daubert demands (*Daubert v. Merrell Dow Pharmaceuticals*, 509 U.S. 579 (1993)). An opposing expert who cannot reproduce a published plan from its manifest is reporting a real failure; an opposing expert who can reproduce it has confirmed the chain.
+This record can support chain-of-custody and reproducibility testimony. Whether
+it satisfies a specific court's evidentiary requirements remains a
+case-specific legal determination.
 
-### 1.4 Constraint-extensible without losing neutrality
+### 1.4 Constraint-extensible with explicit claim changes
+
+VRA-aligned and partisan-weighted modes are research, litigation, or governed
+Layer-C tools. They are not features of the candidate federal geographic
+benchmark, which excludes both signals during generation.
 
 The bisection accepts additional constraints — VRA-awareness (`partition-mode metis-vra`), county integrity, contiguity, chamber nesting — that tighten the feasible region but do NOT introduce partisan signals. The constraint code is in:
 
@@ -67,11 +89,15 @@ The bisection accepts additional constraints — VRA-awareness (`partition-mode 
 - `BISECT/crates/bisect-analysis/src/splits.rs` — county/municipal split analysis
 - `BISECT/crates/bisect-analysis/src/nesting.rs` — chamber nesting validation
 
-**The Callais p.36 mutex matters here.** A single run of `bisect state` cannot enable BOTH race-conscious mode AND partisan-weighted mode. The mutex is enforced at three places (`bisect state` runtime per `runner::validate_partisan_config`; `BISECT import` and `bisect analyze` via `bisect-report::manifest::callais_preflight`). The downstream consequence: a "neutral" baseline produced by this tool for a state-court partisan gerrymandering challenge is provably free of race-conscious signals.
+**The Callais p.36 mutex matters here.** A single run of `bisect state` cannot enable BOTH race-conscious mode AND partisan-weighted mode. The mutex is enforced at three places (`bisect state` runtime per `runner::validate_partisan_config`; `BISECT import` and `bisect analyze` via `bisect-report::manifest::callais_preflight`). The downstream consequence is narrower: the manifest can establish that the named benchmark execution excluded race-conscious signals.
 
 ### 1.5 Falsifiability via ensemble + convergence diagnostics
 
-A single bisection produces ONE plan. Many plans satisfy the constraints; the project does not claim its single output is "the most fair." What the project claims is that **an ensemble of N partisan-blind plans bounds what neutral output looks like**. The enacted plan's percentile rank in that distribution is the falsifiability test.
+A single bisection produces one plan, and many plans satisfy the constraints.
+An adequately sampled ensemble can estimate a distribution under one
+precommitted legal and algorithmic profile. It cannot bound every neutral
+output or define neutrality. Current G.1--G.3 packages remain synthetic with
+missing real traces, so exact percentile claims are not release-grade evidence.
 
 The just-shipped `bisect-analysis::ensemble_diagnostics` module provides the convergence diagnostics a court can use to verify the ensemble was sufficient:
 
@@ -161,7 +187,10 @@ Rucho's central rhetorical move was: "We could not even pretend to apply [partis
 
 The ensemble-outlier methodology this project supports does not require the court to pick one metric. It says:
 
-> Run the same legal constraints (population balance, contiguity, county integrity, VRA when applicable) through a procedurally neutral algorithm N times. Report the percentile rank of the enacted plan against this distribution for whichever partisan metric the court finds most appropriate under the controlling state law.
+> Run one precommitted legal and algorithmic profile many times, validate the
+> resulting sample, and report the enacted plan's percentile under that
+> profile. The percentile is conditional evidence, not a universal neutral
+> distribution or a legal conclusion.
 
 This is judicially manageable because:
 
@@ -194,7 +223,9 @@ We do NOT claim:
 
 ### 6.2 We do NOT call geographic packing "gerrymandering"
 
-When voters of one party cluster geographically (e.g., urban Democratic voters), even procedurally neutral algorithms produce maps where that party's seat share is below their statewide vote share. This is geometry, not bias. Courts and academics call this "natural geographic packing."
+When voters of one party cluster geographically, a geographic benchmark may
+produce seat asymmetry. Geography is one plausible mechanism, but the project
+does not infer causation from a single benchmark comparison.
 
 The ensemble-outlier methodology distinguishes natural packing from intentional packing: if the enacted map is at the median of the neutral ensemble's partisan-bias distribution, the bias is geometry. If the enacted map is at the 99th percentile, the bias is intent.
 
@@ -298,7 +329,12 @@ The output `target_plan_percentiles.json` is the document an expert witness cite
 
 ## 8. The legitimate concrete claim
 
-> **`BISECT` provides a procedurally neutral baseline — partisan-blind by default, race-blind by default, constraint-compliant, reproducible, and (when ensembles are generated) convergence-validated. We do not draw the line between "fair" and "unfair" enacted maps. We provide the statistical tools a court needs to draw that line under whatever standard the court adopts.**
+> **`BISECT` provides a partisan-input-excluded geographic benchmark with
+> published inputs, parameters, manifests, and diagnostics. It does not certify
+> fairness, VRA compliance, community preservation, partisan neutrality,
+> admissibility, or legal validity. Ensemble percentiles are conditional on one
+> precommitted profile and require real archived traces and convergence
+> evidence.**
 
 That is the claim this project will defend. Anything stronger is overreach; anything weaker undersells the work.
 

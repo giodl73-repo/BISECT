@@ -1,0 +1,33 @@
+{
+  "schema_version": "ri-regional-decomposition-frontier-v1",
+  "state": "rhode_island",
+  "year": 2020,
+  "incumbent_weighted_cut": 43047238,
+  "county_separator": {
+    "county_count": 5,
+    "cross_county_edges": 278,
+    "separator_vertices": 379
+  },
+  "county_population_branches": {
+    "branch_count": 5,
+    "local_manifest": "data/2020/certified/ri-county-branches/manifest.json",
+    "local_manifest_sha256": "53f0202250ae430da9935d3871013063889a31338faafc162d1cbcd94f7121d6",
+    "coverage": "Either all four non-Providence counties contribute zero right-child population, or one is the first ordered county with positive population.",
+    "central_reduced_variables": 56932,
+    "central_reduced_constraints": 150704,
+    "central_result": "timelimit"
+  },
+  "tract_purity_branches": {
+    "pure_tracts": 134,
+    "split_tracts": 11,
+    "fixed_positive_units": 20173,
+    "active_units": 5476,
+    "local_manifest": "data/2020/certified/ri-tract-purity-branch/manifest.json",
+    "local_manifest_sha256": "4b307f0b688e3b0bcb6b0817825000026430831d90ce41cb932ab89e431ce672",
+    "central_variables": 23669,
+    "central_constraints": 43365,
+    "central_result": "timelimit"
+  },
+  "conclusion": "Regional branching is exact and substantially reduces model size, but the current central branches remain above the practical proof threshold.",
+  "claim_boundary": "Branch coverage and timed solver results only; Rhode Island boundary optimality remains unproved."
+}

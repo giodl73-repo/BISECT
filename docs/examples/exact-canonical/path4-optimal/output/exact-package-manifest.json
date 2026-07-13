@@ -1,0 +1,18 @@
+{
+  "schema_version": "exact-canonical-package-manifest-v1",
+  "method": "canonical-exhaustive",
+  "result": "optimal",
+  "instance_hash": "sha256:5e49ddf32402692abe4608873db8b105566d53fede804050f423b6aceba24524",
+  "exact_certificate_id": "sha256:bf2d9dee4908db9546db7f4ab26605a0ea9c69f341f8b399fae1950df62194a8",
+  "exact_proof_id": "sha256:67aaf58b1df44481f4984c99a2b1eece12bf030fa6cc996d7431e917aea8f7f0",
+  "declared_population_tolerance_percent": 1.0,
+  "files": {
+    "audit-certificate.json": "c539e826fd2a44dd902ec45e9abf512152f8ba458dee226413402317a7032a67",
+    "exact-canonical-certificate.json": "8c40eed9de8a42fd83112b4f1644816edc6d04e08d4494f41ed2fe121084e6a4",
+    "exact-canonical-instance.json": "604e11284632ee195d09d4dea529dfdf200e20572e557ebd9d0153819a8d8e3b",
+    "exact-canonical-proof.json": "982aa1f66d918b6a3a0fa021fea1e3b48090b3ec539a6cf169350418818e2715",
+    "exact.rctx": "bbda31f57f62b7707eee384988a45811e89cf805e6916a850800454242f227f3",
+    "exact.rplan": "0e28db22bf507fee85b7c997172e68c3b68e2924e2393141d67ce7c6231d2cf2"
+  },
+  "claim_boundary": "Bounded E0 k=2 exhaustive certificate with at most 8 units; not national exact readiness or legal certification."
+}

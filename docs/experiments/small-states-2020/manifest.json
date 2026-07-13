@@ -1,0 +1,17 @@
+{
+  "schema_version": "certified-single-district-states-package-v1",
+  "package_id": "one-district-states-2020",
+  "status": "verified",
+  "files": [
+    {
+      "path": "one-district-states.json",
+      "sha256": "d9bea937fcb3e5e865c993456dd77af20ec570e200c4f33d8d4f0c95a6b31fcc"
+    }
+  ],
+  "analyzer_path": "scripts/research/analyze_single_district_states.py",
+  "analyzer_sha256": "6da030c68ac2a2664b2aac498faae2361397f5ac438fdaeb9580cb6acc576f06",
+  "verification_commands": [
+    "python scripts/research/analyze_single_district_states.py verify docs/experiments/small-states-2020/manifest.json"
+  ],
+  "claim_boundary": "Six complete connected wall-to-wall 2020 one-district packages; source data remain under local hash-bound custody."
+}

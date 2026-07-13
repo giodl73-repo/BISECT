@@ -7,3 +7,7 @@ docs/examples/**/*.txt text eol=crlf
 docs/examples/**/*.md text eol=crlf
 docs/examples/**/*.lp text eol=crlf
 docs/examples/rplan-*/** text eol=lf
+Cargo.lock text eol=lf
+rust-toolchain.toml text eol=lf
+configs/nrs_reference_v0_1.yml text eol=lf
+docs/fixtures/nrs-reference-v0.1/** text eol=lf

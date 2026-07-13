@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "hawaii",
+  "state_code": "HI",
+  "state_fips": "15",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/hi_blocks_2020.rctx",
+  "rctx_bytes": 4564804,
+  "rctx_sha256": "6caf64b658d1a172b371a38b491313eae194bb4d3b28758413b2d19e3a49b600",
+  "context_hash": "sha256:41c229b3d05c3a19f8701d279a883b897c0f807c667da6873e3f962046933959",
+  "unit_universe_hash": "sha256:4006209d0bbc5432b820faf3daf582997ce34bbaec2a80a551f4e27c2e459249",
+  "unit_count": 14732,
+  "population_total": 1455271,
+  "land_edge_count": 36492,
+  "land_component_count": 17,
+  "bridge_edge_count": 7633,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

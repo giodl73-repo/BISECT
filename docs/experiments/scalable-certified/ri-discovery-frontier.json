@@ -1,0 +1,49 @@
+{
+  "schema_version": "ri-certified-discovery-frontier-v1",
+  "status": "unproved-incumbent",
+  "state": "rhode_island",
+  "year": 2020,
+  "districts": 2,
+  "local_package": {
+    "path": "data/2020/certified/ri-root-discovery",
+    "committed": false,
+    "instance_bytes": 5936020,
+    "instance_sha256": "0acd4eb3ede13ff32a05cf51a9a2bcc9949fc173d988b9cd793d63b551d37275",
+    "discovery_bytes": 231444,
+    "discovery_sha256": "949eaf261d01b1721c56d267077936b04f301ab1d9d02edbef420df29952ace2",
+    "instance_hash": "sha256:a02a709f2c54d6877bb9860b17cf46ab2676ccc55efe9eb074b7805bafe1be2d",
+    "discovery_id": "sha256:8011d6d32bafaf565d14df1cb6d526d4e90efa0877ae4d7d1b5d0e8726d8bf66"
+  },
+  "solver": {
+    "name": "SciPy HiGHS",
+    "version": "scipy.optimize.milp",
+    "method": "elite-metis-consensus-fixed-core-milp; heuristic-branch-only",
+    "seed": 4,
+    "deterministic_replay": true
+  },
+  "candidate": {
+    "child_populations": [
+      548690,
+      548689
+    ],
+    "child_unit_counts": [
+      15104,
+      10545
+    ],
+    "connected": [
+      true,
+      true
+    ],
+    "max_population_deviation_scaled": 1,
+    "total_population_deviation_scaled": 2,
+    "weighted_boundary_cut": 43047238,
+    "theoretical_population_floor": 1,
+    "population_gap_above_floor": 0
+  },
+  "certification_status": {
+    "proof": "not-generated",
+    "claim": "deterministic connected incumbent only",
+    "next_step": "compile compact population decision and seek a SAT counterexample or UNSAT proof"
+  },
+  "claim_boundary": "Hash-bound deterministic METIS discovery with exact objective and connectivity validation; not an optimality proof or certified Rhode Island split."
+}

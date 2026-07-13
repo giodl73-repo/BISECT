@@ -93,7 +93,11 @@ Moreover, the bimodal distribution in Figure~\ref{fig:political_margin_hist} ref
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.85\columnwidth]{../../artifacts/papers/01_recursive_bisection/figures/political_margin_hist.png}
+\IfFileExists{../../../../artifacts/papers/01_recursive_bisection/figures/political_margin_hist.png}{
+\includegraphics[width=0.85\columnwidth]{../../../../artifacts/papers/01_recursive_bisection/figures/political_margin_hist.png}
+}{
+\fbox{\parbox{0.78\columnwidth}{\centering The historical political-margin histogram is not present in the current public artifact custody. The quantitative text remains a historical result and should be regenerated before publication reliance.}}
+}
 \caption{Distribution of Democratic margins across 432 districts. The bimodal distribution reflects geographic polarization: dense peaks at strong Democratic (left) and Republican (right) extremes, with few districts in the competitive center. This pattern characterizes American political geography regardless of redistricting method.}
 \label{fig:political_margin_hist}
 \end{figure}

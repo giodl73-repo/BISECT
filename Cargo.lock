@@ -323,6 +323,9 @@ dependencies = [
 name = "bisect-ensemble"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "bisect-data",
+ "csv",
  "metis-core",
  "rand",
  "rayon",
@@ -350,7 +353,10 @@ dependencies = [
 name = "bisect-ilp"
 version = "0.1.0"
 dependencies = [
+ "bisect-core",
  "rgraph-core",
+ "rplan-audit",
+ "rplan-io",
  "serde",
  "serde_json",
  "sha2",
@@ -1228,6 +1234,7 @@ dependencies = [
 [[package]]
 name = "fletch-core"
 version = "0.1.0"
+source = "git+https://github.com/giodl73-repo/FLETCH.git?branch=master#7c7aacd4fbc8753299e2fc3181368d2cc6d90337"
 dependencies = [
  "reqwest",
  "serde",
@@ -2311,6 +2318,7 @@ dependencies = [
 [[package]]
 name = "metis-core"
 version = "0.1.0"
+source = "git+https://github.com/giodl73-repo/METIS-CORE.git?branch=master#78ae34090e043e79a206f2daffaa3889389b4790"
 dependencies = [
  "rand",
  "rand_pcg",

@@ -1,0 +1,346 @@
+{
+  "schema_version": "nrs-challenge-bundle v1",
+  "package_id": "nrs-v0.1-challenge-bundle",
+  "status": "internal-external-review-candidate",
+  "base_source_commit": "d61a7136d60c27ecdd451067a1c08a063581820f",
+  "files": [
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/README.md",
+      "sha256": "f9ec142743520d81b6c780c957a9579c05074a64cb762c617990d1690911f6ed"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/replicate-reference.ps1",
+      "sha256": "e95a7d539097d49c0e94be1af4aa95758b6d5d24361f3295e16748ba67457bd5"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/replication-record-template.md",
+      "sha256": "56418b24a0aa1a460a5bbddda2966903aaea62bbe8e4ce6906496b210eb83c6b"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/replication-record-2026-07-10-agent.md",
+      "sha256": "0b4f7a6a40acb45028773dcb1193f17f585cda821c3adc5545ff0e5be531f349"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/final-bundle-validation.md",
+      "sha256": "6cfbf3e8b153ed210b8ab56138638204b4bb0293e0a31b2df96b4efdc5816dc6"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/reviewer-criteria.md",
+      "sha256": "42e6151f4da53639781711170a1dfb55abab92634092493c6e928509484564d2"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/issue-and-response-process.md",
+      "sha256": "ced7bf91052ae23a105fe6e5636779b5d62848b185ef68da10d9b3efb6cdfabf"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/adoption-matrix.md",
+      "sha256": "b73166af9d7b86f9b8a41c259d08d852e0dde592dc24054d79226888870e9f13"
+    },
+    {
+      "path": "docs/external/nrs-v0.1-challenge-bundle/claims-map.md",
+      "sha256": "cf14b682738b2b2013ee95de730f4b6f5dad6bdbe89e790e84bde6cd16215c43"
+    },
+    {
+      "path": "docs/specs/2026-07-09-national-redistricting-standard-v0.1.md",
+      "sha256": "0e2add31dae0c76a66606ed55d8e4c8cd2b3f61bbb3dd93976f0900d8ab58a86"
+    },
+    {
+      "path": "docs/specs/2026-07-10-exact-canonical-benchmark-north-star.md",
+      "sha256": "346d702b61c81acc48aee0250576d2dd6f9b42d6973b8be232c12e28a222fe32"
+    },
+    {
+      "path": "docs/concepts/certified-recursive-bisection.md",
+      "sha256": "d7632eb9ceb6ab14d0bbc182c55052274cea9c874f8b2341cad0880fb7bfc3b2"
+    },
+    {
+      "path": "docs/file-formats/exact-canonical-certificates.md",
+      "sha256": "0a70c6398dfa3a2cc3a25ca198c921696c5d40cb940fab3b51c6bb07e1b4154d"
+    },
+    {
+      "path": "docs/file-formats/certified-recursive-bisection.md",
+      "sha256": "23061bbaa43c7f538eeda71c68cae08524690ab6c066c2f7e114533089697b7d"
+    },
+    {
+      "path": "docs/file-formats/certified-proof-backend.md",
+      "sha256": "868c38b365888081ced413c282d7959c51981d698d7bee362a021c2ddd87e74e"
+    },
+    {
+      "path": "docs/file-formats/certified-single-district.md",
+      "sha256": "55f4b183cc92c68ccc463e34b178983ad0700cad62d5fd15473f462bf318e087"
+    },
+    {
+      "path": "docs/examples/exact-canonical/manifest.json",
+      "sha256": "d7acf11a167c75048be015d57ba20bab25a3f5617c0da7a7108ef067870615da"
+    },
+    {
+      "path": "docs/examples/exact-canonical/independent-verifier-report.json",
+      "sha256": "167bc93b37bce0e805540b785f8e9e1091bc8e180273bc4839f60bd960088efc"
+    },
+    {
+      "path": "docs/examples/certified-recursive/README.md",
+      "sha256": "3d71cdccdb24d648f24ebd10c8c8a4062c1b8649079c093d6df494e79b630ebb"
+    },
+    {
+      "path": "docs/examples/certified-recursive/manifest.json",
+      "sha256": "2231a9f75572c117173497ae98295f7a957f9a891f6fc85c3fbd93f9d10774f1"
+    },
+    {
+      "path": "docs/examples/certified-recursive/path8-k4/output/certified-bisection-tree.json",
+      "sha256": "eda5af5314f1c4bcdd4cca122bb1639170fc15081939e0015f608c1d51f9001e"
+    },
+    {
+      "path": "docs/examples/certified-proof-backend/README.md",
+      "sha256": "e8572d04f82028b778906a22766e16961455db50a54fd28598ba4d9f670ef3ac"
+    },
+    {
+      "path": "docs/examples/certified-proof-backend/path8-root/manifest.json",
+      "sha256": "25e030372473ffd6d2750993db9f964a96a21f1b99467e2ea7f64202adb6bade"
+    },
+    {
+      "path": "docs/examples/certified-comparison/README.md",
+      "sha256": "37d7e061c7d7e201bae429de2e71a971259bf49a6e9ace0c337af1ecaa3c90bb"
+    },
+    {
+      "path": "docs/examples/certified-comparison/path8-root/manifest.json",
+      "sha256": "f1e334a0d0ae9bd6febf40fb813ef7e2db788dc1700be246a5888dfa5f0e571a"
+    },
+    {
+      "path": "docs/examples/proof-toolchain-smoke/manifest.json",
+      "sha256": "1d355d034ba2657259dc71eb073b32c7bd661be4cfd791411fb77d05e77c2be8"
+    },
+    {
+      "path": "docs/examples/ri-proof-frontier/manifest.json",
+      "sha256": "9b18f74f0192d90143cdd38a0d0d9358f97fb0512b5a7479a38af4f0cf91f6d3"
+    },
+    {
+      "path": "docs/examples/certified-single-district/manifest.json",
+      "sha256": "d2a8f71822622d8e28fc1386c2f05eff59e941fff7f95d0db53b366adc14f946"
+    },
+    {
+      "path": "docs/experiments/exact-canonical/manifest.json",
+      "sha256": "f8287afc9ca938fb1ff0d443c2cd7d60444e715457a1ab2bcdb5bb0664b2cf58"
+    },
+    {
+      "path": "docs/experiments/exact-canonical/README.md",
+      "sha256": "6b0c76f77251ee29a7d03d14db792097b29fb661db4721a5e9eb24faab877ac1"
+    },
+    {
+      "path": "docs/experiments/exact-canonical/ri-2020-block-frontier.json",
+      "sha256": "88bf8059aaf0aa5a1b0c01f982617462e4e12dd893bfe6bdcea272f6d99ad864"
+    },
+    {
+      "path": "docs/experiments/certified-recursive/README.md",
+      "sha256": "534ea66bf2e4f5cc447dfa613132817c90024c2d4b70505c21543bc6fdf999a6"
+    },
+    {
+      "path": "docs/experiments/certified-recursive/manifest.json",
+      "sha256": "4e7eeaaa19ce017dd8ab5eaf7e793f8e5fc391d0b9b4f94fe3509cfcb1a9a40d"
+    },
+    {
+      "path": "docs/experiments/certified-recursive/ri-2020-root-frontier.json",
+      "sha256": "018bc9130c7db75c12f52d1663b76dd4d73055a9e9b46a8d390c54575d907ba8"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/manifest.json",
+      "sha256": "0615a41ce05b2cf61bad96dba6729500ded67f2eac33edfc1da9bf23af415669"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/ri-discovery-frontier.json",
+      "sha256": "6435ea264bbc949461dc6ebc8dd80d43fded8af570ad2f67fc83f70fd451143e"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/README.md",
+      "sha256": "b573bc752bdda1e52b1e1fb90564e0e8103ea120fd95db2f64199597fa6662f7"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/model-manifest.json",
+      "sha256": "c2bbde095fa8d30daeca34c1d8300cc0a2b177e8bb87bd5a0c5e3950b06dc35f"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/ri-model-frontier.json",
+      "sha256": "737f949e4ec31787f98a628c806ead9a833fe6470d57ffa31555fadc13565f47"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/solver-frontier.json",
+      "sha256": "611303f8abc3c6636af9f6f163d011423364d7a5f10507b5ba58fb208e27bb16"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/regional-decomposition-frontier.json",
+      "sha256": "0c42133d3e164a1f6fdaf0107586363f13e8d58713173bd011c007c21698dc70"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/manifest.json",
+      "sha256": "f2fde3fe6925ad8af7cf8a9c34a7d5c5afbd4d77e9e46576839e4751dd2cf23d"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/one-district-states.json",
+      "sha256": "d9bea937fcb3e5e865c993456dd77af20ec570e200c4f33d8d4f0c95a6b31fcc"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/two-district-manifest.json",
+      "sha256": "4c97db115d3746b37b215b0596b3b0b1c35ad517fd5cc5ef9b46c314eb754d9a"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/two-district-frontier.json",
+      "sha256": "b6e3cd5eeef35c9d19b190e9ad5da95512262cb635dda8c90960a598fa36eba6"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/nv-tree-manifest.json",
+      "sha256": "7a1f63da0b893c99a7921f8e2330c4e54cc0b9233ccaf50cce1cae9952cca4de"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/nv-operational-tree.json",
+      "sha256": "9a7e633344af5d57f342e80d0556b1e1cddb9457b0443e11d2ae1e0177e78daa"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/nm-tree-manifest.json",
+      "sha256": "feb7d963806eeb644581ee27053c4c199a97d32addbee07dbba2d97c8f401667"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/nm-operational-tree.json",
+      "sha256": "24ec0182e67daa6b26fa1ec8ec2a2eaf146374baf30a963b0f851a52cc6c5810"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/scaling-manifest.json",
+      "sha256": "7d7206470e5cbaa17e7c33841a54557d98b4ecac0ef3c4b743cd375d6563d2b3"
+    },
+    {
+      "path": "docs/experiments/small-states-2020/scaling-report.json",
+      "sha256": "311af2ea562d7d4bf0446b22c1b71ff2f31c1b01bcd71a287c38bcd627935ff1"
+    },
+    {
+      "path": "docs/experiments/nationwide-2020/manifest.json",
+      "sha256": "874989d1312593d36a800deec5a2d8459d5f204e69b0effec3a88be487ca8a30"
+    },
+    {
+      "path": "docs/experiments/nationwide-2020/inventory.json",
+      "sha256": "b64a253fba295db4dd4ace926327e7476a6e7542303e544a94f3ed7783472dc3"
+    },
+    {
+      "path": "docs/experiments/nationwide-2020/rctx-manifest.json",
+      "sha256": "2225fa057cc46117acd476f1ab441afff2c745796c780054a48cc250c919b579"
+    },
+    {
+      "path": "docs/experiments/nationwide-2020/rctx-verification.json",
+      "sha256": "9a1f3e05d262f0fde00ac3adfefad718e49fc4ada90181b85eec6d08f8e6ed92"
+    },
+    {
+      "path": "docs/experiments/scalable-certified/FRONTIER-REVIEW.md",
+      "sha256": "37f0ddfd6cbfdca6a5675ed5273cabbc0f5824850062c3637a58a71e313a00de"
+    },
+    {
+      "path": "docs/examples/exact-canonical/path4-optimal/output/exact-canonical-certificate.json",
+      "sha256": "8c40eed9de8a42fd83112b4f1644816edc6d04e08d4494f41ed2fe121084e6a4"
+    },
+    {
+      "path": "docs/examples/exact-canonical/path4-optimal/output/exact-canonical-proof.json",
+      "sha256": "982aa1f66d918b6a3a0fa021fea1e3b48090b3ec539a6cf169350418818e2715"
+    },
+    {
+      "path": "docs/examples/exact-canonical/three-islands-infeasible/output/exact-canonical-certificate.json",
+      "sha256": "1bd334fb3e90f79d77df940f8ceaf375c0e54ba7179a1dd63c926cc30663acaf"
+    },
+    {
+      "path": "docs/examples/exact-canonical/three-islands-infeasible/output/exact-canonical-proof.json",
+      "sha256": "8c99b55c9389eda6944cc15c2834b6e3e0e7f135cf219f1febd5df8018e8d455"
+    },
+    {
+      "path": "scripts/research/verify_exact_canonical_independent.py",
+      "sha256": "13856288b36c2409cd41e36b93e855f446ec1008be220b28ae1bb8cfef2c9310"
+    },
+    {
+      "path": "scripts/research/verify_certified_recursive_fixtures.py",
+      "sha256": "5a7b106dec74f7dedb0332f3058541c0d2665a7eb2f10a0920863a15ec5eebe9"
+    },
+    {
+      "path": "scripts/research/verify_certified_proof_backend.py",
+      "sha256": "72bd5b1a9ef26cd7c4d8a020ad73ebcfaad0cb7e0c63606204cf101fbd263662"
+    },
+    {
+      "path": "scripts/research/verify_certified_vs_metis.py",
+      "sha256": "0d4ced55d4ee859db2537140596264d996975fb9afcaef91105597702164f756"
+    },
+    {
+      "path": "scripts/research/verify_proof_toolchain_smoke.py",
+      "sha256": "063ba2707adac3137500824ba0fb8767618a9b8c0c2345d95934683a24caa535"
+    },
+    {
+      "path": "scripts/research/verify_ri_proof_frontier.py",
+      "sha256": "0a7c3f2c8910f8ca4c8067cd9b83f38663bf16cd78cfefc767307b0bf0c4be29"
+    },
+    {
+      "path": "scripts/research/analyze_small_state_exact_frontier.py",
+      "sha256": "bbb1f2bc8557e363fbc24f43cf05f453fb21ce3b89bf712dd05be41e780fd1a2"
+    },
+    {
+      "path": "scripts/research/build_ri_block_rctx.py",
+      "sha256": "ca0621f32fa7a2d19f56a150cbedeb02fe44dc3339af122da60a63dd3fffac97"
+    },
+    {
+      "path": "scripts/research/analyze_ri_certified_discovery.py",
+      "sha256": "7856f79efb4de4b23c0b6050a2b046443a7ba942cc147b0d105e6cfe79fd4e93"
+    },
+    {
+      "path": "scripts/research/analyze_ri_model_package.py",
+      "sha256": "e66d66845abb7f312caa1b313e37c2b6b45ccf9d7f24c0f036719942c015b017"
+    },
+    {
+      "path": "docs/legal/MODEL_FEDERAL_STATUTE.md",
+      "sha256": "b73dbbc2465f9a7380002e7fc594fb79298e52d676191076999cc8e4b829e4c4"
+    },
+    {
+      "path": "docs/legal/NRS_TECHNICAL_SCHEDULE_V0.1.md",
+      "sha256": "7d5dd2cb025e4050973ca32e8ebbf1b0c51801cb9a9943d22cc7b374a9f95996"
+    },
+    {
+      "path": "docs/legal/NRS_EVALUATION_SCHEDULE_V0.1.md",
+      "sha256": "960cd339bad86dd75ca9cddad51eb579e561bd4f2315c4b846fe04e43bfb7283"
+    },
+    {
+      "path": "docs/legal/STATUTE_ONE_PAGER.md",
+      "sha256": "534dbb60c30018d2cd1ff99d7862832288307f60f7b5d462f6018d8216d32462"
+    },
+    {
+      "path": "docs/fixtures/nrs-reference-v0.1/reference_manifest.json",
+      "sha256": "b1914e26770049a49d95734b60b203b21202c74c59e5a2396ae9200eefde78e4"
+    },
+    {
+      "path": "docs/fixtures/nrs-reference-v0.1/runtime-overlay.patch",
+      "sha256": "7afef7e3cf1792b210c099a4848dc61a442432775d5e4f71046312463e2f13b3"
+    },
+    {
+      "path": "docs/fixtures/nrs-reference-v0.1/config.yml",
+      "sha256": "27457b80be6e4b7c01b63d1d43c00519808e7087431d35e7852bbcec8db532da"
+    },
+    {
+      "path": "docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020/manifest.json",
+      "sha256": "f86244f06f0250f8a49d68fc4121786c14b85b715068e0947a343bfe37fe0237"
+    },
+    {
+      "path": "docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020/analysis.json",
+      "sha256": "47fd479c61fa6791101eeca2d75abe84e641c58263d57fda6d7f0757c90efbc6"
+    },
+    {
+      "path": "docs/papers/A.0+synthesis-metapaper.pdf",
+      "sha256": "f98159e1a3754a38eb7e7e816eadd77371c5cd02694426a2762d37ef4dc10dc3"
+    },
+    {
+      "path": "docs/papers/A.5+policy-brief.pdf",
+      "sha256": "0a044179c5e3438e4c9d9491ebf6dcff598a362ca0d8eb686d908158bd3944cc"
+    },
+    {
+      "path": "docs/papers/U.21+certified-recursive-bisection.pdf",
+      "sha256": "f66938888a5266a5410611fbbdcf034bba1c0f1624abf84995acf651d204c8a0"
+    },
+    {
+      "path": "docs/papers/B.02+one-federal-law.pdf",
+      "sha256": "7e2f85355d8242dc20145dbda89e9b7b0fa4a0e79223826c1bd2b58eb4434853"
+    }
+  ],
+  "verification_commands": [
+    "python scripts/research/verify_nrs_challenge_bundle.py",
+    "python scripts/research/verify_real_ensemble_package.py docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020",
+    "python scripts/research/verify_exact_canonical_fixtures.py"
+  ],
+  "claim_boundary": "Supports independent challenge and internal non-author replication; not human external validation, public release readiness, legal certification, or exact optimality."
+}

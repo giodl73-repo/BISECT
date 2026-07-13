@@ -1,0 +1,111 @@
+{
+  "schema_version": "exact-canonical-small-state-frontier-v1",
+  "status": "blocked",
+  "benchmark": {
+    "state": "rhode_island",
+    "state_code": "RI",
+    "state_fips": "44",
+    "year": 2020,
+    "districts": 2,
+    "statutory_unit": "2020 census tabulation block"
+  },
+  "source_files": [
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.dbf",
+      "bytes": 3514491,
+      "sha256": "46aeacfdcf81ee580c50cb555d6dd5b165219463f64208912d1d304e410a6e06"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.prj",
+      "bytes": 165,
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.shp",
+      "bytes": 24560396,
+      "sha256": "2528ad254d42db9368b17b02376f79b5a6021983db77a61e47503d9a91fd72c5"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.shx",
+      "bytes": 205292,
+      "sha256": "fe549c9af889a9aa837e3a365f9aad6133daa6983ae580a01efe8f988ff1d22f"
+    },
+    {
+      "path": "data/2020/redistricting/ri2020.pl/rigeo2020.pl",
+      "bytes": 14024819,
+      "sha256": "d7236ca05940f50fa1bdb6b35c08435327011af40843f19a3f269503063300fd"
+    },
+    {
+      "path": "data/2020/redistricting/ri2020.pl/ri000012020.pl",
+      "bytes": 12094099,
+      "sha256": "a077a305148dd567de66c7ba28e355d62b5b6adde7e72b3bb7a876fefb773657"
+    }
+  ],
+  "observed_instance": {
+    "tiger_block_rows": 25649,
+    "tiger_unique_geoids": 25649,
+    "geometry_null_count": 0,
+    "geometry_empty_count": 0,
+    "pl_block_rows": 25649,
+    "pl_missing_population_count": 0,
+    "population_total": 1097379,
+    "positive_population_blocks": 21382,
+    "zero_population_blocks": 4267,
+    "tiger_without_pl_count": 0,
+    "pl_without_tiger_count": 0
+  },
+  "exact_reference": {
+    "model_id": "exact-canonical-k2-exhaustive-v1",
+    "reference_source": "crates/bisect-ilp/src/canonical.rs",
+    "reference_source_sha256": "08fb56cbc598f7e0a83a88698555e87d61b9c76c448af541efaabf27c132b072",
+    "supported_k": 2,
+    "unit_limit": 24,
+    "state_unit_count": 25649,
+    "units_above_limit": 25625,
+    "candidate_formula": "2^25648-1",
+    "candidate_decimal_digits": 7721,
+    "candidate_log10": "7720.817328789789694841975171893797",
+    "reference_limit_candidates": 8388607,
+    "candidate_ratio_to_reference_log10": "7713.893638941290067081418590000000",
+    "years_at_one_billion_candidates_per_second_log10": "7704.318224822704467174690638532167"
+  },
+  "adjacency_custody": {
+    "search_patterns": [
+      "data/2020/**/*ri*block*adj*",
+      "data/2020/**/*rhode*block*adj*",
+      "data/2020/**/*ri*block*.rctx",
+      "data/2020/**/*44*block*adj*",
+      "data/2020/**/*44*block*.rctx",
+      "data/2020/**/tl_2020_44*adj*",
+      "data/2020/**/tl_2020_44*.rctx"
+    ],
+    "matching_artifacts": [],
+    "block_rctx_available": false
+  },
+  "blockers": [
+    {
+      "kind": "model-bound",
+      "detail": "The E0 exact model accepts at most 24 units; Rhode Island has 25649 statutory blocks."
+    },
+    {
+      "kind": "compute",
+      "detail": "Under the E0 exhaustive proof contract, every symmetry-reduced assignment is enumerated; the Rhode Island search is 2^25648-1 candidates."
+    },
+    {
+      "kind": "input-custody",
+      "detail": "Block geometry and population custody is complete, but no matching block adjacency or block RCTX artifact is present."
+    }
+  ],
+  "disallowed_substitutions": [
+    "tract-level exact claim",
+    "inhabited-block-only universe",
+    "heuristic plan labeled exact",
+    "optimality-gap result labeled optimal"
+  ],
+  "claim_boundary": "This is a reproducible real-data blocker report, not an exact State certificate. It does not construct block adjacency or replay a solver."
+}

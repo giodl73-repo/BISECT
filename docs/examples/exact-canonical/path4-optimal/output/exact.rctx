@@ -1,0 +1,64 @@
+{
+  "rctx_version": "0.1",
+  "context_hash": "sha256:82b4997b2d5161d946a8ad2ca4ce9c9fc7a178519727c091695a3988de728d72",
+  "units": {
+    "unit_kind": "imported",
+    "state": "TT",
+    "year": 2020,
+    "canonical_order": "explicit-unit-ids",
+    "unit_ids": [
+      "u0",
+      "u1",
+      "u2",
+      "u3"
+    ],
+    "unit_universe_hash": "sha256:99d64113e066b263c3d0b2a74557fda93054e7971e62f5b4d97ea1acf9e69a1d",
+    "source_id": "path4-optimal"
+  },
+  "graph": {
+    "edge_semantics": "undirected",
+    "adjacency": [
+      [
+        {
+          "to": 1,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 0,
+          "kind": "boundary"
+        },
+        {
+          "to": 2,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 1,
+          "kind": "boundary"
+        },
+        {
+          "to": 3,
+          "kind": "boundary"
+        }
+      ],
+      [
+        {
+          "to": 2,
+          "kind": "boundary"
+        }
+      ]
+    ]
+  },
+  "populations": [
+    100,
+    100,
+    100,
+    100
+  ],
+  "source_hashes": {
+    "fixture": "sha256:63a4970f3782da2b63bddb05c7c5a96e872ac98d2624ad733a70b25f5a885b00"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "arkansas",
+  "state_code": "AR",
+  "state_fips": "05",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/ar_blocks_2020.rctx",
+  "rctx_bytes": 36109463,
+  "rctx_sha256": "ee37bd496c00a4f01bfff6f0bebafaf3e845080d16e1ec86f0866fd5165b03cc",
+  "context_hash": "sha256:e6c378d48134a5ccd70af8d4e84d8e48edb232657cf3f23c96542ff7c458a9f1",
+  "unit_universe_hash": "sha256:9c87e42bc8541a56db9773f880ca8804061bbcd999ecab3cbf06918bd8e76dae",
+  "unit_count": 136422,
+  "population_total": 3011524,
+  "land_edge_count": 335634,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "ri-certified-root-proof-frontier-package-v1",
+  "package_id": "ri-2020-root-proof-frontier",
+  "status": "partial",
+  "files": {
+    "01-population.pbp": "955f567dcc0fe1e0b34d2aaae861481908560a545c1c950219955a0edb466c8e",
+    "provenance.json": "39609d11185fed1671ed8e457ef793647e20cdfa57bf3c66bc7f9a000e730321",
+    "README.md": "6090dd0a4b5db870fdd82bc6bad31fa2cd796979582dac41d15318e00128dc76",
+    "elite2-branch.json": "0cc187f26444ce23491c49d18f678ceac3531d6ce7482fc94f2a18aaf44270c9"
+  },
+  "verifier_path": "scripts/research/verify_ri_proof_frontier.py",
+  "verification_commands": [
+    "python scripts/research/verify_ri_proof_frontier.py",
+    "python scripts/research/verify_ri_proof_frontier.py --check-local"
+  ],
+  "claim_boundary": "Rhode Island population optimality is proved; boundary and canonical optimality are not."
+}

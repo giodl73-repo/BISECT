@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "michigan",
+  "state_code": "MI",
+  "state_fips": "26",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/mi_blocks_2020.rctx",
+  "rctx_bytes": 66891300,
+  "rctx_sha256": "3fce90c420d818a265aec3a18bfec628f52210fabe302a73ab107a8310674dfd",
+  "context_hash": "sha256:444ae9e706d19dccaf948502da43db0ebe90a4ae60bdd2edc8a6c61c9e35f5b1",
+  "unit_universe_hash": "sha256:595988e67e42dcbc59c2c857a6203414bc8b710e28ebca229927cedaada9e64f",
+  "unit_count": 254730,
+  "population_total": 10077331,
+  "land_edge_count": 617141,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

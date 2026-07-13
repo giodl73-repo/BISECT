@@ -1,0 +1,6 @@
+{
+  "schema_version": "exact-canonical-negative-fixture-v1",
+  "case": "certificate-hash-tamper",
+  "expected_error": "certificate-id-mismatch",
+  "description": "Changes the certificate ID without changing its canonical content."
+}

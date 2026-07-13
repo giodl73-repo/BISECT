@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "louisiana",
+  "state_code": "LA",
+  "state_fips": "22",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/la_blocks_2020.rctx",
+  "rctx_bytes": 37464775,
+  "rctx_sha256": "de493a10b5d933d55d9237d14590c0df7a6db5662a1e6ec0dd6f32f4a9a23d2b",
+  "context_hash": "sha256:dc0cde8eea15fe7614ebddb0c8511980363fdafa69085412645eb93122150bf4",
+  "unit_universe_hash": "sha256:2b7c16fa436590671f4b8a0addae722ea77b73046a9cff1be05db3eceb32ea65",
+  "unit_count": 142874,
+  "population_total": 4657757,
+  "land_edge_count": 348310,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

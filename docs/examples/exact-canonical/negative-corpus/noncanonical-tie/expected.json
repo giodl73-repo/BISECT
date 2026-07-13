@@ -1,0 +1,6 @@
+{
+  "schema_version": "exact-canonical-negative-fixture-v1",
+  "case": "noncanonical-tie",
+  "expected_error": "result-mismatch",
+  "description": "Submits a primary-objective tie that loses the canonical assignment tie-break."
+}

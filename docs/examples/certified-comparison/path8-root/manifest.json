@@ -1,0 +1,11 @@
+{
+  "claim_boundary": "Single bounded synthetic root split; not national runtime or map-quality superiority.",
+  "files": {
+    "comparison.json": "4b5b30a8f02777f1ad2f1fe286f34346188881b460c5d996604673e92951f22a"
+  },
+  "generator_path": "crates/bisect-cli/examples/certified_vs_metis_path8.rs",
+  "generator_sha256": "9f6f5775220c400ccf5878fb1a5b8c176fd844f0ff27b741cf6b00f55936ee89",
+  "package_id": "path8-root-certified-vs-metis",
+  "schema_version": "certified-vs-metis-comparison-package-v1",
+  "verifier_path": "scripts/research/verify_certified_vs_metis.py"
+}

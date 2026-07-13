@@ -70,9 +70,8 @@
 %% -----------------------------------------------------------------------
 
 \title{%
-  \textbf{The Districting Integrity Act}\\[0.4em]
-  \large Huntington-Hill as the Constitutional Standard for\\
-  Intrastate Congressional Apportionment\\[0.8em]
+  \textbf{From One Algorithm to One Evidence Standard}\\[0.4em]
+  \large A Federal Benchmark-and-Disclosure Proposal\\[0.8em]
   \normalsize\textit{B.02 --- Advocacy Paper}%
 }
 
@@ -90,71 +89,38 @@
 
 \begin{abstract}
 \noindent
-Every ten years, Congress apportions 435 seats among the fifty states using
-the Huntington-Hill priority rule---an algorithm whose constitutional
-pedigree is uncontested.
-Yet when each state then divides its seats into districts, no federal standard
-governs the method.
-The result is partisan gerrymandering, litigation that consumes a decade, and
-maps that fail to represent anyone's constituents well.
+The original version of this Article proposed that Congress mandate
+\ar{} as the final-map algorithm by extending the Huntington--Hill analogy
+inside States. Subsequent algorithm, legal, community, and evidence review
+showed that this framing concealed rather than eliminated value judgments.
+Structure, weights, resolution, seed, data corrections, VRA obligations, and
+community criteria all require governance.
 
-This Article proposes a fix grounded entirely in first principles that both
-parties have already endorsed.
-The argument is four steps.
-\emph{First} (\wesberry{}, 1964): congressional districts must have equal
-population.
-\emph{Second} (Article~I, \S2): the interstate allocation method is
-Huntington-Hill.
-\emph{Third} (both parties, on record): the map should not be drawn by
-politicians with a personal stake in the outcome.
-\emph{Fourth} (logic): if Huntington-Hill is the right method for the
-interstate problem---allocating seats to states---and the within-state problem
-is structurally identical---allocating districts to geographic regions---then
-Huntington-Hill should apply within states too.
+This revised Article proposes a narrower federal rule: every State must publish
+a precommitted, partisan-input-excluded geographic benchmark and a complete
+baseline-to-final decision record. The legally authorized State body or court
+retains responsibility for the final plan. VRA-required changes are mandatory;
+State-law, community, and error corrections are permitted only through a
+publicly defined authority, alternatives, effects, and reasons.
 
-The legislative vehicle is simple.
-We call it the \dia{}.
-Its operative text is one sentence, proposed as 2~U.S.C.~\usca{}~2a(c) [new]:
-
-\begin{quote}
-  \itshape
-  Each State shall apportion its congressional districts by applying the
-  Huntington-Hill priority rule to its census tracts, using as input only the
-  prime factorization of the State's apportioned seat count and the federal
-  TIGER/Line adjacency graph for the census year in which the apportionment
-  was performed, with a seed determined by the formula
-  \texttt{SHA-256(census\_release\_id \textbar\textbar{} `DIA\_SEED\_V1')}.
-\end{quote}
-
-This is not a new constitutional theory.
-It is the existing constitutional standard applied at the next level down.
-It satisfies Republican concerns about compact, non-racially-targeted maps.
-It satisfies Democratic concerns about equal population and VRA compliance.
-It satisfies the courts, which need not develop any new doctrine.
-And it satisfies \callais{} (2026), whose disentanglement requirement fits
-the algorithm's architecture exactly.
-
-The empirical case is equally strong.
-Algorithm selection \emph{itself} is a political choice: in Wisconsin,
-switching from ApportionRegions to GeoSection shifts the partisan outcome by
-more than twelve percentage points---purely by changing which algorithm draws
-the map, with no political inputs in either algorithm.
-The only way to remove politics from the process is to mandate the algorithm
-that is prescribed by first principles, not selected by practitioners.
-\hh{} is that algorithm.
-\ar{} is its intrastate extension.
-The \dia{} is the proposed law.
+The canonical benchmark uses census blocks, standard recursive bisection,
+shared-boundary weights, and one manifest-derived seed. \ar{} remains a
+research comparator, not a constitutionally compelled method. The central
+federal claim is reproducibility and disclosure, not a uniquely fair output.
 \end{abstract}
+
+\noindent\textbf{Evidence and policy status.} This paper is a short internal
+policy explainer, not a complete law-review constitutional analysis. It is not
+the canonical national-standard
+specification, enacted legislation, external constitutional review, or a
+completed 50-state seed-stability certificate. The controlling candidate
+decision record is
+\texttt{docs/specs/2026-07-09-national-redistricting-standard-v0.1.md}.
 
 \tableofcontents
 \newpage
 
-\input{sections/01-introduction}
-\input{sections/02-first-principles}
-\input{sections/03-why-apportionregions}
-\input{sections/04-bipartisan-case}
-\input{sections/05-implementation}
-\input{sections/06-conclusion}
+\input{sections/07-canonical-alignment}
 
 \bibliographystyle{plainnat}
 \bibliography{references}

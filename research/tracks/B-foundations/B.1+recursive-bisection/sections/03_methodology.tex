@@ -45,7 +45,7 @@ This minimal bridging approach creates only necessary water crossings while resp
 
 \subsection{The METIS Graph Partitioning Library}
 
-Graph partitioning—dividing a graph into balanced, well-connected components—is NP-hard \cite{garey1979computers}. Exact optimization for census-tract-scale graphs (hundreds to thousands of nodes) is computationally infeasible. We employ heuristic methods that find high-quality solutions efficiently.
+Graph partitioning—dividing a graph into balanced, well-connected components—is NP-hard \cite{garey1979computers}. The nationwide implementation therefore uses heuristic methods that find high-quality solutions efficiently. Bounded exact per-cut and recursive-tree certificates are now implemented separately; full State-scale proof generation remains an open solver and proof-engineering problem rather than a demonstrated impossibility.
 
 Specifically, we use METIS 5.1.0 \cite{karypis1998fast}, a widely-used multilevel graph partitioning system. METIS operates in three phases:
 

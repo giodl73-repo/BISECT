@@ -1,0 +1,88 @@
+{
+  "schema_version": "certified-single-district-states-2020-v1",
+  "status": "verified",
+  "state_count": 6,
+  "states": [
+    {
+      "state": "AK",
+      "unit_count": 28568,
+      "population_total": 733391,
+      "land_edge_count": 67858,
+      "bridge_edge_count": 1778,
+      "final_component_count": 1,
+      "weighted_boundary_cut": 0,
+      "certificate_id": "sha256:123f3228a9f11cc206a0477e9ca72fed5ab1bc9eb9c245c1e846ca855334559d",
+      "rctx_sha256": "30f630d3a6a63fd9bb87c6e0d197c9921dfd804f04221e7c57a9f9ef257cd874",
+      "package_manifest_sha256": "192039d49abb4fa1dcf214b59a7b44fd6bef5a4ef271952e9a0efd3204f6a4d7",
+      "status": "verified"
+    },
+    {
+      "state": "DE",
+      "unit_count": 20198,
+      "population_total": 989948,
+      "land_edge_count": 48440,
+      "bridge_edge_count": 0,
+      "final_component_count": 1,
+      "weighted_boundary_cut": 0,
+      "certificate_id": "sha256:4300aacbcc572a4a171f247b98319f928a211a4c3ebaf9f68038778e5586559f",
+      "rctx_sha256": "de7a70c82e6a89ebb00f31e1638a99f4562e4d7204b44cc12c21542320c48549",
+      "package_manifest_sha256": "7d41dfa9830c111b72a38553f7d3dafee50e2bd3f12c5fb70c9b5598fc29b448",
+      "status": "verified"
+    },
+    {
+      "state": "ND",
+      "unit_count": 84566,
+      "population_total": 779094,
+      "land_edge_count": 199484,
+      "bridge_edge_count": 0,
+      "final_component_count": 1,
+      "weighted_boundary_cut": 0,
+      "certificate_id": "sha256:a368b4044ebf7bc023b27a6ddb3c493dec3ee3a71ea11227e4902ab4d030c9e5",
+      "rctx_sha256": "357f604d7dc94fe2b31939e58511a908844ee1f5d8b9f3aa35f70337f24511c3",
+      "package_manifest_sha256": "b8c1f2816f81dc624bd3dfd83d2f1b7b161b53cbf833fe2b818b71c8eb2f05b1",
+      "status": "verified"
+    },
+    {
+      "state": "SD",
+      "unit_count": 71383,
+      "population_total": 886667,
+      "land_edge_count": 167472,
+      "bridge_edge_count": 0,
+      "final_component_count": 1,
+      "weighted_boundary_cut": 0,
+      "certificate_id": "sha256:41922c3ddd17f2d90845e9919ea135042a94e05070dd4b42d487924026da8169",
+      "rctx_sha256": "440cada496ff60e84dd36a926a4d52d84a6aae8d693a1f8f6c06228e3f0e32e6",
+      "package_manifest_sha256": "4489827a0f2a3940e685759789693926715a939e488d05b81df1a6bc871025a3",
+      "status": "verified"
+    },
+    {
+      "state": "VT",
+      "unit_count": 24611,
+      "population_total": 643077,
+      "land_edge_count": 61175,
+      "bridge_edge_count": 0,
+      "final_component_count": 1,
+      "weighted_boundary_cut": 0,
+      "certificate_id": "sha256:c54d3bf9dc11fd8ff21ffee90ec928ca66df8eb1c5ccc426221a9334a3da039c",
+      "rctx_sha256": "cf96b7711330d3810e748d0fa7df233a6b0a07e3d705b4dc88009d32abd477c0",
+      "package_manifest_sha256": "ab5b67c508b132533727a5f2c354db3b56087c1f8f5cc4e650910fd89beaaf7a",
+      "status": "verified"
+    },
+    {
+      "state": "WY",
+      "unit_count": 53769,
+      "population_total": 576851,
+      "land_edge_count": 136997,
+      "bridge_edge_count": 0,
+      "final_component_count": 1,
+      "weighted_boundary_cut": 0,
+      "certificate_id": "sha256:841ca73c9f5eb8a1f055a794c7a1675ab3801e56c25ed8380b8a5c496012b65c",
+      "rctx_sha256": "c2ebbffa8e6f2265beb1ca35fb3cfd212d617b7d7cfacd625156f0e2088a28f5",
+      "package_manifest_sha256": "7e6cb802706fb0827b20887349f062164624110309d652b60ba9821d2c31d5a0",
+      "status": "verified"
+    }
+  ],
+  "total_units": 283095,
+  "total_population": 4609028,
+  "claim_boundary": "Six complete connected wall-to-wall 2020 one-district packages; source data remain under local hash-bound custody."
+}

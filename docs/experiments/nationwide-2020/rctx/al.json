@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "alabama",
+  "state_code": "AL",
+  "state_fips": "01",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/al_blocks_2020.rctx",
+  "rctx_bytes": 49791051,
+  "rctx_sha256": "5d9acbcfddbac6fd3995f5ed4982535b458777c5cbe43d020bea317e3a376c90",
+  "context_hash": "sha256:422deab555a8d6feb50056e6514caa86da30e1efb8e81aff0364921500e63dd5",
+  "unit_universe_hash": "sha256:d5027f90b6613010e715d9c43ba4f018699e3077aae5735fe6960b67f9818918",
+  "unit_count": 185976,
+  "population_total": 5024279,
+  "land_edge_count": 461910,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

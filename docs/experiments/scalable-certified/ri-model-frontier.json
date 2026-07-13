@@ -1,0 +1,113 @@
+{
+  "schema_version": "ri-compact-proof-model-frontier-v1",
+  "status": "partial-proof",
+  "state": "rhode_island",
+  "year": 2020,
+  "instance_hash": "sha256:a02a709f2c54d6877bb9860b17cf46ab2676ccc55efe9eb074b7805bafe1be2d",
+  "discovery_id": "sha256:8011d6d32bafaf565d14df1cb6d526d4e90efa0877ae4d7d1b5d0e8726d8bf66",
+  "local_package": {
+    "path": "data/2020/certified/ri-root-models",
+    "committed": false,
+    "manifest_sha256": "c7db8babf78912dd2317bdbbe1f4a3f710ba8e26aef7b445131abfa471978f3d",
+    "total_model_bytes": 862944841
+  },
+  "artifacts": {
+    "01-population": {
+      "path": "01-population.opb",
+      "bytes": 171152119,
+      "sha256": "e149c26f2453f33608db064ce752abb18b177271bb1dfae16980874dbddc72ec",
+      "request_path": "01-population.request.json",
+      "request_bytes": 867,
+      "request_sha256": "14c9e05922334c0bf5cd9165765bfcab4442f1ef4fc0d3eb2caf034ee305a931",
+      "variable_count": 1228520,
+      "constraint_count": 1468963,
+      "status": "proof-required-unclassified"
+    },
+    "02-boundary": {
+      "path": "02-boundary.opb",
+      "bytes": 172119842,
+      "sha256": "5c76067389c10a029bf9fb619eb6b1a03c8df59f7b91d807bcb835ea4bb25f18",
+      "request_path": "02-boundary.request.json",
+      "request_bytes": 870,
+      "request_sha256": "6dfbf4f9e825119e373daefc09afc4c5225d2f9514e8126dbf9232577b7c59dc",
+      "variable_count": 1228520,
+      "constraint_count": 1468964,
+      "status": "proof-required-unclassified"
+    },
+    "02-high-boundary-right-548690": {
+      "path": "02-high-boundary-right-548690.opb",
+      "bytes": 171880299,
+      "sha256": "74a78746c22669b3de7f0eddfae99f5e21310874128682dfd5e60117a1375597",
+      "request_path": "02-high-boundary-right-548690.request.json",
+      "request_bytes": 872,
+      "request_sha256": "a2feba886c137857ac90b1ebfcf3c3ac082aec3854c911b0425873094eda469c",
+      "variable_count": 1228520,
+      "constraint_count": 1468963,
+      "status": "proof-required-unclassified"
+    },
+    "02-low-boundary-right-548689": {
+      "path": "02-low-boundary-right-548689.opb",
+      "bytes": 171880299,
+      "sha256": "43a26131cc744210866e91857abe2fca5f6c783673174e11197df18204ac30dc",
+      "request_path": "02-low-boundary-right-548689.request.json",
+      "request_bytes": 872,
+      "request_sha256": "0c930ca74ee3f74b4428ed42658f09cb1839a76877f02a351b2408caf9b1c52a",
+      "variable_count": 1228520,
+      "constraint_count": 1468963,
+      "status": "proof-required-unclassified"
+    },
+    "03-canonical": {
+      "path": "03-canonical.opb",
+      "bytes": 175912282,
+      "sha256": "79148d01d4ce4781260ad3397124f479cfe36e88b72582409bcf327048a7257b",
+      "request_path": "03-canonical.request.json",
+      "request_bytes": 891,
+      "request_sha256": "d173bef64d36a0377f059a6bb8e8549e2ada2992cf04928593a450178edc5e7f",
+      "variable_count": 1264715,
+      "constraint_count": 1577548,
+      "status": "proof-required-unclassified"
+    }
+  },
+  "population_stage": {
+    "status": "verified-unsat",
+    "input_path": "data/2020/certified/ri-root-models/01-population.opb",
+    "input_bytes": 171152119,
+    "input_sha256": "e149c26f2453f33608db064ce752abb18b177271bb1dfae16980874dbddc72ec",
+    "proof_path": "01-population.pbp",
+    "proof_bytes": 3500023,
+    "proof_sha256": "955f567dcc0fe1e0b34d2aaae861481908560a545c1c950219955a0edb466c8e",
+    "roundingsat_result": "UNSATISFIABLE",
+    "veripb_result": "Verification succeeded.",
+    "claim": "No connected canonical split improves scaled population deviation below 1.",
+    "replay_commands": [
+      "cargo run -p bisect-ilp --example certified_model_package -- data/2020/certified/ri-root-discovery/certified-split-instance.json data/2020/certified/ri-root-discovery/certified-discovery.json data/2020/certified/ri-root-models",
+      "roundingsat --lp=0 --proof-log=01-population.pbp 01-population.opb",
+      "veripb --requireUnsat 01-population.opb 01-population.pbp"
+    ]
+  },
+  "boundary_stage": {
+    "status": "not-run",
+    "input_path": "data/2020/certified/ri-root-models/02-boundary.opb",
+    "input_bytes": 172119842,
+    "input_sha256": "5c76067389c10a029bf9fb619eb6b1a03c8df59f7b91d807bcb835ea4bb25f18",
+    "incumbent_weighted_cut": 43047238,
+    "claim": "Improved boundary model compiled; no SAT or UNSAT conclusion."
+  },
+  "strengthened_boundary_branches": [
+    {
+      "right_population": 548689,
+      "connectivity_encoding": "parent-depth-v3",
+      "input_sha256": "43a26131cc744210866e91857abe2fca5f6c783673174e11197df18204ac30dc",
+      "incumbent_weighted_cut": 43047238,
+      "status": "not-run"
+    },
+    {
+      "right_population": 548690,
+      "connectivity_encoding": "parent-depth-v3",
+      "input_sha256": "74a78746c22669b3de7f0eddfae99f5e21310874128682dfd5e60117a1375597",
+      "incumbent_weighted_cut": 43047238,
+      "status": "not-run"
+    }
+  ],
+  "claim_boundary": "Hash-bound compact RI proof inputs and a timed solver probe; not a proof result or certified split."
+}

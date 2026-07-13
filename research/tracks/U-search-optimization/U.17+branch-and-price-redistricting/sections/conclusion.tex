@@ -7,3 +7,8 @@ same RPLAN/RCTX verification path as other U-series algorithms.
 This lets the implementation mature in public stages. The paper can claim a
 fixture-scale contract now, while reserving large-instance exact performance for
 future solver transcripts and benchmark evidence.
+
+Under U.21, branch-and-price is a discovery and lower-bound engine for a fixed
+recursive split. Its selected incumbent becomes a discovery record; separate
+population, boundary, and canonical decision proofs must still be generated
+and independently checked before the cut is certified.

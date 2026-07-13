@@ -35,6 +35,9 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `u3-sa-evidence-manifest.json` | `u3-sa-evidence-manifest v1` | `bisect-cli::sa_evidence` | U.3 Simulated Annealing Evidence wave |
 | `u11-resolution-evidence-manifest.json` | `u11-resolution-evidence-manifest v1` | `bisect-multiscale::resolution_evidence` | U.11 Resolution Evidence wave |
 | `u-search-evidence-manifest.json` | `u-search-evidence-manifest v1` | `bisect-ensemble::search_evidence` | U Search Evidence Packages wave |
+| `docs/fixtures/nrs-reference-v0.1/reference_manifest.json` | `nrs-reference-replay v1` | Documentation fixture; verified by package README commands | National Standard Evidence And Specification wave, Pulse 03 |
+| `exact-package-manifest.json` | `exact-canonical-package-manifest-v1` | `bisect-cli::exact_cmd` | Exact Canonical Benchmark Foundations wave |
+| `docs/examples/exact-canonical/manifest.json` | `exact-canonical-fixture-manifest-v1` | Documentation fixture; Python verifier | Exact Canonical Benchmark Foundations wave |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -378,6 +381,61 @@ Required fields beyond §2:
 | `verifier_path` | Package-relative source path for the verifier implementation. |
 | `verification_commands` | Commands that replay or validate the package. |
 
+### 3.22 `nrs-reference-replay v1`
+
+Source:
+`docs/fixtures/nrs-reference-v0.1/reference_manifest.json`.
+
+This manifest binds the Rhode Island 2020 functional reference replay to a
+source identity, toolchain, config, census/TIGER/adjacency inputs, executable,
+commands, and canonical assignment hash. It records two clean-source
+executions. It is not evidence of block-level NRS conformance, byte-identical
+output, external replication, or legal validity.
+
+Required fields beyond §2:
+
+| Field | Definition |
+|---|---|
+| `package_id` | Stable replay package identifier. |
+| `status` | Evidence posture; current value is `internal_clean_source_snapshot`. |
+| `claim_boundary` | Explicit non-claims for the replay. |
+| `scope` | State, year, district count, unit count, and resolution. |
+| `source` | Base commit, overlay path/hash, validation snapshot, and lockfile hash. |
+| `toolchain` | Rust/Cargo versions, host, profile, and lock policy. |
+| `algorithm` | Config path/hash and all assignment-affecting profile values. |
+| `inputs` | Hash-bound data manifest, PL 94-171, TIGER, and adjacency rows. |
+| `build` | Binary hash and build command. |
+| `execution` | Commands, execution count, cleanliness, mapping comparison, and chain verdict. |
+| `expected_output` | Canonical assignment hash plus raw-hash caveat. |
+| `verification` | Package-relative verifier path and commands. |
+
+### 3.23 `exact-canonical-package-manifest-v1`
+
+Source: `bisect-cli::exact_cmd`.
+
+This manifest binds the bounded exact instance, exact certificate, and any
+feasible-plan package artifacts.
+
+Required fields:
+
+| Field | Definition |
+|---|---|
+| `method` | `canonical-exhaustive`. |
+| `result` | `optimal` or `infeasible`. |
+| `instance_hash` | Canonical exact-instance identity. |
+| `exact_certificate_id` | Canonical exact-certificate identity. |
+| `declared_population_tolerance_percent` | Independent RPLAN audit tolerance supplied by the operator. |
+| `files` | Map from every present package-relative artifact to SHA-256. |
+| `claim_boundary` | Bounded E0 non-claims. |
+
+### 3.24 `exact-canonical-fixture-manifest-v1`
+
+Source: `docs/examples/exact-canonical/manifest.json`.
+
+This fixture manifest hashes the positive optimal and negative infeasibility
+packages and names the Python fixture verifier plus Rust certificate/package
+tests.
+
 ---
 
 ## 4. Date semantics: `accessed_date` vs `fetched_at` (D-01)
@@ -412,13 +470,27 @@ The Court Reports reproducibility-zip pipeline runs a path-portability rewrite p
 
 ## 6. Cross-manifest hash-link convention
 
-Manifests reference upstream manifests by SHA-256 of the upstream's canonical-JSON representation.
+Two hashes have different purposes:
+
+- **canonical content hash** — SHA-256 of `canonical-json-v1`: compact UTF-8,
+  sorted object keys, preserved array order, shortest-roundtrip finite floats,
+  base-10 integers without leading zeros, absent fields distinct from explicit
+  `null`, and no insignificant whitespace. This hash is used for conformance
+  identity and seed input manifests.
+- **transport/file hash** — SHA-256 of the exact published file bytes. This
+  detects byte changes in pretty-printed artifacts.
+
+Writers and schemas must label which hash is carried. A field named only
+`sha256` uses the transport/file hash unless its schema expressly identifies it
+as `canonical_content_sha256`.
+
+Manifests reference upstream manifests by the hash named in the owning schema.
 
 - The `narrative_manifest.json` field `plan_a_manifest_sha256` is the SHA-256 of the canonicalized bytes of the upstream `PlanManifest.json`. The same applies to `plan_b_manifest_sha256` and `baseline_manifest_sha256`.
 - The `whatif-manifest v1` field `parent_plan_manifest_sha256` is SHA-256 of the upstream `PlanManifest.json`. `parent_report_pdf_sha256` is SHA-256 of the rendered court PDF (when present).
 - The `repro-package v1` manifest carries `pdf_sha256` (the embedded PDF's bytes) AND `included_files[].sha256` (every file in the zip).
 
-**Canonicalization for SHA computation:**
+**Pretty-file transport hash:**
 
 JSON manifests are hashed in their pretty-printed form when the writer was set to "pretty" mode (default for human-readable artifacts). For byte-stable re-hashing, writers MUST:
 - Use sorted-key serialization (e.g., serde's `BTreeMap` instead of `HashMap`).
@@ -426,7 +498,10 @@ JSON manifests are hashed in their pretty-printed form when the writer was set t
 - Write LF line endings (NOT CRLF) regardless of host OS.
 - End with exactly one trailing newline.
 
-The hash is computed over the file bytes as written. Re-reading the file and re-serializing through serde MAY produce different bytes if the canonicalization rules above are violated; this is a writer bug.
+The transport hash is computed over the file bytes as written. Re-reading the
+file and re-serializing through serde may produce different bytes. The
+canonical content hash is separately computed under `canonical-json-v1` and is
+independent of pretty-print whitespace or line endings.
 
 ---
 

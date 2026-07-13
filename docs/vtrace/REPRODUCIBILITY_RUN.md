@@ -51,6 +51,29 @@ below. This does not constitute a clean-environment replay or full-scale run.
 | Verification result | Config, build-index, and analysis-index SHA chain reported `MATCH`; verdict `VERIFIED`. |
 | Replay class | release-subset candidate with dirty-data allowance; not clean L2 release-subset or full-scale reproducibility evidence. |
 
+## NRS v0.1 clean-source reference replay
+
+Pulse 03 of the National Standard Evidence And Specification wave added a
+Rhode Island 2020 reference package at
+`docs/fixtures/nrs-reference-v0.1/`.
+
+| Field | Value |
+|---|---|
+| Scope | Rhode Island 2020, 2 congressional districts, 250 tract units. |
+| Source identity | Base commit `d61a7136d60c27ecdd451067a1c08a063581820f` plus the hash-bound runtime overlay and reference config in the package. |
+| Toolchain | `rustc 1.95.0`; `cargo 1.95.0`; release build with `--locked`. |
+| Algorithm | `standard-bisect`, `geographic`, `single`, seed `424242`, tolerance `0.5`, engine `c-ffi`. |
+| Input custody | Data manifest, PL 94-171 components, TIGER tract components, adjacency pickle/binary, and GEOID map are SHA-256 bound in `reference_manifest.json`. |
+| Executions | Two executions, each beginning from a clean source snapshot. |
+| Mapping comparison | 250 units in each run; zero assignment differences. |
+| Canonical assignment SHA-256 | `6cd96b33ac8fdae2d8e5e4b7bc9674358311eed62becbe624e6913d1507b4822`. |
+| Audit chain | Config, build-index, and analysis-index links reported `MATCH`; verdict `VERIFIED` in both executions. |
+| Raw assignment SHA-256 | `930d3b18024d64ed17f640ac37d16a0204fc318c9df5332f074b5cb0491dac71` in both executions after canonical key-order serialization. |
+| Replay class | Internal clean-source functional reference candidate; not block-level NRS conformance, external replication, or byte-identical output evidence. |
+
+This replay closes the assignment-level functional reference for the declared
+tract fixture and adds deterministic assignment JSON key ordering.
+
 ## Required L2 release-subset/full-scale record
 
 The maintenance harness
@@ -144,9 +167,9 @@ record must include:
 
 ## Current disposition
 
-DCR-007 is not closed for L2 full-scale or clean release-subset reproducibility.
-Public claims may cite only the declared fixture, smoke, and candidate replay
-scopes with their stated dirty-data limitation until a selected clean data-backed
-replay is executed and reviewed. The current local checkout has a dirty
-`data/manifest.json`, so `--allow-dirty-data` evidence is useful as tooling and
-candidate replay evidence, but it is not clean replay evidence.
+DCR-007 is not closed for L2 full-scale or externally replicated clean
+release-subset reproducibility.
+Public claims may cite the NRS Rhode Island fixture only with its tract-level,
+internal, base-plus-overlay, local-data-custody, and raw-order caveats. Broader
+release claims remain blocked on a committed source identity, reviewed artifact
+custody, block-level execution where claimed, and non-author replay.

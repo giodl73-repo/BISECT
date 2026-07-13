@@ -34,18 +34,18 @@ Giovanni Della-Libera \\
 \begin{abstract}
 Congressional redistricting in the United States suffers a legitimacy crisis:
 partisan mapmakers manipulate district boundaries to predetermine election outcomes,
-eroding public confidence in representative democracy. We demonstrate that recursive
-graph bisection—a computational method used for supercomputer workload distribution—
-provides an algorithmic alternative that cannot be instructed to gerrymander because it cannot access
-partisan data. Applied to all 50 states across three census decades (2000/2010/2020),
-this method produces 435 congressional districts with near-perfect population equality,
-geographic contiguity, and geometric compactness. Algorithmic plans create 69 more
-majority-minority districts than enacted maps, exceeding Voting Rights Act requirements
-without explicit racial targeting. We identify a 42\% demographic threshold determining
-where proportional minority representation becomes geographically feasible. These
-findings establish that mathematical governance—successful for congressional
-apportionment since 1941—can extend to redistricting, offering a path toward restoring
-electoral legitimacy through structural objectivity rather than institutional reform.
+eroding public confidence in representative democracy. We evaluate recursive graph
+bisection---a computational method used for supercomputer workload distribution---as a
+partisan-input-excluded geographic benchmark. The execution stage does not consume
+partisan data, but structure, weights, resolution, seed, and legal modifications remain
+public policy choices. Historical pipeline runs cover all 50 states across three census
+decades (2000/2010/2020) and produce population-balanced, contiguous district plans.
+The demographic analysis reports majority-minority opportunity diagnostics, not legal
+Voting Rights Act compliance; the reported 42\% threshold is exploratory rather than a
+legal rule. Some ensemble and national headline claims still depend on synthetic or
+incomplete evidence packages. The contribution is therefore a reproducible baseline and
+research program, not proof of a uniquely fair map or a substitute for commissions,
+courts, civil-rights analysis, or public judgment.
 \end{abstract}
 
 % Main sections
@@ -57,28 +57,28 @@ electoral legitimacy through structural objectivity rather than institutional re
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/figure1_portfolio_architecture.png}
-\caption{\textbf{Research program architecture.} 190+ papers across 20 active tracks (A--G, I--U) form a comprehensive investigation of algorithmic redistricting. Foundation papers (blue) establish methods, analysis papers (green) validate findings across multiple dimensions, and theory papers (orange) explore algorithmic variations. Arrows indicate methodological dependencies. Key findings annotated for each paper cluster.}
+\caption{\textbf{Research program architecture.} The current index contains 206 papers across 23 active tracks. Foundation papers (blue) establish methods, analysis papers (green) test findings across multiple dimensions, and theory papers (orange) explore algorithmic variations. Internal review and PDF availability do not imply external peer review or complete empirical evidence.}
 \label{fig:architecture}
 \end{figure}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/figure2_national_map_placeholder.png}
-\caption{\textbf{National redistricting results.} Map of all 435 algorithmic congressional districts from 2020 census, color-coded by majority-minority (MM) status. Algorithmic plans created 137 MM districts compared to 68 in enacted maps (+69 surplus). Insets show key examples: Alabama (VRA success with 2 MM districts), California (large state with 52 districts), and Vermont (small state with 1 district). Demonstrates national-scale feasibility.}
+\includegraphics[width=\textwidth]{../../E-experimental/E.3+national-redistricting/figures/figure1_national_map_2020.png}
+\caption{\textbf{National benchmark output.} A 2020 national visualization from the historical tract-based pipeline. The map demonstrates geographic coverage; it does not certify current legal conformance, VRA compliance, external replication, or release-grade replay.}
 \label{fig:national}
 \end{figure}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/figure3_vra_analysis.png}
-\caption{\textbf{VRA compliance analysis.} (A) Algorithmic plans create 137 majority-minority (MM) districts versus 68 in enacted plans, a surplus of 69 (+101\%). Key states shown: Alabama (0$\rightarrow$2), Georgia (5$\rightarrow$6), Louisiana (1$\rightarrow$2). (B) The 42\% demographic threshold determines where proportional minority representation becomes geographically feasible. States above 42\% minority population achieve near-proportional outcomes; states below 37\% face geometric constraints. (C) Pareto frontier for Alabama shows tradeoff between VRA compliance and geometric compactness, illustrating achievable parameter space.}
+\caption{\textbf{Minority-opportunity diagnostics.} (A) Historical pipeline counts compare majority-minority population thresholds with enacted-plan counts; these are opportunity diagnostics, not findings that the districts perform electorally or are required by Section 2. (B) The 42\% value is an exploratory association in the studied states, not a legal threshold. (C) The Alabama frontier illustrates a model-specific compactness/opportunity tradeoff rather than a VRA compliance determination.}
 \label{fig:vra}
 \end{figure*}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/figure4_temporal_stability.png}
-\caption{\textbf{Temporal stability across census cycles.} (A) Recursive bisection maintains 80\% census tract retention from 2010 to 2020 redistricting, outperforming n-way partitioning (66\%) by 14 percentage points. The hierarchical structure creates geographic scaffolding that persists across demographic change. (B) Variance decomposition reveals that differences between geographic regions (e.g., urban vs. rural) exceed temporal changes by 3.2×, indicating districts reflect durable spatial structure rather than decade-specific population artifacts. (C) District boundary overlay shows 2010 boundaries (blue) and 2020 boundaries (red); purple overlap illustrates high spatial consistency despite population shifts.}
+\caption{\textbf{Temporal diagnostics across census cycles.} Historical analyses use several non-equivalent stability measures. Earlier tract-retention projections and the later observed 66\% county-disruption result should not be read as the same quantity. The figure motivates cross-census sensitivity analysis; current release-grade claims require regenerated, metric-aligned evidence.}
 \label{fig:temporal}
 \end{figure*}
 

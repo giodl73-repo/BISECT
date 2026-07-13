@@ -1,0 +1,32 @@
+\section{Introduction}
+
+Congressional redistricting combines a fixed numerical obligation---create
+exactly $k$ districts---with a vast collection of geographically feasible
+assignments. Recursive bisection reduces that choice space to a sequence of
+two-way decisions. For California's 52-district delegation, the canonical
+schedule begins
+\[
+52\rightarrow 26/26,\qquad 26\rightarrow 13/13,\qquad
+13\rightarrow 6/7.
+\]
+The schedule is intelligible, reproducible, and naturally parallel. The
+remaining discretion lies in selecting each cut.
+
+Practical graph partitioners such as METIS are well suited to finding strong
+balanced cuts quickly \cite{karypis1998fast}. Their output, however, is not an
+optimality proof. Re-running a deterministic heuristic can establish what the
+program produced; it cannot establish that no better cut was permitted by the
+same rules.
+
+This paper asks whether the recursive structure itself can become
+proof-carrying. Our answer is conditional but constructive. A governing rule
+must freeze the unit universe, population, adjacency and island links, split
+schedule, objective order, and tie-break. Software can then certify each
+required cut and bind the cuts into one recursive tree. This follows the
+procedural lesson of Huntington--Hill: mathematics settles execution only
+after the governing criterion has been selected \cite{huntington1928}.
+
+The contribution is a methods and evidence contract. We do not claim that the
+chosen geographic objective is inevitable, that the resulting plan is a legal
+safe harbor, or that certified plans already outperform all alternatives on
+compactness, representation, or runtime.

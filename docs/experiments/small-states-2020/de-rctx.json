@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "delaware",
+  "state_code": "DE",
+  "state_fips": "10",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/de_blocks_2020.rctx",
+  "rctx_bytes": 5134246,
+  "rctx_sha256": "de7a70c82e6a89ebb00f31e1638a99f4562e4d7204b44cc12c21542320c48549",
+  "context_hash": "sha256:6fb2f4d3db7e94c558a53a35fa347ee93e8e18c35773db97aff364564635f999",
+  "unit_universe_hash": "sha256:e9742719103a0e204c45732fd0aa45a28b18bf27df7d0ee2ff579c1aca2dba39",
+  "unit_count": 20198,
+  "population_total": 989948,
+  "land_edge_count": 48440,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

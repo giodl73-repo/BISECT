@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "colorado",
+  "state_code": "CO",
+  "state_fips": "08",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/co_blocks_2020.rctx",
+  "rctx_bytes": 37196659,
+  "rctx_sha256": "9897646633a4071560afead6ff5c243f55aecd45a0d1d22e778f9fa2d9460242",
+  "context_hash": "sha256:8cb9279a72292fbea6edf647107f3c9503a8eb7251779fcf089242ff593c9722",
+  "unit_universe_hash": "sha256:b8a643cf6eda5674303f957b5c2418aa6d2307f453da84037e9186adfc0e24cf",
+  "unit_count": 140345,
+  "population_total": 5773714,
+  "land_edge_count": 346078,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

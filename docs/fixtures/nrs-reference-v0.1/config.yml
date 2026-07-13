@@ -1,0 +1,23 @@
+# Reference replay profile for National Redistricting Standard v0.1.
+#
+# This is a tract-level implementation fixture, not full block-level national
+# standard conformance. Rhode Island 2020 is the selected reference scope
+# because it is small and still exercises a real two-district METIS partition.
+
+name: nrs_reference_v0_1
+description: >
+  Reproducibility reference profile for Rhode Island 2020. Uses the candidate
+  standard's standard-bisect structure, geographic boundary weights, one fixed
+  seed, 0.5 percent balance tolerance, and embedded C-FFI METIS engine.
+
+algorithm:
+  structure: standard-bisect
+  weights: geographic
+  search: single
+  seed: 424242
+  balance_tolerance: 0.5
+  engine: c-ffi
+
+workers: 1
+years: ["2020"]
+analysis_types: [compactness, contiguity, splits, summary]

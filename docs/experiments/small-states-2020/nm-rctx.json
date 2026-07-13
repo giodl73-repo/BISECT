@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "new_mexico",
+  "state_code": "NM",
+  "state_fips": "35",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/nm_blocks_2020.rctx",
+  "rctx_bytes": 28787096,
+  "rctx_sha256": "6ec8526daac0349be74bcf01119a14b4d37ba3c6d65577d07503cf2ec5d868bc",
+  "context_hash": "sha256:ef1192da52b9800c9b631806db888884d3a82a1ae84768f9baa0467dd73aa8bd",
+  "unit_universe_hash": "sha256:ee1912331d716ac1a6822d07f1d1deb9f2b4694b3c1a86bcbcd606377e33b169",
+  "unit_count": 107215,
+  "population_total": 2117522,
+  "land_edge_count": 268806,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

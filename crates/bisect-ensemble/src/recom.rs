@@ -13,7 +13,7 @@
 //! The "full tree-resample on balance failure" approach matches GerryChain's
 //! stationary distribution: every balanced spanning-tree cut is equally likely.
 
-use crate::spanning::{random_spanning_tree, SpanningTree};
+use crate::spanning::{random_kruskal_spanning_tree, random_spanning_tree, SpanningTree};
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::{HashMap, HashSet};
@@ -34,6 +34,12 @@ pub struct StepRecord {
     pub accepted: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TreeSampler {
+    Wilson,
+    GerryChainKruskal,
+}
+
 /// Core ReCom chain state.
 pub struct RecomChain {
     /// CSR adjacency: adj[v] = list of neighbour indices.
@@ -48,6 +54,7 @@ pub struct RecomChain {
     // Pre-computed ideal population.
     ideal_pop: f64,
     target_pops: Vec<f64>,
+    tree_sampler: TreeSampler,
     // Total edges (for cut_fraction).
     total_edges: usize,
 }
@@ -75,8 +82,22 @@ impl RecomChain {
             steps_taken: 0,
             ideal_pop,
             target_pops,
+            tree_sampler: TreeSampler::Wilson,
             total_edges,
         }
+    }
+
+    pub fn new_with_sampler(
+        adj: Vec<Vec<u32>>,
+        pop: Vec<i64>,
+        assignment: Vec<u32>,
+        k: u32,
+        pop_tolerance: f64,
+        tree_sampler: TreeSampler,
+    ) -> Self {
+        let mut chain = Self::new(adj, pop, assignment, k, pop_tolerance);
+        chain.tree_sampler = tree_sampler;
+        chain
     }
 
     pub fn new_with_target_pops(
@@ -102,6 +123,7 @@ impl RecomChain {
             steps_taken: 0,
             ideal_pop,
             target_pops,
+            tree_sampler: TreeSampler::Wilson,
             total_edges,
         }
     }
@@ -178,7 +200,10 @@ impl RecomChain {
 
             // Try up to MAX_TREE_RESAMPLES spanning trees.
             for _ in 0..MAX_TREE_RESAMPLES {
-                let tree = random_spanning_tree(&local_adj, rng);
+                let tree = match self.tree_sampler {
+                    TreeSampler::Wilson => random_spanning_tree(&local_adj, rng),
+                    TreeSampler::GerryChainKruskal => random_kruskal_spanning_tree(&local_adj, rng),
+                };
 
                 // Collect all balanced cuts.
                 let balanced_cuts = self.balanced_cuts(&tree, &region, d_i, d_j);
@@ -212,30 +237,50 @@ impl RecomChain {
     ) -> Vec<(u32, u32)> {
         let mut balanced = Vec::new();
         let total_pop: i64 = region.iter().map(|&g| self.pop[g as usize]).sum();
-
-        for (a, b) in tree.edges() {
-            let (comp_a, comp_b) = tree.split_on(a, b);
-            let pop_a: i64 = comp_a
-                .iter()
-                .map(|&local| self.pop[region[local as usize] as usize])
-                .sum();
-            let pop_b = total_pop - pop_a;
-            if comp_a.is_empty() || comp_b.is_empty() {
-                continue;
+        let mut children = vec![Vec::new(); tree.n];
+        let mut root = None;
+        for node in 0..tree.n {
+            let parent = tree.parent[node];
+            if parent == u32::MAX {
+                root = Some(node);
+            } else {
+                children[parent as usize].push(node);
             }
+        }
+        let root = root.expect("spanning tree must have a root");
+        let mut order = Vec::with_capacity(tree.n);
+        let mut stack = vec![root];
+        while let Some(node) = stack.pop() {
+            order.push(node);
+            stack.extend(children[node].iter().copied());
+        }
+        let mut subtree_pop: Vec<i64> = region
+            .iter()
+            .map(|&global| self.pop[global as usize])
+            .collect();
+        for &node in order.iter().rev() {
+            let parent = tree.parent[node];
+            if parent != u32::MAX {
+                subtree_pop[parent as usize] += subtree_pop[node];
+            }
+        }
+
+        for (child, parent) in tree.edges() {
+            let pop_a = subtree_pop[child as usize];
+            let pop_b = total_pop - pop_a;
             let target_a = self.target_pop(d_i);
             let target_b = self.target_pop(d_j);
             let dev_a = (pop_a as f64 - target_a).abs() / target_a;
             let dev_b = (pop_b as f64 - target_b).abs() / target_b;
             if dev_a <= self.pop_tolerance && dev_b <= self.pop_tolerance {
-                balanced.push((a, b));
+                balanced.push((child, parent));
                 continue;
             }
 
             let rev_dev_a = (pop_a as f64 - target_b).abs() / target_b;
             let rev_dev_b = (pop_b as f64 - target_a).abs() / target_a;
             if rev_dev_a <= self.pop_tolerance && rev_dev_b <= self.pop_tolerance {
-                balanced.push((b, a));
+                balanced.push((parent, child));
             }
         }
         balanced

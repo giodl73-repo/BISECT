@@ -1,0 +1,70 @@
+{
+  "schema_version": "certified-vs-metis-comparison-v1",
+  "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+  "metis_version": "METIS 5.1.0 (vendored via metis-rs 0.2)",
+  "metis_seed": 42,
+  "rows": [
+    {
+      "method": "certified",
+      "assignment": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 0,
+        "total_population_deviation_scaled": 0,
+        "weighted_boundary_cut": 1
+      },
+      "connected": true,
+      "matches_certified_assignment": true
+    },
+    {
+      "method": "metis-seed-42",
+      "assignment": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 0,
+        "total_population_deviation_scaled": 0,
+        "weighted_boundary_cut": 1
+      },
+      "connected": true,
+      "matches_certified_assignment": true
+    },
+    {
+      "method": "deliberate-suboptimal-control",
+      "assignment": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 400,
+        "total_population_deviation_scaled": 800,
+        "weighted_boundary_cut": 1
+      },
+      "connected": true,
+      "matches_certified_assignment": false
+    }
+  ],
+  "conclusion": "METIS matches the certified optimum on path8; certification adds proof strength, not a better cut on this fixture.",
+  "claim_boundary": "Single bounded synthetic root split; not national runtime or map-quality superiority."
+}

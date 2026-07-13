@@ -1,0 +1,14 @@
+{
+  "schema_version": "certified-two-district-frontier-package-v1",
+  "package_id": "two-district-frontier-2020",
+  "status": "operational-complete-population-proved",
+  "files": [
+    {
+      "path": "two-district-frontier.json",
+      "sha256": "b6e3cd5eeef35c9d19b190e9ad5da95512262cb635dda8c90960a598fa36eba6"
+    }
+  ],
+  "analyzer_path": "scripts/research/analyze_two_district_frontier.py",
+  "analyzer_sha256": "dccb24cc0c5c947afe65ac98336ba29656142d3f9a6329b3f776da7c627db5eb",
+  "claim_boundary": "HI and NH have connected wall-to-wall operational roots and verified population optimality. Boundary and canonical optimality are not claimed."
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": "certified-national-rctx-verification-package-v1",
+  "package_id": "nationwide-2020-rctx-verification",
+  "status": "verified",
+  "files": [
+    {
+      "path": "rctx-verification.json",
+      "sha256": "9a1f3e05d262f0fde00ac3adfefad718e49fc4ada90181b85eec6d08f8e6ed92"
+    }
+  ],
+  "verifier_path": "scripts/research/verify_national_rctx.py",
+  "verifier_sha256": "af977337d5598fe1ef17c61b1fc439e30b8bf01a57d770486bf98f0c924fa883",
+  "claim_boundary": "All 50 local 2020 block contexts are hash-valid and connected; no district assignments are claimed."
+}

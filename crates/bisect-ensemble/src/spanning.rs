@@ -7,6 +7,7 @@
 //! For redistricting regions of ~n/k tracts this runs in O((n/k) log(n/k)).
 
 use rand::Rng;
+use std::cmp::Ordering;
 
 /// A spanning tree represented as a parent array.
 ///
@@ -142,6 +143,95 @@ pub fn random_spanning_tree<R: Rng>(adj: &[Vec<u32>], rng: &mut R) -> SpanningTr
     }
 
     SpanningTree { parent, n }
+}
+
+/// Sample the GerryChain-compatible random-weight Kruskal spanning tree.
+///
+/// This is not a uniform spanning-tree sampler. It matches GerryChain 0.3.x's
+/// `random_spanning_tree`: assign an independent random edge weight and return
+/// the minimum spanning tree. It is exposed separately so evidence runs can
+/// compare implementations under the same proposal kernel without changing
+/// the default Wilson UST sampler.
+pub fn random_kruskal_spanning_tree<R: Rng>(adj: &[Vec<u32>], rng: &mut R) -> SpanningTree {
+    let n = adj.len();
+    assert!(n >= 2, "need at least 2 vertices for a spanning tree");
+    let mut edges = Vec::new();
+    for (node, neighbors) in adj.iter().enumerate() {
+        for &neighbor in neighbors {
+            if node < neighbor as usize {
+                edges.push((rng.gen::<f64>(), node, neighbor as usize));
+            }
+        }
+    }
+    edges.sort_by(|left, right| left.0.partial_cmp(&right.0).unwrap_or(Ordering::Equal));
+
+    let mut uf = UnionFind::new(n);
+    let mut tree_adj = vec![Vec::new(); n];
+    let mut selected = 0usize;
+    for (_, left, right) in edges {
+        if uf.union(left, right) {
+            tree_adj[left].push(right);
+            tree_adj[right].push(left);
+            selected += 1;
+            if selected == n - 1 {
+                break;
+            }
+        }
+    }
+    assert_eq!(selected, n - 1, "input graph must be connected");
+
+    let root = rng.gen_range(0..n);
+    let mut parent = vec![u32::MAX; n];
+    let mut visited = vec![false; n];
+    let mut stack = vec![root];
+    visited[root] = true;
+    while let Some(node) = stack.pop() {
+        for &neighbor in &tree_adj[node] {
+            if !visited[neighbor] {
+                visited[neighbor] = true;
+                parent[neighbor] = node as u32;
+                stack.push(neighbor);
+            }
+        }
+    }
+    SpanningTree { parent, n }
+}
+
+struct UnionFind {
+    parent: Vec<usize>,
+    rank: Vec<u8>,
+}
+
+impl UnionFind {
+    fn new(n: usize) -> Self {
+        Self {
+            parent: (0..n).collect(),
+            rank: vec![0; n],
+        }
+    }
+
+    fn find(&mut self, node: usize) -> usize {
+        if self.parent[node] != node {
+            self.parent[node] = self.find(self.parent[node]);
+        }
+        self.parent[node]
+    }
+
+    fn union(&mut self, left: usize, right: usize) -> bool {
+        let mut left_root = self.find(left);
+        let mut right_root = self.find(right);
+        if left_root == right_root {
+            return false;
+        }
+        if self.rank[left_root] < self.rank[right_root] {
+            std::mem::swap(&mut left_root, &mut right_root);
+        }
+        self.parent[right_root] = left_root;
+        if self.rank[left_root] == self.rank[right_root] {
+            self.rank[left_root] += 1;
+        }
+        true
+    }
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

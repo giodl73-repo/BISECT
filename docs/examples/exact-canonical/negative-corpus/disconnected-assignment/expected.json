@@ -1,0 +1,6 @@
+{
+  "schema_version": "exact-canonical-negative-fixture-v1",
+  "case": "disconnected-assignment",
+  "expected_error": "result-mismatch",
+  "description": "Submits a population-balanced assignment with disconnected districts."
+}

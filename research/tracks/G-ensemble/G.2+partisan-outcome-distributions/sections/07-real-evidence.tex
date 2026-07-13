@@ -1,0 +1,55 @@
+\section{Election Model And Coverage}
+
+The primary metric sums tract-level Democratic and Republican presidential
+estimates within each district and counts Democratic-plurality districts. The
+2020 file matched every Rhode Island, Iowa, and North Carolina benchmark tract.
+This is a descriptive seats model, not a legal fairness test
+~\citep{stephanopoulos2015partisan,rodden2019why}.
+The 2016 file missed 12 of 250 Rhode Island tracts, 129 of 896 Iowa tracts, and
+942 of 2,672 North Carolina tracts because it does not share the 2020 tract
+universe. No crosswalk was available, so 2016 is excluded from the primary
+percentiles rather than treating unmatched units as zero votes.
+
+\section{2020 Presidential Seat Results}
+
+\begin{table}[h]
+\centering
+\caption{Benchmark Democratic-seat position under the 2020 presidential tract model.}
+\begin{tabular}{lrrrrrr}
+\toprule
+State & Tool & Benchmark & Mean & Percentile & $\widehat R$ & ESS \\
+\midrule
+RI & Rust & 2 & 2.000 & 50.0 & 1.000 & 6000 \\
+RI & GerryChain & 2 & 2.000 & 50.0 & 1.000 & 6000 \\
+IA & Rust & 1 & 1.266 & 36.7 & 1.002 & 486 \\
+IA & GerryChain & 1 & 1.323 & 33.9 & 1.006 & 1072 \\
+NC & Rust & 5 & 5.944 & 17.1 & 1.028 & 90 \\
+NC & GerryChain & 5 & 5.811 & 21.2 & 1.036 & 98 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Rhode Island is degenerate for this metric: every sampled plan has two
+Democratic seats, so the mid-rank percentile is 50\% but carries no evidence of
+partisan neutrality. Iowa is below the ensemble mean but not in an extreme
+tail. North Carolina is lower than most sampled plans, but both ESS values fail
+the preregistered 100-sample threshold; the 17--21\% estimates remain
+non-converged descriptive results.
+
+\section{Interpretation}
+
+The state results are heterogeneous and election-specific. They do not show
+that the benchmark systematically favors or disfavors a party. They also do
+not support the earlier claim that the algorithm is near the partisan median
+in five of six states. Cross-tool seat means are similar here, while the
+underlying cut distributions differ materially.
+
+The proportionality corridor is not reported because the experiment did not
+preregister a statewide proportional-entitlement rule. A seat percentile under
+one presidential election is a diagnostic, not a fairness standard.
+
+\section{Claim Boundary}
+
+The package is tract-level, covers three states and one complete election, and
+does not establish intent, causation, partisan fairness, or legal validity.
+Additional elections require a valid crosswalk to the same unit universe.

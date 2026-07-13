@@ -38,6 +38,7 @@ The central architectural rule is that high-stakes claims flow from explicit inp
 | Research and public evidence corpus | PKG-012 | Papers, README claims, concept docs, public dashboards, legal docs, and evidence-status reviews. | REQ-005, REQ-006, REQ-024, REQ-025, REQ-026, REQ-027 | IF-006, IF-008 | `README.md`, `docs/`, `docs/papers/`, `research/`, GitHub Pages dashboard | accepted |
 | Wave/pulse execution records | PKG-013 | Controlled implementation and review records that connect changes to requirements, validation, risks, and role gates. | REQ-028, REQ-029, REQ-030, REQ-034, REQ-035 | IF-007 | `context/waves/`, pulse plans, review panels | accepted |
 | Archived forensic references | PKG-014 | Preserve sealed historical references without silently driving active production behavior. | REQ-031, REQ-033 | none unless explicitly promoted | `archive/python-pipeline-final/` and other archives | accepted |
+| National-standard evidence and exact-certificate frontier | PKG-015 | Separate heuristic benchmark evidence, governed legal modifications, external challenge packages, exact canonical certificates, recursive split certification, and proof-producing solver integration. | REQ-005, REQ-012, REQ-024, REQ-026, REQ-029 | IF-003, IF-006, IF-007, IF-008 | NRS specs, exact/recursive fixtures, hostile corpora, OPB/proof packages, RI partial certificate, U.21, `bisect-ilp`, `bisect-column`, `rplan-audit` | RI population certified; boundary optimization active |
 
 ## AR-03 Package / Language Boundaries
 
@@ -85,6 +86,31 @@ RPLAN/RCOUNT/RCTX/RHIST source package
   -> audit/reconciliation/context validation
   -> pass / pass-with-risk / partial / blocked / deferred / gap status
   -> public or restricted evidence disposition
+```
+
+National-standard flow:
+
+```text
+enacted benchmark/evaluation profile + census instance
+  -> heuristic geographic benchmark (current)
+  -> baseline RPLAN/RCTX + audit certificate
+  -> legally governed final-plan modifications
+  -> baseline-to-final diff + evaluation + public review
+  -> external challenge bundle + replication record
+
+North Star:
+exact feasible-set model + lexicographic objective
+  -> exact solver / lower bounds / connectivity witnesses
+  -> optimal assignment OR exact infeasibility certificate
+  -> two independent verifiers
+  -> canonical benchmark identity
+
+Certified recursive bisection:
+canonical k_left/k_right schedule + parent unit universe
+  -> unique optimal connected two-way cut certificate
+  -> hash-bound left/right child contexts
+  -> repeat until one-seat leaves
+  -> canonical BISECT plan + complete split-certificate tree
 ```
 
 ## AR-05 Dependencies

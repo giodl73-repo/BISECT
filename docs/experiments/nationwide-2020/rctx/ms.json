@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "mississippi",
+  "state_code": "MS",
+  "state_fips": "28",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/ms_blocks_2020.rctx",
+  "rctx_bytes": 29664834,
+  "rctx_sha256": "49e494baea46907c210b56bff544e07b99c9782d34a8b57fbd78271485e1cb3a",
+  "context_hash": "sha256:00643507d2f4ff50cd43b51252b0980db14da32ce7e91f17d46b832e300faab7",
+  "unit_universe_hash": "sha256:b496f9f9d5596f51b445f683e6e24b1fb5237ded59e3cdf885625bcb11dd4ad6",
+  "unit_count": 112241,
+  "population_total": 2961279,
+  "land_edge_count": 276363,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

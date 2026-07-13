@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "north_dakota",
+  "state_code": "ND",
+  "state_fips": "38",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/nd_blocks_2020.rctx",
+  "rctx_bytes": 21514565,
+  "rctx_sha256": "357f604d7dc94fe2b31939e58511a908844ee1f5d8b9f3aa35f70337f24511c3",
+  "context_hash": "sha256:bee43b3487c0be1f43148072858ae57faad9d6d0193beca95135f81e00d01f1d",
+  "unit_universe_hash": "sha256:02dfe50b2a1ebc4331ad04e42531c538ed4996b17e1608f942e361f03d1aac20",
+  "unit_count": 84566,
+  "population_total": 779094,
+  "land_edge_count": 199484,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "exact-canonical-certificate-v1",
+  "certificate_id": "sha256:98b1f84cb51e3f2082028f248393bc721203281ce7bde9568f48233718cb753c",
+  "instance_hash": "sha256:101d82eb80e238ca7da5853c13cc4e6b2be6ccb652bed337faa28125f2837e73",
+  "model_id": "exact-canonical-k2-exhaustive-v1",
+  "result": {
+    "result": "infeasible"
+  },
+  "proof": {
+    "proof_kind": "label-fixed-exhaustive-enumeration",
+    "fixed_label_unit": 0,
+    "enumerated_assignments": 3,
+    "feasible_assignments": 0,
+    "primary_objective_ties": 0,
+    "lower_bound": null,
+    "transcript_id": "sha256:cd2e88a27c08bd172ca7fb1489c8830ac8977f90006a50eb21ec21d51d1536c1"
+  }
+}

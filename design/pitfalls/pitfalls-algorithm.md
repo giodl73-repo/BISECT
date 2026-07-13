@@ -1,4 +1,4 @@
-# Algorithm Pitfalls (AP-01..AP-05)
+# Algorithm Pitfalls
 
 Structural vulnerabilities in the core redistricting algorithm. Each describes a class of failure — not a specific bug, but the pattern that makes a whole category of bugs possible.
 
@@ -117,3 +117,85 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 **Status:** MITIGATED
 **Proved by:** Block group resolution (54 units/district for WA 98HD) achieves 10% balance where tract (18/district) cannot. Validation script identifies states needing BG resolution.
 **Test:** `scripts/pipeline/validate_state_legislative.py` detects granularity failures; `state_policy.json` documents low_density_note for MT/ND
+
+---
+
+## AP-09: Single-seed heuristic incumbent blindness
+
+**Pattern:** A deterministic heuristic can make an optimization frontier appear
+locally exhausted when only one basin of attraction has been explored. Deep
+local refinement of that candidate may cost far more than screening independent
+starts and can miss dramatically better incumbents.
+
+**Domain:** Graph partitioning and other non-convex heuristic searches where a
+seed determines the initial partition and local neighborhoods cannot cross large
+topological barriers.
+
+**Why it's hard to catch:** The single run is reproducible, valid, and steadily
+improves under local moves. Nothing in that trajectory reveals that another seed
+starts tens of millions of objective units lower.
+
+**Structural solution:** Separate inexpensive multi-seed screening from
+expensive refinement. Exactly validate and rescore every candidate, rank them
+lexicographically, reject invalid seeds as evidence, and refine only the best
+few candidates.
+
+**Status:** MITIGATED
+**Proved by:** A 32-seed Rhode Island screen found a seed whose refined cut was
+64,132,468 versus 97,994,953 for the deeply refined original seed.
+**Test:** `tests/unit/test_certified_metis_ensemble.py`
+
+---
+
+## AP-10: Connectivity witness variables dominate exact search
+
+**Pattern:** Encoding connectivity by materializing complete spanning-tree
+witnesses can make auxiliary variables and constraints dominate the original
+optimization problem. Solver effort is then spent choosing certificates of
+connectivity rather than deciding the partition.
+
+**Domain:** Exact graph partitioning models that attach roots, parent arcs, and
+depth labels to every possible assignment before knowing which connectivity
+violations are relevant.
+
+**Why it's hard to catch:** The formulation is polynomial, correct, and compact
+relative to exponential no-goods, so model-size growth appears acceptable until
+State-scale solving repeatedly times out.
+
+**Structural solution:** Start with assignment and objective variables, detect
+disconnected incumbent components independently, and add graph-verified
+separator cuts lazily. Preserve every accumulated cut and generate the final
+proof only from the complete model.
+
+**Status:** MITIGATED
+**Proved by:** Rhode Island's initial cutset model reduced variables from
+1,228,520 to 194,406 while preserving the exact branch objective.
+**Test:** `tests/unit/test_certified_cutset.py`;
+`crates/bisect-ilp/src/proof_backend.rs::tests::cutset_boundary_compiles_small_relaxation_and_violated_cuts`
+
+---
+
+## AP-11: Solver substitution masks a decomposition bottleneck
+
+**Pattern:** Repeatedly changing exact solvers or encoding formats can look like
+progress while every backend is confronting the same undecomposed combinatorial
+core. Different conflict engines then produce different statistics but the same
+timeout.
+
+**Domain:** Exact optimization and certification systems with large global
+equalities, weighted objectives, and graph constraints. It is especially common
+when several mature solvers are readily interchangeable.
+
+**Why it's hard to catch:** Each new solver requires legitimate engineering and
+shows different propagation, memory, or conflict rates. Those local differences
+can obscure that none changes the mathematical search space.
+
+**Structural solution:** Define a bounded solver bake-off with identical
+instances and stop criteria. If all major architectures fail, close solver
+substitution and require a decomposition that creates independently coverable
+smaller decisions.
+
+**Status:** MITIGATED
+**Proved by:** RoundingSat, Exact, Kissat, and CaDiCaL all returned timeout or
+unknown on the Rhode Island unrestricted boundary decision.
+**Test:** `docs/experiments/scalable-certified/solver-frontier.json`

@@ -1,9 +1,30 @@
 \section{Conclusion}
 
-Recursive graph bisection demonstrates that algorithmic objectivity can extend from congressional apportionment to redistricting. Applied at national scale across three census decades, the method produces 1,305 constitutionally compliant districts while structurally unable to access partisan data. Five findings establish feasibility: technical requirements met, VRA compliance exceeding human maps, a 42\% demographic threshold determining minority representation feasibility, partisan patterns reflecting geography rather than manipulation, and temporal stability across census cycles.
+Recursive graph bisection provides a reproducible geographic benchmark whose
+historical outputs span 50 states and three census decades. Those artifacts
+support continued study of compactness, population balance, demographic
+opportunity, political geography, and temporal sensitivity. They do not by
+themselves establish constitutional compliance, VRA compliance, causal partisan
+neutrality, a universal 42\% threshold, or release-grade reproducibility.
 
-The paradigm shift moves from asking ``How can we prevent gerrymandering?'' to ``What if the algorithm cannot see party?'' The impossibility defense---stronger than intent-based tests---offers courts a judicially manageable standard. Legislatures and commissions gain transparent alternatives implementable without constitutional amendment. Open-source release planned for the 2030 census cycle will enable independent verification and broader adoption.
+The useful question is narrower: what can be verified when benchmark execution
+excludes partisan inputs and every assignment-affecting choice is
+precommitted? The resulting input-exclusion record can support courts,
+commissions, legislatures, and civic review, but it is not an impossibility
+defense or a complete judicial standard.
 
-Gerrymandering persists not because solutions are unknown but because reform requires removing discretion from those who benefit from its exercise. Mathematical governance succeeded for apportionment because Congress, in a rare moment of institutional humility, accepted that formulas could allocate House seats more legitimately than politicians. The same path remains available for redistricting.
+Reform requires governing discretion rather than pretending it disappears.
+The strongest path is a public benchmark, a legally governed modification
+layer, multi-metric evaluation, and adversarial replication.
 
-Eighty years after mathematical governance resolved congressional apportionment, algorithmic redistricting offers a similar path toward restoring electoral legitimacy---not through optimal outcomes, which mathematics cannot guarantee, but through structural objectivity, which it can.
+The contribution is therefore procedural evidence: published inputs,
+versioned code, reproducible assignments, explicit limitations, and visible
+departures from the benchmark.
+
+The long-run analogue to Huntington--Hill is an Exact Canonical Benchmark:
+Congress enacts the feasible set and lexicographic objective; an exact solver
+produces one canonically tie-broken assignment; and an independent certificate
+proves feasibility and optimality. Current METIS output is heuristic and does
+not meet that standard. Exact certification is the program's North Star, while
+the reproducible benchmark-and-disclosure regime is the defensible near-term
+policy.

@@ -1,0 +1,548 @@
+{
+  "schema_version": "certified-recursive-ri-block-rctx-frontier-v1",
+  "status": "blocked",
+  "state": "rhode_island",
+  "year": 2020,
+  "districts": 2,
+  "rctx": {
+    "path": "data/2020/certified/ri_blocks_2020.rctx",
+    "bytes": 6963593,
+    "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371",
+    "context_hash": "sha256:7980a29dc393110fc2f31eb9d86b91b687d29bfe3519c09ad2c4e0abe468d3f8",
+    "unit_universe_hash": "sha256:7fbdf185f5f26c88652cb0e9975a06c3402f700948cc078ffae0bcd11878975f",
+    "committed": false
+  },
+  "source_hashes": {
+    "tiger_block_shp": "sha256:2528ad254d42db9368b17b02376f79b5a6021983db77a61e47503d9a91fd72c5",
+    "tiger_block_dbf": "sha256:46aeacfdcf81ee580c50cb555d6dd5b165219463f64208912d1d304e410a6e06",
+    "tiger_block_shx": "sha256:fe549c9af889a9aa837e3a365f9aad6133daa6983ae580a01efe8f988ff1d22f",
+    "pl_geo": "sha256:d7236ca05940f50fa1bdb6b35c08435327011af40843f19a3f269503063300fd",
+    "pl_population": "sha256:a077a305148dd567de66c7ba28e355d62b5b6adde7e72b3bb7a876fefb773657",
+    "bridge_rule_source": "sha256:d8c7e5292e4e768ee1ad36422dca0feff70bd3db47f9a23db8c7a3947e6fb7c4",
+    "bridge_weight_rule_source": "sha256:0da364273bc9188519ed20ceda0eda4cde95bc76786745f11f41c8235b3e7468"
+  },
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "graph": {
+    "unit_count": 25649,
+    "land_edge_count": 66097,
+    "bridge_edge_count": 64,
+    "final_edge_count": 66161,
+    "total_boundary_weight_millimeters": 16686153769,
+    "land_component_count": 2,
+    "land_components": [
+      {
+        "unit_count": 25585,
+        "population": 1095969,
+        "first_geoid": "440010301001000",
+        "last_geoid": "440099901000025"
+      },
+      {
+        "unit_count": 64,
+        "population": 1410,
+        "first_geoid": "440090415001000",
+        "last_geoid": "440099902000002"
+      }
+    ],
+    "final_component_count": 1,
+    "bridge_rule": {
+      "algorithm": "each non-main-component unit connects to nearest same-county main-component unit; fallback to nearest main-component unit",
+      "weight_rule": "median land-boundary weight",
+      "source_path": "crates/bisect-data/src/bridge.rs",
+      "source_sha256": "d8c7e5292e4e768ee1ad36422dca0feff70bd3db47f9a23db8c7a3947e6fb7c4",
+      "weight_source_path": "crates/bisect-data/src/adjacency.rs",
+      "weight_source_sha256": "0da364273bc9188519ed20ceda0eda4cde95bc76786745f11f41c8235b3e7468"
+    },
+    "bridge_records": [
+      {
+        "island_geoid": "440090415001000",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 18933.011,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001001",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 18773.452,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001002",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 16523.622,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001003",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 19340.628,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001004",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 20393.302,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001005",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 20200.983,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001006",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 20822.979,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001007",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 18472.462,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001008",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 17095.533,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001009",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 20659.657,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001010",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 15517.067,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001011",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 20910.165,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001012",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 19334.997,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001013",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 17865.306,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001014",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 17805.614,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001015",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 17532.083,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001016",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 17341.261,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001017",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 16849.402,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001018",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 17734.836,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001019",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 17666.05,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001020",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 17635.951,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001021",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 16575.195,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001022",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18363.003,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001023",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18084.873,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001024",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18267.923,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001025",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18088.572,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001026",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18036.183,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001027",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18146.535,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001028",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18506.887,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001029",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18428.586,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001030",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 18875.879,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001031",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 19097.748,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001032",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 18512.785,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001033",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 18574.238,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001034",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 18965.847,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001035",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 19820.291,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001036",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 19355.236,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001037",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 19127.646,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001038",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 18084.875,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001039",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 17110.849,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001040",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 17485.495,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001041",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 17693.374,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001042",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 18711.982,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001043",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 19568.81,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001044",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 19726.48,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001045",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 20050.356,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001046",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 20346.649,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415001047",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 18685.851,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002000",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 14920.253,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002001",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 15462.881,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002002",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 14989.479,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002003",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 13906.409,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002004",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 16196.741,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002005",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 13967.373,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002006",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 18417.826,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002007",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 18355.646,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002008",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 17452.338,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002009",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 16794.56,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002010",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 15980.934,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002011",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 16089.061,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002012",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 15715.228,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440090415002013",
+        "mainland_geoid": "440099901000019",
+        "same_county": true,
+        "centroid_distance_meters": 15483.387,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440099902000001",
+        "mainland_geoid": "440099901000017",
+        "same_county": true,
+        "centroid_distance_meters": 11331.78,
+        "weight_millimeters": 133760
+      },
+      {
+        "island_geoid": "440099902000002",
+        "mainland_geoid": "440099901000021",
+        "same_county": true,
+        "centroid_distance_meters": 20150.481,
+        "weight_millimeters": 133760
+      }
+    ],
+    "adjacency_rule": "positive shared boundary length after EPSG:5070 projection"
+  },
+  "population": {
+    "total": 1097379,
+    "positive_blocks": 21382,
+    "zero_blocks": 4267,
+    "theoretical_minimum_scaled_deviation": 1
+  },
+  "proof_frontier": {
+    "bounded_unit_limit": 24,
+    "state_unit_count": 25649,
+    "opb_assignment_variables": 25649,
+    "opb_cut_variables": 66161,
+    "opb_total_variables_before_connectivity_encoding": 91810,
+    "static_connectivity_nogood_formula": "up to 2^25648 canonical equal-seat assignments",
+    "roundingsat_available": false,
+    "veripb_available": false,
+    "external_proof_smoke_verified": true,
+    "discovery_solver_availability": {
+      "scip": false,
+      "highs": false
+    },
+    "compact_parent_depth": {
+      "depth_bits": 15,
+      "boolean_variables": 1177222,
+      "base_constraints": 1263773,
+      "encoding": "one root per child, one parent per non-root unit, binary acyclic depth",
+      "bounded_smoke_proof_verified": true
+    }
+  },
+  "blockers": [
+    "compact parent/depth model is polynomial but still requires production-scale solver integration",
+    "no production discovery solver is installed",
+    "proof toolchain is smoke-tested but not integrated into the production runner"
+  ],
+  "claim_boundary": "Local uncommitted county-bridged RCTX custody using the established BISECT island rule and a quantified proof frontier; not a certified split or scalable proof."
+}

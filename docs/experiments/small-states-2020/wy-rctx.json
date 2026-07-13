@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "wyoming",
+  "state_code": "WY",
+  "state_fips": "56",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/wy_blocks_2020.rctx",
+  "rctx_bytes": 14652219,
+  "rctx_sha256": "c2ebbffa8e6f2265beb1ca35fb3cfd212d617b7d7cfacd625156f0e2088a28f5",
+  "context_hash": "sha256:7ad92e37d008c6619f44773bb729a54f03e8716580f2d1589ae4a24ab07358ad",
+  "unit_universe_hash": "sha256:43f5c07461a35aebd31486b65ae7df1f2ca3f914dd4debd3c4b08749f1a6218b",
+  "unit_count": 53769,
+  "population_total": 576851,
+  "land_edge_count": 136997,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

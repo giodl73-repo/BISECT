@@ -4,15 +4,36 @@ These findings suggest actionable paths for courts, legislatures, and redistrict
 
 \subsection{Implications for Courts}
 
-The impossibility defense offers courts a \emph{procedural} rather than intent-based framework for evaluating redistricting. Algorithmic methods demonstrate good faith through structural inability to access partisan data, strengthening defenses against intentional discrimination claims. However, this procedural safeguard does not immunize outcomes from judicial review. Under \emph{Arlington Heights} (1977), discriminatory effects can violate equal protection even without discriminatory intent if effects are sufficiently severe and unexplained by neutral factors. Thus, an algorithm producing systematic partisan asymmetries due to geographic sorting remains subject to effects-based challenges, with courts applying rational basis review to parameter choices~\cite{deluca2026edgeweighted}.
+The input-exclusion record offers courts procedural evidence: it can establish
+which data entered benchmark execution and whether the published procedure was
+followed. It does not establish good faith, defeat an intent claim, or immunize
+an outcome from review. Upstream profile selection and downstream modifications
+remain human decisions, and discriminatory effects require independent legal
+analysis~\cite{deluca2026edgeweighted}.
+
+Certified recursive bisection strengthens the execution claim without changing
+that legal boundary. A completed proof chain could establish that no better
+connected cut existed under the enacted population, geographic-weight, and
+canonical tie rules at any recursive node. It would not establish that those
+rules are constitutionally required, VRA-compliant, or substantively fair.
 
 The defense's value lies in \emph{transparency and reproducibility} rather than substantive immunity. Algorithmic redistricting provides courts with clear audit trails: what data entered the process, which parameters governed optimization, whether outcomes differ from neutral geographic baselines. This procedural clarity addresses \emph{Rucho}'s concern about distinguishing permissible partisanship from unconstitutional manipulation, even if it does not resolve the deeper justiciability problem of determining acceptable partisan asymmetry levels.
 
-For VRA litigation, the 42\% threshold and algorithmic district analysis provide empirical benchmarks for the \emph{geographic compactness component} of the first \emph{Gingles} prong. Plaintiffs can reference national patterns to demonstrate that minority populations are sufficiently large and clustered to permit majority-minority districts; defendants can show geographic constraints that make such districts infeasible under neutral redistricting criteria. This analysis complements but does not replace the full \emph{Gingles} inquiry, which requires additional showings of political cohesion and racially polarized voting. Pareto frontier analysis---mapping tradeoffs between minority representation and compactness---distinguishes geometrically achievable from impossible targets~\cite{deluca2026vra,deluca2026compactness}. The 2026 \emph{Louisiana v.\ Callais} ruling~\cite{callais2026} (608 U.S.\ \_\_\_ (2026)) further clarifies the VRA \S2 evidentiary standard: partisan affiliation data must be statistically controlled and cannot co-optimize with racial composition in the same METIS objective, consistent with the \texttt{vra-aligned} mode described in this paper.
+For VRA litigation, threshold counts and exploratory statewide associations may
+help identify questions for district-specific analysis, but they cannot
+demonstrate a \emph{Gingles} precondition or legal obligation. Any use requires
+current compactness evidence, political-cohesion and bloc-voting analysis, and
+the controlling post-\emph{Callais} legal framework
+~\cite{deluca2026vra,deluca2026compactness,callais2026}.
 
 \subsection{Implications for Legislatures and Commissions}
 
-State legislatures seeking transparent alternatives to partisan mapmaking can adopt algorithmic redistricting without constitutional amendment. The method exceeds VRA requirements while maintaining race-neutral partitioning, avoiding constitutional tensions between color-blindness and minority representation. Computational efficiency enables ensemble generation: producing thousands of plans to explore tradeoff spaces rather than defending a single map~\cite{deluca2026recursive}.
+Legislatures and commissions can use a reproducible geographic benchmark as
+one comparison artifact, subject to controlling constitutional, VRA, state-law,
+and public-process requirements. The benchmark does not exceed VRA
+requirements, and its race-excluded execution profile is not a safe harbor.
+Computational efficiency can support transparent comparison once real ensemble
+generation and convergence evidence are archived~\cite{deluca2026recursive}.
 
 Independent redistricting commissions, established in 14 states to reduce partisan influence, can use algorithms as technical implementation of normative goals. Commissioners retain control over parameters---edge-weighting schemes, compactness metrics, community preservation priorities---while delegating geometric optimization to computational methods. This division parallels how Huntington-Hill apportionment: Congress sets House size (normative choice), the formula allocates seats (technical implementation).
 
@@ -51,10 +72,16 @@ The value of algorithmic redistricting lies not in resolving justiciability but 
 
 These procedural safeguards constitute genuine progress even without solving \emph{Rucho}'s standards problem. Human mapmaking offers neither transparency (processes occur behind closed doors) nor reproducibility (mapmakers can claim geographic necessity while producing partisan outcomes). Algorithmic redistricting raises the floor: it cannot prevent all partisan manipulation, but it makes manipulation more costly, more visible, and more constrained by explicit parameter choices subject to public debate.
 
-Ultimately, algorithmic redistricting shifts redistricting governance from \emph{unconstrained discretion} to \emph{bounded discretion}. Commissions retain discretion over parameter weights, but this discretion operates within constitutional constraints (population equality, contiguity, VRA compliance) and produces auditable, reproducible outcomes. Whether courts find this bounded discretion sufficiently manageable for judicial review remains an open question---one that state courts applying state constitutional provisions may answer differently than federal courts applying \emph{Rucho}'s federal standards.
+Ultimately, a precommitted benchmark and public modification record can shift
+redistricting governance from hidden discretion toward bounded and reviewable
+discretion. Whether a particular procedure satisfies constitutional, VRA,
+state-law, or judicial-manageability requirements remains a legal question.
 
 \subsection{Broader Lessons and Limitations}
 
-Mathematical governance need not replace human judgment but can implement human values through objective procedures. Algorithms serve as legitimacy-restoring tools, not decision-making oracles. The distinction between \emph{procedural fairness} (transparent, reproducible process) and \emph{outcome fairness} (partisan symmetry) matters: recursive bisection guarantees the former, geography constrains the latter.
+Mathematical procedures need not replace human judgment. Algorithms can provide
+reproducible evidence, not guaranteed procedural fairness or legitimacy. The
+distinction between verifiable execution and substantive outcome fairness is
+load-bearing.
 
 Important limitations remain. Algorithms cannot eliminate efficiency gaps caused by voter sorting---they can only avoid amplifying geographic patterns through manipulation. Results depend on census tract definitions (MAUP sensitivity), though findings replicate across multiple census years. This research derives from a single computational ecosystem; independent replication would strengthen confidence. These caveats notwithstanding, algorithmic redistricting offers a path toward restoring electoral legitimacy through structural objectivity accessible to contemporary policymakers.

@@ -1,4 +1,11 @@
 # Revision Plan — B.02 One Federal Law (Districting Integrity Act)
+
+**2026-07-10 canonical realignment:** The compiled paper now advances a
+benchmark-and-disclosure standard rather than an ApportionRegions final-map
+mandate. The historical reviewer tasks below describe the superseded advocacy
+version unless expressly carried forward into
+`sections/07-canonical-alignment.tex`.
+
 Round 1 avg: 2.6/4
 Round 2 avg: 3.0/4 (Karypis 3, Rodden 3, Duchin 3, Stephanopoulos 3, Liang 3)
 Round 3 avg: 3.4/4 (Karypis 3, Rodden 4, Duchin 3, Stephanopoulos 4, Liang 3)
@@ -30,7 +37,7 @@ Round 3 avg: 3.4/4 (Karypis 3, Rodden 4, Duchin 3, Stephanopoulos 4, Liang 3)
 
 ## P1 — Required (from reviewers)
 
-- [ ] [Karypis R1.1] Resolve the T.4 zero-variance citation — either confirm T.4 is complete with Table 3 as an actual empirical result, or restate the zero seed variance claim as a theoretical prediction pending T.4 completion; update all downstream claims accordingly
+- [x] [Karypis R1.1] Resolved 2026-07-09 — removed the completed national zero-variance claim and made the committed 50-state seed-trace package an explicit evidence gate
 - [ ] [Karypis R1.2] Specify METIS k-way vs. bisection for non-binary prime factors — for states where p_i > 2 (e.g., California k=52=4×13 requiring 4-way and 13-way partitions), specify whether `METIS_PartGraphKway` is used and provide exact ubvec and tpwgts settings for k-way runs
 - [ ] [Karypis R1.3] Fix the ubvec tolerance inconsistency — ubvec[0]=1.001 means ±0.1% per-part tolerance, not ±0.05%; correct the "±0.05% deviation ceiling" claim and make consistent with B.0's "≤0.5% by triangle inequality" statement
 - [x] [Rodden R2.1] Address the adjacency constraint gap in the structural isomorphism argument — RESOLVED R3: isomorphism in decision procedure (priority→tree), not feasible set; HH applies at bisection-ratio level, METIS handles contiguous realization; Rodden upgrades to 4

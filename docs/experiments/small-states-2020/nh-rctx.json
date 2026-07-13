@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "new_hampshire",
+  "state_code": "NH",
+  "state_fips": "33",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/nh_blocks_2020.rctx",
+  "rctx_bytes": 8401067,
+  "rctx_sha256": "fed430c5d4e7c2e53d1dc5d164f0f2b22afa7898ba97821365b18a8bc3aca77c",
+  "context_hash": "sha256:302685974cf87cb6a5f9ada7f6293e22e1f98e7034117f139e762e67c7f4346d",
+  "unit_universe_hash": "sha256:86d9541a320d16a84a0c7bdc317a3ec54af9d0a6ea363011346e3c0d51ee749d",
+  "unit_count": 31948,
+  "population_total": 1377529,
+  "land_edge_count": 78880,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}

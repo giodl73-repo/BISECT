@@ -8,7 +8,7 @@
 /// BOUNDARY invariant: both files are written together or neither is.
 /// This eliminates the vra_mode premature-clear class of bugs where
 /// vra_analysis.pkl was not written.
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -76,8 +76,12 @@ pub fn write_state_outputs(
     }
 
     // Write assignments to temp file
-    let assignments_json =
-        serde_json::to_string_pretty(assignments).map_err(|e| OutputError::Json(e.to_string()))?;
+    let canonical_assignments: BTreeMap<String, usize> = assignments
+        .iter()
+        .map(|(&unit, &district)| (unit.to_string(), district))
+        .collect();
+    let assignments_json = serde_json::to_string_pretty(&canonical_assignments)
+        .map_err(|e| OutputError::Json(e.to_string()))?;
     fs::write(&tmp_assignments, &assignments_json).map_err(|e| OutputError::Io {
         path: tmp_assignments.clone(),
         source: e,
@@ -398,6 +402,21 @@ mod tests {
         let parsed: HashMap<String, usize> = serde_json::from_str(&content).unwrap();
         // Keys are string in JSON; check count matches
         assert_eq!(parsed.len(), orig.len());
+    }
+
+    #[test]
+    fn test_assignments_json_has_canonical_key_order() {
+        let tmp = TempDir::new().unwrap();
+        let assignments: HashMap<usize, usize> = [(10, 2), (2, 1), (1, 1)].into_iter().collect();
+        write_state_outputs(tmp.path(), &assignments, None).unwrap();
+        let content = std::fs::read_to_string(tmp.path().join("final_assignments.json")).unwrap();
+        let one = content.find("\"1\"").unwrap();
+        let two = content.find("\"2\"").unwrap();
+        let ten = content.find("\"10\"").unwrap();
+        assert!(
+            one < ten && ten < two,
+            "assignment keys must be sorted lexicographically"
+        );
     }
 
     // ── 20 additional L0 tests ───────────────────────────────────────────────

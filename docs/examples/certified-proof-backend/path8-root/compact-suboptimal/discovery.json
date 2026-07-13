@@ -1,0 +1,25 @@
+{
+  "schema_version": "certified-split-discovery-v1",
+  "discovery_id": "sha256:ffd5b5cf6f3ff70a2e3037ae352c23ef929dd0ec3d9b595018c705535afec9c2",
+  "instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+  "solver_name": "prototype",
+  "solver_version": null,
+  "method": "deliberate-compact-counterexample-fixture",
+  "objective": {
+    "primary": {
+      "max_population_deviation_scaled": 400,
+      "total_population_deviation_scaled": 800,
+      "weighted_boundary_cut": 1
+    },
+    "canonical_assignment": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  }
+}

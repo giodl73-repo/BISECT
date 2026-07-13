@@ -77,67 +77,46 @@ Not one of many acceptable maps.
 One map.
 
 This uniqueness is the source of the algorithm's constitutional legitimacy.
-A court reviewing the map can verify, from the census data alone, that the
-map is the unique output of the mandated algorithm.
-There is no room for the mapmaker to choose differently.
-The census told the algorithm what to do.
+A court or outside reviewer could verify that a named implementation produced
+a named output from published inputs and parameters. That does not make the map
+mathematically unique: structure, geographic units, adjacency rules, engine,
+seed, weights, and exception procedures must first be fixed by law or rule.
 
-\subsection{Seed Independence: The Map Is the Same Across All Seeds}
+\subsection{Seed Sensitivity: A Required Empirical Test}
 
 One potential objection to any algorithm is that it depends on a random seed,
 and seed selection is itself a political choice.
-\citet{b11paper} documents that \ar{} has \emph{zero seed variance}: the
-resulting map is the same regardless of which random seed is used to
-initialize the METIS graph partitioner.
+\citet{b11paper} motivates testing whether \ar{} has low seed sensitivity.
+The available NC and WI experiments are encouraging, but they do not establish
+that the resulting map is identical across seeds nationally.
 
 This result is a consequence of the tight geographic structure of the
 \hh{} bisection tree.
-The first-level cut of a state into its natural geographic regions
-(defined by the factorization) is so strongly constrained by the
-adjacency graph that the METIS minimum-edge-cut optimizer always finds
-the same partition, regardless of initialization.
-Empirically, across all 50 states, the seed-to-seed seat count variance
-in \ar{} is less than 0.01 seats---effectively zero.\footnote{%
-  Companion paper T.4 (ApportionRegions) demonstrates near-zero partisan variance
-  across seeds in NC and WI, the two most-litigated competitive states.
-  Full 50-state variance tables will appear in T.4 upon completion of the
-  ApportionRegions experimental sweep; preliminary runs confirm the
-  pattern holds in all tested states.
-}
+The prime-factor tree can constrain the candidate space, but METIS remains a
+heuristic local optimizer. Companion paper T.4 reports limited state examples;
+a committed 50-state seed-trace package is still required before making a
+national variance claim.
 
-Combined with the content-derived seed formula in the proposed statute
-(\texttt{SHA-256(census\_release\_id || `DIA\_SEED\_V1')}), this means
-that the map is completely determined by the census data.
-No practitioner decision influences the output.
-The seed formula is merely the formal specification of a property that is
-empirically already true: \ar{} produces the same map regardless of seed.
-The statutory seed formula provides an auditable reference point for
-verification.
+A content-derived seed can prevent post hoc seed shopping when its schema and
+all seed-affecting inputs are precommitted. It does not make census data the
+only influence on the map and does not eliminate practitioner or legislative
+choices. The current canonical candidate derives the seed from the complete
+assignment-affecting manifest rather than the census release identifier alone.
 
-\subsection{Convergence: The Map Is Stable Across the Solution Space}
+\subsection{Seed-Sweep Evidence And Remaining Package Gap}
 
-Beyond seed independence, \citet{b7paper} certifies that the solution space
-of minimum-edge-cut redistricting is narrow.
-Across 50 states, running the edge-weighted bisection algorithm with 50
-different seeds per state, the seat-count variance is less than 0.3 across
-the entire 50-seed ensemble.\footnote{%
-  \citet{b7paper}, Section~4: ``We certify convergence for all states where
-  the 50-seed seat-count standard deviation is less than 0.3.
-  This criterion is met by 47 of 50 states.
-  The three borderline states (Colorado, Nevada, Arizona) have seat-count
-  standard deviations between 0.1 and 0.3, indicating that a small fraction
-  of seeds produce maps with one-seat partisan differences at margin.''
-}
-The minimum-edge-cut objective---minimize the total length of district
-boundaries---is a strong geographic signal that dominates any random
-variation in initialization.
+\citet{b7paper} reports a 50-seed comparison for the edge-weighted bisection
+family, including seat-count standard deviations below 0.3 in the reported
+states. That paper-level result is not a substitute for a committed 50-state
+seed-trace package, and it does not certify \ar{} map identity or convergence
+across the full solution space.
+The minimum-edge-cut objective is a strong geographic signal, but the relative
+effect of initialization must be measured rather than assumed.
 
-For \ar{} specifically, the convergence is even stronger because the
-bisection tree is fully determined by the factorization of $k$.
-The algorithm does not search among trees; it executes the unique tree
-prescribed by \hh{}.
-Seed variation affects only the placement of individual tracts near the
-boundary of a cut, not the large-scale geographic structure.
+For \ar{}, prime factorization fixes a tree-ordering rule once its canonical
+ordering and prime-seat fallback are selected. It does not prove that METIS
+returns the same geographic partition or that seed variation is confined to
+individual boundary tracts.
 
 \subsection{The Other Algorithms Are Practitioners' Choices}
 
@@ -284,4 +263,6 @@ a different algorithm for state legislative maps, the resulting boundaries
 may bear no rational relationship to each other.
 The \hh{} factorization spine produces coherent multi-chamber hierarchies
 as a byproduct of first-principles derivation.
-\end{document}
+\noindent\textbf{SUPERSEDED SOURCE --- NOT COMPILED.} This section belongs to
+the former ApportionRegions final-map mandate. See
+\texttt{07-canonical-alignment.tex} and \texttt{REVISION-PLAN.md}.

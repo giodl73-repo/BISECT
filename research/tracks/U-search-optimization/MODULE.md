@@ -33,6 +33,7 @@ and practitioner algorithm selection.
 | U.18+large-neighborhood-search | Local improvement, staged tabu/LNS, and repair hooks |
 | U.19+evolutionary-search-comparison | Validity-preserving crossover/mutation and selected frontier audits |
 | U.20+plan-audit-certificates | RPLAN/RCTX audit certificates and lineage fixed point |
+| U.21+certified-recursive-bisection | Proof-carrying per-cut and recursive tree certification |
 
 ## Reviewed Spine Papers
 
@@ -76,6 +77,7 @@ role map is:
 - U.15 states legal posture boundaries.
 - U.16-U.19 describe exact and heuristic implementation families.
 - U.20 is the verifier-facing fixed point for final plans.
+- U.21 binds exact per-cut proof claims into the canonical recursive construction.
 
 The core invariant is convergence: construction, search, exact optimization,
 heuristic improvement, and Pareto comparison may differ upstream, but final

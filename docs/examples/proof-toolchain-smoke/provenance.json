@@ -1,0 +1,52 @@
+{
+  "schema_version": "certified-proof-toolchain-smoke-v1",
+  "status": "verified",
+  "input": {
+    "path": "population.opb",
+    "bytes": 7422,
+    "sha256": "0467c50312e430df1fed2fae0dfc0af5daffa3bbc44a127a8ebfb4a29d1a672b"
+  },
+  "proof": {
+    "path": "population.pbp",
+    "bytes": 1443,
+    "sha256": "c06c749431db6eb871fd80b91e55446598581e3869cf0acab113ad2185971fb2",
+    "format": "pseudo-Boolean proof version 2.0"
+  },
+  "compact_connectivity_proof": {
+    "input_path": "compact-boundary.opb",
+    "input_bytes": 7600,
+    "input_sha256": "c8fb9a5c14c5c28b0046e899c6956ecdda8f51d864c25266494d50533ba4203e",
+    "proof_path": "compact-boundary.pbp",
+    "proof_bytes": 2033,
+    "proof_sha256": "d6962503eed6fdfe6b8d96b195a19d9fab2c88b76c261d9159d0a72827a072c6",
+    "connectivity_encoding": "parent-depth-v3",
+    "variables": 123,
+    "result": "Verification succeeded."
+  },
+  "roundingsat": {
+    "repository": "https://gitlab.com/MIAOresearch/software/roundingsat.git",
+    "source_commit": "d4edbf7908a9bb951fd181940919e0f3ac7ab1ee",
+    "binary_url": "https://gitlab.com/MIAOresearch/software/roundingsat/-/jobs/artifacts/master/raw/build/roundingsat?job=build-linux",
+    "binary_sha256": "cf115250c7539000b39b950d53ddf9d1dfd4ca0d004caf52038a116e7efe3ed5",
+    "reported_version": "RoundingSat 2",
+    "reported_commit": "d4edbf7",
+    "command": "roundingsat --lp=0 --proof-log=population.pbp population.opb",
+    "result": "UNSATISFIABLE"
+  },
+  "veripb": {
+    "repository": "https://gitlab.com/MIAOresearch/software/VeriPB.git",
+    "source_commit": "409a889bc23413e068af77361925b3d2b8e8cd66",
+    "source_tag": "SAT_competition_2023",
+    "command": "veripb --requireUnsat --stats population.opb population.pbp",
+    "result": "Verification succeeded."
+  },
+  "build_environment": {
+    "platform": "WSL2 Ubuntu 24.04 x86_64",
+    "python": "3.12",
+    "compiler": "g++ 13.3.0",
+    "gmp": "6.3.0",
+    "cython": "3.2.8",
+    "pybind11": "3.0.4"
+  },
+  "claim_boundary": "One bounded UNSAT smoke proof; not a Rhode Island or production-scale proof."
+}

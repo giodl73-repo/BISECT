@@ -1,0 +1,28 @@
+{
+  "schema_version": "certified-state-block-rctx-v1",
+  "status": "ready",
+  "state": "illinois",
+  "state_code": "IL",
+  "state_fips": "17",
+  "year": 2020,
+  "rctx_path": "data/2020/certified/il_blocks_2020.rctx",
+  "rctx_bytes": 97145750,
+  "rctx_sha256": "d2b4b3988e3871c2315655dab6d48d963b0f0c8edc8570ab4c6584b9459f5ee5",
+  "context_hash": "sha256:d35aee8b720e2f7d51e8e25bc79a823c2cdad5412124eda4237f42449e7e7d97",
+  "unit_universe_hash": "sha256:550fdffead971baf9f35d870b020b5112aeba5aca7ac342be88cfb6896be22d9",
+  "unit_count": 369978,
+  "population_total": 12812508,
+  "land_edge_count": 896522,
+  "land_component_count": 1,
+  "bridge_edge_count": 0,
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "geopandas": "1.1.3",
+    "shapely": "2.1.2",
+    "geos": "3.13.1",
+    "pyproj": "3.7.2",
+    "proj": "9.5.1",
+    "crs": "EPSG:5070"
+  },
+  "claim_boundary": "Hash-bound connected block context; not a district certificate."
+}
