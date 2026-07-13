@@ -1,0 +1,1368 @@
+{
+  "schema_version": "certified-operational-tree-frontier-v1",
+  "status": "operational-complete-population-proved",
+  "state": "WI",
+  "year": 2020,
+  "districts": 8,
+  "unit_count": 203059,
+  "population_total": 5893718,
+  "bridge_edge_count": 0,
+  "tree_sha256": "064a8b0b55fcbc84a90a25a4eb3f02a1826823a1d51d061f265e7a053bb86c7b",
+  "package_manifest_sha256": "5b471f262f0e5d58ff8fbe682b3141c9018292e15e507b14f467d50307781507",
+  "nodes": [
+    {
+      "path": "",
+      "seats": 8,
+      "parent_population": 5893718,
+      "discovery_id": "sha256:f5bf3c3f3e5f9a38f64e114a0bb2b21a1eb54de8456d8ce3db3bab4f76bfc30e",
+      "seed": 3,
+      "seed_screening": [
+        {
+          "seed": 1,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 752616,
+            "total_population_deviation_scaled": 1505232,
+            "weighted_boundary_cut": 1344596630
+          }
+        },
+        {
+          "seed": 2,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1644016,
+            "total_population_deviation_scaled": 3288032,
+            "weighted_boundary_cut": 1318490537
+          }
+        },
+        {
+          "seed": 3,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 206712,
+            "total_population_deviation_scaled": 413424,
+            "weighted_boundary_cut": 2555282202
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 0,
+            "total_population_deviation_scaled": 0,
+            "weighted_boundary_cut": 2827253851
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 4,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 12548728,
+            "total_population_deviation_scaled": 25097456,
+            "weighted_boundary_cut": 3884001170
+          }
+        },
+        {
+          "seed": 5,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 6298552,
+            "total_population_deviation_scaled": 12597104,
+            "weighted_boundary_cut": 1248505408
+          }
+        },
+        {
+          "seed": 6,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 6355560,
+            "total_population_deviation_scaled": 12711120,
+            "weighted_boundary_cut": 1987307503
+          }
+        },
+        {
+          "seed": 7,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 4032184,
+            "total_population_deviation_scaled": 8064368,
+            "weighted_boundary_cut": 1104262319
+          }
+        },
+        {
+          "seed": 8,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 8172512,
+            "total_population_deviation_scaled": 16345024,
+            "weighted_boundary_cut": 1256448435
+          }
+        },
+        {
+          "seed": 9,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2774160,
+            "total_population_deviation_scaled": 5548320,
+            "weighted_boundary_cut": 1280403141
+          }
+        },
+        {
+          "seed": 10,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 378304,
+            "total_population_deviation_scaled": 756608,
+            "weighted_boundary_cut": 1863714901
+          }
+        },
+        {
+          "seed": 11,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3138864,
+            "total_population_deviation_scaled": 6277728,
+            "weighted_boundary_cut": 2296328600
+          }
+        },
+        {
+          "seed": 12,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 6234696,
+            "total_population_deviation_scaled": 12469392,
+            "weighted_boundary_cut": 2043986415
+          }
+        },
+        {
+          "seed": 13,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2264232,
+            "total_population_deviation_scaled": 4528464,
+            "weighted_boundary_cut": 2671840594
+          }
+        },
+        {
+          "seed": 14,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 6506352,
+            "total_population_deviation_scaled": 13012704,
+            "weighted_boundary_cut": 1323097107
+          }
+        },
+        {
+          "seed": 15,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 4488064,
+            "total_population_deviation_scaled": 8976128,
+            "weighted_boundary_cut": 2781112540
+          }
+        },
+        {
+          "seed": 16,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3620432,
+            "total_population_deviation_scaled": 7240864,
+            "weighted_boundary_cut": 1717975420
+          }
+        }
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 0,
+        "total_population_deviation_scaled": 0,
+        "weighted_boundary_cut": 2827253851
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 0
+      },
+      "context_sha256": "34e1485b05ac8d6489fab2f49da194069587de6a48bbaf363d5bd71d8f2a88d5"
+    },
+    {
+      "path": "0",
+      "seats": 4,
+      "parent_population": 2946859,
+      "discovery_id": "sha256:44496a6fbe0565a4d3b40c238cf0a9079b03bdb92e5bf611347c5d36fa53d387",
+      "seed": 12,
+      "seed_screening": [
+        {
+          "seed": 2,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1026350,
+            "total_population_deviation_scaled": 2052700,
+            "weighted_boundary_cut": 286968582
+          }
+        },
+        {
+          "seed": 1,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 410134,
+            "total_population_deviation_scaled": 820268,
+            "weighted_boundary_cut": 775592550
+          }
+        },
+        {
+          "seed": 3,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2521586,
+            "total_population_deviation_scaled": 5043172,
+            "weighted_boundary_cut": 328117042
+          }
+        },
+        {
+          "seed": 4,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 585290,
+            "total_population_deviation_scaled": 1170580,
+            "weighted_boundary_cut": 1075814553
+          }
+        },
+        {
+          "seed": 5,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2040962,
+            "total_population_deviation_scaled": 4081924,
+            "weighted_boundary_cut": 586977741
+          }
+        },
+        {
+          "seed": 6,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2324150,
+            "total_population_deviation_scaled": 4648300,
+            "weighted_boundary_cut": 627579271
+          }
+        },
+        {
+          "seed": 7,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3454662,
+            "total_population_deviation_scaled": 6909324,
+            "weighted_boundary_cut": 311147081
+          }
+        },
+        {
+          "seed": 8,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1267554,
+            "total_population_deviation_scaled": 2535108,
+            "weighted_boundary_cut": 597639196
+          }
+        },
+        {
+          "seed": 9,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2376194,
+            "total_population_deviation_scaled": 4752388,
+            "weighted_boundary_cut": 324404017
+          }
+        },
+        {
+          "seed": 10,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3949310,
+            "total_population_deviation_scaled": 7898620,
+            "weighted_boundary_cut": 205157655
+          }
+        },
+        {
+          "seed": 11,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2792738,
+            "total_population_deviation_scaled": 5585476,
+            "weighted_boundary_cut": 540256500
+          }
+        },
+        {
+          "seed": 12,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 185582,
+            "total_population_deviation_scaled": 371164,
+            "weighted_boundary_cut": 448348943
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 2,
+            "total_population_deviation_scaled": 4,
+            "weighted_boundary_cut": 874226464
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 13,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 825034,
+            "total_population_deviation_scaled": 1650068,
+            "weighted_boundary_cut": 834235530
+          }
+        },
+        {
+          "seed": 14,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2251682,
+            "total_population_deviation_scaled": 4503364,
+            "weighted_boundary_cut": 966318014
+          }
+        },
+        {
+          "seed": 15,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 824150,
+            "total_population_deviation_scaled": 1648300,
+            "weighted_boundary_cut": 710140049
+          }
+        },
+        {
+          "seed": 16,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2939554,
+            "total_population_deviation_scaled": 5879108,
+            "weighted_boundary_cut": 235580910
+          }
+        }
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 2,
+        "total_population_deviation_scaled": 4,
+        "weighted_boundary_cut": 874226464
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 2
+      },
+      "context_sha256": "398615e9c1c9cde0367b20ca606157551af0287aaf994a0d810e7df8120faac8"
+    },
+    {
+      "path": "00",
+      "seats": 2,
+      "parent_population": 1473429,
+      "discovery_id": "sha256:91afe083e8141d0dd35c64d66f16d0593b06ed7778a5f89db72261f42dd61879",
+      "seed": 1,
+      "seed_screening": [
+        {
+          "seed": 3,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 126319,
+            "total_population_deviation_scaled": 252638,
+            "weighted_boundary_cut": 883617296
+          }
+        },
+        {
+          "seed": 1,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 38737,
+            "total_population_deviation_scaled": 77474,
+            "weighted_boundary_cut": 192756595
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 1,
+            "total_population_deviation_scaled": 2,
+            "weighted_boundary_cut": 1446190168
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 2,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 338619,
+            "total_population_deviation_scaled": 677238,
+            "weighted_boundary_cut": 205512880
+          }
+        },
+        {
+          "seed": 4,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 219961,
+            "total_population_deviation_scaled": 439922,
+            "weighted_boundary_cut": 169332833
+          }
+        },
+        {
+          "seed": 5,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 789019,
+            "total_population_deviation_scaled": 1578038,
+            "weighted_boundary_cut": 829240474
+          }
+        },
+        {
+          "seed": 6,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 207095,
+            "total_population_deviation_scaled": 414190,
+            "weighted_boundary_cut": 490557575
+          }
+        },
+        {
+          "seed": 7,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 369979,
+            "total_population_deviation_scaled": 739958,
+            "weighted_boundary_cut": 256089018
+          }
+        },
+        {
+          "seed": 8,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 296037,
+            "total_population_deviation_scaled": 592074,
+            "weighted_boundary_cut": 1129420115
+          }
+        },
+        {
+          "seed": 9,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 116901,
+            "total_population_deviation_scaled": 233802,
+            "weighted_boundary_cut": 1061789819
+          }
+        },
+        {
+          "seed": 10,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 615985,
+            "total_population_deviation_scaled": 1231970,
+            "weighted_boundary_cut": 476563848
+          }
+        },
+        {
+          "seed": 11,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 487295,
+            "total_population_deviation_scaled": 974590,
+            "weighted_boundary_cut": 204848798
+          }
+        },
+        {
+          "seed": 12,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 311431,
+            "total_population_deviation_scaled": 622862,
+            "weighted_boundary_cut": 1376935688
+          }
+        },
+        {
+          "seed": 13,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 93371,
+            "total_population_deviation_scaled": 186742,
+            "weighted_boundary_cut": 931788710
+          }
+        },
+        {
+          "seed": 14,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 39333,
+            "total_population_deviation_scaled": 78666,
+            "weighted_boundary_cut": 665448822
+          }
+        },
+        {
+          "seed": 15,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 312531,
+            "total_population_deviation_scaled": 625062,
+            "weighted_boundary_cut": 309244896
+          }
+        },
+        {
+          "seed": 16,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 83425,
+            "total_population_deviation_scaled": 166850,
+            "weighted_boundary_cut": 412808006
+          }
+        }
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 1,
+        "total_population_deviation_scaled": 2,
+        "weighted_boundary_cut": 1446190168
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 1
+      },
+      "context_sha256": "1f0cfc135e78daa4687c23a132739ef4113466ea0ace3dddbd410d2d9539cc66"
+    },
+    {
+      "path": "01",
+      "seats": 2,
+      "parent_population": 1473430,
+      "discovery_id": "sha256:373569aaecae1d31572cb38e787d2b963391de3cfbcf2fae4f3375c8a9e71b94",
+      "seed": 7,
+      "seed_screening": [
+        {
+          "seed": 4,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 19862,
+            "total_population_deviation_scaled": 39724,
+            "weighted_boundary_cut": 224330324
+          }
+        },
+        {
+          "seed": 1,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 492466,
+            "total_population_deviation_scaled": 984932,
+            "weighted_boundary_cut": 324236902
+          }
+        },
+        {
+          "seed": 2,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 297774,
+            "total_population_deviation_scaled": 595548,
+            "weighted_boundary_cut": 188541724
+          }
+        },
+        {
+          "seed": 3,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 770456,
+            "total_population_deviation_scaled": 1540912,
+            "weighted_boundary_cut": 145745471
+          }
+        },
+        {
+          "seed": 5,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 8974,
+            "total_population_deviation_scaled": 17948,
+            "weighted_boundary_cut": 228797305
+          }
+        },
+        {
+          "seed": 6,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 549658,
+            "total_population_deviation_scaled": 1099316,
+            "weighted_boundary_cut": 61436054
+          }
+        },
+        {
+          "seed": 7,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2394,
+            "total_population_deviation_scaled": 4788,
+            "weighted_boundary_cut": 335149077
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 0,
+            "total_population_deviation_scaled": 0,
+            "weighted_boundary_cut": 347959196
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 8,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 126876,
+            "total_population_deviation_scaled": 253752,
+            "weighted_boundary_cut": 968698550
+          }
+        },
+        {
+          "seed": 9,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 362026,
+            "total_population_deviation_scaled": 724052,
+            "weighted_boundary_cut": 595034873
+          }
+        },
+        {
+          "seed": 10,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 41368,
+            "total_population_deviation_scaled": 82736,
+            "weighted_boundary_cut": 213325133
+          }
+        },
+        {
+          "seed": 11,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 128512,
+            "total_population_deviation_scaled": 257024,
+            "weighted_boundary_cut": 295789927
+          }
+        },
+        {
+          "seed": 12,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 8004,
+            "total_population_deviation_scaled": 16008,
+            "weighted_boundary_cut": 627273295
+          }
+        },
+        {
+          "seed": 13,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 153628,
+            "total_population_deviation_scaled": 307256,
+            "weighted_boundary_cut": 238143550
+          }
+        },
+        {
+          "seed": 14,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 180458,
+            "total_population_deviation_scaled": 360916,
+            "weighted_boundary_cut": 293748325
+          }
+        },
+        {
+          "seed": 15,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 654746,
+            "total_population_deviation_scaled": 1309492,
+            "weighted_boundary_cut": 84415522
+          }
+        },
+        {
+          "seed": 16,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 48480,
+            "total_population_deviation_scaled": 96960,
+            "weighted_boundary_cut": 274117150
+          }
+        }
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 0,
+        "total_population_deviation_scaled": 0,
+        "weighted_boundary_cut": 347959196
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 0
+      },
+      "context_sha256": "615c9d4d4dee5ee5e6abacaeadcc355a33bbf80c781605c6acabfc4bec33a3e9"
+    },
+    {
+      "path": "1",
+      "seats": 4,
+      "parent_population": 2946859,
+      "discovery_id": "sha256:cf23c36f1ad6c99173a5f54429150c75fbee3032cfe9a668953bc32736510503",
+      "seed": 13,
+      "seed_screening": [
+        {
+          "seed": 3,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1285202,
+            "total_population_deviation_scaled": 2570404,
+            "weighted_boundary_cut": 107748389
+          }
+        },
+        {
+          "seed": 1,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 489114,
+            "total_population_deviation_scaled": 978228,
+            "weighted_boundary_cut": 517955516
+          }
+        },
+        {
+          "seed": 2,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3650846,
+            "total_population_deviation_scaled": 7301692,
+            "weighted_boundary_cut": 599026969
+          }
+        },
+        {
+          "seed": 4,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1365406,
+            "total_population_deviation_scaled": 2730812,
+            "weighted_boundary_cut": 188197247
+          }
+        },
+        {
+          "seed": 5,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3124262,
+            "total_population_deviation_scaled": 6248524,
+            "weighted_boundary_cut": 359552081
+          }
+        },
+        {
+          "seed": 6,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 222258,
+            "total_population_deviation_scaled": 444516,
+            "weighted_boundary_cut": 628312638
+          }
+        },
+        {
+          "seed": 7,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3116934,
+            "total_population_deviation_scaled": 6233868,
+            "weighted_boundary_cut": 582208812
+          }
+        },
+        {
+          "seed": 8,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3512210,
+            "total_population_deviation_scaled": 7024420,
+            "weighted_boundary_cut": 504638482
+          }
+        },
+        {
+          "seed": 9,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 207066,
+            "total_population_deviation_scaled": 414132,
+            "weighted_boundary_cut": 443330546
+          }
+        },
+        {
+          "seed": 10,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1165174,
+            "total_population_deviation_scaled": 2330348,
+            "weighted_boundary_cut": 145683173
+          }
+        },
+        {
+          "seed": 11,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 2491814,
+            "total_population_deviation_scaled": 4983628,
+            "weighted_boundary_cut": 212985286
+          }
+        },
+        {
+          "seed": 12,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 234730,
+            "total_population_deviation_scaled": 469460,
+            "weighted_boundary_cut": 1219912854
+          }
+        },
+        {
+          "seed": 13,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 192946,
+            "total_population_deviation_scaled": 385892,
+            "weighted_boundary_cut": 462489681
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 2,
+            "total_population_deviation_scaled": 4,
+            "weighted_boundary_cut": 736988088
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 14,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1258434,
+            "total_population_deviation_scaled": 2516868,
+            "weighted_boundary_cut": 284068616
+          }
+        },
+        {
+          "seed": 15,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3603734,
+            "total_population_deviation_scaled": 7207468,
+            "weighted_boundary_cut": 581567706
+          }
+        },
+        {
+          "seed": 16,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1729754,
+            "total_population_deviation_scaled": 3459508,
+            "weighted_boundary_cut": 57561204
+          }
+        }
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 2,
+        "total_population_deviation_scaled": 4,
+        "weighted_boundary_cut": 736988088
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 2
+      },
+      "context_sha256": "12a3cd73d1945c8de3c6e7931f56f9ebb019c682ba1f7f37ea4f7066bebe3561"
+    },
+    {
+      "path": "10",
+      "seats": 2,
+      "parent_population": 1473429,
+      "discovery_id": "sha256:28cd6623ce46820b2cb9750c589319f923fcd2c33e8c8f0f2b80b418d8e42de9",
+      "seed": 9,
+      "seed_screening": [
+        {
+          "seed": 4,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 284581,
+            "total_population_deviation_scaled": 569162,
+            "weighted_boundary_cut": 482308077
+          }
+        },
+        {
+          "seed": 1,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 213877,
+            "total_population_deviation_scaled": 427754,
+            "weighted_boundary_cut": 813405082
+          }
+        },
+        {
+          "seed": 2,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 441615,
+            "total_population_deviation_scaled": 883230,
+            "weighted_boundary_cut": 383418307
+          }
+        },
+        {
+          "seed": 3,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 688057,
+            "total_population_deviation_scaled": 1376114,
+            "weighted_boundary_cut": 496312584
+          }
+        },
+        {
+          "seed": 5,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 280185,
+            "total_population_deviation_scaled": 560370,
+            "weighted_boundary_cut": 321711209
+          }
+        },
+        {
+          "seed": 6,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 196669,
+            "total_population_deviation_scaled": 393338,
+            "weighted_boundary_cut": 251840372
+          }
+        },
+        {
+          "seed": 7,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 294611,
+            "total_population_deviation_scaled": 589222,
+            "weighted_boundary_cut": 612520393
+          }
+        },
+        {
+          "seed": 8,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 183347,
+            "total_population_deviation_scaled": 366694,
+            "weighted_boundary_cut": 681297505
+          }
+        },
+        {
+          "seed": 9,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 20617,
+            "total_population_deviation_scaled": 41234,
+            "weighted_boundary_cut": 388361578
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 1,
+            "total_population_deviation_scaled": 2,
+            "weighted_boundary_cut": 537265378
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 10,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 166257,
+            "total_population_deviation_scaled": 332514,
+            "weighted_boundary_cut": 881982792
+          }
+        },
+        {
+          "seed": 11,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 26709,
+            "total_population_deviation_scaled": 53418,
+            "weighted_boundary_cut": 867780395
+          }
+        },
+        {
+          "seed": 12,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 176543,
+            "total_population_deviation_scaled": 353086,
+            "weighted_boundary_cut": 509475213
+          }
+        },
+        {
+          "seed": 13,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 487465,
+            "total_population_deviation_scaled": 974930,
+            "weighted_boundary_cut": 216953348
+          }
+        },
+        {
+          "seed": 14,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 850479,
+            "total_population_deviation_scaled": 1700958,
+            "weighted_boundary_cut": 1093127671
+          }
+        },
+        {
+          "seed": 15,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 118191,
+            "total_population_deviation_scaled": 236382,
+            "weighted_boundary_cut": 1028630148
+          }
+        },
+        {
+          "seed": 16,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 810931,
+            "total_population_deviation_scaled": 1621862,
+            "weighted_boundary_cut": 319794317
+          }
+        }
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 1,
+        "total_population_deviation_scaled": 2,
+        "weighted_boundary_cut": 537265378
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 1
+      },
+      "context_sha256": "cd5de7e7ad5312781f7f5105f828151b8e8a48326509ab56439f376080d67470"
+    },
+    {
+      "path": "11",
+      "seats": 2,
+      "parent_population": 1473430,
+      "discovery_id": "sha256:434add53fc0847b1a6ab1e686596e1729cad14b367ef2ccef77c2027981fbf17",
+      "seed": 2,
+      "seed_screening": [
+        {
+          "seed": 5,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 343588,
+            "total_population_deviation_scaled": 687176,
+            "weighted_boundary_cut": 211385704
+          }
+        },
+        {
+          "seed": 1,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 105956,
+            "total_population_deviation_scaled": 211912,
+            "weighted_boundary_cut": 117051687
+          }
+        },
+        {
+          "seed": 2,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 190,
+            "total_population_deviation_scaled": 380,
+            "weighted_boundary_cut": 137974352
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 0,
+            "total_population_deviation_scaled": 0,
+            "weighted_boundary_cut": 139414733
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 3,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 3450,
+            "total_population_deviation_scaled": 6900,
+            "weighted_boundary_cut": 36941174
+          }
+        },
+        {
+          "seed": 4,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 4366,
+            "total_population_deviation_scaled": 8732,
+            "weighted_boundary_cut": 169018759
+          }
+        },
+        {
+          "seed": 6,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 169862,
+            "total_population_deviation_scaled": 339724,
+            "weighted_boundary_cut": 47447727
+          }
+        },
+        {
+          "seed": 7,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 23804,
+            "total_population_deviation_scaled": 47608,
+            "weighted_boundary_cut": 213215648
+          }
+        },
+        {
+          "seed": 8,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 19232,
+            "total_population_deviation_scaled": 38464,
+            "weighted_boundary_cut": 126453558
+          }
+        },
+        {
+          "seed": 9,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 52,
+            "total_population_deviation_scaled": 104,
+            "weighted_boundary_cut": 173516435
+          },
+          "refined_objective": {
+            "max_population_deviation_scaled": 2,
+            "total_population_deviation_scaled": 4,
+            "weighted_boundary_cut": 175711837
+          },
+          "refined_reused": false
+        },
+        {
+          "seed": 10,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 263390,
+            "total_population_deviation_scaled": 526780,
+            "weighted_boundary_cut": 54362971
+          }
+        },
+        {
+          "seed": 11,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 61064,
+            "total_population_deviation_scaled": 122128,
+            "weighted_boundary_cut": 139064982
+          }
+        },
+        {
+          "seed": 12,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 119400,
+            "total_population_deviation_scaled": 238800,
+            "weighted_boundary_cut": 111817822
+          }
+        },
+        {
+          "seed": 13,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 206088,
+            "total_population_deviation_scaled": 412176,
+            "weighted_boundary_cut": 95654375
+          }
+        },
+        {
+          "seed": 14,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 1994,
+            "total_population_deviation_scaled": 3988,
+            "weighted_boundary_cut": 39224876
+          }
+        },
+        {
+          "seed": 15,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 15102,
+            "total_population_deviation_scaled": 30204,
+            "weighted_boundary_cut": 70099721
+          }
+        },
+        {
+          "seed": 16,
+          "status": "completed",
+          "reused": false,
+          "objective": {
+            "max_population_deviation_scaled": 73108,
+            "total_population_deviation_scaled": 146216,
+            "weighted_boundary_cut": 256682559
+          }
+        }
+      ],
+      "objective": {
+        "max_population_deviation_scaled": 0,
+        "total_population_deviation_scaled": 0,
+        "weighted_boundary_cut": 139414733
+      },
+      "population_proof": {
+        "kind": "ratio-arithmetic-floor",
+        "lower_bound": 0
+      },
+      "context_sha256": "c0bb311f53daf81da947c7674592a3405660afbaaf200fe036c324b7148c3166"
+    }
+  ],
+  "leaves": [
+    {
+      "path": "000",
+      "district": 0,
+      "unit_count": 37100,
+      "population": 736714
+    },
+    {
+      "path": "001",
+      "district": 1,
+      "unit_count": 36387,
+      "population": 736715
+    },
+    {
+      "path": "010",
+      "district": 2,
+      "unit_count": 18839,
+      "population": 736715
+    },
+    {
+      "path": "011",
+      "district": 3,
+      "unit_count": 15004,
+      "population": 736715
+    },
+    {
+      "path": "100",
+      "district": 4,
+      "unit_count": 47630,
+      "population": 736714
+    },
+    {
+      "path": "101",
+      "district": 5,
+      "unit_count": 19300,
+      "population": 736715
+    },
+    {
+      "path": "110",
+      "district": 6,
+      "unit_count": 18559,
+      "population": 736715
+    },
+    {
+      "path": "111",
+      "district": 7,
+      "unit_count": 10240,
+      "population": 736715
+    }
+  ],
+  "boundary_proof": "not-run",
+  "canonical_proof": "blocked-by-boundary",
+  "claim_boundary": "Complete connected wall-to-wall recursive tree with arithmetic population optimality at every node; boundary and canonical optimality are unproved."
+}
