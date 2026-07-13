@@ -188,6 +188,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "MN",
+      "districts": 8,
+      "block_count": 198705,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
+    },
+    {
       "state": "MS",
       "districts": 4,
       "block_count": 112241,
@@ -380,7 +391,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 25,
+  "built_count": 26,
   "failed_count": 5,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
