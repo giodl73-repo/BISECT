@@ -1,0 +1,14 @@
+{
+  "schema_version": "certified-operational-tree-frontier-package-v1",
+  "package_id": "in-operational-tree-2020",
+  "status": "operational-complete-population-proved",
+  "files": [
+    {
+      "path": "in-operational-tree.json",
+      "sha256": "65969dc8283a3a8ba52b5140a52ed47c5e663ef03fb120be0065d1c9c7d74163"
+    }
+  ],
+  "analyzer_path": "scripts/research/analyze_operational_tree_package.py",
+  "analyzer_sha256": "8982852c178cd707f5561af5535248cde5350fff6940c02dfaa9eb117e88dd6e",
+  "claim_boundary": "Complete connected wall-to-wall recursive tree with arithmetic population optimality at every node; boundary and canonical optimality are unproved."
+}
