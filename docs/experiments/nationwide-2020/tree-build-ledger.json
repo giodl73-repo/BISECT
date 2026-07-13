@@ -2,6 +2,17 @@
   "schema_version": "certified-national-tree-build-ledger-v1",
   "results": [
     {
+      "state": "AL",
+      "districts": 7,
+      "block_count": 185976,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
+    },
+    {
       "state": "AR",
       "districts": 4,
       "block_count": 136422,
@@ -369,7 +380,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 24,
+  "built_count": 25,
   "failed_count": 5,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
