@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -120,3 +123,70 @@ def test_prune_discovery_scratch_keeps_only_resume_artifact(tmp_path: Path) -> N
     assert [path.name for path in out_dir.iterdir()] == [
         "certified-discovery.json"
     ]
+
+
+def test_floor_discovery_preserves_unresolved_frontier(
+    monkeypatch, tmp_path: Path
+) -> None:
+    calls = 0
+
+    def fake_run_discovery(
+        _bisect: Path,
+        _context_path: Path,
+        _districts: int,
+        out_dir: Path,
+        seed: int,
+        refinement: str = "population",
+        timeout_seconds: int | None = None,
+    ) -> dict:
+        nonlocal calls
+        calls += 1
+        out_dir.mkdir(parents=True)
+        deviation = seed + (10 if refinement == "metis" else 1)
+        discovery = {
+            "objective": {
+                "primary": {
+                    "max_population_deviation_scaled": deviation,
+                    "total_population_deviation_scaled": deviation * 2,
+                    "weighted_boundary_cut": seed,
+                }
+            }
+        }
+        (out_dir / "certified-discovery.json").write_text(
+            json.dumps(discovery), encoding="utf-8"
+        )
+        return discovery
+
+    monkeypatch.setattr(TREE, "run_discovery", fake_run_discovery)
+    out_dir = tmp_path / "node"
+
+    with pytest.raises(RuntimeError, match="best seed 1 reached 2"):
+        TREE.run_floor_discovery(
+            tmp_path / "bisect",
+            tmp_path / "context.rctx",
+            3,
+            out_dir,
+            preferred_seed=1,
+            population_floor=1,
+            max_seed=2,
+        )
+
+    screening = json.loads((out_dir / "seed-screening.json").read_text())
+    frontier = json.loads((out_dir / "unresolved-floor.json").read_text())
+    assert len(screening) == 2
+    assert frontier["status"] == "unresolved-local-search-frontier"
+    assert frontier["best_seed"] == 1
+    assert frontier["best_objective"]["max_population_deviation_scaled"] == 2
+    assert "not a proof of infeasibility" in frontier["claim_boundary"]
+
+    with pytest.raises(RuntimeError, match="best seed 1 reached 2"):
+        TREE.run_floor_discovery(
+            tmp_path / "bisect",
+            tmp_path / "context.rctx",
+            3,
+            out_dir,
+            preferred_seed=1,
+            population_floor=1,
+            max_seed=2,
+        )
+    assert calls == 4

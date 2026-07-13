@@ -259,21 +259,26 @@ def run_floor_discovery(
             selected = (screened_discovery, seed, screen_dir)
             break
         candidate_dir = out_dir.with_name(f"{out_dir.name}-seed-{seed:02d}")
-        if candidate_dir.exists():
-            shutil.rmtree(candidate_dir)
-        discovery = run_discovery(
-            bisect,
-            context_path,
-            districts,
-            candidate_dir,
-            seed,
-            refinement="population",
-        )
+        candidate_path = candidate_dir / "certified-discovery.json"
+        refined_reused = candidate_path.is_file()
+        if refined_reused:
+            discovery = json.loads(candidate_path.read_text(encoding="utf-8"))
+        else:
+            if candidate_dir.exists():
+                shutil.rmtree(candidate_dir)
+            discovery = run_discovery(
+                bisect,
+                context_path,
+                districts,
+                candidate_dir,
+                seed,
+                refinement="population",
+            )
         prune_discovery_scratch(candidate_dir)
         candidates.append((discovery, seed, candidate_dir))
-        next(row for row in screen_report if row["seed"] == seed)[
-            "refined_objective"
-        ] = discovery["objective"]["primary"]
+        screen_row = next(row for row in screen_report if row["seed"] == seed)
+        screen_row["refined_objective"] = discovery["objective"]["primary"]
+        screen_row["refined_reused"] = refined_reused
         print(
             f"{out_dir.name}: refined seed {seed} to deviation "
             f"{discovery['objective']['primary']['max_population_deviation_scaled']}",
@@ -286,7 +291,22 @@ def run_floor_discovery(
             selected = (discovery, seed, candidate_dir)
             break
     if selected is None:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "seed-screening.json").write_text(
+            json.dumps(screen_report, indent=2) + "\n", encoding="utf-8"
+        )
         if not candidates:
+            (out_dir / "unresolved-floor.json").write_text(
+                json.dumps(
+                    {
+                        "population_floor": population_floor,
+                        "status": "no-completed-refinement",
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
             raise RuntimeError("no seed completed discovery screening")
         best = min(
             candidates,
@@ -296,6 +316,23 @@ def run_floor_discovery(
                 row[0]["objective"]["primary"]["weighted_boundary_cut"],
                 row[1],
             ),
+        )
+        (out_dir / "unresolved-floor.json").write_text(
+            json.dumps(
+                {
+                    "population_floor": population_floor,
+                    "status": "unresolved-local-search-frontier",
+                    "best_seed": best[1],
+                    "best_objective": best[0]["objective"]["primary"],
+                    "claim_boundary": (
+                        "No screened deterministic seed reached the arithmetic "
+                        "population floor; this is not a proof of infeasibility."
+                    ),
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
         )
         raise RuntimeError(
             f"no seed reached arithmetic population floor {population_floor}; "

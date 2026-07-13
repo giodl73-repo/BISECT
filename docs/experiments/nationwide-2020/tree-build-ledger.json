@@ -254,6 +254,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "OK",
+      "districts": 5,
+      "block_count": 180154,
+      "status": "failed",
+      "exit_code": 1,
+      "command": [
+        "population-floor-seed-screen"
+      ],
+      "output": "Root reached arithmetic floor 1 and the two-seat child reached floor 1. At the remaining three-seat child, seed 3 screening timed out after 180 seconds; all 15 completed screens were population-refined, and best seed 8 reached deviation 20 against arithmetic floor 1. This is an unresolved local-search frontier, not proof of infeasibility."
+    },
+    {
       "state": "OR",
       "districts": 6,
       "block_count": 130807,
@@ -359,6 +370,6 @@
     }
   ],
   "built_count": 24,
-  "failed_count": 4,
+  "failed_count": 5,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }

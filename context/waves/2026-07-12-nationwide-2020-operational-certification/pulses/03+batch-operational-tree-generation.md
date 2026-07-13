@@ -19,12 +19,12 @@ State and reuse the completed one-district packages.
 - [ ] 50 operational State packages;
 - [ ] 435 one-seat leaves;
 - [ ] per-node arithmetic population proof status;
-- [ ] failure and retry ledger.
+- [x] failure and retry ledger.
 
 ## Progress
 
-The ledger contains 24 verified multi-district State packages and four open
-failures (Arizona, Colorado, Utah, and Washington). Virginia is the first
+The ledger contains 24 verified multi-district State packages and five open
+failures (Arizona, Colorado, Oklahoma, Utah, and Washington). Virginia is the first
 package completed under deterministic two-phase seed screening: METIS-only
 screens are ranked before population refinement, each screen has a recorded
 180-second operational timeout, completed nodes and screens are reusable, and
@@ -47,4 +47,11 @@ Tennessee completed nine connected leaves after bounded root and five-seat-node
 screen timeouts. All eight recursive nodes reached their arithmetic floors,
 including the resumed final three- and two-seat nodes.
 
-Next untouched State: Oklahoma.
+Oklahoma reached arithmetic floor 1 at its root and two-seat child. Its
+remaining three-seat child exhausted all 15 completed screens and population
+refinements after one screen timeout; best seed 8 reached deviation 20 against
+floor 1. This is preserved as an unresolved local-search frontier, not a proof
+of infeasibility. Future failed runs now write their full seed-screening and
+best-objective evidence before exiting.
+
+Next untouched State: Alabama.
