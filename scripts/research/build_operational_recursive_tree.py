@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = Path("scripts/research/build_operational_recursive_tree.py")
+SCREEN_TIMEOUT_SECONDS = 180
 
 
 def sha256(path: Path) -> str:
@@ -45,6 +46,14 @@ def connected(adjacency: list[list[dict]], assignment: list[int], label: int) ->
 def ratio_arithmetic_floor(parent_population: int, seats: int, right_seats: int) -> int:
     remainder = (right_seats * parent_population) % seats
     return min(remainder, seats - remainder)
+
+
+def discovery_seed(discovery: dict) -> int:
+    for field in discovery["method"].split(";"):
+        field = field.strip()
+        if field.startswith("seed="):
+            return int(field.removeprefix("seed="))
+    raise ValueError("certified discovery method does not record its seed")
 
 
 def subset_context(context: dict, selected: list[int], source_id: str) -> dict:
@@ -82,6 +91,8 @@ def run_discovery(
     districts: int,
     out_dir: Path,
     seed: int,
+    refinement: str = "population",
+    timeout_seconds: int | None = None,
 ) -> dict:
     subprocess.run(
         [
@@ -100,10 +111,11 @@ def run_discovery(
             "--discovery-seed",
             str(seed),
             "--discovery-refinement",
-            "population",
+            refinement,
         ],
         cwd=ROOT,
         check=True,
+        timeout=timeout_seconds,
     )
     return json.loads(
         (out_dir / "certified-discovery.json").read_text(encoding="utf-8")
@@ -118,20 +130,137 @@ def run_floor_discovery(
     preferred_seed: int,
     population_floor: int,
     max_seed: int,
-) -> tuple[dict, int]:
+) -> tuple[dict, int, list[dict]]:
+    completed_path = out_dir / "certified-discovery.json"
+    if completed_path.is_file():
+        completed = json.loads(completed_path.read_text(encoding="utf-8"))
+        completed_deviation = completed["objective"]["primary"][
+            "max_population_deviation_scaled"
+        ]
+        if completed_deviation == population_floor:
+            report_path = out_dir / "seed-screening.json"
+            report = (
+                json.loads(report_path.read_text(encoding="utf-8"))
+                if report_path.is_file()
+                else [
+                    {
+                        "seed": discovery_seed(completed),
+                        "status": "selected-node-reused",
+                        "objective": completed["objective"]["primary"],
+                    }
+                ]
+            )
+            print(
+                f"{out_dir.name}: reused completed node at arithmetic floor "
+                f"{population_floor}",
+                flush=True,
+            )
+            return completed, discovery_seed(completed), report
     seeds = [preferred_seed] + [
         seed for seed in range(1, max_seed + 1) if seed != preferred_seed
     ]
+    screened = []
+    screen_report = []
+    for seed in seeds:
+        screen_dir = out_dir.with_name(f"{out_dir.name}-screen-seed-{seed:02d}")
+        discovery_path = screen_dir / "certified-discovery.json"
+        reused = discovery_path.is_file()
+        if reused:
+            discovery = json.loads(discovery_path.read_text(encoding="utf-8"))
+        else:
+            if screen_dir.exists():
+                shutil.rmtree(screen_dir)
+            try:
+                discovery = run_discovery(
+                    bisect,
+                    context_path,
+                    districts,
+                    screen_dir,
+                    seed,
+                    refinement="metis",
+                    timeout_seconds=SCREEN_TIMEOUT_SECONDS,
+                )
+            except subprocess.TimeoutExpired:
+                screen_report.append(
+                    {
+                        "seed": seed,
+                        "status": "timeout",
+                        "timeout_seconds": SCREEN_TIMEOUT_SECONDS,
+                    }
+                )
+                print(
+                    f"{out_dir.name}: screen seed {seed} timed out after "
+                    f"{SCREEN_TIMEOUT_SECONDS} seconds",
+                    flush=True,
+                )
+                continue
+            except subprocess.CalledProcessError as error:
+                screen_report.append(
+                    {
+                        "seed": seed,
+                        "status": "failed",
+                        "exit_code": error.returncode,
+                    }
+                )
+                print(
+                    f"{out_dir.name}: screen seed {seed} failed with exit code "
+                    f"{error.returncode}",
+                    flush=True,
+                )
+                continue
+        screened.append((discovery, seed, screen_dir))
+        screen_report.append(
+            {
+                "seed": seed,
+                "status": "completed",
+                "reused": reused,
+                "objective": discovery["objective"]["primary"],
+            }
+        )
+        print(
+            f"{out_dir.name}: screened seed {seed} at deviation "
+            f"{discovery['objective']['primary']['max_population_deviation_scaled']}",
+            flush=True,
+        )
+    screened.sort(
+        key=lambda row: (
+            row[0]["objective"]["primary"]["max_population_deviation_scaled"],
+            row[0]["objective"]["primary"]["total_population_deviation_scaled"],
+            row[0]["objective"]["primary"]["weighted_boundary_cut"],
+            row[1],
+        )
+    )
     candidates = []
     selected = None
-    for seed in seeds:
+    for screened_discovery, seed, screen_dir in screened:
+        if (
+            screened_discovery["objective"]["primary"][
+                "max_population_deviation_scaled"
+            ]
+            == population_floor
+        ):
+            selected = (screened_discovery, seed, screen_dir)
+            break
         candidate_dir = out_dir.with_name(f"{out_dir.name}-seed-{seed:02d}")
         if candidate_dir.exists():
             shutil.rmtree(candidate_dir)
         discovery = run_discovery(
-            bisect, context_path, districts, candidate_dir, seed
+            bisect,
+            context_path,
+            districts,
+            candidate_dir,
+            seed,
+            refinement="population",
         )
         candidates.append((discovery, seed, candidate_dir))
+        next(row for row in screen_report if row["seed"] == seed)[
+            "refined_objective"
+        ] = discovery["objective"]["primary"]
+        print(
+            f"{out_dir.name}: refined seed {seed} to deviation "
+            f"{discovery['objective']['primary']['max_population_deviation_scaled']}",
+            flush=True,
+        )
         if (
             discovery["objective"]["primary"]["max_population_deviation_scaled"]
             == population_floor
@@ -139,6 +268,8 @@ def run_floor_discovery(
             selected = (discovery, seed, candidate_dir)
             break
     if selected is None:
+        if not candidates:
+            raise RuntimeError("no seed completed discovery screening")
         best = min(
             candidates,
             key=lambda row: (
@@ -157,9 +288,15 @@ def run_floor_discovery(
     if out_dir.exists():
         shutil.rmtree(out_dir)
     candidate_dir.rename(out_dir)
+    (out_dir / "seed-screening.json").write_text(
+        json.dumps(screen_report, indent=2) + "\n", encoding="utf-8"
+    )
     for _, _, other_dir in candidates:
         if other_dir != candidate_dir and other_dir.exists():
             shutil.rmtree(other_dir)
+    for _, _, screen_dir in screened:
+        if screen_dir != candidate_dir and screen_dir.exists():
+            shutil.rmtree(screen_dir)
     for name in (
         "audit-certificate.json",
         "certified-discovery-manifest.json",
@@ -169,7 +306,7 @@ def run_floor_discovery(
         path = out_dir / name
         if path.is_file():
             path.unlink()
-    return discovery, seed
+    return discovery, seed, screen_report
 
 
 def build(
@@ -215,7 +352,7 @@ def build(
         floor = ratio_arithmetic_floor(
             sum(node_context["populations"]), seats, right_seats
         )
-        discovery, selected_seed = run_floor_discovery(
+        discovery, selected_seed, seed_screening = run_floor_discovery(
             bisect,
             node_context_path,
             seats,
@@ -232,6 +369,7 @@ def build(
                 "parent_population": sum(node_context["populations"]),
                 "discovery_id": discovery["discovery_id"],
                 "seed": selected_seed,
+                "seed_screening": seed_screening,
                 "objective": discovery["objective"]["primary"],
                 "population_proof": {
                     "kind": "ratio-arithmetic-floor",

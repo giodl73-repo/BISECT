@@ -1,7 +1,7 @@
 ---
 pulse: 03
 title: Batch operational tree generation
-status: ready
+status: in_progress
 depends_on: 02
 wave: nationwide-2020-operational-certification
 validation_level: L2 nationwide recursive execution
@@ -14,9 +14,25 @@ State and reuse the completed one-district packages.
 
 ## Deliverables
 
-- [ ] resumable State/tree batch runner;
-- [ ] node-specific seed screening and retry policy;
+- [x] resumable State/tree batch runner;
+- [x] node-specific seed screening and retry policy;
 - [ ] 50 operational State packages;
 - [ ] 435 one-seat leaves;
 - [ ] per-node arithmetic population proof status;
 - [ ] failure and retry ledger.
+
+## Progress
+
+The ledger contains 21 verified multi-district State packages and four open
+failures (Arizona, Colorado, Utah, and Washington). Virginia is the first
+package completed under deterministic two-phase seed screening: METIS-only
+screens are ranked before population refinement, each screen has a recorded
+180-second operational timeout, completed nodes and screens are reusable, and
+timeouts remain distinct from infeasibility.
+
+Virginia produces 11 connected one-seat leaves. Every recursive node reaches
+its ratio-arithmetic population floor. At node `10`, eight screens timed out;
+seed 14 subsequently reached the arithmetic floor, demonstrating why bounded
+screening and retry evidence are both required.
+
+Next untouched State: Kansas.

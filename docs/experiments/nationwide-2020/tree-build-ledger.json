@@ -260,25 +260,9 @@
       "status": "built",
       "exit_code": 0,
       "command": [
-        "python",
-        "scripts/research/build_operational_recursive_tree.py",
-        "build",
-        "--bisect",
-        "C:\\src\\apportionment\\target\\debug\\bisect.exe",
-        "--context",
-        "C:\\src\\apportionment\\data\\2020\\certified\\sc_blocks_2020.rctx",
-        "--out-dir",
-        "C:\\src\\apportionment\\data\\2020\\certified\\operational-trees\\sc",
-        "--districts",
-        "7",
-        "--root-seed",
-        "1",
-        "--child-seed-0",
-        "2",
-        "--child-seed-1",
-        "3"
+        "recovered-from-package"
       ],
-      "output": "Operational recursive tree: VERIFIED\n"
+      "output": "Recovered from verified package manifest."
     },
     {
       "state": "UT",
@@ -290,6 +274,17 @@
         "population-floor-seed-screen"
       ],
       "output": "No seed 1-16 reached arithmetic population floor at a child node; best deviation 236324."
+    },
+    {
+      "state": "VA",
+      "districts": 11,
+      "block_count": 163491,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
     },
     {
       "state": "WA",
@@ -330,7 +325,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 20,
+  "built_count": 21,
   "failed_count": 4,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }

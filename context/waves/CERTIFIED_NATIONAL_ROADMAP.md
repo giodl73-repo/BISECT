@@ -98,4 +98,6 @@ Current objective:
 
 Next unblocked pulse:
 
-> Inventory all 50 State source inputs and existing connected block contexts.
+> Continue Pulse 03 operational-tree generation from Kansas. Preserve the
+> Arizona, Colorado, Utah, and Washington failures as separate scaling
+> evidence while untouched States advance in block-count order.
