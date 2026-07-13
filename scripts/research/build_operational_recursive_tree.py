@@ -56,6 +56,17 @@ def discovery_seed(discovery: dict) -> int:
     raise ValueError("certified discovery method does not record its seed")
 
 
+def prune_discovery_scratch(out_dir: Path) -> None:
+    """Keep only the discovery needed for ranking and deterministic resume."""
+    for path in out_dir.iterdir():
+        if path.name == "certified-discovery.json":
+            continue
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+
+
 def subset_context(context: dict, selected: list[int], source_id: str) -> dict:
     selected_set = set(selected)
     remap = {old: new for new, old in enumerate(selected)}
@@ -167,6 +178,7 @@ def run_floor_discovery(
         reused = discovery_path.is_file()
         if reused:
             discovery = json.loads(discovery_path.read_text(encoding="utf-8"))
+            prune_discovery_scratch(screen_dir)
         else:
             if screen_dir.exists():
                 shutil.rmtree(screen_dir)
@@ -181,6 +193,8 @@ def run_floor_discovery(
                     timeout_seconds=SCREEN_TIMEOUT_SECONDS,
                 )
             except subprocess.TimeoutExpired:
+                if screen_dir.exists():
+                    shutil.rmtree(screen_dir)
                 screen_report.append(
                     {
                         "seed": seed,
@@ -195,6 +209,8 @@ def run_floor_discovery(
                 )
                 continue
             except subprocess.CalledProcessError as error:
+                if screen_dir.exists():
+                    shutil.rmtree(screen_dir)
                 screen_report.append(
                     {
                         "seed": seed,
@@ -208,6 +224,7 @@ def run_floor_discovery(
                     flush=True,
                 )
                 continue
+            prune_discovery_scratch(screen_dir)
         screened.append((discovery, seed, screen_dir))
         screen_report.append(
             {
@@ -252,6 +269,7 @@ def run_floor_discovery(
             seed,
             refinement="population",
         )
+        prune_discovery_scratch(candidate_dir)
         candidates.append((discovery, seed, candidate_dir))
         next(row for row in screen_report if row["seed"] == seed)[
             "refined_objective"

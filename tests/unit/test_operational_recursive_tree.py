@@ -104,3 +104,19 @@ def test_floor_discovery_reuses_completed_node(tmp_path: Path) -> None:
     assert reused == discovery
     assert seed == 7
     assert report[0]["status"] == "selected-node-reused"
+
+
+def test_prune_discovery_scratch_keeps_only_resume_artifact(tmp_path: Path) -> None:
+    out_dir = tmp_path / "screen"
+    out_dir.mkdir()
+    (out_dir / "certified-discovery.json").write_text("{}", encoding="utf-8")
+    (out_dir / "certified-split-instance.json").write_text("{}", encoding="utf-8")
+    nested = out_dir / "extra"
+    nested.mkdir()
+    (nested / "artifact.txt").write_text("scratch", encoding="utf-8")
+
+    TREE.prune_discovery_scratch(out_dir)
+
+    assert [path.name for path in out_dir.iterdir()] == [
+        "certified-discovery.json"
+    ]
