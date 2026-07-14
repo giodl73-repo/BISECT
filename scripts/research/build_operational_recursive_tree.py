@@ -174,6 +174,22 @@ def run_floor_discovery(
     screen_report = []
     for seed in seeds:
         screen_dir = out_dir.with_name(f"{out_dir.name}-screen-seed-{seed:02d}")
+        timeout_path = screen_dir.with_suffix(".timeout.json")
+        if timeout_path.is_file():
+            timeout_report = json.loads(timeout_path.read_text(encoding="utf-8"))
+            screen_report.append(
+                {
+                    "seed": seed,
+                    "status": "timeout",
+                    "timeout_seconds": timeout_report["timeout_seconds"],
+                    "reused": True,
+                }
+            )
+            print(
+                f"{out_dir.name}: reused recorded screen timeout for seed {seed}",
+                flush=True,
+            )
+            continue
         discovery_path = screen_dir / "certified-discovery.json"
         reused = discovery_path.is_file()
         if reused:
@@ -195,6 +211,17 @@ def run_floor_discovery(
             except subprocess.TimeoutExpired:
                 if screen_dir.exists():
                     shutil.rmtree(screen_dir)
+                timeout_path.write_text(
+                    json.dumps(
+                        {
+                            "status": "timeout",
+                            "timeout_seconds": SCREEN_TIMEOUT_SECONDS,
+                        },
+                        indent=2,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
                 screen_report.append(
                     {
                         "seed": seed,
@@ -225,6 +252,8 @@ def run_floor_discovery(
                 )
                 continue
             prune_discovery_scratch(screen_dir)
+        if timeout_path.is_file():
+            timeout_path.unlink()
         screened.append((discovery, seed, screen_dir))
         screen_report.append(
             {

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -190,3 +191,72 @@ def test_floor_discovery_preserves_unresolved_frontier(
             max_seed=2,
         )
     assert calls == 4
+
+
+def test_floor_discovery_reuses_recorded_screen_timeout(
+    monkeypatch, tmp_path: Path
+) -> None:
+    calls: list[int] = []
+
+    def fake_run_discovery(
+        _bisect: Path,
+        _context_path: Path,
+        _districts: int,
+        out_dir: Path,
+        seed: int,
+        refinement: str = "population",
+        timeout_seconds: int | None = None,
+    ) -> dict:
+        calls.append(seed)
+        if seed == 1:
+            raise subprocess.TimeoutExpired("bisect", timeout_seconds)
+        out_dir.mkdir(parents=True)
+        deviation = 3 if refinement == "metis" else 1
+        discovery = {
+            "objective": {
+                "primary": {
+                    "max_population_deviation_scaled": deviation,
+                    "total_population_deviation_scaled": deviation * 2,
+                    "weighted_boundary_cut": seed,
+                }
+            }
+        }
+        (out_dir / "certified-discovery.json").write_text(
+            json.dumps(discovery), encoding="utf-8"
+        )
+        return discovery
+
+    monkeypatch.setattr(TREE, "run_discovery", fake_run_discovery)
+    out_dir = tmp_path / "node"
+    discovery, seed, _ = TREE.run_floor_discovery(
+        tmp_path / "bisect",
+        tmp_path / "context.rctx",
+        2,
+        out_dir,
+        preferred_seed=1,
+        population_floor=1,
+        max_seed=2,
+    )
+    assert seed == 2
+    assert discovery["objective"]["primary"]["max_population_deviation_scaled"] == 1
+    assert calls == [1, 2, 2]
+
+    out_dir.rename(tmp_path / "selected")
+    calls.clear()
+    discovery, seed, report = TREE.run_floor_discovery(
+        tmp_path / "bisect",
+        tmp_path / "context.rctx",
+        2,
+        out_dir,
+        preferred_seed=1,
+        population_floor=1,
+        max_seed=2,
+    )
+    assert seed == 2
+    assert calls == [2, 2]
+    assert report[0] == {
+        "seed": 1,
+        "status": "timeout",
+        "timeout_seconds": TREE.SCREEN_TIMEOUT_SECONDS,
+        "reused": True,
+    }

@@ -265,6 +265,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "NC",
+      "districts": 14,
+      "block_count": 236638,
+      "status": "failed",
+      "exit_code": 1,
+      "command": [
+        "population-floor-seed-screen"
+      ],
+      "output": "The 14-seat root and complete left seven-seat half reached their arithmetic floors. At the right seven-seat child, ten seed screens timed out after 180 seconds and all six completed screens were population-refined; best seed 13 reached deviation 1124100 against arithmetic floor 2. This is an unresolved local-search frontier, not proof of infeasibility."
+    },
+    {
       "state": "NJ",
       "districts": 12,
       "block_count": 137972,
@@ -425,6 +436,6 @@
     }
   ],
   "built_count": 29,
-  "failed_count": 5,
+  "failed_count": 6,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
