@@ -375,6 +375,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "PA",
+      "districts": 17,
+      "block_count": 336985,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
+    },
+    {
       "state": "RI",
       "districts": 2,
       "block_count": 25649,
@@ -479,7 +490,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 32,
+  "built_count": 33,
   "failed_count": 7,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
