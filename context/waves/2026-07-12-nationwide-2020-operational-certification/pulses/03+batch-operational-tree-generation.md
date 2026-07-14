@@ -23,7 +23,7 @@ State and reuse the completed one-district packages.
 
 ## Progress
 
-The ledger contains 30 verified multi-district State packages and six open
+The ledger contains 31 verified multi-district State packages and six open
 failures (Arizona, Colorado, North Carolina, Oklahoma, Utah, and Washington). Virginia is the first
 package completed under deterministic two-phase seed screening: METIS-only
 screens are ranked before population refinement, each screen has a recorded
@@ -96,4 +96,12 @@ four-seat children reached floors 0 and 2, and their four two-seat descendants
 reached floors 0, 0, 0, and 1. The independently verified report and manifest
 preserve all deterministic seed screens and ranked refinements.
 
-Next untouched State: Michigan.
+Michigan completed 13 connected leaves with all 12 recursive nodes at their
+arithmetic population floors. Its 13-seat root recorded 12 bounded screen
+timeouts but reached floor 2 from one of four completed candidates. The
+six-seat parent survived a wrapper boundary, and its first three-seat child
+reused one timeout marker before recording eight additional timeouts and
+reaching floor 1. The independently verified report preserves the complete
+resume and seed-refinement evidence.
+
+Next untouched State: Ohio.
