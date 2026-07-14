@@ -331,6 +331,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "NY",
+      "districts": 26,
+      "block_count": 288819,
+      "status": "failed",
+      "exit_code": 1,
+      "command": [
+        "population-floor-seed-screen"
+      ],
+      "output": "The 26-seat root, first 13-seat half, six-seat child, and completed descendants through node 001 reached their arithmetic population floors. At two-seat node 0011, all 16 completed screens were population-refined; best seed 1 reached deviation 2 against arithmetic floor 0. This is an unresolved local-search frontier, not proof of infeasibility."
+    },
+    {
       "state": "OH",
       "districts": 15,
       "block_count": 276428,
@@ -469,6 +480,6 @@
     }
   ],
   "built_count": 32,
-  "failed_count": 6,
+  "failed_count": 7,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
