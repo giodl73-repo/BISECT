@@ -331,6 +331,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "OH",
+      "districts": 15,
+      "block_count": 276428,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
+    },
+    {
       "state": "OK",
       "districts": 5,
       "block_count": 180154,
@@ -457,7 +468,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 31,
+  "built_count": 32,
   "failed_count": 6,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
