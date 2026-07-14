@@ -89,6 +89,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "GA",
+      "districts": 14,
+      "block_count": 232717,
+      "status": "built",
+      "exit_code": 0,
+      "command": [
+        "recovered-from-package"
+      ],
+      "output": "Recovered from verified package manifest."
+    },
+    {
       "state": "HI",
       "districts": 2,
       "block_count": 14732,
@@ -413,7 +424,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 28,
+  "built_count": 29,
   "failed_count": 5,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
