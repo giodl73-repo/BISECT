@@ -98,6 +98,6 @@ Current objective:
 
 Next unblocked pulse:
 
-> Continue Pulse 03 operational-tree generation from Missouri. Preserve the
+> Continue Pulse 03 operational-tree generation from Michigan. Preserve the
 > Arizona, Colorado, North Carolina, Oklahoma, Utah, and Washington failures as separate scaling
 > evidence while untouched States advance in block-count order.
