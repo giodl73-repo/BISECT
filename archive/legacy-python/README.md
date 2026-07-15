@@ -18,3 +18,7 @@ weights exactly.
 The earlier Rhode Island-specific builder/verifier and its Python unit test
 were retired after `bisect-ops verify-ri-frontier` took over verification of
 the sealed package.
+
+The small-state exact-frontier analyzer and its Python unit test were retired
+after Rust took over package arithmetic, source custody, and live TIGER/PL94
+verification.

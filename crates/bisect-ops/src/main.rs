@@ -121,6 +121,11 @@ enum Action {
         #[arg(long)]
         check_rctx: bool,
     },
+    VerifyExactFrontier {
+        manifest: PathBuf,
+        #[arg(long)]
+        check_sources: bool,
+    },
 }
 
 #[derive(Clone)]
@@ -1192,6 +1197,102 @@ fn verify_ri_frontier(manifest_path: &Path, check_rctx: bool) -> Result<()> {
     Ok(())
 }
 
+fn verify_exact_frontier(manifest_path: &Path, check_sources: bool) -> Result<()> {
+    let manifest = read_json(manifest_path)?;
+    if manifest["schema_version"] != "exact-canonical-small-state-frontier-package-v1"
+        || manifest["status"] != "blocked-real-data-frontier"
+    {
+        bail!("unsupported exact frontier package posture");
+    }
+    let analyzer = PathBuf::from(
+        manifest["analyzer_path"]
+            .as_str()
+            .context("analyzer path")?,
+    );
+    if sha256(&custody_source(&analyzer))? != manifest["analyzer_sha256"] {
+        bail!("frontier analyzer source hash mismatch");
+    }
+    let files = manifest["files"].as_array().context("package files")?;
+    if files.len() != 1 {
+        bail!("frontier package file inventory mismatch");
+    }
+    let report_path = manifest_path
+        .parent()
+        .context("manifest parent")?
+        .join(files[0]["path"].as_str().context("report path")?);
+    if sha256(&report_path)? != files[0]["sha256"] {
+        bail!("frontier report hash mismatch");
+    }
+    let report = read_json(&report_path)?;
+    let observed = &report["observed_instance"];
+    let exact = &report["exact_reference"];
+    if report["schema_version"] != "exact-canonical-small-state-frontier-v1"
+        || report["status"] != "blocked"
+        || exact["state_unit_count"] != observed["tiger_block_rows"]
+        || exact["state_unit_count"] != 25_649
+        || exact["unit_limit"] != 24
+        || exact["units_above_limit"] != 25_625
+        || exact["candidate_formula"] != "2^25648-1"
+        || exact["candidate_decimal_digits"] != 7_721
+        || exact["candidate_log10"] != "7720.817328789789694841975171893797"
+        || exact["reference_limit_candidates"] != 8_388_607
+        || exact["candidate_ratio_to_reference_log10"] != "7713.893638941290067081418590000000"
+        || exact["years_at_one_billion_candidates_per_second_log10"]
+            != "7704.318224822704467174690638532167"
+        || observed["tiger_block_rows"] != observed["pl_block_rows"]
+        || observed["positive_population_blocks"].as_u64().unwrap_or(0)
+            + observed["zero_population_blocks"].as_u64().unwrap_or(0)
+            != observed["pl_block_rows"].as_u64().unwrap_or(u64::MAX)
+    {
+        bail!("exact frontier arithmetic or posture drift");
+    }
+    if check_sources {
+        for record in report["source_files"].as_array().context("source files")? {
+            let path = Path::new(record["path"].as_str().context("source path")?);
+            if fs::metadata(path)?.len() != record["bytes"].as_u64().context("source bytes")?
+                || sha256(path)? != record["sha256"]
+            {
+                bail!("frontier source custody mismatch: {}", path.display());
+            }
+        }
+        let shape =
+            Path::new("data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.shp");
+        let geo = Path::new("data/2020/redistricting/ri2020.pl/rigeo2020.pl");
+        let population = Path::new("data/2020/redistricting/ri2020.pl/ri000012020.pl");
+        let blocks = read_tiger_blocks_projected(shape)?;
+        let populations = read_pl94_block_populations(geo, population)?;
+        let block_ids: Vec<_> = blocks.iter().map(|block| &block.geoid).collect();
+        let population_ids: Vec<_> = populations.iter().map(|record| &record.geoid).collect();
+        let positive = populations
+            .iter()
+            .filter(|record| record.population > 0)
+            .count();
+        let zero = populations
+            .iter()
+            .filter(|record| record.population == 0)
+            .count();
+        let total: i64 = populations.iter().map(|record| record.population).sum();
+        if blocks.len() != 25_649
+            || block_ids != population_ids
+            || positive != 21_382
+            || zero != 4_267
+            || total != 1_097_379
+        {
+            bail!("exact frontier current-source analysis drift");
+        }
+        let reference = Path::new(
+            exact["reference_source"]
+                .as_str()
+                .context("reference source")?,
+        );
+        if sha256(reference)? != exact["reference_source_sha256"] {
+            bail!("exact frontier Rust reference hash mismatch");
+        }
+    }
+    println!("Small-State exact frontier package verification: PASS");
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn build_state_rctx(
     state_code: &str,
@@ -1576,6 +1677,10 @@ fn main() -> Result<()> {
             manifest,
             check_rctx,
         } => verify_ri_frontier(&manifest, check_rctx),
+        Action::VerifyExactFrontier {
+            manifest,
+            check_sources,
+        } => verify_exact_frontier(&manifest, check_sources),
     }
 }
 

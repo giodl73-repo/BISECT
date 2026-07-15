@@ -20,22 +20,19 @@ Island search would contain `2^25648-1` candidates, a 7,721-digit number.
 Even at one billion candidates per second, enumeration would require roughly
 `10^7704` years.
 
-## Additional Input Blocker
+## Historical Input Blocker
 
-The local source custody contains complete block geometry and population files
-with matching GEOIDs, but no matching block-adjacency or block-RCTX artifact.
-Constructing that input would not resolve the exhaustive-search barrier.
+At the time this sealed report was generated, local source custody contained
+complete block geometry and population files but no block RCTX. That input is
+now available and Rust-native, with exact parity against the historical graph.
+Closing the input blocker does not resolve the exhaustive-search barrier.
 
 ## Reproduce
 
-With the local Census source files present:
+Verify the sealed package and, optionally, re-read every source using Rust:
 
 ```powershell
-python scripts\research\analyze_small_state_exact_frontier.py analyze `
-  --output docs\experiments\exact-canonical\ri-2020-block-frontier.json `
-  --manifest docs\experiments\exact-canonical\manifest.json
-
-python scripts\research\analyze_small_state_exact_frontier.py verify-package `
+cargo run -p bisect-ops -- verify-exact-frontier `
   docs\experiments\exact-canonical\manifest.json `
   --check-sources
 ```
