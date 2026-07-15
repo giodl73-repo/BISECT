@@ -475,25 +475,9 @@
       "status": "failed",
       "exit_code": 1,
       "command": [
-        "python",
-        "scripts/research/build_operational_recursive_tree.py",
-        "build",
-        "--bisect",
-        "C:\\src\\apportionment\\target\\debug\\bisect.exe",
-        "--context",
-        "C:\\src\\apportionment\\data\\2020\\certified\\wa_blocks_2020.rctx",
-        "--out-dir",
-        "C:\\src\\apportionment\\data\\2020\\certified\\operational-trees\\wa",
-        "--districts",
-        "10",
-        "--root-seed",
-        "1",
-        "--child-seed-0",
-        "2",
-        "--child-seed-1",
-        "3"
+        "population-floor-seed-screen"
       ],
-      "output": "memory allocation of 5058976 bytes failed\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\nTraceback (most recent call last):\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 381, in <module>\n    main()\n    ~~~~^^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 368, in main\n    build(\n    ~~~~~^\n        args.bisect.resolve(),\n        ^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n        (args.child_seed_0, args.child_seed_1),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 273, in build\n    visit(\n    ~~~~~^\n        context,\n        ^^^^^^^^\n    ...<5 lines>...\n        root_seed,\n        ^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 218, in visit\n    discovery, selected_seed = run_floor_discovery(\n                               ~~~~~~~~~~~~~~~~~~~^\n        bisect,\n        ^^^^^^^\n    ...<5 lines>...\n        16,\n        ^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 131, in run_floor_discovery\n    discovery = run_discovery(\n        bisect, context_path, districts, candidate_dir, seed\n    )\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 86, in run_discovery\n    subprocess.run(\n    ~~~~~~~~~~~~~~^\n        [\n        ^\n    ...<18 lines>...\n        check=True,\n        ^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Python314\\Lib\\subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['C:\\\\src\\\\apportionment\\\\target\\\\debug\\\\bisect.exe', 'exact', '--context', 'C:\\\\src\\\\apportionment\\\\data\\\\2020\\\\certified\\\\wa_blocks_2020.rctx', '--districts', '10', '--method', 'certified-discovery', '--out-dir', 'C:\\\\src\\\\apportionment\\\\data\\\\2020\\\\certified\\\\operational-trees\\\\wa\\\\root-seed-01', '--generated-at', '2026-07-12T00:00:00Z', '--discovery-seed', '1', '--discovery-refinement', 'population']' returned non-zero exit status 3221226505.\n"
+      "output": "The 10-seat root and complete first five-seat half reached their arithmetic population floors under the current bounded-screening workflow. At the second five-seat node 1, all 16 completed screens were population-refined; best seed 7 reached deviation 3 against arithmetic floor 2. This is an unresolved local-search frontier, not proof of infeasibility."
     },
     {
       "state": "WI",

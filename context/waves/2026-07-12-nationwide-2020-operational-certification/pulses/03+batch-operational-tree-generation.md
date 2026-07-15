@@ -160,6 +160,14 @@ population floors with no screen timeouts. The root reached floor zero from
 seed 2; the two four-seat parents reached floor 2 from seeds 15 and 6; and all
 four two-seat descendants reached their respective floors 0, 1, 1, and 0.
 
+Washington's original root memory-allocation crash was cleared by the current
+bounded-screening and scratch-retention workflow. Its ten-seat root and
+complete first five-seat half now reach their arithmetic population floors.
+At the second five-seat node `1`, all 16 screens completed and were
+population-refined; three seeds reached deviation 3, with seed 7 best by the
+ranked objective, against arithmetic floor 2. This is an unresolved
+local-search frontier, not proof of infeasibility.
+
 No untouched multi-district State remains. Pulse 03 now continues by revisiting
 the nine preserved local-search frontiers; national wall-to-wall verification
 remains blocked until operational packages are complete.

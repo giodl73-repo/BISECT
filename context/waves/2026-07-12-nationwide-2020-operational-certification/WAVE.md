@@ -44,7 +44,7 @@ and publish exact objective proof coverage separately.
 |---|---|---|
 | 01 - National data and context inventory | DONE | 50/50 sources, 8,126,956 blocks, 2.02 GiB estimate |
 | 02 - Batch block RCTX generation | DONE | 50 contexts, 8,126,956 blocks, 9,657 bridges |
-| 03 - Batch operational tree generation | IN PROGRESS | All multi-district States attempted: 35 verified packages and 9 preserved local-search frontiers |
+| 03 - Batch operational tree generation | IN PROGRESS | 35 verified packages; Washington legacy crash replaced by deviation-3/floor-2 frontier |
 | 04 - National wall-to-wall verifier | BLOCKED BY 03 | Zero omissions, duplicates, or disconnected leaves |
 | 05 - National proof coverage matrix | BLOCKED BY 04 | Population/boundary/canonical status per node |
 | 06 - Nationwide 2020 publication | BLOCKED BY 05 | Reports, maps, custody, and Stage 3 closure |
