@@ -2,6 +2,7 @@ pub mod adjacency;
 pub mod bridge;
 pub mod enacted;
 pub mod fiedler;
+pub mod projection;
 pub mod serialize;
 pub mod tiger;
 
