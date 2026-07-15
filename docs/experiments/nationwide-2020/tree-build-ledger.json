@@ -338,9 +338,9 @@
       "status": "failed",
       "exit_code": 1,
       "command": [
-        "extended-population-floor-seed-screen-32"
+        "extended-population-floor-seed-screen-64"
       ],
-      "output": "The 26-seat root, first 13-seat half, six-seat child, and completed descendants through node 001 reached their arithmetic population floors. At two-seat node 0011, all 32 completed screens were population-refined; best seed 1 remained at deviation 2 against arithmetic floor 0. This is an unresolved extended local-search frontier, not proof of infeasibility."
+      "output": "The 26-seat root, first 13-seat half, six-seat child, and completed descendants through node 001 reached their arithmetic population floors. At two-seat node 0011, all 64 completed screens were population-refined; best seed 52 remained at deviation 2 against arithmetic floor 0. This is an unresolved extended local-search frontier, not proof of infeasibility."
     },
     {
       "state": "OH",

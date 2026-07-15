@@ -104,13 +104,13 @@ Next unblocked work:
 > untouched State remains, and Pulse 04 stays blocked until operational
 > packages are complete. All stale tooling and single-policy failures have now
 > been retried; the next work is a deterministic expansion beyond the current
-> 16-seed local-search frontier. Washington was recovered at seed 27, while New
-> York remained deviation 2/floor 0 after 32 seeds, Oklahoma was recovered at
+> bounded local-search frontier. Washington was recovered at seed 27, while New
+> York remained deviation 2/floor 0 after 64 seeds, Oklahoma was recovered at
 > seed 28, Arizona remained deviation 9,047/floor 1 after 32 seeds, and North
 > Carolina was recovered at seed 18. Florida's former seven-seat frontier was
 > recovered at seed 18, but its newly exposed three-seat node `100` remained at
 > deviation 3/floor 0 after 32 seeds. California's seven-seat node `001`
 > remained at deviation 261,137/floor 2 after 32 seeds, with eight screen
 > timeouts. Texas's five-seat node `110` was recovered at seed 20 and the full
-> 38-leaf package is independently verified. New York's deviation-2/floor-0
-> node `0011` is the next deterministic target beyond the 32-seed frontier.
+> 38-leaf package is independently verified. Florida's deviation-3/floor-0
+> node `100` is the next deterministic target beyond the 32-seed frontier.
