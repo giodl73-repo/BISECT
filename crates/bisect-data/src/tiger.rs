@@ -1,4 +1,5 @@
-use geo::Contains;
+use crate::projection::nad83_to_epsg5070;
+use geo::{Centroid, Contains};
 use geo_types::{Coord, LineString, MultiPolygon, Point, Polygon};
 use shapefile::PolygonRing;
 /// TIGER/Line tract shapefile reader.
@@ -24,6 +25,10 @@ pub enum TigerError {
     UnsupportedGeometry(usize),
     #[error("GEOID {0} is not 11 characters (tract GEOID must be 11 digits: SSCCCTTTTTT)")]
     InvalidGeoidLength(String),
+    #[error("block GEOID {0} is not 15 digits")]
+    InvalidBlockGeoid(String),
+    #[error("projected geometry at record {0} has no centroid")]
+    MissingCentroid(usize),
 }
 
 /// A single census tract record from a TIGER shapefile.
@@ -103,20 +108,108 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
     Ok(records)
 }
 
+/// Read TIGER 2020 tabulation blocks and project NAD83 geometry to EPSG:5070.
+///
+/// Records are sorted by `GEOID20`, matching the canonical RCTX unit order.
+pub fn read_tiger_blocks_projected<P: AsRef<Path>>(
+    shp_path: P,
+) -> Result<Vec<BlockRecord>, TigerError> {
+    let mut reader = shapefile::Reader::from_path(shp_path.as_ref())
+        .map_err(|error| TigerError::ShapefileError(error.to_string()))?;
+    let mut records = Vec::new();
+    for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
+        let (shape, record) =
+            shape_record.map_err(|error| TigerError::ShapefileError(error.to_string()))?;
+        let geoid = match record.get("GEOID20") {
+            Some(shapefile::dbase::FieldValue::Character(Some(value))) => value.trim().to_string(),
+            _ => return Err(TigerError::MissingGeoid),
+        };
+        if geoid.len() != 15 || !geoid.bytes().all(|byte| byte.is_ascii_digit()) {
+            return Err(TigerError::InvalidBlockGeoid(geoid));
+        }
+        let aland = numeric_field(&record, "ALAND20")
+            .or_else(|| numeric_field(&record, "ALAND"))
+            .unwrap_or(0);
+        let awater = numeric_field(&record, "AWATER20")
+            .or_else(|| numeric_field(&record, "AWATER"))
+            .unwrap_or(0);
+        let geographic = shape_to_multipolygon(&shape, idx)?;
+        if geographic.0.is_empty() {
+            continue;
+        }
+        let projected = project_epsg5070(&geographic);
+        let centroid = projected
+            .centroid()
+            .map(|point| (point.x(), point.y()))
+            .ok_or(TigerError::MissingCentroid(idx))?;
+        records.push(BlockRecord {
+            geoid,
+            geometry_wkb: geo_to_wkb_multipolygon(&projected),
+            centroid,
+            aland,
+            awater,
+        });
+    }
+    records.sort_by(|left, right| left.geoid.cmp(&right.geoid));
+    Ok(records)
+}
+
+fn numeric_field(record: &shapefile::dbase::Record, field: &str) -> Option<i64> {
+    match record.get(field) {
+        Some(shapefile::dbase::FieldValue::Numeric(Some(value))) => Some(*value as i64),
+        Some(shapefile::dbase::FieldValue::Integer(value)) => Some(i64::from(*value)),
+        _ => None,
+    }
+}
+
 /// Convert a shapefile shape to WKB bytes.
 /// Returns empty Vec for Null shapes.
 fn shape_to_wkb(shape: &shapefile::Shape, idx: usize) -> Result<Vec<u8>, TigerError> {
+    let multipolygon = shape_to_multipolygon(shape, idx)?;
+    if multipolygon.0.is_empty() {
+        return Ok(Vec::new());
+    }
+    Ok(geo_to_wkb_multipolygon(&multipolygon))
+}
+
+fn shape_to_multipolygon(
+    shape: &shapefile::Shape,
+    idx: usize,
+) -> Result<MultiPolygon<f64>, TigerError> {
     match shape {
-        shapefile::Shape::Polygon(poly) => {
-            Ok(geo_to_wkb_multipolygon(&shapefile_poly_to_geo(poly)))
-        }
-        shapefile::Shape::NullShape => Ok(Vec::new()),
+        shapefile::Shape::Polygon(poly) => Ok(shapefile_poly_to_geo(poly)),
+        shapefile::Shape::NullShape => Ok(MultiPolygon(vec![])),
         // Some tract files use PolygonZ (3D) — flatten to 2D
-        shapefile::Shape::PolygonZ(polyz) => {
-            Ok(geo_to_wkb_multipolygon(&shapefile_polyz_to_geo(polyz)))
-        }
+        shapefile::Shape::PolygonZ(polyz) => Ok(shapefile_polyz_to_geo(polyz)),
         _ => Err(TigerError::UnsupportedGeometry(idx)),
     }
+}
+
+fn project_epsg5070(multipolygon: &MultiPolygon<f64>) -> MultiPolygon<f64> {
+    MultiPolygon(
+        multipolygon
+            .0
+            .iter()
+            .map(|polygon| {
+                Polygon::new(
+                    project_ring(polygon.exterior()),
+                    polygon.interiors().iter().map(project_ring).collect(),
+                )
+            })
+            .collect(),
+    )
+}
+
+fn project_ring(ring: &LineString<f64>) -> LineString<f64> {
+    LineString::new(
+        ring.0
+            .iter()
+            .map(|coordinate| {
+                let (x, y) = nad83_to_epsg5070(coordinate.x, coordinate.y);
+                Coord { x, y }
+            })
+            .collect(),
+    )
 }
 
 fn shapefile_poly_to_geo(poly: &shapefile::Polygon) -> MultiPolygon<f64> {
@@ -129,6 +222,17 @@ fn shapefile_poly_to_geo(poly: &shapefile::Polygon) -> MultiPolygon<f64> {
         }
     }
     rings_to_multipolygon(exteriors, interiors)
+}
+
+/// A census block with EPSG:5070 geometry and centroid.
+#[derive(Debug, Clone)]
+pub struct BlockRecord {
+    /// 15-character GEOID: state(2) + county(3) + tract(6) + block(4).
+    pub geoid: String,
+    pub geometry_wkb: Vec<u8>,
+    pub centroid: (f64, f64),
+    pub aland: i64,
+    pub awater: i64,
 }
 
 fn shapefile_polyz_to_geo(poly: &shapefile::PolygonZ) -> MultiPolygon<f64> {
@@ -400,6 +504,52 @@ mod tests {
         let wkb = geo_to_wkb_multipolygon(&multipolygon);
         assert_eq!(u32::from_le_bytes(wkb[1..5].try_into().unwrap()), 3);
         assert_eq!(u32::from_le_bytes(wkb[5..9].try_into().unwrap()), 2);
+    }
+
+    #[test]
+    fn test_block_projection_preserves_parts_and_holes() {
+        let geographic = MultiPolygon(vec![
+            Polygon::new(
+                LineString::new(vec![
+                    Coord { x: -76.0, y: 38.0 },
+                    Coord { x: -75.9, y: 38.0 },
+                    Coord { x: -75.9, y: 38.1 },
+                    Coord { x: -76.0, y: 38.0 },
+                ]),
+                vec![LineString::new(vec![
+                    Coord {
+                        x: -75.98,
+                        y: 38.02,
+                    },
+                    Coord {
+                        x: -75.96,
+                        y: 38.02,
+                    },
+                    Coord {
+                        x: -75.97,
+                        y: 38.04,
+                    },
+                    Coord {
+                        x: -75.98,
+                        y: 38.02,
+                    },
+                ])],
+            ),
+            Polygon::new(
+                LineString::new(vec![
+                    Coord { x: -75.0, y: 39.0 },
+                    Coord { x: -74.9, y: 39.0 },
+                    Coord { x: -75.0, y: 39.1 },
+                    Coord { x: -75.0, y: 39.0 },
+                ]),
+                vec![],
+            ),
+        ]);
+        let projected = project_epsg5070(&geographic);
+        assert_eq!(projected.0.len(), 2);
+        assert_eq!(projected.0[0].interiors().len(), 1);
+        assert!(projected.0[0].exterior().0[0].x > 1_000_000.0);
+        assert!(projected.centroid().is_some());
     }
 
     #[test]

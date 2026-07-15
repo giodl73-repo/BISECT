@@ -13,4 +13,6 @@ pub use enacted::{assign_single_centroid, assign_tracts_to_enacted, EnactedAssig
 pub use fiedler::{compute_fiedler, make_certificate, FiedlerCertificate};
 pub use pl94::{read_pl94_block_populations, Pl94BlockPopulation, Pl94Error};
 pub use serialize::{deserialize_adjacency, serialize_adjacency, SerializeError};
-pub use tiger::{read_tiger_tracts, TigerError, TractRecord};
+pub use tiger::{
+    read_tiger_blocks_projected, read_tiger_tracts, BlockRecord, TigerError, TractRecord,
+};
