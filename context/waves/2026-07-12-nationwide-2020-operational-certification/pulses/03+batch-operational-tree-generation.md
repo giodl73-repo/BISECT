@@ -116,9 +116,9 @@ manifest preserve all screening and refinement evidence.
 
 New York reached the arithmetic population floors at its 26-seat root, first
 13-seat half, six-seat child, and completed descendants through node `001`.
-At two-seat node `0011`, all 16 completed screens were population-refined;
-best seed 1 reached deviation 2 against floor zero. This is an unresolved
-local-search frontier, not proof of infeasibility.
+At two-seat node `0011`, all 32 completed screens were population-refined;
+best seed 1 remained at deviation 2 against floor zero. This is an unresolved
+extended local-search frontier, not proof of infeasibility.
 
 Pennsylvania completed 17 connected leaves with all 16 recursive nodes at
 their arithmetic population floors. Its 17-seat root reached floor 6 after a
