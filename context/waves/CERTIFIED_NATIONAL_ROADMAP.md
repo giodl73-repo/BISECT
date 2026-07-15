@@ -99,7 +99,7 @@ Current objective:
 Next unblocked work:
 
 > Continue Pulse 03 by revisiting the preserved Arizona, California, Florida,
-> New York, and Texas
+> and New York
 > local-search frontiers. Every multi-district State has been attempted; no
 > untouched State remains, and Pulse 04 stays blocked until operational
 > packages are complete. All stale tooling and single-policy failures have now
@@ -111,4 +111,6 @@ Next unblocked work:
 > recovered at seed 18, but its newly exposed three-seat node `100` remained at
 > deviation 3/floor 0 after 32 seeds. California's seven-seat node `001`
 > remained at deviation 261,137/floor 2 after 32 seeds, with eight screen
-> timeouts. Texas's five-seat node `110` is the next extended target.
+> timeouts. Texas's five-seat node `110` was recovered at seed 20 and the full
+> 38-leaf package is independently verified. New York's deviation-2/floor-0
+> node `0011` is the next deterministic target beyond the 32-seed frontier.

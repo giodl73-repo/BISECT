@@ -423,12 +423,12 @@
       "state": "TX",
       "districts": 38,
       "block_count": 668757,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "population-floor-seed-screen"
+        "recovered-from-package"
       ],
-      "output": "At node 110, two screens timed out and all 14 completed seeds were population-refined; no seed reached arithmetic population floor 2, and best seed 6 reached deviation 442993. This is an unresolved local-search frontier, not proof of infeasibility."
+      "output": "Recovered from verified package manifest."
     },
     {
       "state": "UT",
@@ -486,7 +486,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 39,
-  "failed_count": 5,
+  "built_count": 40,
+  "failed_count": 4,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
