@@ -181,6 +181,11 @@ current all-seed refinement workflow. It now produces four connected leaves;
 the four-seat root and both two-seat children all reach arithmetic floor zero,
 using seeds 7, 16, and 9 respectively, with no screen timeouts.
 
+A versioned extended-frontier wrapper now raises the deterministic retry bound
+from 16 to 32 seeds without changing the frozen base builder or invalidating
+existing package hashes. Extended packages bind both wrapper and base-builder
+hashes and record their seed-frontier maximum in the package manifest.
+
 No untouched multi-district State remains. Pulse 03 now continues by revisiting
 the eight preserved local-search frontiers; national wall-to-wall verification
 remains blocked until operational packages are complete.
