@@ -2,7 +2,7 @@ use geo::{
     line_intersection::{line_intersection, LineIntersection},
     BoundingRect, EuclideanLength, Intersects,
 };
-use geo_types::{Coord, Line, Polygon, Rect};
+use geo_types::{Coord, Line, MultiPolygon, Polygon, Rect};
 use rayon::prelude::*;
 use rstar::{RTree, RTreeObject, AABB};
 /// Parallel spatial adjacency builder.
@@ -168,10 +168,10 @@ pub fn build_adjacency_graph(
     let n = polygons_wkb.len();
 
     // Parse WKB → geo Polygons
-    let polygons: Vec<Polygon<f64>> = polygons_wkb
+    let polygons: Vec<MultiPolygon<f64>> = polygons_wkb
         .iter()
         .enumerate()
-        .map(|(i, wkb)| parse_wkb_polygon(wkb, i))
+        .map(|(i, wkb)| parse_wkb_multipolygon(wkb, i))
         .collect::<Result<Vec<_>, _>>()?;
 
     // Validate at least one polygon looks projected (rough sanity check)
@@ -268,14 +268,19 @@ pub fn build_adjacency_graph(
         // Total perimeter of each polygon = sum of all ring exterior lengths
         let total_perimeters: Vec<f64> = polygons
             .iter()
-            .map(|poly| {
-                let ext_len = poly.exterior().euclidean_length();
-                let holes_len: f64 = poly
-                    .interiors()
+            .map(|multipolygon| {
+                multipolygon
+                    .0
                     .iter()
-                    .map(|ring| ring.euclidean_length())
-                    .sum();
-                ext_len + holes_len
+                    .map(|polygon| {
+                        polygon.exterior().euclidean_length()
+                            + polygon
+                                .interiors()
+                                .iter()
+                                .map(|ring| ring.euclidean_length())
+                                .sum::<f64>()
+                    })
+                    .sum()
             })
             .collect();
 
@@ -313,6 +318,64 @@ pub fn build_adjacency_graph(
 /// Public wrapper for tests and PyO3 (compactness module needs to parse WKB).
 pub fn parse_wkb_polygon_pub(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyError> {
     parse_wkb_polygon(wkb, idx)
+}
+
+fn parse_wkb_multipolygon(wkb: &[u8], idx: usize) -> Result<MultiPolygon<f64>, AdjacencyError> {
+    if wkb.len() < 5 {
+        return Err(AdjacencyError::WkbParseError(idx, "WKB too short".into()));
+    }
+    let wkb_type = u32::from_le_bytes([wkb[1], wkb[2], wkb[3], wkb[4]]);
+    if wkb_type == 3 {
+        return Ok(MultiPolygon(vec![parse_wkb_polygon(wkb, idx)?]));
+    }
+    if wkb_type != 6 || wkb.len() < 9 {
+        return Err(AdjacencyError::WkbParseError(
+            idx,
+            format!("expected WKB Polygon (3) or MultiPolygon (6), got {wkb_type}"),
+        ));
+    }
+    let count = u32::from_le_bytes([wkb[5], wkb[6], wkb[7], wkb[8]]) as usize;
+    let mut offset = 9;
+    let mut polygons = Vec::with_capacity(count);
+    for _ in 0..count {
+        let consumed = wkb_polygon_size(&wkb[offset..], idx)?;
+        polygons.push(parse_wkb_polygon(&wkb[offset..offset + consumed], idx)?);
+        offset += consumed;
+    }
+    if polygons.is_empty() {
+        return Err(AdjacencyError::EmptyPolygon(idx));
+    }
+    Ok(MultiPolygon(polygons))
+}
+
+fn wkb_polygon_size(wkb: &[u8], idx: usize) -> Result<usize, AdjacencyError> {
+    if wkb.len() < 9 || u32::from_le_bytes([wkb[1], wkb[2], wkb[3], wkb[4]]) != 3 {
+        return Err(AdjacencyError::WkbParseError(
+            idx,
+            "invalid nested Polygon WKB".into(),
+        ));
+    }
+    let rings = u32::from_le_bytes([wkb[5], wkb[6], wkb[7], wkb[8]]) as usize;
+    let mut offset = 9usize;
+    for _ in 0..rings {
+        if offset + 4 > wkb.len() {
+            return Err(AdjacencyError::WkbParseError(idx, "truncated ring".into()));
+        }
+        let points = u32::from_le_bytes(wkb[offset..offset + 4].try_into().unwrap()) as usize;
+        let bytes = points
+            .checked_mul(16)
+            .ok_or_else(|| AdjacencyError::WkbParseError(idx, "WKB size overflow".into()))?;
+        offset = offset
+            .checked_add(4 + bytes)
+            .ok_or_else(|| AdjacencyError::WkbParseError(idx, "WKB size overflow".into()))?;
+        if offset > wkb.len() {
+            return Err(AdjacencyError::WkbParseError(
+                idx,
+                "truncated ring data".into(),
+            ));
+        }
+    }
+    Ok(offset)
 }
 
 /// Parse a WKB-encoded polygon (little-endian, type 3).
@@ -386,9 +449,15 @@ fn boundary_lines(polygon: &Polygon<f64>) -> impl Iterator<Item = Line<f64>> + '
         .chain(polygon.interiors().iter().flat_map(|ring| ring.lines()))
 }
 
-fn shared_boundary_length(left: &Polygon<f64>, right: &Polygon<f64>) -> f64 {
-    let right_lines: Vec<_> = boundary_lines(right).collect();
-    boundary_lines(left)
+fn multipolygon_boundary_lines(
+    multipolygon: &MultiPolygon<f64>,
+) -> impl Iterator<Item = Line<f64>> + '_ {
+    multipolygon.0.iter().flat_map(boundary_lines)
+}
+
+fn shared_boundary_length(left: &MultiPolygon<f64>, right: &MultiPolygon<f64>) -> f64 {
+    let right_lines: Vec<_> = multipolygon_boundary_lines(right).collect();
+    multipolygon_boundary_lines(left)
         .flat_map(|left_line| {
             right_lines.iter().filter_map(move |right_line| {
                 match line_intersection(left_line, *right_line) {
@@ -404,8 +473,8 @@ fn shared_boundary_length(left: &Polygon<f64>, right: &Polygon<f64>) -> f64 {
 
 /// Classify the exact shared boundary between two polygons.
 fn classify_edge(
-    poly_i: &Polygon<f64>,
-    poly_j: &Polygon<f64>,
+    poly_i: &MultiPolygon<f64>,
+    poly_j: &MultiPolygon<f64>,
     i: usize,
     j: usize,
 ) -> Option<((usize, usize), EdgeType)> {
@@ -448,6 +517,16 @@ mod tests {
     fn polygon_to_wkb(poly: &Polygon<f64>) -> Vec<u8> {
         // Use the tiger module's WKB writer
         crate::tiger::geo_to_wkb_polygon_pub(poly)
+    }
+
+    fn multipolygon_to_wkb(polygons: &[Polygon<f64>]) -> Vec<u8> {
+        let mut wkb = vec![1];
+        wkb.extend_from_slice(&6u32.to_le_bytes());
+        wkb.extend_from_slice(&(polygons.len() as u32).to_le_bytes());
+        for polygon in polygons {
+            wkb.extend_from_slice(&polygon_to_wkb(polygon));
+        }
+        wkb
     }
 
     #[test]
@@ -494,6 +573,20 @@ mod tests {
         ];
         let graph = build_adjacency_graph(&wkbs, 10.0).unwrap();
         assert_eq!(graph.n_edges, 2);
+    }
+
+    #[test]
+    fn multipart_polygon_preserves_adjacency() {
+        let island = square_polygon(1_000_000.0, 1_000_000.0, 1000.0);
+        let remote = square_polygon(2_000_000.0, 2_000_000.0, 1000.0);
+        let neighbor = square_polygon(1_001_000.0, 1_000_000.0, 1000.0);
+        let wkbs = vec![
+            multipolygon_to_wkb(&[island, remote]),
+            polygon_to_wkb(&neighbor),
+        ];
+        let graph = build_adjacency_graph(&wkbs, 10.0).unwrap();
+        assert_eq!(graph.n_edges, 1);
+        assert_eq!(graph.edge_weights[&(0, 1)], 1000.0);
     }
 
     #[test]

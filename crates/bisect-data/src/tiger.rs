@@ -1,4 +1,6 @@
-use geo_types::{Coord, LineString, MultiPolygon, Polygon};
+use geo::Contains;
+use geo_types::{Coord, LineString, MultiPolygon, Point, Polygon};
+use shapefile::PolygonRing;
 /// TIGER/Line tract shapefile reader.
 ///
 /// Reads ESRI .shp files (pure Rust, no GDAL). Returns per-tract records
@@ -44,12 +46,9 @@ pub struct TractRecord {
 /// Returns records sorted by GEOID for deterministic ordering.
 /// Skips records with empty geometries (rare in TIGER but possible).
 ///
-/// **TIGER tract geometry assumption**: Census tract shapefiles have exactly
-/// one polygon record per tract. Multi-polygon features do not appear in tract
-/// files — each island or disconnected area in a tract is encoded as a single
-/// `shapefile::Polygon` with multiple rings, not as a separate record. The
-/// county-bridge logic in `bridge.rs` handles connectivity between physically
-/// separated tract polygons.
+/// A TIGER feature may contain several outer rings (for islands or other
+/// disconnected pieces). Those are preserved as a WKB MultiPolygon rather
+/// than being misclassified as holes in the first polygon.
 pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>, TigerError> {
     let shp_path = shp_path.as_ref();
 
@@ -109,45 +108,70 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
 fn shape_to_wkb(shape: &shapefile::Shape, idx: usize) -> Result<Vec<u8>, TigerError> {
     match shape {
         shapefile::Shape::Polygon(poly) => {
-            let geo_poly = shapefile_poly_to_geo(poly);
-            let wkb = geo_to_wkb_polygon(&geo_poly);
-            Ok(wkb)
+            Ok(geo_to_wkb_multipolygon(&shapefile_poly_to_geo(poly)))
         }
         shapefile::Shape::NullShape => Ok(Vec::new()),
         // Some tract files use PolygonZ (3D) — flatten to 2D
         shapefile::Shape::PolygonZ(polyz) => {
-            let geo_poly = shapefile_polyz_to_geo(polyz);
-            let wkb = geo_to_wkb_polygon(&geo_poly);
-            Ok(wkb)
+            Ok(geo_to_wkb_multipolygon(&shapefile_polyz_to_geo(polyz)))
         }
         _ => Err(TigerError::UnsupportedGeometry(idx)),
     }
 }
 
-fn shapefile_poly_to_geo(poly: &shapefile::Polygon) -> Polygon<f64> {
-    let rings = poly.rings();
-    if rings.is_empty() {
-        return Polygon::new(LineString::new(vec![]), vec![]);
+fn shapefile_poly_to_geo(poly: &shapefile::Polygon) -> MultiPolygon<f64> {
+    let mut exteriors = Vec::new();
+    let mut interiors = Vec::new();
+    for ring in poly.rings() {
+        match ring {
+            PolygonRing::Outer(points) => exteriors.push(ring_to_linestring(points)),
+            PolygonRing::Inner(points) => interiors.push(ring_to_linestring(points)),
+        }
     }
-    let exterior = ring_to_linestring(rings[0].points());
-    let interiors: Vec<LineString<f64>> = rings[1..]
-        .iter()
-        .map(|r| ring_to_linestring(r.points()))
-        .collect();
-    Polygon::new(exterior, interiors)
+    rings_to_multipolygon(exteriors, interiors)
 }
 
-fn shapefile_polyz_to_geo(poly: &shapefile::PolygonZ) -> Polygon<f64> {
-    let rings = poly.rings();
-    if rings.is_empty() {
-        return Polygon::new(LineString::new(vec![]), vec![]);
+fn shapefile_polyz_to_geo(poly: &shapefile::PolygonZ) -> MultiPolygon<f64> {
+    let mut exteriors = Vec::new();
+    let mut interiors = Vec::new();
+    for ring in poly.rings() {
+        match ring {
+            PolygonRing::Outer(points) => exteriors.push(ring_to_linestring_z(points)),
+            PolygonRing::Inner(points) => interiors.push(ring_to_linestring_z(points)),
+        }
     }
-    let exterior = ring_to_linestring_z(rings[0].points());
-    let interiors: Vec<LineString<f64>> = rings[1..]
-        .iter()
-        .map(|r| ring_to_linestring_z(r.points()))
+    rings_to_multipolygon(exteriors, interiors)
+}
+
+fn rings_to_multipolygon(
+    exteriors: Vec<LineString<f64>>,
+    interiors: Vec<LineString<f64>>,
+) -> MultiPolygon<f64> {
+    let mut grouped: Vec<_> = exteriors
+        .into_iter()
+        .map(|exterior| (exterior, Vec::new()))
         .collect();
-    Polygon::new(exterior, interiors)
+    for interior in interiors {
+        let Some(coord) = interior.0.first() else {
+            continue;
+        };
+        let point = Point::new(coord.x, coord.y);
+        if let Some((_, holes)) = grouped
+            .iter_mut()
+            .find(|(exterior, _)| Polygon::new(exterior.clone(), vec![]).contains(&point))
+        {
+            holes.push(interior);
+        } else if let Some((_, holes)) = grouped.first_mut() {
+            // Preserve malformed/uncontained rings instead of silently dropping geometry.
+            holes.push(interior);
+        }
+    }
+    MultiPolygon(
+        grouped
+            .into_iter()
+            .map(|(exterior, interiors)| Polygon::new(exterior, interiors))
+            .collect(),
+    )
 }
 
 fn ring_to_linestring(points: &[shapefile::Point]) -> LineString<f64> {
@@ -162,6 +186,19 @@ fn ring_to_linestring_z(points: &[shapefile::PointZ]) -> LineString<f64> {
 /// Format: byte order (1) + type (3 = Polygon) + n_rings + rings
 pub fn geo_to_wkb_polygon_pub(poly: &Polygon<f64>) -> Vec<u8> {
     geo_to_wkb_polygon(poly)
+}
+
+pub fn geo_to_wkb_multipolygon(multipolygon: &MultiPolygon<f64>) -> Vec<u8> {
+    if multipolygon.0.len() == 1 {
+        return geo_to_wkb_polygon(&multipolygon.0[0]);
+    }
+    let mut buffer = vec![1];
+    buffer.extend_from_slice(&6u32.to_le_bytes());
+    buffer.extend_from_slice(&(multipolygon.0.len() as u32).to_le_bytes());
+    for polygon in &multipolygon.0 {
+        buffer.extend_from_slice(&geo_to_wkb_polygon(polygon));
+    }
+    buffer
 }
 
 fn geo_to_wkb_polygon(poly: &Polygon<f64>) -> Vec<u8> {
@@ -313,6 +350,56 @@ mod tests {
         let wkb = geo_to_wkb_polygon(&poly);
         let n_rings = u32::from_le_bytes([wkb[5], wkb[6], wkb[7], wkb[8]]);
         assert_eq!(n_rings, 1u32); // exterior only
+    }
+
+    #[test]
+    fn test_shapefile_multiple_outers_become_multipolygon() {
+        let polygon = shapefile::Polygon::with_rings(vec![
+            PolygonRing::Outer(vec![
+                shapefile::Point::new(0.0, 0.0),
+                shapefile::Point::new(0.0, 10.0),
+                shapefile::Point::new(10.0, 10.0),
+                shapefile::Point::new(10.0, 0.0),
+            ]),
+            PolygonRing::Outer(vec![
+                shapefile::Point::new(20.0, 20.0),
+                shapefile::Point::new(20.0, 30.0),
+                shapefile::Point::new(30.0, 30.0),
+                shapefile::Point::new(30.0, 20.0),
+            ]),
+        ]);
+
+        let multipolygon = shapefile_poly_to_geo(&polygon);
+        assert_eq!(multipolygon.0.len(), 2);
+        let wkb = geo_to_wkb_multipolygon(&multipolygon);
+        assert_eq!(u32::from_le_bytes(wkb[1..5].try_into().unwrap()), 6);
+        assert_eq!(u32::from_le_bytes(wkb[5..9].try_into().unwrap()), 2);
+    }
+
+    #[test]
+    fn test_shapefile_inner_ring_remains_a_hole() {
+        let polygon = shapefile::Polygon::with_rings(vec![
+            // Ring order is not significant in the shapefile specification.
+            PolygonRing::Inner(vec![
+                shapefile::Point::new(2.0, 2.0),
+                shapefile::Point::new(8.0, 2.0),
+                shapefile::Point::new(8.0, 8.0),
+                shapefile::Point::new(2.0, 8.0),
+            ]),
+            PolygonRing::Outer(vec![
+                shapefile::Point::new(0.0, 0.0),
+                shapefile::Point::new(0.0, 10.0),
+                shapefile::Point::new(10.0, 10.0),
+                shapefile::Point::new(10.0, 0.0),
+            ]),
+        ]);
+
+        let multipolygon = shapefile_poly_to_geo(&polygon);
+        assert_eq!(multipolygon.0.len(), 1);
+        assert_eq!(multipolygon.0[0].interiors().len(), 1);
+        let wkb = geo_to_wkb_multipolygon(&multipolygon);
+        assert_eq!(u32::from_le_bytes(wkb[1..5].try_into().unwrap()), 3);
+        assert_eq!(u32::from_le_bytes(wkb[5..9].try_into().unwrap()), 2);
     }
 
     #[test]
