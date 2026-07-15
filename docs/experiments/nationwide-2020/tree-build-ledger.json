@@ -456,12 +456,12 @@
       "state": "WA",
       "districts": 10,
       "block_count": 158093,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "population-floor-seed-screen"
+        "recovered-from-package"
       ],
-      "output": "The 10-seat root and complete first five-seat half reached their arithmetic population floors under the current bounded-screening workflow. At the second five-seat node 1, all 16 completed screens were population-refined; best seed 7 reached deviation 3 against arithmetic floor 2. This is an unresolved local-search frontier, not proof of infeasibility."
+      "output": "Recovered from verified package manifest."
     },
     {
       "state": "WI",
@@ -486,7 +486,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 36,
-  "failed_count": 8,
+  "built_count": 37,
+  "failed_count": 7,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }

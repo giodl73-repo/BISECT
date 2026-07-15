@@ -23,9 +23,9 @@ State and reuse the completed one-district packages.
 
 ## Progress
 
-The ledger contains 36 verified multi-district State packages and eight open
+The ledger contains 37 verified multi-district State packages and seven open
 failures (Arizona, California, Florida, North Carolina, New York,
-Oklahoma, Texas, and Washington). Every multi-district State has now
+Oklahoma, and Texas). Every multi-district State has now
 been attempted; no untouched State remains. Virginia is the first
 package completed under deterministic two-phase seed screening: METIS-only
 screens are ranked before population refinement, each screen has a recorded
@@ -160,13 +160,12 @@ population floors with no screen timeouts. The root reached floor zero from
 seed 2; the two four-seat parents reached floor 2 from seeds 15 and 6; and all
 four two-seat descendants reached their respective floors 0, 1, 1, and 0.
 
-Washington's original root memory-allocation crash was cleared by the current
-bounded-screening and scratch-retention workflow. Its ten-seat root and
-complete first five-seat half now reach their arithmetic population floors.
-At the second five-seat node `1`, all 16 screens completed and were
-population-refined; three seeds reached deviation 3, with seed 7 best by the
-ranked objective, against arithmetic floor 2. This is an unresolved
-local-search frontier, not proof of infeasibility.
+Washington's original root memory-allocation crash was first narrowed to a
+deviation-3/floor-2 frontier and then recovered by the 32-seed extension. Seed
+27 reached floor 2 at five-seat node `1`; the remaining second-half nodes
+reached floors 0, 1, and 1 using seeds 5, 7, and 21. The completed package
+produces ten connected leaves, proves the arithmetic population floor at all
+nine nodes, and records three screen timeouts from the original 16-seed pass.
 
 Arizona's original articulation-thread stack overflow was also cleared by the
 current bounded-screening workflow. Its nine-seat root, complete four-seat
@@ -187,5 +186,5 @@ existing package hashes. Extended packages bind both wrapper and base-builder
 hashes and record their seed-frontier maximum in the package manifest.
 
 No untouched multi-district State remains. Pulse 03 now continues by revisiting
-the eight preserved local-search frontiers; national wall-to-wall verification
+the seven preserved local-search frontiers; national wall-to-wall verification
 remains blocked until operational packages are complete.
