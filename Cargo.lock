@@ -411,6 +411,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bisect-ops"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "bisect-pareto"
 version = "0.1.0"
 dependencies = [

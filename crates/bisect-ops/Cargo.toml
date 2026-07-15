@@ -1,0 +1,17 @@
+[package]
+name = "bisect-ops"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Rust-native experiment operations and evidence orchestration for BISECT"
+
+[[bin]]
+name = "bisect-ops"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+sha2.workspace = true

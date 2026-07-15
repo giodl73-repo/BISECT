@@ -28,4 +28,27 @@ if [ "${ALLOW_PDF:-0}" != "1" ]; then
     fi
 fi
 
+# Rust-first experiment policy. Python is permitted only for the maintained
+# language binding and external-data adapters. Deletions are intentionally
+# allowed so legacy experiment code can be retired incrementally.
+blocked_python=""
+while IFS= read -r path; do
+    case "$path" in
+        python/bisect_py/*|scripts/data/*|setup_data.py) ;;
+        *.py) blocked_python="${blocked_python}${path}\n" ;;
+    esac
+done <<EOF
+$(git diff --cached --name-only --diff-filter=AM)
+EOF
+
+if [ -n "$blocked_python" ]; then
+    echo "ERROR: Rust-first policy blocks new or modified Python outside bindings/data adapters."
+    echo ""
+    printf "%b" "$blocked_python"
+    echo ""
+    echo "Implement experiments, orchestration, analysis, verification, and benchmarks in Rust."
+    echo "See docs/engineering/RUST_FIRST_EXPERIMENTS.md."
+    exit 1
+fi
+
 exit 0

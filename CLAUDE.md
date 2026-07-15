@@ -14,7 +14,7 @@ crates/              # Rust workspace (bisect-cli, bisect-core, bisect-data, bis
 docs/                   # Human-facing docs (BISECT_CLI.md, PAPERS.md, concepts/, quickstart/, legal/)
 docs/papers/            # 63+ compiled PDFs (committed)
 research/               # LaTeX sources for all papers (A–H series)
-scripts/                # Python: data download, elections, dashboard generation only
+scripts/                # Legacy Python plus external-data adapters; no new Python experiments
 configs/                # YAML plan configs (configs/{label}.yml)
 runs/ analysis/ reports/ # Build outputs (gitignored)
 data/{year}/            # Raw census data (gitignored, ~55GB)
@@ -77,6 +77,10 @@ years: ["2020", "2010", "2000"]
 - ⚠️ NEVER commit: `data/`, `outputs/`, `*.{png,jpg,pdf}` (except `docs/`)
 - Windows: ASCII only in console output — NO Unicode (CP1252 crashes)
 - State names in code: `lowercase_underscores` (`north_carolina`, not `NC`)
+- Rust-first: all new experiments, orchestration, analysis, verification, and
+  benchmarks must be Rust. Python is limited to `python/bisect_py`,
+  `scripts/data`, and `setup_data.py`; see
+  `docs/engineering/RUST_FIRST_EXPERIMENTS.md`.
 
 ## Testing
 
