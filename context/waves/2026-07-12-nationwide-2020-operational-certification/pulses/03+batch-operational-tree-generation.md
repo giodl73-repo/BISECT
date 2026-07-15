@@ -23,8 +23,8 @@ State and reuse the completed one-district packages.
 
 ## Progress
 
-The ledger contains 34 verified multi-district State packages and ten open
-failures (Arizona, California, Colorado, Florida, North Carolina, New York,
+The ledger contains 35 verified multi-district State packages and nine open
+failures (Arizona, California, Florida, North Carolina, New York,
 Oklahoma, Texas, Utah, and Washington). Every multi-district State has now
 been attempted; no untouched State remains. Virginia is the first
 package completed under deterministic two-phase seed screening: METIS-only
@@ -153,6 +153,13 @@ all 14 completed screens were population-refined; best seed 6 reached
 deviation 442,993 against floor 2. This is an unresolved local-search
 frontier, not proof of infeasibility.
 
+Colorado was recovered from its original single-refinement floor miss using
+the current deterministic two-phase retry policy. It now produces eight
+connected leaves, and all seven recursive nodes reach their arithmetic
+population floors with no screen timeouts. The root reached floor zero from
+seed 2; the two four-seat parents reached floor 2 from seeds 15 and 6; and all
+four two-seat descendants reached their respective floors 0, 1, 1, and 0.
+
 No untouched multi-district State remains. Pulse 03 now continues by revisiting
-the ten preserved local-search frontiers; national wall-to-wall verification
+the nine preserved local-search frontiers; national wall-to-wall verification
 remains blocked until operational packages are complete.

@@ -98,8 +98,8 @@ Current objective:
 
 Next unblocked work:
 
-> Continue Pulse 03 by revisiting the preserved Arizona, California, Colorado,
-> Florida, North Carolina, New York, Oklahoma, Texas, Utah, and Washington
+> Continue Pulse 03 by revisiting the preserved Arizona, California, Florida,
+> North Carolina, New York, Oklahoma, Texas, Utah, and Washington
 > local-search frontiers. Every multi-district State has been attempted; no
 > untouched State remains, and Pulse 04 stays blocked until operational
 > packages are complete.

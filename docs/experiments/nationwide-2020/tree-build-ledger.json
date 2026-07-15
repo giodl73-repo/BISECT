@@ -65,28 +65,12 @@
       "state": "CO",
       "districts": 8,
       "block_count": 140345,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "python",
-        "scripts/research/build_operational_recursive_tree.py",
-        "build",
-        "--bisect",
-        "C:\\src\\apportionment\\target\\debug\\bisect.exe",
-        "--context",
-        "C:\\src\\apportionment\\data\\2020\\certified\\co_blocks_2020.rctx",
-        "--out-dir",
-        "C:\\src\\apportionment\\data\\2020\\certified\\operational-trees\\co",
-        "--districts",
-        "8",
-        "--root-seed",
-        "1",
-        "--child-seed-0",
-        "2",
-        "--child-seed-1",
-        "3"
+        "recovered-from-package"
       ],
-      "output": "Traceback (most recent call last):\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 381, in <module>\n    main()\n    ~~~~^^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 368, in main\n    build(\n    ~~~~~^\n        args.bisect.resolve(),\n        ^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n        (args.child_seed_0, args.child_seed_1),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 273, in build\n    visit(\n    ~~~~~^\n        context,\n        ^^^^^^^^\n    ...<5 lines>...\n        root_seed,\n        ^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 263, in visit\n    visit(\n    ~~~~~^\n        child_context,\n        ^^^^^^^^^^^^^^\n    ...<5 lines>...\n        child_seed,\n        ^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 263, in visit\n    visit(\n    ~~~~~^\n        child_context,\n        ^^^^^^^^^^^^^^\n    ...<5 lines>...\n        child_seed,\n        ^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 218, in visit\n    discovery, selected_seed = run_floor_discovery(\n                               ~~~~~~~~~~~~~~~~~~~^\n        bisect,\n        ^^^^^^^\n    ...<5 lines>...\n        16,\n        ^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 151, in run_floor_discovery\n    raise RuntimeError(\n    ...<3 lines>...\n    )\nRuntimeError: no seed reached arithmetic population floor 1; best seed 7 reached 15055\n"
+      "output": "Recovered from verified package manifest."
     },
     {
       "state": "CT",
@@ -534,7 +518,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 34,
-  "failed_count": 10,
+  "built_count": 35,
+  "failed_count": 9,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
