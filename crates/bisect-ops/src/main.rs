@@ -116,6 +116,11 @@ enum Action {
         left: PathBuf,
         right: PathBuf,
     },
+    VerifyRiFrontier {
+        manifest: PathBuf,
+        #[arg(long)]
+        check_rctx: bool,
+    },
 }
 
 #[derive(Clone)]
@@ -151,9 +156,18 @@ fn sha256(path: &Path) -> Result<String> {
 
 fn custody_source(path: &Path) -> PathBuf {
     if path.is_file() {
-        path.to_path_buf()
+        return path.to_path_buf();
+    }
+    let archived = Path::new("archive/legacy-python").join(path);
+    if archived.is_file() {
+        return archived;
+    }
+    let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let active = workspace.join(path);
+    if active.is_file() {
+        active
     } else {
-        Path::new("archive/legacy-python").join(path)
+        workspace.join("archive/legacy-python").join(path)
     }
 }
 
@@ -1116,6 +1130,68 @@ fn compare_rctx(left_path: &Path, right_path: &Path) -> Result<()> {
     Ok(())
 }
 
+fn verify_ri_frontier(manifest_path: &Path, check_rctx: bool) -> Result<()> {
+    let manifest = read_json(manifest_path)?;
+    if manifest["schema_version"] != "certified-recursive-ri-frontier-package-v1" {
+        bail!("unsupported RI certified frontier package");
+    }
+    let builder = PathBuf::from(manifest["builder_path"].as_str().context("builder_path")?);
+    if sha256(&custody_source(&builder))? != manifest["builder_sha256"] {
+        bail!("RI frontier builder hash mismatch");
+    }
+    let parent = manifest_path.parent().context("manifest parent")?;
+    let report_path = parent.join(
+        manifest["files"][0]["path"]
+            .as_str()
+            .context("report path")?,
+    );
+    if sha256(&report_path)? != manifest["files"][0]["sha256"] {
+        bail!("RI frontier report hash mismatch");
+    }
+    let report = read_json(&report_path)?;
+    if report["schema_version"] != "certified-recursive-ri-block-rctx-frontier-v1"
+        || report["status"] != "blocked"
+        || report["graph"]["unit_count"] != 25_649
+        || report["graph"]["land_component_count"] != 2
+        || report["graph"]["bridge_edge_count"] != 64
+        || report["graph"]["final_component_count"] != 1
+    {
+        bail!("RI block graph frontier drift");
+    }
+    let components = report["graph"]["land_components"]
+        .as_array()
+        .context("land components")?;
+    let component_units: u64 = components
+        .iter()
+        .map(|component| component["unit_count"].as_u64().unwrap_or(0))
+        .sum();
+    let component_population: i64 = components
+        .iter()
+        .map(|component| component["population"].as_i64().unwrap_or(0))
+        .sum();
+    if component_units != 25_649 || component_population != 1_097_379 {
+        bail!("RI component totals mismatch");
+    }
+    if check_rctx {
+        let rctx_path = PathBuf::from(report["rctx"]["path"].as_str().context("RCTX path")?);
+        if sha256(&rctx_path)? != report["rctx"]["sha256"] {
+            bail!("RI local RCTX custody mismatch");
+        }
+        let rctx = read_json(&rctx_path)?;
+        let projection = json!({
+            "units":rctx["units"],
+            "graph":rctx["graph"],
+            "populations":rctx["populations"],
+            "source_hashes":rctx["source_hashes"]
+        });
+        if rctx["context_hash"] != canonical_hash(&projection)? {
+            bail!("RI local RCTX context hash mismatch");
+        }
+    }
+    println!("RI block RCTX frontier verification: PASS");
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn build_state_rctx(
     state_code: &str,
@@ -1496,6 +1572,10 @@ fn main() -> Result<()> {
             &manifest,
         ),
         Action::CompareRctx { left, right } => compare_rctx(&left, &right),
+        Action::VerifyRiFrontier {
+            manifest,
+            check_rctx,
+        } => verify_ri_frontier(&manifest, check_rctx),
     }
 }
 
@@ -1539,5 +1619,13 @@ mod tests {
         let context = tiny_context();
         assert!(connected(&context, &[0, 0, 1], 0).unwrap());
         assert!(!connected(&context, &[0, 1, 0], 0).unwrap());
+    }
+
+    #[test]
+    fn committed_ri_frontier_verifies_without_local_data() {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .join("docs/experiments/certified-recursive/manifest.json");
+        verify_ri_frontier(&manifest, false).unwrap();
     }
 }

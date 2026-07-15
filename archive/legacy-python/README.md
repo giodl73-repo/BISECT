@@ -14,3 +14,7 @@ weakening verification.
 The State block RCTX builder was retired after the Rust implementation matched
 Rhode Island's complete unit universe, populations, edge set, edge kinds, and
 weights exactly.
+
+The earlier Rhode Island-specific builder/verifier and its Python unit test
+were retired after `bisect-ops verify-ri-frontier` took over verification of
+the sealed package.

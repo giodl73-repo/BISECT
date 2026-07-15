@@ -58,21 +58,30 @@ certified recursive instance has 25649 units, above --exact-fixture-limit 24
 With the local Census sources:
 
 ```powershell
-python scripts\research\build_ri_block_rctx.py build `
-  --rctx data\2020\certified\ri_blocks_2020.rctx `
-  --report docs\experiments\certified-recursive\ri-2020-root-frontier.json `
-  --manifest docs\experiments\certified-recursive\manifest.json
+cargo run -p bisect-ops -- build-state-rctx `
+  --state-code RI --state-fips 44 --state-name rhode_island `
+  --shapefile data\2020\tiger\blocks\tl_2020_44_tabblock20\tl_2020_44_tabblock20.shp `
+  --pl-geo data\2020\redistricting\ri2020.pl\rigeo2020.pl `
+  --pl-population data\2020\redistricting\ri2020.pl\ri000012020.pl `
+  --rctx target\native-rctx-ri\ri_blocks_2020.rctx `
+  --report target\native-rctx-ri\ri.json `
+  --manifest target\native-rctx-ri\ri-manifest.json
 
-python scripts\research\build_ri_block_rctx.py verify `
+cargo run -p bisect-ops -- compare-rctx `
+  data\2020\certified\ri_blocks_2020.rctx `
+  target\native-rctx-ri\ri_blocks_2020.rctx
+
+cargo run -p bisect-ops -- verify-ri-frontier `
   docs\experiments\certified-recursive\manifest.json `
   --check-rctx
 ```
 
 Without the ignored RCTX, the committed hashes and report arithmetic remain
-verifiable by omitting `--check-rctx`. Byte-identical RCTX reconstruction also
-depends on the GEOS/PROJ/Shapely/GeoPandas versions recorded in the report;
-`--check-rctx` verifies custody of that exact generated file rather than
-claiming toolchain-independent geometry output.
+verifiable by omitting `--check-rctx`. The native Rust rebuild has exact graph
+parity with the historical context across every unit, population, edge kind,
+and edge weight. Its context hash intentionally differs because source hashes
+now bind the Rust implementation. `--check-rctx` verifies custody of the
+historical generated file.
 
 ## Claim Boundary
 
