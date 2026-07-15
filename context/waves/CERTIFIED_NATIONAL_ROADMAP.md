@@ -107,5 +107,7 @@ Next unblocked work:
 > 16-seed local-search frontier. Washington was recovered at seed 27, while New
 > York remained deviation 2/floor 0 after 32 seeds, Oklahoma was recovered at
 > seed 28, Arizona remained deviation 9,047/floor 1 after 32 seeds, and North
-> Carolina was recovered at seed 18. Florida's seven-seat frontier is the next
-> extended target.
+> Carolina was recovered at seed 18. Florida's former seven-seat frontier was
+> recovered at seed 18, but its newly exposed three-seat node `100` remained at
+> deviation 3/floor 0 after 32 seeds. California's seven-seat node `001` is the
+> next extended target.
