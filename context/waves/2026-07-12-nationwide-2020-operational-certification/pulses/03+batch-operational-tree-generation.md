@@ -133,11 +133,14 @@ recorded five timeouts, while ranked refinements still certified every
 remaining node. The independently verified report preserves all evidence.
 
 Florida's former right-half seven-seat frontier was recovered by the 32-seed
-extension: seed 18 reached arithmetic floor zero at node `10`. The run then
-advanced into the newly exposed subtree. At three-seat node `100`, all 32
-completed screens were population-refined; best seed 20 remained at deviation
-3 against arithmetic floor zero. This is an unresolved extended local-search
-frontier, not proof of infeasibility.
+extension: seed 18 reached arithmetic floor zero at node `10`. The 64-seed
+extension then recovered three-seat node `100` at seed 59 and reached the
+arithmetic floors at newly exposed nodes `1001`, `101`, `1010`, `1011`, `11`,
+`110`, `1101`, `111`, and `1110` using seeds 9, 57, 4, 43, 8, 59, 11, 35,
+and 35. Node `11` preserved three screen timeouts. At two-seat node `1111`,
+all 64 completed screens were population-refined; best seed 37 remained at
+deviation 6 against arithmetic floor zero. This is an unresolved extended
+local-search frontier, not proof of infeasibility.
 
 California reached the arithmetic population floors at its 52-seat root,
 first 26-seat half, first 13-seat child, and completed six-seat subtree. At

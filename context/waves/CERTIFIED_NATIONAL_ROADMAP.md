@@ -108,9 +108,10 @@ Next unblocked work:
 > York remained deviation 2/floor 0 after 64 seeds, Oklahoma was recovered at
 > seed 28, Arizona remained deviation 9,047/floor 1 after 32 seeds, and North
 > Carolina was recovered at seed 18. Florida's former seven-seat frontier was
-> recovered at seed 18, but its newly exposed three-seat node `100` remained at
-> deviation 3/floor 0 after 32 seeds. California's seven-seat node `001`
+> recovered at seed 18, its three-seat node `100` was recovered at seed 59,
+> and the newly exposed two-seat node `1111` remained at deviation 6/floor 0
+> after 64 seeds. California's seven-seat node `001`
 > remained at deviation 261,137/floor 2 after 32 seeds, with eight screen
 > timeouts. Texas's five-seat node `110` was recovered at seed 20 and the full
-> 38-leaf package is independently verified. Florida's deviation-3/floor-0
-> node `100` is the next deterministic target beyond the 32-seed frontier.
+> 38-leaf package is independently verified. New York's deviation-2/floor-0
+> node `0011` is the next deterministic target beyond the 64-seed frontier.

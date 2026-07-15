@@ -74,9 +74,9 @@
       "status": "failed",
       "exit_code": 1,
       "command": [
-        "extended-population-floor-seed-screen-32"
+        "extended-population-floor-seed-screen-64"
       ],
-      "output": "The 28-seat root, complete left 14-seat half, right 14-seat parent, and right-half seven-seat node 10 reached their arithmetic population floors under the extended bounded-screening workflow; seed 18 recovered the former node-10 frontier at deviation 0. At three-seat node 100, all 32 completed screens were population-refined; best seed 20 remained at deviation 3 against arithmetic floor 0. This is an unresolved extended local-search frontier, not proof of infeasibility."
+      "output": "The 28-seat root, complete left 14-seat half, right 14-seat parent, and completed descendants through node 1110 reached their arithmetic population floors under the extended bounded-screening workflow. Seed 59 recovered the former node-100 frontier at deviation 0; newly exposed nodes 1001, 101, 1010, 1011, 11, 110, 1101, 111, and 1110 reached their floors using seeds 9, 57, 4, 43, 8, 59, 11, 35, and 35. Node 11 preserved three screen timeouts. At two-seat node 1111, all 64 completed screens were population-refined; best seed 37 remained at deviation 6 against arithmetic floor 0. This is an unresolved extended local-search frontier, not proof of infeasibility."
     },
     {
       "state": "GA",
