@@ -23,9 +23,9 @@ State and reuse the completed one-district packages.
 
 ## Progress
 
-The ledger contains 34 verified multi-district State packages and eight open
-failures (Arizona, Colorado, Florida, North Carolina, New York, Oklahoma, Utah,
-and Washington). Virginia is the first
+The ledger contains 34 verified multi-district State packages and nine open
+failures (Arizona, California, Colorado, Florida, North Carolina, New York,
+Oklahoma, Utah, and Washington). Virginia is the first
 package completed under deterministic two-phase seed screening: METIS-only
 screens are ranked before population refinement, each screen has a recorded
 180-second operational timeout, completed nodes and screens are reusable, and
@@ -139,5 +139,10 @@ left 14-seat half, and right 14-seat parent. At right-half seven-seat node
 deviation 759,388 against floor zero. This is an unresolved local-search
 frontier, not proof of infeasibility.
 
-Remaining untouched States in block-count order: California and Texas. Next
-untouched State: California.
+California reached the arithmetic population floors at its 52-seat root,
+first 26-seat half, first 13-seat child, and completed six-seat subtree. At
+seven-seat node `001`, two screens timed out and all 14 completed screens were
+population-refined; best seed 3 reached deviation 261,137 against floor 2.
+This is an unresolved local-search frontier, not proof of infeasibility.
+
+Remaining untouched State: Texas. Next untouched State: Texas.

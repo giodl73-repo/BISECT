@@ -51,6 +51,17 @@
       "output": "\nthread 'certified-discovery-articulation' (54384) has overflowed its stack\nTraceback (most recent call last):\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 381, in <module>\n    main()\n    ~~~~^^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 368, in main\n    build(\n    ~~~~~^\n        args.bisect.resolve(),\n        ^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n        (args.child_seed_0, args.child_seed_1),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 273, in build\n    visit(\n    ~~~~~^\n        context,\n        ^^^^^^^^\n    ...<5 lines>...\n        root_seed,\n        ^^^^^^^^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 218, in visit\n    discovery, selected_seed = run_floor_discovery(\n                               ~~~~~~~~~~~~~~~~~~~^\n        bisect,\n        ^^^^^^^\n    ...<5 lines>...\n        16,\n        ^^^\n    )\n    ^\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 131, in run_floor_discovery\n    discovery = run_discovery(\n        bisect, context_path, districts, candidate_dir, seed\n    )\n  File \"C:\\src\\apportionment\\scripts\\research\\build_operational_recursive_tree.py\", line 86, in run_discovery\n    subprocess.run(\n    ~~~~~~~~~~~~~~^\n        [\n        ^\n    ...<18 lines>...\n        check=True,\n        ^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Python314\\Lib\\subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['C:\\\\src\\\\apportionment\\\\target\\\\debug\\\\bisect.exe', 'exact', '--context', 'C:\\\\src\\\\apportionment\\\\data\\\\2020\\\\certified\\\\az_blocks_2020.rctx', '--districts', '9', '--method', 'certified-discovery', '--out-dir', 'C:\\\\src\\\\apportionment\\\\data\\\\2020\\\\certified\\\\operational-trees\\\\az\\\\root-seed-01', '--generated-at', '2026-07-12T00:00:00Z', '--discovery-seed', '1', '--discovery-refinement', 'population']' returned non-zero exit status 3221225725.\n"
     },
     {
+      "state": "CA",
+      "districts": 52,
+      "block_count": 519723,
+      "status": "failed",
+      "exit_code": 1,
+      "command": [
+        "population-floor-seed-screen"
+      ],
+      "output": "The 52-seat root, first 26-seat half, first 13-seat child, and completed six-seat subtree reached their arithmetic population floors. At seven-seat node 001, two seed screens timed out after 180 seconds and all 14 completed screens were population-refined; best seed 3 reached deviation 261137 against arithmetic floor 2. This is an unresolved local-search frontier, not proof of infeasibility."
+    },
+    {
       "state": "CO",
       "districts": 8,
       "block_count": 140345,
@@ -513,6 +524,6 @@
     }
   ],
   "built_count": 34,
-  "failed_count": 8,
+  "failed_count": 9,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
