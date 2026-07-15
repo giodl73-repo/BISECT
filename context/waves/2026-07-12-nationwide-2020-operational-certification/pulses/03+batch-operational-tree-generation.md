@@ -23,9 +23,10 @@ State and reuse the completed one-district packages.
 
 ## Progress
 
-The ledger contains 34 verified multi-district State packages and nine open
+The ledger contains 34 verified multi-district State packages and ten open
 failures (Arizona, California, Colorado, Florida, North Carolina, New York,
-Oklahoma, Utah, and Washington). Virginia is the first
+Oklahoma, Texas, Utah, and Washington). Every multi-district State has now
+been attempted; no untouched State remains. Virginia is the first
 package completed under deterministic two-phase seed screening: METIS-only
 screens are ranked before population refinement, each screen has a recorded
 180-second operational timeout, completed nodes and screens are reusable, and
@@ -145,4 +146,13 @@ seven-seat node `001`, two screens timed out and all 14 completed screens were
 population-refined; best seed 3 reached deviation 261,137 against floor 2.
 This is an unresolved local-search frontier, not proof of infeasibility.
 
-Remaining untouched State: Texas. Next untouched State: Texas.
+Texas reached the arithmetic population floors at its 38-seat root, complete
+first 19-seat half, second 19-seat parent, complete nine-seat child, and the
+second-half ten-seat parent. At five-seat node `110`, two screens timed out and
+all 14 completed screens were population-refined; best seed 6 reached
+deviation 442,993 against floor 2. This is an unresolved local-search
+frontier, not proof of infeasibility.
+
+No untouched multi-district State remains. Pulse 03 now continues by revisiting
+the ten preserved local-search frontiers; national wall-to-wall verification
+remains blocked until operational packages are complete.

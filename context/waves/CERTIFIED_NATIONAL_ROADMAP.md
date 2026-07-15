@@ -96,8 +96,10 @@ Current objective:
 > Generate nationwide 2020 operational trees with complete wall-to-wall
 > coverage and a separate exact-objective proof matrix.
 
-Next unblocked pulse:
+Next unblocked work:
 
-> Continue Pulse 03 operational-tree generation from Texas. Preserve the
-> Arizona, California, Colorado, Florida, North Carolina, New York, Oklahoma, Utah, and Washington failures as separate scaling
-> evidence while untouched States advance in block-count order.
+> Continue Pulse 03 by revisiting the preserved Arizona, California, Colorado,
+> Florida, North Carolina, New York, Oklahoma, Texas, Utah, and Washington
+> local-search frontiers. Every multi-district State has been attempted; no
+> untouched State remains, and Pulse 04 stays blocked until operational
+> packages are complete.
