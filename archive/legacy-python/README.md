@@ -10,3 +10,7 @@ uses this archive as a legacy fallback when checking those recorded hashes.
 Some early manifests reference source bytes that did not survive in Git; those
 packages correctly fail the source-custody check rather than silently
 weakening verification.
+
+The State block RCTX builder was retired after the Rust implementation matched
+Rhode Island's complete unit universe, populations, edge set, edge kinds, and
+weights exactly.

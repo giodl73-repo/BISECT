@@ -59,6 +59,11 @@ cargo run -p bisect-ops -- analyze-tree --state UT --package <package> \
 cargo run -p bisect-ops -- verify-tree-report <manifest.json>
 cargo run -p bisect-ops -- verify-national-rctx
 cargo run -p bisect-ops -- rctx-batch --workers 2
+cargo run -p bisect-ops -- build-state-rctx --state-code RI --state-fips 44 \
+  --state-name rhode_island --shapefile <blocks.shp> --pl-geo <geo.pl> \
+  --pl-population <population.pl> --rctx <state.rctx> \
+  --report <report.json> --manifest <manifest.json>
+cargo run -p bisect-ops -- compare-rctx <reference.rctx> <candidate.rctx>
 ```
 
 Completed Rust packages contain `builder-source.rs`, an immutable snapshot of
@@ -72,9 +77,10 @@ The initial 2026-07-15 inventory found 429 tracked Python files outside
 and 11 elsewhere. These files are migration inventory. They may be deleted or
 replaced by Rust, but they may not be extended as active experiment machinery.
 
-The operational-tree analyzer, national RCTX verifier, and national RCTX batch
-controller have been migrated to `bisect-ops`. The remaining State block RCTX
-builder is frozen Python geospatial ingestion code and may only be invoked as
-the adapter behind `bisect-ops rctx-batch`; its graph construction and source
-reading are the next data-layer migration target. It must not acquire new
-experiment or verification responsibilities.
+The operational-tree analyzer, national RCTX verifier, national RCTX batch
+controller, and State block RCTX builder have been migrated to `bisect-ops`.
+TIGER multipart geometry, NAD83-to-EPSG:5070 projection, PL 94-171 parsing,
+exact shared-boundary weights, and county-aware island bridges are native
+Rust. Rhode Island parity covers all 25,649 blocks and all 66,161 final edges,
+including 64 bridges. The retired Python State builder remains only under
+`archive/legacy-python` for historical manifest custody.

@@ -11,6 +11,7 @@ name = "bisect-ops"
 path = "src/main.rs"
 
 [dependencies]
+bisect-data = { path = "../bisect-data" }
 anyhow.workspace = true
 clap.workspace = true
 serde_json.workspace = true

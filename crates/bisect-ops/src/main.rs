@@ -1,4 +1,8 @@
 use anyhow::{bail, Context, Result};
+use bisect_data::{
+    build_adjacency_graph, connect_island_components, read_pl94_block_populations,
+    read_tiger_blocks_projected,
+};
 use clap::{Parser, Subcommand};
 use rayon::prelude::*;
 use serde_json::{json, Map, Value};
@@ -87,10 +91,30 @@ enum Action {
         workers: usize,
         #[arg(long)]
         limit: Option<usize>,
-        #[arg(long, default_value = "python")]
-        adapter_runtime: PathBuf,
-        #[arg(long, default_value = "scripts/research/build_state_block_rctx.py")]
-        adapter: PathBuf,
+    },
+    BuildStateRctx {
+        #[arg(long)]
+        state_code: String,
+        #[arg(long)]
+        state_fips: String,
+        #[arg(long)]
+        state_name: String,
+        #[arg(long)]
+        shapefile: PathBuf,
+        #[arg(long)]
+        pl_geo: PathBuf,
+        #[arg(long)]
+        pl_population: PathBuf,
+        #[arg(long)]
+        rctx: PathBuf,
+        #[arg(long)]
+        report: PathBuf,
+        #[arg(long)]
+        manifest: PathBuf,
+    },
+    CompareRctx {
+        left: PathBuf,
+        right: PathBuf,
     },
 }
 
@@ -832,7 +856,10 @@ fn audit_python(staged: bool, base: Option<&str>) -> Result<()> {
 fn write_source_snapshot(dir: &Path, name: &str) -> Result<(PathBuf, String)> {
     let path = dir.join(name);
     fs::create_dir_all(dir)?;
-    fs::write(&path, include_bytes!("main.rs"))?;
+    let source = include_bytes!("main.rs");
+    if fs::read(&path).ok().as_deref() != Some(source) {
+        fs::write(&path, source)?;
+    }
     Ok((path.clone(), sha256(&path)?))
 }
 
@@ -1037,7 +1064,215 @@ fn verify_national_rctx(out: &Path) -> Result<()> {
     Ok(())
 }
 
-fn rctx_batch(workers: usize, limit: Option<usize>, runtime: &Path, adapter: &Path) -> Result<()> {
+fn component_count(adjacency: &[Vec<usize>]) -> usize {
+    let mut seen = vec![false; adjacency.len()];
+    let mut count = 0;
+    for start in 0..adjacency.len() {
+        if seen[start] {
+            continue;
+        }
+        count += 1;
+        seen[start] = true;
+        let mut stack = vec![start];
+        while let Some(unit) = stack.pop() {
+            for &neighbor in &adjacency[unit] {
+                if !seen[neighbor] {
+                    seen[neighbor] = true;
+                    stack.push(neighbor);
+                }
+            }
+        }
+    }
+    count
+}
+
+fn compare_rctx(left_path: &Path, right_path: &Path) -> Result<()> {
+    let left = read_json(left_path)?;
+    let right = read_json(right_path)?;
+    for field in ["units", "populations", "graph"] {
+        if left[field] != right[field] {
+            bail!("RCTX parity mismatch in {field}");
+        }
+    }
+    let adjacency = left
+        .pointer("/graph/adjacency")
+        .and_then(Value::as_array)
+        .context("adjacency")?;
+    let directed_edges: usize = adjacency
+        .iter()
+        .map(|neighbors| neighbors.as_array().map_or(0, Vec::len))
+        .sum();
+    let directed_bridges = adjacency
+        .iter()
+        .flat_map(|neighbors| neighbors.as_array().into_iter().flatten())
+        .filter(|edge| edge["kind"] == "bridge")
+        .count();
+    println!(
+        "RCTX parity: PASS ({} units, {} edges, {} bridges)",
+        adjacency.len(),
+        directed_edges / 2,
+        directed_bridges / 2
+    );
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_state_rctx(
+    state_code: &str,
+    state_fips: &str,
+    state_name: &str,
+    shapefile: &Path,
+    pl_geo: &Path,
+    pl_population: &Path,
+    rctx_path: &Path,
+    report_path: &Path,
+    manifest_path: &Path,
+) -> Result<()> {
+    let state_code = state_code.to_uppercase();
+    let lower = state_code.to_lowercase();
+    println!("{state_code}: reading and projecting TIGER blocks");
+    let blocks = read_tiger_blocks_projected(shapefile)?;
+    println!("{state_code}: reading PL94 populations");
+    let populations = read_pl94_block_populations(pl_geo, pl_population)?;
+    let block_geoids: Vec<_> = blocks.iter().map(|block| block.geoid.clone()).collect();
+    let population_geoids: Vec<_> = populations
+        .iter()
+        .map(|record| record.geoid.clone())
+        .collect();
+    if block_geoids != population_geoids {
+        bail!("{state_code}: TIGER/PL block GEOID mismatch");
+    }
+    let population_values: Vec<_> = populations.iter().map(|record| record.population).collect();
+    let geometry: Vec<_> = blocks
+        .iter()
+        .map(|block| block.geometry_wkb.clone())
+        .collect();
+    println!("{state_code}: building exact shared-boundary adjacency");
+    let graph = build_adjacency_graph(&geometry, 1e-6)?;
+    let land_component_count = component_count(&graph.adjacency);
+    let mut land_weights: Vec<i64> = graph
+        .edge_weights
+        .values()
+        .map(|metres| (metres * 1000.0).round_ties_even().max(1.0) as i64)
+        .collect();
+    land_weights.sort_unstable();
+    let median_land_weight = *land_weights
+        .get(land_weights.len() / 2)
+        .context("state has no land-boundary edges")?;
+    let centroids: Vec<_> = blocks.iter().map(|block| block.centroid).collect();
+    let bridges = connect_island_components(&graph.adjacency, &centroids, &block_geoids);
+    let mut adjacency: Vec<Vec<Value>> = vec![Vec::new(); blocks.len()];
+    for (&(left, right), metres) in &graph.edge_weights {
+        let weight = (metres * 1000.0).round_ties_even().max(1.0);
+        adjacency[left].push(json!({"to":right,"kind":"boundary","weight":weight}));
+        adjacency[right].push(json!({"to":left,"kind":"boundary","weight":weight}));
+    }
+    for &(left, right) in &bridges {
+        let weight = median_land_weight as f64;
+        adjacency[left].push(json!({"to":right,"kind":"bridge","weight":weight}));
+        adjacency[right].push(json!({"to":left,"kind":"bridge","weight":weight}));
+    }
+    for neighbors in &mut adjacency {
+        neighbors.sort_by_key(|edge| edge["to"].as_u64().unwrap_or(u64::MAX));
+    }
+    let final_adjacency: Vec<Vec<usize>> = adjacency
+        .iter()
+        .map(|neighbors| {
+            neighbors
+                .iter()
+                .filter_map(|edge| edge["to"].as_u64().map(|value| value as usize))
+                .collect()
+        })
+        .collect();
+    let final_component_count = component_count(&final_adjacency);
+    if final_component_count != 1 {
+        bail!("{state_code}: block graph remains disconnected");
+    }
+
+    let mut units = json!({
+        "unit_kind":"block",
+        "state":state_code,
+        "year":2020,
+        "canonical_order":"sorted-geoid",
+        "unit_ids":block_geoids,
+        "source_id":format!("{lower}-2020-tiger-pl-block-county-bridged-adjacency")
+    });
+    units["unit_universe_hash"] = json!(canonical_hash(&units)?);
+    let adjacent_source = Path::new("crates/bisect-data/src/adjacency.rs");
+    let bridge_source = Path::new("crates/bisect-data/src/bridge.rs");
+    let source_hashes = json!({
+        "tiger_block_shp":format!("sha256:{}",sha256(shapefile)?),
+        "tiger_block_dbf":format!("sha256:{}",sha256(&shapefile.with_extension("dbf"))?),
+        "tiger_block_shx":format!("sha256:{}",sha256(&shapefile.with_extension("shx"))?),
+        "pl_geo":format!("sha256:{}",sha256(pl_geo)?),
+        "pl_population":format!("sha256:{}",sha256(pl_population)?),
+        "bridge_rule_source":format!("sha256:{}",sha256(bridge_source)?),
+        "bridge_weight_rule_source":format!("sha256:{}",sha256(adjacent_source)?),
+    });
+    let projection = json!({
+        "units":units,
+        "graph":{"edge_semantics":"undirected","adjacency":adjacency},
+        "populations":population_values,
+        "source_hashes":source_hashes
+    });
+    let mut rctx = projection.clone();
+    rctx["rctx_version"] = json!("0.1");
+    rctx["context_hash"] = json!(canonical_hash(&projection)?);
+    write_json(rctx_path, &rctx, false)?;
+
+    let claim = "Hash-bound connected block context built by Rust; not a district certificate.";
+    let report = json!({
+        "schema_version":"certified-state-block-rctx-v1",
+        "status":"ready",
+        "state":state_name,
+        "state_code":state_code,
+        "state_fips":state_fips,
+        "year":2020,
+        "rctx_path":rctx_path.to_string_lossy().replace('\\',"/"),
+        "rctx_bytes":fs::metadata(rctx_path)?.len(),
+        "rctx_sha256":sha256(rctx_path)?,
+        "context_hash":rctx["context_hash"],
+        "unit_universe_hash":rctx["units"]["unit_universe_hash"],
+        "unit_count":blocks.len(),
+        "population_total":population_values.iter().sum::<i64>(),
+        "land_edge_count":graph.n_edges,
+        "land_component_count":land_component_count,
+        "bridge_edge_count":bridges.len(),
+        "final_component_count":final_component_count,
+        "geometry_toolchain":{"implementation":"bisect-data","language":"rust","crs":"EPSG:5070"},
+        "claim_boundary":claim
+    });
+    write_json(report_path, &report, true)?;
+    let parent = manifest_path.parent().context("manifest parent")?;
+    let (source, source_hash) = write_source_snapshot(parent, "bisect-ops-rctx-builder-source.rs")?;
+    let source_name = source
+        .file_name()
+        .context("source filename")?
+        .to_string_lossy();
+    let report_name = report_path
+        .file_name()
+        .context("report filename")?
+        .to_string_lossy();
+    let manifest = json!({
+        "schema_version":"certified-state-block-rctx-package-v1",
+        "package_id":format!("{lower}-2020-block-rctx"),
+        "status":"ready",
+        "files":[{"path":report_name,"sha256":sha256(report_path)?}],
+        "builder_path":source_name,
+        "builder_sha256":source_hash,
+        "claim_boundary":claim
+    });
+    write_json(manifest_path, &manifest, true)?;
+    println!(
+        "{state_code}: {} blocks, {} land edges, {} bridges",
+        blocks.len(),
+        graph.n_edges,
+        bridges.len()
+    );
+    Ok(())
+}
+
+fn rctx_batch(workers: usize, limit: Option<usize>) -> Result<()> {
     if workers == 0 {
         bail!("workers must be positive");
     }
@@ -1077,10 +1312,22 @@ fn rctx_batch(workers: usize, limit: Option<usize>, runtime: &Path, adapter: &Pa
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(workers)
         .build()?;
+    write_source_snapshot(
+        &root.join("docs/experiments/nationwide-2020/rctx"),
+        "bisect-ops-rctx-builder-source.rs",
+    )?;
     let results:Vec<Value>=pool.install(||pending.par_iter().map(|row|{
         let state=row["state"].as_str().unwrap(); let lower=state.to_lowercase(); let state_name=row["name"].as_str().unwrap_or(state).to_lowercase().replace(' ',"_");
-        let args=vec![adapter.to_string_lossy().into_owned(),"--state-code".into(),state.into(),"--state-fips".into(),row["fips"].as_str().unwrap_or("").into(),"--state-name".into(),state_name,"--rctx".into(),format!("data/2020/certified/{lower}_blocks_2020.rctx"),"--report".into(),format!("docs/experiments/nationwide-2020/rctx/{lower}.json"),"--manifest".into(),format!("docs/experiments/nationwide-2020/rctx/{lower}-manifest.json")];
-        let output=Command::new(runtime).args(&args).current_dir(&root).output(); match output { Ok(out)=>{let mut text=String::from_utf8_lossy(&out.stdout).into_owned()+&String::from_utf8_lossy(&out.stderr);if text.len()>4000{text=text[text.len()-4000..].into();}json!({"state":state,"block_count":row["block_count"],"status":if out.status.success(){"built"}else{"failed"},"exit_code":out.status.code().unwrap_or(1),"command":std::iter::once(runtime.to_string_lossy().into_owned()).chain(args).collect::<Vec<_>>(),"output":text})},Err(error)=>json!({"state":state,"block_count":row["block_count"],"status":"failed","exit_code":1,"command":[runtime.to_string_lossy(),adapter.to_string_lossy()],"output":error.to_string()}) }
+        let fips=row["fips"].as_str().unwrap_or("");
+        let shapefile=root.join(format!("data/2020/tiger/blocks/tl_2020_{fips}_tabblock20/tl_2020_{fips}_tabblock20.shp"));
+        let pl_dir=root.join(format!("data/2020/redistricting/{lower}2020.pl"));
+        let pl_geo=pl_dir.join(format!("{lower}geo2020.pl"));
+        let pl_population=pl_dir.join(format!("{lower}000012020.pl"));
+        let rctx=root.join(format!("data/2020/certified/{lower}_blocks_2020.rctx"));
+        let report=root.join(format!("docs/experiments/nationwide-2020/rctx/{lower}.json"));
+        let manifest=root.join(format!("docs/experiments/nationwide-2020/rctx/{lower}-manifest.json"));
+        let result=build_state_rctx(state,fips,&state_name,&shapefile,&pl_geo,&pl_population,&rctx,&report,&manifest);
+        match result { Ok(())=>json!({"state":state,"block_count":row["block_count"],"status":"built","exit_code":0,"command":["bisect-ops","build-state-rctx"],"output":"Rust-native state RCTX build completed."}),Err(error)=>json!({"state":state,"block_count":row["block_count"],"status":"failed","exit_code":1,"command":["bisect-ops","build-state-rctx"],"output":format!("{error:#}")}) }
     }).collect());
     let mut merged: BTreeMap<String, Value> = if ledger_path.is_file() {
         read_json(&ledger_path)?["results"]
@@ -1226,12 +1473,29 @@ fn main() -> Result<()> {
         } => analyze_tree(&state, &package, &rctx_report, &report, &manifest),
         Action::VerifyTreeReport { manifest } => verify_tree_report(&manifest),
         Action::VerifyNationalRctx { out_dir } => verify_national_rctx(&out_dir),
-        Action::RctxBatch {
-            workers,
-            limit,
-            adapter_runtime,
-            adapter,
-        } => rctx_batch(workers, limit, &adapter_runtime, &adapter),
+        Action::RctxBatch { workers, limit } => rctx_batch(workers, limit),
+        Action::BuildStateRctx {
+            state_code,
+            state_fips,
+            state_name,
+            shapefile,
+            pl_geo,
+            pl_population,
+            rctx,
+            report,
+            manifest,
+        } => build_state_rctx(
+            &state_code,
+            &state_fips,
+            &state_name,
+            &shapefile,
+            &pl_geo,
+            &pl_population,
+            &rctx,
+            &report,
+            &manifest,
+        ),
+        Action::CompareRctx { left, right } => compare_rctx(&left, &right),
     }
 }
 

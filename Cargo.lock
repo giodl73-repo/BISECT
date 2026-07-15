@@ -416,6 +416,7 @@ name = "bisect-ops"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bisect-data",
  "clap",
  "rayon",
  "serde_json",
