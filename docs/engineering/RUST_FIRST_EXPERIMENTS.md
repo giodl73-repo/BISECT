@@ -53,6 +53,12 @@ cargo run -p bisect-ops -- build --bisect target/release/bisect \
   --context <state.rctx> --out-dir <package> --districts <n> --max-seed 32
 cargo run -p bisect-ops -- batch --bisect target/release/bisect --max-seed 32
 cargo run -p bisect-ops -- verify <package>
+cargo run -p bisect-ops -- analyze-tree --state UT --package <package> \
+  --rctx-report <state-rctx-report.json> --report <report.json> \
+  --manifest <manifest.json>
+cargo run -p bisect-ops -- verify-tree-report <manifest.json>
+cargo run -p bisect-ops -- verify-national-rctx
+cargo run -p bisect-ops -- rctx-batch --workers 2
 ```
 
 Completed Rust packages contain `builder-source.rs`, an immutable snapshot of
@@ -65,3 +71,10 @@ The initial 2026-07-15 inventory found 429 tracked Python files outside
 `archive/`: 213 under `scripts/`, 104 under `research/`, 101 under `tests/`,
 and 11 elsewhere. These files are migration inventory. They may be deleted or
 replaced by Rust, but they may not be extended as active experiment machinery.
+
+The operational-tree analyzer, national RCTX verifier, and national RCTX batch
+controller have been migrated to `bisect-ops`. The remaining State block RCTX
+builder is frozen Python geospatial ingestion code and may only be invoked as
+the adapter behind `bisect-ops rctx-batch`; its graph construction and source
+reading are the next data-layer migration target. It must not acquire new
+experiment or verification responsibilities.

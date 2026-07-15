@@ -1,5 +1,6 @@
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
+use rayon::prelude::*;
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 use std::{
@@ -61,6 +62,35 @@ enum Action {
         staged: bool,
         #[arg(long)]
         base: Option<String>,
+    },
+    AnalyzeTree {
+        #[arg(long)]
+        state: String,
+        #[arg(long)]
+        package: PathBuf,
+        #[arg(long)]
+        rctx_report: PathBuf,
+        #[arg(long)]
+        report: PathBuf,
+        #[arg(long)]
+        manifest: PathBuf,
+    },
+    VerifyTreeReport {
+        manifest: PathBuf,
+    },
+    VerifyNationalRctx {
+        #[arg(long, default_value = "docs/experiments/nationwide-2020")]
+        out_dir: PathBuf,
+    },
+    RctxBatch {
+        #[arg(long, default_value_t = 2)]
+        workers: usize,
+        #[arg(long)]
+        limit: Option<usize>,
+        #[arg(long, default_value = "python")]
+        adapter_runtime: PathBuf,
+        #[arg(long, default_value = "scripts/research/build_state_block_rctx.py")]
+        adapter: PathBuf,
     },
 }
 
@@ -799,6 +829,291 @@ fn audit_python(staged: bool, base: Option<&str>) -> Result<()> {
     Ok(())
 }
 
+fn write_source_snapshot(dir: &Path, name: &str) -> Result<(PathBuf, String)> {
+    let path = dir.join(name);
+    fs::create_dir_all(dir)?;
+    fs::write(&path, include_bytes!("main.rs"))?;
+    Ok((path.clone(), sha256(&path)?))
+}
+
+fn analyze_tree(
+    state: &str,
+    package: &Path,
+    rctx_report_path: &Path,
+    report_path: &Path,
+    manifest_path: &Path,
+) -> Result<()> {
+    let package_manifest = read_json(&package.join("manifest.json"))?;
+    let tree_path = package.join(
+        package_manifest["files"][0]["path"]
+            .as_str()
+            .context("tree path")?,
+    );
+    if sha256(&tree_path)?
+        != package_manifest["files"][0]["sha256"]
+            .as_str()
+            .context("tree hash")?
+    {
+        bail!("operational tree package hash mismatch");
+    }
+    let tree = read_json(&tree_path)?;
+    let rctx = read_json(rctx_report_path)?;
+    let leaves = tree["leaves"].as_array().context("leaves")?;
+    let nodes = tree["nodes"].as_array().context("nodes")?;
+    let leaf_units: u64 = leaves
+        .iter()
+        .map(|v| v["unit_count"].as_u64().unwrap_or(0))
+        .sum();
+    let leaf_population: i64 = leaves
+        .iter()
+        .map(|v| v["population"].as_i64().unwrap_or(0))
+        .sum();
+    let floors = nodes.iter().all(|node| {
+        node.pointer("/objective/max_population_deviation_scaled")
+            == node.pointer("/population_proof/lower_bound")
+    });
+    if tree["unit_count"] != rctx["unit_count"]
+        || leaves.len() != tree["districts"].as_u64().unwrap_or(0) as usize
+        || leaf_units != tree["unit_count"].as_u64().unwrap_or(u64::MAX)
+        || leaf_population != tree["population_total"].as_i64().unwrap_or(i64::MIN)
+        || !floors
+    {
+        bail!("operational tree coverage or population proof mismatch");
+    }
+    let claim="Complete connected wall-to-wall recursive tree with arithmetic population optimality at every node; boundary and canonical optimality are unproved.";
+    let report = json!({"schema_version":"certified-operational-tree-frontier-v1","status":"operational-complete-population-proved","state":state,"year":2020,"districts":tree["districts"],"unit_count":tree["unit_count"],"population_total":tree["population_total"],"bridge_edge_count":rctx["bridge_edge_count"],"tree_sha256":sha256(&tree_path)?,"package_manifest_sha256":sha256(&package.join("manifest.json"))?,"nodes":nodes,"leaves":leaves,"boundary_proof":"not-run","canonical_proof":"blocked-by-boundary","claim_boundary":claim});
+    write_json(report_path, &report, true)?;
+    let parent = manifest_path.parent().context("manifest parent")?;
+    let (source, source_hash) = write_source_snapshot(parent, "bisect-ops-analyzer-source.rs")?;
+    let report_name = report_path
+        .file_name()
+        .context("report filename")?
+        .to_string_lossy()
+        .into_owned();
+    let source_name = source
+        .file_name()
+        .context("source filename")?
+        .to_string_lossy()
+        .into_owned();
+    let manifest = json!({"schema_version":"certified-operational-tree-frontier-package-v1","package_id":format!("{}-operational-tree-2020",state.to_lowercase()),"status":"operational-complete-population-proved","files":[{"path":report_name,"sha256":sha256(report_path)?}],"analyzer_path":source_name,"analyzer_sha256":source_hash,"claim_boundary":claim});
+    write_json(manifest_path, &manifest, true)?;
+    println!("{state} operational tree frontier: VERIFIED");
+    Ok(())
+}
+
+fn verify_tree_report(manifest_path: &Path) -> Result<()> {
+    let manifest = read_json(manifest_path)?;
+    let parent = manifest_path.parent().context("manifest parent")?;
+    let analyzer = PathBuf::from(
+        manifest["analyzer_path"]
+            .as_str()
+            .context("analyzer path")?,
+    );
+    let source = if analyzer.components().count() == 1 {
+        parent.join(analyzer)
+    } else {
+        custody_source(&analyzer)
+    };
+    if sha256(&source)?
+        != manifest["analyzer_sha256"]
+            .as_str()
+            .context("analyzer hash")?
+    {
+        bail!("operational tree analyzer hash mismatch");
+    }
+    let report_path = parent.join(
+        manifest["files"][0]["path"]
+            .as_str()
+            .context("report path")?,
+    );
+    if sha256(&report_path)?
+        != manifest["files"][0]["sha256"]
+            .as_str()
+            .context("report hash")?
+    {
+        bail!("operational tree report hash mismatch");
+    }
+    let report = read_json(&report_path)?;
+    let leaves = report["leaves"].as_array().context("leaves")?;
+    let units: u64 = leaves
+        .iter()
+        .map(|v| v["unit_count"].as_u64().unwrap_or(0))
+        .sum();
+    if report["status"] != "operational-complete-population-proved"
+        || leaves.len() != report["districts"].as_u64().unwrap_or(0) as usize
+        || units != report["unit_count"].as_u64().unwrap_or(u64::MAX)
+    {
+        bail!("operational tree report posture drift");
+    }
+    println!("Operational tree frontier report verification: PASS");
+    Ok(())
+}
+
+fn verify_national_rctx(out: &Path) -> Result<()> {
+    let root = std::env::current_dir()?;
+    let inventory = read_json(&out.join("inventory.json"))?;
+    let mut states: Vec<String> = inventory["states"]
+        .as_array()
+        .context("states")?
+        .iter()
+        .filter_map(|v| v["state"].as_str().map(str::to_owned))
+        .collect();
+    states.sort();
+    let mut rows = Vec::new();
+    for state in states {
+        let path = root.join(format!(
+            "data/2020/certified/{}_blocks_2020.rctx",
+            state.to_lowercase()
+        ));
+        let context = read_json(&path)?;
+        let projection = json!({"units":context["units"],"graph":context["graph"],"populations":context["populations"],"source_hashes":context["source_hashes"]});
+        if context["context_hash"] != canonical_hash(&projection)? {
+            bail!("{state} context hash mismatch");
+        }
+        let adjacency = context
+            .pointer("/graph/adjacency")
+            .and_then(Value::as_array)
+            .context("adjacency")?;
+        let mut seen = BTreeSet::from([0usize]);
+        let mut queue = VecDeque::from([0usize]);
+        while let Some(unit) = queue.pop_front() {
+            for edge in adjacency[unit].as_array().context("edges")? {
+                let to = edge["to"].as_u64().context("edge.to")? as usize;
+                if seen.insert(to) {
+                    queue.push_back(to);
+                }
+            }
+        }
+        if seen.len() != adjacency.len() {
+            bail!("{state} context is disconnected");
+        }
+        let directed: usize = adjacency
+            .iter()
+            .map(|v| v.as_array().map_or(0, Vec::len))
+            .sum();
+        let bridges: usize = adjacency
+            .iter()
+            .flat_map(|v| v.as_array().into_iter().flatten())
+            .filter(|edge| edge["kind"] == "bridge")
+            .count()
+            / 2;
+        let population: i64 = context["populations"]
+            .as_array()
+            .context("populations")?
+            .iter()
+            .map(|v| v.as_i64().unwrap_or(0))
+            .sum();
+        rows.push(json!({"state":state,"unit_count":context.pointer("/units/unit_ids").and_then(Value::as_array).context("unit_ids")?.len(),"population_total":population,"edge_count":directed/2,"bridge_edge_count":bridges,"rctx_bytes":fs::metadata(&path)?.len(),"rctx_sha256":sha256(&path)?,"context_hash":context["context_hash"],"status":"verified"}));
+        println!(
+            "{}: verified",
+            rows.last().unwrap()["state"].as_str().unwrap()
+        );
+    }
+    let sum = |key: &str| {
+        rows.iter()
+            .map(|v| v[key].as_u64().unwrap_or(0))
+            .sum::<u64>()
+    };
+    let population: i64 = rows
+        .iter()
+        .map(|v| v["population_total"].as_i64().unwrap_or(0))
+        .sum();
+    let claim="All 50 local 2020 block contexts are hash-valid and connected; no district assignments are claimed.";
+    let report = json!({"schema_version":"certified-national-rctx-verification-v1","status":"verified","state_count":rows.len(),"unit_count":sum("unit_count"),"population_total":population,"edge_count":sum("edge_count"),"bridge_edge_count":sum("bridge_edge_count"),"rctx_bytes":sum("rctx_bytes"),"states":rows,"claim_boundary":claim});
+    let report_path = out.join("rctx-verification.json");
+    write_json(&report_path, &report, true)?;
+    let (source, source_hash) = write_source_snapshot(out, "bisect-ops-rctx-verifier-source.rs")?;
+    let source_name = source
+        .file_name()
+        .context("source filename")?
+        .to_string_lossy()
+        .into_owned();
+    let manifest = json!({"schema_version":"certified-national-rctx-verification-package-v1","package_id":"nationwide-2020-rctx-verification","status":"verified","files":[{"path":"rctx-verification.json","sha256":sha256(&report_path)?}],"verifier_path":source_name,"verifier_sha256":source_hash,"claim_boundary":claim});
+    write_json(&out.join("rctx-manifest.json"), &manifest, true)?;
+    println!(
+        "National RCTX verification: {} States, {} blocks, {} bridges",
+        report["state_count"], report["unit_count"], report["bridge_edge_count"]
+    );
+    Ok(())
+}
+
+fn rctx_batch(workers: usize, limit: Option<usize>, runtime: &Path, adapter: &Path) -> Result<()> {
+    if workers == 0 {
+        bail!("workers must be positive");
+    }
+    let root = std::env::current_dir()?;
+    let inventory = read_json(&root.join("docs/experiments/nationwide-2020/inventory.json"))?;
+    let rows = inventory["states"].as_array().context("states")?;
+    let by_state: BTreeMap<_, _> = rows
+        .iter()
+        .filter_map(|row| Some((row["state"].as_str()?.to_owned(), row.clone())))
+        .collect();
+    let mut pending: Vec<Value> = inventory["batch_order"]
+        .as_array()
+        .context("batch_order")?
+        .iter()
+        .filter_map(|state| by_state.get(state.as_str()?).cloned())
+        .filter(|row| {
+            !root
+                .join(format!(
+                    "data/2020/certified/{}_blocks_2020.rctx",
+                    row["state"].as_str().unwrap().to_lowercase()
+                ))
+                .is_file()
+        })
+        .collect();
+    if let Some(limit) = limit {
+        pending.truncate(limit);
+    }
+    let ledger_path = root.join("docs/experiments/nationwide-2020/rctx-build-ledger.json");
+    if pending.is_empty() {
+        let ledger = read_json(&ledger_path)?;
+        println!(
+            "National RCTX batch: {} built, {} failed, {} remaining",
+            ledger["built_count"], ledger["failed_count"], ledger["remaining_count"]
+        );
+        return Ok(());
+    }
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(workers)
+        .build()?;
+    let results:Vec<Value>=pool.install(||pending.par_iter().map(|row|{
+        let state=row["state"].as_str().unwrap(); let lower=state.to_lowercase(); let state_name=row["name"].as_str().unwrap_or(state).to_lowercase().replace(' ',"_");
+        let args=vec![adapter.to_string_lossy().into_owned(),"--state-code".into(),state.into(),"--state-fips".into(),row["fips"].as_str().unwrap_or("").into(),"--state-name".into(),state_name,"--rctx".into(),format!("data/2020/certified/{lower}_blocks_2020.rctx"),"--report".into(),format!("docs/experiments/nationwide-2020/rctx/{lower}.json"),"--manifest".into(),format!("docs/experiments/nationwide-2020/rctx/{lower}-manifest.json")];
+        let output=Command::new(runtime).args(&args).current_dir(&root).output(); match output { Ok(out)=>{let mut text=String::from_utf8_lossy(&out.stdout).into_owned()+&String::from_utf8_lossy(&out.stderr);if text.len()>4000{text=text[text.len()-4000..].into();}json!({"state":state,"block_count":row["block_count"],"status":if out.status.success(){"built"}else{"failed"},"exit_code":out.status.code().unwrap_or(1),"command":std::iter::once(runtime.to_string_lossy().into_owned()).chain(args).collect::<Vec<_>>(),"output":text})},Err(error)=>json!({"state":state,"block_count":row["block_count"],"status":"failed","exit_code":1,"command":[runtime.to_string_lossy(),adapter.to_string_lossy()],"output":error.to_string()}) }
+    }).collect());
+    let mut merged: BTreeMap<String, Value> = if ledger_path.is_file() {
+        read_json(&ledger_path)?["results"]
+            .as_array()
+            .context("results")?
+            .iter()
+            .filter_map(|row| Some((row["state"].as_str()?.into(), row.clone())))
+            .collect()
+    } else {
+        BTreeMap::new()
+    };
+    for row in results {
+        println!(
+            "{}: {}",
+            row["state"].as_str().unwrap(),
+            row["status"].as_str().unwrap()
+        );
+        merged.insert(row["state"].as_str().unwrap().into(), row);
+    }
+    let results: Vec<_> = merged.values().cloned().collect();
+    let built = results.iter().filter(|v| v["status"] == "built").count();
+    let failed = results.iter().filter(|v| v["status"] == "failed").count();
+    let remaining = inventory["batch_order"]
+        .as_array()
+        .unwrap()
+        .len()
+        .saturating_sub(results.len());
+    let ledger = json!({"schema_version":"certified-national-rctx-build-ledger-v1","results":results,"built_count":built,"failed_count":failed,"remaining_count":remaining,"claim_boundary":"Resumable engineering ledger; aggregate verification occurs after all State contexts exist."});
+    write_json(&ledger_path, &ledger, true)?;
+    println!("National RCTX batch: {built} built, {failed} failed, {remaining} remaining");
+    Ok(())
+}
+
 fn main() -> Result<()> {
     match Cli::parse().command {
         Action::Build {
@@ -902,6 +1217,21 @@ fn main() -> Result<()> {
             max_seed,
         } => batch(&bisect, limit, retry_failed, max_seed),
         Action::AuditPython { staged, base } => audit_python(staged, base.as_deref()),
+        Action::AnalyzeTree {
+            state,
+            package,
+            rctx_report,
+            report,
+            manifest,
+        } => analyze_tree(&state, &package, &rctx_report, &report, &manifest),
+        Action::VerifyTreeReport { manifest } => verify_tree_report(&manifest),
+        Action::VerifyNationalRctx { out_dir } => verify_national_rctx(&out_dir),
+        Action::RctxBatch {
+            workers,
+            limit,
+            adapter_runtime,
+            adapter,
+        } => rctx_batch(workers, limit, &adapter_runtime, &adapter),
     }
 }
 
