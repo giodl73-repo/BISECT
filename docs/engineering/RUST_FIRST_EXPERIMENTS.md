@@ -17,6 +17,13 @@ Python may be changed only in these compatibility areas:
 The pre-commit hook rejects added or modified Python elsewhere. Deleting
 legacy Python remains allowed.
 
+The same policy is available without a shell hook:
+
+```text
+cargo run -p bisect-ops -- audit-python --staged
+cargo run -p bisect-ops -- audit-python --base origin/main
+```
+
 ## Migration Policy
 
 Existing Python is legacy, not precedent. Migrate active code in this order:
@@ -40,6 +47,17 @@ The migration preserves deterministic seed ordering, per-seed timeouts,
 resumable evidence, arithmetic-floor classification, recursive context
 projection, connected-leaf verification, and package custody. Once parity is
 certified, active documentation and batch entry points must use `bisect-ops`.
+
+```text
+cargo run -p bisect-ops -- build --bisect target/release/bisect \
+  --context <state.rctx> --out-dir <package> --districts <n> --max-seed 32
+cargo run -p bisect-ops -- batch --bisect target/release/bisect --max-seed 32
+cargo run -p bisect-ops -- verify <package>
+```
+
+Completed Rust packages contain `builder-source.rs`, an immutable snapshot of
+the exact builder source hashed by the manifest. This avoids the historical
+failure mode where a manifest pointed at a mutable repository script.
 
 ## Legacy Inventory
 

@@ -4,7 +4,7 @@ use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 use std::{
     cmp::Ordering,
-    collections::{BTreeSet, VecDeque},
+    collections::{BTreeMap, BTreeSet, VecDeque},
     fs,
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -14,7 +14,7 @@ use std::{
 
 const SCREEN_TIMEOUT: Duration = Duration::from_secs(180);
 const GENERATED_AT: &str = "2026-07-12T00:00:00Z";
-const BUILDER_PATH: &str = "crates/bisect-ops/src/main.rs";
+const BUILDER_SNAPSHOT: &str = "builder-source.rs";
 
 #[derive(Parser)]
 #[command(about = "Rust-native deterministic operational recursive-tree builder")]
@@ -45,6 +45,22 @@ enum Action {
     },
     Verify {
         package: PathBuf,
+    },
+    Batch {
+        #[arg(long)]
+        bisect: PathBuf,
+        #[arg(long)]
+        limit: Option<usize>,
+        #[arg(long)]
+        retry_failed: bool,
+        #[arg(long, default_value_t = 16)]
+        max_seed: u64,
+    },
+    AuditPython {
+        #[arg(long)]
+        staged: bool,
+        #[arg(long)]
+        base: Option<String>,
     },
 }
 
@@ -77,6 +93,14 @@ fn write_json(path: &Path, value: &Value, pretty: bool) -> Result<()> {
 
 fn sha256(path: &Path) -> Result<String> {
     Ok(format!("{:x}", Sha256::digest(fs::read(path)?)))
+}
+
+fn custody_source(path: &Path) -> PathBuf {
+    if path.is_file() {
+        path.to_path_buf()
+    } else {
+        Path::new("archive/legacy-python").join(path)
+    }
 }
 
 fn canonical_hash(value: &Value) -> Result<String> {
@@ -637,25 +661,141 @@ fn build(
     let tree = json!({"schema_version":"certified-operational-recursive-tree-v1","status":"operational-unproved-objectives","context_sha256":sha256(context_path)?,"context_hash":context["context_hash"],"districts":districts,"nodes":state.nodes,"leaves":state.leaves,"assignment":state.assignment,"unit_count":unit_count,"population_total":population_total,"claim_boundary":claim});
     let tree_path = out.join("operational-tree.json");
     write_json(&tree_path, &tree, true)?;
-    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/main.rs");
+    let source = out.join(BUILDER_SNAPSHOT);
+    fs::write(&source, include_bytes!("main.rs"))?;
     let state_name = context
         .pointer("/units/state")
         .and_then(Value::as_str)
         .unwrap_or("unknown")
         .to_lowercase();
-    let manifest = json!({"schema_version":"certified-operational-recursive-tree-package-v1","package_id":format!("operational-tree-{state_name}-2020"),"status":"operational-unproved-objectives","files":[{"path":"operational-tree.json","sha256":sha256(&tree_path)?}],"builder_path":BUILDER_PATH,"builder_sha256":sha256(&source)?,"seed_frontier_max":max_seed,"claim_boundary":claim});
+    let manifest = json!({"schema_version":"certified-operational-recursive-tree-package-v1","package_id":format!("operational-tree-{state_name}-2020"),"status":"operational-unproved-objectives","files":[{"path":"operational-tree.json","sha256":sha256(&tree_path)?}],"builder_path":BUILDER_SNAPSHOT,"builder_sha256":sha256(&source)?,"seed_frontier_max":max_seed,"claim_boundary":claim});
     write_json(&out.join("manifest.json"), &manifest, true)?;
     for entry in fs::read_dir(out)? {
         let path = entry?.path();
-        let keep = path
-            .file_name()
-            .and_then(|v| v.to_str())
-            .is_some_and(|v| v == "manifest.json" || v == "operational-tree.json");
+        let keep = path.file_name().and_then(|v| v.to_str()).is_some_and(|v| {
+            v == "manifest.json" || v == "operational-tree.json" || v == BUILDER_SNAPSHOT
+        });
         if !keep {
             remove_path(&path)?;
         }
     }
     println!("Operational recursive tree: VERIFIED");
+    Ok(())
+}
+
+fn batch(bisect: &Path, limit: Option<usize>, retry_failed: bool, max_seed: u64) -> Result<()> {
+    let root = std::env::current_dir()?;
+    let inventory_path = root.join("docs/experiments/nationwide-2020/inventory.json");
+    let ledger_path = root.join("docs/experiments/nationwide-2020/tree-build-ledger.json");
+    let inventory = read_json(&inventory_path)?;
+    let mut prior: BTreeMap<String, Value> = if ledger_path.is_file() {
+        read_json(&ledger_path)?["results"]
+            .as_array()
+            .context("ledger results")?
+            .iter()
+            .filter_map(|row| Some((row["state"].as_str()?.to_owned(), row.clone())))
+            .collect()
+    } else {
+        BTreeMap::new()
+    };
+    let package_root = root.join("data/2020/certified/operational-trees");
+    for source in inventory["states"].as_array().context("inventory states")? {
+        let state = source["state"].as_str().context("state")?;
+        let package = package_root.join(state.to_lowercase());
+        if package.join("manifest.json").is_file() {
+            prior.insert(state.into(), json!({"state":state,"districts":source["districts"],"block_count":source["block_count"],"status":"built","exit_code":0,"command":["recovered-from-package"],"output":"Recovered from verified package manifest."}));
+        }
+    }
+    let failed: BTreeSet<String> = prior
+        .iter()
+        .filter_map(|(state, row)| (row["status"] == "failed").then_some(state.clone()))
+        .collect();
+    let mut states: Vec<Value> = inventory["states"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|row| {
+            let state = row["state"].as_str().unwrap_or("");
+            row["districts"].as_u64().unwrap_or(0) > 1
+                && (retry_failed || !failed.contains(state))
+                && !package_root
+                    .join(state.to_lowercase())
+                    .join("manifest.json")
+                    .is_file()
+        })
+        .cloned()
+        .collect();
+    states.sort_by_key(|row| {
+        (
+            row["block_count"].as_u64().unwrap_or(u64::MAX),
+            row["state"].as_str().unwrap_or("").to_owned(),
+        )
+    });
+    if let Some(limit) = limit {
+        states.truncate(limit);
+    }
+    for row in states {
+        let state = row["state"].as_str().context("state")?.to_owned();
+        let lower = state.to_lowercase();
+        let districts = row["districts"].as_u64().context("districts")? as usize;
+        let context = root.join(format!("data/2020/certified/{lower}_blocks_2020.rctx"));
+        let out = package_root.join(&lower);
+        let result = build(bisect, &context, &out, districts, 1, [2, 3], max_seed);
+        let (status, exit_code, output) = match result {
+            Ok(()) => ("built", 0, "Built and verified by bisect-ops.".into()),
+            Err(error) => ("failed", 1, format!("{error:#}")),
+        };
+        println!("{state}: {status}");
+        prior.insert(state.clone(),json!({"state":state,"districts":districts,"block_count":row["block_count"],"status":status,"exit_code":exit_code,"command":["bisect-ops","batch",format!("--max-seed={max_seed}")],"output":output}));
+        let results: Vec<_> = prior.values().cloned().collect();
+        let built = results
+            .iter()
+            .filter(|row| row["status"] == "built")
+            .count();
+        let failed_count = results
+            .iter()
+            .filter(|row| row["status"] == "failed")
+            .count();
+        write_json(
+            &ledger_path,
+            &json!({"schema_version":"certified-national-tree-build-ledger-v1","results":results,"built_count":built,"failed_count":failed_count,"claim_boundary":"Resumable operational tree build ledger; national coverage verification is separate."}),
+            true,
+        )?;
+    }
+    Ok(())
+}
+
+fn audit_python(staged: bool, base: Option<&str>) -> Result<()> {
+    let mut command = Command::new("git");
+    command.args(["diff", "--name-only", "--diff-filter=AM"]);
+    if staged {
+        command.arg("--cached");
+    } else if let Some(base) = base {
+        command.arg(format!("{base}...HEAD"));
+    } else {
+        command.arg("HEAD");
+    }
+    let output = command.output().context("run git diff for Python policy")?;
+    if !output.status.success() {
+        bail!("git diff failed while enforcing Rust-first policy");
+    }
+    let blocked: Vec<_> = String::from_utf8(output.stdout)?
+        .lines()
+        .filter(|path| path.ends_with(".py"))
+        .filter(|path| {
+            *path != "setup_data.py"
+                && !path.starts_with("python/bisect_py/")
+                && !path.starts_with("scripts/data/")
+        })
+        .map(str::to_owned)
+        .collect();
+    if !blocked.is_empty() {
+        bail!(
+            "Rust-first policy blocks new or modified Python:\n{}",
+            blocked.join("\n")
+        );
+    }
+    println!("Rust-first Python boundary: PASS");
     Ok(())
 }
 
@@ -687,7 +827,12 @@ fn main() -> Result<()> {
         Action::Verify { package } => {
             let manifest = read_json(&package.join("manifest.json"))?;
             let builder = PathBuf::from(manifest["builder_path"].as_str().context("builder path")?);
-            if sha256(&builder)?
+            let builder_source = if builder.components().count() == 1 {
+                package.join(&builder)
+            } else {
+                custody_source(&builder)
+            };
+            if sha256(&builder_source)?
                 != manifest["builder_sha256"]
                     .as_str()
                     .context("builder hash")?
@@ -695,7 +840,7 @@ fn main() -> Result<()> {
                 bail!("operational tree builder hash mismatch");
             }
             if let Some(base) = manifest["base_builder_path"].as_str() {
-                if sha256(Path::new(base))?
+                if sha256(&custody_source(Path::new(base)))?
                     != manifest["base_builder_sha256"]
                         .as_str()
                         .context("base builder hash")?
@@ -750,6 +895,13 @@ fn main() -> Result<()> {
             println!("Operational recursive tree package verification: PASS");
             Ok(())
         }
+        Action::Batch {
+            bisect,
+            limit,
+            retry_failed,
+            max_seed,
+        } => batch(&bisect, limit, retry_failed, max_seed),
+        Action::AuditPython { staged, base } => audit_python(staged, base.as_deref()),
     }
 }
 
