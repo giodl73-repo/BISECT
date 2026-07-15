@@ -1,5 +1,8 @@
-use geo::{BoundingRect, EuclideanLength, Intersects};
-use geo_types::{Coord, Polygon, Rect};
+use geo::{
+    line_intersection::{line_intersection, LineIntersection},
+    BoundingRect, EuclideanLength, Intersects,
+};
+use geo_types::{Coord, Line, Polygon, Rect};
 use rayon::prelude::*;
 use rstar::{RTree, RTreeObject, AABB};
 /// Parallel spatial adjacency builder.
@@ -149,10 +152,6 @@ impl AdjacencyGraph {
 enum EdgeType {
     /// Shared boundary (LineString) — use actual length
     Land(f64),
-    /// Point contact (corners touching) — use 0.1m
-    Point,
-    /// No shared boundary (water gap) — use median of land lengths
-    Water,
 }
 
 /// Build adjacency graph from WKB-encoded polygons.
@@ -233,39 +232,20 @@ pub fn build_adjacency_graph(
         .map(|&(i, j)| classify_edge(&polygons[i], &polygons[j], i, j))
         .collect();
 
-    // Collect land boundary lengths for median computation
-    let mut land_lengths: Vec<f64> = edge_results
-        .iter()
-        .filter_map(|r| match r {
-            Some((_, EdgeType::Land(len))) => Some(*len),
-            _ => None,
-        })
-        .collect();
-    land_lengths.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let median_length = if land_lengths.is_empty() {
-        100.0 // fallback (shouldn't happen for real states)
-    } else {
-        land_lengths[land_lengths.len() / 2]
-    };
-
     // Build adjacency and edge_weights, applying min_boundary_length filter
     let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); n];
     let mut edge_weights: HashMap<(usize, usize), f64> = HashMap::new();
 
     for result in &edge_results {
         if let Some(((i, j), edge_type)) = result {
-            let length = match edge_type {
-                EdgeType::Land(len) => *len,
-                EdgeType::Point => 0.1,
-                EdgeType::Water => median_length,
-            };
-            if length < min_boundary_length {
+            let EdgeType::Land(length) = edge_type;
+            if *length < min_boundary_length {
                 continue; // filter short edges (e.g. point contacts)
             }
             adjacency[*i].push(*j);
             adjacency[*j].push(*i);
             let key = (*i.min(j), *i.max(j));
-            edge_weights.insert(key, length);
+            edge_weights.insert(key, *length);
         }
     }
 
@@ -399,7 +379,30 @@ fn parse_wkb_polygon(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyEr
     Ok(Polygon::new(exterior, interiors))
 }
 
-/// Classify the shared boundary between two polygons.
+fn boundary_lines(polygon: &Polygon<f64>) -> impl Iterator<Item = Line<f64>> + '_ {
+    polygon
+        .exterior()
+        .lines()
+        .chain(polygon.interiors().iter().flat_map(|ring| ring.lines()))
+}
+
+fn shared_boundary_length(left: &Polygon<f64>, right: &Polygon<f64>) -> f64 {
+    let right_lines: Vec<_> = boundary_lines(right).collect();
+    boundary_lines(left)
+        .flat_map(|left_line| {
+            right_lines.iter().filter_map(move |right_line| {
+                match line_intersection(left_line, *right_line) {
+                    Some(LineIntersection::Collinear { intersection }) => {
+                        Some(intersection.euclidean_length())
+                    }
+                    _ => None,
+                }
+            })
+        })
+        .sum()
+}
+
+/// Classify the exact shared boundary between two polygons.
 fn classify_edge(
     poly_i: &Polygon<f64>,
     poly_j: &Polygon<f64>,
@@ -411,34 +414,8 @@ fn classify_edge(
         return None; // no adjacency
     }
 
-    // Approximate boundary intersection via bounding-box overlap
-    // (Full geometric intersection via BooleanOps is more expensive;
-    // this gives sufficient accuracy for METIS edge weighting)
-
-    // Approximate shared boundary length using overlap of bounding boxes
-    // (A full geometric intersection would require geo::BooleanOps which is
-    // more expensive. This approximation is sufficient for weighting METIS cuts.)
-    let bb_i = poly_i.bounding_rect().unwrap();
-    let bb_j = poly_j.bounding_rect().unwrap();
-
-    // Compute overlap rectangle
-    let ox_min = bb_i.min().x.max(bb_j.min().x);
-    let ox_max = bb_i.max().x.min(bb_j.max().x);
-    let oy_min = bb_i.min().y.max(bb_j.min().y);
-    let oy_max = bb_i.max().y.min(bb_j.max().y);
-
-    let overlap_x = (ox_max - ox_min).max(0.0);
-    let overlap_y = (oy_max - oy_min).max(0.0);
-
-    // Estimate shared boundary as the shorter overlap dimension (perimeter of overlap)
-    let approx_length = overlap_x.min(overlap_y) * 2.0 + overlap_x.max(overlap_y);
-
-    if approx_length > 1.0 {
-        Some(((i, j), EdgeType::Land(approx_length)))
-    } else {
-        // Bboxes overlap but no significant shared boundary → point contact
-        Some(((i, j), EdgeType::Point))
-    }
+    let length = shared_boundary_length(poly_i, poly_j);
+    (length > 1e-6).then_some(((i, j), EdgeType::Land(length)))
 }
 
 #[cfg(test)]
@@ -539,6 +516,7 @@ mod tests {
         // Key must be (0, 1) not (1, 0)
         assert!(graph.edge_weights.contains_key(&(0, 1)));
         assert!(!graph.edge_weights.contains_key(&(1, 0)));
+        assert_eq!(graph.edge_weights[&(0, 1)], 1000.0);
     }
 
     #[test]
