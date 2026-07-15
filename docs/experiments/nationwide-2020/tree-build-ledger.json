@@ -41,9 +41,9 @@
       "status": "failed",
       "exit_code": 1,
       "command": [
-        "population-floor-seed-screen"
+        "extended-population-floor-seed-screen-32"
       ],
-      "output": "The 52-seat root, first 26-seat half, first 13-seat child, and completed six-seat subtree reached their arithmetic population floors. At seven-seat node 001, two seed screens timed out after 180 seconds and all 14 completed screens were population-refined; best seed 3 reached deviation 261137 against arithmetic floor 2. This is an unresolved local-search frontier, not proof of infeasibility."
+      "output": "The 52-seat root, first 26-seat half, first 13-seat child, and completed six-seat subtree reached their arithmetic population floors. At seven-seat node 001, eight of 32 seed screens timed out after 180 seconds and all 24 completed screens were population-refined; best seed 3 remained at deviation 261137 against arithmetic floor 2. This is an unresolved extended local-search frontier, not proof of infeasibility."
     },
     {
       "state": "CO",

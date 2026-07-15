@@ -142,9 +142,10 @@ frontier, not proof of infeasibility.
 
 California reached the arithmetic population floors at its 52-seat root,
 first 26-seat half, first 13-seat child, and completed six-seat subtree. At
-seven-seat node `001`, two screens timed out and all 14 completed screens were
-population-refined; best seed 3 reached deviation 261,137 against floor 2.
-This is an unresolved local-search frontier, not proof of infeasibility.
+seven-seat node `001`, eight of 32 screens timed out and all 24 completed
+screens were population-refined; best seed 3 remained at deviation 261,137
+against floor 2. This is an unresolved extended local-search frontier, not
+proof of infeasibility.
 
 Texas reached the arithmetic population floors at its 38-seat root, complete
 first 19-seat half, second 19-seat parent, complete nine-seat child, and the

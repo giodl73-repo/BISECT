@@ -109,5 +109,6 @@ Next unblocked work:
 > seed 28, Arizona remained deviation 9,047/floor 1 after 32 seeds, and North
 > Carolina was recovered at seed 18. Florida's former seven-seat frontier was
 > recovered at seed 18, but its newly exposed three-seat node `100` remained at
-> deviation 3/floor 0 after 32 seeds. California's seven-seat node `001` is the
-> next extended target.
+> deviation 3/floor 0 after 32 seeds. California's seven-seat node `001`
+> remained at deviation 261,137/floor 2 after 32 seeds, with eight screen
+> timeouts. Texas's five-seat node `110` is the next extended target.
