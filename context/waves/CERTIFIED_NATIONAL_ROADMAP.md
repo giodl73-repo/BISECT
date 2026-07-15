@@ -99,9 +99,10 @@ Current objective:
 Next unblocked work:
 
 > Continue Pulse 03 by revisiting the preserved Arizona, California, Florida,
-> North Carolina, New York, Oklahoma, Texas, Utah, and Washington
+> North Carolina, New York, Oklahoma, Texas, and Washington
 > local-search frontiers. Every multi-district State has been attempted; no
 > untouched State remains, and Pulse 04 stays blocked until operational
-> packages are complete. Washington's legacy allocation crash and Arizona's
-> legacy stack overflow are now preserved local-search frontiers. Utah is the
-> next old-policy retry.
+> packages are complete. All stale tooling and single-policy failures have now
+> been retried; the next work is a deterministic expansion beyond the current
+> 16-seed local-search frontier, starting with the near-floor Washington and
+> New York nodes.

@@ -434,12 +434,12 @@
       "state": "UT",
       "districts": 4,
       "block_count": 71207,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "population-floor-seed-screen"
+        "recovered-from-package"
       ],
-      "output": "No seed 1-16 reached arithmetic population floor at a child node; best deviation 236324."
+      "output": "Recovered from verified package manifest."
     },
     {
       "state": "VA",
@@ -486,7 +486,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 35,
-  "failed_count": 9,
+  "built_count": 36,
+  "failed_count": 8,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
