@@ -105,5 +105,6 @@ Next unblocked work:
 > packages are complete. All stale tooling and single-policy failures have now
 > been retried; the next work is a deterministic expansion beyond the current
 > 16-seed local-search frontier. Washington was recovered at seed 27, while New
-> York remained deviation 2/floor 0 after 32 seeds, and Oklahoma was recovered
-> at seed 28. Arizona's three-seat frontier is the next extended target.
+> York remained deviation 2/floor 0 after 32 seeds, Oklahoma was recovered at
+> seed 28, and Arizona remained deviation 9,047/floor 1 after 32 seeds. North
+> Carolina's timeout-limited seven-seat node is the next extended target.

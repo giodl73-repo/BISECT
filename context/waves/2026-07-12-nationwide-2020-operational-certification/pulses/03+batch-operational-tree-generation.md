@@ -169,9 +169,9 @@ nine nodes, and records three screen timeouts from the original 16-seed pass.
 Arizona's original articulation-thread stack overflow was also cleared by the
 current bounded-screening workflow. Its nine-seat root, complete four-seat
 half, second five-seat parent, and two-seat child reach their arithmetic
-population floors. At three-seat node `11`, all 16 screens completed and were
-population-refined; best seed 3 reached deviation 9,047 against arithmetic
-floor 1. This is an unresolved local-search frontier, not proof of
+population floors. At three-seat node `11`, all 32 screens completed and were
+population-refined; best seed 3 remained at deviation 9,047 against arithmetic
+floor 1. This is an unresolved extended local-search frontier, not proof of
 infeasibility.
 
 Utah was recovered from its old single-policy child-node miss under the
