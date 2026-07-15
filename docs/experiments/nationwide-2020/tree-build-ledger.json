@@ -89,6 +89,17 @@
       "output": "Recovered from verified package manifest."
     },
     {
+      "state": "FL",
+      "districts": 28,
+      "block_count": 390066,
+      "status": "failed",
+      "exit_code": 1,
+      "command": [
+        "population-floor-seed-screen"
+      ],
+      "output": "The 28-seat root, complete left 14-seat half, and right 14-seat parent reached their arithmetic population floors. At right-half seven-seat node 10, all 16 completed screens were population-refined; best seed 4 reached deviation 759388 against arithmetic floor 0. This is an unresolved local-search frontier, not proof of infeasibility."
+    },
+    {
       "state": "GA",
       "districts": 14,
       "block_count": 232717,
@@ -502,6 +513,6 @@
     }
   ],
   "built_count": 34,
-  "failed_count": 7,
+  "failed_count": 8,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }
