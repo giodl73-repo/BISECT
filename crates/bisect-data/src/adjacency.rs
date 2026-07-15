@@ -1,6 +1,7 @@
 use geo::{BoundingRect, EuclideanLength, Intersects};
 use geo_types::{Coord, Polygon, Rect};
 use rayon::prelude::*;
+use rstar::{RTree, RTreeObject, AABB};
 /// Parallel spatial adjacency builder.
 ///
 /// Replaces the single-threaded Python Shapely intersection loop in adjacency.py.
@@ -14,6 +15,20 @@ use rayon::prelude::*;
 /// 4. Return adjacency list + edge weights (boundary lengths in metres)
 use std::collections::HashMap;
 use thiserror::Error;
+
+#[derive(Clone)]
+struct IndexedBounds {
+    index: usize,
+    envelope: AABB<[f64; 2]>,
+}
+
+impl RTreeObject for IndexedBounds {
+    type Envelope = AABB<[f64; 2]>;
+
+    fn envelope(&self) -> Self::Envelope {
+        self.envelope
+    }
+}
 
 #[derive(Debug, Error)]
 pub enum AdjacencyError {
@@ -187,18 +202,30 @@ pub fn build_adjacency_graph(
         })
         .collect();
 
-    // Find candidate pairs via bounding-box overlap (O(n²) scan — replace with
-    // R-tree in a future pass once the `rstar` integration is added)
-    // For now, this is already much faster than Python because the intersection
-    // computation (the real bottleneck) runs in parallel.
-    let mut candidate_pairs: Vec<(usize, usize)> = Vec::new();
-    for i in 0..n {
-        for j in (i + 1)..n {
-            if bboxes_overlap(&bboxes[i], &bboxes[j]) {
-                candidate_pairs.push((i, j));
-            }
-        }
-    }
+    // Bulk-load a spatial index and enumerate only bounding-box intersections.
+    // Census block graphs contain hundreds of thousands of polygons, making an
+    // O(n²) scan infeasible even when exact intersection work is parallel.
+    let indexed: Vec<_> = bboxes
+        .iter()
+        .enumerate()
+        .map(|(index, bounds)| IndexedBounds {
+            index,
+            envelope: AABB::from_corners(
+                [bounds.min().x, bounds.min().y],
+                [bounds.max().x, bounds.max().y],
+            ),
+        })
+        .collect();
+    let tree = RTree::bulk_load(indexed.clone());
+    let candidate_pairs: Vec<(usize, usize)> = indexed
+        .par_iter()
+        .flat_map_iter(|item| {
+            tree.locate_in_envelope_intersecting(&item.envelope)
+                .filter_map(move |other| {
+                    (item.index < other.index).then_some((item.index, other.index))
+                })
+        })
+        .collect();
 
     // Parallel intersection computation — the O(E) Shapely bottleneck
     let edge_results: Vec<Option<((usize, usize), EdgeType)>> = candidate_pairs
@@ -370,15 +397,6 @@ fn parse_wkb_polygon(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyEr
         rings.into_iter().map(geo_types::LineString::new).collect();
 
     Ok(Polygon::new(exterior, interiors))
-}
-
-/// Check if two axis-aligned bounding boxes overlap.
-#[inline]
-fn bboxes_overlap(a: &Rect<f64>, b: &Rect<f64>) -> bool {
-    !(a.max().x < b.min().x
-        || b.max().x < a.min().x
-        || a.max().y < b.min().y
-        || b.max().y < a.min().y)
 }
 
 /// Classify the shared boundary between two polygons.
