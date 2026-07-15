@@ -99,11 +99,11 @@ Current objective:
 Next unblocked work:
 
 > Continue Pulse 03 by revisiting the preserved Arizona, California, Florida,
-> North Carolina, New York, Oklahoma, and Texas
+> North Carolina, New York, and Texas
 > local-search frontiers. Every multi-district State has been attempted; no
 > untouched State remains, and Pulse 04 stays blocked until operational
 > packages are complete. All stale tooling and single-policy failures have now
 > been retried; the next work is a deterministic expansion beyond the current
 > 16-seed local-search frontier. Washington was recovered at seed 27, while New
-> York remained deviation 2/floor 0 after 32 seeds. Oklahoma's small three-seat
-> frontier is the next extended-frontier target.
+> York remained deviation 2/floor 0 after 32 seeds, and Oklahoma was recovered
+> at seed 28. Arizona's three-seat frontier is the next extended target.

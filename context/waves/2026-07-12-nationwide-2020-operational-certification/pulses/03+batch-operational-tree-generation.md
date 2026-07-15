@@ -23,9 +23,9 @@ State and reuse the completed one-district packages.
 
 ## Progress
 
-The ledger contains 37 verified multi-district State packages and seven open
+The ledger contains 38 verified multi-district State packages and six open
 failures (Arizona, California, Florida, North Carolina, New York,
-Oklahoma, and Texas). Every multi-district State has now
+and Texas). Every multi-district State has now
 been attempted; no untouched State remains. Virginia is the first
 package completed under deterministic two-phase seed screening: METIS-only
 screens are ranked before population refinement, each screen has a recorded
@@ -49,12 +49,11 @@ Tennessee completed nine connected leaves after bounded root and five-seat-node
 screen timeouts. All eight recursive nodes reached their arithmetic floors,
 including the resumed final three- and two-seat nodes.
 
-Oklahoma reached arithmetic floor 1 at its root and two-seat child. Its
-remaining three-seat child exhausted all 15 completed screens and population
-refinements after one screen timeout; best seed 8 reached deviation 20 against
-floor 1. This is preserved as an unresolved local-search frontier, not a proof
-of infeasibility. Future failed runs now write their full seed-screening and
-best-objective evidence before exiting.
+Oklahoma's original three-seat frontier was recovered by the 32-seed
+extension. Seed 28 reached floor 1 at the former frontier, and seed 21 reached
+floor 1 at its final two-seat child. The completed package produces five
+connected leaves and proves floor 1 at all four recursive nodes; its combined
+original and extended screening evidence records ten timeouts.
 
 Alabama completed seven connected leaves with all six recursive nodes at their
 arithmetic population floors. Root seed 13 reached floor 3 after four bounded
@@ -186,5 +185,5 @@ existing package hashes. Extended packages bind both wrapper and base-builder
 hashes and record their seed-frontier maximum in the package manifest.
 
 No untouched multi-district State remains. Pulse 03 now continues by revisiting
-the seven preserved local-search frontiers; national wall-to-wall verification
+the six preserved local-search frontiers; national wall-to-wall verification
 remains blocked until operational packages are complete.
