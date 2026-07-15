@@ -168,6 +168,14 @@ population-refined; three seeds reached deviation 3, with seed 7 best by the
 ranked objective, against arithmetic floor 2. This is an unresolved
 local-search frontier, not proof of infeasibility.
 
+Arizona's original articulation-thread stack overflow was also cleared by the
+current bounded-screening workflow. Its nine-seat root, complete four-seat
+half, second five-seat parent, and two-seat child reach their arithmetic
+population floors. At three-seat node `11`, all 16 screens completed and were
+population-refined; best seed 3 reached deviation 9,047 against arithmetic
+floor 1. This is an unresolved local-search frontier, not proof of
+infeasibility.
+
 No untouched multi-district State remains. Pulse 03 now continues by revisiting
 the nine preserved local-search frontiers; national wall-to-wall verification
 remains blocked until operational packages are complete.
