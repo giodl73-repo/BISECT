@@ -6,6 +6,26 @@
 [ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
 repository-local review panels.
 
+## R package family
+
+BISECT is the primary application consumer of a reusable civic-evidence family:
+
+```text
+                    ┌→ RPLAN  — district-plan packages, IO, and audits ─┐
+RLINE — kernels ────┤                                                   ├→ BISECT
+                    └→ RCOUNT — count packages and audit replay ────────┘
+```
+
+| Repo | Responsibility |
+|------|----------------|
+| [RLINE](https://github.com/giodl73-repo/RLINE) | Product-neutral graph, context, statistics, optimization, and history kernels. |
+| [RPLAN](https://github.com/giodl73-repo/RPLAN) | Portable district-plan representation, interchange, hashing, and audit certificates. |
+| [RCOUNT](https://github.com/giodl73-repo/RCOUNT) | Election-count package verification, reconciliation, aggregation, and audit replay. |
+| **BISECT** | Redistricting generation, analysis, maps, reports, verification, and research workflows. |
+
+Reusable contracts move outward into RLINE, RPLAN, or RCOUNT; BISECT retains
+application policy, algorithms, maps, reports, and research.
+
 `bisect` draws congressional and state-legislative districts that are compact, population-balanced, and reviewable from first principles for supported chambers, states, and census years. Evidence-producing label-pipeline runs record hashes and provenance for byte-level verification; historical outputs may need regeneration or supplemental manifests before release-level replay claims.
 
 ## How it works
