@@ -6,6 +6,21 @@
 [ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
 repository-local review panels.
 
+## Show someone (start here)
+
+Hand the repo to an election researcher or an algorithm implementer without a
+maintainer tour:
+
+| Audience | Path | Time |
+|---|---|---|
+| **Election researcher / journalist** | [SHOWCASE.md](SHOWCASE.md) → [researcher brief](docs/show/researcher-brief.md) → [dashboards](https://giodl73-repo.github.io/BISECT/) | 15–25 min |
+| **Algorithm implementer** | [SHOWCASE.md](SHOWCASE.md) → [implementer brief](docs/show/implementer-brief.md) → [algorithm explorer](docs/quickstart/quickstart-algorithm-explorer.md) | 20–40 min |
+| **Either, hands-on** | [Vermont 2020 walkthrough](examples/vermont-2020-walkthrough/README.md) | 2–5 min after build |
+
+Research demonstration only — not court-ready, not an official score, not a
+fairness certificate. Claim boundaries:
+[docs/vtrace/COMMUNICATIONS_STRATEGY.md](docs/vtrace/COMMUNICATIONS_STRATEGY.md).
+
 ## R package family
 
 BISECT is the primary application consumer of a reusable civic-evidence family:

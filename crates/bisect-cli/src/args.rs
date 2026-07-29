@@ -174,7 +174,7 @@ pub enum Stage {
 #[command(
     name = "bisect",
     about = "Congressional redistricting pipeline -- compact, population-balanced districts",
-    before_help = "QUICKSTART:\n  1. bisect fetch --type adjacency --states VT --year 2020\n  2. bisect state --state VT --year 2020 --label vt_test\n  3. bisect analyze --label vt_test --types all\n  4. bisect report --label vt_test --format html\n  5. bisect tui   (interactive interface)\n  6. bisect doctor --label vt_test  (diagnose plan)\n\nSee: bisect <command> --help for detailed options.\n",
+    before_help = "SHOW SOMEONE:\n  README → SHOWCASE.md (researcher vs implementer paths)\n  Hands-on: examples/vermont-2020-walkthrough/\n\nQUICKSTART:\n  1. bisect fetch --type adjacency --states VT --year 2020\n  2. bisect state --state VT --year 2020 --label vt_test\n  3. bisect analyze --label vt_test --types all\n  4. bisect report --label vt_test --format html\n  5. bisect tui   (interactive interface)\n  6. bisect doctor --label vt_test  (diagnose plan)\n\nSee: bisect <command> --help for detailed options.\n",
     version,
     propagate_version = true
 )]
