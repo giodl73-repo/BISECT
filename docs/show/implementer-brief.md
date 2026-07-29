@@ -73,7 +73,7 @@ rcount-*            count package verify / replay
 ```
 
 Workspace members are listed in the root `Cargo.toml`. Prefer extending a named
-crate over growing `bisect-cli/src/runner.rs` further.
+crate over growing `bisect-cli/src/runner/ (`mod.rs` + `support.rs` + `tests.rs`)` further.
 
 ## Determinism and nondeterminism
 
