@@ -132,6 +132,25 @@ enum Action {
         #[arg(long)]
         context: PathBuf,
     },
+    BuildNrsState {
+        #[arg(long)]
+        bisect: PathBuf,
+        #[arg(long)]
+        context: PathBuf,
+        #[arg(long)]
+        districts: usize,
+        #[arg(long)]
+        seed_package: PathBuf,
+        #[arg(long)]
+        out_dir: PathBuf,
+        #[arg(long)]
+        generated_at: String,
+    },
+    VerifyNrsState {
+        package: PathBuf,
+        #[arg(long)]
+        context: PathBuf,
+    },
     RctxBatch {
         #[arg(long, default_value_t = 2)]
         workers: usize,
@@ -900,6 +919,511 @@ impl BuildState<'_> {
         }
         Ok(())
     }
+}
+
+struct NrsBuildState<'a> {
+    bisect: &'a Path,
+    out: &'a Path,
+    original: &'a Value,
+    engine_seed: u64,
+    assignment: Vec<i64>,
+    nodes: Vec<Value>,
+    leaves: Vec<Value>,
+}
+
+impl NrsBuildState<'_> {
+    fn visit(&mut self, visit: Visit) -> Result<()> {
+        let Visit {
+            context,
+            context_path,
+            global,
+            seats,
+            path,
+            offset,
+            ..
+        } = visit;
+        let populations = context["populations"]
+            .as_array()
+            .context("NRS node populations")?;
+        let unit_ids = context
+            .pointer("/units/unit_ids")
+            .and_then(Value::as_array)
+            .context("NRS node unit ids")?;
+        if seats == 1 {
+            for &unit in &global {
+                self.assignment[unit] = offset as i64;
+            }
+            let population: i64 = global
+                .iter()
+                .map(|&unit| self.original["populations"][unit].as_i64().unwrap_or(0))
+                .sum();
+            self.leaves.push(json!({
+                "path":path,"district_zero_based":offset,"district_one_based":offset + 1,
+                "unit_count":global.len(),"population":population,
+                "minimum_geoid":unit_ids.first().and_then(Value::as_str)
+            }));
+            return Ok(());
+        }
+        let name = if path.is_empty() {
+            "root".into()
+        } else {
+            format!("node-{path}")
+        };
+        let node_dir = self.out.join("nodes").join(name);
+        let discovery = run_discovery(
+            self.bisect,
+            &context_path,
+            seats,
+            &node_dir,
+            self.engine_seed,
+            "nrs-v0-1",
+            None,
+        )?
+        .context("NRS discovery unexpectedly timed out")?;
+        prune(&node_dir)?;
+        if discovery_seed(&discovery)? != self.engine_seed
+            || !discovery["method"].as_str().is_some_and(|method| {
+                method.contains("niter=100") && method.contains("refinement=nrsv01")
+            })
+        {
+            bail!("NRS discovery profile mismatch at node {path}");
+        }
+        let raw_labels = discovery
+            .pointer("/objective/canonical_assignment")
+            .and_then(Value::as_array)
+            .context("NRS canonical assignment")?;
+        if raw_labels.len() != global.len() {
+            bail!("NRS node assignment length mismatch at {path}");
+        }
+        let reverse = raw_labels.first().and_then(Value::as_u64) == Some(1);
+        let labels: Vec<u64> = raw_labels
+            .iter()
+            .map(|label| {
+                let label = label.as_u64().context("NRS child label")?;
+                if label > 1 {
+                    bail!("NRS non-binary child label");
+                }
+                Ok(if reverse { 1 - label } else { label })
+            })
+            .collect::<Result<_>>()?;
+        if labels.first() != Some(&0) {
+            bail!("NRS minimum-GEOID orientation failed at {path}");
+        }
+        let floor_seats = seats / 2;
+        let ceil_seats = seats - floor_seats;
+        let child_seats = if reverse {
+            [ceil_seats, floor_seats]
+        } else {
+            [floor_seats, ceil_seats]
+        };
+        let parent_population: i64 = populations.iter().map(|v| v.as_i64().unwrap_or(0)).sum();
+        let arithmetic_floor = ratio_floor(
+            parent_population,
+            seats,
+            if reverse { floor_seats } else { ceil_seats },
+        );
+        let achieved = field_u64(
+            &discovery,
+            &["objective", "primary", "max_population_deviation_scaled"],
+        )?;
+        self.nodes.push(json!({
+            "path":path,"seats":seats,"child_seats":child_seats,
+            "parent_population":parent_population,"minimum_geoid":unit_ids[0],
+            "discovery_id":discovery["discovery_id"],"engine_seed_i32":self.engine_seed,
+            "discovery_path":release_relative(self.out,&node_dir.join("certified-discovery.json"))?,
+            "discovery_sha256":sha256(&node_dir.join("certified-discovery.json"))?,
+            "objective":objective(&discovery)?,
+            "population_floor":{"lower_bound":arithmetic_floor,"attained":achieved == arithmetic_floor},
+            "orientation_reversed_from_engine":reverse,
+            "context_canonical_sha256":canonical_sha256(&context)?
+        }));
+        for label in 0..=1usize {
+            let local: Vec<usize> = labels
+                .iter()
+                .enumerate()
+                .filter_map(|(unit, child)| (*child == label as u64).then_some(unit))
+                .collect();
+            if local.is_empty() {
+                bail!("NRS node {path} produced empty child {label}");
+            }
+            let child_global = local.iter().map(|&unit| global[unit]).collect();
+            let child_path = format!("{path}{label}");
+            let child_context = subset_context(
+                &context,
+                &local,
+                format!(
+                    "nrs-v0.1-node-{}-{label}",
+                    if path.is_empty() { "root" } else { &path }
+                ),
+            )?;
+            let child_context_path = self.out.join(format!("context-{child_path}.rctx"));
+            write_json(&child_context_path, &child_context, false)?;
+            self.visit(Visit {
+                context: child_context,
+                context_path: child_context_path,
+                global: child_global,
+                seats: child_seats[label],
+                path: child_path,
+                offset: if label == 0 {
+                    offset
+                } else {
+                    offset + child_seats[0]
+                },
+                seed: self.engine_seed,
+            })?;
+        }
+        Ok(())
+    }
+}
+
+fn build_nrs_state(
+    bisect: &Path,
+    context_path: &Path,
+    districts: usize,
+    seed_package: &Path,
+    out: &Path,
+    generated_at: &str,
+) -> Result<()> {
+    if out.exists() {
+        bail!("NRS State package already exists: {}", out.display());
+    }
+    if !git_text(&["status", "--porcelain"])?.is_empty() {
+        bail!("NRS State package must be generated from a clean working tree");
+    }
+    verify_nrs_seed_package(seed_package, context_path)?;
+    let seed_record = read_json(&seed_package.join("seed_record.json"))?;
+    let engine_seed = seed_record["engine_seed_i32"]
+        .as_u64()
+        .context("NRS engine seed")?;
+    let seed_districts = read_json(&seed_package.join("manifest.json"))?["district_count"]
+        .as_u64()
+        .context("NRS seed district count")? as usize;
+    if districts != seed_districts || districts == 0 {
+        bail!("NRS State and seed-package district counts disagree");
+    }
+    fs::create_dir_all(out.join("seed"))?;
+    for entry in fs::read_dir(seed_package)? {
+        let path = entry?.path();
+        if path.is_file() {
+            copy_artifact(&path, &out.join("seed").join(path.file_name().unwrap()))?;
+        }
+    }
+    let context = read_json(context_path)?;
+    let unit_ids = context
+        .pointer("/units/unit_ids")
+        .and_then(Value::as_array)
+        .context("NRS unit ids")?;
+    let mut state = NrsBuildState {
+        bisect,
+        out,
+        original: &context,
+        engine_seed,
+        assignment: vec![-1; unit_ids.len()],
+        nodes: Vec::new(),
+        leaves: Vec::new(),
+    };
+    state.visit(Visit {
+        context: context.clone(),
+        context_path: context_path.to_path_buf(),
+        global: (0..unit_ids.len()).collect(),
+        seats: districts,
+        path: String::new(),
+        offset: 0,
+        seed: engine_seed,
+    })?;
+    if state.assignment.iter().any(|district| *district < 0) {
+        bail!("NRS State tree left blocks unassigned");
+    }
+    for district in 0..districts {
+        if !connected(&context, &state.assignment, district as i64)? {
+            bail!("NRS district {district} is disconnected");
+        }
+    }
+    let assignments = unit_ids
+        .iter()
+        .zip(&state.assignment)
+        .map(|(geoid, district)| {
+            Ok((
+                geoid.as_str().context("NRS GEOID")?.to_owned(),
+                json!(district + 1),
+            ))
+        })
+        .collect::<Result<Map<String, Value>>>()?;
+    let population_total: i64 = context["populations"]
+        .as_array()
+        .context("NRS populations")?
+        .iter()
+        .filter_map(Value::as_i64)
+        .sum();
+    let all_floors = state
+        .nodes
+        .iter()
+        .all(|node| node["population_floor"]["attained"] == true);
+    let tree = json!({
+        "schema_version":"nrs-baseline-tree-v0.1-v1","state":context["units"]["state"],
+        "year":2020,"districts":districts,"engine_seed_i32":engine_seed,
+        "unit_count":unit_ids.len(),"population_total":population_total,
+        "nodes":state.nodes,"leaves":state.leaves,"assignment":state.assignment,
+        "population_arithmetic_floor_all_nodes":all_floors,
+        "claim_boundary":"Single-manifest-seed NRS v0.1 reference-engine baseline. Boundary and canonical global optimality are not claimed."
+    });
+    write_json(&out.join("baseline-tree.json"), &tree, true)?;
+    write_json(
+        &out.join("baseline_assignments.json"),
+        &json!({
+            "schema_version":"nrs-baseline-assignments-v0.1-v1","label_base":1,
+            "canonical_order":"sorted-geoid","assignments":assignments
+        }),
+        true,
+    )?;
+    for entry in fs::read_dir(out)? {
+        let path = entry?.path();
+        if path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.starts_with("context-") && name.ends_with(".rctx"))
+        {
+            remove_path(&path)?;
+        }
+    }
+    let artifact_paths = release_files(out)?;
+    let artifacts = artifact_paths
+        .iter()
+        .map(|path| Ok(json!({"path":release_relative(out,path)?,"sha256":sha256(path)?})))
+        .collect::<Result<Vec<_>>>()?;
+    write_json(
+        &out.join("baseline_manifest.json"),
+        &json!({
+            "schema_version":"nrs-baseline-package-v0.1-v1",
+            "BISECT_version":env!("CARGO_PKG_VERSION"),
+            "BISECT_build_commit":git_text(&["rev-parse","HEAD"]).unwrap_or_else(|_|"unknown".into()),
+            "rustc_version":Command::new("rustc").arg("--version").output().ok().and_then(|output|String::from_utf8(output.stdout).ok()).map(|text|text.trim().to_owned()).unwrap_or_else(||"unknown".into()),
+            "created_at":generated_at,"status":"reference-baseline-candidate",
+            "source_context_sha256":sha256(context_path)?,
+            "input_manifest_canonical_sha256":seed_record["input_manifest_canonical_sha256"],
+            "seed_u64_little_endian":seed_record["seed_u64_little_endian"],
+            "engine_seed_i32":engine_seed,"artifacts":artifacts,
+            "verification_status":"pass",
+            "non_claims":["boundary global optimality","canonical global optimality","VRA compliance","partisan fairness","legal validity","official adoption"]
+        }),
+        true,
+    )?;
+    verify_nrs_state(out, context_path)?;
+    println!("NRS State baseline package: VERIFIED ({})", out.display());
+    Ok(())
+}
+
+fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
+    verify_nrs_seed_package(&package.join("seed"), context_path)?;
+    let manifest = read_json(&package.join("baseline_manifest.json"))?;
+    if manifest["schema_version"] != "nrs-baseline-package-v0.1-v1"
+        || manifest["verification_status"] != "pass"
+        || manifest["status"] != "reference-baseline-candidate"
+        || manifest["source_context_sha256"] != sha256(context_path)?
+    {
+        bail!("NRS baseline manifest posture or context mismatch");
+    }
+    for artifact in manifest["artifacts"]
+        .as_array()
+        .context("NRS baseline artifacts")?
+    {
+        let relative = artifact["path"]
+            .as_str()
+            .context("NRS baseline artifact path")?;
+        if relative.contains("..") || Path::new(relative).is_absolute() {
+            bail!("nonportable NRS baseline artifact path");
+        }
+        let path = package.join(relative);
+        if sha256(&path)? != artifact["sha256"] {
+            bail!("NRS baseline artifact hash mismatch: {relative}");
+        }
+    }
+    let seed_record = read_json(&package.join("seed/seed_record.json"))?;
+    if manifest["input_manifest_canonical_sha256"] != seed_record["input_manifest_canonical_sha256"]
+        || manifest["seed_u64_little_endian"] != seed_record["seed_u64_little_endian"]
+        || manifest["engine_seed_i32"] != seed_record["engine_seed_i32"]
+    {
+        bail!("NRS baseline seed link mismatch");
+    }
+    let context = read_json(context_path)?;
+    let tree = read_json(&package.join("baseline-tree.json"))?;
+    let assignments = read_json(&package.join("baseline_assignments.json"))?;
+    if tree["schema_version"] != "nrs-baseline-tree-v0.1-v1"
+        || assignments["schema_version"] != "nrs-baseline-assignments-v0.1-v1"
+        || assignments["label_base"] != 1
+    {
+        bail!("unknown NRS baseline tree or assignment schema");
+    }
+    let districts = tree["districts"].as_u64().context("NRS districts")? as usize;
+    let unit_ids = context
+        .pointer("/units/unit_ids")
+        .and_then(Value::as_array)
+        .context("NRS context unit ids")?;
+    let assignment = tree["assignment"]
+        .as_array()
+        .context("NRS tree assignment")?
+        .iter()
+        .map(|value| value.as_i64().context("NRS district label"))
+        .collect::<Result<Vec<_>>>()?;
+    if assignment.len() != unit_ids.len()
+        || assignment
+            .iter()
+            .any(|label| *label < 0 || *label >= districts as i64)
+        || tree["unit_count"] != unit_ids.len()
+    {
+        bail!("NRS assignment universe mismatch");
+    }
+    let assignment_map = assignments["assignments"]
+        .as_object()
+        .context("NRS assignment object")?;
+    if assignment_map.len() != unit_ids.len() {
+        bail!("NRS assignment object coverage mismatch");
+    }
+    for (unit, district) in unit_ids.iter().zip(&assignment) {
+        let geoid = unit.as_str().context("NRS GEOID")?;
+        if assignment_map.get(geoid).and_then(Value::as_i64) != Some(district + 1) {
+            bail!("NRS assignment representation mismatch for {geoid}");
+        }
+    }
+    for district in 0..districts {
+        if !connected(&context, &assignment, district as i64)? {
+            bail!("NRS disconnected district {district}");
+        }
+    }
+    let nodes = tree["nodes"].as_array().context("NRS nodes")?;
+    let leaves = tree["leaves"].as_array().context("NRS leaves")?;
+    if nodes.len() + 1 != districts || leaves.len() != districts {
+        bail!("NRS recursive tree size mismatch");
+    }
+    let node_seats: BTreeMap<String, usize> = nodes
+        .iter()
+        .map(|node| {
+            Ok((
+                node["path"].as_str().context("NRS node path")?.to_owned(),
+                node["seats"].as_u64().context("NRS node seats")? as usize,
+            ))
+        })
+        .collect::<Result<_>>()?;
+    let leaf_paths: BTreeMap<String, usize> = leaves
+        .iter()
+        .map(|leaf| {
+            Ok((
+                leaf["path"].as_str().context("NRS leaf path")?.to_owned(),
+                leaf["district_zero_based"]
+                    .as_u64()
+                    .context("NRS leaf district")? as usize,
+            ))
+        })
+        .collect::<Result<_>>()?;
+    let root_valid = if districts == 1 {
+        leaf_paths.get("") == Some(&0)
+    } else {
+        node_seats.get("") == Some(&districts)
+    };
+    if !root_valid
+        || leaf_paths.values().copied().collect::<BTreeSet<_>>()
+            != (0..districts).collect::<BTreeSet<_>>()
+    {
+        bail!("NRS recursive root or leaf labels mismatch");
+    }
+    let engine_seed = seed_record["engine_seed_i32"]
+        .as_u64()
+        .context("NRS seed")?;
+    for node in nodes {
+        let path = node["path"].as_str().context("NRS node path")?;
+        let seats = node["seats"].as_u64().context("NRS node seats")? as usize;
+        let child_seats = node["child_seats"]
+            .as_array()
+            .context("NRS child seats")?
+            .iter()
+            .map(|value| {
+                value
+                    .as_u64()
+                    .context("NRS child seat")
+                    .map(|value| value as usize)
+            })
+            .collect::<Result<Vec<_>>>()?;
+        if child_seats.len() != 2 || child_seats.iter().sum::<usize>() != seats || {
+            let mut sorted = child_seats.clone();
+            sorted.sort_unstable();
+            sorted != vec![seats / 2, seats - seats / 2]
+        } {
+            bail!("NRS child seat schedule mismatch at {path}");
+        }
+        for label in 0..=1 {
+            let child = format!("{path}{label}");
+            if node_seats
+                .get(&child)
+                .copied()
+                .or_else(|| leaf_paths.contains_key(&child).then_some(1))
+                != Some(child_seats[label])
+            {
+                bail!("NRS recursive child mismatch at {child}");
+            }
+        }
+        if node["engine_seed_i32"] != engine_seed {
+            bail!("NRS node seed mismatch at {path}");
+        }
+        let discovery_path = package.join(
+            node["discovery_path"]
+                .as_str()
+                .context("NRS discovery path")?,
+        );
+        if sha256(&discovery_path)? != node["discovery_sha256"] {
+            bail!("NRS discovery hash mismatch at {path}");
+        }
+        let discovery = read_json(&discovery_path)?;
+        if discovery["discovery_id"] != node["discovery_id"]
+            || discovery_seed(&discovery)? != engine_seed
+            || !discovery["method"].as_str().is_some_and(|method| {
+                method.contains("niter=100") && method.contains("refinement=nrsv01")
+            })
+            || objective(&discovery)? != &node["objective"]
+        {
+            bail!("NRS discovery record mismatch at {path}");
+        }
+        let lower_bound = node["population_floor"]["lower_bound"]
+            .as_u64()
+            .context("NRS population lower bound")?;
+        let achieved = field_u64(
+            &discovery,
+            &["objective", "primary", "max_population_deviation_scaled"],
+        )?;
+        if node["population_floor"]["attained"] != (achieved == lower_bound) {
+            bail!("NRS population-floor classification mismatch at {path}");
+        }
+        let subtree_districts: BTreeSet<usize> = leaf_paths
+            .iter()
+            .filter_map(|(leaf_path, district)| leaf_path.starts_with(path).then_some(*district))
+            .collect();
+        let first_unit = assignment
+            .iter()
+            .enumerate()
+            .find(|(_, district)| subtree_districts.contains(&(**district as usize)))
+            .map(|(unit, _)| unit)
+            .context("NRS empty node subtree")?;
+        let first_district = assignment[first_unit] as usize;
+        let first_leaf_path = leaf_paths
+            .iter()
+            .find_map(|(leaf_path, district)| (*district == first_district).then_some(leaf_path))
+            .context("NRS missing first leaf")?;
+        if !first_leaf_path.starts_with(&format!("{path}0"))
+            || node["minimum_geoid"] != unit_ids[first_unit]
+        {
+            bail!("NRS minimum-GEOID child orientation mismatch at {path}");
+        }
+    }
+    let population_total: i64 = context["populations"]
+        .as_array()
+        .context("NRS populations")?
+        .iter()
+        .filter_map(Value::as_i64)
+        .sum();
+    if tree["population_total"] != population_total {
+        bail!("NRS population total mismatch");
+    }
+    println!("NRS State baseline verification: PASS");
+    Ok(())
 }
 
 fn connected(context: &Value, assignment: &[i64], label: i64) -> Result<bool> {
@@ -2830,6 +3354,22 @@ fn main() -> Result<()> {
             &generated_at,
         ),
         Action::VerifyNrsSeed { package, context } => verify_nrs_seed_package(&package, &context),
+        Action::BuildNrsState {
+            bisect,
+            context,
+            districts,
+            seed_package,
+            out_dir,
+            generated_at,
+        } => build_nrs_state(
+            &bisect,
+            &context,
+            districts,
+            &seed_package,
+            &out_dir,
+            &generated_at,
+        ),
+        Action::VerifyNrsState { package, context } => verify_nrs_state(&package, &context),
         Action::RctxBatch { workers, limit } => rctx_batch(workers, limit),
         Action::BuildStateRctx {
             state_code,

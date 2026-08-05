@@ -43,6 +43,9 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `input_manifest.json` in an NRS package | logical `nrs-input-manifest-v0.1` | `bisect-ops` | NRS v0.1 assignment-affecting seed manifest |
 | `seed_record.json` in an NRS package | `nrs-seed-record-v1` | `bisect-ops` | NRS v0.1 seed derivation |
 | `manifest.json` in an NRS seed package | `nrs-seed-package-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `baseline-tree.json` in an NRS package | `nrs-baseline-tree-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `baseline_assignments.json` in an NRS package | `nrs-baseline-assignments-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `baseline_manifest.json` in an NRS package | `nrs-baseline-package-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -462,6 +465,16 @@ time. `nrs-seed-package-v1` binds the source RCTX transport hash and every
 package artifact. The verifier rejects unknown versions, artifact or context
 hash mismatches, profile-link mismatches, reference-engine source mismatches,
 and seed derivation mismatches.
+
+`nrs-baseline-tree-v0.1-v1` records the complete recursive node/leaf schedule,
+one reused engine seed, discovery identities, objectives, population-floor
+classifications, minimum-GEOID orientation, and canonical assignment vector.
+`nrs-baseline-assignments-v0.1-v1` is the canonical 15-digit-GEOID to 1-based
+district mapping. `nrs-baseline-package-v0.1-v1` binds those records, every
+retained node discovery, the nested seed package, the source context, build
+identity, verification posture, and non-claims. The verifier rejects schedule,
+orientation, coverage, representation, connectivity, population, seed, method,
+profile, source, and artifact-hash mismatches.
 
 ---
 
