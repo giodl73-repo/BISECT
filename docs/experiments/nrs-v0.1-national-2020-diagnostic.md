@@ -99,3 +99,27 @@ State manifests and retained failure witnesses bind the executable too. Resume
 now rejects packages, failures, and seed directories from a different profile
 or executable, preventing a single ledger from silently mixing algorithm
 revisions.
+
+## Subtree-repair targeted debug run
+
+The custody-bound ledger-v2 debug run (ledger SHA-256
+`95f3e70acc60622281d33f7596084e19653c3df76a9755a4c9533aa237fd62c1`)
+verified the first five historical tolerance failures with no retained failure
+witnesses:
+
+| State | Wall seconds | Nodes | Arithmetic floors attained | Maximum scaled deviation |
+|---|---:|---:|---:|---:|
+| Colorado | 111.785 | 7 | 7 | 2 |
+| Georgia | 247.615 | 13 | 11 | 6 |
+| Kentucky | 102.478 | 5 | 5 | 1 |
+| Louisiana | 100.557 | 5 | 5 | 3 |
+| Massachusetts | 104.673 | 8 | 5 | 4 |
+
+This includes exact passage through the formerly failing CO `0`, GA `000`, KY
+`01`, LA `10`, and MA `1` nodes. The same run then passed North Carolina's
+formerly failing `11` node, but its final 30,743-block `111` node exceeded 20
+CPU-minutes in an unoptimized debug executable. The worker was deliberately
+stopped before a terminal artifact was emitted. That interruption is a runtime
+diagnostic, not an algorithm failure. Production national certification must
+use optimized release executables in a fresh ledger because ledger v2 forbids
+mixing executable hashes.
