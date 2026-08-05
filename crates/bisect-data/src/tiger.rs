@@ -29,6 +29,8 @@ pub enum TigerError {
     InvalidBlockGeoid(String),
     #[error("projected geometry at record {0} has no centroid")]
     MissingCentroid(usize),
+    #[error("unsupported TIGER tabulation-block census year {0}")]
+    UnsupportedBlockYear(u16),
 }
 
 /// A single census tract record from a TIGER shapefile.
@@ -114,23 +116,36 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
 pub fn read_tiger_blocks_projected<P: AsRef<Path>>(
     shp_path: P,
 ) -> Result<Vec<BlockRecord>, TigerError> {
+    read_tiger_blocks_projected_for_year(shp_path, 2020)
+}
+
+/// Read tabulation blocks for a supported TIGER census vintage and project
+/// NAD83 geometry to EPSG:5070.
+pub fn read_tiger_blocks_projected_for_year<P: AsRef<Path>>(
+    shp_path: P,
+    year: u16,
+) -> Result<Vec<BlockRecord>, TigerError> {
+    let suffix = block_field_suffix(year)?;
+    let geoid_field = format!("GEOID{suffix}");
+    let aland_field = format!("ALAND{suffix}");
+    let awater_field = format!("AWATER{suffix}");
     let mut reader = shapefile::Reader::from_path(shp_path.as_ref())
         .map_err(|error| TigerError::ShapefileError(error.to_string()))?;
     let mut records = Vec::new();
     for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
         let (shape, record) =
             shape_record.map_err(|error| TigerError::ShapefileError(error.to_string()))?;
-        let geoid = match record.get("GEOID20") {
+        let geoid = match record.get(&geoid_field) {
             Some(shapefile::dbase::FieldValue::Character(Some(value))) => value.trim().to_string(),
             _ => return Err(TigerError::MissingGeoid),
         };
         if geoid.len() != 15 || !geoid.bytes().all(|byte| byte.is_ascii_digit()) {
             return Err(TigerError::InvalidBlockGeoid(geoid));
         }
-        let aland = numeric_field(&record, "ALAND20")
+        let aland = numeric_field(&record, &aland_field)
             .or_else(|| numeric_field(&record, "ALAND"))
             .unwrap_or(0);
-        let awater = numeric_field(&record, "AWATER20")
+        let awater = numeric_field(&record, &awater_field)
             .or_else(|| numeric_field(&record, "AWATER"))
             .unwrap_or(0);
         let geographic = shape_to_multipolygon(&shape, idx)?;
@@ -161,13 +176,21 @@ pub fn read_tiger_blocks_projected<P: AsRef<Path>>(
 pub fn read_tiger_block_centroids_projected<P: AsRef<Path>>(
     shp_path: P,
 ) -> Result<Vec<(String, (f64, f64))>, TigerError> {
+    read_tiger_block_centroids_projected_for_year(shp_path, 2020)
+}
+
+pub fn read_tiger_block_centroids_projected_for_year<P: AsRef<Path>>(
+    shp_path: P,
+    year: u16,
+) -> Result<Vec<(String, (f64, f64))>, TigerError> {
+    let geoid_field = format!("GEOID{}", block_field_suffix(year)?);
     let mut reader = shapefile::Reader::from_path(shp_path.as_ref())
         .map_err(|error| TigerError::ShapefileError(error.to_string()))?;
     let mut records = Vec::new();
     for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
         let (shape, record) =
             shape_record.map_err(|error| TigerError::ShapefileError(error.to_string()))?;
-        let geoid = match record.get("GEOID20") {
+        let geoid = match record.get(&geoid_field) {
             Some(shapefile::dbase::FieldValue::Character(Some(value))) => value.trim().to_string(),
             _ => return Err(TigerError::MissingGeoid),
         };
@@ -186,6 +209,15 @@ pub fn read_tiger_block_centroids_projected<P: AsRef<Path>>(
     }
     records.sort_by(|left, right| left.0.cmp(&right.0));
     Ok(records)
+}
+
+fn block_field_suffix(year: u16) -> Result<&'static str, TigerError> {
+    match year {
+        2000 => Ok("00"),
+        2010 => Ok("10"),
+        2020 => Ok("20"),
+        _ => Err(TigerError::UnsupportedBlockYear(year)),
+    }
 }
 
 fn numeric_field(record: &shapefile::dbase::Record, field: &str) -> Option<i64> {

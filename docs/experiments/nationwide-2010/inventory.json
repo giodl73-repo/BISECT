@@ -6,8 +6,8 @@
   "district_count": 435,
   "total_blocks": 11071790,
   "pl_custody_ready_states": 50,
-  "tiger_ready_states": 0,
-  "existing_rctx_states": 0,
+  "tiger_ready_states": 1,
+  "existing_rctx_states": 1,
   "missing_pl_states": [],
   "missing_tiger_states": [
     "AK",
@@ -17,7 +17,6 @@
     "CA",
     "CO",
     "CT",
-    "DE",
     "FL",
     "GA",
     "HI",
@@ -69,7 +68,6 @@
     "CA",
     "CO",
     "CT",
-    "DE",
     "FL",
     "GA",
     "HI",
@@ -121,10 +119,10 @@
       "districts": 1,
       "block_count": 24115,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "rctx_ready": false,
+      "tiger_ready": true,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/de_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 6148339,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/de2010.pl/degeo2010.pl",
@@ -152,21 +150,21 @@
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.shp",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 19819640,
+          "sha256": "371ce40bb446a36c3d004b6c133abec7c3d04e8bf9e2f15312ed081f0285ec2a"
         },
         "tiger_dbf": {
           "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.dbf",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 2532589,
+          "sha256": "bbd65c4ce4635e331257230b373f3699926349d028f6516eefe6f7346089075f"
         },
         "tiger_shx": {
           "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.shx",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 193020,
+          "sha256": "c021d21693decbd6001e5073dd29ff239f3c4eee78edf7c699478fa8ad7d36ae"
         }
       }
     },
@@ -2916,7 +2914,6 @@
     }
   ],
   "batch_order": [
-    "DE",
     "HI",
     "RI",
     "VT",

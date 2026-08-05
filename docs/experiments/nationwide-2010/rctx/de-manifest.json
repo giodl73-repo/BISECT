@@ -1,0 +1,15 @@
+{
+  "builder_path": "bisect-ops-rctx-builder-source-724326e29b51c83c.rs",
+  "builder_sha256": "724326e29b51c83c2f549839bea1f951d990c0ec88bc327b6b413bba0909c36a",
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "files": [
+    {
+      "path": "de.json",
+      "sha256": "0e5adf990f34c0102a6c4faeb686251a913aa7f2617d3cfb575df02432d8e923"
+    }
+  ],
+  "package_id": "de-2010-block-rctx",
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "status": "ready",
+  "year": 2010
+}

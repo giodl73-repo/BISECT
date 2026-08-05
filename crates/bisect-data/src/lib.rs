@@ -11,9 +11,13 @@ pub use adjacency::{build_adjacency_graph, AdjacencyError, AdjacencyGraph};
 pub use bridge::{connect_island_components, county_from_geoid};
 pub use enacted::{assign_single_centroid, assign_tracts_to_enacted, EnactedAssignmentMeta};
 pub use fiedler::{compute_fiedler, make_certificate, FiedlerCertificate};
-pub use pl94::{read_pl94_block_populations, Pl94BlockPopulation, Pl94Error};
+pub use pl94::{
+    read_pl94_block_populations, read_pl94_block_populations_for_year, Pl94BlockPopulation,
+    Pl94Error,
+};
 pub use serialize::{deserialize_adjacency, serialize_adjacency, SerializeError};
 pub use tiger::{
-    read_tiger_block_centroids_projected, read_tiger_blocks_projected, read_tiger_tracts,
+    read_tiger_block_centroids_projected, read_tiger_block_centroids_projected_for_year,
+    read_tiger_blocks_projected, read_tiger_blocks_projected_for_year, read_tiger_tracts,
     BlockRecord, TigerError, TractRecord,
 };
