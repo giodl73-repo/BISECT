@@ -208,9 +208,10 @@ pub fn split_subgraph(
     )
 }
 
-/// NRS v0.1 reference split. Unlike the legacy/general path, the METIS
-/// candidate itself is constrained to contiguous, minimum-connection parts
-/// before the deterministic repair pass.
+/// NRS v0.1 reference split. It uses METIS recursive bisection for every
+/// two-child node and preserves seed zero under the profile's signed conversion.
+/// Recursive METIS does not support its k-way-only contiguous-parts option;
+/// NRS normalizes a fragmented raw candidate deterministically in `bisect-cli`.
 pub fn split_subgraph_nrs_v0_1(
     adjacency: &[Vec<usize>],
     vwgt: &[i64],
@@ -254,7 +255,7 @@ fn split_subgraph_profile(
     tpwgts: Option<Vec<f32>>,
     // ubvec: per-constraint imbalance tolerances.  None = use ufactor for all constraints.
     ubvec: Option<Vec<f32>>,
-    enforce_metis_contiguity: bool,
+    nrs_v0_1_profile: bool,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
     if tract_indices.len() <= 1 {
         return Ok((tract_indices.clone(), HashSet::new()));
@@ -365,16 +366,9 @@ fn split_subgraph_profile(
             let graph = graph
                 .set_option(metis::option::UFactor(uf_int.max(1)))
                 .set_option(metis::option::NIter(niter as i32));
-            let graph = if enforce_metis_contiguity {
-                graph
-                    .set_option(metis::option::Contig(true))
-                    .set_option(metis::option::MinConn(true))
-            } else {
-                graph
-            };
             let graph = if let Some(s) = seed {
                 let converted = (s & 0x7FFF_FFFF) as i32;
-                let converted = if enforce_metis_contiguity {
+                let converted = if nrs_v0_1_profile {
                     converted
                 } else {
                     converted.max(1)
@@ -383,7 +377,7 @@ fn split_subgraph_profile(
             } else {
                 graph
             };
-            if tpwgts.is_some() && !enforce_metis_contiguity {
+            if tpwgts.is_some() && !nrs_v0_1_profile {
                 graph
                     .part_kway(&mut part)
                     .map_err(|e| format!("METIS kway bisection failed: {e}"))?;

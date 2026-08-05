@@ -44,6 +44,16 @@ At a node allocated `k` districts:
 No prime-factor, ratio-search, county, racial, partisan, or community signal is
 used.
 
+METIS recursive bisection does not guarantee contiguous parts. When its raw
+candidate is fragmented, the reference engine constructs a depth-first
+spanning tree rooted at the lexicographically smallest GEOID, visiting adjacent
+blocks in ascending GEOID order. Every tree-edge cut and both orientations are
+evaluated. The candidate is selected in ascending order of maximum absolute
+population deviation, weighted boundary cut, moved population relative to the
+raw METIS labels, and minimum GEOID. A tree-edge cut makes both children
+connected by construction. This normalization is skipped when both raw METIS
+parts are already connected.
+
 ## 4. Population target
 
 The child population targets are proportional to child district counts.

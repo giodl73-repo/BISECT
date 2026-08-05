@@ -990,6 +990,9 @@ impl NrsBuildState<'_> {
             || !discovery["method"].as_str().is_some_and(|method| {
                 method.contains("niter=100")
                     && method.contains("partition-type=recursive")
+                    && method.contains(
+                        "contiguity-normalization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
+                    )
                     && method.contains("refinement=nrsv01")
             })
         {
@@ -1398,6 +1401,9 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
             || !discovery["method"].as_str().is_some_and(|method| {
                 method.contains("niter=100")
                     && method.contains("partition-type=recursive")
+                    && method.contains(
+                        "contiguity-normalization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
+                    )
                     && method.contains("refinement=nrsv01")
             })
             || objective(&discovery)? != &node["objective"]

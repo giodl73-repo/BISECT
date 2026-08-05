@@ -126,20 +126,24 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             .collect::<Vec<_>>()
     };
     let original_assignment = assignment.clone();
-    let left = assignment
-        .iter()
-        .enumerate()
-        .filter_map(|(unit, &label)| (label == 0).then_some(unit))
-        .collect::<HashSet<_>>();
-    let right = assignment
-        .iter()
-        .enumerate()
-        .filter_map(|(unit, &label)| (label == 1).then_some(unit))
-        .collect::<HashSet<_>>();
-    let (left, _) =
-        bisect_runner::bisection_runner::repair_bisection_contiguity(&adjacency, left, right);
-    for (unit, label) in assignment.iter_mut().enumerate() {
-        *label = if left.contains(&unit) { 0 } else { 1 };
+    if nrs_profile {
+        assignment = normalize_nrs_with_dfs_tree_cut(&root, &adjacency, &assignment)?;
+    } else {
+        let left = assignment
+            .iter()
+            .enumerate()
+            .filter_map(|(unit, &label)| (label == 0).then_some(unit))
+            .collect::<HashSet<_>>();
+        let right = assignment
+            .iter()
+            .enumerate()
+            .filter_map(|(unit, &label)| (label == 1).then_some(unit))
+            .collect::<HashSet<_>>();
+        let (left, _) =
+            bisect_runner::bisection_runner::repair_bisection_contiguity(&adjacency, left, right);
+        for (unit, label) in assignment.iter_mut().enumerate() {
+            *label = if left.contains(&unit) { 0 } else { 1 };
+        }
     }
     let contiguity_repair_moves = assignment
         .iter()
@@ -186,7 +190,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; contiguity-repair-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; contiguity-normalization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; contiguity-repair-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
             niter,
             partition_type,
@@ -218,6 +222,136 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         )?;
     }
     write_discovery_manifest(args, &root, &discovery)
+}
+
+fn normalize_nrs_with_dfs_tree_cut(
+    instance: &bisect_ilp::CertifiedSplitInstance,
+    adjacency: &[Vec<usize>],
+    assignment: &[u8],
+) -> anyhow::Result<Vec<u8>> {
+    if rgraph_core::assignment_labels_connected(adjacency, assignment, [0_u8, 1_u8])
+        .map_err(|error| anyhow!("NRS connectivity check failed: {error}"))?
+    {
+        return Ok(assignment.to_vec());
+    }
+    let n = assignment.len();
+    let mut parent = vec![usize::MAX; n];
+    let mut order = Vec::with_capacity(n);
+    let mut stack = vec![0_usize];
+    parent[0] = 0;
+    while let Some(unit) = stack.pop() {
+        order.push(unit);
+        let mut neighbors = adjacency[unit].clone();
+        neighbors.sort_unstable_by(|left, right| right.cmp(left));
+        for neighbor in neighbors {
+            if parent[neighbor] == usize::MAX {
+                parent[neighbor] = unit;
+                stack.push(neighbor);
+            }
+        }
+    }
+    if order.len() != n {
+        return Err(anyhow!("NRS input graph is disconnected"));
+    }
+    let mut children = vec![Vec::new(); n];
+    for unit in 1..n {
+        children[parent[unit]].push(unit);
+    }
+    let mut entry = vec![0_usize; n];
+    let mut exit = vec![0_usize; n];
+    let mut clock = 0_usize;
+    let mut traversal = vec![(0_usize, false)];
+    while let Some((unit, leaving)) = traversal.pop() {
+        if leaving {
+            exit[unit] = clock;
+            continue;
+        }
+        entry[unit] = clock;
+        clock += 1;
+        traversal.push((unit, true));
+        for &child in children[unit].iter().rev() {
+            traversal.push((child, false));
+        }
+    }
+    let mut subtree_population = instance.populations.clone();
+    let mut subtree_initial_left_population = assignment
+        .iter()
+        .zip(&instance.populations)
+        .map(|(&label, &population)| if label == 0 { population } else { 0 })
+        .collect::<Vec<_>>();
+    let mut subtree_minimum = (0..n).collect::<Vec<_>>();
+    for &unit in order.iter().rev() {
+        if unit != 0 {
+            let ancestor = parent[unit];
+            subtree_population[ancestor] += subtree_population[unit];
+            subtree_initial_left_population[ancestor] += subtree_initial_left_population[unit];
+            subtree_minimum[ancestor] = subtree_minimum[ancestor].min(subtree_minimum[unit]);
+        }
+    }
+    let total_population = subtree_population[0];
+    let target_numerator = instance.k_left as i128 * i128::from(total_population);
+    let total_initial_left_population = subtree_initial_left_population[0];
+    let mut best_deviation = u128::MAX;
+    let mut candidates = Vec::new();
+    for candidate in 1..n {
+        for complement_is_left in [false, true] {
+            let population = if complement_is_left {
+                total_population - subtree_population[candidate]
+            } else {
+                subtree_population[candidate]
+            };
+            let deviation = (instance.k_parent as i128 * i128::from(population) - target_numerator)
+                .unsigned_abs();
+            let candidate_initial_left_population = if complement_is_left {
+                total_initial_left_population - subtree_initial_left_population[candidate]
+            } else {
+                subtree_initial_left_population[candidate]
+            };
+            let moved_population = (population - candidate_initial_left_population)
+                + (total_initial_left_population - candidate_initial_left_population);
+            let minimum = if complement_is_left {
+                0
+            } else {
+                subtree_minimum[candidate]
+            };
+            if deviation < best_deviation {
+                best_deviation = deviation;
+                candidates.clear();
+            }
+            if deviation == best_deviation {
+                candidates.push((candidate, complement_is_left, moved_population, minimum));
+            }
+        }
+    }
+    let mut best: Option<((u64, i64, usize), usize, bool)> = None;
+    for (candidate, complement_is_left, moved_population, minimum) in candidates {
+        let cut = instance
+            .edges
+            .iter()
+            .filter_map(|edge| {
+                let left_in =
+                    entry[candidate] <= entry[edge.left] && entry[edge.left] < exit[candidate];
+                let right_in =
+                    entry[candidate] <= entry[edge.right] && entry[edge.right] < exit[candidate];
+                (left_in != right_in).then_some(edge.weight)
+            })
+            .sum::<u64>();
+        let key = (cut, moved_population, minimum);
+        if best.as_ref().is_none_or(|(current, _, _)| key < *current) {
+            best = Some((key, candidate, complement_is_left));
+        }
+    }
+    let (_, candidate, complement_is_left) = best.context("NRS DFS tree has no cut edge")?;
+    Ok((0..n)
+        .map(|unit| {
+            let in_subtree = entry[candidate] <= entry[unit] && entry[unit] < exit[candidate];
+            if in_subtree != complement_is_left {
+                0
+            } else {
+                1
+            }
+        })
+        .collect())
 }
 
 fn improve_discovery_population(
@@ -2078,6 +2212,27 @@ mod tests {
             &discovery.objective.canonical_assignment
         )
         .unwrap());
+    }
+
+    #[test]
+    fn nrs_dfs_tree_cut_normalizes_fragmented_candidate_deterministically() {
+        let context = path_context(10);
+        let instance = certified_root_instance_from_context(&context, 5).unwrap();
+        let adjacency = graph_adjacency(context.graph.as_ref().unwrap()).unwrap();
+        let raw = (0..10).map(|unit| (unit % 2) as u8).collect::<Vec<_>>();
+        let first = normalize_nrs_with_dfs_tree_cut(&instance, &adjacency, &raw).unwrap();
+        let second = normalize_nrs_with_dfs_tree_cut(&instance, &adjacency, &raw).unwrap();
+        assert_eq!(first, second);
+        assert!(
+            rgraph_core::assignment_labels_connected(&adjacency, &first, [0_u8, 1_u8]).unwrap()
+        );
+        let left_population = instance
+            .populations
+            .iter()
+            .zip(&first)
+            .filter_map(|(&population, &label)| (label == 0).then_some(population))
+            .sum::<i64>();
+        assert_eq!(left_population, 400);
     }
 
     #[test]
