@@ -3,13 +3,13 @@
   "files": [
     {
       "path": "rctx-verification.json",
-      "sha256": "0c26dcf31022ecb545acc2e9c68be6a82ad506e79e160f7045bf5ccb6c421010"
+      "sha256": "3e2c22c6b6bc60b3649733ba1688151b61b3d6faf40b8a55c32cfba31ce2d0a5"
     }
   ],
   "package_id": "nationwide-2010-rctx-verification",
   "schema_version": "certified-national-rctx-verification-package-v2",
   "status": "partial",
-  "verifier_path": "bisect-ops-rctx-verifier-source-724326e29b51c83c.rs",
-  "verifier_sha256": "724326e29b51c83c2f549839bea1f951d990c0ec88bc327b6b413bba0909c36a",
+  "verifier_path": "bisect-ops-rctx-verifier-source-a68c498d6b2c9c1c.rs",
+  "verifier_sha256": "a68c498d6b2c9c1cad9f5e3a80836290167bc9e894f4fbb804697434bac65f5a",
   "year": 2010
 }

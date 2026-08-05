@@ -70,6 +70,9 @@ def main() -> None:
             ROOT / f"data/2010/tiger/blocks/tl_2010_{fips}_tabblock10/"
             f"tl_2010_{fips}_tabblock10"
         )
+        archive = (
+            ROOT / f"data/2010/tiger/archives/tl_2010_{fips}_tabblock10.zip"
+        )
         rctx = ROOT / f"data/2010/certified/{lower}_blocks_2010.rctx"
         geo = pl_dir / f"{lower}geo2010.pl"
         sources = {
@@ -79,6 +82,7 @@ def main() -> None:
             "pl_packing_list": file_record(
                 pl_dir / f"{lower}2010.pl.prd.packinglist.txt"
             ),
+            "tiger_archive": file_record(archive),
             "tiger_shp": file_record(shape_base.with_suffix(".shp")),
             "tiger_dbf": file_record(shape_base.with_suffix(".dbf")),
             "tiger_shx": file_record(shape_base.with_suffix(".shx")),
@@ -87,9 +91,10 @@ def main() -> None:
             "pl_geography", "pl_population_segment_1",
             "pl_population_segment_2", "pl_packing_list",
         ))
-        tiger_ready = all(sources[key]["ready"] for key in (
+        tiger_extracted_ready = all(sources[key]["ready"] for key in (
             "tiger_shp", "tiger_dbf", "tiger_shx",
         ))
+        tiger_custody_ready = bool(sources["tiger_archive"]["ready"])
         rows.append({
             "state": code,
             "name": config["name"],
@@ -97,7 +102,13 @@ def main() -> None:
             "districts": config["districts"],
             "block_count": count_2010_blocks(geo),
             "pl_custody_ready": pl_ready,
-            "tiger_ready": tiger_ready,
+            "tiger_ready": tiger_custody_ready,
+            "tiger_custody_ready": tiger_custody_ready,
+            "tiger_extracted_ready": tiger_extracted_ready,
+            "tiger_source_url": (
+                "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/"
+                f"tl_2010_{fips}_tabblock10.zip"
+            ),
             "rctx_ready": rctx.is_file(),
             "rctx_path": rctx.relative_to(ROOT).as_posix(),
             "rctx_bytes": rctx.stat().st_size if rctx.is_file() else None,

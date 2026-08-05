@@ -424,6 +424,7 @@ dependencies = [
  "sha2",
  "tempfile",
  "tiny-skia",
+ "zip",
 ]
 
 [[package]]

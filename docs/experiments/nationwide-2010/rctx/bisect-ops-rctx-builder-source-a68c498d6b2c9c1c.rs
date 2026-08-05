@@ -14,7 +14,7 @@ use std::{
     collections::{BTreeMap, BTreeSet, VecDeque},
     fs,
     fs::File,
-    io::{BufWriter, Write},
+    io::{BufWriter, Read, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
@@ -221,6 +221,8 @@ enum Action {
         #[arg(long)]
         shapefile: PathBuf,
         #[arg(long)]
+        tiger_archive: Option<PathBuf>,
+        #[arg(long)]
         pl_geo: PathBuf,
         #[arg(long)]
         pl_population: PathBuf,
@@ -275,7 +277,55 @@ fn write_json(path: &Path, value: &Value, pretty: bool) -> Result<()> {
 }
 
 fn sha256(path: &Path) -> Result<String> {
-    Ok(format!("{:x}", Sha256::digest(fs::read(path)?)))
+    let mut source = File::open(path).with_context(|| format!("open {}", path.display()))?;
+    let mut digest = Sha256::new();
+    let mut buffer = vec![0_u8; 8 * 1024 * 1024];
+    loop {
+        let count = source
+            .read(&mut buffer)
+            .with_context(|| format!("read {}", path.display()))?;
+        if count == 0 {
+            break;
+        }
+        digest.update(&buffer[..count]);
+    }
+    Ok(format!("{:x}", digest.finalize()))
+}
+
+fn tiger_archive_member_hashes(path: &Path) -> Result<BTreeMap<String, String>> {
+    let source = File::open(path).with_context(|| format!("open {}", path.display()))?;
+    let mut archive = zip::ZipArchive::new(source)
+        .with_context(|| format!("open TIGER archive {}", path.display()))?;
+    let mut hashes = BTreeMap::new();
+    for index in 0..archive.len() {
+        let mut member = archive.by_index(index)?;
+        let Some(name) = Path::new(member.name())
+            .file_name()
+            .and_then(|value| value.to_str())
+            .map(str::to_owned)
+        else {
+            continue;
+        };
+        let extension = Path::new(&name)
+            .extension()
+            .and_then(|value| value.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        if !matches!(extension.as_str(), "shp" | "dbf" | "shx") {
+            continue;
+        }
+        let mut digest = Sha256::new();
+        let mut buffer = vec![0_u8; 8 * 1024 * 1024];
+        loop {
+            let count = member.read(&mut buffer)?;
+            if count == 0 {
+                break;
+            }
+            digest.update(&buffer[..count]);
+        }
+        hashes.insert(name, format!("sha256:{:x}", digest.finalize()));
+    }
+    Ok(hashes)
 }
 
 fn custody_source(path: &Path) -> PathBuf {
@@ -293,6 +343,15 @@ fn custody_source(path: &Path) -> PathBuf {
     } else {
         workspace.join("archive/legacy-python").join(path)
     }
+}
+
+fn portable_path(path: &Path) -> String {
+    let root = std::env::current_dir().ok();
+    let relative = root
+        .as_deref()
+        .and_then(|root| path.strip_prefix(root).ok())
+        .unwrap_or(path);
+    relative.to_string_lossy().replace('\\', "/")
 }
 
 fn canonical_hash(value: &Value) -> Result<String> {
@@ -2680,6 +2739,7 @@ fn verify_national_rctx(
             ),
         ];
         let mut rehashed_sources = 0usize;
+        let mut rehashed_keys = BTreeSet::new();
         for (key, source_path) in &source_checks {
             if source_path.is_file() {
                 let expected = context["source_hashes"][key]
@@ -2689,6 +2749,34 @@ fn verify_national_rctx(
                     bail!("{state} source hash mismatch for {key}");
                 }
                 rehashed_sources += 1;
+                rehashed_keys.insert(*key);
+            }
+        }
+        if let Some(expected_archive_hash) = context["source_hashes"]["tiger_archive"].as_str() {
+            let archive_path = root.join(format!(
+                "data/{year}/tiger/archives/tl_{year}_{fips}_tabblock{suffix}.zip"
+            ));
+            if !archive_path.is_file()
+                || format!("sha256:{}", sha256(&archive_path)?) != expected_archive_hash
+            {
+                bail!("{state} TIGER archive missing or hash-mismatched");
+            }
+            rehashed_sources += 1;
+            let members = tiger_archive_member_hashes(&archive_path)?;
+            for (key, source_path) in &source_checks[..3] {
+                let filename = source_path
+                    .file_name()
+                    .and_then(|value| value.to_str())
+                    .context("TIGER source filename")?;
+                let member_hash = members
+                    .get(filename)
+                    .with_context(|| format!("{state} TIGER archive missing {filename}"))?;
+                if Some(member_hash.as_str()) != context["source_hashes"][key].as_str() {
+                    bail!("{state} TIGER archive member hash mismatch for {filename}");
+                }
+                if rehashed_keys.insert(*key) {
+                    rehashed_sources += 1;
+                }
             }
         }
         rows.push(json!({"state":state,"year":year,"unit_count":unit_ids.len(),"population_total":population,"edge_count":directed/2,"bridge_edge_count":bridges,"rctx_bytes":fs::metadata(&path)?.len(),"rctx_sha256":sha256(&path)?,"context_hash":context["context_hash"],"source_files_rehashed":rehashed_sources,"status":"verified"}));
@@ -3857,6 +3945,7 @@ fn build_state_rctx(
     state_fips: &str,
     state_name: &str,
     shapefile: &Path,
+    tiger_archive: Option<&Path>,
     pl_geo: &Path,
     pl_population: &Path,
     rctx_path: &Path,
@@ -3935,7 +4024,10 @@ fn build_state_rctx(
     units["unit_universe_hash"] = json!(canonical_hash(&units)?);
     let adjacent_source = Path::new("crates/bisect-data/src/adjacency.rs");
     let bridge_source = Path::new("crates/bisect-data/src/bridge.rs");
-    let source_hashes = json!({
+    let tiger_source = Path::new("crates/bisect-data/src/tiger.rs");
+    let pl94_source = Path::new("crates/bisect-data/src/pl94.rs");
+    let projection_source = Path::new("crates/bisect-data/src/projection.rs");
+    let mut source_hashes = json!({
         "tiger_block_shp":format!("sha256:{}",sha256(shapefile)?),
         "tiger_block_dbf":format!("sha256:{}",sha256(&shapefile.with_extension("dbf"))?),
         "tiger_block_shx":format!("sha256:{}",sha256(&shapefile.with_extension("shx"))?),
@@ -3943,7 +4035,19 @@ fn build_state_rctx(
         "pl_population":format!("sha256:{}",sha256(pl_population)?),
         "bridge_rule_source":format!("sha256:{}",sha256(bridge_source)?),
         "bridge_weight_rule_source":format!("sha256:{}",sha256(adjacent_source)?),
+        "tiger_reader_source":format!("sha256:{}",sha256(tiger_source)?),
+        "pl94_reader_source":format!("sha256:{}",sha256(pl94_source)?),
+        "projection_source":format!("sha256:{}",sha256(projection_source)?),
     });
+    if let Some(archive) = tiger_archive {
+        if !archive.is_file() {
+            bail!(
+                "{state_code}: TIGER archive does not exist: {}",
+                archive.display()
+            );
+        }
+        source_hashes["tiger_archive"] = json!(format!("sha256:{}", sha256(archive)?));
+    }
     let projection = json!({
         "units":units,
         "graph":{"edge_semantics":"undirected","adjacency":adjacency},
@@ -3963,7 +4067,7 @@ fn build_state_rctx(
         "state_code":state_code,
         "state_fips":state_fips,
         "year":year,
-        "rctx_path":rctx_path.to_string_lossy().replace('\\',"/"),
+        "rctx_path":portable_path(rctx_path),
         "rctx_bytes":fs::metadata(rctx_path)?.len(),
         "rctx_sha256":sha256(rctx_path)?,
         "context_hash":rctx["context_hash"],
@@ -3975,6 +4079,8 @@ fn build_state_rctx(
         "bridge_edge_count":bridges.len(),
         "final_component_count":final_component_count,
         "geometry_toolchain":{"implementation":"bisect-data","language":"rust","crs":"EPSG:5070"},
+        "tiger_archive_path":tiger_archive.map(portable_path),
+        "tiger_archive_sha256":tiger_archive.map(sha256).transpose()?,
         "claim_boundary":claim
     });
     write_json(report_path, &report, true)?;
@@ -3989,14 +4095,20 @@ fn build_state_rctx(
         .file_name()
         .context("report filename")?
         .to_string_lossy();
+    let executable = std::env::current_exe().context("resolve RCTX builder executable")?;
+    let executable_hash = sha256(&executable)?;
     let manifest = json!({
         "schema_version":"certified-state-block-rctx-package-v1",
         "package_id":format!("{lower}-{year}-block-rctx"),
         "year":year,
+        "tiger_archive_path":tiger_archive.map(portable_path),
+        "tiger_archive_sha256":tiger_archive.map(sha256).transpose()?,
         "status":"ready",
         "files":[{"path":report_name,"sha256":sha256(report_path)?}],
         "builder_path":source_name,
         "builder_sha256":source_hash,
+        "builder_executable_path":portable_path(&executable),
+        "builder_executable_sha256":executable_hash,
         "claim_boundary":claim
     });
     write_json(manifest_path, &manifest, true)?;
@@ -4077,7 +4189,9 @@ fn rctx_batch(
         let rctx=root.join(format!("data/{year}/certified/{lower}_blocks_{year}.rctx"));
         let report=report_root.join(format!("rctx/{lower}.json"));
         let manifest=report_root.join(format!("rctx/{lower}-manifest.json"));
-        let result=build_state_rctx(year,state,fips,&state_name,&shapefile,&pl_geo,&pl_population,&rctx,&report,&manifest);
+        let tiger_archive=root.join(format!("data/{year}/tiger/archives/tl_{tiger_year}_{fips}_tabblock{suffix}.zip"));
+        let tiger_archive=tiger_archive.is_file().then_some(tiger_archive.as_path());
+        let result=build_state_rctx(year,state,fips,&state_name,&shapefile,tiger_archive,&pl_geo,&pl_population,&rctx,&report,&manifest);
         match result { Ok(())=>json!({"state":state,"year":year,"block_count":row["block_count"],"status":"built","exit_code":0,"command":["bisect-ops","build-state-rctx",format!("--year={year}")],"output":"Rust-native state RCTX build completed."}),Err(error)=>json!({"state":state,"year":year,"block_count":row["block_count"],"status":"failed","exit_code":1,"command":["bisect-ops","build-state-rctx",format!("--year={year}")],"output":format!("{error:#}")}) }
     }).collect());
     let mut merged: BTreeMap<String, Value> = if ledger_path.is_file() {
@@ -4317,6 +4431,7 @@ fn main() -> Result<()> {
             state_fips,
             state_name,
             shapefile,
+            tiger_archive,
             pl_geo,
             pl_population,
             rctx,
@@ -4328,6 +4443,7 @@ fn main() -> Result<()> {
             &state_fips,
             &state_name,
             &shapefile,
+            tiger_archive.as_deref(),
             &pl_geo,
             &pl_population,
             &rctx,

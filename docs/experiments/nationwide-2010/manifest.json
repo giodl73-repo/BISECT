@@ -5,10 +5,10 @@
   "files": [
     {
       "path": "inventory.json",
-      "sha256": "729474d928bab302249bf524118d719b54b97c3c91f1794ce4a85180428bab27"
+      "sha256": "e2ec5a935518115c23ad2a2d305fcfc119469ed341a8bd4b424a2da06920d46f"
     }
   ],
   "builder_path": "scripts/research/inventory_national_2010.py",
-  "builder_sha256": "71344a2c7cfea4ae4b4a87fe5efcf30f169b4c12d79dcac28eb5721b514c2524",
+  "builder_sha256": "7d459f34d2be5856d9582b62aa9c9bb011dd308bc487ad75ddf398223778e959",
   "claim_boundary": "Hash-bound local 2010 source and context custody inventory. An incomplete status is expected until TIGER block geometry and all RCTX files exist; this report makes no district-generation claim."
 }

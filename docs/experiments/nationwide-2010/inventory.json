@@ -120,9 +120,12 @@
       "block_count": 24115,
       "pl_custody_ready": true,
       "tiger_ready": true,
+      "tiger_custody_ready": true,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_10_tabblock10.zip",
       "rctx_ready": true,
       "rctx_path": "data/2010/certified/de_blocks_2010.rctx",
-      "rctx_bytes": 6148339,
+      "rctx_bytes": 6148714,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/de2010.pl/degeo2010.pl",
@@ -148,23 +151,29 @@
           "bytes": 1754,
           "sha256": "569a8eae04a52dcc514b8dc12dfabc4c2ad1315b8eacb4ba78c85eca4757185f"
         },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_10_tabblock10.zip",
+          "ready": true,
+          "bytes": 12784417,
+          "sha256": "b696723e692d1e4966ab2da299e46541d60216956385dac2210a763ee6f782d4"
+        },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.shp",
-          "ready": true,
-          "bytes": 19819640,
-          "sha256": "371ce40bb446a36c3d004b6c133abec7c3d04e8bf9e2f15312ed081f0285ec2a"
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_dbf": {
           "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.dbf",
-          "ready": true,
-          "bytes": 2532589,
-          "sha256": "bbd65c4ce4635e331257230b373f3699926349d028f6516eefe6f7346089075f"
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shx": {
           "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.shx",
-          "ready": true,
-          "bytes": 193020,
-          "sha256": "c021d21693decbd6001e5073dd29ff239f3c4eee78edf7c699478fa8ad7d36ae"
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         }
       }
     },
@@ -176,6 +185,9 @@
       "block_count": 25016,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_15_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/hi_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -203,6 +215,12 @@
           "ready": true,
           "bytes": 1754,
           "sha256": "3bfa51291c6d2d685b89532cb9d9b5726e63888c0d77a2695d14b5972a489df8"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_15_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_15_tabblock10/tl_2010_15_tabblock10.shp",
@@ -232,6 +250,9 @@
       "block_count": 25181,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_44_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ri_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -259,6 +280,12 @@
           "ready": true,
           "bytes": 1753,
           "sha256": "8cae9bd750233a2f7ca3c6a6925ae40d58a22210c4a0f5f740546d8d1a3362ee"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_44_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_44_tabblock10/tl_2010_44_tabblock10.shp",
@@ -288,6 +315,9 @@
       "block_count": 32580,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_50_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/vt_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -315,6 +345,12 @@
           "ready": true,
           "bytes": 1754,
           "sha256": "2ddc158be1e15deac8a0bdf559d11fa29b1d2a6f37504d2eb4ffcb60054523be"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_50_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_50_tabblock10/tl_2010_50_tabblock10.shp",
@@ -344,6 +380,9 @@
       "block_count": 45292,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_02_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ak_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -371,6 +410,12 @@
           "ready": true,
           "bytes": 1754,
           "sha256": "7d033bdae7edb32a6b798fb09e87a2ca98179e9f4fa67ca2bce91e6e61df7c9a"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_02_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_02_tabblock10/tl_2010_02_tabblock10.shp",
@@ -400,6 +445,9 @@
       "block_count": 48837,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_33_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/nh_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -427,6 +475,12 @@
           "ready": true,
           "bytes": 1754,
           "sha256": "5cf06195f0e0d9d342908ce86e24305ec80157a49e2d116eaf8af4d67c6ecc68"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_33_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_33_tabblock10/tl_2010_33_tabblock10.shp",
@@ -456,6 +510,9 @@
       "block_count": 67578,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_09_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ct_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -483,6 +540,12 @@
           "ready": true,
           "bytes": 1754,
           "sha256": "597e98104e1520204a69058c6af26864bff8c07ff7c201d1ca173bebabd87281"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_09_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_09_tabblock10/tl_2010_09_tabblock10.shp",
@@ -512,6 +575,9 @@
       "block_count": 69518,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_23_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/me_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -539,6 +605,12 @@
           "ready": true,
           "bytes": 1754,
           "sha256": "fe3332076081bea72da45f75c117658cd3119cf01152225322f41dd390f11ac9"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_23_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_23_tabblock10/tl_2010_23_tabblock10.shp",
@@ -568,6 +640,9 @@
       "block_count": 84538,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_32_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/nv_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -595,6 +670,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "07a2ee3524e630ddbd2972208fc9522ccf7963ca4e1f1e51e78fdb74ddf81ff9"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_32_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_32_tabblock10/tl_2010_32_tabblock10.shp",
@@ -624,6 +705,9 @@
       "block_count": 86204,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_56_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/wy_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -651,6 +735,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "0bc33f96d6caec3e18428d4a90c98ea8924d2f0dcc7e4a3fb76775517ded1e57"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_56_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_56_tabblock10/tl_2010_56_tabblock10.shp",
@@ -680,6 +770,9 @@
       "block_count": 88360,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_46_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/sd_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -707,6 +800,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "1b7f0452ef3dc88e6930aafd184819787b5a679612bda39ed7e9fcf05bd2159a"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_46_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_46_tabblock10/tl_2010_46_tabblock10.shp",
@@ -736,6 +835,9 @@
       "block_count": 115406,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_49_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ut_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -763,6 +865,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "de444f89a2882834b6bb2ffd6165f38a926182bc135cec00e38eb4203359e753"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_49_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_49_tabblock10/tl_2010_49_tabblock10.shp",
@@ -792,6 +900,9 @@
       "block_count": 132288,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_30_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/mt_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -819,6 +930,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "af9f036b819f22c8bc21bd2c16863e771f7e290d91aac5c3d41aa6e241853466"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_30_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_30_tabblock10/tl_2010_30_tabblock10.shp",
@@ -848,6 +965,9 @@
       "block_count": 133769,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_38_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/nd_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -875,6 +995,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "e8d6e0756286f7eaa655febcf1b5915f8ce22c81ee8df1d8f428e67a81db8d0b"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_38_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_38_tabblock10/tl_2010_38_tabblock10.shp",
@@ -904,6 +1030,9 @@
       "block_count": 135218,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_54_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/wv_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -931,6 +1060,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "278316f4545d052ca2c97d4470da487e0b1f2dd1edbe2a26cdb7efd4e13dfde5"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_54_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_54_tabblock10/tl_2010_54_tabblock10.shp",
@@ -960,6 +1095,9 @@
       "block_count": 145247,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_24_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/md_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -987,6 +1125,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "840e2d937fbb6aa01bafd316d9c47eaf04dfdaddd6b9fbaa6b62025000c632d3"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_24_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_24_tabblock10/tl_2010_24_tabblock10.shp",
@@ -1016,6 +1160,9 @@
       "block_count": 149842,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_16_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/id_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1043,6 +1190,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "30de425bbcd2e0f0a0fde4491f0f0cccf2b0771443fd0fce44961fa63c818023"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_16_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_16_tabblock10/tl_2010_16_tabblock10.shp",
@@ -1072,6 +1225,9 @@
       "block_count": 157508,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_25_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ma_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1099,6 +1255,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "6227c1a3e4082c6193ad4cc6353e6f8c0ac301d9ced2e5049c83e85be6f4c53d"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_25_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_25_tabblock10/tl_2010_25_tabblock10.shp",
@@ -1128,6 +1290,9 @@
       "block_count": 161672,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_21_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ky_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1155,6 +1320,12 @@
           "ready": true,
           "bytes": 1757,
           "sha256": "49aaa5658e71e1801cf817392cb8cdec73862598eeb2e5020daea430b517feaa"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_21_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_21_tabblock10/tl_2010_21_tabblock10.shp",
@@ -1184,6 +1355,9 @@
       "block_count": 168609,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_35_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/nm_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1211,6 +1385,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "3c85e28de4b117996bc16a822955d93ce7267288d3835b9314aa480d47e76fb7"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_35_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_35_tabblock10/tl_2010_35_tabblock10.shp",
@@ -1240,6 +1420,9 @@
       "block_count": 169588,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_34_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/nj_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1267,6 +1450,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "ac7fef67901977ba2c7ad538b6fb51d3911527fc9fdcc27e22009a550efda3f7"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_34_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_34_tabblock10/tl_2010_34_tabblock10.shp",
@@ -1296,6 +1485,9 @@
       "block_count": 171778,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_28_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ms_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1323,6 +1515,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "8ca6c7c75249a3f3fb21cf54d68e9f8634d518c8dafedb34162c960a22740a5c"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_28_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_28_tabblock10/tl_2010_28_tabblock10.shp",
@@ -1352,6 +1550,9 @@
       "block_count": 181908,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_45_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/sc_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1379,6 +1580,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "8aad7d71af57f89ee67810b08837ed23e74985ce1acd8e59984b54042eda70d9"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_45_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_45_tabblock10/tl_2010_45_tabblock10.shp",
@@ -1408,6 +1615,9 @@
       "block_count": 186211,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_05_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ar_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1435,6 +1645,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "0c289c5e48e9b66fdcf89f2ae3d6215abca88f9b72ec4fc00e842806b6fa3d9c"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_05_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_05_tabblock10/tl_2010_05_tabblock10.shp",
@@ -1464,6 +1680,9 @@
       "block_count": 193352,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_31_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ne_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1491,6 +1710,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "45bf92cba31602552ecacb5fb9fb39824c634ed5b35c1ccafd00c01f5aab5dc6"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_31_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_31_tabblock10/tl_2010_31_tabblock10.shp",
@@ -1520,6 +1745,9 @@
       "block_count": 195574,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_53_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/wa_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1547,6 +1775,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "a4c11e7512018f8b6b5f0925616c8e3c6a237ce87df2dca3920b373bd7ce56a2"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_53_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_53_tabblock10/tl_2010_53_tabblock10.shp",
@@ -1576,6 +1810,9 @@
       "block_count": 196621,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_41_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/or_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1603,6 +1840,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "24285534f72bb8fd0a316134dd5b1a29fdb8e2f1f0cb60958f0df1db3c16a2c9"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_41_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_41_tabblock10/tl_2010_41_tabblock10.shp",
@@ -1632,6 +1875,9 @@
       "block_count": 201062,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_08_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/co_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1659,6 +1905,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "b357a8df7cc00df0f65bccadde1d63927dd98cf9a630eed3226898ee440eb532"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_08_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_08_tabblock10/tl_2010_08_tabblock10.shp",
@@ -1688,6 +1940,9 @@
       "block_count": 204447,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_22_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/la_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1715,6 +1970,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "9e85659120c83cd98612ac1cf9232bcc1d67cd3ca7cb75f027e9f3e0d43c3a64"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_22_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_22_tabblock10/tl_2010_22_tabblock10.shp",
@@ -1744,6 +2005,9 @@
       "block_count": 216007,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_19_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ia_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1771,6 +2035,12 @@
           "ready": true,
           "bytes": 1758,
           "sha256": "eda622884803fe7b256883eefa43d8b85d9076c7dacfc7aba4b18838575c9125"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_19_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_19_tabblock10/tl_2010_19_tabblock10.shp",
@@ -1800,6 +2070,9 @@
       "block_count": 238600,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_20_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ks_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1827,6 +2100,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "28de10f25a52588655ed12e0e7490ac0c66b2f7ec6f88573da1da5ed129f32d5"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_20_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_20_tabblock10/tl_2010_20_tabblock10.shp",
@@ -1856,6 +2135,9 @@
       "block_count": 240116,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_47_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/tn_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1883,6 +2165,12 @@
           "ready": true,
           "bytes": 1759,
           "sha256": "97c584256fd62444531afbfeea462372f6b3e32bc060d1d2aab2babe529d197c"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_47_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_47_tabblock10/tl_2010_47_tabblock10.shp",
@@ -1912,6 +2200,9 @@
       "block_count": 241666,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_04_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/az_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1939,6 +2230,12 @@
           "ready": true,
           "bytes": 1759,
           "sha256": "ead8dacc3b35b2d128c47edb03e1ba4e7e16d1d108a4581e7fb589f7aa9bc9a1"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_04_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_04_tabblock10/tl_2010_04_tabblock10.shp",
@@ -1968,6 +2265,9 @@
       "block_count": 252266,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_01_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/al_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -1995,6 +2295,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "16e0dab9133ed8090e3b6d8bb2ab07e4c5dc91706f17c26e28eb2f9f865137a5"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_01_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_01_tabblock10/tl_2010_01_tabblock10.shp",
@@ -2024,6 +2330,9 @@
       "block_count": 253096,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_55_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/wi_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2051,6 +2360,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "6b0c173e29f99b003ea684b180d712cf056e2493b38c1ceca0b7d12cbe5bdeeb"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_55_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_55_tabblock10/tl_2010_55_tabblock10.shp",
@@ -2080,6 +2395,9 @@
       "block_count": 259777,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_27_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/mn_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2107,6 +2425,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "0c167d3920cbad39f4221f9d3f0f2b1b8bf1be0a64ca33b498864f645722836c"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_27_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_27_tabblock10/tl_2010_27_tabblock10.shp",
@@ -2136,6 +2460,9 @@
       "block_count": 267071,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_18_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/in_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2163,6 +2490,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "c54adbeec46879955246ec9ad1a250c4c787a7b16a3f84326ddfbfdbad7541c2"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_18_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_18_tabblock10/tl_2010_18_tabblock10.shp",
@@ -2192,6 +2525,9 @@
       "block_count": 269118,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_40_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ok_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2219,6 +2555,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "cf3c5ef5f543c1fe33cb859e3648df8fbdb91bda3147618816fbb668481175f0"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_40_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_40_tabblock10/tl_2010_40_tabblock10.shp",
@@ -2248,6 +2590,9 @@
       "block_count": 285762,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_51_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/va_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2275,6 +2620,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "4fa70aa0c0bc0259db8d0fe53112842a050c04ab51e56697967b7a6241b4b4d0"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_51_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_51_tabblock10/tl_2010_51_tabblock10.shp",
@@ -2304,6 +2655,9 @@
       "block_count": 288987,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_37_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/nc_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2331,6 +2685,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "50b5dadf4c55c2cb04a9db25a80a89f039454624d6467202ca81ee7a4d5af84c"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_37_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_37_tabblock10/tl_2010_37_tabblock10.shp",
@@ -2360,6 +2720,9 @@
       "block_count": 291086,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_13_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ga_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2387,6 +2750,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "c4e17c17f468d0d8a4e052714514326affc0dbbafddabc93c20d913b4290a433"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_13_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_13_tabblock10/tl_2010_13_tabblock10.shp",
@@ -2416,6 +2785,9 @@
       "block_count": 329885,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_26_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/mi_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2443,6 +2815,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "4437311024870d0fd6f66b87b0c470081ff258d80343d2ffe626e8eed419d87e"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_26_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_26_tabblock10/tl_2010_26_tabblock10.shp",
@@ -2472,6 +2850,9 @@
       "block_count": 343565,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_29_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/mo_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2499,6 +2880,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "a3a4708173ab5f33422bcdc074d50c2ce2e3589640a700203abbd7e6bc67818e"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_29_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_29_tabblock10/tl_2010_29_tabblock10.shp",
@@ -2528,6 +2915,9 @@
       "block_count": 350169,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_36_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ny_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2555,6 +2945,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "fcf6d2f58474b250e3507d87bd5f94b32cdaa55f7b4bc96031fd31dde65c95ed"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_36_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_36_tabblock10/tl_2010_36_tabblock10.shp",
@@ -2584,6 +2980,9 @@
       "block_count": 365344,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_39_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/oh_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2611,6 +3010,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "7887ca3b3f3f22fda2f272bf5f025b3aa4ca1c3cb901e092d81379a96275be9f"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_39_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_39_tabblock10/tl_2010_39_tabblock10.shp",
@@ -2640,6 +3045,9 @@
       "block_count": 421545,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_42_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/pa_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2667,6 +3075,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "9eefca5a5919a9e7a30a4ab0e662dc25be6fdbd96429efc4c598e7492bde4cd9"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_42_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_42_tabblock10/tl_2010_42_tabblock10.shp",
@@ -2696,6 +3110,9 @@
       "block_count": 451554,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_17_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/il_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2723,6 +3140,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "92c44f08c287bd0ee2c47572d7ce50728169434709ff58e67c914734a474035e"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_17_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_17_tabblock10/tl_2010_17_tabblock10.shp",
@@ -2752,6 +3175,9 @@
       "block_count": 484481,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_12_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/fl_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2779,6 +3205,12 @@
           "ready": true,
           "bytes": 1760,
           "sha256": "5b1a9bb46ff4841115d9dff7d7338dcf73604d217e56d7f487758ad98c6ca76a"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_12_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_12_tabblock10/tl_2010_12_tabblock10.shp",
@@ -2808,6 +3240,9 @@
       "block_count": 710145,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_06_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/ca_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2835,6 +3270,12 @@
           "ready": true,
           "bytes": 1763,
           "sha256": "dfde26d5f56077035409ef006236d803e9d9406f61794b427d592e712e109eac"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_06_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_06_tabblock10/tl_2010_06_tabblock10.shp",
@@ -2864,6 +3305,9 @@
       "block_count": 914231,
       "pl_custody_ready": true,
       "tiger_ready": false,
+      "tiger_custody_ready": false,
+      "tiger_extracted_ready": false,
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_48_tabblock10.zip",
       "rctx_ready": false,
       "rctx_path": "data/2010/certified/tx_blocks_2010.rctx",
       "rctx_bytes": null,
@@ -2891,6 +3335,12 @@
           "ready": true,
           "bytes": 1763,
           "sha256": "688a3e1c1e2a801791ea09e448a475c56043d8afb855e78fbe455a66f868dad3"
+        },
+        "tiger_archive": {
+          "path": "data/2010/tiger/archives/tl_2010_48_tabblock10.zip",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_48_tabblock10/tl_2010_48_tabblock10.shp",

@@ -56,18 +56,18 @@
     "WY"
   ],
   "population_total": 897934,
-  "rctx_bytes": 6148339,
+  "rctx_bytes": 6148714,
   "schema_version": "certified-national-rctx-verification-v2",
   "state_count": 1,
   "states": [
     {
       "bridge_edge_count": 0,
-      "context_hash": "sha256:27162cedb77c87f1a9ddb3403e3e11ce65934de8e119f2eb21e98da0a7fa8fcc",
+      "context_hash": "sha256:b1263494152f8463b8ce11678217c88aad1ab61f8e017324e0cdf88850cab7dd",
       "edge_count": 58028,
       "population_total": 897934,
-      "rctx_bytes": 6148339,
-      "rctx_sha256": "0888aaba2857c87c7feb0734f4401f259cd359c8e666f94d42ff0e62f9d6b044",
-      "source_files_rehashed": 5,
+      "rctx_bytes": 6148714,
+      "rctx_sha256": "254acb21691591564bcb30d1999b888c362f08b65d91c6eb05fab599c826e32e",
+      "source_files_rehashed": 6,
       "state": "DE",
       "status": "verified",
       "unit_count": 24115,
