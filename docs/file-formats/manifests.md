@@ -47,6 +47,7 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `baseline_assignments.json` in an NRS package | `nrs-baseline-assignments-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
 | `baseline_manifest.json` in an NRS package | `nrs-baseline-package-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
 | `nrs-failure.json` in an incomplete NRS package | `nrs-baseline-failure-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `ledger.json` in an NRS national batch | `nrs-national-batch-ledger-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -483,6 +484,12 @@ the failed recursive node and retained discovery artifact to the achieved and
 allowed scaled deviations. This is a candidate-generation failure record, not
 an infeasibility certificate; no downstream reader may treat it as proof that
 no conforming split exists.
+
+`nrs-national-batch-ledger-v1` is a resumable execution ledger keyed by State.
+It binds the national inventory, verified State package-manifest hashes, failed
+candidate witnesses when present, and measured wall-clock time. Partial ledger
+verification does not imply national coverage; the complete verifier requires
+all inventory States to have independently verified packages and no failures.
 
 ---
 

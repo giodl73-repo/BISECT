@@ -151,6 +151,36 @@ enum Action {
         #[arg(long)]
         context: PathBuf,
     },
+    NrsBatch {
+        #[arg(long)]
+        bisect: PathBuf,
+        #[arg(
+            long,
+            default_value = "docs/experiments/nationwide-2020/inventory.json"
+        )]
+        inventory: PathBuf,
+        #[arg(long, default_value = "runs/nrs-v0.1/national-2020")]
+        out_dir: PathBuf,
+        #[arg(long)]
+        generated_at: String,
+        #[arg(long)]
+        limit: Option<usize>,
+        #[arg(long, value_delimiter = ',')]
+        states: Vec<String>,
+        #[arg(long)]
+        retry_failed: bool,
+    },
+    VerifyNrsBatch {
+        #[arg(
+            long,
+            default_value = "docs/experiments/nationwide-2020/inventory.json"
+        )]
+        inventory: PathBuf,
+        #[arg(long, default_value = "runs/nrs-v0.1/national-2020")]
+        out_dir: PathBuf,
+        #[arg(long)]
+        require_complete: bool,
+    },
     RctxBatch {
         #[arg(long, default_value_t = 2)]
         workers: usize,
@@ -1470,6 +1500,267 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
         bail!("NRS population total mismatch");
     }
     println!("NRS State baseline verification: PASS");
+    Ok(())
+}
+
+fn write_nrs_batch_ledger(
+    out: &Path,
+    inventory: &Path,
+    generated_at: &str,
+    rows: &BTreeMap<String, Value>,
+) -> Result<()> {
+    let results = rows.values().cloned().collect::<Vec<_>>();
+    let verified = results
+        .iter()
+        .filter(|row| row["status"] == "verified")
+        .count();
+    let failed = results
+        .iter()
+        .filter(|row| row["status"] == "failed")
+        .count();
+    write_json(
+        &out.join("ledger.json"),
+        &json!({
+            "schema_version":"nrs-national-batch-ledger-v1",
+            "generated_at":generated_at,
+            "inventory_sha256":sha256(inventory)?,
+            "verified_count":verified,"failed_count":failed,"results":results,
+            "claim_boundary":"Resumable NRS v0.1 reference-baseline execution ledger. State package verification is independent; complete national coverage is claimed only after verify-nrs-batch --require-complete passes."
+        }),
+        true,
+    )
+}
+
+fn nrs_batch(
+    bisect: &Path,
+    inventory_path: &Path,
+    out: &Path,
+    generated_at: &str,
+    limit: Option<usize>,
+    selected_states: &[String],
+    retry_failed: bool,
+) -> Result<()> {
+    let inventory = read_json(inventory_path)?;
+    let selected: BTreeSet<String> = selected_states
+        .iter()
+        .map(|state| state.to_uppercase())
+        .collect();
+    let ledger_path = out.join("ledger.json");
+    let mut rows: BTreeMap<String, Value> = if ledger_path.is_file() {
+        let ledger = read_json(&ledger_path)?;
+        if ledger["schema_version"] != "nrs-national-batch-ledger-v1"
+            || ledger["inventory_sha256"] != sha256(inventory_path)?
+            || ledger["generated_at"] != generated_at
+        {
+            bail!("NRS national ledger identity mismatch");
+        }
+        ledger["results"]
+            .as_array()
+            .context("NRS batch results")?
+            .iter()
+            .filter_map(|row| Some((row["state"].as_str()?.to_owned(), row.clone())))
+            .collect()
+    } else {
+        BTreeMap::new()
+    };
+    fs::create_dir_all(out.join("states"))?;
+    let mut candidates = inventory["states"]
+        .as_array()
+        .context("NRS inventory states")?
+        .iter()
+        .filter(|row| {
+            selected.is_empty()
+                || row["state"]
+                    .as_str()
+                    .is_some_and(|state| selected.contains(state))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    candidates.sort_by_key(|row| {
+        (
+            row["block_count"].as_u64().unwrap_or(u64::MAX),
+            row["state"].as_str().unwrap_or("").to_owned(),
+        )
+    });
+    let found: BTreeSet<String> = candidates
+        .iter()
+        .filter_map(|row| row["state"].as_str().map(str::to_owned))
+        .collect();
+    if !selected.is_subset(&found) {
+        bail!("unknown NRS --states selection");
+    }
+    let mut pending = Vec::new();
+    for row in candidates {
+        let state = row["state"].as_str().context("NRS state")?.to_owned();
+        let lower = state.to_lowercase();
+        let context_path = PathBuf::from(format!("data/2020/certified/{lower}_blocks_2020.rctx"));
+        let state_root = out.join("states").join(&lower);
+        let package = state_root.join("package");
+        if package.join("baseline_manifest.json").is_file()
+            && verify_nrs_state(&package, &context_path).is_ok()
+        {
+            rows.insert(
+                state.clone(),
+                json!({
+                    "state":state,"districts":row["districts"],"block_count":row["block_count"],
+                    "status":"verified","recovered":true,
+                    "package_path":release_relative(out,&package)?,
+                    "manifest_sha256":sha256(&package.join("baseline_manifest.json"))?
+                }),
+            );
+            continue;
+        }
+        if rows
+            .get(&state)
+            .is_some_and(|prior| prior["status"] == "failed")
+            && !retry_failed
+        {
+            continue;
+        }
+        let failure = package.join("nrs-failure.json");
+        if failure.is_file() && !retry_failed {
+            rows.insert(
+                state.clone(),
+                json!({
+                    "state":state,"districts":row["districts"],"block_count":row["block_count"],
+                    "status":"failed","recovered":true,"error":"Recovered retained NRS failure witness.",
+                    "failure_path":release_relative(out,&failure)?,"failure_sha256":sha256(&failure)?
+                }),
+            );
+            continue;
+        }
+        pending.push((row, context_path, state_root, package));
+    }
+    if let Some(limit) = limit {
+        pending.truncate(limit);
+    }
+    write_nrs_batch_ledger(out, inventory_path, generated_at, &rows)?;
+    for (row, context_path, state_root, package) in pending {
+        let state = row["state"].as_str().context("NRS state")?.to_owned();
+        let districts = row["districts"].as_u64().context("NRS districts")? as usize;
+        let seed = state_root.join("seed");
+        if retry_failed {
+            remove_path(&package)?;
+            if seed.exists() && verify_nrs_seed_package(&seed, &context_path).is_err() {
+                remove_path(&seed)?;
+            }
+        }
+        let started = Instant::now();
+        let result = (|| -> Result<()> {
+            if !seed.join("manifest.json").is_file() {
+                build_nrs_seed_package(
+                    &context_path,
+                    districts,
+                    Path::new("configs/nrs_v0_1/standard_profile.json"),
+                    Path::new("configs/nrs_v0_1/legal_profile.json"),
+                    &seed,
+                    generated_at,
+                )?;
+            } else {
+                verify_nrs_seed_package(&seed, &context_path)?;
+            }
+            build_nrs_state(
+                bisect,
+                &context_path,
+                districts,
+                &seed,
+                &package,
+                generated_at,
+            )?;
+            verify_nrs_state(&package, &context_path)
+        })();
+        let elapsed_seconds = started.elapsed().as_secs_f64();
+        let result_row = match result {
+            Ok(()) => json!({
+                "state":state,"districts":districts,"block_count":row["block_count"],
+                "status":"verified","recovered":false,"elapsed_seconds":elapsed_seconds,
+                "package_path":release_relative(out,&package)?,
+                "manifest_sha256":sha256(&package.join("baseline_manifest.json"))?
+            }),
+            Err(error) => {
+                let failure = package.join("nrs-failure.json");
+                json!({
+                    "state":state,"districts":districts,"block_count":row["block_count"],
+                    "status":"failed","elapsed_seconds":elapsed_seconds,"error":format!("{error:#}"),
+                    "failure_path":failure.is_file().then(||release_relative(out,&failure)).transpose()?,
+                    "failure_sha256":failure.is_file().then(||sha256(&failure)).transpose()?
+                })
+            }
+        };
+        println!("{state}: {} ({elapsed_seconds:.3}s)", result_row["status"]);
+        rows.insert(state, result_row);
+        write_nrs_batch_ledger(out, inventory_path, generated_at, &rows)?;
+    }
+    verify_nrs_batch(inventory_path, out, false)
+}
+
+fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -> Result<()> {
+    let inventory = read_json(inventory_path)?;
+    let ledger = read_json(&out.join("ledger.json"))?;
+    if ledger["schema_version"] != "nrs-national-batch-ledger-v1"
+        || ledger["inventory_sha256"] != sha256(inventory_path)?
+    {
+        bail!("NRS national batch ledger identity mismatch");
+    }
+    let inventory_rows: BTreeMap<String, Value> = inventory["states"]
+        .as_array()
+        .context("NRS inventory states")?
+        .iter()
+        .filter_map(|row| Some((row["state"].as_str()?.to_owned(), row.clone())))
+        .collect();
+    let mut verified = 0_usize;
+    let mut failed = 0_usize;
+    let mut seen = BTreeSet::new();
+    for row in ledger["results"].as_array().context("NRS batch results")? {
+        let state = row["state"].as_str().context("NRS batch state")?;
+        if !seen.insert(state.to_owned()) {
+            bail!("duplicate NRS batch state {state}");
+        }
+        let source = inventory_rows
+            .get(state)
+            .context("unknown NRS batch state")?;
+        if row["districts"] != source["districts"] || row["block_count"] != source["block_count"] {
+            bail!("NRS inventory mismatch for {state}");
+        }
+        if row["status"] == "verified" {
+            let relative = row["package_path"].as_str().context("NRS package path")?;
+            if relative.contains("..") || Path::new(relative).is_absolute() {
+                bail!("nonportable NRS batch package path for {state}");
+            }
+            let package = out.join(relative);
+            let context_path = PathBuf::from(format!(
+                "data/2020/certified/{}_blocks_2020.rctx",
+                state.to_lowercase()
+            ));
+            verify_nrs_state(&package, &context_path)?;
+            if row["manifest_sha256"] != sha256(&package.join("baseline_manifest.json"))? {
+                bail!("NRS package manifest hash mismatch for {state}");
+            }
+            verified += 1;
+        } else if row["status"] == "failed" {
+            failed += 1;
+            if let Some(relative) = row["failure_path"].as_str() {
+                if relative.contains("..") || Path::new(relative).is_absolute() {
+                    bail!("nonportable NRS failure path for {state}");
+                }
+                if row["failure_sha256"] != sha256(&out.join(relative))? {
+                    bail!("NRS failure witness hash mismatch for {state}");
+                }
+            }
+        } else {
+            bail!("unknown NRS batch status for {state}");
+        }
+    }
+    if ledger["verified_count"] != verified || ledger["failed_count"] != failed {
+        bail!("NRS batch summary count mismatch");
+    }
+    if require_complete && (verified != inventory_rows.len() || failed != 0) {
+        bail!(
+            "NRS national batch incomplete: {verified}/{} verified, {failed} failed",
+            inventory_rows.len()
+        );
+    }
+    println!("NRS national batch verification: PASS ({verified} verified, {failed} failed)");
     Ok(())
 }
 
@@ -3417,6 +3708,28 @@ fn main() -> Result<()> {
             &generated_at,
         ),
         Action::VerifyNrsState { package, context } => verify_nrs_state(&package, &context),
+        Action::NrsBatch {
+            bisect,
+            inventory,
+            out_dir,
+            generated_at,
+            limit,
+            states,
+            retry_failed,
+        } => nrs_batch(
+            &bisect,
+            &inventory,
+            &out_dir,
+            &generated_at,
+            limit,
+            &states,
+            retry_failed,
+        ),
+        Action::VerifyNrsBatch {
+            inventory,
+            out_dir,
+            require_complete,
+        } => verify_nrs_batch(&inventory, &out_dir, require_complete),
         Action::RctxBatch { workers, limit } => rctx_batch(workers, limit),
         Action::BuildStateRctx {
             state_code,
