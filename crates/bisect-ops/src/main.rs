@@ -530,6 +530,17 @@ fn remove_path(path: &Path) -> Result<()> {
     Ok(())
 }
 
+fn is_transient_file_lock(error: &anyhow::Error) -> bool {
+    error.chain().any(|cause| {
+        cause
+            .downcast_ref::<std::io::Error>()
+            .is_some_and(|io_error| {
+                matches!(io_error.raw_os_error(), Some(32) | Some(33))
+                    || io_error.kind() == std::io::ErrorKind::WouldBlock
+            })
+    })
+}
+
 fn prune(dir: &Path) -> Result<()> {
     for entry in fs::read_dir(dir)? {
         let path = entry?.path();
@@ -1021,7 +1032,7 @@ impl NrsBuildState<'_> {
                 method.contains("niter=100")
                     && method.contains("partition-type=recursive")
                     && method.contains(
-                        "contiguity-normalization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
+                        "candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
                     )
                     && method.contains("refinement=nrsv01")
             })
@@ -1432,7 +1443,7 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
                 method.contains("niter=100")
                     && method.contains("partition-type=recursive")
                     && method.contains(
-                        "contiguity-normalization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
+                        "candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
                     )
                     && method.contains("refinement=nrsv01")
             })
@@ -1596,6 +1607,7 @@ fn nrs_batch(
         let context_path = PathBuf::from(format!("data/2020/certified/{lower}_blocks_2020.rctx"));
         let state_root = out.join("states").join(&lower);
         let package = state_root.join("package");
+        let staging = state_root.join("package.in-progress");
         if package.join("baseline_manifest.json").is_file()
             && verify_nrs_state(&package, &context_path).is_ok()
         {
@@ -1612,7 +1624,7 @@ fn nrs_batch(
         }
         if rows
             .get(&state)
-            .is_some_and(|prior| prior["status"] == "failed")
+            .is_some_and(|prior| prior["status"] == "failed" && prior["failure_path"].is_string())
             && !retry_failed
         {
             continue;
@@ -1629,51 +1641,118 @@ fn nrs_batch(
             );
             continue;
         }
-        pending.push((row, context_path, state_root, package));
+        pending.push((row, context_path, state_root, package, staging));
     }
     if let Some(limit) = limit {
         pending.truncate(limit);
     }
     write_nrs_batch_ledger(out, inventory_path, generated_at, &rows)?;
-    for (row, context_path, state_root, package) in pending {
+    for (row, context_path, state_root, package, staging) in pending {
         let state = row["state"].as_str().context("NRS state")?.to_owned();
         let districts = row["districts"].as_u64().context("NRS districts")? as usize;
         let seed = state_root.join("seed");
         if retry_failed {
             remove_path(&package)?;
+            remove_path(&staging)?;
             if seed.exists() && verify_nrs_seed_package(&seed, &context_path).is_err() {
                 remove_path(&seed)?;
             }
         }
         let started = Instant::now();
-        let result = (|| -> Result<()> {
-            if !seed.join("manifest.json").is_file() {
-                build_nrs_seed_package(
+        let mut attempts = 0_u8;
+        let mut recovered_from_staging = false;
+        let result = loop {
+            attempts += 1;
+            let attempt = (|| -> Result<()> {
+                if staging.join("baseline_manifest.json").is_file()
+                    && verify_nrs_state(&staging, &context_path).is_ok()
+                {
+                    remove_path(&package)?;
+                    fs::rename(&staging, &package).with_context(|| {
+                        format!(
+                            "promote recovered NRS package {} to {}",
+                            staging.display(),
+                            package.display()
+                        )
+                    })?;
+                    recovered_from_staging = true;
+                    return Ok(());
+                }
+                if staging.join("nrs-failure.json").is_file() {
+                    remove_path(&package)?;
+                    fs::rename(&staging, &package).with_context(|| {
+                        format!(
+                            "promote recovered NRS failure {} to {}",
+                            staging.display(),
+                            package.display()
+                        )
+                    })?;
+                    recovered_from_staging = true;
+                    bail!("Recovered retained NRS failure witness from interrupted build");
+                }
+                remove_path(&staging)?;
+                // A canonical directory without a verified manifest or retained
+                // algorithm witness is a legacy interrupted build. It is safe to
+                // replace because the recovery checks above rejected it.
+                remove_path(&package)?;
+                if seed.exists() && verify_nrs_seed_package(&seed, &context_path).is_err() {
+                    remove_path(&seed)?;
+                }
+                if !seed.join("manifest.json").is_file() {
+                    build_nrs_seed_package(
+                        &context_path,
+                        districts,
+                        Path::new("configs/nrs_v0_1/standard_profile.json"),
+                        Path::new("configs/nrs_v0_1/legal_profile.json"),
+                        &seed,
+                        generated_at,
+                    )?;
+                } else {
+                    verify_nrs_seed_package(&seed, &context_path)?;
+                }
+                build_nrs_state(
+                    bisect,
                     &context_path,
                     districts,
-                    Path::new("configs/nrs_v0_1/standard_profile.json"),
-                    Path::new("configs/nrs_v0_1/legal_profile.json"),
                     &seed,
+                    &staging,
                     generated_at,
                 )?;
-            } else {
-                verify_nrs_seed_package(&seed, &context_path)?;
+                verify_nrs_state(&staging, &context_path)?;
+                fs::rename(&staging, &package).with_context(|| {
+                    format!(
+                        "promote verified NRS package {} to {}",
+                        staging.display(),
+                        package.display()
+                    )
+                })?;
+                Ok(())
+            })();
+            match attempt {
+                Ok(()) => break Ok(()),
+                Err(error) if staging.join("nrs-failure.json").is_file() => {
+                    remove_path(&package)?;
+                    fs::rename(&staging, &package).with_context(|| {
+                        format!(
+                            "promote retained NRS failure {} to {}",
+                            staging.display(),
+                            package.display()
+                        )
+                    })?;
+                    break Err(error);
+                }
+                Err(error) if attempts < 3 && is_transient_file_lock(&error) => {
+                    thread::sleep(Duration::from_millis(250 * u64::from(attempts)));
+                }
+                Err(error) => break Err(error),
             }
-            build_nrs_state(
-                bisect,
-                &context_path,
-                districts,
-                &seed,
-                &package,
-                generated_at,
-            )?;
-            verify_nrs_state(&package, &context_path)
-        })();
+        };
         let elapsed_seconds = started.elapsed().as_secs_f64();
         let result_row = match result {
             Ok(()) => json!({
                 "state":state,"districts":districts,"block_count":row["block_count"],
-                "status":"verified","recovered":false,"elapsed_seconds":elapsed_seconds,
+                "status":"verified","recovered":recovered_from_staging,"attempts":attempts,
+                "elapsed_seconds":elapsed_seconds,
                 "package_path":release_relative(out,&package)?,
                 "manifest_sha256":sha256(&package.join("baseline_manifest.json"))?
             }),
@@ -1681,7 +1760,9 @@ fn nrs_batch(
                 let failure = package.join("nrs-failure.json");
                 json!({
                     "state":state,"districts":districts,"block_count":row["block_count"],
-                    "status":"failed","elapsed_seconds":elapsed_seconds,"error":format!("{error:#}"),
+                    "status":"failed","attempts":attempts,"elapsed_seconds":elapsed_seconds,
+                    "recovered":recovered_from_staging,
+                    "error":format!("{error:#}"),
                     "failure_path":failure.is_file().then(||release_relative(out,&failure)).transpose()?,
                     "failure_sha256":failure.is_file().then(||sha256(&failure)).transpose()?
                 })
@@ -3792,6 +3873,15 @@ mod tests {
         assert_eq!(nrs_generation_tolerance_scaled_bound(100, 1), 1);
         assert_eq!(nrs_generation_tolerance_scaled_bound(1_000, 1), 5);
         assert_eq!(nrs_generation_tolerance_scaled_bound(1_000, 2), 10);
+    }
+
+    #[test]
+    fn nrs_batch_retries_windows_sharing_violations_only() {
+        let locked = anyhow::Error::new(std::io::Error::from_raw_os_error(32));
+        let ordinary =
+            anyhow::Error::new(std::io::Error::new(std::io::ErrorKind::NotFound, "missing"));
+        assert!(is_transient_file_lock(&locked));
+        assert!(!is_transient_file_lock(&ordinary));
     }
 
     #[test]
