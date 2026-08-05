@@ -754,6 +754,11 @@ fn ratio_floor(population: i64, seats: usize, right: usize) -> u64 {
     rem.min(seats as i64 - rem) as u64
 }
 
+fn nrs_generation_tolerance_scaled_bound(population: i64, smaller_child_seats: usize) -> u64 {
+    // The established BISECT integer convention rounds a 0.5% allowance up.
+    ((5_i128 * smaller_child_seats as i128 * population as i128 + 999) / 1_000) as u64
+}
+
 fn subset_context(context: &Value, selected: &[usize], source_id: String) -> Result<Value> {
     let chosen: BTreeSet<_> = selected.iter().copied().collect();
     let remap: std::collections::BTreeMap<_, _> = selected
@@ -1017,15 +1022,12 @@ impl NrsBuildState<'_> {
             [floor_seats, ceil_seats]
         };
         let parent_population: i64 = populations.iter().map(|v| v.as_i64().unwrap_or(0)).sum();
-        let arithmetic_floor = ratio_floor(
-            parent_population,
-            seats,
-            if reverse { floor_seats } else { ceil_seats },
-        );
+        let arithmetic_floor = ratio_floor(parent_population, seats, ceil_seats);
         let achieved = field_u64(
             &discovery,
             &["objective", "primary", "max_population_deviation_scaled"],
         )?;
+        let tolerance_bound = nrs_generation_tolerance_scaled_bound(parent_population, floor_seats);
         self.nodes.push(json!({
             "path":path,"seats":seats,"child_seats":child_seats,
             "parent_population":parent_population,"minimum_geoid":unit_ids[0],
@@ -1034,9 +1036,25 @@ impl NrsBuildState<'_> {
             "discovery_sha256":sha256(&node_dir.join("certified-discovery.json"))?,
             "objective":objective(&discovery)?,
             "population_floor":{"lower_bound":arithmetic_floor,"attained":achieved == arithmetic_floor},
+            "generation_tolerance_scaled_bound":tolerance_bound,
             "orientation_reversed_from_engine":reverse,
             "context_canonical_sha256":canonical_sha256(&context)?
         }));
+        if achieved > tolerance_bound {
+            write_json(
+                &self.out.join("nrs-failure.json"),
+                &json!({
+                    "schema_version":"nrs-baseline-failure-v1",
+                    "status":"candidate-failed-population-tolerance","node_path":path,
+                    "engine_seed_i32":self.engine_seed,"achieved_scaled_deviation":achieved,
+                    "allowed_scaled_deviation":tolerance_bound,
+                    "discovery_path":release_relative(self.out,&node_dir.join("certified-discovery.json"))?,
+                    "claim_boundary":"The single canonical candidate failed the profile tolerance. This is a benchmark failure record, not a proof that no feasible partition exists."
+                }),
+                true,
+            )?;
+            bail!("NRS node {path} exceeded population tolerance: {achieved} > {tolerance_bound}");
+        }
         for label in 0..=1usize {
             let local: Vec<usize> = labels
                 .iter()
@@ -1391,6 +1409,25 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
         )?;
         if node["population_floor"]["attained"] != (achieved == lower_bound) {
             bail!("NRS population-floor classification mismatch at {path}");
+        }
+        let recorded_tolerance_bound = node["generation_tolerance_scaled_bound"]
+            .as_u64()
+            .context("NRS generation tolerance")?;
+        let parent_population = node["parent_population"]
+            .as_i64()
+            .context("NRS node parent population")?;
+        let smaller_child_seats = child_seats
+            .iter()
+            .copied()
+            .min()
+            .context("NRS node child seats")?;
+        let tolerance_bound =
+            nrs_generation_tolerance_scaled_bound(parent_population, smaller_child_seats);
+        if recorded_tolerance_bound != tolerance_bound {
+            bail!("NRS generation tolerance bound mismatch at {path}");
+        }
+        if achieved > tolerance_bound {
+            bail!("NRS population tolerance exceeded at {path}");
         }
         let subtree_districts: BTreeSet<usize> = leaf_paths
             .iter()
@@ -3425,6 +3462,13 @@ mod tests {
     fn arithmetic_floor_matches_ratio_bound() {
         assert_eq!(ratio_floor(101, 3, 2), 1);
         assert_eq!(ratio_floor(100, 2, 1), 0);
+    }
+
+    #[test]
+    fn nrs_generation_tolerance_uses_smaller_child_target_and_ceiling() {
+        assert_eq!(nrs_generation_tolerance_scaled_bound(100, 1), 1);
+        assert_eq!(nrs_generation_tolerance_scaled_bound(1_000, 1), 5);
+        assert_eq!(nrs_generation_tolerance_scaled_bound(1_000, 2), 10);
     }
 
     #[test]

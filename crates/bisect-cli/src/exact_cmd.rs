@@ -86,7 +86,12 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             root.k_left as f32 / root.k_parent as f32,
             root.k_right as f32 / root.k_parent as f32,
         ]);
-        let (left, _right) = bisect_runner::bisection_runner::split_subgraph(
+        let split = if args.discovery_refinement == DiscoveryRefinementArg::NrsV01 {
+            bisect_runner::bisection_runner::split_subgraph_nrs_v0_1
+        } else {
+            bisect_runner::bisection_runner::split_subgraph
+        };
+        let (left, _right) = split(
             &adjacency,
             populations,
             1,

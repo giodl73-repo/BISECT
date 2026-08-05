@@ -187,6 +187,64 @@ pub fn split_subgraph(
     ncon: usize,
     edge_weights: &HashMap<(usize, usize), f64>,
     tract_indices: &HashSet<usize>,
+    ufactor: f64,
+    niter: u32,
+    seed: Option<u64>,
+    tpwgts: Option<Vec<f32>>,
+    ubvec: Option<Vec<f32>>,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    split_subgraph_profile(
+        adjacency,
+        vwgt,
+        ncon,
+        edge_weights,
+        tract_indices,
+        ufactor,
+        niter,
+        seed,
+        tpwgts,
+        ubvec,
+        false,
+    )
+}
+
+/// NRS v0.1 reference split. Unlike the legacy/general path, the METIS
+/// candidate itself is constrained to contiguous, minimum-connection parts
+/// before the deterministic repair pass.
+pub fn split_subgraph_nrs_v0_1(
+    adjacency: &[Vec<usize>],
+    vwgt: &[i64],
+    ncon: usize,
+    edge_weights: &HashMap<(usize, usize), f64>,
+    tract_indices: &HashSet<usize>,
+    ufactor: f64,
+    niter: u32,
+    seed: Option<u64>,
+    tpwgts: Option<Vec<f32>>,
+    ubvec: Option<Vec<f32>>,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    split_subgraph_profile(
+        adjacency,
+        vwgt,
+        ncon,
+        edge_weights,
+        tract_indices,
+        ufactor,
+        niter,
+        seed,
+        tpwgts,
+        ubvec,
+        true,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn split_subgraph_profile(
+    adjacency: &[Vec<usize>],
+    vwgt: &[i64],
+    ncon: usize,
+    edge_weights: &HashMap<(usize, usize), f64>,
+    tract_indices: &HashSet<usize>,
     // ufactor: METIS decimal multiplier (e.g. 1.001 = 0.1%). Use ufactor_for_depth().
     ufactor: f64,
     niter: u32,
@@ -196,6 +254,7 @@ pub fn split_subgraph(
     tpwgts: Option<Vec<f32>>,
     // ubvec: per-constraint imbalance tolerances.  None = use ufactor for all constraints.
     ubvec: Option<Vec<f32>>,
+    enforce_metis_contiguity: bool,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
     if tract_indices.len() <= 1 {
         return Ok((tract_indices.clone(), HashSet::new()));
@@ -306,8 +365,21 @@ pub fn split_subgraph(
             let graph = graph
                 .set_option(metis::option::UFactor(uf_int.max(1)))
                 .set_option(metis::option::NIter(niter as i32));
+            let graph = if enforce_metis_contiguity {
+                graph
+                    .set_option(metis::option::Contig(true))
+                    .set_option(metis::option::MinConn(true))
+            } else {
+                graph
+            };
             let graph = if let Some(s) = seed {
-                graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
+                let converted = (s & 0x7FFF_FFFF) as i32;
+                let converted = if enforce_metis_contiguity {
+                    converted
+                } else {
+                    converted.max(1)
+                };
+                graph.set_option(metis::option::Seed(converted))
             } else {
                 graph
             };
