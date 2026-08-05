@@ -1,7 +1,7 @@
 {
   "schema_version": "nrs-standard-profile-v0.1-v1",
   "BISECT_version": "0.1.0",
-  "BISECT_build_commit": "176ab7ecdb792c7a7d9d80ea89811230b0317196",
+  "BISECT_build_commit": "c247e3032c7f5045d118ec3bdfebe747d226e4ee",
   "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)",
   "created_at": "2026-07-09T00:00:00Z",
   "profile_id": "NRS-BASELINE-v0.1-reference-2020",
@@ -47,15 +47,27 @@
     "sys_crate": "metis-sys-0.3.2",
     "partition_type": "recursive-bisection",
     "objective": "edge-cut",
-    "require_contiguous_parts": true,
-    "minimize_subdomain_connectivity": true,
+    "contiguous_parts_option": "disabled-unsupported-for-recursive",
+    "minimize_subdomain_connectivity": false,
+    "fragmented_candidate_normalization": {
+      "kind": "minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
+      "applies_when": "either-raw-child-is-disconnected",
+      "root": "lexicographically-smallest-geoid",
+      "neighbor_order": "ascending-geoid",
+      "candidate_order": [
+        "maximum-absolute-population-deviation",
+        "weighted-boundary-cut",
+        "moved-population-from-raw-metis-labels",
+        "minimum-geoid"
+      ]
+    },
     "niter": 100,
-    "source_commit": "176ab7ecdb792c7a7d9d80ea89811230b0317196",
+    "source_commit": "c247e3032c7f5045d118ec3bdfebe747d226e4ee",
     "source_files": {
       "Cargo.lock": "0a8d0bdd97f765c64963d101cfa83880d16529c57af1510e6d1cfa7f7528a1d2",
       "crates/bisect-cli/src/args.rs": "fcf1f914f18287d4ba7c39bdcfe4dfbdca02cb17e27a55c25c694df3ce85babb",
-      "crates/bisect-cli/src/exact_cmd.rs": "cf1117eb7405deb9b0068c8ba40d4b7c7a30776c5f3f45120a984e8d33faff27",
-      "crates/bisect-runner/src/bisection_runner/core.rs": "62ad481435d5956ecaadcc072d2bcdf11eead07fbe960df2d338de5ab886022f",
+      "crates/bisect-cli/src/exact_cmd.rs": "f0c6745d507cf83b0dc44ae2859b52055c33a2b7e223a9d6106c067bcd65d046",
+      "crates/bisect-runner/src/bisection_runner/core.rs": "794115e289441e543c58d25be6dd7665d3296af3a21612022d9aaea7ead4bafe",
       "crates/bisect-runner/src/bisection_runner/nway_geo.rs": "54a2afa3a0c52bb6b40f08242686a17ad739538ccbde0c941ae683ebd71728d2"
     }
   },
