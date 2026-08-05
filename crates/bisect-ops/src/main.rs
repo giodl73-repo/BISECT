@@ -1709,15 +1709,19 @@ fn nrs_batch(
                 false,
             )?
         {
-            rows.insert(
-                state.clone(),
-                json!({
-                    "state":state,"districts":row["districts"],"block_count":row["block_count"],
-                    "status":"verified","recovered":true,
-                    "package_path":release_relative(out,&package)?,
-                    "manifest_sha256":sha256(&package.join("baseline_manifest.json"))?
-                }),
-            );
+            let manifest_sha256 = sha256(&package.join("baseline_manifest.json"))?;
+            let recovered = json!({
+                "state":state,"districts":row["districts"],"block_count":row["block_count"],
+                "status":"verified","recovered":true,
+                "package_path":release_relative(out,&package)?,
+                "manifest_sha256":manifest_sha256
+            });
+            let retained = rows.get(&state).filter(|prior| {
+                prior["status"] == "verified"
+                    && prior["manifest_sha256"] == recovered["manifest_sha256"]
+                    && prior["package_path"] == recovered["package_path"]
+            });
+            rows.insert(state.clone(), retained.cloned().unwrap_or(recovered));
             continue;
         }
         if rows

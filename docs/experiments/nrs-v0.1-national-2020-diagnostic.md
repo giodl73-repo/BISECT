@@ -132,3 +132,42 @@ tolerance the deterministic NRS repair stopping rule. Other discovery modes
 retain arithmetic-floor repair. This narrows work to the criterion the profile
 actually requires and avoids repeatedly rebuilding 16 DFS analyses for
 population improvements that cannot change pass/fail status.
+
+## Final-profile national result
+
+The optimized release run for profile commit `e8f3acdf` completed all 50 State
+packages and passed both the runner's independent verification and a separate
+`verify-nrs-batch --require-complete` invocation:
+
+- ledger SHA-256:
+  `868689ba05e389930f32bd78408a39a46c54305e832d184c0f4c822516d06d6f`
+- canonical standard-profile SHA-256:
+  `a6350af1d9793802e6a955c951c2c1f5dd33a26a61b0f334a58493ca63a75db9`
+- exact BISECT executable SHA-256:
+  `f2f19787ab6899ae495fa648fe8166011b2842d046e96e9869c1b8cbabaed135`
+- result: 50 verified, 0 failed; 385 recursive split nodes
+- package set: 1,136 files, 896,593,719 bytes
+- summed State generation wall time: 3,087.046 seconds (51.45 minutes)
+- slowest States: Texas 797.884 seconds, Washington 408.727 seconds, New
+  York 320.543 seconds, California 216.251 seconds
+- Illinois runtime regression: 106.643 seconds, down from 1,730.421 seconds
+- tightest passing node: New Jersey `001`, at 99.6513% of its allowed scaled
+  population deviation
+
+North Carolina was generated and independently verified in 56.181 seconds in
+the same ledger before the all-State resume. The pre-fix resume path replaced
+that row with a recovery row lacking elapsed time, so the summed duration above
+restores the measured value from the retained run log. All other 49 durations
+come directly from the final ledger. The harness now preserves an existing
+verified row when its package path and manifest hash are unchanged.
+
+Every one of the ten historical tolerance-failure States verified under the
+final profile. Nine historical node paths remained in the regenerated trees
+and passed; California's old `10000` path is absent because the new
+profile-derived seed changed that recursive topology. California's complete
+52-district package nevertheless passed all 51 of its actual split nodes.
+
+This closes the NRS v0.1 2020 national reference-baseline execution gate. It
+does not expand the profile's non-claims: boundary or canonical global
+optimality, VRA compliance, partisan fairness, legal validity, and official
+adoption remain outside this baseline result.
