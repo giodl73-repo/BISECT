@@ -92,3 +92,10 @@ commits. The revised profile must regenerate all seeds, pass the ten failed
 States and the Illinois runtime regression, complete all 50 State packages, and
 pass `verify-nrs-batch --require-complete` before national baseline completion
 is recorded.
+
+Before that rerun, the batch custody model was also strengthened. Ledger v2
+binds both the canonical standard-profile hash and the exact executable hash;
+State manifests and retained failure witnesses bind the executable too. Resume
+now rejects packages, failures, and seed directories from a different profile
+or executable, preventing a single ledger from silently mixing algorithm
+revisions.

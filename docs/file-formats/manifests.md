@@ -45,9 +45,9 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `manifest.json` in an NRS seed package | `nrs-seed-package-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
 | `baseline-tree.json` in an NRS package | `nrs-baseline-tree-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
 | `baseline_assignments.json` in an NRS package | `nrs-baseline-assignments-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
-| `baseline_manifest.json` in an NRS package | `nrs-baseline-package-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
-| `nrs-failure.json` in an incomplete NRS package | `nrs-baseline-failure-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
-| `ledger.json` in an NRS national batch | `nrs-national-batch-ledger-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `baseline_manifest.json` in an NRS package | `nrs-baseline-package-v0.1-v2` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `nrs-failure.json` in an incomplete NRS package | `nrs-baseline-failure-v2` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `ledger.json` in an NRS national batch | `nrs-national-batch-ledger-v2` | `bisect-ops` | NRS v0.1 block reference implementation |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -472,22 +472,27 @@ and seed derivation mismatches.
 one reused engine seed, discovery identities, objectives, population-floor
 classifications, minimum-GEOID orientation, and canonical assignment vector.
 `nrs-baseline-assignments-v0.1-v1` is the canonical 15-digit-GEOID to 1-based
-district mapping. `nrs-baseline-package-v0.1-v1` binds those records, every
+district mapping. `nrs-baseline-package-v0.1-v2` binds those records, every
 retained node discovery, the nested seed package, the source context, build
-identity, verification posture, and non-claims. The verifier rejects schedule,
+commit and exact executable identity, verification posture, and non-claims. The
+verifier rejects schedule,
 orientation, coverage, representation, connectivity, population, seed, method,
 profile, source, and artifact-hash mismatches.
 
-`nrs-baseline-failure-v1` is emitted instead of a passing package manifest when
+`nrs-baseline-failure-v2` is emitted instead of a passing package manifest when
 a candidate node exceeds the frozen generation population tolerance. It binds
-the failed recursive node and retained discovery artifact to the achieved and
-allowed scaled deviations. This is a candidate-generation failure record, not
+the failed recursive node, exact executable, and hashed retained discovery
+artifact to the achieved and allowed scaled deviations. This is a
+candidate-generation failure record, not
 an infeasibility certificate; no downstream reader may treat it as proof that
 no conforming split exists.
 
-`nrs-national-batch-ledger-v1` is a resumable execution ledger keyed by State.
-It binds the national inventory, verified State package-manifest hashes, failed
-candidate witnesses when present, and measured wall-clock time. Partial ledger
+`nrs-national-batch-ledger-v2` is a resumable execution ledger keyed by State.
+It binds the national inventory, canonical standard-profile hash, exact BISECT
+executable hash, verified State package-manifest hashes, failed candidate
+witnesses when present, and measured wall-clock time. Passing package manifests
+and failure witnesses also bind the executable hash; recovery additionally
+requires their packaged standard profile to match the ledger. Partial ledger
 verification does not imply national coverage; the complete verifier requires
 all inventory States to have independently verified packages and no failures.
 

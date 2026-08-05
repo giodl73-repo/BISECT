@@ -969,6 +969,7 @@ impl BuildState<'_> {
 
 struct NrsBuildState<'a> {
     bisect: &'a Path,
+    bisect_executable_sha256: &'a str,
     out: &'a Path,
     original: &'a Value,
     engine_seed: u64,
@@ -1090,11 +1091,13 @@ impl NrsBuildState<'_> {
             write_json(
                 &self.out.join("nrs-failure.json"),
                 &json!({
-                    "schema_version":"nrs-baseline-failure-v1",
+                    "schema_version":"nrs-baseline-failure-v2",
                     "status":"candidate-failed-population-tolerance","node_path":path,
+                    "bisect_executable_sha256":self.bisect_executable_sha256,
                     "engine_seed_i32":self.engine_seed,"achieved_scaled_deviation":achieved,
                     "allowed_scaled_deviation":tolerance_bound,
                     "discovery_path":release_relative(self.out,&node_dir.join("certified-discovery.json"))?,
+                    "discovery_sha256":sha256(&node_dir.join("certified-discovery.json"))?,
                     "claim_boundary":"The single canonical candidate failed the profile tolerance. This is a benchmark failure record, not a proof that no feasible partition exists."
                 }),
                 true,
@@ -1173,12 +1176,14 @@ fn build_nrs_state(
         }
     }
     let context = read_json(context_path)?;
+    let bisect_executable_sha256 = sha256(bisect)?;
     let unit_ids = context
         .pointer("/units/unit_ids")
         .and_then(Value::as_array)
         .context("NRS unit ids")?;
     let mut state = NrsBuildState {
         bisect,
+        bisect_executable_sha256: &bisect_executable_sha256,
         out,
         original: &context,
         engine_seed,
@@ -1258,9 +1263,10 @@ fn build_nrs_state(
     write_json(
         &out.join("baseline_manifest.json"),
         &json!({
-            "schema_version":"nrs-baseline-package-v0.1-v1",
+            "schema_version":"nrs-baseline-package-v0.1-v2",
             "BISECT_version":env!("CARGO_PKG_VERSION"),
             "BISECT_build_commit":git_text(&["rev-parse","HEAD"]).unwrap_or_else(|_|"unknown".into()),
+            "bisect_executable_sha256":bisect_executable_sha256,
             "rustc_version":Command::new("rustc").arg("--version").output().ok().and_then(|output|String::from_utf8(output.stdout).ok()).map(|text|text.trim().to_owned()).unwrap_or_else(||"unknown".into()),
             "created_at":generated_at,"status":"reference-baseline-candidate",
             "source_context_sha256":sha256(context_path)?,
@@ -1280,12 +1286,18 @@ fn build_nrs_state(
 fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
     verify_nrs_seed_package(&package.join("seed"), context_path)?;
     let manifest = read_json(&package.join("baseline_manifest.json"))?;
-    if manifest["schema_version"] != "nrs-baseline-package-v0.1-v1"
+    if manifest["schema_version"] != "nrs-baseline-package-v0.1-v2"
         || manifest["verification_status"] != "pass"
         || manifest["status"] != "reference-baseline-candidate"
         || manifest["source_context_sha256"] != sha256(context_path)?
     {
         bail!("NRS baseline manifest posture or context mismatch");
+    }
+    let executable_hash = manifest["bisect_executable_sha256"]
+        .as_str()
+        .context("NRS baseline executable hash")?;
+    if !is_sha256_hex(executable_hash) {
+        bail!("invalid NRS baseline executable hash");
     }
     for artifact in manifest["artifacts"]
         .as_array()
@@ -1514,10 +1526,54 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
     Ok(())
 }
 
+fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+fn verify_nrs_failure(package: &Path, context_path: &Path) -> Result<()> {
+    verify_nrs_seed_package(&package.join("seed"), context_path)?;
+    let failure = read_json(&package.join("nrs-failure.json"))?;
+    if failure["schema_version"] != "nrs-baseline-failure-v2"
+        || failure["status"] != "candidate-failed-population-tolerance"
+    {
+        bail!("NRS failure posture mismatch");
+    }
+    let executable_hash = failure["bisect_executable_sha256"]
+        .as_str()
+        .context("NRS failure executable hash")?;
+    if !is_sha256_hex(executable_hash) {
+        bail!("invalid NRS failure executable hash");
+    }
+    let achieved = failure["achieved_scaled_deviation"]
+        .as_u64()
+        .context("NRS failure achieved deviation")?;
+    let allowed = failure["allowed_scaled_deviation"]
+        .as_u64()
+        .context("NRS failure allowed deviation")?;
+    if achieved <= allowed {
+        bail!("NRS failure witness does not exceed tolerance");
+    }
+    let relative = failure["discovery_path"]
+        .as_str()
+        .context("NRS failure discovery path")?;
+    if relative.contains("..") || Path::new(relative).is_absolute() {
+        bail!("nonportable NRS failure discovery path");
+    }
+    if failure["discovery_sha256"] != sha256(&package.join(relative))? {
+        bail!("NRS failure discovery hash mismatch");
+    }
+    Ok(())
+}
+
 fn write_nrs_batch_ledger(
     out: &Path,
     inventory: &Path,
     generated_at: &str,
+    standard_profile_sha256: &str,
+    bisect_executable_sha256: &str,
     rows: &BTreeMap<String, Value>,
 ) -> Result<()> {
     let results = rows.values().cloned().collect::<Vec<_>>();
@@ -1532,14 +1588,44 @@ fn write_nrs_batch_ledger(
     write_json(
         &out.join("ledger.json"),
         &json!({
-            "schema_version":"nrs-national-batch-ledger-v1",
+            "schema_version":"nrs-national-batch-ledger-v2",
             "generated_at":generated_at,
             "inventory_sha256":sha256(inventory)?,
+            "standard_profile_canonical_sha256":standard_profile_sha256,
+            "bisect_executable_sha256":bisect_executable_sha256,
             "verified_count":verified,"failed_count":failed,"results":results,
             "claim_boundary":"Resumable NRS v0.1 reference-baseline execution ledger. State package verification is independent; complete national coverage is claimed only after verify-nrs-batch --require-complete passes."
         }),
         true,
     )
+}
+
+fn nrs_package_matches_execution_identity(
+    package: &Path,
+    standard_profile_sha256: &str,
+    bisect_executable_sha256: &str,
+    failure: bool,
+) -> Result<bool> {
+    let packaged_profile = package.join("seed/standard_profile.json");
+    if !packaged_profile.is_file()
+        || canonical_sha256(&read_json(&packaged_profile)?)? != standard_profile_sha256
+    {
+        return Ok(false);
+    }
+    let identity_record = if failure {
+        package.join("nrs-failure.json")
+    } else {
+        package.join("baseline_manifest.json")
+    };
+    if !identity_record.is_file() {
+        return Ok(false);
+    }
+    Ok(read_json(&identity_record)?["bisect_executable_sha256"] == bisect_executable_sha256)
+}
+
+fn nrs_seed_matches_standard_profile(seed: &Path, standard_profile_sha256: &str) -> Result<bool> {
+    let profile = seed.join("standard_profile.json");
+    Ok(profile.is_file() && canonical_sha256(&read_json(&profile)?)? == standard_profile_sha256)
 }
 
 fn nrs_batch(
@@ -1552,6 +1638,10 @@ fn nrs_batch(
     retry_failed: bool,
 ) -> Result<()> {
     let inventory = read_json(inventory_path)?;
+    let standard_profile_sha256 = canonical_sha256(&read_json(Path::new(
+        "configs/nrs_v0_1/standard_profile.json",
+    ))?)?;
+    let bisect_executable_sha256 = sha256(bisect)?;
     let selected: BTreeSet<String> = selected_states
         .iter()
         .map(|state| state.to_uppercase())
@@ -1559,9 +1649,11 @@ fn nrs_batch(
     let ledger_path = out.join("ledger.json");
     let mut rows: BTreeMap<String, Value> = if ledger_path.is_file() {
         let ledger = read_json(&ledger_path)?;
-        if ledger["schema_version"] != "nrs-national-batch-ledger-v1"
+        if ledger["schema_version"] != "nrs-national-batch-ledger-v2"
             || ledger["inventory_sha256"] != sha256(inventory_path)?
             || ledger["generated_at"] != generated_at
+            || ledger["standard_profile_canonical_sha256"] != standard_profile_sha256
+            || ledger["bisect_executable_sha256"] != bisect_executable_sha256
         {
             bail!("NRS national ledger identity mismatch");
         }
@@ -1610,6 +1702,12 @@ fn nrs_batch(
         let staging = state_root.join("package.in-progress");
         if package.join("baseline_manifest.json").is_file()
             && verify_nrs_state(&package, &context_path).is_ok()
+            && nrs_package_matches_execution_identity(
+                &package,
+                &standard_profile_sha256,
+                &bisect_executable_sha256,
+                false,
+            )?
         {
             rows.insert(
                 state.clone(),
@@ -1630,7 +1728,16 @@ fn nrs_batch(
             continue;
         }
         let failure = package.join("nrs-failure.json");
-        if failure.is_file() && !retry_failed {
+        if failure.is_file()
+            && !retry_failed
+            && verify_nrs_failure(&package, &context_path).is_ok()
+            && nrs_package_matches_execution_identity(
+                &package,
+                &standard_profile_sha256,
+                &bisect_executable_sha256,
+                true,
+            )?
+        {
             rows.insert(
                 state.clone(),
                 json!({
@@ -1646,7 +1753,14 @@ fn nrs_batch(
     if let Some(limit) = limit {
         pending.truncate(limit);
     }
-    write_nrs_batch_ledger(out, inventory_path, generated_at, &rows)?;
+    write_nrs_batch_ledger(
+        out,
+        inventory_path,
+        generated_at,
+        &standard_profile_sha256,
+        &bisect_executable_sha256,
+        &rows,
+    )?;
     for (row, context_path, state_root, package, staging) in pending {
         let state = row["state"].as_str().context("NRS state")?.to_owned();
         let districts = row["districts"].as_u64().context("NRS districts")? as usize;
@@ -1654,7 +1768,10 @@ fn nrs_batch(
         if retry_failed {
             remove_path(&package)?;
             remove_path(&staging)?;
-            if seed.exists() && verify_nrs_seed_package(&seed, &context_path).is_err() {
+            if seed.exists()
+                && (verify_nrs_seed_package(&seed, &context_path).is_err()
+                    || !nrs_seed_matches_standard_profile(&seed, &standard_profile_sha256)?)
+            {
                 remove_path(&seed)?;
             }
         }
@@ -1666,6 +1783,12 @@ fn nrs_batch(
             let attempt = (|| -> Result<()> {
                 if staging.join("baseline_manifest.json").is_file()
                     && verify_nrs_state(&staging, &context_path).is_ok()
+                    && nrs_package_matches_execution_identity(
+                        &staging,
+                        &standard_profile_sha256,
+                        &bisect_executable_sha256,
+                        false,
+                    )?
                 {
                     remove_path(&package)?;
                     fs::rename(&staging, &package).with_context(|| {
@@ -1678,7 +1801,15 @@ fn nrs_batch(
                     recovered_from_staging = true;
                     return Ok(());
                 }
-                if staging.join("nrs-failure.json").is_file() {
+                if staging.join("nrs-failure.json").is_file()
+                    && verify_nrs_failure(&staging, &context_path).is_ok()
+                    && nrs_package_matches_execution_identity(
+                        &staging,
+                        &standard_profile_sha256,
+                        &bisect_executable_sha256,
+                        true,
+                    )?
+                {
                     remove_path(&package)?;
                     fs::rename(&staging, &package).with_context(|| {
                         format!(
@@ -1695,7 +1826,10 @@ fn nrs_batch(
                 // algorithm witness is a legacy interrupted build. It is safe to
                 // replace because the recovery checks above rejected it.
                 remove_path(&package)?;
-                if seed.exists() && verify_nrs_seed_package(&seed, &context_path).is_err() {
+                if seed.exists()
+                    && (verify_nrs_seed_package(&seed, &context_path).is_err()
+                        || !nrs_seed_matches_standard_profile(&seed, &standard_profile_sha256)?)
+                {
                     remove_path(&seed)?;
                 }
                 if !seed.join("manifest.json").is_file() {
@@ -1770,7 +1904,14 @@ fn nrs_batch(
         };
         println!("{state}: {} ({elapsed_seconds:.3}s)", result_row["status"]);
         rows.insert(state, result_row);
-        write_nrs_batch_ledger(out, inventory_path, generated_at, &rows)?;
+        write_nrs_batch_ledger(
+            out,
+            inventory_path,
+            generated_at,
+            &standard_profile_sha256,
+            &bisect_executable_sha256,
+            &rows,
+        )?;
     }
     verify_nrs_batch(inventory_path, out, false)
 }
@@ -1778,8 +1919,12 @@ fn nrs_batch(
 fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -> Result<()> {
     let inventory = read_json(inventory_path)?;
     let ledger = read_json(&out.join("ledger.json"))?;
-    if ledger["schema_version"] != "nrs-national-batch-ledger-v1"
+    let standard_profile_sha256 = canonical_sha256(&read_json(Path::new(
+        "configs/nrs_v0_1/standard_profile.json",
+    ))?)?;
+    if ledger["schema_version"] != "nrs-national-batch-ledger-v2"
         || ledger["inventory_sha256"] != sha256(inventory_path)?
+        || ledger["standard_profile_canonical_sha256"] != standard_profile_sha256
     {
         bail!("NRS national batch ledger identity mismatch");
     }
@@ -1814,6 +1959,18 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
                 state.to_lowercase()
             ));
             verify_nrs_state(&package, &context_path)?;
+            if !nrs_package_matches_execution_identity(
+                &package,
+                ledger["standard_profile_canonical_sha256"]
+                    .as_str()
+                    .context("NRS ledger standard profile hash")?,
+                ledger["bisect_executable_sha256"]
+                    .as_str()
+                    .context("NRS ledger executable hash")?,
+                false,
+            )? {
+                bail!("NRS execution identity mismatch for {state}");
+            }
             if row["manifest_sha256"] != sha256(&package.join("baseline_manifest.json"))? {
                 bail!("NRS package manifest hash mismatch for {state}");
             }
@@ -1826,6 +1983,28 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
                 }
                 if row["failure_sha256"] != sha256(&out.join(relative))? {
                     bail!("NRS failure witness hash mismatch for {state}");
+                }
+                let package = out
+                    .join(relative)
+                    .parent()
+                    .context("NRS failure parent")?
+                    .to_path_buf();
+                let context_path = PathBuf::from(format!(
+                    "data/2020/certified/{}_blocks_2020.rctx",
+                    state.to_lowercase()
+                ));
+                verify_nrs_failure(&package, &context_path)?;
+                if !nrs_package_matches_execution_identity(
+                    &package,
+                    ledger["standard_profile_canonical_sha256"]
+                        .as_str()
+                        .context("NRS ledger standard profile hash")?,
+                    ledger["bisect_executable_sha256"]
+                        .as_str()
+                        .context("NRS ledger executable hash")?,
+                    true,
+                )? {
+                    bail!("NRS failure execution identity mismatch for {state}");
                 }
             }
         } else {
