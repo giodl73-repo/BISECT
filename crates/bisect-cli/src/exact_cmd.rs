@@ -155,14 +155,17 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             *label = 1 - *label;
         }
     }
-    let mut population_improvement_moves = 0;
+    let mut population_improvement_operations = 0;
+    let mut population_improvement_units = 0;
     let mut zero_population_cut_moves = 0;
     let mut same_population_swap_moves = 0;
     let mut one_to_two_swap_moves = 0;
     let mut two_to_two_swap_moves = 0;
     if args.discovery_refinement != DiscoveryRefinementArg::Metis {
-        population_improvement_moves =
-            improve_discovery_population(&root, &adjacency, &mut assignment)?;
+        (
+            population_improvement_operations,
+            population_improvement_units,
+        ) = improve_discovery_population(&root, &adjacency, &mut assignment)?;
     }
     if matches!(
         args.discovery_refinement,
@@ -190,12 +193,13 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; candidate-initialization-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; candidate-initialization-moves={}; connected-subtree-population-operations={}; connected-subtree-population-units={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
             niter,
             partition_type,
             contiguity_repair_moves,
-            population_improvement_moves,
+            population_improvement_operations,
+            population_improvement_units,
             zero_population_cut_moves,
             same_population_swap_moves,
             one_to_two_swap_moves,
@@ -353,7 +357,7 @@ fn improve_discovery_population(
     instance: &bisect_ilp::CertifiedSplitInstance,
     adjacency: &[Vec<usize>],
     assignment: &mut [u8],
-) -> anyhow::Result<usize> {
+) -> anyhow::Result<(usize, usize)> {
     let total_population = instance.populations.iter().sum::<i64>();
     let mut right_population = instance
         .populations
@@ -361,16 +365,11 @@ fn improve_discovery_population(
         .zip(assignment.iter())
         .filter_map(|(&population, &label)| (label == 1).then_some(population))
         .sum::<i64>();
-    let graph = DiscoveryGraph { adjacency };
-    let edge_weights = instance
-        .edges
-        .iter()
-        .map(|edge| ((edge.left, edge.right), edge.weight))
-        .collect::<HashMap<_, _>>();
     let target_numerator = instance.k_right as i128 * i128::from(total_population);
     let remainder = target_numerator.rem_euclid(instance.k_parent as i128) as u128;
     let arithmetic_floor = remainder.min(instance.k_parent as u128 - remainder);
-    let mut moves = 0;
+    let mut operations = 0;
+    let mut moved_units = 0;
     loop {
         let signed_deviation = instance.k_parent as i128 * i128::from(right_population)
             - instance.k_right as i128 * i128::from(total_population);
@@ -379,67 +378,208 @@ fn improve_discovery_population(
             break;
         }
         let heavy = if signed_deviation > 0 { 1_u8 } else { 0_u8 };
-        let light = 1 - heavy;
-        let articulations = discovery_articulation_points(&graph, assignment, heavy)?
-            .into_iter()
-            .collect::<HashSet<_>>();
-        let heavy_units = assignment.iter().filter(|&&label| label == heavy).count();
-        let heavy_seats = if heavy == 0 {
-            instance.k_left
-        } else {
-            instance.k_right
-        };
-        if heavy_units <= heavy_seats {
+        let Some((units, proposed_right)) = best_connected_population_subtree_move(
+            instance,
+            adjacency,
+            assignment,
+            heavy,
+            right_population,
+            current_deviation,
+        )?
+        else {
             break;
+        };
+        for &unit in &units {
+            assignment[unit] = 1 - heavy;
         }
-        let mut best: Option<(u128, i128, i64, usize, i64)> = None;
-        for unit in 0..assignment.len() {
-            let population = instance.populations[unit];
-            if assignment[unit] != heavy
-                || population <= 0
-                || articulations.contains(&unit)
-                || (instance.k_left == instance.k_right && unit == 0 && heavy == 0)
-                || !adjacency[unit]
-                    .iter()
-                    .any(|&neighbor| assignment[neighbor] == light)
+        right_population = proposed_right;
+        operations += 1;
+        moved_units += units.len();
+    }
+    Ok((operations, moved_units))
+}
+
+fn best_connected_population_subtree_move(
+    instance: &bisect_ilp::CertifiedSplitInstance,
+    adjacency: &[Vec<usize>],
+    assignment: &[u8],
+    heavy: u8,
+    right_population: i64,
+    current_deviation: u128,
+) -> anyhow::Result<Option<(Vec<usize>, i64)>> {
+    let heavy_units = assignment
+        .iter()
+        .enumerate()
+        .filter_map(|(unit, &label)| (label == heavy).then_some(unit))
+        .collect::<Vec<_>>();
+    let heavy_seats = if heavy == 0 {
+        instance.k_left
+    } else {
+        instance.k_right
+    };
+    if heavy_units.len() <= heavy_seats {
+        return Ok(None);
+    }
+    let total_population = instance.populations.iter().sum::<i64>();
+    let target_numerator = instance.k_right as i128 * i128::from(total_population);
+    let mut roots = (0..16)
+        .map(|quantile| heavy_units[quantile * (heavy_units.len() - 1) / 15])
+        .collect::<Vec<_>>();
+    roots.sort_unstable();
+    roots.dedup();
+    let mut heavy_adjacency = vec![Vec::new(); assignment.len()];
+    for &unit in &heavy_units {
+        heavy_adjacency[unit] = adjacency[unit]
+            .iter()
+            .copied()
+            .filter(|&neighbor| assignment[neighbor] == heavy)
+            .collect();
+        heavy_adjacency[unit].sort_unstable();
+    }
+
+    let mut global_best_deviation = current_deviation;
+    let mut global_best: Option<((i128, i64, usize, usize, usize), Vec<usize>, i64)> = None;
+    for root in roots {
+        let n = assignment.len();
+        let mut parent = vec![usize::MAX; n];
+        let mut order = Vec::with_capacity(heavy_units.len());
+        let mut stack = vec![root];
+        parent[root] = root;
+        while let Some(unit) = stack.pop() {
+            order.push(unit);
+            for &neighbor in heavy_adjacency[unit].iter().rev() {
+                if parent[neighbor] == usize::MAX {
+                    parent[neighbor] = unit;
+                    stack.push(neighbor);
+                }
+            }
+        }
+        if order.len() != heavy_units.len() {
+            return Err(anyhow!(
+                "NRS heavy child is disconnected during subtree repair"
+            ));
+        }
+        let mut children = vec![Vec::new(); n];
+        for &unit in &order {
+            if unit != root {
+                children[parent[unit]].push(unit);
+            }
+        }
+        let mut entry = vec![usize::MAX; n];
+        let mut exit = vec![usize::MAX; n];
+        let mut preorder = Vec::with_capacity(heavy_units.len());
+        let mut traversal = vec![(root, false)];
+        while let Some((unit, leaving)) = traversal.pop() {
+            if leaving {
+                exit[unit] = preorder.len();
+                continue;
+            }
+            entry[unit] = preorder.len();
+            preorder.push(unit);
+            traversal.push((unit, true));
+            for &child in children[unit].iter().rev() {
+                traversal.push((child, false));
+            }
+        }
+        let mut subtree_population = instance.populations.clone();
+        let mut subtree_count = vec![1_usize; n];
+        let mut subtree_minimum = (0..n).collect::<Vec<_>>();
+        let mut touches_light = (0..n)
+            .map(|unit| {
+                assignment[unit] == heavy
+                    && adjacency[unit]
+                        .iter()
+                        .any(|&neighbor| assignment[neighbor] != heavy)
+            })
+            .collect::<Vec<_>>();
+        for &unit in order.iter().rev() {
+            if unit != root {
+                let ancestor = parent[unit];
+                subtree_population[ancestor] += subtree_population[unit];
+                subtree_count[ancestor] += subtree_count[unit];
+                subtree_minimum[ancestor] = subtree_minimum[ancestor].min(subtree_minimum[unit]);
+                touches_light[ancestor] |= touches_light[unit];
+            }
+        }
+        let mut tree_best_deviation = current_deviation;
+        let mut tree_candidates = Vec::new();
+        for &candidate in &order {
+            if candidate == root
+                || subtree_population[candidate] <= 0
+                || !touches_light[candidate]
+                || heavy_units.len() - subtree_count[candidate] < heavy_seats
+                || (instance.k_left == instance.k_right
+                    && heavy == 0
+                    && entry[candidate] <= entry[0]
+                    && entry[0] < exit[candidate])
             {
                 continue;
             }
             let proposed_right = if heavy == 1 {
-                right_population - population
+                right_population - subtree_population[candidate]
             } else {
-                right_population + population
+                right_population + subtree_population[candidate]
             };
             let proposed = (instance.k_parent as i128 * i128::from(proposed_right)
-                - instance.k_right as i128 * i128::from(total_population))
-            .unsigned_abs();
-            if proposed < current_deviation {
-                let cut_delta = adjacency[unit]
-                    .iter()
-                    .map(|&neighbor| {
-                        let key = (unit.min(neighbor), unit.max(neighbor));
-                        let weight = edge_weights[&key] as i128;
-                        if assignment[neighbor] == heavy {
-                            weight
-                        } else {
-                            -weight
-                        }
-                    })
-                    .sum::<i128>();
-                let key = (proposed, cut_delta, population, unit, proposed_right);
-                if best.as_ref().is_none_or(|current| key < *current) {
-                    best = Some(key);
-                }
+                - target_numerator)
+                .unsigned_abs();
+            if proposed < tree_best_deviation {
+                tree_best_deviation = proposed;
+                tree_candidates.clear();
+            }
+            if proposed == tree_best_deviation {
+                tree_candidates.push((candidate, proposed_right));
             }
         }
-        let Some((_, _, _, unit, proposed_right)) = best else {
-            break;
-        };
-        assignment[unit] = light;
-        right_population = proposed_right;
-        moves += 1;
+        if tree_best_deviation > global_best_deviation {
+            continue;
+        }
+        if tree_best_deviation < global_best_deviation {
+            global_best_deviation = tree_best_deviation;
+            global_best = None;
+        }
+        for (candidate, proposed_right) in tree_candidates {
+            if tree_best_deviation != global_best_deviation {
+                continue;
+            }
+            let units = preorder[entry[candidate]..exit[candidate]].to_vec();
+            let mut in_subtree = vec![false; n];
+            for &unit in &units {
+                in_subtree[unit] = true;
+            }
+            let cut_delta = instance
+                .edges
+                .iter()
+                .filter_map(|edge| {
+                    let left_in = in_subtree[edge.left];
+                    let right_in = in_subtree[edge.right];
+                    if left_in == right_in {
+                        return None;
+                    }
+                    let outside = if left_in { edge.right } else { edge.left };
+                    Some(if assignment[outside] == heavy {
+                        i128::from(edge.weight)
+                    } else {
+                        -i128::from(edge.weight)
+                    })
+                })
+                .sum::<i128>();
+            let key = (
+                cut_delta,
+                subtree_population[candidate],
+                subtree_minimum[candidate],
+                root,
+                candidate,
+            );
+            if global_best
+                .as_ref()
+                .is_none_or(|(current, _, _)| key < *current)
+            {
+                global_best = Some((key, units, proposed_right));
+            }
+        }
     }
-    Ok(moves)
+    Ok(global_best.map(|(_, units, proposed_right)| (units, proposed_right)))
 }
 
 fn discovery_articulation_points(
@@ -2370,9 +2510,52 @@ mod tests {
         let mut assignment = vec![0, 0, 0, 0, 1, 1];
         assert_eq!(
             improve_discovery_population(&instance, &adjacency, &mut assignment).unwrap(),
-            1
+            (1, 1)
         );
         assert_eq!(assignment, vec![0, 0, 1, 0, 1, 1]);
+    }
+
+    #[test]
+    fn population_repair_moves_connected_subtree_past_articulation_local_minimum() {
+        let unit_ids = (0..4).map(|unit| format!("u{unit}")).collect::<Vec<_>>();
+        let instance = bisect_ilp::CertifiedSplitInstance {
+            schema_version: bisect_ilp::CERTIFIED_SPLIT_INSTANCE_SCHEMA_VERSION.to_string(),
+            model_id: bisect_ilp::CERTIFIED_SPLIT_MODEL_ID.to_string(),
+            node_path: String::new(),
+            parent_certificate_id: None,
+            unit_universe_hash: bisect_ilp::certified_split_unit_universe_hash(&unit_ids).unwrap(),
+            unit_ids,
+            populations: vec![20, 10, 20, 50],
+            edges: vec![
+                bisect_ilp::ExactEdge {
+                    left: 0,
+                    right: 1,
+                    weight: 1,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 1,
+                    right: 2,
+                    weight: 1,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 1,
+                    right: 3,
+                    weight: 1,
+                },
+            ],
+            k_parent: 2,
+            k_left: 1,
+            k_right: 1,
+            orientation_rule: bisect_ilp::SplitOrientationRule::EqualSeatsUnitZeroLeft,
+        };
+        let adjacency = vec![vec![1], vec![0, 2, 3], vec![1], vec![1]];
+        let mut assignment = vec![0, 1, 1, 1];
+        assert_eq!(
+            improve_discovery_population(&instance, &adjacency, &mut assignment).unwrap(),
+            (1, 2)
+        );
+        assert_eq!(assignment, vec![0, 0, 0, 1]);
+        assert!(bisect_ilp::certified_split_children_connected(&instance, &assignment).unwrap());
     }
 
     #[test]
