@@ -62,6 +62,11 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         .map(|edge| ((edge.left, edge.right), edge.weight as f64))
         .collect::<HashMap<_, _>>();
     let units = (0..root.unit_ids.len()).collect::<HashSet<_>>();
+    let niter = if args.discovery_refinement == DiscoveryRefinementArg::NrsV01 {
+        100
+    } else {
+        10
+    };
     let mut assignment = if root.k_left == root.k_right {
         let partition = bisect_runner::bisection_runner::run_nway_partition(
             &adjacency,
@@ -69,7 +74,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             &edge_weights,
             2,
             1.005,
-            10,
+            niter,
             Some(args.discovery_seed),
         )
         .map_err(|error| anyhow!("certified discovery METIS split failed: {error}"))?;
@@ -88,7 +93,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             &edge_weights,
             &units,
             1.005,
-            10,
+            niter,
             Some(args.discovery_seed),
             tpwgts,
             None,
@@ -158,8 +163,9 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter=10; ufactor=1.005; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; contiguity-repair-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; contiguity-repair-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
+            niter,
             contiguity_repair_moves,
             population_improvement_moves,
             zero_population_cut_moves,
@@ -203,6 +209,11 @@ fn improve_discovery_population(
         .filter_map(|(&population, &label)| (label == 1).then_some(population))
         .sum::<i64>();
     let graph = DiscoveryGraph { adjacency };
+    let edge_weights = instance
+        .edges
+        .iter()
+        .map(|edge| ((edge.left, edge.right), edge.weight))
+        .collect::<HashMap<_, _>>();
     let target_numerator = instance.k_right as i128 * i128::from(total_population);
     let remainder = target_numerator.rem_euclid(instance.k_parent as i128) as u128;
     let arithmetic_floor = remainder.min(instance.k_parent as u128 - remainder);
@@ -228,7 +239,7 @@ fn improve_discovery_population(
         if heavy_units <= heavy_seats {
             break;
         }
-        let mut best: Option<(u128, usize, i64)> = None;
+        let mut best: Option<(u128, i128, i64, usize, i64)> = None;
         for unit in 0..assignment.len() {
             let population = instance.populations[unit];
             if assignment[unit] != heavy
@@ -249,15 +260,26 @@ fn improve_discovery_population(
             let proposed = (instance.k_parent as i128 * i128::from(proposed_right)
                 - instance.k_right as i128 * i128::from(total_population))
             .unsigned_abs();
-            if proposed < current_deviation
-                && best.as_ref().is_none_or(|&(best_deviation, best_unit, _)| {
-                    (proposed, unit) < (best_deviation, best_unit)
-                })
-            {
-                best = Some((proposed, unit, proposed_right));
+            if proposed < current_deviation {
+                let cut_delta = adjacency[unit]
+                    .iter()
+                    .map(|&neighbor| {
+                        let key = (unit.min(neighbor), unit.max(neighbor));
+                        let weight = edge_weights[&key] as i128;
+                        if assignment[neighbor] == heavy {
+                            weight
+                        } else {
+                            -weight
+                        }
+                    })
+                    .sum::<i128>();
+                let key = (proposed, cut_delta, population, unit, proposed_right);
+                if best.as_ref().is_none_or(|current| key < *current) {
+                    best = Some(key);
+                }
             }
         }
-        let Some((_, unit, proposed_right)) = best else {
+        let Some((_, _, _, unit, proposed_right)) = best else {
             break;
         };
         assignment[unit] = light;
@@ -2085,6 +2107,75 @@ mod tests {
             before.max_population_deviation_scaled
         );
         assert!(after.weighted_boundary_cut < before.weighted_boundary_cut);
+    }
+
+    #[test]
+    fn population_repair_uses_cut_delta_before_geoid_order() {
+        let unit_ids = (0..6).map(|unit| format!("u{unit}")).collect::<Vec<_>>();
+        let instance = bisect_ilp::CertifiedSplitInstance {
+            schema_version: bisect_ilp::CERTIFIED_SPLIT_INSTANCE_SCHEMA_VERSION.to_string(),
+            model_id: bisect_ilp::CERTIFIED_SPLIT_MODEL_ID.to_string(),
+            node_path: String::new(),
+            parent_certificate_id: None,
+            unit_universe_hash: bisect_ilp::certified_split_unit_universe_hash(&unit_ids).unwrap(),
+            unit_ids,
+            populations: vec![2, 1, 1, 1, 1, 1],
+            edges: vec![
+                bisect_ilp::ExactEdge {
+                    left: 0,
+                    right: 1,
+                    weight: 10,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 1,
+                    right: 3,
+                    weight: 10,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 2,
+                    right: 3,
+                    weight: 1,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 0,
+                    right: 2,
+                    weight: 1,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 1,
+                    right: 4,
+                    weight: 1,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 2,
+                    right: 4,
+                    weight: 10,
+                },
+                bisect_ilp::ExactEdge {
+                    left: 4,
+                    right: 5,
+                    weight: 1,
+                },
+            ],
+            k_parent: 2,
+            k_left: 1,
+            k_right: 1,
+            orientation_rule: bisect_ilp::SplitOrientationRule::EqualSeatsUnitZeroLeft,
+        };
+        let adjacency = vec![
+            vec![1, 2],
+            vec![0, 3, 4],
+            vec![0, 3, 4],
+            vec![1, 2],
+            vec![1, 2, 5],
+            vec![4],
+        ];
+        let mut assignment = vec![0, 0, 0, 0, 1, 1];
+        assert_eq!(
+            improve_discovery_population(&instance, &adjacency, &mut assignment).unwrap(),
+            1
+        );
+        assert_eq!(assignment, vec![0, 0, 1, 0, 1, 1]);
     }
 
     #[test]

@@ -618,6 +618,9 @@ pub enum DiscoveryRefinementArg {
     Metis,
     /// Apply articulation-safe population repair only.
     Population,
+    /// NRS v0.1 repair order with the profile-mandated 100 METIS iterations.
+    #[value(name = "nrs-v0-1")]
+    NrsV01,
     /// Apply population repair and bounded 0-, 1-, and 1-to-2 boundary moves.
     Fast,
     /// Apply all deterministic neighborhoods, including bounded 2-to-2 search.
