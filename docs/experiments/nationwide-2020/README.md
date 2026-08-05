@@ -20,3 +20,14 @@ All 50 State contexts now verify:
 - 9,657 deterministic bridge edges.
 
 See `rctx-verification.json`.
+
+## Operational Trees
+
+All 50 State assignments and all 435 one-seat leaves now verify. The national
+replay independently checks the original State adjacency graphs and reports
+zero omitted blocks, duplicate assignments, or disconnected leaves. All 385
+nontrivial recursive nodes reach their arithmetic population floors.
+
+See `OPERATIONAL_CERTIFICATION.md`, `national-tree-verification.json`, and
+`national-proof-coverage.json`. Weighted-boundary and canonical optimality
+remain unproved.

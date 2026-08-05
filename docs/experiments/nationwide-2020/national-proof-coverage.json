@@ -1,0 +1,28 @@
+{
+  "boundary": {
+    "coverage_rate": 0.0,
+    "proved_nodes": 0,
+    "status": "not-run",
+    "unproved_nodes": 385
+  },
+  "canonical": {
+    "coverage_rate": 0.0,
+    "proved_nodes": 0,
+    "status": "blocked-by-boundary",
+    "unproved_nodes": 385
+  },
+  "claim_boundary": "All 50 State assignments cover every 2020 Census block exactly once, all 435 leaves are connected, and all 385 nontrivial recursive nodes attain their arithmetic population floors. Historical builder-source custody gaps are reported separately. Boundary and canonical optimality remain unproved.",
+  "population": {
+    "coverage_rate": 1.0,
+    "proof_kind": "ratio-arithmetic-floor",
+    "proved_nodes": 385,
+    "unproved_nodes": 0
+  },
+  "recursive_node_count": 385,
+  "schema_version": "certified-national-proof-coverage-v1",
+  "single_district_states": {
+    "count": 6,
+    "objective_proofs": "not-applicable"
+  },
+  "status": "classified"
+}

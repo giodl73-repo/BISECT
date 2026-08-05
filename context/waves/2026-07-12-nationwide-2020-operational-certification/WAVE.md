@@ -44,10 +44,10 @@ and publish exact objective proof coverage separately.
 |---|---|---|
 | 01 - National data and context inventory | DONE | 50/50 sources, 8,126,956 blocks, 2.02 GiB estimate |
 | 02 - Batch block RCTX generation | DONE | 50 contexts, 8,126,956 blocks, 9,657 bridges |
-| 03 - Batch operational tree generation | IN PROGRESS | Florida 64-seed frontier preserved: 40 verified packages and 4 local-search frontiers |
-| 04 - National wall-to-wall verifier | BLOCKED BY 03 | Zero omissions, duplicates, or disconnected leaves |
-| 05 - National proof coverage matrix | BLOCKED BY 04 | Population/boundary/canonical status per node |
-| 06 - Nationwide 2020 publication | BLOCKED BY 05 | Reports, maps, custody, and Stage 3 closure |
+| 03 - Batch operational tree generation | DONE | 44 multi-district trees plus six single-district packages; 435 leaves |
+| 04 - National wall-to-wall verifier | DONE | 8,126,956 blocks; zero omissions, duplicates, or disconnected leaves |
+| 05 - National proof coverage matrix | DONE | Population 385/385; boundary 0/385; canonical 0/385 |
+| 06 - Nationwide 2020 publication | IN PROGRESS | Assignment/report custody and legacy-source disposition complete; release bundle and review remain |
 
 ## Claim Boundary
 

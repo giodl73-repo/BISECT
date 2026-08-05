@@ -1,7 +1,7 @@
 ---
 pulse: 03
 title: Batch operational tree generation
-status: in_progress
+status: done
 depends_on: 02
 wave: nationwide-2020-operational-certification
 validation_level: L2 nationwide recursive execution
@@ -16,16 +16,16 @@ State and reuse the completed one-district packages.
 
 - [x] resumable State/tree batch runner;
 - [x] node-specific seed screening and retry policy;
-- [ ] 50 operational State packages;
-- [ ] 435 one-seat leaves;
-- [ ] per-node arithmetic population proof status;
+- [x] 50 operational State packages;
+- [x] 435 one-seat leaves;
+- [x] per-node arithmetic population proof status;
 - [x] failure and retry ledger.
 
 ## Progress
 
-The ledger contains 40 verified multi-district State packages and four open
-failures (Arizona, California, Florida, and New York). Every multi-district
-State has now been attempted; no untouched State remains. Virginia is the first
+The ledger contains all 44 verified multi-district State packages. Together
+with the six one-district certificates, they produce all 435 congressional
+leaves. Virginia was the first
 package completed under deterministic two-phase seed screening: METIS-only
 screens are ranked before population refinement, each screen has a recorded
 180-second operational timeout, completed nodes and screens are reusable, and
@@ -112,11 +112,12 @@ without screen timeouts, while final two-seat node `110` required a second
 ranked refinement to reach floor zero. The independently verified report and
 manifest preserve all screening and refinement evidence.
 
-New York reached the arithmetic population floors at its 26-seat root, first
-13-seat half, six-seat child, and completed descendants through node `001`.
-At two-seat node `0011`, all 64 completed screens were population-refined;
-best seed 52 remained at deviation 2 against floor zero. This is an unresolved
-extended local-search frontier, not proof of infeasibility.
+New York's deviation-2/floor-0 node `0011` was recovered by the 128-seed
+extension: seed 113 reached arithmetic floor zero. The resumed tree then
+recovered newly exposed two-seat node `0101` at seed 40 and completed all
+remaining branches, including node `1101` at seed 119. The independently
+verified package produces 26 connected leaves and proves all 25 recursive
+arithmetic population floors.
 
 Pennsylvania completed 17 connected leaves with all 16 recursive nodes at
 their arithmetic population floors. Its 17-seat root reached floor 6 after a
@@ -137,17 +138,18 @@ extension: seed 18 reached arithmetic floor zero at node `10`. The 64-seed
 extension then recovered three-seat node `100` at seed 59 and reached the
 arithmetic floors at newly exposed nodes `1001`, `101`, `1010`, `1011`, `11`,
 `110`, `1101`, `111`, and `1110` using seeds 9, 57, 4, 43, 8, 59, 11, 35,
-and 35. Node `11` preserved three screen timeouts. At two-seat node `1111`,
-all 64 completed screens were population-refined; best seed 37 remained at
-deviation 6 against arithmetic floor zero. This is an unresolved extended
-local-search frontier, not proof of infeasibility.
+and 35. Node `11` preserved three screen timeouts. The 128-seed extension
+recovered the final two-seat node `1111` at seed 98. The independently
+verified package produces 28 connected leaves and proves all 27 recursive
+arithmetic population floors.
 
-California reached the arithmetic population floors at its 52-seat root,
-first 26-seat half, first 13-seat child, and completed six-seat subtree. At
-seven-seat node `001`, eight of 32 screens timed out and all 24 completed
-screens were population-refined; best seed 3 remained at deviation 261,137
-against floor 2. This is an unresolved extended local-search frontier, not
-proof of infeasibility.
+California's former seven-seat node `001` frontier was recovered by the
+128-seed extension. Seed 128 screened at deviation 355,479 and refined to the
+arithmetic floor of 2. The resumed tree completed all remaining branches and
+produces 52 connected leaves; all 51 recursive nodes reach their arithmetic
+population floors. The independently verified report and manifest preserve
+the complete screening and refinement evidence, including the earlier bounded
+timeouts.
 
 Texas's five-seat node `110` frontier was recovered by the 32-seed extension:
 seed 20 reached arithmetic floor 2 after three of 32 screens timed out. The
@@ -171,24 +173,22 @@ reached floors 0, 1, and 1 using seeds 5, 7, and 21. The completed package
 produces ten connected leaves, proves the arithmetic population floor at all
 nine nodes, and records three screen timeouts from the original 16-seed pass.
 
-Arizona's original articulation-thread stack overflow was also cleared by the
-current bounded-screening workflow. Its nine-seat root, complete four-seat
-half, second five-seat parent, and two-seat child reach their arithmetic
-population floors. At three-seat node `11`, all 32 screens completed and were
-population-refined; best seed 3 remained at deviation 9,047 against arithmetic
-floor 1. This is an unresolved extended local-search frontier, not proof of
-infeasibility.
+Arizona's original articulation-thread stack overflow was cleared by the
+bounded-screening workflow, and its deviation-9,047/floor-1 node `11` was
+recovered by the 128-seed extension. Seed 84 reached arithmetic floor 1 at
+that three-seat node; newly exposed node `111` then reached floor 1 at seed
+18. The independently verified package produces nine connected leaves and
+proves all eight recursive arithmetic population floors.
 
 Utah was recovered from its old single-policy child-node miss under the
 current all-seed refinement workflow. It now produces four connected leaves;
 the four-seat root and both two-seat children all reach arithmetic floor zero,
 using seeds 7, 16, and 9 respectively, with no screen timeouts.
 
-A versioned extended-frontier wrapper now raises the deterministic retry bound
-from 16 to 32 seeds without changing the frozen base builder or invalidating
-existing package hashes. Extended packages bind both wrapper and base-builder
-hashes and record their seed-frontier maximum in the package manifest.
+A versioned extended-frontier path now raises the deterministic retry bound
+without changing completed package hashes. New York records a 128-seed
+frontier in its package manifest; earlier extended packages retain their
+original frontier maximum and builder custody.
 
-No untouched multi-district State remains. Pulse 03 now continues by revisiting
-the four preserved local-search frontiers; national wall-to-wall verification
-remains blocked until operational packages are complete.
+No multi-district State remains. Pulse 03 is complete and the national
+wall-to-wall and proof-coverage verification pulses have passed.

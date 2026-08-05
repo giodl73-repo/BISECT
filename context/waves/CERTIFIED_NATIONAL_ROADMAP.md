@@ -39,9 +39,9 @@ For every State and Census year:
 ### Stage 3 — Nationwide 2020
 
 - [x] Generate connected block RCTX for every State.
-- [ ] Execute every recursive node.
-- [ ] Produce all 435 one-seat leaves.
-- [ ] Verify wall-to-wall national assignment coverage.
+- [x] Execute every recursive node.
+- [x] Produce all 435 one-seat leaves.
+- [x] Verify wall-to-wall national assignment coverage.
 - [ ] Publish maps, plans, certificates, proof sizes, runtimes, and gaps.
 
 ### Stage 4 — Nationwide 2010
@@ -98,20 +98,10 @@ Current objective:
 
 Next unblocked work:
 
-> Continue Pulse 03 by revisiting the preserved Arizona, California, Florida,
-> and New York
-> local-search frontiers. Every multi-district State has been attempted; no
-> untouched State remains, and Pulse 04 stays blocked until operational
-> packages are complete. All stale tooling and single-policy failures have now
-> been retried; the next work is a deterministic expansion beyond the current
-> bounded local-search frontier. Washington was recovered at seed 27, while New
-> York remained deviation 2/floor 0 after 64 seeds, Oklahoma was recovered at
-> seed 28, Arizona remained deviation 9,047/floor 1 after 32 seeds, and North
-> Carolina was recovered at seed 18. Florida's former seven-seat frontier was
-> recovered at seed 18, its three-seat node `100` was recovered at seed 59,
-> and the newly exposed two-seat node `1111` remained at deviation 6/floor 0
-> after 64 seeds. California's seven-seat node `001`
-> remained at deviation 261,137/floor 2 after 32 seeds, with eight screen
-> timeouts. Texas's five-seat node `110` was recovered at seed 20 and the full
-> 38-leaf package is independently verified. New York's deviation-2/floor-0
-> node `0011` is the next deterministic target beyond the 64-seed frontier.
+> Complete Pulse 06 publication. Nationwide operational execution is complete:
+> 50 States, 435 connected leaves, 8,126,956 blocks with zero omissions or
+> duplicates, and arithmetic population floors at all 385 nontrivial nodes.
+> California's final frontier was recovered at seed 128. Publish the State
+> assignments, cartographic renderings, custody bundle, runtimes, and explicit
+> proof gaps. Boundary and canonical optimality remain unproved at all 385
+> nontrivial nodes and must not be promoted to exact national completion.

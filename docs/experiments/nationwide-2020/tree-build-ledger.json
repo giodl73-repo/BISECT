@@ -27,23 +27,23 @@
       "state": "AZ",
       "districts": 9,
       "block_count": 155444,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "extended-population-floor-seed-screen-32"
+        "extended-population-floor-seed-screen-128"
       ],
-      "output": "The nine-seat root, complete four-seat half, and second five-seat parent and two-seat child reached their arithmetic population floors under the current bounded-screening workflow. At three-seat node 11, all 32 completed screens were population-refined; best seed 3 remained at deviation 9047 against arithmetic floor 1. This is an unresolved extended local-search frontier, not proof of infeasibility."
+      "output": "The 128-seed extension recovered three-seat node 11 at seed 84 and completed the full nine-leaf operational package. Newly exposed two-seat node 111 reached arithmetic floor 1 at seed 18. The independently verified report and manifest preserve all eight recursive population-floor proofs."
     },
     {
       "state": "CA",
       "districts": 52,
       "block_count": 519723,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "extended-population-floor-seed-screen-32"
+        "extended-population-floor-seed-screen-128"
       ],
-      "output": "The 52-seat root, first 26-seat half, first 13-seat child, and completed six-seat subtree reached their arithmetic population floors. At seven-seat node 001, eight of 32 seed screens timed out after 180 seconds and all 24 completed screens were population-refined; best seed 3 remained at deviation 261137 against arithmetic floor 2. This is an unresolved extended local-search frontier, not proof of infeasibility."
+      "output": "The 128-seed extension recovered seven-seat node 001 at seed 128, refining deviation 355479 to arithmetic floor 2. The resumed tree completed all 52 connected leaves and all 51 recursive nodes reach their arithmetic population floors. The independently verified report and manifest preserve the full screening and refinement evidence."
     },
     {
       "state": "CO",
@@ -71,12 +71,12 @@
       "state": "FL",
       "districts": 28,
       "block_count": 390066,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "extended-population-floor-seed-screen-64"
+        "extended-population-floor-seed-screen-128"
       ],
-      "output": "The 28-seat root, complete left 14-seat half, right 14-seat parent, and completed descendants through node 1110 reached their arithmetic population floors under the extended bounded-screening workflow. Seed 59 recovered the former node-100 frontier at deviation 0; newly exposed nodes 1001, 101, 1010, 1011, 11, 110, 1101, 111, and 1110 reached their floors using seeds 9, 57, 4, 43, 8, 59, 11, 35, and 35. Node 11 preserved three screen timeouts. At two-seat node 1111, all 64 completed screens were population-refined; best seed 37 remained at deviation 6 against arithmetic floor 0. This is an unresolved extended local-search frontier, not proof of infeasibility."
+      "output": "The 128-seed extension recovered two-seat node 1111 at seed 98 and completed the full 28-leaf operational package. All 27 recursive nodes reach their arithmetic population floors. The independently verified report and manifest preserve the complete screening and refinement evidence."
     },
     {
       "state": "GA",
@@ -335,12 +335,12 @@
       "state": "NY",
       "districts": 26,
       "block_count": 288819,
-      "status": "failed",
-      "exit_code": 1,
+      "status": "built",
+      "exit_code": 0,
       "command": [
-        "extended-population-floor-seed-screen-64"
+        "extended-population-floor-seed-screen-128"
       ],
-      "output": "The 26-seat root, first 13-seat half, six-seat child, and completed descendants through node 001 reached their arithmetic population floors. At two-seat node 0011, all 64 completed screens were population-refined; best seed 52 remained at deviation 2 against arithmetic floor 0. This is an unresolved extended local-search frontier, not proof of infeasibility."
+      "output": "The 128-seed extension recovered node 0011 at seed 113 and completed the full 26-leaf operational package. All 25 recursive nodes reach their arithmetic population floors; later nodes 0101 and 1101 reached floor zero at seeds 40 and 119. The independently verified report and manifest preserve the complete screening and refinement evidence."
     },
     {
       "state": "OH",
@@ -486,7 +486,7 @@
       "output": "Recovered from verified package manifest."
     }
   ],
-  "built_count": 40,
-  "failed_count": 4,
+  "built_count": 44,
+  "failed_count": 0,
   "claim_boundary": "Resumable operational tree build ledger; national coverage verification is separate."
 }

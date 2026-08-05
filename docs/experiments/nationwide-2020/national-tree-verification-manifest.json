@@ -1,0 +1,18 @@
+{
+  "claim_boundary": "All 50 State assignments cover every 2020 Census block exactly once, all 435 leaves are connected, and all 385 nontrivial recursive nodes attain their arithmetic population floors. Historical builder-source custody gaps are reported separately. Boundary and canonical optimality remain unproved.",
+  "files": [
+    {
+      "path": "national-tree-verification.json",
+      "sha256": "6c70401812abfb78075d667a803530b83a48bb06b3dd7e0e4fd7f9ac6a85c2a4"
+    },
+    {
+      "path": "national-proof-coverage.json",
+      "sha256": "682fec43e830d0e6083d69e1fca7d26cb8ccd2cc03ebb50738e242a30f39b558"
+    }
+  ],
+  "package_id": "nationwide-2020-operational-tree-verification",
+  "schema_version": "certified-national-operational-tree-verification-package-v1",
+  "status": "verified-operational-complete-population-proved",
+  "verifier_path": "bisect-ops-national-tree-verifier-source.rs",
+  "verifier_sha256": "13e3859b7eddf7adb905a0a022d7cb675d4e66ec0e5d3a2538fc6f2eb0120e69"
+}

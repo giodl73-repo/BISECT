@@ -1,0 +1,14 @@
+{
+  "analyzer_path": "bisect-ops-analyzer-source.rs",
+  "analyzer_sha256": "e0562d10814c703dcde21070d25d0e48c11e27658fa4d3cbdbdc39c354823822",
+  "claim_boundary": "Complete connected wall-to-wall recursive tree with arithmetic population optimality at every node; boundary and canonical optimality are unproved.",
+  "files": [
+    {
+      "path": "ny-operational-tree.json",
+      "sha256": "7e0dafe14be539e44779a2c413eefbc3fe27c185646e787ba2d85c5ba044be12"
+    }
+  ],
+  "package_id": "ny-operational-tree-2020",
+  "schema_version": "certified-operational-tree-frontier-package-v1",
+  "status": "operational-complete-population-proved"
+}

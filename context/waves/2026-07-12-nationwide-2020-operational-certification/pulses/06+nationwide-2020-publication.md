@@ -1,0 +1,38 @@
+---
+pulse: 06
+title: Nationwide 2020 publication
+status: in_progress
+depends_on: 05
+wave: nationwide-2020-operational-certification
+validation_level: L2 release-gated publication
+---
+
+# Pulse 06 - Nationwide 2020 Publication
+
+Operational computation and internal evidence custody are complete. Public
+promotion remains a separate governed action under
+`docs/vtrace/ARTIFACT_PUBLICATION_POLICY.md`.
+
+## Complete
+
+- [x] national verification report;
+- [x] national proof-coverage matrix;
+- [x] hash-bound verifier source and manifest;
+- [x] State tree hashes and local assignment custody;
+- [x] replay commands and explicit non-claims.
+
+## Remaining release work
+
+- [ ] select and review the public evidence bundle;
+- [ ] generate custody-cleared State assignment exports;
+- [x] disposition 40 legacy builder-source hash mismatches as a preserved
+  historical limitation;
+- [ ] generate and review cartographic renderings;
+- [ ] publish runtime and proof-size tables from retained execution evidence;
+- [ ] pass the applicable VTRACE, VAULT, DATUM/SCALE, and COMMONS gates; and
+- [ ] close Stage 3 without promoting boundary or canonical incumbents to
+  exact proofs.
+
+No external publication occurs automatically. Generated maps and raw run
+outputs remain local-only until the artifact-publication policy permits their
+promotion.
