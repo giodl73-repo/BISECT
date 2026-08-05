@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 100,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:b6c6fae6d616d3a3f0b5b3fffed0f8b33ab541fe245b2ac795aa0a03a754b3cd",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 2,
+  "land_edge_count": 62875,
+  "population_total": 1052567,
+  "rctx_bytes": 6637195,
+  "rctx_path": "data/2010/certified/ri_blocks_2010.rctx",
+  "rctx_sha256": "b46fb8e3ddf16c87061b1715a76ceaa72237b9752cab06a19ecdac3bb18f5019",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Rhode Island",
+  "state_code": "RI",
+  "state_fips": "44",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_44_tabblock10.zip",
+  "tiger_archive_sha256": "b1cf5baa8d2525e38ec35d310e6c756aef531ff9e4af812d09d3376146181926",
+  "unit_count": 25181,
+  "unit_universe_hash": "sha256:c6e81c835a954bf06a5a29c2f8f043dd84af033b1dede31ece158ed6d07a1f64",
+  "year": 2010
+}

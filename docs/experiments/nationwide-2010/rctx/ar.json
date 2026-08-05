@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:292e2504be25bbb5ba039da6fdbc656f69da2b2e87f91e4e362c9656444236b9",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 452155,
+  "population_total": 2915918,
+  "rctx_bytes": 48776238,
+  "rctx_path": "data/2010/certified/ar_blocks_2010.rctx",
+  "rctx_sha256": "91490401d458af12b234f9e918017b8af896585ba731e5f0dcddd3f201b50c4c",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Arkansas",
+  "state_code": "AR",
+  "state_fips": "05",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_05_tabblock10.zip",
+  "tiger_archive_sha256": "b26e7138d8513c1182250cc8f397668d13aed017aafcd2634eeef09451ca90b9",
+  "unit_count": 186211,
+  "unit_universe_hash": "sha256:acca74a9a5169dd0c7fe157703f5d9058960a38e80d9d10d6f4c475f4b9f6c8e",
+  "year": 2010
+}

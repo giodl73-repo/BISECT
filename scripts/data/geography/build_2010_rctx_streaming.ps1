@@ -6,6 +6,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Add-Type -AssemblyName System.IO.Compression.FileSystem
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\..\.."))
 $inventoryPath = Join-Path $repoRoot "docs/experiments/nationwide-2010/inventory.json"
 $inventory = Get-Content -LiteralPath $inventoryPath -Raw | ConvertFrom-Json
@@ -18,11 +19,6 @@ $rows = @{}
 foreach ($row in $inventory.states) {
     $rows[$row.state] = $row
 }
-if (-not $States -or $States.Count -eq 0) {
-    $States = @($inventory.batch_order)
-}
-$States = @($States | ForEach-Object { $_.ToUpperInvariant() })
-
 $archiveRoot = Join-Path $repoRoot "data/2010/tiger/archives"
 $blockRoot = Join-Path $repoRoot "data/2010/tiger/blocks"
 $contextRoot = Join-Path $repoRoot "data/2010/certified"
@@ -30,6 +26,38 @@ $reportRoot = Join-Path $repoRoot "docs/experiments/nationwide-2010/rctx"
 foreach ($directory in @($archiveRoot, $blockRoot, $contextRoot, $reportRoot)) {
     New-Item -ItemType Directory -Path $directory -Force | Out-Null
 }
+
+function Test-TigerArchive {
+    param([string]$Path, [string]$ExpectedShapefile)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return $false
+    }
+    try {
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($Path)
+        try {
+            return [bool]($archive.Entries | Where-Object { $_.Name -eq $ExpectedShapefile })
+        }
+        finally {
+            $archive.Dispose()
+        }
+    }
+    catch {
+        return $false
+    }
+}
+
+if (-not $States -or $States.Count -eq 0) {
+    $States = @(
+        $inventory.states |
+            Where-Object {
+                -not (Test-Path -LiteralPath (
+                    Join-Path $contextRoot "$($_.state.ToLowerInvariant())_blocks_2010.rctx"
+                ) -PathType Leaf)
+            } |
+            ForEach-Object { $_.state }
+    )
+}
+$States = @($States | ForEach-Object { $_.ToUpperInvariant() })
 
 foreach ($state in $States) {
     if (-not $rows.ContainsKey($state)) {
@@ -44,12 +72,31 @@ foreach ($state in $States) {
     $shape = Join-Path $extractDir "$baseName.shp"
 
     Write-Host "$($state): acquiring governed TIGER archive"
-    if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
-        if (Test-Path -LiteralPath $partial) {
-            Remove-Item -LiteralPath $partial -Force
+    $expectedShapefile = "$baseName.shp"
+    if (-not (Test-TigerArchive -Path $archive -ExpectedShapefile $expectedShapefile)) {
+        if (Test-Path -LiteralPath $archive) {
+            Remove-Item -LiteralPath $archive -Force
         }
-        Invoke-WebRequest -Uri $row.tiger_source_url -OutFile $partial
-        Move-Item -LiteralPath $partial -Destination $archive
+        $downloaded = $false
+        for ($attempt = 1; $attempt -le 4 -and -not $downloaded; $attempt++) {
+            if (Test-Path -LiteralPath $partial) {
+                Remove-Item -LiteralPath $partial -Force
+            }
+            Write-Host "$($state): download attempt $attempt"
+            try {
+                Invoke-WebRequest -Uri $row.tiger_source_url -OutFile $partial
+                if (Test-TigerArchive -Path $partial -ExpectedShapefile $expectedShapefile) {
+                    Move-Item -LiteralPath $partial -Destination $archive
+                    $downloaded = $true
+                }
+            }
+            catch {
+                Write-Warning "$($state): download attempt $attempt failed: $($_.Exception.Message)"
+            }
+        }
+        if (-not $downloaded) {
+            throw "$state archive failed integrity validation after 4 attempts"
+        }
     }
 
     if (Test-Path -LiteralPath $extractDir) {

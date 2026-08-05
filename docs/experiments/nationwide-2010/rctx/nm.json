@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:3e6c007a8eb43ed9be1d3c5761ff4cb4c31a787f7a6c3bc99d00b15259116d2f",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 415485,
+  "population_total": 2059179,
+  "rctx_bytes": 44719746,
+  "rctx_path": "data/2010/certified/nm_blocks_2010.rctx",
+  "rctx_sha256": "c4f096127663fc93e09560d3ae0569ee3afaaff33223709f8880a430cd0fb469",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "New Mexico",
+  "state_code": "NM",
+  "state_fips": "35",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_35_tabblock10.zip",
+  "tiger_archive_sha256": "c9c789ca882346efc40e6398f78a9086884521e2eacd11d42d41fc5772f31c58",
+  "unit_count": 168609,
+  "unit_universe_hash": "sha256:382ed03a0a7fe57a03308486d42457520c1f8528ff3a42812b11e7a4155cc1a6",
+  "year": 2010
+}

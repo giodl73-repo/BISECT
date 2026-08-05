@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:3628c6ea0f5201f2f0c9b17bd7ec251cb39cf2f7d25162528cf9d1e3d3950fcf",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 167738,
+  "population_total": 1328361,
+  "rctx_bytes": 17943036,
+  "rctx_path": "data/2010/certified/me_blocks_2010.rctx",
+  "rctx_sha256": "d07a29ff7029a1e5a24f22d686f6a9d22f38dc44ae32d9dcb75d6326a3de0ad2",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Maine",
+  "state_code": "ME",
+  "state_fips": "23",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_23_tabblock10.zip",
+  "tiger_archive_sha256": "24238ba90eb9c986b12b13308bf0229cb61b40cd156398e667f120de9e3c2395",
+  "unit_count": 69518,
+  "unit_universe_hash": "sha256:6a566ced573f80b61ab021633debf1884ed5d5e230c202fb746e99c39a851577",
+  "year": 2010
+}

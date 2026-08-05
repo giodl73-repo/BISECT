@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:eea40f2751b89d3d7c1b22b48794e50694c20aa3e9d5d8153303c643aea00637",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 286033,
+  "population_total": 2763885,
+  "rctx_bytes": 30595662,
+  "rctx_path": "data/2010/certified/ut_blocks_2010.rctx",
+  "rctx_sha256": "ea89f3938dfa6347c52366c3c53b1eef25b5604f5e7d94a3abc262f2fd6a61d3",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Utah",
+  "state_code": "UT",
+  "state_fips": "49",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_49_tabblock10.zip",
+  "tiger_archive_sha256": "62e00731550c1d3868c172cb496c89da8aa0f6327cb3ef3e6f7004dc7dc3629d",
+  "unit_count": 115406,
+  "unit_universe_hash": "sha256:d3f8eeaaec67db7d1c3da1979b10aa07e3e6c155d974f70100ade368c27a1ed6",
+  "year": 2010
+}

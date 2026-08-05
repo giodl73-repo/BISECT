@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 16128,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:94d2376430dc62e2fb64836c91100fd30d18fed38da3948cb987ec630a9258a8",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 16,
+  "land_edge_count": 62063,
+  "population_total": 1360301,
+  "rctx_bytes": 8070594,
+  "rctx_path": "data/2010/certified/hi_blocks_2010.rctx",
+  "rctx_sha256": "4aae32b70f7dd0cb97b4c17bc3af038d3c15dfd4fb8ef5b4c10de36914edda58",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Hawaii",
+  "state_code": "HI",
+  "state_fips": "15",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_15_tabblock10.zip",
+  "tiger_archive_sha256": "6738912f725a482cbfb012911fc944613505f1db0cc2aa9403d509145745a4ad",
+  "unit_count": 25016,
+  "unit_universe_hash": "sha256:57ed3d3c3f59b82cdea90182026e80907785c534f235ee6cc4fd666f87427a5a",
+  "year": 2010
+}

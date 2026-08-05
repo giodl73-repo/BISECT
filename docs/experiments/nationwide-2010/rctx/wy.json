@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:c71f519ac313587791dcb83a36fac92a6c4cb9e447139b3a2e76ab194235b388",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 213793,
+  "population_total": 563626,
+  "rctx_bytes": 22841799,
+  "rctx_path": "data/2010/certified/wy_blocks_2010.rctx",
+  "rctx_sha256": "a27519480b265866c294f2c45c88e27633db5a935709154519179d71b55a8d81",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Wyoming",
+  "state_code": "WY",
+  "state_fips": "56",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_56_tabblock10.zip",
+  "tiger_archive_sha256": "0dbe6e7e98bc8e5374f72e00f5ed456da9119411418a4c3d905e217ee3a93f58",
+  "unit_count": 86204,
+  "unit_universe_hash": "sha256:10a671d3f16480ae037beea60fe3c50f78ce79644a0f52f49ab9f6fbe8690caf",
+  "year": 2010
+}

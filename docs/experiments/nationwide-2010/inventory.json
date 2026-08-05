@@ -6,110 +6,64 @@
   "district_count": 435,
   "total_blocks": 11071790,
   "pl_custody_ready_states": 50,
-  "tiger_ready_states": 1,
-  "existing_rctx_states": 1,
+  "tiger_ready_states": 24,
+  "existing_rctx_states": 24,
   "missing_pl_states": [],
   "missing_tiger_states": [
-    "AK",
     "AL",
-    "AR",
     "AZ",
     "CA",
     "CO",
-    "CT",
     "FL",
     "GA",
-    "HI",
     "IA",
-    "ID",
     "IL",
     "IN",
     "KS",
-    "KY",
     "LA",
-    "MA",
-    "MD",
-    "ME",
     "MI",
     "MN",
     "MO",
-    "MS",
-    "MT",
     "NC",
-    "ND",
     "NE",
-    "NH",
-    "NJ",
-    "NM",
-    "NV",
     "NY",
     "OH",
     "OK",
     "OR",
     "PA",
-    "RI",
-    "SC",
-    "SD",
     "TN",
     "TX",
-    "UT",
     "VA",
-    "VT",
     "WA",
-    "WI",
-    "WV",
-    "WY"
+    "WI"
   ],
   "missing_rctx_states": [
-    "AK",
     "AL",
-    "AR",
     "AZ",
     "CA",
     "CO",
-    "CT",
     "FL",
     "GA",
-    "HI",
     "IA",
-    "ID",
     "IL",
     "IN",
     "KS",
-    "KY",
     "LA",
-    "MA",
-    "MD",
-    "ME",
     "MI",
     "MN",
     "MO",
-    "MS",
-    "MT",
     "NC",
-    "ND",
     "NE",
-    "NH",
-    "NJ",
-    "NM",
-    "NV",
     "NY",
     "OH",
     "OK",
     "OR",
     "PA",
-    "RI",
-    "SC",
-    "SD",
     "TN",
     "TX",
-    "UT",
     "VA",
-    "VT",
     "WA",
-    "WI",
-    "WV",
-    "WY"
+    "WI"
   ],
   "states": [
     {
@@ -184,13 +138,13 @@
       "districts": 2,
       "block_count": 25016,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_15_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/hi_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 8070594,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/hi2010.pl/higeo2010.pl",
@@ -218,9 +172,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_15_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 18213795,
+          "sha256": "6738912f725a482cbfb012911fc944613505f1db0cc2aa9403d509145745a4ad"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_15_tabblock10/tl_2010_15_tabblock10.shp",
@@ -249,13 +203,13 @@
       "districts": 2,
       "block_count": 25181,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_44_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ri_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 6637195,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ri2010.pl/rigeo2010.pl",
@@ -283,9 +237,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_44_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 14050063,
+          "sha256": "b1cf5baa8d2525e38ec35d310e6c756aef531ff9e4af812d09d3376146181926"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_44_tabblock10/tl_2010_44_tabblock10.shp",
@@ -314,13 +268,13 @@
       "districts": 1,
       "block_count": 32580,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_50_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/vt_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 8290991,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/vt2010.pl/vtgeo2010.pl",
@@ -348,9 +302,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_50_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 33909676,
+          "sha256": "41f7ee5ce037e6a50a0d35516b285cee70469e73cd8962efce7082d57c26c79e"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_50_tabblock10/tl_2010_50_tabblock10.shp",
@@ -379,13 +333,13 @@
       "districts": 1,
       "block_count": 45292,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_02_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ak_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 11929905,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ak2010.pl/akgeo2010.pl",
@@ -413,9 +367,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_02_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 96974706,
+          "sha256": "1cdd0bfce7ff685cfe903ae537845a5ed530a62b9b2f99f9c0f998202a61060a"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_02_tabblock10/tl_2010_02_tabblock10.shp",
@@ -444,13 +398,13 @@
       "districts": 2,
       "block_count": 48837,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_33_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/nh_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 12502652,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/nh2010.pl/nhgeo2010.pl",
@@ -478,9 +432,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_33_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 30045585,
+          "sha256": "a4a6a87ff2b3903feb87289831d15f506b127db2992419f64c5ed70a16e53b54"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_33_tabblock10/tl_2010_33_tabblock10.shp",
@@ -509,13 +463,13 @@
       "districts": 5,
       "block_count": 67578,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_09_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ct_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 17885414,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ct2010.pl/ctgeo2010.pl",
@@ -543,9 +497,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_09_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 41194006,
+          "sha256": "c894fc22a3ef61d52822654661a051ea2fdf45ccbd4c50d18f5ec13c2f863a46"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_09_tabblock10/tl_2010_09_tabblock10.shp",
@@ -574,13 +528,13 @@
       "districts": 2,
       "block_count": 69518,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_23_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/me_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 17943036,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/me2010.pl/megeo2010.pl",
@@ -608,9 +562,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_23_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 75469422,
+          "sha256": "24238ba90eb9c986b12b13308bf0229cb61b40cd156398e667f120de9e3c2395"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_23_tabblock10/tl_2010_23_tabblock10.shp",
@@ -639,13 +593,13 @@
       "districts": 4,
       "block_count": 84538,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_32_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/nv_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 22253317,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/nv2010.pl/nvgeo2010.pl",
@@ -673,9 +627,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_32_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 80545038,
+          "sha256": "e213afad5366fa6d9c9a59e78e32d25392788ac537ba56f44f2cad293b7bbcd5"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_32_tabblock10/tl_2010_32_tabblock10.shp",
@@ -704,13 +658,13 @@
       "districts": 1,
       "block_count": 86204,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_56_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/wy_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 22841799,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/wy2010.pl/wygeo2010.pl",
@@ -738,9 +692,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_56_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 86205109,
+          "sha256": "0dbe6e7e98bc8e5374f72e00f5ed456da9119411418a4c3d905e217ee3a93f58"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_56_tabblock10/tl_2010_56_tabblock10.shp",
@@ -769,13 +723,13 @@
       "districts": 1,
       "block_count": 88360,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_46_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/sd_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 22123551,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/sd2010.pl/sdgeo2010.pl",
@@ -803,9 +757,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_46_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 58937581,
+          "sha256": "0b1e75f301c6fce06a9bf95cea2ce8ab609def1aa88107680483acdc985c4f9f"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_46_tabblock10/tl_2010_46_tabblock10.shp",
@@ -834,13 +788,13 @@
       "districts": 4,
       "block_count": 115406,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_49_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ut_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 30595662,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ut2010.pl/utgeo2010.pl",
@@ -868,9 +822,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_49_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 126265528,
+          "sha256": "62e00731550c1d3868c172cb496c89da8aa0f6327cb3ef3e6f7004dc7dc3629d"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_49_tabblock10/tl_2010_49_tabblock10.shp",
@@ -899,13 +853,13 @@
       "districts": 1,
       "block_count": 132288,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_30_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/mt_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 34396470,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/mt2010.pl/mtgeo2010.pl",
@@ -933,9 +887,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_30_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 163300593,
+          "sha256": "cc0e4cbd42f7889c69d0951b7efcb238bdad24b26fbd2ae7a6c2537cc7f4ed60"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_30_tabblock10/tl_2010_30_tabblock10.shp",
@@ -964,13 +918,13 @@
       "districts": 1,
       "block_count": 133769,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_38_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/nd_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 33793314,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/nd2010.pl/ndgeo2010.pl",
@@ -998,9 +952,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_38_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 64568953,
+          "sha256": "ba4476dfd4feba4bb97008c02e4276fd77a51dd64f1a1c44ac620e20bbb5a253"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_38_tabblock10/tl_2010_38_tabblock10.shp",
@@ -1029,13 +983,13 @@
       "districts": 3,
       "block_count": 135218,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_54_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/wv_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 35445073,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/wv2010.pl/wvgeo2010.pl",
@@ -1063,9 +1017,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_54_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 124673010,
+          "sha256": "023200b49999e3f17984ca92ea85c6effc7eb0c52316b664fed2ccf2edf9929f"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_54_tabblock10/tl_2010_54_tabblock10.shp",
@@ -1094,13 +1048,13 @@
       "districts": 8,
       "block_count": 145247,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_24_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/md_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 37519782,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/md2010.pl/mdgeo2010.pl",
@@ -1128,9 +1082,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_24_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 79222624,
+          "sha256": "26e71cc1ba1da6f02b2dc97eae9e30dfa9911cd5c08b3fe0803a27352bfe8abd"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_24_tabblock10/tl_2010_24_tabblock10.shp",
@@ -1159,13 +1113,13 @@
       "districts": 2,
       "block_count": 149842,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_16_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/id_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 39150646,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/id2010.pl/idgeo2010.pl",
@@ -1193,9 +1147,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_16_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 141298468,
+          "sha256": "4e3591896c23f77b197efa6012dfb39d1ea215e7c4b31cf69492ad7f2c348689"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_16_tabblock10/tl_2010_16_tabblock10.shp",
@@ -1224,13 +1178,13 @@
       "districts": 9,
       "block_count": 157508,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_25_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ma_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 41562202,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ma2010.pl/mageo2010.pl",
@@ -1258,9 +1212,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_25_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 71569355,
+          "sha256": "06e10a9bf3c1958380a524c68daa9f7376cfb5d5b73001d4325a4a0302b0f548"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_25_tabblock10/tl_2010_25_tabblock10.shp",
@@ -1289,13 +1243,13 @@
       "districts": 6,
       "block_count": 161672,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_21_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ky_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 42383291,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ky2010.pl/kygeo2010.pl",
@@ -1323,9 +1277,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_21_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 160992596,
+          "sha256": "71ce3afdf9bd9af5ced8f8b0f00aa80f9f2beed2cd9ee45dfb35ecb90d1ec6ea"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_21_tabblock10/tl_2010_21_tabblock10.shp",
@@ -1354,13 +1308,13 @@
       "districts": 3,
       "block_count": 168609,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_35_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/nm_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 44719746,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/nm2010.pl/nmgeo2010.pl",
@@ -1388,9 +1342,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_35_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 117044174,
+          "sha256": "c9c789ca882346efc40e6398f78a9086884521e2eacd11d42d41fc5772f31c58"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_35_tabblock10/tl_2010_35_tabblock10.shp",
@@ -1419,13 +1373,13 @@
       "districts": 12,
       "block_count": 169588,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_34_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/nj_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 44524405,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/nj2010.pl/njgeo2010.pl",
@@ -1453,9 +1407,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_34_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 69651227,
+          "sha256": "65e487a0372beccc8b5d31260031d2607a4666a3bfa1c14f693c5be2bec14a46"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_34_tabblock10/tl_2010_34_tabblock10.shp",
@@ -1484,13 +1438,13 @@
       "districts": 4,
       "block_count": 171778,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_28_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ms_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 45222593,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ms2010.pl/msgeo2010.pl",
@@ -1518,9 +1472,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_28_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 134474567,
+          "sha256": "8d88d49017799cd069c53def3a75b3b3448ef89e25d6e838e713af6ecf6a0c68"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_28_tabblock10/tl_2010_28_tabblock10.shp",
@@ -1549,13 +1503,13 @@
       "districts": 7,
       "block_count": 181908,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_45_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/sc_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 48081659,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/sc2010.pl/scgeo2010.pl",
@@ -1583,9 +1537,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_45_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 120568072,
+          "sha256": "63d4c91cd6dee998ad41533523b3ab840af67ad6299c97f3bb452514d5f73806"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_45_tabblock10/tl_2010_45_tabblock10.shp",
@@ -1614,13 +1568,13 @@
       "districts": 4,
       "block_count": 186211,
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/tl_2010_05_tabblock10.zip",
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2010/certified/ar_blocks_2010.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 48776238,
       "sources": {
         "pl_geography": {
           "path": "data/2010/redistricting/ar2010.pl/argeo2010.pl",
@@ -1648,9 +1602,9 @@
         },
         "tiger_archive": {
           "path": "data/2010/tiger/archives/tl_2010_05_tabblock10.zip",
-          "ready": false,
-          "bytes": null,
-          "sha256": null
+          "ready": true,
+          "bytes": 143052493,
+          "sha256": "b26e7138d8513c1182250cc8f397668d13aed017aafcd2634eeef09451ca90b9"
         },
         "tiger_shp": {
           "path": "data/2010/tiger/blocks/tl_2010_05_tabblock10/tl_2010_05_tabblock10.shp",
@@ -3364,29 +3318,6 @@
     }
   ],
   "batch_order": [
-    "HI",
-    "RI",
-    "VT",
-    "AK",
-    "NH",
-    "CT",
-    "ME",
-    "NV",
-    "WY",
-    "SD",
-    "UT",
-    "MT",
-    "ND",
-    "WV",
-    "MD",
-    "ID",
-    "MA",
-    "KY",
-    "NM",
-    "NJ",
-    "MS",
-    "SC",
-    "AR",
     "NE",
     "WA",
     "OR",

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 2911,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:a980e23a5f8ebf5c66315a919fea3860904d15af85287a70e9926c7bb478211e",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 50,
+  "land_edge_count": 108549,
+  "population_total": 710231,
+  "rctx_bytes": 11929905,
+  "rctx_path": "data/2010/certified/ak_blocks_2010.rctx",
+  "rctx_sha256": "0648d6b1692e1aec2f28526972608b42b9e8a62d3c2d671713e82e8a0a4f5b5c",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Alaska",
+  "state_code": "AK",
+  "state_fips": "02",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_02_tabblock10.zip",
+  "tiger_archive_sha256": "1cdd0bfce7ff685cfe903ae537845a5ed530a62b9b2f99f9c0f998202a61060a",
+  "unit_count": 45292,
+  "unit_universe_hash": "sha256:7db31170e9a20473abc94b71ab671771c4e0c0f7f964105a2e8c71284557ad9d",
+  "year": 2010
+}

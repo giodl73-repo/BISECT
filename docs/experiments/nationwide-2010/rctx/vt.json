@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:2e0e5faddb657c80530e79e691eb856add7f4efd33917a4e28d2d1609aef47c9",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 77799,
+  "population_total": 625741,
+  "rctx_bytes": 8290991,
+  "rctx_path": "data/2010/certified/vt_blocks_2010.rctx",
+  "rctx_sha256": "badcc8933323307f2bc4ac2465b698d428a86b97b0a92563fcb8e96e4a80748b",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Vermont",
+  "state_code": "VT",
+  "state_fips": "50",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_50_tabblock10.zip",
+  "tiger_archive_sha256": "41f7ee5ce037e6a50a0d35516b285cee70469e73cd8962efce7082d57c26c79e",
+  "unit_count": 32580,
+  "unit_universe_hash": "sha256:9ede1bdab8326e35b7fcc253652e02ffcaa1760453ab57eb8b802dba81d02eae",
+  "year": 2010
+}

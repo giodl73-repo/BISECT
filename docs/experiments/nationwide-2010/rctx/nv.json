@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:d5ed9f4cbd33a3dc495dfd263d8f89ef06873328802ce51689b419af1d715038",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 208499,
+  "population_total": 2700551,
+  "rctx_bytes": 22253317,
+  "rctx_path": "data/2010/certified/nv_blocks_2010.rctx",
+  "rctx_sha256": "8c549e6a8ad18cd4738f1cdd204d8e4e6cf579b22a46cdbb37e762c7609dab15",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Nevada",
+  "state_code": "NV",
+  "state_fips": "32",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_32_tabblock10.zip",
+  "tiger_archive_sha256": "e213afad5366fa6d9c9a59e78e32d25392788ac537ba56f44f2cad293b7bbcd5",
+  "unit_count": 84538,
+  "unit_universe_hash": "sha256:abe85787324c916143866fd6594833bc5ce6176c1c87a151bedc24fabe113e2a",
+  "year": 2010
+}

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:345822cd49c942482fcb1e007e2e27601be6fb1a8d40ba34a86780a81c3c1aa7",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 205361,
+  "population_total": 814180,
+  "rctx_bytes": 22123551,
+  "rctx_path": "data/2010/certified/sd_blocks_2010.rctx",
+  "rctx_sha256": "61947c08ecd126271d54bcf462ed119367897e2c8ff5885263ab19ebd52f98bb",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "South Dakota",
+  "state_code": "SD",
+  "state_fips": "46",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_46_tabblock10.zip",
+  "tiger_archive_sha256": "0b1e75f301c6fce06a9bf95cea2ce8ab609def1aa88107680483acdc985c4f9f",
+  "unit_count": 88360,
+  "unit_universe_hash": "sha256:d80b4137507d2d1476e2b78ddd6a6e370fb8a8c40434d1bea0badfc7e0c3cec9",
+  "year": 2010
+}

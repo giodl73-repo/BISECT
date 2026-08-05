@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:94d69ad96190ca4580b50fb3c9718d4c89c096a5b4afa4079c29efe7759954bb",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 319334,
+  "population_total": 989415,
+  "rctx_bytes": 34396470,
+  "rctx_path": "data/2010/certified/mt_blocks_2010.rctx",
+  "rctx_sha256": "6fb083e3fd38d27bd917096f57a1d0e3c285a4245760f9f8ef816b5d0f06ce0e",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Montana",
+  "state_code": "MT",
+  "state_fips": "30",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_30_tabblock10.zip",
+  "tiger_archive_sha256": "cc0e4cbd42f7889c69d0951b7efcb238bdad24b26fbd2ae7a6c2537cc7f4ed60",
+  "unit_count": 132288,
+  "unit_universe_hash": "sha256:41eb3a4c9f69660f00dbec47cdf9a626a4a2b8f24548c5fc91808677f6cb8630",
+  "year": 2010
+}

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 7,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:1ecb9d0a0d176db94e0acf097f9d68ddc50259e7a35274a42e90f2a9b7928ff8",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 2,
+  "land_edge_count": 393889,
+  "population_total": 4339367,
+  "rctx_bytes": 42383291,
+  "rctx_path": "data/2010/certified/ky_blocks_2010.rctx",
+  "rctx_sha256": "7914698823769abb5f3b83cbf89e24ba63e1924bdc0bdc1776b7191685c5c59e",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Kentucky",
+  "state_code": "KY",
+  "state_fips": "21",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_21_tabblock10.zip",
+  "tiger_archive_sha256": "71ce3afdf9bd9af5ced8f8b0f00aa80f9f2beed2cd9ee45dfb35ecb90d1ec6ea",
+  "unit_count": 161672,
+  "unit_universe_hash": "sha256:d00990242f8dceb8c0625dcdc03019056ab94bddca629c88599f3b5f687055ef",
+  "year": 2010
+}

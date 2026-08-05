@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:80af27b3934ea77370aa41cfa0b192c15ee218811d8616a60a6e37f2796a18a3",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 364132,
+  "population_total": 1567582,
+  "rctx_bytes": 39150646,
+  "rctx_path": "data/2010/certified/id_blocks_2010.rctx",
+  "rctx_sha256": "12ea0735064ee9561afaf9d576cf28995376f89d67937e9ceacd35ea7871ed6e",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Idaho",
+  "state_code": "ID",
+  "state_fips": "16",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_16_tabblock10.zip",
+  "tiger_archive_sha256": "4e3591896c23f77b197efa6012dfb39d1ea215e7c4b31cf69492ad7f2c348689",
+  "unit_count": 149842,
+  "unit_universe_hash": "sha256:a712f13ffaaccc09c6725cd68a5384cc61f69486d5d6bf7cb073dbb85d350bf1",
+  "year": 2010
+}

@@ -9,13 +9,16 @@ baseline is constructed.
 - The geography files contain 11,071,790 block (`SUMLEV=750`) records.
 - The cycle-correct apportionment configuration contains 435 congressional
   districts across 50 States.
-- Delaware is the first live TIGER/RCTX pilot. Its 24,115-block context joins
+- Delaware was the first live TIGER/RCTX pilot. Its 24,115-block context joins
   the 2010 fixed-width PL geography to `GEOID10` TIGER geometry exactly,
   contains 58,028 undirected land edges, needs no synthetic bridge, and passes
   the independent context verifier. The retained official Census ZIP and its
   `.shp`, `.dbf`, and `.shx` members are all independently re-hashed without
   retaining the extracted directory.
-- The other 49 State TIGER inputs and RCTX files remain to be constructed.
+- The resumable batch currently has 24 independently verified State contexts
+  covering 2,606,263 blocks and 60,810,726 people. Their graphs contain
+  6,364,784 undirected edges, including 19,146 governed island bridges.
+- The other 26 State TIGER inputs and RCTX files remain to be constructed.
 
 Every retained PL and TIGER source is recorded with its relative path, byte
 length, and SHA-256 digest in `inventory.json`. The inventory remains

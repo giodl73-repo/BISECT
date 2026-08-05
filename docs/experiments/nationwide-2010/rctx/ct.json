@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:dbe7f9b2176683adb339f7375ffeccad675fe56e6ece57e4e8bfed4352673819",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 168176,
+  "population_total": 3574097,
+  "rctx_bytes": 17885414,
+  "rctx_path": "data/2010/certified/ct_blocks_2010.rctx",
+  "rctx_sha256": "e5c4c384bd61837180546491aefd266d2a0255fb05c3b9fd56ac97772735cb53",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Connecticut",
+  "state_code": "CT",
+  "state_fips": "09",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_09_tabblock10.zip",
+  "tiger_archive_sha256": "c894fc22a3ef61d52822654661a051ea2fdf45ccbd4c50d18f5ec13c2f863a46",
+  "unit_count": 67578,
+  "unit_universe_hash": "sha256:0099482fc133a1cf2100bf8626dfe50bca8b719067749c29fe3e6a53071e56e6",
+  "year": 2010
+}

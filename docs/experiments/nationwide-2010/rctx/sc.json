@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:93d8f634986483f228202f623da605052516ba566fa2a4b6f46e81661e39d8b3",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 446580,
+  "population_total": 4625364,
+  "rctx_bytes": 48081659,
+  "rctx_path": "data/2010/certified/sc_blocks_2010.rctx",
+  "rctx_sha256": "81e4863f4041c74d28aff41b0cb2082d39bb16d07c890b358a7e951a6c047d0b",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "South Carolina",
+  "state_code": "SC",
+  "state_fips": "45",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_45_tabblock10.zip",
+  "tiger_archive_sha256": "63d4c91cd6dee998ad41533523b3ab840af67ad6299c97f3bb452514d5f73806",
+  "unit_count": 181908,
+  "unit_universe_hash": "sha256:f541b22ec261834de8c19749db2a54c25676c7327461b2114f5515b56598ab4d",
+  "year": 2010
+}

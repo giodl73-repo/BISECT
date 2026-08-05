@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:9ee5d2a7b2417a50c4ed1573f6dfde8f6b6186affbc48b44f2f34aebeeaffac8",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 312973,
+  "population_total": 672591,
+  "rctx_bytes": 33793314,
+  "rctx_path": "data/2010/certified/nd_blocks_2010.rctx",
+  "rctx_sha256": "6a0dc68373b0c6bb4db3220038161342d76ceabfefd5cf7d33a0f65480a08d7e",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "North Dakota",
+  "state_code": "ND",
+  "state_fips": "38",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_38_tabblock10.zip",
+  "tiger_archive_sha256": "ba4476dfd4feba4bb97008c02e4276fd77a51dd64f1a1c44ac620e20bbb5a253",
+  "unit_count": 133769,
+  "unit_universe_hash": "sha256:72bf7e733de229439764681bed14e73d2ec2ebcf93279b007cbeabfdd44b397f",
+  "year": 2010
+}

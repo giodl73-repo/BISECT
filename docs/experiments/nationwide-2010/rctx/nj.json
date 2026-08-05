@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:9dae0c4064ae26fbb7b61abfce07850ba51da0a859a11f4976d5ba7c4be10d1a",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 414956,
+  "population_total": 8791894,
+  "rctx_bytes": 44524405,
+  "rctx_path": "data/2010/certified/nj_blocks_2010.rctx",
+  "rctx_sha256": "f81b41f15988391ab963d73275ae9d28d41ccc6926b1a8a19f413c9b35c66a25",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "New Jersey",
+  "state_code": "NJ",
+  "state_fips": "34",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_34_tabblock10.zip",
+  "tiger_archive_sha256": "65e487a0372beccc8b5d31260031d2607a4666a3bfa1c14f693c5be2bec14a46",
+  "unit_count": 169588,
+  "unit_universe_hash": "sha256:cf6425a4cf95e42fa95c7c3b627e81a7889bb716ccf82b2cc8f5aba8e3c94609",
+  "year": 2010
+}

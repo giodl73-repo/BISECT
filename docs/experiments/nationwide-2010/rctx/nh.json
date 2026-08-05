@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:a5acec060f6a15884fd1b28e22ae60f22e5bc0fbe7c263b3c645143e7a599520",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 117275,
+  "population_total": 1316470,
+  "rctx_bytes": 12502652,
+  "rctx_path": "data/2010/certified/nh_blocks_2010.rctx",
+  "rctx_sha256": "71021ba4cbcb3467520ba7d63cb6247a2d8c59dd5421341e246d808852bbde3b",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "New Hampshire",
+  "state_code": "NH",
+  "state_fips": "33",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_33_tabblock10.zip",
+  "tiger_archive_sha256": "a4a6a87ff2b3903feb87289831d15f506b127db2992419f64c5ed70a16e53b54",
+  "unit_count": 48837,
+  "unit_universe_hash": "sha256:9448d2c4a775dfcc0a4dbf4bcf40258c6c44c30076605f27deca37f8326130e6",
+  "year": 2010
+}

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:89159ca780c4fd0414b564c4331dfa80528a4a5d566afe06b1e28be787be1893",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 419990,
+  "population_total": 2967297,
+  "rctx_bytes": 45222593,
+  "rctx_path": "data/2010/certified/ms_blocks_2010.rctx",
+  "rctx_sha256": "98514153abf2d9dd69898ab1d58850ead563fa04424f0214b2a19e3bcae01356",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Mississippi",
+  "state_code": "MS",
+  "state_fips": "28",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_28_tabblock10.zip",
+  "tiger_archive_sha256": "8d88d49017799cd069c53def3a75b3b3448ef89e25d6e838e713af6ecf6a0c68",
+  "unit_count": 171778,
+  "unit_universe_hash": "sha256:3a358185c03b56497792d16bab87b2cb4c2850ef55016cf5358e50e4340a962c",
+  "year": 2010
+}
