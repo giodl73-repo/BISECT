@@ -127,7 +127,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     };
     let original_assignment = assignment.clone();
     if nrs_profile {
-        assignment = normalize_nrs_with_dfs_tree_cut(&root, &adjacency, &assignment)?;
+        assignment = nrs_dfs_tree_cut_candidate(&root, &adjacency, &assignment)?;
     } else {
         let left = assignment
             .iter()
@@ -190,7 +190,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; contiguity-normalization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; contiguity-repair-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; candidate-initialization-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
             niter,
             partition_type,
@@ -224,16 +224,11 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     write_discovery_manifest(args, &root, &discovery)
 }
 
-fn normalize_nrs_with_dfs_tree_cut(
+fn nrs_dfs_tree_cut_candidate(
     instance: &bisect_ilp::CertifiedSplitInstance,
     adjacency: &[Vec<usize>],
     assignment: &[u8],
 ) -> anyhow::Result<Vec<u8>> {
-    if rgraph_core::assignment_labels_connected(adjacency, assignment, [0_u8, 1_u8])
-        .map_err(|error| anyhow!("NRS connectivity check failed: {error}"))?
-    {
-        return Ok(assignment.to_vec());
-    }
     let n = assignment.len();
     let mut parent = vec![usize::MAX; n];
     let mut order = Vec::with_capacity(n);
@@ -2220,8 +2215,8 @@ mod tests {
         let instance = certified_root_instance_from_context(&context, 5).unwrap();
         let adjacency = graph_adjacency(context.graph.as_ref().unwrap()).unwrap();
         let raw = (0..10).map(|unit| (unit % 2) as u8).collect::<Vec<_>>();
-        let first = normalize_nrs_with_dfs_tree_cut(&instance, &adjacency, &raw).unwrap();
-        let second = normalize_nrs_with_dfs_tree_cut(&instance, &adjacency, &raw).unwrap();
+        let first = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw).unwrap();
+        let second = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw).unwrap();
         assert_eq!(first, second);
         assert!(
             rgraph_core::assignment_labels_connected(&adjacency, &first, [0_u8, 1_u8]).unwrap()
@@ -2230,6 +2225,27 @@ mod tests {
             .populations
             .iter()
             .zip(&first)
+            .filter_map(|(&population, &label)| (label == 0).then_some(population))
+            .sum::<i64>();
+        assert_eq!(left_population, 400);
+    }
+
+    #[test]
+    fn nrs_dfs_tree_cut_replaces_connected_unbalanced_candidate() {
+        let context = path_context(10);
+        let instance = certified_root_instance_from_context(&context, 5).unwrap();
+        let adjacency = graph_adjacency(context.graph.as_ref().unwrap()).unwrap();
+        let raw = vec![0, 0, 0, 0, 0, 0, 1, 1, 1, 1];
+        assert!(rgraph_core::assignment_labels_connected(&adjacency, &raw, [0_u8, 1_u8]).unwrap());
+        let candidate = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw).unwrap();
+        assert_ne!(candidate, raw);
+        assert!(
+            rgraph_core::assignment_labels_connected(&adjacency, &candidate, [0_u8, 1_u8]).unwrap()
+        );
+        let left_population = instance
+            .populations
+            .iter()
+            .zip(&candidate)
             .filter_map(|(&population, &label)| (label == 0).then_some(population))
             .sum::<i64>();
         assert_eq!(left_population, 400);
