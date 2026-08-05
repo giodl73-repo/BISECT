@@ -71,6 +71,13 @@
       "crates/bisect-cli/src/exact_cmd.rs": "a5b9efa7d0c7c87aaf5cacfe6fc431de15c9d85cfe88454395cba20e8695693f",
       "crates/bisect-runner/src/bisection_runner/core.rs": "794115e289441e543c58d25be6dd7665d3296af3a21612022d9aaea7ead4bafe",
       "crates/bisect-runner/src/bisection_runner/nway_geo.rs": "54a2afa3a0c52bb6b40f08242686a17ad739538ccbde0c941ae683ebd71728d2"
+    },
+    "source_git_blob_sha256": {
+      "Cargo.lock": "0a8d0bdd97f765c64963d101cfa83880d16529c57af1510e6d1cfa7f7528a1d2",
+      "crates/bisect-cli/src/args.rs": "d996587c23dcf97265dde50469a7d18b98dfd50f3009849065e40ff91df3f053",
+      "crates/bisect-cli/src/exact_cmd.rs": "a5b9efa7d0c7c87aaf5cacfe6fc431de15c9d85cfe88454395cba20e8695693f",
+      "crates/bisect-runner/src/bisection_runner/core.rs": "f183e9e26063dd371f13b0fd961184317431dd0cef2f3284aeeb4bc21e1cdf52",
+      "crates/bisect-runner/src/bisection_runner/nway_geo.rs": "8725cd4e8ea0767ca133afa057eb9ef973cb11c27c76b414720d1df10bb7e4d9"
     }
   },
   "prohibited_baseline_inputs": [

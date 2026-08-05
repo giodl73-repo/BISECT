@@ -310,7 +310,7 @@ fn sha256(path: &Path) -> Result<String> {
     Ok(format!("{:x}", digest.finalize()))
 }
 
-fn git_blob_matches_sha256(commit: &str, path: &str, expected: &str) -> Result<bool> {
+fn git_blob_sha256(commit: &str, path: &str) -> Result<String> {
     let object = format!("{commit}:{path}");
     let output = Command::new("git")
         .args(["cat-file", "blob", &object])
@@ -319,13 +319,7 @@ fn git_blob_matches_sha256(commit: &str, path: &str, expected: &str) -> Result<b
     if !output.status.success() {
         bail!("frozen source object is unavailable: {object}");
     }
-    if format!("{:x}", Sha256::digest(&output.stdout)) == expected {
-        return Ok(true);
-    }
-    let text = String::from_utf8(output.stdout)
-        .with_context(|| format!("frozen source is not text: {object}"))?;
-    let crlf = text.replace("\r\n", "\n").replace('\n', "\r\n");
-    Ok(format!("{:x}", Sha256::digest(crlf.as_bytes())) == expected)
+    Ok(format!("{:x}", Sha256::digest(output.stdout)))
 }
 
 fn tiger_archive_member_hashes(path: &Path) -> Result<BTreeMap<String, String>> {
@@ -644,17 +638,26 @@ fn verify_nrs_seed_package(package: &Path, context_path: &Path) -> Result<()> {
         .pointer("/reference_engine/source_commit")
         .and_then(Value::as_str)
         .context("NRS reference engine source commit")?;
-    for (relative, expected) in standard_profile
-        .pointer("/reference_engine/source_files")
+    if let Some(git_blobs) = standard_profile
+        .pointer("/reference_engine/source_git_blob_sha256")
         .and_then(Value::as_object)
-        .context("NRS reference engine source files")?
     {
-        if !git_blob_matches_sha256(
-            source_commit,
-            relative,
-            expected.as_str().context("NRS source hash")?,
-        )? {
-            bail!("NRS reference engine source mismatch: {relative}");
+        for (relative, expected) in git_blobs {
+            if git_blob_sha256(source_commit, relative)?
+                != expected.as_str().context("NRS git blob hash")?
+            {
+                bail!("NRS reference engine Git blob mismatch: {relative}");
+            }
+        }
+    } else {
+        for (relative, expected) in standard_profile
+            .pointer("/reference_engine/source_files")
+            .and_then(Value::as_object)
+            .context("NRS reference engine source files")?
+        {
+            if sha256(Path::new(relative))? != expected.as_str().context("NRS source hash")? {
+                bail!("NRS reference engine source mismatch: {relative}");
+            }
         }
     }
     println!("NRS seed package verification: PASS");
