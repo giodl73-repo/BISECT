@@ -1725,6 +1725,7 @@ fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
         .collect::<Result<_>>()?;
     let mut package_rows = Vec::new();
     let mut runtime_rows = Vec::new();
+    let mut proof_size_rows = Vec::new();
     let mut map_rows = Vec::new();
     for state_row in inventory["states"].as_array().context("inventory states")? {
         let state = state_row["state"].as_str().context("state")?;
@@ -1762,12 +1763,23 @@ fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
                 "assignment_sha256":sha256(&assignment_path)?,"tree":"not-applicable-single-district"
             }));
             runtime_rows.push(json!({"state":state,"recursive_nodes":0,"completed_screens":0,"timeout_screens":0,"wall_clock_seconds":null,"status":"not-retained"}));
+            proof_size_rows.push(json!({
+                "state":state,"recursive_nodes":0,"population_proof_records":0,
+                "tree_file_bytes":0,"package_manifest_bytes":0,
+                "boundary_certificate_bytes":0,"canonical_certificate_bytes":0,
+                "status":"not-applicable-single-district"
+            }));
         } else {
             let package =
                 Path::new("data/2020/certified/operational-trees").join(state.to_lowercase());
             let tree_path = package.join("operational-tree.json");
             let manifest_path = package.join("manifest.json");
             let tree = read_json(&tree_path)?;
+            let nodes = tree["nodes"].as_array().context("tree nodes")?;
+            let population_proof_records = nodes
+                .iter()
+                .filter(|node| node.get("population_proof").is_some_and(Value::is_object))
+                .count();
             let (completed, timeouts, retained_nodes, missing_nodes) = count_screening(&tree)?;
             package_rows.push(json!({
                 "state":state,"districts":districts,"context_path":context_path,
@@ -1785,6 +1797,14 @@ fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
                 "wall_clock_seconds":null,
                 "status":if missing_nodes == 0 {"screen-history-retained-wall-clock-not-retained"} else {"partial-screen-history-wall-clock-not-retained"}
             }));
+            proof_size_rows.push(json!({
+                "state":state,"recursive_nodes":nodes.len(),
+                "population_proof_records":population_proof_records,
+                "tree_file_bytes":fs::metadata(&tree_path)?.len(),
+                "package_manifest_bytes":fs::metadata(&manifest_path)?.len(),
+                "boundary_certificate_bytes":0,"canonical_certificate_bytes":0,
+                "status":"population-proofs-embedded-boundary-and-canonical-certificates-absent"
+            }));
         }
         println!("{state}: release assignment and centroid map complete");
     }
@@ -1798,6 +1818,30 @@ fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
         &json!({
             "schema_version":"nationwide-2020-runtime-evidence-v1","states":runtime_rows,
             "limitation":"Per-screen 180-second timeout events are retained. Successful-screen and State wall-clock durations were not retained and cannot be reconstructed."
+        }),
+        true,
+    )?;
+    let total_tree_bytes: u64 = proof_size_rows
+        .iter()
+        .filter_map(|row| row["tree_file_bytes"].as_u64())
+        .sum();
+    let total_manifest_bytes: u64 = proof_size_rows
+        .iter()
+        .filter_map(|row| row["package_manifest_bytes"].as_u64())
+        .sum();
+    let total_population_records: u64 = proof_size_rows
+        .iter()
+        .filter_map(|row| row["population_proof_records"].as_u64())
+        .sum();
+    write_json(
+        &out.join("analysis/proof-size-evidence.json"),
+        &json!({
+            "schema_version":"nationwide-2020-proof-size-evidence-v1",
+            "measurement_boundary":"Population proofs are embedded records, so retained bytes are reported at containing tree-file granularity. Boundary and canonical certificate bytes are zero because those proof stages were not run.",
+            "totals":{"population_proof_records":total_population_records,
+                "tree_file_bytes":total_tree_bytes,"package_manifest_bytes":total_manifest_bytes,
+                "boundary_certificate_bytes":0,"canonical_certificate_bytes":0},
+            "states":proof_size_rows
         }),
         true,
     )?;
