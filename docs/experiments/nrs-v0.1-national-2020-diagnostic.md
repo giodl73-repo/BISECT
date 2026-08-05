@@ -62,7 +62,7 @@ about 13 minutes before passing, and California later failed at node `10000`.
 These are retained before/after regression cases; recursion size alone did not
 explain the long tail.
 
-## Corrective revision and next gate
+## Corrective revisions and next gate
 
 Commit `8f6239e5` removes the connected-candidate bypass. Every NRS recursive
 split now selects the same minimum-GEOID-rooted, ascending-neighbor DFS tree
@@ -71,8 +71,24 @@ cut, population moved from raw METIS labels, and minimum GEOID. The profile and
 verifier now call this operation `candidate-initialization` and state that it
 applies to every recursive split.
 
+A targeted rerun rejected that change as sufficient: Massachusetts node `1`
+and Kentucky node `01` reproduced exactly the prior achieved deviations
+(94,468 and 48,207). Their method records proved that the new initialization
+ran, but the single-block population repair converged to the same articulation
+local minima. The targeted worker was stopped after those two conclusive
+failures rather than spending time on the remaining rejected-profile States.
+
+Commit `094160f8` replaces the single-block population repair with
+connectivity-preserving connected-subtree moves. At each repair step it builds
+ascending-neighbor DFS trees from 16 evenly spaced canonical heavy-child
+roots, considers improving subtrees whose transfer keeps both children
+connected, and orders equal-deviation candidates by boundary-cut change,
+moved population, GEOID, root, and subtree root. A fixture specifically proves
+escape from an articulation local minimum that no boundary-block move can
+cross.
+
 No national success claim follows from this diagnostic or from the corrective
-commit. The revised profile must regenerate all seeds, pass the ten failed
+commits. The revised profile must regenerate all seeds, pass the ten failed
 States and the Illinois runtime regression, complete all 50 State packages, and
 pass `verify-nrs-batch --require-complete` before national baseline completion
 is recorded.
