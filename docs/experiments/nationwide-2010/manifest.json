@@ -1,0 +1,14 @@
+{
+  "schema_version": "certified-national-2010-input-inventory-package-v1",
+  "package_id": "nationwide-2010-input-inventory",
+  "status": "incomplete",
+  "files": [
+    {
+      "path": "inventory.json",
+      "sha256": "6aac13b94a7110e24ebbfd42f0e5778d85dc65d4d017a013898907bb6710ed56"
+    }
+  ],
+  "builder_path": "scripts/research/inventory_national_2010.py",
+  "builder_sha256": "71344a2c7cfea4ae4b4a87fe5efcf30f169b4c12d79dcac28eb5721b514c2524",
+  "claim_boundary": "Hash-bound local 2010 source and context custody inventory. An incomplete status is expected until TIGER block geometry and all RCTX files exist; this report makes no district-generation claim."
+}

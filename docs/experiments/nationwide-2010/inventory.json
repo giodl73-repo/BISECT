@@ -1,0 +1,2971 @@
+{
+  "schema_version": "certified-national-2010-input-inventory-v1",
+  "status": "incomplete",
+  "census_year": 2010,
+  "state_count": 50,
+  "district_count": 435,
+  "total_blocks": 11071790,
+  "pl_custody_ready_states": 50,
+  "tiger_ready_states": 0,
+  "existing_rctx_states": 0,
+  "missing_pl_states": [],
+  "missing_tiger_states": [
+    "AK",
+    "AL",
+    "AR",
+    "AZ",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "FL",
+    "GA",
+    "HI",
+    "IA",
+    "ID",
+    "IL",
+    "IN",
+    "KS",
+    "KY",
+    "LA",
+    "MA",
+    "MD",
+    "ME",
+    "MI",
+    "MN",
+    "MO",
+    "MS",
+    "MT",
+    "NC",
+    "ND",
+    "NE",
+    "NH",
+    "NJ",
+    "NM",
+    "NV",
+    "NY",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VA",
+    "VT",
+    "WA",
+    "WI",
+    "WV",
+    "WY"
+  ],
+  "missing_rctx_states": [
+    "AK",
+    "AL",
+    "AR",
+    "AZ",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "FL",
+    "GA",
+    "HI",
+    "IA",
+    "ID",
+    "IL",
+    "IN",
+    "KS",
+    "KY",
+    "LA",
+    "MA",
+    "MD",
+    "ME",
+    "MI",
+    "MN",
+    "MO",
+    "MS",
+    "MT",
+    "NC",
+    "ND",
+    "NE",
+    "NH",
+    "NJ",
+    "NM",
+    "NV",
+    "NY",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VA",
+    "VT",
+    "WA",
+    "WI",
+    "WV",
+    "WY"
+  ],
+  "states": [
+    {
+      "state": "DE",
+      "name": "Delaware",
+      "fips": "10",
+      "districts": 1,
+      "block_count": 24115,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/de_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/de2010.pl/degeo2010.pl",
+          "ready": true,
+          "bytes": 18016461,
+          "sha256": "80736da54942d36f671f24fcfa960fba1d5437ec9725458ac3ef7a1e147526a5"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/de2010.pl/de000012010.pl",
+          "ready": true,
+          "bytes": 11651130,
+          "sha256": "5256c9790ad40e4a74c52f6ca41b1f209a86531b6cc46e33c75d603e8aa0ae13"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/de2010.pl/de000022010.pl",
+          "ready": true,
+          "bytes": 11884151,
+          "sha256": "aa50bc7c7f51df93cb395bc68eaee3a23ca67a5ef8ddbe94a42006522dfb3f3e"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/de2010.pl/de2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1754,
+          "sha256": "569a8eae04a52dcc514b8dc12dfabc4c2ad1315b8eacb4ba78c85eca4757185f"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_10_tabblock10/tl_2010_10_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "HI",
+      "name": "Hawaii",
+      "fips": "15",
+      "districts": 2,
+      "block_count": 25016,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/hi_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/hi2010.pl/higeo2010.pl",
+          "ready": true,
+          "bytes": 19619160,
+          "sha256": "5942654dae645e79e330f4987ead390dfd623c7bc05630bdef3aa9b30df8d6bc"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/hi2010.pl/hi000012010.pl",
+          "ready": true,
+          "bytes": 13018629,
+          "sha256": "70fd036780943127f37bafa051d445fb237f548c9d4af2a0450abafb64031f87"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/hi2010.pl/hi000022010.pl",
+          "ready": true,
+          "bytes": 13217880,
+          "sha256": "c5b60d36664efc1782f7605a05d9895fb3d174f96076c641d49f3cc64cf7ed89"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/hi2010.pl/hi2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1754,
+          "sha256": "3bfa51291c6d2d685b89532cb9d9b5726e63888c0d77a2695d14b5972a489df8"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_15_tabblock10/tl_2010_15_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_15_tabblock10/tl_2010_15_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_15_tabblock10/tl_2010_15_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "RI",
+      "name": "Rhode Island",
+      "fips": "44",
+      "districts": 2,
+      "block_count": 25181,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ri_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ri2010.pl/rigeo2010.pl",
+          "ready": true,
+          "bytes": 15415269,
+          "sha256": "3026fa023087f5349247ae7a0e58f95fe237c2b6b8de5e3050767acb2c3a03a0"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ri2010.pl/ri000012010.pl",
+          "ready": true,
+          "bytes": 9953611,
+          "sha256": "9a697c1920c20d488dfabfc28f1491f9816aca788dd09bdcf754c53ea7b6de72"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ri2010.pl/ri000022010.pl",
+          "ready": true,
+          "bytes": 10154227,
+          "sha256": "e88e95cc6e5eea20270a26f1009699ae11b5619c7c4a576fe7bc2b0bbd727db0"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ri2010.pl/ri2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1753,
+          "sha256": "8cae9bd750233a2f7ca3c6a6925ae40d58a22210c4a0f5f740546d8d1a3362ee"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_44_tabblock10/tl_2010_44_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_44_tabblock10/tl_2010_44_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_44_tabblock10/tl_2010_44_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "VT",
+      "name": "Vermont",
+      "fips": "50",
+      "districts": 1,
+      "block_count": 32580,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/vt_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/vt2010.pl/vtgeo2010.pl",
+          "ready": true,
+          "bytes": 21297510,
+          "sha256": "ef670974505e1e557bdaaf8cf6544b572d64e3e453562207e26998fa896c3b86"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/vt2010.pl/vt000012010.pl",
+          "ready": true,
+          "bytes": 13577013,
+          "sha256": "3d48b57187fc0071dbc9b9af2fccd92d62d17d392224a9d398b4cedde136038e"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/vt2010.pl/vt000022010.pl",
+          "ready": true,
+          "bytes": 13863114,
+          "sha256": "101d38a76326ff9d6f11f2327220a9e1483011dfabf83eeb4959768ae5590a26"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/vt2010.pl/vt2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1754,
+          "sha256": "2ddc158be1e15deac8a0bdf559d11fa29b1d2a6f37504d2eb4ffcb60054523be"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_50_tabblock10/tl_2010_50_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_50_tabblock10/tl_2010_50_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_50_tabblock10/tl_2010_50_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "AK",
+      "name": "Alaska",
+      "fips": "02",
+      "districts": 1,
+      "block_count": 45292,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ak_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ak2010.pl/akgeo2010.pl",
+          "ready": true,
+          "bytes": 30997872,
+          "sha256": "dfe4576fa4481f5c807e76c0e02a6f2b1db1cc69fe0635de9a82a1e83e3e5f30"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ak2010.pl/ak000012010.pl",
+          "ready": true,
+          "bytes": 19798931,
+          "sha256": "3d5dd5e151dbd697e27f57752b98a756c93779e290c8caabbbe43612ec55eefa"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ak2010.pl/ak000022010.pl",
+          "ready": true,
+          "bytes": 20166153,
+          "sha256": "3168a1f046cd18947b40278bf380257a5e9224c889859c145b9cca54d9c0bf48"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ak2010.pl/ak2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1754,
+          "sha256": "7d033bdae7edb32a6b798fb09e87a2ca98179e9f4fa67ca2bce91e6e61df7c9a"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_02_tabblock10/tl_2010_02_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_02_tabblock10/tl_2010_02_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_02_tabblock10/tl_2010_02_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "NH",
+      "name": "New Hampshire",
+      "fips": "33",
+      "districts": 2,
+      "block_count": 48837,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/nh_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/nh2010.pl/nhgeo2010.pl",
+          "ready": true,
+          "bytes": 30234348,
+          "sha256": "12c1b450def6b2af3aeef9403b910219cfd6f4709a95985e5d8e7262a3907a2e"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/nh2010.pl/nh000012010.pl",
+          "ready": true,
+          "bytes": 19302740,
+          "sha256": "f2e9ad2fbe37bbe9a13e812d391cda33deac7b175bbaa51371cfd11c0c345ea5"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/nh2010.pl/nh000022010.pl",
+          "ready": true,
+          "bytes": 19705379,
+          "sha256": "7708c0108a62e0cf296011fc86adb42f6fbbd570df1f9f4b5238c1df733ad445"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/nh2010.pl/nh2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1754,
+          "sha256": "5cf06195f0e0d9d342908ce86e24305ec80157a49e2d116eaf8af4d67c6ecc68"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_33_tabblock10/tl_2010_33_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_33_tabblock10/tl_2010_33_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_33_tabblock10/tl_2010_33_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "CT",
+      "name": "Connecticut",
+      "fips": "09",
+      "districts": 5,
+      "block_count": 67578,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ct_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ct2010.pl/ctgeo2010.pl",
+          "ready": true,
+          "bytes": 47331474,
+          "sha256": "4108402b9ae9bef7e8a707aef611bf6b0913c39e91a38af0229b76f6b155f9e0"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ct2010.pl/ct000012010.pl",
+          "ready": true,
+          "bytes": 30776260,
+          "sha256": "67d1bdc7f6acd7369defec2a338ab600c1cb28d1a112252818eb24a3a2f92e9a"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ct2010.pl/ct000022010.pl",
+          "ready": true,
+          "bytes": 31397846,
+          "sha256": "439a696da1918451b9557536e932a2561f925fc405b9c56ba7e7ea1671f8b3c3"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ct2010.pl/ct2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1754,
+          "sha256": "597e98104e1520204a69058c6af26864bff8c07ff7c201d1ca173bebabd87281"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_09_tabblock10/tl_2010_09_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_09_tabblock10/tl_2010_09_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_09_tabblock10/tl_2010_09_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "ME",
+      "name": "Maine",
+      "fips": "23",
+      "districts": 2,
+      "block_count": 69518,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/me_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/me2010.pl/megeo2010.pl",
+          "ready": true,
+          "bytes": 43355037,
+          "sha256": "242c8de83c2dc9ca30deb3550fc267d740ea91763b26f9d15bf19c66d3913273"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/me2010.pl/me000012010.pl",
+          "ready": true,
+          "bytes": 27543204,
+          "sha256": "10a4940a15b94c61b5408cd78dc42b12d38d59a02067a7996ff4b8022eb326c7"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/me2010.pl/me000022010.pl",
+          "ready": true,
+          "bytes": 28126880,
+          "sha256": "040ddb1acb24d72c5d903e73b6599e9dc69be4efb3f158fe3140269463fd8e39"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/me2010.pl/me2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1754,
+          "sha256": "fe3332076081bea72da45f75c117658cd3119cf01152225322f41dd390f11ac9"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_23_tabblock10/tl_2010_23_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_23_tabblock10/tl_2010_23_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_23_tabblock10/tl_2010_23_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "NV",
+      "name": "Nevada",
+      "fips": "32",
+      "districts": 4,
+      "block_count": 84538,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/nv_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/nv2010.pl/nvgeo2010.pl",
+          "ready": true,
+          "bytes": 63277803,
+          "sha256": "86bf0b721c091dfae2553ca9ea8b4c2217c04224d2362d96a41d230985288e67"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/nv2010.pl/nv000012010.pl",
+          "ready": true,
+          "bytes": 40682950,
+          "sha256": "cc7c0b46abfc8d7227620e78c374f732612f46471f78e8f1baa579f9bad81948"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/nv2010.pl/nv000022010.pl",
+          "ready": true,
+          "bytes": 41453922,
+          "sha256": "1a5e23ac48d968cc788a883afe05761ff15d8d0834327a5668b71d5482d74a20"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/nv2010.pl/nv2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "07a2ee3524e630ddbd2972208fc9522ccf7963ca4e1f1e51e78fdb74ddf81ff9"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_32_tabblock10/tl_2010_32_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_32_tabblock10/tl_2010_32_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_32_tabblock10/tl_2010_32_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "WY",
+      "name": "Wyoming",
+      "fips": "56",
+      "districts": 1,
+      "block_count": 86204,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/wy_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/wy2010.pl/wygeo2010.pl",
+          "ready": true,
+          "bytes": 50912121,
+          "sha256": "f32c4978d2ae42492abd3059e33ceb215bb0f1230d3bf3ea470a7b7341e04605"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/wy2010.pl/wy000012010.pl",
+          "ready": true,
+          "bytes": 32009731,
+          "sha256": "b1df0398b1ac85101861eec33944a2d9c95a548b5af1ab0bbf3436c7ca323246"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/wy2010.pl/wy000022010.pl",
+          "ready": true,
+          "bytes": 32642033,
+          "sha256": "18ead39905e349024bf04f0e373a312461aa6cb6ad82ea8d10c652ef05d8b528"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/wy2010.pl/wy2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "0bc33f96d6caec3e18428d4a90c98ea8924d2f0dcc7e4a3fb76775517ded1e57"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_56_tabblock10/tl_2010_56_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_56_tabblock10/tl_2010_56_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_56_tabblock10/tl_2010_56_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "SD",
+      "name": "South Dakota",
+      "fips": "46",
+      "districts": 1,
+      "block_count": 88360,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/sd_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/sd2010.pl/sdgeo2010.pl",
+          "ready": true,
+          "bytes": 60765288,
+          "sha256": "e3a292de1ab594982a291d4dce09227c1fb8ca9fe58417bba94f47a9f09e9b1d"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/sd2010.pl/sd000012010.pl",
+          "ready": true,
+          "bytes": 38409946,
+          "sha256": "4ce222ae9bdf1d2a40621f884f1032ed36d81c26ae3fc6c61784fce563d6ff16"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/sd2010.pl/sd000022010.pl",
+          "ready": true,
+          "bytes": 39169042,
+          "sha256": "1f1efbe7a6efe474be538cab56f80a03b1be13ca5073c5b0f020f3fc90a0c075"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/sd2010.pl/sd2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "1b7f0452ef3dc88e6930aafd184819787b5a679612bda39ed7e9fcf05bd2159a"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_46_tabblock10/tl_2010_46_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_46_tabblock10/tl_2010_46_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_46_tabblock10/tl_2010_46_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "UT",
+      "name": "Utah",
+      "fips": "49",
+      "districts": 4,
+      "block_count": 115406,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ut_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ut2010.pl/utgeo2010.pl",
+          "ready": true,
+          "bytes": 82778727,
+          "sha256": "2e53053f0f56544ee0ddc81c087111a267aca8e5496d57a735b6510cb7805ef4"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ut2010.pl/ut000012010.pl",
+          "ready": true,
+          "bytes": 52901829,
+          "sha256": "66265e7b01be845a15f280f4ae59b23f0405cb62225c11e818ded519a56c4580"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ut2010.pl/ut000022010.pl",
+          "ready": true,
+          "bytes": 53853574,
+          "sha256": "6f21c17f09112f1d5560e3880b737d0ecc7ad9262a48802f5da821999464483c"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ut2010.pl/ut2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "de444f89a2882834b6bb2ffd6165f38a926182bc135cec00e38eb4203359e753"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_49_tabblock10/tl_2010_49_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_49_tabblock10/tl_2010_49_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_49_tabblock10/tl_2010_49_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "MT",
+      "name": "Montana",
+      "fips": "30",
+      "districts": 1,
+      "block_count": 132288,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/mt_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/mt2010.pl/mtgeo2010.pl",
+          "ready": true,
+          "bytes": 79168521,
+          "sha256": "6288a4f45c26980ac46c6bacb4df4609fa830e5f81a9a8193236f39c27bbe1d5"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/mt2010.pl/mt000012010.pl",
+          "ready": true,
+          "bytes": 49867419,
+          "sha256": "ab8ca307e57b7e95c30ef4e22d474481d50eb9ea2dd73508678008ccc1f455fc"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/mt2010.pl/mt000022010.pl",
+          "ready": true,
+          "bytes": 50858666,
+          "sha256": "1b01505bd6b7d5911ed393de3c8878b7d88faf4c123934c1b4b5f160b385d569"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/mt2010.pl/mt2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "af9f036b819f22c8bc21bd2c16863e771f7e290d91aac5c3d41aa6e241853466"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_30_tabblock10/tl_2010_30_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_30_tabblock10/tl_2010_30_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_30_tabblock10/tl_2010_30_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "ND",
+      "name": "North Dakota",
+      "fips": "38",
+      "districts": 1,
+      "block_count": 133769,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/nd_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/nd2010.pl/ndgeo2010.pl",
+          "ready": true,
+          "bytes": 82474119,
+          "sha256": "abed0180a652dc45d7f631f54945f04555bf517d1f3ebb201dea6f42ed63eba5"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/nd2010.pl/nd000012010.pl",
+          "ready": true,
+          "bytes": 51755704,
+          "sha256": "8463d0dc8d81a971f105ff6c7ea35b6b1b2683c5ea45cb75e0b3f5c550a04d9e"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/nd2010.pl/nd000022010.pl",
+          "ready": true,
+          "bytes": 52786086,
+          "sha256": "b35048ca9e86de5cd95603998da3bc249992825d69da0ba05835cc994d997d30"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/nd2010.pl/nd2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "e8d6e0756286f7eaa655febcf1b5915f8ce22c81ee8df1d8f428e67a81db8d0b"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_38_tabblock10/tl_2010_38_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_38_tabblock10/tl_2010_38_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_38_tabblock10/tl_2010_38_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "WV",
+      "name": "West Virginia",
+      "fips": "54",
+      "districts": 3,
+      "block_count": 135218,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/wv_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/wv2010.pl/wvgeo2010.pl",
+          "ready": true,
+          "bytes": 90164970,
+          "sha256": "304139296494344bf50c5d4be9c85afe4e36b3bce1c72c90475ec6669bf77d92"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/wv2010.pl/wv000012010.pl",
+          "ready": true,
+          "bytes": 57092199,
+          "sha256": "73432571d40de0bf60de00d9d0f32a720a3ac9b295487f8aa424b093a63daebc"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/wv2010.pl/wv000022010.pl",
+          "ready": true,
+          "bytes": 58272645,
+          "sha256": "c63cd26a2fdb9f1c45cdcc5adaa5cea0ff496771468e986d00db34edf1c4c81e"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/wv2010.pl/wv2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "278316f4545d052ca2c97d4470da487e0b1f2dd1edbe2a26cdb7efd4e13dfde5"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_54_tabblock10/tl_2010_54_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_54_tabblock10/tl_2010_54_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_54_tabblock10/tl_2010_54_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "MD",
+      "name": "Maryland",
+      "fips": "24",
+      "districts": 8,
+      "block_count": 145247,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/md_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/md2010.pl/mdgeo2010.pl",
+          "ready": true,
+          "bytes": 101698491,
+          "sha256": "cb221716f9591856375cfcd87701d5ade9f016d38bf332a06b04f09030fe3c17"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/md2010.pl/md000012010.pl",
+          "ready": true,
+          "bytes": 65567599,
+          "sha256": "e0b9251df296ba71d262d5abfc364bd29ab03039d6a224c0d95f0cdd2ca76234"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/md2010.pl/md000022010.pl",
+          "ready": true,
+          "bytes": 66874025,
+          "sha256": "4c12fd7c059a8fd1059858390a4c862f6949a518df0420c6c0a6479c21c57c90"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/md2010.pl/md2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "840e2d937fbb6aa01bafd316d9c47eaf04dfdaddd6b9fbaa6b62025000c632d3"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_24_tabblock10/tl_2010_24_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_24_tabblock10/tl_2010_24_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_24_tabblock10/tl_2010_24_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "ID",
+      "name": "Idaho",
+      "fips": "16",
+      "districts": 2,
+      "block_count": 149842,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/id_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/id2010.pl/idgeo2010.pl",
+          "ready": true,
+          "bytes": 87992634,
+          "sha256": "f655e3a987b963aed4c04032bf6ea459cd178a9838a21a0af14dc42aecad5051"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/id2010.pl/id000012010.pl",
+          "ready": true,
+          "bytes": 55487162,
+          "sha256": "73adf20bfc6d2989b70455b83db86878403d6f0f689b7ee1c4e9e376962e31d8"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/id2010.pl/id000022010.pl",
+          "ready": true,
+          "bytes": 56561425,
+          "sha256": "b53eb0f861ca16dd654ada8e2afbc11bc4e2da232d2a6de79b142af1204ab2bc"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/id2010.pl/id2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "30de425bbcd2e0f0a0fde4491f0f0cccf2b0771443fd0fce44961fa63c818023"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_16_tabblock10/tl_2010_16_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_16_tabblock10/tl_2010_16_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_16_tabblock10/tl_2010_16_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "MA",
+      "name": "Massachusetts",
+      "fips": "25",
+      "districts": 9,
+      "block_count": 157508,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ma_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ma2010.pl/mageo2010.pl",
+          "ready": true,
+          "bytes": 109208481,
+          "sha256": "d996d2282f0dd8ff13ea2f20e7ab42b799a9b2eef69aa8fab033eaa70b8f5dbb"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ma2010.pl/ma000012010.pl",
+          "ready": true,
+          "bytes": 70597911,
+          "sha256": "27399c2b53049194955d76ff70f4bdeabef9691a675db799173f085a2481b8ac"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ma2010.pl/ma000022010.pl",
+          "ready": true,
+          "bytes": 72062098,
+          "sha256": "473f669534776c810bffc20481cb8bb779c05aa4744b8ea36bc95d6ac1c60a47"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ma2010.pl/ma2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "6227c1a3e4082c6193ad4cc6353e6f8c0ac301d9ced2e5049c83e85be6f4c53d"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_25_tabblock10/tl_2010_25_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_25_tabblock10/tl_2010_25_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_25_tabblock10/tl_2010_25_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "KY",
+      "name": "Kentucky",
+      "fips": "21",
+      "districts": 6,
+      "block_count": 161672,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ky_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ky2010.pl/kygeo2010.pl",
+          "ready": true,
+          "bytes": 95748114,
+          "sha256": "73d07083d3e9871ea16802b23533a42a2d7558bd18206e01ab89b9223016c5ce"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ky2010.pl/ky000012010.pl",
+          "ready": true,
+          "bytes": 60913523,
+          "sha256": "7e786ba546a76ce56c7c4a3036838b16d5d006fa5b812f8982357df61df8e909"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ky2010.pl/ky000022010.pl",
+          "ready": true,
+          "bytes": 62141778,
+          "sha256": "0bfd6ca176c9ac92ebc38e3816c14f609bab5fb99740bf23b724234a98563b1f"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ky2010.pl/ky2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1757,
+          "sha256": "49aaa5658e71e1801cf817392cb8cdec73862598eeb2e5020daea430b517feaa"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_21_tabblock10/tl_2010_21_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_21_tabblock10/tl_2010_21_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_21_tabblock10/tl_2010_21_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "NM",
+      "name": "New Mexico",
+      "fips": "35",
+      "districts": 3,
+      "block_count": 168609,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/nm_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/nm2010.pl/nmgeo2010.pl",
+          "ready": true,
+          "bytes": 104892867,
+          "sha256": "f3c041432df96d45f0e5ca24d0d5a7991464c80517e0e83252a1018626aab3a6"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/nm2010.pl/nm000012010.pl",
+          "ready": true,
+          "bytes": 66391615,
+          "sha256": "2d6ec8dc0e256626af5b44fdce1a98d03156cd564a34be938609ccd2992a6eef"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/nm2010.pl/nm000022010.pl",
+          "ready": true,
+          "bytes": 67711210,
+          "sha256": "be557d75db79e11d6cc43dc15bb4ed8e985c2478deb28c26a09e6dc454865ad1"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/nm2010.pl/nm2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "3c85e28de4b117996bc16a822955d93ce7267288d3835b9314aa480d47e76fb7"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_35_tabblock10/tl_2010_35_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_35_tabblock10/tl_2010_35_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_35_tabblock10/tl_2010_35_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "NJ",
+      "name": "New Jersey",
+      "fips": "34",
+      "districts": 12,
+      "block_count": 169588,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/nj_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/nj2010.pl/njgeo2010.pl",
+          "ready": true,
+          "bytes": 143625678,
+          "sha256": "a0b6f4c746d92fa7eefce793c85a585be8c19a0f7c4d4e31e1ef5ee915439687"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/nj2010.pl/nj000012010.pl",
+          "ready": true,
+          "bytes": 93730656,
+          "sha256": "c5c1272d6f3416138bc6a0a64ea1713850d29c642600e7a4dd425799ac39613f"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/nj2010.pl/nj000022010.pl",
+          "ready": true,
+          "bytes": 95612246,
+          "sha256": "5891c722cbe6e62e266ae8ce66d316b771a43ed42b0033c5890e2bb3c150d988"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/nj2010.pl/nj2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "ac7fef67901977ba2c7ad538b6fb51d3911527fc9fdcc27e22009a550efda3f7"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_34_tabblock10/tl_2010_34_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_34_tabblock10/tl_2010_34_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_34_tabblock10/tl_2010_34_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "MS",
+      "name": "Mississippi",
+      "fips": "28",
+      "districts": 4,
+      "block_count": 171778,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ms_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ms2010.pl/msgeo2010.pl",
+          "ready": true,
+          "bytes": 114613770,
+          "sha256": "89f6a34fbc96ec77e2dbde27ef9f6e560ae3a5aa7410ba3d504e4c3ed2f4af9f"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ms2010.pl/ms000012010.pl",
+          "ready": true,
+          "bytes": 72840880,
+          "sha256": "e4bbb6d4cfe216cce9ddc1739c40d954458d75fb921217057530ff6902c25a5a"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ms2010.pl/ms000022010.pl",
+          "ready": true,
+          "bytes": 74333034,
+          "sha256": "bca632903087f4ce1e07e7bd7ecabc50d4870d62b2180f7392da63799aa147cc"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ms2010.pl/ms2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "8ca6c7c75249a3f3fb21cf54d68e9f8634d518c8dafedb34162c960a22740a5c"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_28_tabblock10/tl_2010_28_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_28_tabblock10/tl_2010_28_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_28_tabblock10/tl_2010_28_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "SC",
+      "name": "South Carolina",
+      "fips": "45",
+      "districts": 7,
+      "block_count": 181908,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/sc_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/sc2010.pl/scgeo2010.pl",
+          "ready": true,
+          "bytes": 122409330,
+          "sha256": "3862768e2587814fe0a0414d15bf5354dc9d234a9599d04d1c3631be70b0cfa4"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/sc2010.pl/sc000012010.pl",
+          "ready": true,
+          "bytes": 78284340,
+          "sha256": "91f64d13d6d237ee05e5a5bdc543bfccfe7afa46985764c7a605a627c8761582"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/sc2010.pl/sc000022010.pl",
+          "ready": true,
+          "bytes": 79877035,
+          "sha256": "ad85967ca4e25a3992a2383e4d08cc38a1a397e7033f6804df464a25be84513f"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/sc2010.pl/sc2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "8aad7d71af57f89ee67810b08837ed23e74985ce1acd8e59984b54042eda70d9"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_45_tabblock10/tl_2010_45_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_45_tabblock10/tl_2010_45_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_45_tabblock10/tl_2010_45_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "AR",
+      "name": "Arkansas",
+      "fips": "05",
+      "districts": 4,
+      "block_count": 186211,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ar_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ar2010.pl/argeo2010.pl",
+          "ready": true,
+          "bytes": 130067616,
+          "sha256": "68c04fabf3c82324328826eb060c0ea413906a02d6aa5b0cbf1741cd7bb887d2"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ar2010.pl/ar000012010.pl",
+          "ready": true,
+          "bytes": 82639630,
+          "sha256": "1951f2f9212fda5904532399c56317dd71bf924c741994398c8af2ba7ac8ee6a"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ar2010.pl/ar000022010.pl",
+          "ready": true,
+          "bytes": 84320390,
+          "sha256": "bd8b12252829acab303da21beb2f4a91ad2bddbd29f645681009a665db40053b"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ar2010.pl/ar2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "0c289c5e48e9b66fdcf89f2ae3d6215abca88f9b72ec4fc00e842806b6fa3d9c"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_05_tabblock10/tl_2010_05_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_05_tabblock10/tl_2010_05_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_05_tabblock10/tl_2010_05_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "NE",
+      "name": "Nebraska",
+      "fips": "31",
+      "districts": 3,
+      "block_count": 193352,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ne_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ne2010.pl/negeo2010.pl",
+          "ready": true,
+          "bytes": 122696403,
+          "sha256": "ae42af2797582d985b0f95318527dff0a9864f32a3d047a2ff872850475f8c33"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ne2010.pl/ne000012010.pl",
+          "ready": true,
+          "bytes": 77432440,
+          "sha256": "c8d86dbdf579d77a26cc1774bb5ce636874c2153e2469db13ad634090983e1bb"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ne2010.pl/ne000022010.pl",
+          "ready": true,
+          "bytes": 78923023,
+          "sha256": "84d9506de46afa951763c02f08d85ee0adf4eaef9cf4441e143724b2c5406cfd"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ne2010.pl/ne2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "45bf92cba31602552ecacb5fb9fb39824c634ed5b35c1ccafd00c01f5aab5dc6"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_31_tabblock10/tl_2010_31_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_31_tabblock10/tl_2010_31_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_31_tabblock10/tl_2010_31_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "WA",
+      "name": "Washington",
+      "fips": "53",
+      "districts": 10,
+      "block_count": 195574,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/wa_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/wa2010.pl/wageo2010.pl",
+          "ready": true,
+          "bytes": 164346036,
+          "sha256": "f1e17775bf98ca71aac34e4d07020d2c3d1993fecdc95811ef52900429a89745"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/wa2010.pl/wa000012010.pl",
+          "ready": true,
+          "bytes": 106307849,
+          "sha256": "64b40fd16c0eca7f07230f3f7c7252a83fa7a3ca7fe7984c1c9616add86c6ce7"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/wa2010.pl/wa000022010.pl",
+          "ready": true,
+          "bytes": 108341882,
+          "sha256": "6659efa80a9abcd1cb45c77f918d2ee1eafee74c795ac8916aca4f79aabd208b"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/wa2010.pl/wa2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "a4c11e7512018f8b6b5f0925616c8e3c6a237ce87df2dca3920b373bd7ce56a2"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_53_tabblock10/tl_2010_53_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_53_tabblock10/tl_2010_53_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_53_tabblock10/tl_2010_53_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "OR",
+      "name": "Oregon",
+      "fips": "41",
+      "districts": 5,
+      "block_count": 196621,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/or_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/or2010.pl/orgeo2010.pl",
+          "ready": true,
+          "bytes": 109685934,
+          "sha256": "8e773301f2fb673c9b9722611f77d1bf1a0be6bb1bd5c4522a748ec672ba3b19"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/or2010.pl/or000012010.pl",
+          "ready": true,
+          "bytes": 69448497,
+          "sha256": "88f016e8c041fdbcf7c9d1a4f2f6d6c0bdece96302a865209ed9625de9296657"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/or2010.pl/or000022010.pl",
+          "ready": true,
+          "bytes": 70807871,
+          "sha256": "3827496f7e790a2f3a3f661a3cb1f121354fb2303c492375e0eff7ce3c848894"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/or2010.pl/or2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "24285534f72bb8fd0a316134dd5b1a29fdb8e2f1f0cb60958f0df1db3c16a2c9"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_41_tabblock10/tl_2010_41_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_41_tabblock10/tl_2010_41_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_41_tabblock10/tl_2010_41_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "CO",
+      "name": "Colorado",
+      "fips": "08",
+      "districts": 7,
+      "block_count": 201062,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/co_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/co2010.pl/cogeo2010.pl",
+          "ready": true,
+          "bytes": 139017981,
+          "sha256": "64bb27636282625a61e52db2f2f3aabffb24d51c6effcb2d79c6c94b7112c084"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/co2010.pl/co000012010.pl",
+          "ready": true,
+          "bytes": 88990127,
+          "sha256": "75da607c49f7713d6bd65952069dec7bea99112bd4290474b116ecdaa229e879"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/co2010.pl/co000022010.pl",
+          "ready": true,
+          "bytes": 90734684,
+          "sha256": "5097893705e488de570e28fb150c6dee37a50494d0734975600da742aad1092e"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/co2010.pl/co2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "b357a8df7cc00df0f65bccadde1d63927dd98cf9a630eed3226898ee440eb532"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_08_tabblock10/tl_2010_08_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_08_tabblock10/tl_2010_08_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_08_tabblock10/tl_2010_08_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "LA",
+      "name": "Louisiana",
+      "fips": "22",
+      "districts": 6,
+      "block_count": 204447,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/la_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/la2010.pl/lageo2010.pl",
+          "ready": true,
+          "bytes": 143858142,
+          "sha256": "3867b48070a7777f1b1c6e5cde15abd4ee3786a7eca98b2624b3f299a728aefa"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/la2010.pl/la000012010.pl",
+          "ready": true,
+          "bytes": 91868530,
+          "sha256": "3a644a5f72de839f2629cbf6addbf542aa2227538e3de12673bf31d5722def1c"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/la2010.pl/la000022010.pl",
+          "ready": true,
+          "bytes": 93754384,
+          "sha256": "8c5cb84588a005d044cdfd979b05dcaa1332a512a7672b7e016e86ed8c113966"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/la2010.pl/la2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "9e85659120c83cd98612ac1cf9232bcc1d67cd3ca7cb75f027e9f3e0d43c3a64"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_22_tabblock10/tl_2010_22_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_22_tabblock10/tl_2010_22_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_22_tabblock10/tl_2010_22_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "IA",
+      "name": "Iowa",
+      "fips": "19",
+      "districts": 4,
+      "block_count": 216007,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ia_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ia2010.pl/iageo2010.pl",
+          "ready": true,
+          "bytes": 144221367,
+          "sha256": "0ac8b549bfe6a1bc72475e176b8851d76020f23134363a5f935c6a99869c4674"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ia2010.pl/ia000012010.pl",
+          "ready": true,
+          "bytes": 91472237,
+          "sha256": "3d39ea5626170b6362343414964742ccb396f18dcefdb259acae4f2490577cf3"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ia2010.pl/ia000022010.pl",
+          "ready": true,
+          "bytes": 93295335,
+          "sha256": "368029bd113844f15c3bd2163f3dae63ad024dae7ee3435cb381fa1ca69bf6ce"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ia2010.pl/ia2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1758,
+          "sha256": "eda622884803fe7b256883eefa43d8b85d9076c7dacfc7aba4b18838575c9125"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_19_tabblock10/tl_2010_19_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_19_tabblock10/tl_2010_19_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_19_tabblock10/tl_2010_19_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "KS",
+      "name": "Kansas",
+      "fips": "20",
+      "districts": 4,
+      "block_count": 238600,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ks_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ks2010.pl/ksgeo2010.pl",
+          "ready": true,
+          "bytes": 161066991,
+          "sha256": "cbc4f46d97d9491715a93519a4992dafee48b5f6ce4d7b21820f414e89f1a7be"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ks2010.pl/ks000012010.pl",
+          "ready": true,
+          "bytes": 102026590,
+          "sha256": "3d003abcb2b936b62116ce7ccf6c475640b9665b1c6cc2a3fbb250ae493f1737"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ks2010.pl/ks000022010.pl",
+          "ready": true,
+          "bytes": 103990796,
+          "sha256": "4a464210ac37a840519bc69dcb34395aedabeb511e1e4f69a069de69fd1cf760"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ks2010.pl/ks2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "28de10f25a52588655ed12e0e7490ac0c66b2f7ec6f88573da1da5ed129f32d5"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_20_tabblock10/tl_2010_20_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_20_tabblock10/tl_2010_20_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_20_tabblock10/tl_2010_20_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "TN",
+      "name": "Tennessee",
+      "fips": "47",
+      "districts": 9,
+      "block_count": 240116,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/tn_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/tn2010.pl/tngeo2010.pl",
+          "ready": true,
+          "bytes": 155312505,
+          "sha256": "5e7bed9419fae280107090b7315f65b0ad9890cc33039635c9f6d4dbc7211e35"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/tn2010.pl/tn000012010.pl",
+          "ready": true,
+          "bytes": 99146453,
+          "sha256": "fc0a0e1bc10dc8cb18b10ef4ed5320c8e6a46dad7edf4326076e815acd512171"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/tn2010.pl/tn000022010.pl",
+          "ready": true,
+          "bytes": 101172992,
+          "sha256": "baf2da3adbc16e7e02a6a37de68480faf3444cf099e01f4bf04dafe68f29a74f"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/tn2010.pl/tn2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1759,
+          "sha256": "97c584256fd62444531afbfeea462372f6b3e32bc060d1d2aab2babe529d197c"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_47_tabblock10/tl_2010_47_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_47_tabblock10/tl_2010_47_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_47_tabblock10/tl_2010_47_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "AZ",
+      "name": "Arizona",
+      "fips": "04",
+      "districts": 9,
+      "block_count": 241666,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/az_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/az2010.pl/azgeo2010.pl",
+          "ready": true,
+          "bytes": 154294974,
+          "sha256": "e86fbd5a57738feb049b4e4317117afcd9b8022d21a04dd24e6cbb13aa816506"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/az2010.pl/az000012010.pl",
+          "ready": true,
+          "bytes": 98521097,
+          "sha256": "224304a5f5472874be80f932fa9fbfef10b5d9b6140cc97a9d0dffe8ea2aa6f8"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/az2010.pl/az000022010.pl",
+          "ready": true,
+          "bytes": 100488086,
+          "sha256": "6616c0e6e959ac25a05ace5f44471c9649834062774a456ed7284fe08376c08d"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/az2010.pl/az2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1759,
+          "sha256": "ead8dacc3b35b2d128c47edb03e1ba4e7e16d1d108a4581e7fb589f7aa9bc9a1"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_04_tabblock10/tl_2010_04_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_04_tabblock10/tl_2010_04_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_04_tabblock10/tl_2010_04_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "AL",
+      "name": "Alabama",
+      "fips": "01",
+      "districts": 7,
+      "block_count": 252266,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/al_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/al2010.pl/algeo2010.pl",
+          "ready": true,
+          "bytes": 160189239,
+          "sha256": "63d349f759a0ae4c2ef5147123e6ec8edbb32514250aae2b0b0f1eb45308361b"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/al2010.pl/al000012010.pl",
+          "ready": true,
+          "bytes": 101751502,
+          "sha256": "db5fa69d07208b82e846ee50c4d75eda0d762cc8a6b40a47c5f8c3f9f01af378"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/al2010.pl/al000022010.pl",
+          "ready": true,
+          "bytes": 103823429,
+          "sha256": "e91882953e5c0b5c557a16ca89f5fe4fd88de88b446cb40331a55c639d1190db"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/al2010.pl/al2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "16e0dab9133ed8090e3b6d8bb2ab07e4c5dc91706f17c26e28eb2f9f865137a5"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_01_tabblock10/tl_2010_01_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_01_tabblock10/tl_2010_01_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_01_tabblock10/tl_2010_01_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "WI",
+      "name": "Wisconsin",
+      "fips": "55",
+      "districts": 8,
+      "block_count": 253096,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/wi_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/wi2010.pl/wigeo2010.pl",
+          "ready": true,
+          "bytes": 196138995,
+          "sha256": "d27e557d2921fd232217b519bb610c6235b9a6f22c8572fbaaf01a4f9255ba6a"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/wi2010.pl/wi000012010.pl",
+          "ready": true,
+          "bytes": 125297367,
+          "sha256": "5047b89cbcfc0ebfeb9b7b97045fa89bc9b9f61c88d609decdd0343157c727d7"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/wi2010.pl/wi000022010.pl",
+          "ready": true,
+          "bytes": 127901043,
+          "sha256": "b3b058b0ae56ea6273a3f18ace95dc684acdda1584dbbe04e5e92b116f2b34c1"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/wi2010.pl/wi2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "6b0c173e29f99b003ea684b180d712cf056e2493b38c1ceca0b7d12cbe5bdeeb"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_55_tabblock10/tl_2010_55_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_55_tabblock10/tl_2010_55_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_55_tabblock10/tl_2010_55_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "MN",
+      "name": "Minnesota",
+      "fips": "27",
+      "districts": 8,
+      "block_count": 259777,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/mn_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/mn2010.pl/mngeo2010.pl",
+          "ready": true,
+          "bytes": 179741766,
+          "sha256": "06d23f582b5f6e1e02bae984df0606a3d0f7ce92ddba4b595fdac1174d367322"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/mn2010.pl/mn000012010.pl",
+          "ready": true,
+          "bytes": 114645409,
+          "sha256": "c5d9dd94b7ff8a680def08e5bc8c95d09e5bbe42495e3c1662ecc85e3fe22941"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/mn2010.pl/mn000022010.pl",
+          "ready": true,
+          "bytes": 116927733,
+          "sha256": "089880329cb99d285514a927f312d98f8bad9381dc63325f6e07706b01669125"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/mn2010.pl/mn2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "0c167d3920cbad39f4221f9d3f0f2b1b8bf1be0a64ca33b498864f645722836c"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_27_tabblock10/tl_2010_27_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_27_tabblock10/tl_2010_27_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_27_tabblock10/tl_2010_27_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "IN",
+      "name": "Indiana",
+      "fips": "18",
+      "districts": 9,
+      "block_count": 267071,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/in_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/in2010.pl/ingeo2010.pl",
+          "ready": true,
+          "bytes": 190808856,
+          "sha256": "d1348f83d524af839b13b74fdaaf95e2def3885060536fd4a0556c662320e509"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/in2010.pl/in000012010.pl",
+          "ready": true,
+          "bytes": 122134429,
+          "sha256": "752d75cb6fbb2563d7819cfd59a6b7b746a83d14c28322ed834a0fc6d4f0df25"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/in2010.pl/in000022010.pl",
+          "ready": true,
+          "bytes": 124526268,
+          "sha256": "b84e35c9f0a14e745725d03c46607f59c6c0a4ae1bd03aef8c966dd25679783f"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/in2010.pl/in2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "c54adbeec46879955246ec9ad1a250c4c787a7b16a3f84326ddfbfdbad7541c2"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_18_tabblock10/tl_2010_18_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_18_tabblock10/tl_2010_18_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_18_tabblock10/tl_2010_18_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "OK",
+      "name": "Oklahoma",
+      "fips": "40",
+      "districts": 5,
+      "block_count": 269118,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ok_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ok2010.pl/okgeo2010.pl",
+          "ready": true,
+          "bytes": 170579979,
+          "sha256": "44012059c8be7661c47c33d7ea8d41545554975aa99e741be01418b859ede5fd"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ok2010.pl/ok000012010.pl",
+          "ready": true,
+          "bytes": 108562547,
+          "sha256": "e9173a1743ff251b8f6860411565e243237e689d052ffb8c8dd3145252abc26f"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ok2010.pl/ok000022010.pl",
+          "ready": true,
+          "bytes": 110613193,
+          "sha256": "bb508537f525cd1f9e3789ce82e03745e0bf6853e27e0ae7c924dec307a155ab"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ok2010.pl/ok2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "cf3c5ef5f543c1fe33cb859e3648df8fbdb91bda3147618816fbb668481175f0"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_40_tabblock10/tl_2010_40_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_40_tabblock10/tl_2010_40_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_40_tabblock10/tl_2010_40_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "VA",
+      "name": "Virginia",
+      "fips": "51",
+      "districts": 11,
+      "block_count": 285762,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/va_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/va2010.pl/vageo2010.pl",
+          "ready": true,
+          "bytes": 179841966,
+          "sha256": "d1848ad996bb056cf8fbf0ca2eb8c86e426d2fab52f6dd8e76a3341922c8930b"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/va2010.pl/va000012010.pl",
+          "ready": true,
+          "bytes": 115022785,
+          "sha256": "40c34a8eaff94bbcc027e3dc9a5a8816dd4b9034b9b6101d4d37b2b12826771e"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/va2010.pl/va000022010.pl",
+          "ready": true,
+          "bytes": 117291889,
+          "sha256": "5270f673e0c9d7944fa58113bacd1ea197645d2980185f616cdd857a4519bc3d"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/va2010.pl/va2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "4fa70aa0c0bc0259db8d0fe53112842a050c04ab51e56697967b7a6241b4b4d0"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_51_tabblock10/tl_2010_51_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_51_tabblock10/tl_2010_51_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_51_tabblock10/tl_2010_51_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "NC",
+      "name": "North Carolina",
+      "fips": "37",
+      "districts": 13,
+      "block_count": 288987,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/nc_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/nc2010.pl/ncgeo2010.pl",
+          "ready": true,
+          "bytes": 194845914,
+          "sha256": "fa818ea596a8f34fcc673c458720e0af739bfd3973d13342dc948a694d3d0a9d"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/nc2010.pl/nc000012010.pl",
+          "ready": true,
+          "bytes": 125093386,
+          "sha256": "d6f436752dd88533c34bfd8977022bb944c9155d9621301f69896a4fefa713b3"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/nc2010.pl/nc000022010.pl",
+          "ready": true,
+          "bytes": 127616610,
+          "sha256": "fdc4e9258870dde5027cb9437195950bc9e9c91e8f02df28387ea9c6afa1ff79"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/nc2010.pl/nc2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "50b5dadf4c55c2cb04a9db25a80a89f039454624d6467202ca81ee7a4d5af84c"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_37_tabblock10/tl_2010_37_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_37_tabblock10/tl_2010_37_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_37_tabblock10/tl_2010_37_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "GA",
+      "name": "Georgia",
+      "fips": "13",
+      "districts": 14,
+      "block_count": 291086,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ga_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ga2010.pl/gageo2010.pl",
+          "ready": true,
+          "bytes": 191526789,
+          "sha256": "2858582939376ab9ba64cb15dfb42d370ac8d7392253c5c3e45d9d2b79149eec"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ga2010.pl/ga000012010.pl",
+          "ready": true,
+          "bytes": 122827368,
+          "sha256": "046f14d90cd2aae1600f8bd88ae251342d5cdaea7e43c78e4f4c740f17333294"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ga2010.pl/ga000022010.pl",
+          "ready": true,
+          "bytes": 125282608,
+          "sha256": "9736e7a950cfc9193acd497b550add5184965374f09d74244658a0442740b7af"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ga2010.pl/ga2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "c4e17c17f468d0d8a4e052714514326affc0dbbafddabc93c20d913b4290a433"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_13_tabblock10/tl_2010_13_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_13_tabblock10/tl_2010_13_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_13_tabblock10/tl_2010_13_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "MI",
+      "name": "Michigan",
+      "fips": "26",
+      "districts": 14,
+      "block_count": 329885,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/mi_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/mi2010.pl/migeo2010.pl",
+          "ready": true,
+          "bytes": 230128839,
+          "sha256": "7099e91f3a203a6e4a2112d3f70b6125a9475b3688d16156cd35fac09023b8f6"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/mi2010.pl/mi000012010.pl",
+          "ready": true,
+          "bytes": 147735403,
+          "sha256": "91a9f4ee48173c4ad856bbd6289046e683394510230e81e4f2e39fb616f475b8"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/mi2010.pl/mi000022010.pl",
+          "ready": true,
+          "bytes": 150766064,
+          "sha256": "a2fc904530fc073a970dcaded01d6bade9c33de7c938f863fdd79902c63c2b84"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/mi2010.pl/mi2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "4437311024870d0fd6f66b87b0c470081ff258d80343d2ffe626e8eed419d87e"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_26_tabblock10/tl_2010_26_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_26_tabblock10/tl_2010_26_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_26_tabblock10/tl_2010_26_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "MO",
+      "name": "Missouri",
+      "fips": "29",
+      "districts": 8,
+      "block_count": 343565,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/mo_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/mo2010.pl/mogeo2010.pl",
+          "ready": true,
+          "bytes": 236962479,
+          "sha256": "633cc06444b52594c0e784f9a4de35a11c3d304f704f1ad07a0908990beb2a7f"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/mo2010.pl/mo000012010.pl",
+          "ready": true,
+          "bytes": 150582172,
+          "sha256": "686a77ec7ab6b286c1179b4a3ea5f3d9d35161be4a4d8fc5e33a73a73b874dc2"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/mo2010.pl/mo000022010.pl",
+          "ready": true,
+          "bytes": 153603742,
+          "sha256": "ec45c49b7312f7a9786758108b0d0df496140f1062249fccfd670275e308e8b2"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/mo2010.pl/mo2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "a3a4708173ab5f33422bcdc074d50c2ce2e3589640a700203abbd7e6bc67818e"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_29_tabblock10/tl_2010_29_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_29_tabblock10/tl_2010_29_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_29_tabblock10/tl_2010_29_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "NY",
+      "name": "New York",
+      "fips": "36",
+      "districts": 27,
+      "block_count": 350169,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ny_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ny2010.pl/nygeo2010.pl",
+          "ready": true,
+          "bytes": 318200130,
+          "sha256": "0fe28e0dc1e733ee0b3e9cf8e773b0312f28d91dba9c8343aac8bf0237ae48cf"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ny2010.pl/ny000012010.pl",
+          "ready": true,
+          "bytes": 207296533,
+          "sha256": "4871d4cf8a9d938820e2ba321a6bb26080c426e4ef57b60a8232e316e9e8ace5"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ny2010.pl/ny000022010.pl",
+          "ready": true,
+          "bytes": 211552055,
+          "sha256": "67b55b583e2c2190f391711d2921ba4b7780270c080786ba47cdf764ab95b90e"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ny2010.pl/ny2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "fcf6d2f58474b250e3507d87bd5f94b32cdaa55f7b4bc96031fd31dde65c95ed"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_36_tabblock10/tl_2010_36_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_36_tabblock10/tl_2010_36_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_36_tabblock10/tl_2010_36_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "OH",
+      "name": "Ohio",
+      "fips": "39",
+      "districts": 16,
+      "block_count": 365344,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/oh_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/oh2010.pl/ohgeo2010.pl",
+          "ready": true,
+          "bytes": 298436181,
+          "sha256": "24312d0e71cbf5732f49509a4fcbb6acca7bb7d2440c50526e89181974562d21"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/oh2010.pl/oh000012010.pl",
+          "ready": true,
+          "bytes": 191793957,
+          "sha256": "3afb11c11820426eed8677863971d507ec000128882bc5e82b105b6cac4ff2b1"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/oh2010.pl/oh000022010.pl",
+          "ready": true,
+          "bytes": 195638365,
+          "sha256": "1743c5f0178a333dbfa10a15db8d2987c7ac08ba44b7f7411bbd7f568d83ea47"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/oh2010.pl/oh2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "7887ca3b3f3f22fda2f272bf5f025b3aa4ca1c3cb901e092d81379a96275be9f"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_39_tabblock10/tl_2010_39_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_39_tabblock10/tl_2010_39_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_39_tabblock10/tl_2010_39_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "PA",
+      "name": "Pennsylvania",
+      "fips": "42",
+      "districts": 18,
+      "block_count": 421545,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/pa_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/pa2010.pl/pageo2010.pl",
+          "ready": true,
+          "bytes": 307145565,
+          "sha256": "6ed932db32e0cdd5e93f77fe455fa21973456db182019e6831771dc5e77bf9de"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/pa2010.pl/pa000012010.pl",
+          "ready": true,
+          "bytes": 197424139,
+          "sha256": "eaaeb8a8e629aa66da91ba61591665d9c0fb420628b7688e8b5689dd0849039a"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/pa2010.pl/pa000022010.pl",
+          "ready": true,
+          "bytes": 201498023,
+          "sha256": "aece689a724e4ca8534a2847c0ecfa4ce9aa0890e991cc79f8100a17ea84a8a1"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/pa2010.pl/pa2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "9eefca5a5919a9e7a30a4ab0e662dc25be6fdbd96429efc4c598e7492bde4cd9"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_42_tabblock10/tl_2010_42_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_42_tabblock10/tl_2010_42_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_42_tabblock10/tl_2010_42_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "IL",
+      "name": "Illinois",
+      "fips": "17",
+      "districts": 18,
+      "block_count": 451554,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/il_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/il2010.pl/ilgeo2010.pl",
+          "ready": true,
+          "bytes": 356014107,
+          "sha256": "a574d5d000677e830e0b99c943f7102f03cbb1a8ab41751cba269d6257fbc53d"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/il2010.pl/il000012010.pl",
+          "ready": true,
+          "bytes": 228580704,
+          "sha256": "f8f55bf454688ba389f4acee046a5ccf0f71a57da4ead8fa26f8c11d1d43f14b"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/il2010.pl/il000022010.pl",
+          "ready": true,
+          "bytes": 233181899,
+          "sha256": "58a976f69c2d81d450db2be7ab8378bf00b658f7de47b894ad34edbae8e02f2e"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/il2010.pl/il2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "92c44f08c287bd0ee2c47572d7ce50728169434709ff58e67c914734a474035e"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_17_tabblock10/tl_2010_17_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_17_tabblock10/tl_2010_17_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_17_tabblock10/tl_2010_17_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "FL",
+      "name": "Florida",
+      "fips": "12",
+      "districts": 27,
+      "block_count": 484481,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/fl_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/fl2010.pl/flgeo2010.pl",
+          "ready": true,
+          "bytes": 348483576,
+          "sha256": "777c555146de48ef7de8cc024d87a08ef97cf9b7eacf89326fffc0b10cc2d704"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/fl2010.pl/fl000012010.pl",
+          "ready": true,
+          "bytes": 224144675,
+          "sha256": "1c840a17214b5ac4f77ad10ed100b16f625e8c949f84cfa50e272507c82241a1"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/fl2010.pl/fl000022010.pl",
+          "ready": true,
+          "bytes": 228898561,
+          "sha256": "4fce00288ffbc528161735e7e247a52e24922d3e316ca90d923993a1c0abac56"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/fl2010.pl/fl2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1760,
+          "sha256": "5b1a9bb46ff4841115d9dff7d7338dcf73604d217e56d7f487758ad98c6ca76a"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_12_tabblock10/tl_2010_12_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_12_tabblock10/tl_2010_12_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_12_tabblock10/tl_2010_12_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "CA",
+      "name": "California",
+      "fips": "06",
+      "districts": 53,
+      "block_count": 710145,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/ca_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/ca2010.pl/cageo2010.pl",
+          "ready": true,
+          "bytes": 545649621,
+          "sha256": "7be2542fe972fb27cdb88c5dac77ba1f4069a022588c9f52d1d229d624173ab5"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/ca2010.pl/ca000012010.pl",
+          "ready": true,
+          "bytes": 352094415,
+          "sha256": "0d3150054826797994040a189350a74958f1316af5e67b0604ae1104b119f150"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/ca2010.pl/ca000022010.pl",
+          "ready": true,
+          "bytes": 358861680,
+          "sha256": "539fb49d79d9654700370c02c30ff6dc0f01215adef0c8870a2999efef478b43"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/ca2010.pl/ca2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1763,
+          "sha256": "dfde26d5f56077035409ef006236d803e9d9406f61794b427d592e712e109eac"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_06_tabblock10/tl_2010_06_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_06_tabblock10/tl_2010_06_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_06_tabblock10/tl_2010_06_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    },
+    {
+      "state": "TX",
+      "name": "Texas",
+      "fips": "48",
+      "districts": 36,
+      "block_count": 914231,
+      "pl_custody_ready": true,
+      "tiger_ready": false,
+      "rctx_ready": false,
+      "rctx_path": "data/2010/certified/tx_blocks_2010.rctx",
+      "rctx_bytes": null,
+      "sources": {
+        "pl_geography": {
+          "path": "data/2010/redistricting/tx2010.pl/txgeo2010.pl",
+          "ready": true,
+          "bytes": 580529742,
+          "sha256": "9934d9014b65025ae625b3327286dec3f0398b29fa467d872882f308fbc4b76f"
+        },
+        "pl_population_segment_1": {
+          "path": "data/2010/redistricting/tx2010.pl/tx000012010.pl",
+          "ready": true,
+          "bytes": 370116243,
+          "sha256": "1c4bf6f581c07c6bb094cfa4311f3d4c49c484be13c328f3226c56877e263fa8"
+        },
+        "pl_population_segment_2": {
+          "path": "data/2010/redistricting/tx2010.pl/tx000022010.pl",
+          "ready": true,
+          "bytes": 377499076,
+          "sha256": "ad93b94b699b74524073dd56d36ea151a493f6005a1a717e2e64e2aaa648ef63"
+        },
+        "pl_packing_list": {
+          "path": "data/2010/redistricting/tx2010.pl/tx2010.pl.prd.packinglist.txt",
+          "ready": true,
+          "bytes": 1763,
+          "sha256": "688a3e1c1e2a801791ea09e448a475c56043d8afb855e78fbe455a66f868dad3"
+        },
+        "tiger_shp": {
+          "path": "data/2010/tiger/blocks/tl_2010_48_tabblock10/tl_2010_48_tabblock10.shp",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_dbf": {
+          "path": "data/2010/tiger/blocks/tl_2010_48_tabblock10/tl_2010_48_tabblock10.dbf",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        },
+        "tiger_shx": {
+          "path": "data/2010/tiger/blocks/tl_2010_48_tabblock10/tl_2010_48_tabblock10.shx",
+          "ready": false,
+          "bytes": null,
+          "sha256": null
+        }
+      }
+    }
+  ],
+  "batch_order": [
+    "DE",
+    "HI",
+    "RI",
+    "VT",
+    "AK",
+    "NH",
+    "CT",
+    "ME",
+    "NV",
+    "WY",
+    "SD",
+    "UT",
+    "MT",
+    "ND",
+    "WV",
+    "MD",
+    "ID",
+    "MA",
+    "KY",
+    "NM",
+    "NJ",
+    "MS",
+    "SC",
+    "AR",
+    "NE",
+    "WA",
+    "OR",
+    "CO",
+    "LA",
+    "IA",
+    "KS",
+    "TN",
+    "AZ",
+    "AL",
+    "WI",
+    "MN",
+    "IN",
+    "OK",
+    "VA",
+    "NC",
+    "GA",
+    "MI",
+    "MO",
+    "NY",
+    "OH",
+    "PA",
+    "IL",
+    "FL",
+    "CA",
+    "TX"
+  ],
+  "claim_boundary": "Hash-bound local 2010 source and context custody inventory. An incomplete status is expected until TIGER block geometry and all RCTX files exist; this report makes no district-generation claim."
+}
