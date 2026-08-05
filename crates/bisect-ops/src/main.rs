@@ -310,7 +310,7 @@ fn sha256(path: &Path) -> Result<String> {
     Ok(format!("{:x}", digest.finalize()))
 }
 
-fn git_blob_sha256(commit: &str, path: &str) -> Result<String> {
+fn git_blob_matches_sha256(commit: &str, path: &str, expected: &str) -> Result<bool> {
     let object = format!("{commit}:{path}");
     let output = Command::new("git")
         .args(["cat-file", "blob", &object])
@@ -319,7 +319,13 @@ fn git_blob_sha256(commit: &str, path: &str) -> Result<String> {
     if !output.status.success() {
         bail!("frozen source object is unavailable: {object}");
     }
-    Ok(format!("{:x}", Sha256::digest(output.stdout)))
+    if format!("{:x}", Sha256::digest(&output.stdout)) == expected {
+        return Ok(true);
+    }
+    let text = String::from_utf8(output.stdout)
+        .with_context(|| format!("frozen source is not text: {object}"))?;
+    let crlf = text.replace("\r\n", "\n").replace('\n', "\r\n");
+    Ok(format!("{:x}", Sha256::digest(crlf.as_bytes())) == expected)
 }
 
 fn tiger_archive_member_hashes(path: &Path) -> Result<BTreeMap<String, String>> {
@@ -643,9 +649,11 @@ fn verify_nrs_seed_package(package: &Path, context_path: &Path) -> Result<()> {
         .and_then(Value::as_object)
         .context("NRS reference engine source files")?
     {
-        if git_blob_sha256(source_commit, relative)?
-            != expected.as_str().context("NRS source hash")?
-        {
+        if !git_blob_matches_sha256(
+            source_commit,
+            relative,
+            expected.as_str().context("NRS source hash")?,
+        )? {
             bail!("NRS reference engine source mismatch: {relative}");
         }
     }
