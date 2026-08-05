@@ -1627,14 +1627,17 @@ fn render_centroid_map(
     }))
 }
 
-fn count_screening(tree: &Value) -> Result<(u64, u64)> {
+fn count_screening(tree: &Value) -> Result<(u64, u64, u64, u64)> {
     let mut completed = 0u64;
     let mut timeouts = 0u64;
-    for node in tree["nodes"].as_array().context("nodes")? {
-        for screen in node["seed_screening"]
-            .as_array()
-            .context("seed screening")?
-        {
+    let mut retained_nodes = 0u64;
+    let nodes = tree["nodes"].as_array().context("nodes")?;
+    for node in nodes {
+        let Some(screening) = node.get("seed_screening").and_then(Value::as_array) else {
+            continue;
+        };
+        retained_nodes += 1;
+        for screen in screening {
             match screen["status"].as_str() {
                 Some("completed") => completed += 1,
                 Some("timeout") => timeouts += 1,
@@ -1642,7 +1645,12 @@ fn count_screening(tree: &Value) -> Result<(u64, u64)> {
             }
         }
     }
-    Ok((completed, timeouts))
+    Ok((
+        completed,
+        timeouts,
+        retained_nodes,
+        nodes.len() as u64 - retained_nodes,
+    ))
 }
 
 fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
@@ -1760,7 +1768,7 @@ fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
             let tree_path = package.join("operational-tree.json");
             let manifest_path = package.join("manifest.json");
             let tree = read_json(&tree_path)?;
-            let (completed, timeouts) = count_screening(&tree)?;
+            let (completed, timeouts, retained_nodes, missing_nodes) = count_screening(&tree)?;
             package_rows.push(json!({
                 "state":state,"districts":districts,"context_path":context_path,
                 "context_sha256":sha256(&context_path)?,"tree_path":tree_path,
@@ -1772,7 +1780,10 @@ fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
             runtime_rows.push(json!({
                 "state":state,"recursive_nodes":tree["nodes"].as_array().map_or(0,Vec::len),
                 "completed_screens":completed,"timeout_screens":timeouts,"screen_timeout_seconds":180,
-                "wall_clock_seconds":null,"status":"wall-clock-runtime-not-retained"
+                "screen_history_nodes_retained":retained_nodes,
+                "screen_history_nodes_not_retained":missing_nodes,
+                "wall_clock_seconds":null,
+                "status":if missing_nodes == 0 {"screen-history-retained-wall-clock-not-retained"} else {"partial-screen-history-wall-clock-not-retained"}
             }));
         }
         println!("{state}: release assignment and centroid map complete");
@@ -2658,6 +2669,17 @@ mod tests {
         assert!(bytes.starts_with(b"\x89PNG\r\n\x1a\n"));
         assert!(bytes.len() > 1_000);
         assert_eq!(metadata["block_count"], 4);
+    }
+
+    #[test]
+    fn screening_count_tolerates_unretained_legacy_history() {
+        let tree = json!({"nodes":[
+            {"path":"","seed":1},
+            {"path":"0","seed_screening":[
+                {"status":"completed"},{"status":"timeout"},{"status":"completed"}
+            ]}
+        ]});
+        assert_eq!(count_screening(&tree).unwrap(), (2, 1, 1, 1));
     }
 
     #[test]
