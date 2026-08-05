@@ -47,7 +47,7 @@ and publish exact objective proof coverage separately.
 | 03 - Batch operational tree generation | DONE | 44 multi-district trees plus six single-district packages; 435 leaves |
 | 04 - National wall-to-wall verifier | DONE | 8,126,956 blocks; zero omissions, duplicates, or disconnected leaves |
 | 05 - National proof coverage matrix | DONE | Population 385/385; boundary 0/385; canonical 0/385 |
-| 06 - Nationwide 2020 publication | IN PROGRESS | Assignment/report custody and legacy-source disposition complete; release bundle and review remain |
+| 06 - Nationwide 2020 publication | IN PROGRESS | Verified local release candidate complete; human/external L2 public-release gates remain open |
 
 ## Claim Boundary
 
