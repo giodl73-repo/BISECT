@@ -159,6 +159,8 @@ enum Action {
         context: PathBuf,
     },
     NrsBatch {
+        #[arg(long, default_value_t = 2020)]
+        year: u16,
         #[arg(long)]
         bisect: PathBuf,
         #[arg(
@@ -166,6 +168,10 @@ enum Action {
             default_value = "docs/experiments/nationwide-2020/inventory.json"
         )]
         inventory: PathBuf,
+        #[arg(long)]
+        standard_profile: Option<PathBuf>,
+        #[arg(long)]
+        legal_profile: Option<PathBuf>,
         #[arg(long, default_value = "runs/nrs-v0.1/national-2020")]
         out_dir: PathBuf,
         #[arg(long)]
@@ -178,22 +184,34 @@ enum Action {
         retry_failed: bool,
     },
     VerifyNrsBatch {
+        #[arg(long, default_value_t = 2020)]
+        year: u16,
         #[arg(
             long,
             default_value = "docs/experiments/nationwide-2020/inventory.json"
         )]
         inventory: PathBuf,
+        #[arg(long)]
+        standard_profile: Option<PathBuf>,
+        #[arg(long)]
+        legal_profile: Option<PathBuf>,
         #[arg(long, default_value = "runs/nrs-v0.1/national-2020")]
         out_dir: PathBuf,
         #[arg(long)]
         require_complete: bool,
     },
     SummarizeNrsBatch {
+        #[arg(long, default_value_t = 2020)]
+        year: u16,
         #[arg(
             long,
             default_value = "docs/experiments/nationwide-2020/inventory.json"
         )]
         inventory: PathBuf,
+        #[arg(long)]
+        standard_profile: Option<PathBuf>,
+        #[arg(long)]
+        legal_profile: Option<PathBuf>,
         #[arg(long, default_value = "runs/nrs-v0.1/national-2020")]
         out_dir: PathBuf,
         #[arg(long, default_value = "docs/experiments/nrs-v0.1-national-2020")]
@@ -376,6 +394,58 @@ fn nrs_seed(input_manifest: &Value) -> Result<(String, u64, u32)> {
     Ok((format!("{digest:x}"), seed, (seed % 2_147_483_647) as u32))
 }
 
+fn nrs_context_year(context: &Value) -> Result<u16> {
+    context
+        .pointer("/units/year")
+        .and_then(Value::as_u64)
+        .and_then(|year| u16::try_from(year).ok())
+        .context("NRS context census year")
+}
+
+fn default_nrs_profiles(year: u16) -> (PathBuf, PathBuf) {
+    let suffix = if year == 2020 {
+        String::new()
+    } else {
+        format!("_{year}")
+    };
+    (
+        PathBuf::from(format!("configs/nrs_v0_1/standard_profile{suffix}.json")),
+        PathBuf::from(format!("configs/nrs_v0_1/legal_profile{suffix}.json")),
+    )
+}
+
+fn resolve_nrs_profiles(
+    year: u16,
+    standard_profile: Option<&Path>,
+    legal_profile: Option<&Path>,
+) -> (PathBuf, PathBuf) {
+    let defaults = default_nrs_profiles(year);
+    (
+        standard_profile.unwrap_or(&defaults.0).to_path_buf(),
+        legal_profile.unwrap_or(&defaults.1).to_path_buf(),
+    )
+}
+
+fn validate_nrs_profile_cycle(
+    year: u16,
+    standard_profile: &Value,
+    legal_profile: &Value,
+) -> Result<()> {
+    let cycles = standard_profile["effective_census_cycles"]
+        .as_array()
+        .context("NRS standard profile effective census cycles")?;
+    if !cycles
+        .iter()
+        .any(|cycle| cycle.as_u64() == Some(u64::from(year)))
+    {
+        bail!("NRS standard profile does not govern census year {year}");
+    }
+    if legal_profile["census_cycle"].as_u64() != Some(u64::from(year)) {
+        bail!("NRS legal profile does not govern census year {year}");
+    }
+    Ok(())
+}
+
 fn build_nrs_seed_package(
     context_path: &Path,
     districts: usize,
@@ -398,6 +468,8 @@ fn build_nrs_seed_package(
     {
         bail!("unknown NRS profile schema");
     }
+    let year = nrs_context_year(&context)?;
+    validate_nrs_profile_cycle(year, &standard_profile, &legal_profile)?;
     let unit_ids = context
         .pointer("/units/unit_ids")
         .and_then(Value::as_array)
@@ -434,9 +506,9 @@ fn build_nrs_seed_package(
         "adjacency_sha256":canonical_sha256(&Value::Array(adjacency.clone()))?,
         "algorithm_profile_sha256":canonical_sha256(&standard_profile)?,
         "canonicalization_version":"canonical-json-v1",
-        "census_release":"2020-PL94-171",
+        "census_release":format!("{year}-PL94-171"),
         "district_count":districts,
-        "geographic_vintage":"TIGER-Line-2020-tabulation-blocks",
+        "geographic_vintage":format!("TIGER-Line-{year}-tabulation-blocks"),
         "legal_profile_sha256":canonical_sha256(&legal_profile)?,
         "population_sha256":canonical_sha256(&Value::Array(populations.clone()))?,
         "reference_engine_sha256":canonical_sha256(reference_engine)?,
@@ -1259,6 +1331,7 @@ fn build_nrs_state(
         }
     }
     let context = read_json(context_path)?;
+    let year = nrs_context_year(&context)?;
     let bisect_executable_sha256 = sha256(bisect)?;
     let unit_ids = context
         .pointer("/units/unit_ids")
@@ -1313,7 +1386,7 @@ fn build_nrs_state(
         .all(|node| node["population_floor"]["attained"] == true);
     let tree = json!({
         "schema_version":"nrs-baseline-tree-v0.1-v1","state":context["units"]["state"],
-        "year":2020,"districts":districts,"engine_seed_i32":engine_seed,
+        "year":year,"districts":districts,"engine_seed_i32":engine_seed,
         "unit_count":unit_ids.len(),"population_total":population_total,
         "nodes":state.nodes,"leaves":state.leaves,"assignment":state.assignment,
         "population_arithmetic_floor_all_nodes":all_floors,
@@ -1654,8 +1727,10 @@ fn verify_nrs_failure(package: &Path, context_path: &Path) -> Result<()> {
 fn write_nrs_batch_ledger(
     out: &Path,
     inventory: &Path,
+    year: u16,
     generated_at: &str,
     standard_profile_sha256: &str,
+    legal_profile_sha256: &str,
     bisect_executable_sha256: &str,
     rows: &BTreeMap<String, Value>,
 ) -> Result<()> {
@@ -1671,10 +1746,12 @@ fn write_nrs_batch_ledger(
     write_json(
         &out.join("ledger.json"),
         &json!({
-            "schema_version":"nrs-national-batch-ledger-v2",
+            "schema_version":"nrs-national-batch-ledger-v3",
+            "census_year":year,
             "generated_at":generated_at,
             "inventory_sha256":sha256(inventory)?,
             "standard_profile_canonical_sha256":standard_profile_sha256,
+            "legal_profile_canonical_sha256":legal_profile_sha256,
             "bisect_executable_sha256":bisect_executable_sha256,
             "verified_count":verified,"failed_count":failed,"results":results,
             "claim_boundary":"Resumable NRS v0.1 reference-baseline execution ledger. State package verification is independent; complete national coverage is claimed only after verify-nrs-batch --require-complete passes."
@@ -1686,12 +1763,19 @@ fn write_nrs_batch_ledger(
 fn nrs_package_matches_execution_identity(
     package: &Path,
     standard_profile_sha256: &str,
+    legal_profile_sha256: &str,
     bisect_executable_sha256: &str,
     failure: bool,
 ) -> Result<bool> {
     let packaged_profile = package.join("seed/standard_profile.json");
     if !packaged_profile.is_file()
         || canonical_sha256(&read_json(&packaged_profile)?)? != standard_profile_sha256
+    {
+        return Ok(false);
+    }
+    let packaged_legal_profile = package.join("seed/legal_profile.json");
+    if !packaged_legal_profile.is_file()
+        || canonical_sha256(&read_json(&packaged_legal_profile)?)? != legal_profile_sha256
     {
         return Ok(false);
     }
@@ -1706,14 +1790,25 @@ fn nrs_package_matches_execution_identity(
     Ok(read_json(&identity_record)?["bisect_executable_sha256"] == bisect_executable_sha256)
 }
 
-fn nrs_seed_matches_standard_profile(seed: &Path, standard_profile_sha256: &str) -> Result<bool> {
-    let profile = seed.join("standard_profile.json");
-    Ok(profile.is_file() && canonical_sha256(&read_json(&profile)?)? == standard_profile_sha256)
+fn nrs_seed_matches_profiles(
+    seed: &Path,
+    standard_profile_sha256: &str,
+    legal_profile_sha256: &str,
+) -> Result<bool> {
+    let standard = seed.join("standard_profile.json");
+    let legal = seed.join("legal_profile.json");
+    Ok(standard.is_file()
+        && legal.is_file()
+        && canonical_sha256(&read_json(&standard)?)? == standard_profile_sha256
+        && canonical_sha256(&read_json(&legal)?)? == legal_profile_sha256)
 }
 
 fn nrs_batch(
+    year: u16,
     bisect: &Path,
     inventory_path: &Path,
+    standard_profile_path: &Path,
+    legal_profile_path: &Path,
     out: &Path,
     generated_at: &str,
     limit: Option<usize>,
@@ -1721,9 +1816,14 @@ fn nrs_batch(
     retry_failed: bool,
 ) -> Result<()> {
     let inventory = read_json(inventory_path)?;
-    let standard_profile_sha256 = canonical_sha256(&read_json(Path::new(
-        "configs/nrs_v0_1/standard_profile.json",
-    ))?)?;
+    if inventory["census_year"].as_u64() != Some(u64::from(year)) {
+        bail!("NRS inventory census year does not match --year {year}");
+    }
+    let standard_profile = read_json(standard_profile_path)?;
+    let legal_profile = read_json(legal_profile_path)?;
+    validate_nrs_profile_cycle(year, &standard_profile, &legal_profile)?;
+    let standard_profile_sha256 = canonical_sha256(&standard_profile)?;
+    let legal_profile_sha256 = canonical_sha256(&legal_profile)?;
     let bisect_executable_sha256 = sha256(bisect)?;
     let selected: BTreeSet<String> = selected_states
         .iter()
@@ -1732,10 +1832,12 @@ fn nrs_batch(
     let ledger_path = out.join("ledger.json");
     let mut rows: BTreeMap<String, Value> = if ledger_path.is_file() {
         let ledger = read_json(&ledger_path)?;
-        if ledger["schema_version"] != "nrs-national-batch-ledger-v2"
+        if ledger["schema_version"] != "nrs-national-batch-ledger-v3"
+            || ledger["census_year"].as_u64() != Some(u64::from(year))
             || ledger["inventory_sha256"] != sha256(inventory_path)?
             || ledger["generated_at"] != generated_at
             || ledger["standard_profile_canonical_sha256"] != standard_profile_sha256
+            || ledger["legal_profile_canonical_sha256"] != legal_profile_sha256
             || ledger["bisect_executable_sha256"] != bisect_executable_sha256
         {
             bail!("NRS national ledger identity mismatch");
@@ -1779,7 +1881,8 @@ fn nrs_batch(
     for row in candidates {
         let state = row["state"].as_str().context("NRS state")?.to_owned();
         let lower = state.to_lowercase();
-        let context_path = PathBuf::from(format!("data/2020/certified/{lower}_blocks_2020.rctx"));
+        let context_path =
+            PathBuf::from(format!("data/{year}/certified/{lower}_blocks_{year}.rctx"));
         let state_root = out.join("states").join(&lower);
         let package = state_root.join("package");
         let staging = state_root.join("package.in-progress");
@@ -1788,6 +1891,7 @@ fn nrs_batch(
             && nrs_package_matches_execution_identity(
                 &package,
                 &standard_profile_sha256,
+                &legal_profile_sha256,
                 &bisect_executable_sha256,
                 false,
             )?
@@ -1821,6 +1925,7 @@ fn nrs_batch(
             && nrs_package_matches_execution_identity(
                 &package,
                 &standard_profile_sha256,
+                &legal_profile_sha256,
                 &bisect_executable_sha256,
                 true,
             )?
@@ -1843,8 +1948,10 @@ fn nrs_batch(
     write_nrs_batch_ledger(
         out,
         inventory_path,
+        year,
         generated_at,
         &standard_profile_sha256,
+        &legal_profile_sha256,
         &bisect_executable_sha256,
         &rows,
     )?;
@@ -1857,7 +1964,11 @@ fn nrs_batch(
             remove_path(&staging)?;
             if seed.exists()
                 && (verify_nrs_seed_package(&seed, &context_path).is_err()
-                    || !nrs_seed_matches_standard_profile(&seed, &standard_profile_sha256)?)
+                    || !nrs_seed_matches_profiles(
+                        &seed,
+                        &standard_profile_sha256,
+                        &legal_profile_sha256,
+                    )?)
             {
                 remove_path(&seed)?;
             }
@@ -1873,6 +1984,7 @@ fn nrs_batch(
                     && nrs_package_matches_execution_identity(
                         &staging,
                         &standard_profile_sha256,
+                        &legal_profile_sha256,
                         &bisect_executable_sha256,
                         false,
                     )?
@@ -1893,6 +2005,7 @@ fn nrs_batch(
                     && nrs_package_matches_execution_identity(
                         &staging,
                         &standard_profile_sha256,
+                        &legal_profile_sha256,
                         &bisect_executable_sha256,
                         true,
                     )?
@@ -1915,7 +2028,11 @@ fn nrs_batch(
                 remove_path(&package)?;
                 if seed.exists()
                     && (verify_nrs_seed_package(&seed, &context_path).is_err()
-                        || !nrs_seed_matches_standard_profile(&seed, &standard_profile_sha256)?)
+                        || !nrs_seed_matches_profiles(
+                            &seed,
+                            &standard_profile_sha256,
+                            &legal_profile_sha256,
+                        )?)
                 {
                     remove_path(&seed)?;
                 }
@@ -1923,8 +2040,8 @@ fn nrs_batch(
                     build_nrs_seed_package(
                         &context_path,
                         districts,
-                        Path::new("configs/nrs_v0_1/standard_profile.json"),
-                        Path::new("configs/nrs_v0_1/legal_profile.json"),
+                        standard_profile_path,
+                        legal_profile_path,
                         &seed,
                         generated_at,
                     )?;
@@ -1994,24 +2111,47 @@ fn nrs_batch(
         write_nrs_batch_ledger(
             out,
             inventory_path,
+            year,
             generated_at,
             &standard_profile_sha256,
+            &legal_profile_sha256,
             &bisect_executable_sha256,
             &rows,
         )?;
     }
-    verify_nrs_batch(inventory_path, out, false)
+    verify_nrs_batch(
+        year,
+        inventory_path,
+        standard_profile_path,
+        legal_profile_path,
+        out,
+        false,
+    )
 }
 
-fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -> Result<()> {
+fn verify_nrs_batch(
+    year: u16,
+    inventory_path: &Path,
+    standard_profile_path: &Path,
+    legal_profile_path: &Path,
+    out: &Path,
+    require_complete: bool,
+) -> Result<()> {
     let inventory = read_json(inventory_path)?;
     let ledger = read_json(&out.join("ledger.json"))?;
-    let standard_profile_sha256 = canonical_sha256(&read_json(Path::new(
-        "configs/nrs_v0_1/standard_profile.json",
-    ))?)?;
-    if ledger["schema_version"] != "nrs-national-batch-ledger-v2"
+    if inventory["census_year"].as_u64() != Some(u64::from(year)) {
+        bail!("NRS inventory census year does not match --year {year}");
+    }
+    let standard_profile = read_json(standard_profile_path)?;
+    let legal_profile = read_json(legal_profile_path)?;
+    validate_nrs_profile_cycle(year, &standard_profile, &legal_profile)?;
+    let standard_profile_sha256 = canonical_sha256(&standard_profile)?;
+    let legal_profile_sha256 = canonical_sha256(&legal_profile)?;
+    if ledger["schema_version"] != "nrs-national-batch-ledger-v3"
+        || ledger["census_year"].as_u64() != Some(u64::from(year))
         || ledger["inventory_sha256"] != sha256(inventory_path)?
         || ledger["standard_profile_canonical_sha256"] != standard_profile_sha256
+        || ledger["legal_profile_canonical_sha256"] != legal_profile_sha256
     {
         bail!("NRS national batch ledger identity mismatch");
     }
@@ -2042,7 +2182,7 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
             }
             let package = out.join(relative);
             let context_path = PathBuf::from(format!(
-                "data/2020/certified/{}_blocks_2020.rctx",
+                "data/{year}/certified/{}_blocks_{year}.rctx",
                 state.to_lowercase()
             ));
             verify_nrs_state(&package, &context_path)?;
@@ -2051,6 +2191,9 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
                 ledger["standard_profile_canonical_sha256"]
                     .as_str()
                     .context("NRS ledger standard profile hash")?,
+                ledger["legal_profile_canonical_sha256"]
+                    .as_str()
+                    .context("NRS ledger legal profile hash")?,
                 ledger["bisect_executable_sha256"]
                     .as_str()
                     .context("NRS ledger executable hash")?,
@@ -2077,7 +2220,7 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
                     .context("NRS failure parent")?
                     .to_path_buf();
                 let context_path = PathBuf::from(format!(
-                    "data/2020/certified/{}_blocks_2020.rctx",
+                    "data/{year}/certified/{}_blocks_{year}.rctx",
                     state.to_lowercase()
                 ));
                 verify_nrs_failure(&package, &context_path)?;
@@ -2086,6 +2229,9 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
                     ledger["standard_profile_canonical_sha256"]
                         .as_str()
                         .context("NRS ledger standard profile hash")?,
+                    ledger["legal_profile_canonical_sha256"]
+                        .as_str()
+                        .context("NRS ledger legal profile hash")?,
                     ledger["bisect_executable_sha256"]
                         .as_str()
                         .context("NRS ledger executable hash")?,
@@ -2111,8 +2257,47 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
     Ok(())
 }
 
-fn summarize_nrs_batch(inventory_path: &Path, out: &Path, report_dir: &Path) -> Result<()> {
-    verify_nrs_batch(inventory_path, out, true)?;
+fn summarize_nrs_batch(
+    year: u16,
+    inventory_path: &Path,
+    standard_profile_path: &Path,
+    legal_profile_path: &Path,
+    out: &Path,
+    report_dir: &Path,
+) -> Result<()> {
+    verify_nrs_batch(
+        year,
+        inventory_path,
+        standard_profile_path,
+        legal_profile_path,
+        out,
+        true,
+    )?;
+    let inventory = read_json(inventory_path)?;
+    let inventory_rows = inventory["states"]
+        .as_array()
+        .context("NRS inventory states")?;
+    let expected_units: u64 = inventory_rows
+        .iter()
+        .map(|row| row["block_count"].as_u64().context("inventory block count"))
+        .sum::<Result<_>>()?;
+    let expected_districts: u64 = inventory_rows
+        .iter()
+        .map(|row| row["districts"].as_u64().context("inventory districts"))
+        .sum::<Result<_>>()?;
+    let expected_nodes: u64 = inventory_rows
+        .iter()
+        .map(|row| {
+            row["districts"]
+                .as_u64()
+                .context("inventory districts")
+                .map(|d| d - 1)
+        })
+        .sum::<Result<_>>()?;
+    let single_district_states = inventory_rows
+        .iter()
+        .filter(|row| row["districts"].as_u64() == Some(1))
+        .count();
     let ledger_path = out.join("ledger.json");
     let ledger = read_json(&ledger_path)?;
     let mut rows = Vec::new();
@@ -2183,19 +2368,23 @@ fn summarize_nrs_batch(inventory_path: &Path, out: &Path, report_dir: &Path) -> 
         }));
     }
     rows.sort_by_key(|row| row["state"].as_str().unwrap_or("").to_owned());
-    if total_units != 8_126_956 || total_districts != 435 || total_nodes != 385 || rows.len() != 50
+    if total_units != expected_units
+        || total_districts != expected_districts
+        || total_nodes != expected_nodes
+        || rows.len() != inventory_rows.len()
     {
         bail!("NRS national publication aggregate mismatch");
     }
     fs::create_dir_all(report_dir)?;
     let state_count = rows.len();
-    let claim = "NRS v0.1 generated and independently verified complete 2020 block assignments for all 50 States and all 435 districts. All 385 recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.";
+    let claim = format!("NRS v0.1 generated and independently verified complete {year} block assignments for all {state_count} States and all {total_districts} districts. All {total_nodes} recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.");
     let summary_path = report_dir.join("national-summary.json");
     write_json(
         &summary_path,
         &json!({
             "schema_version":"nrs-national-summary-v0.1-v1",
             "status":"verified-national-reference-baseline",
+            "census_year":year,
             "state_count":state_count,"district_count":total_districts,
             "recursive_node_count":total_nodes,"unit_count":total_units,
             "population_total":total_population,"omitted_units":0,"duplicate_units":0,
@@ -2219,7 +2408,7 @@ fn summarize_nrs_batch(inventory_path: &Path, out: &Path, report_dir: &Path) -> 
             "population_exact":{"proved_nodes":arithmetic_floor_nodes,"unproved_nodes":total_nodes-arithmetic_floor_nodes,"coverage_rate":arithmetic_floor_nodes as f64/total_nodes as f64,"proof_kind":"ratio-arithmetic-floor-when-attained"},
             "boundary":{"proved_nodes":0,"unproved_nodes":total_nodes,"coverage_rate":0.0,"status":"not-run"},
             "canonical":{"proved_nodes":0,"unproved_nodes":total_nodes,"coverage_rate":0.0,"status":"blocked-by-boundary"},
-            "single_district_states":{"count":6,"objective_proofs":"not-applicable"},
+            "single_district_states":{"count":single_district_states,"objective_proofs":"not-applicable"},
             "claim_boundary":claim
         }),
         true,
@@ -4393,32 +4582,70 @@ fn main() -> Result<()> {
         ),
         Action::VerifyNrsState { package, context } => verify_nrs_state(&package, &context),
         Action::NrsBatch {
+            year,
             bisect,
             inventory,
+            standard_profile,
+            legal_profile,
             out_dir,
             generated_at,
             limit,
             states,
             retry_failed,
-        } => nrs_batch(
-            &bisect,
-            &inventory,
-            &out_dir,
-            &generated_at,
-            limit,
-            &states,
-            retry_failed,
-        ),
+        } => {
+            let profiles =
+                resolve_nrs_profiles(year, standard_profile.as_deref(), legal_profile.as_deref());
+            nrs_batch(
+                year,
+                &bisect,
+                &inventory,
+                &profiles.0,
+                &profiles.1,
+                &out_dir,
+                &generated_at,
+                limit,
+                &states,
+                retry_failed,
+            )
+        }
         Action::VerifyNrsBatch {
+            year,
             inventory,
+            standard_profile,
+            legal_profile,
             out_dir,
             require_complete,
-        } => verify_nrs_batch(&inventory, &out_dir, require_complete),
+        } => {
+            let profiles =
+                resolve_nrs_profiles(year, standard_profile.as_deref(), legal_profile.as_deref());
+            verify_nrs_batch(
+                year,
+                &inventory,
+                &profiles.0,
+                &profiles.1,
+                &out_dir,
+                require_complete,
+            )
+        }
         Action::SummarizeNrsBatch {
+            year,
             inventory,
+            standard_profile,
+            legal_profile,
             out_dir,
             report_dir,
-        } => summarize_nrs_batch(&inventory, &out_dir, &report_dir),
+        } => {
+            let profiles =
+                resolve_nrs_profiles(year, standard_profile.as_deref(), legal_profile.as_deref());
+            summarize_nrs_batch(
+                year,
+                &inventory,
+                &profiles.0,
+                &profiles.1,
+                &out_dir,
+                &report_dir,
+            )
+        }
         Action::RctxBatch {
             year,
             inventory,
