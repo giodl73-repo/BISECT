@@ -123,3 +123,12 @@ stopped before a terminal artifact was emitted. That interruption is a runtime
 diagnostic, not an algorithm failure. Production national certification must
 use optimized release executables in a fresh ledger because ledger v2 forbids
 mixing executable hashes.
+
+The first release-mode NC rerun reached `111` in under 41 seconds, then spent
+about ten CPU-minutes inside that one repair without terminating. Inspection
+showed that NRS repair was continuing toward the arithmetic floor even after
+meeting the frozen 0.5% generation tolerance. Commit `7aa8fbdb` makes that
+tolerance the deterministic NRS repair stopping rule. Other discovery modes
+retain arithmetic-floor repair. This narrows work to the criterion the profile
+actually requires and avoids repeatedly rebuilding 16 DFS analyses for
+population improvements that cannot change pass/fail status.
