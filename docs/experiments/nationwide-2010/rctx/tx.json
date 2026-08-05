@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:bc1df1110a211ac2ac243524b7715594688b5f1cf883f1b739710c85a1c7e5fc",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 2228136,
+  "population_total": 25145561,
+  "rctx_bytes": 242187518,
+  "rctx_path": "data/2010/certified/tx_blocks_2010.rctx",
+  "rctx_sha256": "0d02f5f64628041bb1d77be87630bc8c6ed0df10312e5e24fd32aa033ccdaca3",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Texas",
+  "state_code": "TX",
+  "state_fips": "48",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_48_tabblock10.zip",
+  "tiger_archive_sha256": "418f7558a658ac808aee3226a502eb5e85b0d59877f893e2128de4f9d6d58299",
+  "unit_count": 914231,
+  "unit_universe_hash": "sha256:e55f062f6079d0632289f4804117570fe8c987d2cd6c06d077bebd979dee7e24",
+  "year": 2010
+}

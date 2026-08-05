@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 2,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:1b82ff6dccd5acfdf927a41b04f0945f6731ec27b4bd4909aa3ae4f6140a13c3",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 3,
+  "land_edge_count": 854772,
+  "population_total": 19378102,
+  "rctx_bytes": 92510294,
+  "rctx_path": "data/2010/certified/ny_blocks_2010.rctx",
+  "rctx_sha256": "a1d1bd75c3922f890f15336d3b43f0e987d5191e89e0f8021788dc3e08585408",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "New York",
+  "state_code": "NY",
+  "state_fips": "36",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_36_tabblock10.zip",
+  "tiger_archive_sha256": "e03c0ed2df6f211d15d4f37352ef1494b64b132ed27b6d12324dca4600553718",
+  "unit_count": 350169,
+  "unit_universe_hash": "sha256:1e3de1932233068df8bd174b9fbb2dd33b9c004b480be279101785959cbe4e0e",
+  "year": 2010
+}

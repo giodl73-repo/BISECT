@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:1537e945eac3cc82bca89e7259e1884eea7e1606c1cf1ca9d906833b67f39fdd",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 456927,
+  "population_total": 1826341,
+  "rctx_bytes": 49376523,
+  "rctx_path": "data/2010/certified/ne_blocks_2010.rctx",
+  "rctx_sha256": "50a7d3fd2165e43aa8285ae0b9e3f1b463290ba46f679eb7816993d8d3acb3cc",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Nebraska",
+  "state_code": "NE",
+  "state_fips": "31",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_31_tabblock10.zip",
+  "tiger_archive_sha256": "af1f64a30192e1048600be58412c0a6ccfc888876e974913aad0d8e8f87ef39e",
+  "unit_count": 193352,
+  "unit_universe_hash": "sha256:506bf71a01476ab275f7f3e99b632648f3329eda43bdbab5f30794c968bae0d1",
+  "year": 2010
+}

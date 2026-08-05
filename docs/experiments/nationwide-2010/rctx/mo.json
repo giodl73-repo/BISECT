@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:e37e891c71c390a6679b44abb12a3b8b6121bd452de9bd8ecd721a9110ef58e0",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 828284,
+  "population_total": 5988927,
+  "rctx_bytes": 89674338,
+  "rctx_path": "data/2010/certified/mo_blocks_2010.rctx",
+  "rctx_sha256": "41b30059d3c7d693751fae80a4ecf899d7e79e31d58048c79b52d25ec9006b3a",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Missouri",
+  "state_code": "MO",
+  "state_fips": "29",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_29_tabblock10.zip",
+  "tiger_archive_sha256": "a4da245bd42636fd9a8d5ff8ea7cc96fc1cc075c7404d55c0722f829912ec88b",
+  "unit_count": 343565,
+  "unit_universe_hash": "sha256:f7fc778c5ca69c06f112095ca6914c1e4c3c3636a10dc7e7a5a3222399444492",
+  "year": 2010
+}

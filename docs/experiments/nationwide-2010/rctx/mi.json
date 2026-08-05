@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:a0428c310675a3b4852cf989eb3799beda13e1a1d5e6f435d8199de69a179239",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 789045,
+  "population_total": 9883640,
+  "rctx_bytes": 85616413,
+  "rctx_path": "data/2010/certified/mi_blocks_2010.rctx",
+  "rctx_sha256": "ba19ba2427fb90ad60b4b42928125c6d9ad5cc5efc1be56337c847bf77c4c20e",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Michigan",
+  "state_code": "MI",
+  "state_fips": "26",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_26_tabblock10.zip",
+  "tiger_archive_sha256": "3a67ec7d7e47e766153457b0b2b5bca4471267e80e2d2ed798a8a5450742823f",
+  "unit_count": 329885,
+  "unit_universe_hash": "sha256:eef743d6a680b0eaf5f3ab81de4f3b755b5a85953277dc54feb2317ce8260943",
+  "year": 2010
+}

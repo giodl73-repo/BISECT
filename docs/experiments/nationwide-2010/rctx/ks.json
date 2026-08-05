@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:c1c2113d5cab7c9811b98fc17bc5d6f6c9170255aa44a8ee1b2e689704477d9b",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 560899,
+  "population_total": 2853118,
+  "rctx_bytes": 60816828,
+  "rctx_path": "data/2010/certified/ks_blocks_2010.rctx",
+  "rctx_sha256": "56cc9a2f1aa21d87d1274aa1668547ab1aed89fc8314a667f4c8a78fee4730ad",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Kansas",
+  "state_code": "KS",
+  "state_fips": "20",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_20_tabblock10.zip",
+  "tiger_archive_sha256": "0ff79199465cc121c5441a8b10eb198d61b90bf3fdf915d86adbe0274dfd8f13",
+  "unit_count": 238600,
+  "unit_universe_hash": "sha256:95b04c43538382d5f3f15df864b115eb2118629d54a2e76c38b9e0599e25c844",
+  "year": 2010
+}

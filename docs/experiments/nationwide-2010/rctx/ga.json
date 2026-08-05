@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:677ff6a935e545bbbc4e3f39cbcda3b495b402a4acdaf1304871411909d0bc7f",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 709028,
+  "population_total": 9687653,
+  "rctx_bytes": 76776606,
+  "rctx_path": "data/2010/certified/ga_blocks_2010.rctx",
+  "rctx_sha256": "f96ba3ae093b6ba636a13a65704090b246256eb99928c39ab1c4a3708db1165e",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Georgia",
+  "state_code": "GA",
+  "state_fips": "13",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_13_tabblock10.zip",
+  "tiger_archive_sha256": "989ebb9d6142f45cc16ee1964e35be5f7efda9fb5de720cc095f1926b9ba668c",
+  "unit_count": 291086,
+  "unit_universe_hash": "sha256:3fd404eb722cb5d4010f8ee99661d7bbe78f2951d00b999b5562822664d6addf",
+  "year": 2010
+}

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 15,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:01cb38d0282773f1569a8844b24b4bd1ca11855e124fb5e869f42ef2e2eaaeb6",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 2,
+  "land_edge_count": 1173147,
+  "population_total": 18801310,
+  "rctx_bytes": 127062668,
+  "rctx_path": "data/2010/certified/fl_blocks_2010.rctx",
+  "rctx_sha256": "ec272c5e80d6237fca3dde2900c801a4e536df7444fbc7751b131070b2586973",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Florida",
+  "state_code": "FL",
+  "state_fips": "12",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_12_tabblock10.zip",
+  "tiger_archive_sha256": "f5054b9d465aa8f9f358bb30c3fd654af929ba33bf2b4231ddd6ae165b3bddde",
+  "unit_count": 484481,
+  "unit_universe_hash": "sha256:5f9e3d9ab92d389a2a2eaa319d82a3b7d972ca367af7bcaa38b01f72ecd6311e",
+  "year": 2010
+}

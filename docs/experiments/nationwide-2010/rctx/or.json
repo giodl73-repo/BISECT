@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:b1b9ae9d808cf25112ec9793a25b98e22e4dbef151ae96d143b7695a763c77e5",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 489756,
+  "population_total": 3831074,
+  "rctx_bytes": 52734210,
+  "rctx_path": "data/2010/certified/or_blocks_2010.rctx",
+  "rctx_sha256": "ae630eb2c617fa4be20a8eba5815b4d48df1a8db5fc0d9ad0cead72ea3961789",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Oregon",
+  "state_code": "OR",
+  "state_fips": "41",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_41_tabblock10.zip",
+  "tiger_archive_sha256": "ead7f2b05d47828f6592aba8ea277c87c9e351a63303e5830968920aaa88774f",
+  "unit_count": 196621,
+  "unit_universe_hash": "sha256:9236612e751bdef881e0efb5d035468b122edc9d549c0af2e8f382a8f2498527",
+  "year": 2010
+}

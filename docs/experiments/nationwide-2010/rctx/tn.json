@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:e4276907983efab124a37fe0053821cc922884a1199010a5dd1acf0c25cdb35a",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 596983,
+  "population_total": 6346105,
+  "rctx_bytes": 64371044,
+  "rctx_path": "data/2010/certified/tn_blocks_2010.rctx",
+  "rctx_sha256": "9de7f9eb9b902f28344997da42b3880fc755dc12c932184eebdb9b04e0e03655",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Tennessee",
+  "state_code": "TN",
+  "state_fips": "47",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_47_tabblock10.zip",
+  "tiger_archive_sha256": "80f73fe555833406d64dad51bb39d86ec5583ff774016a31a8747e3ff45b4347",
+  "unit_count": 240116,
+  "unit_universe_hash": "sha256:a327a13ada1fff81d86b4c6af9024585ded9c805ca1da89b6dd9d866b4f5f4ba",
+  "year": 2010
+}

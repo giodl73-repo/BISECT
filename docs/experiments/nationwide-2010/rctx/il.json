@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:4c240ee1437e49fb0da3d40b8f05ebd40cf89049bf8651889565db2ac790cede",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 1082232,
+  "population_total": 12830632,
+  "rctx_bytes": 117291454,
+  "rctx_path": "data/2010/certified/il_blocks_2010.rctx",
+  "rctx_sha256": "7368c64e1e38b86c8e324112c237c9fc1a599e81ebf02afb2b1a00d288b488bb",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Illinois",
+  "state_code": "IL",
+  "state_fips": "17",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_17_tabblock10.zip",
+  "tiger_archive_sha256": "62c524b6bf8e3a94c397d0186c086a74eac42c23c687e42a7b01344b5563c045",
+  "unit_count": 451554,
+  "unit_universe_hash": "sha256:cdb2b851a249b2f67190af5aa78b4364f3114dea69adca382946997faf8329a8",
+  "year": 2010
+}

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:48be5d6d277ef7d0924aae6bef211e5013ddf7cb20098bb36860fcf5a77aa51f",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 615241,
+  "population_total": 4779736,
+  "rctx_bytes": 66432522,
+  "rctx_path": "data/2010/certified/al_blocks_2010.rctx",
+  "rctx_sha256": "5ef1c0a45ec6ceadc6bb40188e6bb5f8dea81c4aad43b005c8eab5308d29a6b8",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Alabama",
+  "state_code": "AL",
+  "state_fips": "01",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_01_tabblock10.zip",
+  "tiger_archive_sha256": "70a8e0a9519ac313d5fdca366942d78afcde672e7bbdf57b54a302b497fb2199",
+  "unit_count": 252266,
+  "unit_universe_hash": "sha256:0107625f2369234e1e6724b22d84235dcda7c6e627b9452b904033dcc0539efd",
+  "year": 2010
+}

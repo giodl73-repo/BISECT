@@ -1,41 +1,14 @@
 {
-  "bridge_edge_count": 19146,
+  "bridge_edge_count": 19481,
   "claim_boundary": "Local 2010 block contexts listed as verified are independently checked for hash validity, canonical unit coverage, symmetric connected adjacency, and available source hashes. Complete national context coverage is claimed only when all 50 States pass; no district assignments are claimed.",
-  "complete": false,
-  "edge_count": 6364784,
-  "missing_state_count": 26,
-  "missing_states": [
-    "AL",
-    "AZ",
-    "CA",
-    "CO",
-    "FL",
-    "GA",
-    "IA",
-    "IL",
-    "IN",
-    "KS",
-    "LA",
-    "MI",
-    "MN",
-    "MO",
-    "NC",
-    "NE",
-    "NY",
-    "OH",
-    "OK",
-    "OR",
-    "PA",
-    "TN",
-    "TX",
-    "VA",
-    "WA",
-    "WI"
-  ],
-  "population_total": 60810726,
-  "rctx_bytes": 682798249,
+  "complete": true,
+  "edge_count": 26873114,
+  "missing_state_count": 0,
+  "missing_states": [],
+  "population_total": 308143815,
+  "rctx_bytes": 2902855363,
   "schema_version": "certified-national-rctx-verification-v2",
-  "state_count": 24,
+  "state_count": 50,
   "states": [
     {
       "bridge_edge_count": 2911,
@@ -52,6 +25,19 @@
     },
     {
       "bridge_edge_count": 0,
+      "context_hash": "sha256:48be5d6d277ef7d0924aae6bef211e5013ddf7cb20098bb36860fcf5a77aa51f",
+      "edge_count": 615241,
+      "population_total": 4779736,
+      "rctx_bytes": 66432522,
+      "rctx_sha256": "5ef1c0a45ec6ceadc6bb40188e6bb5f8dea81c4aad43b005c8eab5308d29a6b8",
+      "source_files_rehashed": 6,
+      "state": "AL",
+      "status": "verified",
+      "unit_count": 252266,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
       "context_hash": "sha256:292e2504be25bbb5ba039da6fdbc656f69da2b2e87f91e4e362c9656444236b9",
       "edge_count": 452155,
       "population_total": 2915918,
@@ -61,6 +47,45 @@
       "state": "AR",
       "status": "verified",
       "unit_count": 186211,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:f468580e7422e0304342b634ffd5d49706d81400863bfd219f134ff19d954657",
+      "edge_count": 598047,
+      "population_total": 6392017,
+      "rctx_bytes": 64477300,
+      "rctx_sha256": "db5efb17347ed190d1682b1c0bc071598e94f07990b7b46836af4826367bc3d1",
+      "source_files_rehashed": 6,
+      "state": "AZ",
+      "status": "verified",
+      "unit_count": 241666,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 318,
+      "context_hash": "sha256:c4f0ae85fb9d3775027867470af2895a14e3a953fb9b589b39a6f567bc6e5a51",
+      "edge_count": 1745001,
+      "population_total": 37253956,
+      "rctx_bytes": 189192422,
+      "rctx_sha256": "d6e3afd8950c8b2867d51cea6dac3b9ccff6fd5d9b5720baab81fc83ed3314b7",
+      "source_files_rehashed": 6,
+      "state": "CA",
+      "status": "verified",
+      "unit_count": 710145,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:c2b3525da8a12177eb01029dc915577cbdf3cc6b43e7c966c83a570a31cb62ef",
+      "edge_count": 487287,
+      "population_total": 5029196,
+      "rctx_bytes": 52550175,
+      "rctx_sha256": "7b3f447decc076ed170b86f3e25758970e6dd3cdc9e06084ddab5beb4190978e",
+      "source_files_rehashed": 6,
+      "state": "CO",
+      "status": "verified",
+      "unit_count": 201062,
       "year": 2010
     },
     {
@@ -90,6 +115,32 @@
       "year": 2010
     },
     {
+      "bridge_edge_count": 15,
+      "context_hash": "sha256:01cb38d0282773f1569a8844b24b4bd1ca11855e124fb5e869f42ef2e2eaaeb6",
+      "edge_count": 1173162,
+      "population_total": 18801310,
+      "rctx_bytes": 127062668,
+      "rctx_sha256": "ec272c5e80d6237fca3dde2900c801a4e536df7444fbc7751b131070b2586973",
+      "source_files_rehashed": 6,
+      "state": "FL",
+      "status": "verified",
+      "unit_count": 484481,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:677ff6a935e545bbbc4e3f39cbcda3b495b402a4acdaf1304871411909d0bc7f",
+      "edge_count": 709028,
+      "population_total": 9687653,
+      "rctx_bytes": 76776606,
+      "rctx_sha256": "f96ba3ae093b6ba636a13a65704090b246256eb99928c39ab1c4a3708db1165e",
+      "source_files_rehashed": 6,
+      "state": "GA",
+      "status": "verified",
+      "unit_count": 291086,
+      "year": 2010
+    },
+    {
       "bridge_edge_count": 16128,
       "context_hash": "sha256:94d2376430dc62e2fb64836c91100fd30d18fed38da3948cb987ec630a9258a8",
       "edge_count": 78191,
@@ -100,6 +151,19 @@
       "state": "HI",
       "status": "verified",
       "unit_count": 25016,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:efe1e587b4186a33816364c5bf1bea1151ef29de78ce3bc4273159c9b4892136",
+      "edge_count": 510585,
+      "population_total": 3046355,
+      "rctx_bytes": 55294269,
+      "rctx_sha256": "7e5443d283e341515c48d9fc50945c545f84069b5d3881425dfbe13058c2d24a",
+      "source_files_rehashed": 6,
+      "state": "IA",
+      "status": "verified",
+      "unit_count": 216007,
       "year": 2010
     },
     {
@@ -116,6 +180,45 @@
       "year": 2010
     },
     {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:4c240ee1437e49fb0da3d40b8f05ebd40cf89049bf8651889565db2ac790cede",
+      "edge_count": 1082232,
+      "population_total": 12830632,
+      "rctx_bytes": 117291454,
+      "rctx_sha256": "7368c64e1e38b86c8e324112c237c9fc1a599e81ebf02afb2b1a00d288b488bb",
+      "source_files_rehashed": 6,
+      "state": "IL",
+      "status": "verified",
+      "unit_count": 451554,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:dc11f95b87590dd67182380e12c034c38a7db21692b3714029a99a42c8dbcf11",
+      "edge_count": 640858,
+      "population_total": 6483802,
+      "rctx_bytes": 69257888,
+      "rctx_sha256": "500f104d1939f0d42813a234eb19486424ffb5bea693956a0a71247c52f08ac7",
+      "source_files_rehashed": 6,
+      "state": "IN",
+      "status": "verified",
+      "unit_count": 267071,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:c1c2113d5cab7c9811b98fc17bc5d6f6c9170255aa44a8ee1b2e689704477d9b",
+      "edge_count": 560899,
+      "population_total": 2853118,
+      "rctx_bytes": 60816828,
+      "rctx_sha256": "56cc9a2f1aa21d87d1274aa1668547ab1aed89fc8314a667f4c8a78fee4730ad",
+      "source_files_rehashed": 6,
+      "state": "KS",
+      "status": "verified",
+      "unit_count": 238600,
+      "year": 2010
+    },
+    {
       "bridge_edge_count": 7,
       "context_hash": "sha256:1ecb9d0a0d176db94e0acf097f9d68ddc50259e7a35274a42e90f2a9b7928ff8",
       "edge_count": 393896,
@@ -126,6 +229,19 @@
       "state": "KY",
       "status": "verified",
       "unit_count": 161672,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:176134fa884e1aa3b95c428229ce9729976a64fe6c69297b59fca48cc93eb141",
+      "edge_count": 490317,
+      "population_total": 4533372,
+      "rctx_bytes": 52926599,
+      "rctx_sha256": "b5beb2b13fe38117c3116829bb0277ebeccfd9cdefea5cac58bfd6a76ed988c5",
+      "source_files_rehashed": 6,
+      "state": "LA",
+      "status": "verified",
+      "unit_count": 204447,
       "year": 2010
     },
     {
@@ -169,6 +285,45 @@
     },
     {
       "bridge_edge_count": 0,
+      "context_hash": "sha256:a0428c310675a3b4852cf989eb3799beda13e1a1d5e6f435d8199de69a179239",
+      "edge_count": 789045,
+      "population_total": 9883640,
+      "rctx_bytes": 85616413,
+      "rctx_sha256": "ba19ba2427fb90ad60b4b42928125c6d9ad5cc5efc1be56337c847bf77c4c20e",
+      "source_files_rehashed": 6,
+      "state": "MI",
+      "status": "verified",
+      "unit_count": 329885,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:e2bb61899860260c1186995740377bdbf1eeef1707b9c3441b5c5ef5ae3842cc",
+      "edge_count": 613551,
+      "population_total": 5303925,
+      "rctx_bytes": 66613468,
+      "rctx_sha256": "cf7096a80d71f50c7cfd3b7b1a4e7a026831822a8190df51d918be2c6362fc76",
+      "source_files_rehashed": 6,
+      "state": "MN",
+      "status": "verified",
+      "unit_count": 259777,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:e37e891c71c390a6679b44abb12a3b8b6121bd452de9bd8ecd721a9110ef58e0",
+      "edge_count": 828284,
+      "population_total": 5988927,
+      "rctx_bytes": 89674338,
+      "rctx_sha256": "41b30059d3c7d693751fae80a4ecf899d7e79e31d58048c79b52d25ec9006b3a",
+      "source_files_rehashed": 6,
+      "state": "MO",
+      "status": "verified",
+      "unit_count": 343565,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
       "context_hash": "sha256:89159ca780c4fd0414b564c4331dfa80528a4a5d566afe06b1e28be787be1893",
       "edge_count": 419990,
       "population_total": 2967297,
@@ -195,6 +350,19 @@
     },
     {
       "bridge_edge_count": 0,
+      "context_hash": "sha256:e64da6dd36a3265c0ec321194ab5c814cb7d6dfa19ca5ff751a50ada14affd29",
+      "edge_count": 708310,
+      "population_total": 9535483,
+      "rctx_bytes": 76642020,
+      "rctx_sha256": "5186a43056c6c3f9c933590943ac1d4b97eb73718fec38d54e54d873e3100bff",
+      "source_files_rehashed": 6,
+      "state": "NC",
+      "status": "verified",
+      "unit_count": 288987,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
       "context_hash": "sha256:9ee5d2a7b2417a50c4ed1573f6dfde8f6b6186affbc48b44f2f34aebeeaffac8",
       "edge_count": 312973,
       "population_total": 672591,
@@ -204,6 +372,19 @@
       "state": "ND",
       "status": "verified",
       "unit_count": 133769,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:1537e945eac3cc82bca89e7259e1884eea7e1606c1cf1ca9d906833b67f39fdd",
+      "edge_count": 456927,
+      "population_total": 1826341,
+      "rctx_bytes": 49376523,
+      "rctx_sha256": "50a7d3fd2165e43aa8285ae0b9e3f1b463290ba46f679eb7816993d8d3acb3cc",
+      "source_files_rehashed": 6,
+      "state": "NE",
+      "status": "verified",
+      "unit_count": 193352,
       "year": 2010
     },
     {
@@ -259,6 +440,71 @@
       "year": 2010
     },
     {
+      "bridge_edge_count": 2,
+      "context_hash": "sha256:1b82ff6dccd5acfdf927a41b04f0945f6731ec27b4bd4909aa3ae4f6140a13c3",
+      "edge_count": 854774,
+      "population_total": 19378102,
+      "rctx_bytes": 92510294,
+      "rctx_sha256": "a1d1bd75c3922f890f15336d3b43f0e987d5191e89e0f8021788dc3e08585408",
+      "source_files_rehashed": 6,
+      "state": "NY",
+      "status": "verified",
+      "unit_count": 350169,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:eeaf23869e939886dd62c5c92bcf3fdc1c4525096a1e3fbc1b313ea0e607ff7c",
+      "edge_count": 884120,
+      "population_total": 11536504,
+      "rctx_bytes": 95648147,
+      "rctx_sha256": "dcbc927e5b3daa50c309ac2b9a0d0ce09a8fe8ee03e8db1913ecabc8e94c95a4",
+      "source_files_rehashed": 6,
+      "state": "OH",
+      "status": "verified",
+      "unit_count": 365344,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:4974a37a9ae3fefbc9e4f0e2909a12b94f138d9f7d1cdfe6bf3c64f2ee74a606",
+      "edge_count": 637074,
+      "population_total": 3751351,
+      "rctx_bytes": 69025895,
+      "rctx_sha256": "e223ba7a3baaaf09be054e60bf397bbd710458d2388b306d8f431af83e67a827",
+      "source_files_rehashed": 6,
+      "state": "OK",
+      "status": "verified",
+      "unit_count": 269118,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:b1b9ae9d808cf25112ec9793a25b98e22e4dbef151ae96d143b7695a763c77e5",
+      "edge_count": 489756,
+      "population_total": 3831074,
+      "rctx_bytes": 52734210,
+      "rctx_sha256": "ae630eb2c617fa4be20a8eba5815b4d48df1a8db5fc0d9ad0cead72ea3961789",
+      "source_files_rehashed": 6,
+      "state": "OR",
+      "status": "verified",
+      "unit_count": 196621,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:d0f8542882622817afc655fb06b459eb13f90cc8f933037c9e2386f4585f34d3",
+      "edge_count": 1029231,
+      "population_total": 12702379,
+      "rctx_bytes": 111262557,
+      "rctx_sha256": "3ee58667c72527f3ada0bcd99104fd580f2805fe6b5cb26e293173e69acb0fea",
+      "source_files_rehashed": 6,
+      "state": "PA",
+      "status": "verified",
+      "unit_count": 421545,
+      "year": 2010
+    },
+    {
       "bridge_edge_count": 100,
       "context_hash": "sha256:b6c6fae6d616d3a3f0b5b3fffed0f8b33ab541fe245b2ac795aa0a03a754b3cd",
       "edge_count": 62975,
@@ -299,6 +545,32 @@
     },
     {
       "bridge_edge_count": 0,
+      "context_hash": "sha256:e4276907983efab124a37fe0053821cc922884a1199010a5dd1acf0c25cdb35a",
+      "edge_count": 596983,
+      "population_total": 6346105,
+      "rctx_bytes": 64371044,
+      "rctx_sha256": "9de7f9eb9b902f28344997da42b3880fc755dc12c932184eebdb9b04e0e03655",
+      "source_files_rehashed": 6,
+      "state": "TN",
+      "status": "verified",
+      "unit_count": 240116,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:bc1df1110a211ac2ac243524b7715594688b5f1cf883f1b739710c85a1c7e5fc",
+      "edge_count": 2228136,
+      "population_total": 25145561,
+      "rctx_bytes": 242187518,
+      "rctx_sha256": "0d02f5f64628041bb1d77be87630bc8c6ed0df10312e5e24fd32aa033ccdaca3",
+      "source_files_rehashed": 6,
+      "state": "TX",
+      "status": "verified",
+      "unit_count": 914231,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
       "context_hash": "sha256:eea40f2751b89d3d7c1b22b48794e50694c20aa3e9d5d8153303c643aea00637",
       "edge_count": 286033,
       "population_total": 2763885,
@@ -312,6 +584,19 @@
     },
     {
       "bridge_edge_count": 0,
+      "context_hash": "sha256:d8b544c6c3458fe592fe694d053b854dd104a58509f3cd859cfa5c43940586cd",
+      "edge_count": 701064,
+      "population_total": 8001024,
+      "rctx_bytes": 75707535,
+      "rctx_sha256": "acf6a71625212ec991e2eaa455f635c1fb2604f289d5c917c3c901867878ffbc",
+      "source_files_rehashed": 6,
+      "state": "VA",
+      "status": "verified",
+      "unit_count": 285762,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
       "context_hash": "sha256:2e0e5faddb657c80530e79e691eb856add7f4efd33917a4e28d2d1609aef47c9",
       "edge_count": 77799,
       "population_total": 625741,
@@ -321,6 +606,32 @@
       "state": "VT",
       "status": "verified",
       "unit_count": 32580,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:288ebcf1f320b1185a72f6c22dac48ae927e181eee6aa4d7f3b80c7bb396f333",
+      "edge_count": 473716,
+      "population_total": 6724540,
+      "rctx_bytes": 51095329,
+      "rctx_sha256": "fd8807498560261fdf67de1fbd525343321b561524ed898517634fce9139fc63",
+      "source_files_rehashed": 6,
+      "state": "WA",
+      "status": "verified",
+      "unit_count": 195574,
+      "year": 2010
+    },
+    {
+      "bridge_edge_count": 0,
+      "context_hash": "sha256:96439a4782c6cfe0cd46897b8b71fe36f4271106cee4e7fa446e0cdcd1bed3cd",
+      "edge_count": 604702,
+      "population_total": 5686986,
+      "rctx_bytes": 65513092,
+      "rctx_sha256": "bdbfb3e2a2b9d3e7fc324c5d811eabca28a319c9e706ed49dc774bd6f2466720",
+      "source_files_rehashed": 6,
+      "state": "WI",
+      "status": "verified",
+      "unit_count": 253096,
       "year": 2010
     },
     {
@@ -350,7 +661,7 @@
       "year": 2010
     }
   ],
-  "status": "partial",
-  "unit_count": 2606263,
+  "status": "verified",
+  "unit_count": 11071790,
   "year": 2010
 }

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:f468580e7422e0304342b634ffd5d49706d81400863bfd219f134ff19d954657",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 598047,
+  "population_total": 6392017,
+  "rctx_bytes": 64477300,
+  "rctx_path": "data/2010/certified/az_blocks_2010.rctx",
+  "rctx_sha256": "db5efb17347ed190d1682b1c0bc071598e94f07990b7b46836af4826367bc3d1",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Arizona",
+  "state_code": "AZ",
+  "state_fips": "04",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_04_tabblock10.zip",
+  "tiger_archive_sha256": "33dcd4056eebf0c9d678a02d79a875e7e4db16dea43308811cb8f3be9907abdd",
+  "unit_count": 241666,
+  "unit_universe_hash": "sha256:9de58c32311d8d8659da851be4021ab762844e5214c8e0afec5d14d1bbb513b7",
+  "year": 2010
+}

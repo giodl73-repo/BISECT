@@ -15,10 +15,12 @@ baseline is constructed.
   the independent context verifier. The retained official Census ZIP and its
   `.shp`, `.dbf`, and `.shx` members are all independently re-hashed without
   retaining the extracted directory.
-- The resumable batch currently has 24 independently verified State contexts
-  covering 2,606,263 blocks and 60,810,726 people. Their graphs contain
-  6,364,784 undirected edges, including 19,146 governed island bridges.
-- The other 26 State TIGER inputs and RCTX files remain to be constructed.
+- The completed batch has 50 independently verified State contexts covering
+  11,071,790 blocks and 308,143,815 people. Their graphs contain 26,873,114
+  undirected edges, including 19,481 governed island bridges.
+- All 50 official Census TIGER ZIPs are retained under SHA-256 custody; no
+  extracted TIGER directory is required for independent re-verification.
+- The complete-gate verifier passes with zero missing States.
 
 Every retained PL and TIGER source is recorded with its relative path, byte
 length, and SHA-256 digest in `inventory.json`. The inventory remains

@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 318,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:c4f0ae85fb9d3775027867470af2895a14e3a953fb9b589b39a6f567bc6e5a51",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 7,
+  "land_edge_count": 1744683,
+  "population_total": 37253956,
+  "rctx_bytes": 189192422,
+  "rctx_path": "data/2010/certified/ca_blocks_2010.rctx",
+  "rctx_sha256": "d6e3afd8950c8b2867d51cea6dac3b9ccff6fd5d9b5720baab81fc83ed3314b7",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "California",
+  "state_code": "CA",
+  "state_fips": "06",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_06_tabblock10.zip",
+  "tiger_archive_sha256": "32bf6d543085c5e064b0033aa9f51c11a5dc28a95b8e6aa51de05f6038a203d3",
+  "unit_count": 710145,
+  "unit_universe_hash": "sha256:3b97447f93b35dc448b9b3d51139555bdd3038d269c626e283f91cfdf9d33dbe",
+  "year": 2010
+}

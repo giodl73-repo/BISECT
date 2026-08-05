@@ -84,7 +84,19 @@ foreach ($state in $States) {
             }
             Write-Host "$($state): download attempt $attempt"
             try {
-                Invoke-WebRequest -Uri $row.tiger_source_url -OutFile $partial
+                & curl.exe `
+                    --fail `
+                    --location `
+                    --connect-timeout 30 `
+                    --max-time 600 `
+                    --retry 3 `
+                    --retry-delay 2 `
+                    --retry-all-errors `
+                    --output $partial `
+                    $row.tiger_source_url
+                if ($LASTEXITCODE -ne 0) {
+                    throw "curl exited with code $LASTEXITCODE"
+                }
                 if (Test-TigerArchive -Path $partial -ExpectedShapefile $expectedShapefile) {
                     Move-Item -LiteralPath $partial -Destination $archive
                     $downloaded = $true

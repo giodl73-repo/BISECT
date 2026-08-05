@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:c2b3525da8a12177eb01029dc915577cbdf3cc6b43e7c966c83a570a31cb62ef",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 487287,
+  "population_total": 5029196,
+  "rctx_bytes": 52550175,
+  "rctx_path": "data/2010/certified/co_blocks_2010.rctx",
+  "rctx_sha256": "7b3f447decc076ed170b86f3e25758970e6dd3cdc9e06084ddab5beb4190978e",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Colorado",
+  "state_code": "CO",
+  "state_fips": "08",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_08_tabblock10.zip",
+  "tiger_archive_sha256": "95c3508ff1b49c9c464e54af2cb101d104feeb84ef40ef9365c32211b56a647f",
+  "unit_count": 201062,
+  "unit_universe_hash": "sha256:cadccbf73732848587b8c96b6b39508bd021deeb131f27b494db57723d0c9b19",
+  "year": 2010
+}

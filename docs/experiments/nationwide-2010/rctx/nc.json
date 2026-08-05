@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:e64da6dd36a3265c0ec321194ab5c814cb7d6dfa19ca5ff751a50ada14affd29",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 708310,
+  "population_total": 9535483,
+  "rctx_bytes": 76642020,
+  "rctx_path": "data/2010/certified/nc_blocks_2010.rctx",
+  "rctx_sha256": "5186a43056c6c3f9c933590943ac1d4b97eb73718fec38d54e54d873e3100bff",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "North Carolina",
+  "state_code": "NC",
+  "state_fips": "37",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_37_tabblock10.zip",
+  "tiger_archive_sha256": "c8062cbf3855bae7697041df820264e382aeb74322c64fd3c319a5572a1504bf",
+  "unit_count": 288987,
+  "unit_universe_hash": "sha256:5be5e22564c4fca4a8e05f50eb88581ad865e6a5e5d79d7e7cbf98b05566e67b",
+  "year": 2010
+}

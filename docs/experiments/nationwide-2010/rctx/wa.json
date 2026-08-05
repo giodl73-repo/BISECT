@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:288ebcf1f320b1185a72f6c22dac48ae927e181eee6aa4d7f3b80c7bb396f333",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 473716,
+  "population_total": 6724540,
+  "rctx_bytes": 51095329,
+  "rctx_path": "data/2010/certified/wa_blocks_2010.rctx",
+  "rctx_sha256": "fd8807498560261fdf67de1fbd525343321b561524ed898517634fce9139fc63",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Washington",
+  "state_code": "WA",
+  "state_fips": "53",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_53_tabblock10.zip",
+  "tiger_archive_sha256": "25aaa79fa9ab23595e430cd34588a8d28125bc61e1fb28902d23e2559de73e84",
+  "unit_count": 195574,
+  "unit_universe_hash": "sha256:3dae177d966459e30eebf463ccb0ccd4aa61c008932f18ef27fc403912f1920c",
+  "year": 2010
+}

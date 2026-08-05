@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:e2bb61899860260c1186995740377bdbf1eeef1707b9c3441b5c5ef5ae3842cc",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 613551,
+  "population_total": 5303925,
+  "rctx_bytes": 66613468,
+  "rctx_path": "data/2010/certified/mn_blocks_2010.rctx",
+  "rctx_sha256": "cf7096a80d71f50c7cfd3b7b1a4e7a026831822a8190df51d918be2c6362fc76",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Minnesota",
+  "state_code": "MN",
+  "state_fips": "27",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_27_tabblock10.zip",
+  "tiger_archive_sha256": "3802f2213cd31c637e58bac22143eed3b45fb5f627bb6c67f7a9bea8334f4553",
+  "unit_count": 259777,
+  "unit_universe_hash": "sha256:1b40cdfc7f098e562c0065d20da8568aa31ee09db533aa46e23699b7ec1ed436",
+  "year": 2010
+}

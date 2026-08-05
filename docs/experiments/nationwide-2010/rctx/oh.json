@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:eeaf23869e939886dd62c5c92bcf3fdc1c4525096a1e3fbc1b313ea0e607ff7c",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 884120,
+  "population_total": 11536504,
+  "rctx_bytes": 95648147,
+  "rctx_path": "data/2010/certified/oh_blocks_2010.rctx",
+  "rctx_sha256": "dcbc927e5b3daa50c309ac2b9a0d0ce09a8fe8ee03e8db1913ecabc8e94c95a4",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Ohio",
+  "state_code": "OH",
+  "state_fips": "39",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_39_tabblock10.zip",
+  "tiger_archive_sha256": "aee8fd34bc54a1eb4a53b4917c4f9334c75e8c9b99fa8b0421e75cc11c9f0788",
+  "unit_count": 365344,
+  "unit_universe_hash": "sha256:f0677ad6e8235f36910be1241e601ffba3c98cebce238753e757887fe0dcb9bc",
+  "year": 2010
+}

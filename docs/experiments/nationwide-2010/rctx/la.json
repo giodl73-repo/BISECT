@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:176134fa884e1aa3b95c428229ce9729976a64fe6c69297b59fca48cc93eb141",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 490317,
+  "population_total": 4533372,
+  "rctx_bytes": 52926599,
+  "rctx_path": "data/2010/certified/la_blocks_2010.rctx",
+  "rctx_sha256": "b5beb2b13fe38117c3116829bb0277ebeccfd9cdefea5cac58bfd6a76ed988c5",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Louisiana",
+  "state_code": "LA",
+  "state_fips": "22",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_22_tabblock10.zip",
+  "tiger_archive_sha256": "28884a9ee5b0c3aa01d5d95650f8e4366b6900cf1424e13143e90cd28216ec66",
+  "unit_count": 204447,
+  "unit_universe_hash": "sha256:93ee308bbff50623d53a631b68b74484e49b328a70e51729abbe8667d189eb99",
+  "year": 2010
+}

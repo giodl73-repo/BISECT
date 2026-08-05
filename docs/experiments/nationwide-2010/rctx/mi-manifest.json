@@ -1,0 +1,19 @@
+{
+  "builder_executable_path": "target/release/bisect-ops.exe",
+  "builder_executable_sha256": "1d10327c97539d9faf08836f2baca8677c0cffff1de1a02f421fa4ebdc6e3667",
+  "builder_path": "bisect-ops-rctx-builder-source-a68c498d6b2c9c1c.rs",
+  "builder_sha256": "a68c498d6b2c9c1cad9f5e3a80836290167bc9e894f4fbb804697434bac65f5a",
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "files": [
+    {
+      "path": "mi.json",
+      "sha256": "6b2ba1e7005cf9c637bb7591d1728884169d02c833e170956e5910b1c366aeca"
+    }
+  ],
+  "package_id": "mi-2010-block-rctx",
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_26_tabblock10.zip",
+  "tiger_archive_sha256": "3a67ec7d7e47e766153457b0b2b5bca4471267e80e2d2ed798a8a5450742823f",
+  "year": 2010
+}

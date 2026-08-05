@@ -1,0 +1,27 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:96439a4782c6cfe0cd46897b8b71fe36f4271106cee4e7fa446e0cdcd1bed3cd",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 604702,
+  "population_total": 5686986,
+  "rctx_bytes": 65513092,
+  "rctx_path": "data/2010/certified/wi_blocks_2010.rctx",
+  "rctx_sha256": "bdbfb3e2a2b9d3e7fc324c5d811eabca28a319c9e706ed49dc774bd6f2466720",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "Wisconsin",
+  "state_code": "WI",
+  "state_fips": "55",
+  "status": "ready",
+  "tiger_archive_path": "data/2010/tiger/archives/tl_2010_55_tabblock10.zip",
+  "tiger_archive_sha256": "7af64b8d760517d58300f9324dd0c54547314b91a35078396eba4efe1114aff4",
+  "unit_count": 253096,
+  "unit_universe_hash": "sha256:9e4cce2614e7897dffbafaaaf1f6797f1d40fae9bfaa33a87582b58236b38ef1",
+  "year": 2010
+}

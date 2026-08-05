@@ -31,8 +31,8 @@ verified 2020 national baseline.
 | Pulse | Status | Outcome |
 |---|---|---|
 | 01 - 2010 source and context inventory | COMPLETE | 50/50 PL packages hash-bound; 0/50 TIGER and RCTX; 11,071,790 blocks inventoried |
-| 02 - 2010 block RCTX generation | ACTIVE | Generalize decade parsing, then build and independently verify contexts |
-| 03 - 2010 NRS batch execution | PENDING | Generate resumable, identity-bound State packages |
+| 02 - 2010 block RCTX generation | COMPLETE | 50/50 archive-backed contexts independently verified; 11,071,790 blocks |
+| 03 - 2010 NRS batch execution | ACTIVE | Freeze governed 2010 identity and generate resumable State packages |
 | 04 - 2010 national verification | PENDING | Require complete wall-to-wall coverage |
 | 05 - decade comparison and publication | PENDING | Publish stability, runtime, and exact-proof matrices |
 
