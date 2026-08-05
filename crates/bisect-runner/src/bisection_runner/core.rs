@@ -383,7 +383,7 @@ fn split_subgraph_profile(
             } else {
                 graph
             };
-            if tpwgts.is_some() {
+            if tpwgts.is_some() && !enforce_metis_contiguity {
                 graph
                     .part_kway(&mut part)
                     .map_err(|e| format!("METIS kway bisection failed: {e}"))?;

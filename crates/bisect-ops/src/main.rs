@@ -988,7 +988,9 @@ impl NrsBuildState<'_> {
         prune(&node_dir)?;
         if discovery_seed(&discovery)? != self.engine_seed
             || !discovery["method"].as_str().is_some_and(|method| {
-                method.contains("niter=100") && method.contains("refinement=nrsv01")
+                method.contains("niter=100")
+                    && method.contains("partition-type=recursive")
+                    && method.contains("refinement=nrsv01")
             })
         {
             bail!("NRS discovery profile mismatch at node {path}");
@@ -1394,7 +1396,9 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
         if discovery["discovery_id"] != node["discovery_id"]
             || discovery_seed(&discovery)? != engine_seed
             || !discovery["method"].as_str().is_some_and(|method| {
-                method.contains("niter=100") && method.contains("refinement=nrsv01")
+                method.contains("niter=100")
+                    && method.contains("partition-type=recursive")
+                    && method.contains("refinement=nrsv01")
             })
             || objective(&discovery)? != &node["objective"]
         {

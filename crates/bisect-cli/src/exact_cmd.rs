@@ -67,7 +67,29 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     } else {
         10
     };
-    let mut assignment = if root.k_left == root.k_right {
+    let nrs_profile = args.discovery_refinement == DiscoveryRefinementArg::NrsV01;
+    let mut assignment = if nrs_profile {
+        let tpwgts = Some(vec![
+            root.k_left as f32 / root.k_parent as f32,
+            root.k_right as f32 / root.k_parent as f32,
+        ]);
+        let (left, _right) = bisect_runner::bisection_runner::split_subgraph_nrs_v0_1(
+            &adjacency,
+            populations,
+            1,
+            &edge_weights,
+            &units,
+            1.005,
+            niter,
+            Some(args.discovery_seed),
+            tpwgts,
+            None,
+        )
+        .map_err(|error| anyhow!("certified discovery METIS split failed: {error}"))?;
+        (0..root.unit_ids.len())
+            .map(|unit| if left.contains(&unit) { 0_u8 } else { 1_u8 })
+            .collect::<Vec<_>>()
+    } else if root.k_left == root.k_right {
         let partition = bisect_runner::bisection_runner::run_nway_partition(
             &adjacency,
             populations,
@@ -86,12 +108,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             root.k_left as f32 / root.k_parent as f32,
             root.k_right as f32 / root.k_parent as f32,
         ]);
-        let split = if args.discovery_refinement == DiscoveryRefinementArg::NrsV01 {
-            bisect_runner::bisection_runner::split_subgraph_nrs_v0_1
-        } else {
-            bisect_runner::bisection_runner::split_subgraph
-        };
-        let (left, _right) = split(
+        let (left, _right) = bisect_runner::bisection_runner::split_subgraph(
             &adjacency,
             populations,
             1,
@@ -163,14 +180,16 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     } else {
         format!("; refinement={:?}", args.discovery_refinement).to_lowercase()
     };
+    let partition_type = if nrs_profile { "recursive" } else { "kway" };
     let discovery = bisect_ilp::certified_split_discovery(
         &root,
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; contiguity-repair-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; contiguity-repair-moves={}; articulation-safe-population-moves={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
             niter,
+            partition_type,
             contiguity_repair_moves,
             population_improvement_moves,
             zero_population_cut_moves,
@@ -2039,7 +2058,7 @@ mod tests {
             exact_fixture_limit: 10,
             generated_at: Some("2026-07-10T12:00:00Z".to_string()),
             discovery_seed: 42,
-            discovery_refinement: DiscoveryRefinementArg::Full,
+            discovery_refinement: DiscoveryRefinementArg::NrsV01,
         })
         .unwrap();
         let instance: bisect_ilp::CertifiedSplitInstance = serde_json::from_str(
@@ -2052,6 +2071,8 @@ mod tests {
         .unwrap();
         assert_eq!((instance.k_left, instance.k_right), (2, 3));
         assert_eq!(discovery.objective.canonical_assignment.len(), 10);
+        assert!(discovery.method.contains("partition-type=recursive"));
+        assert!(discovery.method.contains("refinement=nrsv01"));
         assert!(bisect_ilp::certified_split_children_connected(
             &instance,
             &discovery.objective.canonical_assignment
