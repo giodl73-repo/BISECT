@@ -38,6 +38,11 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `docs/fixtures/nrs-reference-v0.1/reference_manifest.json` | `nrs-reference-replay v1` | Documentation fixture; verified by package README commands | National Standard Evidence And Specification wave, Pulse 03 |
 | `exact-package-manifest.json` | `exact-canonical-package-manifest-v1` | `bisect-cli::exact_cmd` | Exact Canonical Benchmark Foundations wave |
 | `docs/examples/exact-canonical/manifest.json` | `exact-canonical-fixture-manifest-v1` | Documentation fixture; Python verifier | Exact Canonical Benchmark Foundations wave |
+| `configs/nrs_v0_1/standard_profile.json` | `nrs-standard-profile-v0.1-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `configs/nrs_v0_1/legal_profile.json` | `nrs-baseline-legal-profile-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `input_manifest.json` in an NRS package | logical `nrs-input-manifest-v0.1` | `bisect-ops` | NRS v0.1 assignment-affecting seed manifest |
+| `seed_record.json` in an NRS package | `nrs-seed-record-v1` | `bisect-ops` | NRS v0.1 seed derivation |
+| `manifest.json` in an NRS seed package | `nrs-seed-package-v1` | `bisect-ops` | NRS v0.1 block reference implementation |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -435,6 +440,28 @@ Source: `docs/examples/exact-canonical/manifest.json`.
 This fixture manifest hashes the positive optimal and negative infeasibility
 packages and names the Python fixture verifier plus Rust certificate/package
 tests.
+
+### 3.25 NRS v0.1 block-reference manifests
+
+Source: `bisect-ops` and `configs/nrs_v0_1/`.
+
+`nrs-standard-profile-v0.1-v1` freezes assignment-affecting algorithm and
+reference-engine choices. `nrs-baseline-legal-profile-v1` freezes the common
+federal floor and prohibited baseline inputs. Their canonical content hashes
+enter the per-jurisdiction input manifest.
+
+The logical `nrs-input-manifest-v0.1` intentionally contains only the ten
+assignment-affecting fields enumerated by NRS v0.1 §3.4. It therefore uses
+`canonicalization_version` as its version discriminator rather than adding a
+presentation-only `schema_version` field that would alter the normative seed
+input.
+
+`nrs-seed-record-v1` records the canonical input-manifest hash, domain-separated
+digest, unsigned little-endian seed, signed-engine conversion, and generation
+time. `nrs-seed-package-v1` binds the source RCTX transport hash and every
+package artifact. The verifier rejects unknown versions, artifact or context
+hash mismatches, profile-link mismatches, reference-engine source mismatches,
+and seed derivation mismatches.
 
 ---
 

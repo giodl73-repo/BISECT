@@ -237,6 +237,7 @@ redist/.cargo/config.toml
 redist/**/*.so
 redist/**/*.pyd
 release_staging/
+runs/nrs-v0.1/
 reports/
 .claude/worktrees/
 

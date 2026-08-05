@@ -23,6 +23,7 @@ use std::{
 const SCREEN_TIMEOUT: Duration = Duration::from_secs(180);
 const GENERATED_AT: &str = "2026-07-12T00:00:00Z";
 const BUILDER_SNAPSHOT: &str = "builder-source.rs";
+const NRS_SEED_PREFIX: &[u8] = b"NRS_BASELINE_V0_1";
 
 #[derive(Parser)]
 #[command(about = "Rust-native deterministic operational recursive-tree builder")]
@@ -111,6 +112,25 @@ enum Action {
     VerifyNationalRelease {
         #[arg(default_value = "release_staging/nationwide-2020-operational-v1")]
         bundle: PathBuf,
+    },
+    NrsSeed {
+        #[arg(long)]
+        context: PathBuf,
+        #[arg(long)]
+        districts: usize,
+        #[arg(long, default_value = "configs/nrs_v0_1/standard_profile.json")]
+        standard_profile: PathBuf,
+        #[arg(long, default_value = "configs/nrs_v0_1/legal_profile.json")]
+        legal_profile: PathBuf,
+        #[arg(long)]
+        out_dir: PathBuf,
+        #[arg(long)]
+        generated_at: String,
+    },
+    VerifyNrsSeed {
+        package: PathBuf,
+        #[arg(long)]
+        context: PathBuf,
     },
     RctxBatch {
         #[arg(long, default_value_t = 2)]
@@ -207,6 +227,208 @@ fn canonical_hash(value: &Value) -> Result<String> {
         "sha256:{:x}",
         Sha256::digest(serde_json::to_vec(value)?)
     ))
+}
+
+fn canonical_sha256(value: &Value) -> Result<String> {
+    Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(value)?)))
+}
+
+fn nrs_seed(input_manifest: &Value) -> Result<(String, u64, u32)> {
+    let mut hasher = Sha256::new();
+    hasher.update(NRS_SEED_PREFIX);
+    hasher.update(serde_json::to_vec(input_manifest)?);
+    let digest = hasher.finalize();
+    let mut first = [0u8; 8];
+    first.copy_from_slice(&digest[..8]);
+    let seed = u64::from_le_bytes(first);
+    Ok((format!("{digest:x}"), seed, (seed % 2_147_483_647) as u32))
+}
+
+fn build_nrs_seed_package(
+    context_path: &Path,
+    districts: usize,
+    standard_profile_path: &Path,
+    legal_profile_path: &Path,
+    out: &Path,
+    generated_at: &str,
+) -> Result<()> {
+    if out.exists() {
+        bail!("NRS seed package already exists: {}", out.display());
+    }
+    if districts == 0 {
+        bail!("NRS district count must be positive");
+    }
+    let context = read_json(context_path)?;
+    let standard_profile = read_json(standard_profile_path)?;
+    let legal_profile = read_json(legal_profile_path)?;
+    if standard_profile["schema_version"] != "nrs-standard-profile-v0.1-v1"
+        || legal_profile["schema_version"] != "nrs-baseline-legal-profile-v1"
+    {
+        bail!("unknown NRS profile schema");
+    }
+    let unit_ids = context
+        .pointer("/units/unit_ids")
+        .and_then(Value::as_array)
+        .context("NRS context unit ids")?;
+    if unit_ids.is_empty()
+        || unit_ids
+            .windows(2)
+            .any(|pair| pair[0].as_str() >= pair[1].as_str())
+        || unit_ids.iter().any(|id| {
+            id.as_str()
+                .is_none_or(|id| id.len() != 15 || !id.bytes().all(|byte| byte.is_ascii_digit()))
+        })
+    {
+        bail!("NRS unit index is not strictly sorted 15-digit GEOIDs");
+    }
+    let populations = context["populations"]
+        .as_array()
+        .context("NRS populations")?;
+    let adjacency = context
+        .pointer("/graph/adjacency")
+        .and_then(Value::as_array)
+        .context("NRS adjacency")?;
+    if populations.len() != unit_ids.len() || adjacency.len() != unit_ids.len() {
+        bail!("NRS context universe lengths disagree");
+    }
+    let unit_index = json!({
+        "schema_version":"nrs-unit-index-v1","unit_kind":"block",
+        "canonical_order":"sorted-geoid","unit_ids":unit_ids
+    });
+    let reference_engine = standard_profile
+        .get("reference_engine")
+        .context("NRS reference engine")?;
+    let input_manifest = json!({
+        "adjacency_sha256":canonical_sha256(&Value::Array(adjacency.clone()))?,
+        "algorithm_profile_sha256":canonical_sha256(&standard_profile)?,
+        "canonicalization_version":"canonical-json-v1",
+        "census_release":"2020-PL94-171",
+        "district_count":districts,
+        "geographic_vintage":"TIGER-Line-2020-tabulation-blocks",
+        "legal_profile_sha256":canonical_sha256(&legal_profile)?,
+        "population_sha256":canonical_sha256(&Value::Array(populations.clone()))?,
+        "reference_engine_sha256":canonical_sha256(reference_engine)?,
+        "unit_index_sha256":canonical_sha256(&unit_index)?
+    });
+    let (digest, seed_u64, seed_i32) = nrs_seed(&input_manifest)?;
+    fs::create_dir_all(out)?;
+    write_json(&out.join("standard_profile.json"), &standard_profile, true)?;
+    write_json(&out.join("legal_profile.json"), &legal_profile, true)?;
+    write_json(&out.join("unit_index.json"), &unit_index, true)?;
+    write_json(&out.join("input_manifest.json"), &input_manifest, true)?;
+    write_json(
+        &out.join("seed_record.json"),
+        &json!({
+            "schema_version":"nrs-seed-record-v1",
+            "generated_at":generated_at,
+            "input_manifest_canonical_sha256":canonical_sha256(&input_manifest)?,
+            "derivation":"SHA-256(ASCII(NRS_BASELINE_V0_1) || canonical-json-v1(input_manifest))",
+            "digest_sha256":digest,"seed_u64_little_endian":seed_u64,
+            "engine_seed_i32":seed_i32,"engine_conversion":"seed mod 2147483647"
+        }),
+        true,
+    )?;
+    let artifacts = [
+        "standard_profile.json",
+        "legal_profile.json",
+        "unit_index.json",
+        "input_manifest.json",
+        "seed_record.json",
+    ]
+    .into_iter()
+    .map(|path| Ok(json!({"path":path,"sha256":sha256(&out.join(path))?})))
+    .collect::<Result<Vec<_>>>()?;
+    write_json(
+        &out.join("manifest.json"),
+        &json!({
+            "schema_version":"nrs-seed-package-v1","status":"seed-derived",
+            "BISECT_version":env!("CARGO_PKG_VERSION"),
+            "BISECT_build_commit":git_text(&["rev-parse","HEAD"]).unwrap_or_else(|_| "unknown".into()),
+            "rustc_version":Command::new("rustc").arg("--version").output().ok().and_then(|output|String::from_utf8(output.stdout).ok()).map(|text|text.trim().to_owned()).unwrap_or_else(||"unknown".into()),
+            "created_at":generated_at,
+            "source_context_sha256":sha256(context_path)?,"district_count":districts,
+            "artifacts":artifacts,
+            "claim_boundary":"Seed and assignment-affecting input identities only; no baseline assignment or NRS conformance claim."
+        }),
+        true,
+    )?;
+    verify_nrs_seed_package(out, context_path)?;
+    println!("NRS seed package: VERIFIED; seed_u64={seed_u64}; engine_seed_i32={seed_i32}");
+    Ok(())
+}
+
+fn verify_nrs_seed_package(package: &Path, context_path: &Path) -> Result<()> {
+    let manifest = read_json(&package.join("manifest.json"))?;
+    if manifest["schema_version"] != "nrs-seed-package-v1" {
+        bail!("unknown NRS seed package schema");
+    }
+    if manifest["source_context_sha256"] != sha256(context_path)? {
+        bail!("NRS source context transport hash mismatch");
+    }
+    for artifact in manifest["artifacts"].as_array().context("NRS artifacts")? {
+        let relative = artifact["path"].as_str().context("NRS artifact path")?;
+        if relative.contains("..") || Path::new(relative).is_absolute() {
+            bail!("nonportable NRS artifact path");
+        }
+        let path = package.join(relative);
+        if sha256(&path)? != artifact["sha256"] {
+            bail!("NRS artifact hash mismatch: {relative}");
+        }
+    }
+    let input_manifest = read_json(&package.join("input_manifest.json"))?;
+    let seed_record = read_json(&package.join("seed_record.json"))?;
+    let (digest, seed_u64, seed_i32) = nrs_seed(&input_manifest)?;
+    if seed_record["input_manifest_canonical_sha256"] != canonical_sha256(&input_manifest)?
+        || seed_record["digest_sha256"] != digest
+        || seed_record["seed_u64_little_endian"] != seed_u64
+        || seed_record["engine_seed_i32"] != seed_i32
+    {
+        bail!("NRS seed derivation mismatch");
+    }
+    let standard_profile = read_json(&package.join("standard_profile.json"))?;
+    let legal_profile = read_json(&package.join("legal_profile.json"))?;
+    let unit_index = read_json(&package.join("unit_index.json"))?;
+    for (field, expected) in [
+        (
+            "algorithm_profile_sha256",
+            canonical_sha256(&standard_profile)?,
+        ),
+        ("legal_profile_sha256", canonical_sha256(&legal_profile)?),
+        ("unit_index_sha256", canonical_sha256(&unit_index)?),
+        (
+            "reference_engine_sha256",
+            canonical_sha256(&standard_profile["reference_engine"])?,
+        ),
+    ] {
+        if input_manifest[field] != expected {
+            bail!("NRS input manifest {field} mismatch");
+        }
+    }
+    let context = read_json(context_path)?;
+    let populations = context["populations"]
+        .as_array()
+        .context("NRS populations")?;
+    let adjacency = context
+        .pointer("/graph/adjacency")
+        .and_then(Value::as_array)
+        .context("NRS adjacency")?;
+    if input_manifest["population_sha256"] != canonical_sha256(&Value::Array(populations.clone()))?
+        || input_manifest["adjacency_sha256"] != canonical_sha256(&Value::Array(adjacency.clone()))?
+        || unit_index["unit_ids"] != context["units"]["unit_ids"]
+    {
+        bail!("NRS context canonical binding mismatch");
+    }
+    for (relative, expected) in standard_profile
+        .pointer("/reference_engine/source_files")
+        .and_then(Value::as_object)
+        .context("NRS reference engine source files")?
+    {
+        if sha256(Path::new(relative))? != expected.as_str().context("NRS source hash")? {
+            bail!("NRS reference engine source mismatch: {relative}");
+        }
+    }
+    println!("NRS seed package verification: PASS");
+    Ok(())
 }
 
 fn field_u64(value: &Value, path: &[&str]) -> Result<u64> {
@@ -2592,6 +2814,22 @@ fn main() -> Result<()> {
             created_at,
         } => build_national_release(&out_dir, &created_at),
         Action::VerifyNationalRelease { bundle } => verify_national_release(&bundle),
+        Action::NrsSeed {
+            context,
+            districts,
+            standard_profile,
+            legal_profile,
+            out_dir,
+            generated_at,
+        } => build_nrs_seed_package(
+            &context,
+            districts,
+            &standard_profile,
+            &legal_profile,
+            &out_dir,
+            &generated_at,
+        ),
+        Action::VerifyNrsSeed { package, context } => verify_nrs_seed_package(&package, &context),
         Action::RctxBatch { workers, limit } => rctx_batch(workers, limit),
         Action::BuildStateRctx {
             state_code,
@@ -2724,6 +2962,35 @@ mod tests {
             ]}
         ]});
         assert_eq!(count_screening(&tree).unwrap(), (2, 1, 1, 1));
+    }
+
+    #[test]
+    fn nrs_seed_vector_001_matches_specification() {
+        let manifest = json!({
+            "adjacency_sha256":"00","algorithm_profile_sha256":"11",
+            "canonicalization_version":"canonical-json-v1","census_release":"test",
+            "district_count":2,"geographic_vintage":"test","legal_profile_sha256":"22",
+            "population_sha256":"33","reference_engine_sha256":"44",
+            "unit_index_sha256":"55"
+        });
+        let (digest, seed, engine_seed) = nrs_seed(&manifest).unwrap();
+        assert_eq!(
+            digest,
+            "e50326ede53a03cd59ffe98bb95ff04e784ad607bdd242ebda4f927b0decf690"
+        );
+        assert_eq!(seed, 14_772_715_961_905_972_197);
+        assert_eq!(engine_seed, (seed % 2_147_483_647) as u32);
+    }
+
+    #[test]
+    fn nrs_seed_canonicalizes_object_key_order_and_whitespace() {
+        let left: Value = serde_json::from_str("{\"z\":1,\"a\":2}").unwrap();
+        let right: Value = serde_json::from_str(" { \"a\" : 2, \"z\" : 1 } ").unwrap();
+        assert_eq!(
+            serde_json::to_vec(&left).unwrap(),
+            serde_json::to_vec(&right).unwrap()
+        );
+        assert_eq!(nrs_seed(&left).unwrap(), nrs_seed(&right).unwrap());
     }
 
     #[test]
