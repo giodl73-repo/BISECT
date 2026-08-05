@@ -165,7 +165,13 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         (
             population_improvement_operations,
             population_improvement_units,
-        ) = improve_discovery_population(&root, &adjacency, &mut assignment)?;
+        ) = improve_discovery_population(
+            &root,
+            &adjacency,
+            &mut assignment,
+            (args.discovery_refinement == DiscoveryRefinementArg::NrsV01)
+                .then(|| nrs_population_tolerance_scaled_bound(&root)),
+        )?;
     }
     if matches!(
         args.discovery_refinement,
@@ -357,6 +363,7 @@ fn improve_discovery_population(
     instance: &bisect_ilp::CertifiedSplitInstance,
     adjacency: &[Vec<usize>],
     assignment: &mut [u8],
+    stop_deviation: Option<u128>,
 ) -> anyhow::Result<(usize, usize)> {
     let total_population = instance.populations.iter().sum::<i64>();
     let mut right_population = instance
@@ -368,13 +375,16 @@ fn improve_discovery_population(
     let target_numerator = instance.k_right as i128 * i128::from(total_population);
     let remainder = target_numerator.rem_euclid(instance.k_parent as i128) as u128;
     let arithmetic_floor = remainder.min(instance.k_parent as u128 - remainder);
+    let repair_target = stop_deviation
+        .unwrap_or(arithmetic_floor)
+        .max(arithmetic_floor);
     let mut operations = 0;
     let mut moved_units = 0;
     loop {
         let signed_deviation = instance.k_parent as i128 * i128::from(right_population)
             - instance.k_right as i128 * i128::from(total_population);
         let current_deviation = signed_deviation.unsigned_abs();
-        if current_deviation <= arithmetic_floor {
+        if current_deviation <= repair_target {
             break;
         }
         let heavy = if signed_deviation > 0 { 1_u8 } else { 0_u8 };
@@ -397,6 +407,12 @@ fn improve_discovery_population(
         moved_units += units.len();
     }
     Ok((operations, moved_units))
+}
+
+fn nrs_population_tolerance_scaled_bound(instance: &bisect_ilp::CertifiedSplitInstance) -> u128 {
+    let population = instance.populations.iter().sum::<i64>() as u128;
+    let smaller_child_seats = instance.k_left.min(instance.k_right) as u128;
+    (5 * smaller_child_seats * population + 999) / 1_000
 }
 
 fn best_connected_population_subtree_move(
@@ -2509,7 +2525,7 @@ mod tests {
         ];
         let mut assignment = vec![0, 0, 0, 0, 1, 1];
         assert_eq!(
-            improve_discovery_population(&instance, &adjacency, &mut assignment).unwrap(),
+            improve_discovery_population(&instance, &adjacency, &mut assignment, None).unwrap(),
             (1, 1)
         );
         assert_eq!(assignment, vec![0, 0, 1, 0, 1, 1]);
@@ -2549,9 +2565,22 @@ mod tests {
             orientation_rule: bisect_ilp::SplitOrientationRule::EqualSeatsUnitZeroLeft,
         };
         let adjacency = vec![vec![1], vec![0, 2, 3], vec![1], vec![1]];
+        assert_eq!(nrs_population_tolerance_scaled_bound(&instance), 1);
+        let mut within_requested_tolerance = vec![0, 1, 1, 1];
+        assert_eq!(
+            improve_discovery_population(
+                &instance,
+                &adjacency,
+                &mut within_requested_tolerance,
+                Some(60),
+            )
+            .unwrap(),
+            (0, 0)
+        );
+        assert_eq!(within_requested_tolerance, vec![0, 1, 1, 1]);
         let mut assignment = vec![0, 1, 1, 1];
         assert_eq!(
-            improve_discovery_population(&instance, &adjacency, &mut assignment).unwrap(),
+            improve_discovery_population(&instance, &adjacency, &mut assignment, None).unwrap(),
             (1, 2)
         );
         assert_eq!(assignment, vec![0, 0, 0, 1]);
