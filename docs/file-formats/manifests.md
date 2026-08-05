@@ -48,6 +48,9 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `baseline_manifest.json` in an NRS package | `nrs-baseline-package-v0.1-v2` | `bisect-ops` | NRS v0.1 block reference implementation |
 | `nrs-failure.json` in an incomplete NRS package | `nrs-baseline-failure-v2` | `bisect-ops` | NRS v0.1 block reference implementation |
 | `ledger.json` in an NRS national batch | `nrs-national-batch-ledger-v2` | `bisect-ops` | NRS v0.1 block reference implementation |
+| `national-summary.json` in an NRS summary package | `nrs-national-summary-v0.1-v1` | `bisect-ops` | NRS v0.1 national publication summary |
+| `proof-coverage.json` in an NRS summary package | `nrs-national-proof-coverage-v0.1-v1` | `bisect-ops` | NRS v0.1 exact-claim classification |
+| `manifest.json` in an NRS summary package | `nrs-national-summary-package-v0.1-v1` | `bisect-ops` | NRS v0.1 national publication summary |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -495,6 +498,15 @@ and failure witnesses also bind the executable hash; recovery additionally
 requires their packaged standard profile to match the ledger. Partial ledger
 verification does not imply national coverage; the complete verifier requires
 all inventory States to have independently verified packages and no failures.
+
+The NRS national summary schemas are emitted only after complete batch
+verification. `nrs-national-summary-v0.1-v1` records national aggregates,
+per-State package/tree hashes, runtime coverage, and conformance status.
+`nrs-national-proof-coverage-v0.1-v1` keeps tolerance verification separate
+from exact population, boundary, and canonical proof coverage.
+`nrs-national-summary-package-v0.1-v1` binds both reports to their source
+ledger hash. The summary package is evidence about the hash-bound local State
+packages; it is not a substitute for those packages.
 
 ---
 

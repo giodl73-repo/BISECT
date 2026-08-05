@@ -42,7 +42,7 @@ For every State and Census year:
 - [x] Execute every recursive node.
 - [x] Produce all 435 one-seat leaves.
 - [x] Verify wall-to-wall national assignment coverage.
-- [ ] Publish maps, plans, certificates, proof sizes, runtimes, and gaps.
+- [x] Publish maps, plans, certificates, proof sizes, runtimes, and gaps.
 
 ### Stage 4 — Nationwide 2010
 
@@ -89,19 +89,17 @@ The agent should:
 
 ## Current Position
 
-Active wave: `2026-07-12-nationwide-2020-operational-certification`.
+Active wave: `2026-08-05-nrs-2010-national-baseline`.
 
 Current objective:
 
-> Generate nationwide 2020 operational trees with complete wall-to-wall
-> coverage and a separate exact-objective proof matrix.
+> Freeze 2010 block/source custody and execute the identical NRS v0.1
+> reference-baseline procedure without weakening the 2020 claim boundary.
 
 Next unblocked work:
 
-> Complete Pulse 06 publication. Nationwide operational execution is complete:
-> 50 States, 435 connected leaves, 8,126,956 blocks with zero omissions or
-> duplicates, and arithmetic population floors at all 385 nontrivial nodes.
-> California's final frontier was recovered at seed 128. Publish the State
-> assignments, cartographic renderings, custody bundle, runtimes, and explicit
-> proof gaps. Boundary and canonical optimality remain unproved at all 385
-> nontrivial nodes and must not be promoted to exact national completion.
+> Inventory locally available 2010 block geometry, PL 94-171 population, and
+> adjacency/RCTX custody for all States. The completed NRS v0.1 2020 run has 50
+> verified States, 435 districts, 8,126,956 blocks, and 385/385 nodes within the
+> frozen tolerance. Exact proof coverage is population 4/385, boundary 0/385,
+> and canonical 0/385; those gaps remain public and are not promoted.

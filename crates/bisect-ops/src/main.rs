@@ -181,6 +181,17 @@ enum Action {
         #[arg(long)]
         require_complete: bool,
     },
+    SummarizeNrsBatch {
+        #[arg(
+            long,
+            default_value = "docs/experiments/nationwide-2020/inventory.json"
+        )]
+        inventory: PathBuf,
+        #[arg(long, default_value = "runs/nrs-v0.1/national-2020")]
+        out_dir: PathBuf,
+        #[arg(long, default_value = "docs/experiments/nrs-v0.1-national-2020")]
+        report_dir: PathBuf,
+    },
     RctxBatch {
         #[arg(long, default_value_t = 2)]
         workers: usize,
@@ -2025,6 +2036,141 @@ fn verify_nrs_batch(inventory_path: &Path, out: &Path, require_complete: bool) -
         );
     }
     println!("NRS national batch verification: PASS ({verified} verified, {failed} failed)");
+    Ok(())
+}
+
+fn summarize_nrs_batch(inventory_path: &Path, out: &Path, report_dir: &Path) -> Result<()> {
+    verify_nrs_batch(inventory_path, out, true)?;
+    let ledger_path = out.join("ledger.json");
+    let ledger = read_json(&ledger_path)?;
+    let mut rows = Vec::new();
+    let mut total_units = 0_u64;
+    let mut total_population = 0_i64;
+    let mut total_districts = 0_u64;
+    let mut total_nodes = 0_u64;
+    let mut arithmetic_floor_nodes = 0_u64;
+    let mut measured_elapsed_seconds = 0_f64;
+    let mut missing_elapsed_states = Vec::new();
+    for row in ledger["results"].as_array().context("NRS batch results")? {
+        let state = row["state"].as_str().context("NRS batch state")?;
+        let package = out.join(
+            row["package_path"]
+                .as_str()
+                .context("NRS batch package path")?,
+        );
+        let tree_path = package.join("baseline-tree.json");
+        let tree = read_json(&tree_path)?;
+        let nodes = tree["nodes"].as_array().context("NRS tree nodes")?;
+        let node_count = nodes.len() as u64;
+        let floors = nodes
+            .iter()
+            .filter(|node| node["population_floor"]["attained"] == true)
+            .count() as u64;
+        let districts = tree["districts"].as_u64().context("NRS districts")?;
+        let units = tree["unit_count"].as_u64().context("NRS unit count")?;
+        let population = tree["population_total"]
+            .as_i64()
+            .context("NRS population total")?;
+        let max_tolerance_fraction = nodes
+            .iter()
+            .map(|node| {
+                let achieved = node["objective"]["max_population_deviation_scaled"]
+                    .as_u64()
+                    .unwrap_or(u64::MAX);
+                let allowed = node["generation_tolerance_scaled_bound"]
+                    .as_u64()
+                    .unwrap_or(0);
+                if allowed == 0 {
+                    0.0
+                } else {
+                    achieved as f64 / allowed as f64
+                }
+            })
+            .fold(0.0_f64, f64::max);
+        if let Some(elapsed) = row["elapsed_seconds"].as_f64() {
+            measured_elapsed_seconds += elapsed;
+        } else {
+            missing_elapsed_states.push(state.to_owned());
+        }
+        total_units += units;
+        total_population += population;
+        total_districts += districts;
+        total_nodes += node_count;
+        arithmetic_floor_nodes += floors;
+        rows.push(json!({
+            "state":state,"districts":districts,"unit_count":units,
+            "population_total":population,"recursive_nodes":node_count,
+            "arithmetic_floor_nodes":floors,
+            "max_generation_tolerance_fraction":max_tolerance_fraction,
+            "elapsed_seconds":row["elapsed_seconds"],
+            "package_manifest_sha256":row["manifest_sha256"],
+            "baseline_tree_sha256":sha256(&tree_path)?,
+            "assignment_coverage":"verified","contiguity":"independently-verified",
+            "population_tolerance":"verified-all-nodes",
+            "boundary_proof":"not-run","canonical_proof":"blocked-by-boundary"
+        }));
+    }
+    rows.sort_by_key(|row| row["state"].as_str().unwrap_or("").to_owned());
+    if total_units != 8_126_956 || total_districts != 435 || total_nodes != 385 || rows.len() != 50
+    {
+        bail!("NRS national publication aggregate mismatch");
+    }
+    fs::create_dir_all(report_dir)?;
+    let state_count = rows.len();
+    let claim = "NRS v0.1 generated and independently verified complete 2020 block assignments for all 50 States and all 435 districts. All 385 recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.";
+    let summary_path = report_dir.join("national-summary.json");
+    write_json(
+        &summary_path,
+        &json!({
+            "schema_version":"nrs-national-summary-v0.1-v1",
+            "status":"verified-national-reference-baseline",
+            "state_count":state_count,"district_count":total_districts,
+            "recursive_node_count":total_nodes,"unit_count":total_units,
+            "population_total":total_population,"omitted_units":0,"duplicate_units":0,
+            "disconnected_districts":0,"population_tolerance_failures":0,
+            "measured_elapsed_seconds":measured_elapsed_seconds,
+            "missing_elapsed_states":missing_elapsed_states,
+            "ledger_sha256":sha256(&ledger_path)?,
+            "standard_profile_canonical_sha256":ledger["standard_profile_canonical_sha256"],
+            "bisect_executable_sha256":ledger["bisect_executable_sha256"],
+            "states":rows,"claim_boundary":claim
+        }),
+        true,
+    )?;
+    let proof_path = report_dir.join("proof-coverage.json");
+    write_json(
+        &proof_path,
+        &json!({
+            "schema_version":"nrs-national-proof-coverage-v0.1-v1",
+            "status":"classified","recursive_node_count":total_nodes,
+            "population_tolerance":{"verified_nodes":total_nodes,"failed_nodes":0,"coverage_rate":1.0},
+            "population_exact":{"proved_nodes":arithmetic_floor_nodes,"unproved_nodes":total_nodes-arithmetic_floor_nodes,"coverage_rate":arithmetic_floor_nodes as f64/total_nodes as f64,"proof_kind":"ratio-arithmetic-floor-when-attained"},
+            "boundary":{"proved_nodes":0,"unproved_nodes":total_nodes,"coverage_rate":0.0,"status":"not-run"},
+            "canonical":{"proved_nodes":0,"unproved_nodes":total_nodes,"coverage_rate":0.0,"status":"blocked-by-boundary"},
+            "single_district_states":{"count":6,"objective_proofs":"not-applicable"},
+            "claim_boundary":claim
+        }),
+        true,
+    )?;
+    let manifest_path = report_dir.join("manifest.json");
+    write_json(
+        &manifest_path,
+        &json!({
+            "schema_version":"nrs-national-summary-package-v0.1-v1",
+            "status":"verified-national-reference-baseline",
+            "source_ledger_sha256":sha256(&ledger_path)?,
+            "files":[
+                {"path":"national-summary.json","sha256":sha256(&summary_path)?},
+                {"path":"proof-coverage.json","sha256":sha256(&proof_path)?}
+            ],
+            "claim_boundary":claim
+        }),
+        true,
+    )?;
+    println!(
+        "NRS national summary: VERIFIED ({} States, {} districts, {} nodes)",
+        state_count, total_districts, total_nodes
+    );
     Ok(())
 }
 
@@ -3994,6 +4140,11 @@ fn main() -> Result<()> {
             out_dir,
             require_complete,
         } => verify_nrs_batch(&inventory, &out_dir, require_complete),
+        Action::SummarizeNrsBatch {
+            inventory,
+            out_dir,
+            report_dir,
+        } => summarize_nrs_batch(&inventory, &out_dir, &report_dir),
         Action::RctxBatch { workers, limit } => rctx_batch(workers, limit),
         Action::BuildStateRctx {
             state_code,

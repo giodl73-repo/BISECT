@@ -60,6 +60,8 @@ within each required step.
 | Rhode Island population-optimality stage | Proved by RoundingSat and VeriPB |
 | Rhode Island boundary/canonical stages | Unresolved after documented timeouts |
 | Rhode Island current connected incumbent | Weighted cut 43,047,238 |
+| NRS v0.1 2020 national reference baseline | 50 States, 435 districts, 385/385 nodes within frozen population tolerance |
+| NRS v0.1 exact proof coverage | Population 4/385; weighted boundary 0/385; canonical tie 0/385 |
 | Rhode Island zero-population cut cleanup | 36,496 weighted-cut reduction at unchanged population |
 | Rhode Island equal-population swaps | Additional 429,150 cut reduction |
 | Rhode Island 1-to-2 balanced exchanges | Additional 3,844,797 cut reduction |
@@ -246,9 +248,10 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 with enacted axioms, lexicographic optimization, canonical tie-breaking, and
 an independently verified proof certificate. Bounded split/tree certificates,
 hostile verifier corpora, proof-request compilation, and Rhode Island's
-connected block RCTX are implemented. The remaining frontier is scalable
-discovery and external proof generation/checking. The current METIS benchmark
-remains heuristic.
+connected block RCTX are implemented. NRS v0.1 now has a complete,
+independently verified 2020 national reference-baseline run. The remaining
+frontier is scalable external proof generation/checking; METIS-derived split
+incumbents remain heuristic for every unproved exact objective.
 
 ---
 

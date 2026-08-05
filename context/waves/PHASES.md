@@ -63,7 +63,8 @@
 | 2026-07-10 | Scalable Certified Split Solver | Install proof/discovery tooling and certify the Rhode Island root cut with compact connectivity | archived |
 | 2026-07-10 | Rhode Island Boundary Certification | Improve and prove the boundary optimum at exact population balance | archived-partial |
 | 2026-07-12 | Small States 2020 Certification | Wall-to-wall packages and exact proof coverage for one- through four-district States | archived |
-| 2026-07-12 | Nationwide 2020 Operational Certification | Build and verify 50 State trees, 435 leaves, and national proof coverage | active |
+| 2026-07-12 | Nationwide 2020 Operational Certification | Build and verify 50 State trees, 435 leaves, and national proof coverage | archived |
+| 2026-08-05 | NRS 2010 National Baseline | Freeze 2010 custody and execute the identical NRS v0.1 national reference procedure | active |
 
 ## Operating Model
 

@@ -1,0 +1,33 @@
+{
+  "boundary": {
+    "coverage_rate": 0.0,
+    "proved_nodes": 0,
+    "status": "not-run",
+    "unproved_nodes": 385
+  },
+  "canonical": {
+    "coverage_rate": 0.0,
+    "proved_nodes": 0,
+    "status": "blocked-by-boundary",
+    "unproved_nodes": 385
+  },
+  "claim_boundary": "NRS v0.1 generated and independently verified complete 2020 block assignments for all 50 States and all 435 districts. All 385 recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.",
+  "population_exact": {
+    "coverage_rate": 0.01038961038961039,
+    "proof_kind": "ratio-arithmetic-floor-when-attained",
+    "proved_nodes": 4,
+    "unproved_nodes": 381
+  },
+  "population_tolerance": {
+    "coverage_rate": 1.0,
+    "failed_nodes": 0,
+    "verified_nodes": 385
+  },
+  "recursive_node_count": 385,
+  "schema_version": "nrs-national-proof-coverage-v0.1-v1",
+  "single_district_states": {
+    "count": 6,
+    "objective_proofs": "not-applicable"
+  },
+  "status": "classified"
+}
