@@ -1,8 +1,9 @@
 use anyhow::{bail, Context, Result};
 use bisect_data::{
     build_adjacency_graph, connect_island_components, read_pl94_block_populations,
-    read_tiger_blocks_projected,
+    read_tiger_block_centroids_projected, read_tiger_blocks_projected,
 };
+use bisect_map::CategoricalScheme;
 use clap::{Parser, Subcommand};
 use rayon::prelude::*;
 use serde_json::{json, Map, Value};
@@ -11,6 +12,8 @@ use std::{
     cmp::Ordering,
     collections::{BTreeMap, BTreeSet, VecDeque},
     fs,
+    fs::File,
+    io::{BufWriter, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
@@ -98,6 +101,16 @@ enum Action {
             default_value = "docs/experiments/small-states-2020/one-district-states.json"
         )]
         one_district: PathBuf,
+    },
+    BuildNationalRelease {
+        #[arg(long, default_value = "release_staging/nationwide-2020-operational-v1")]
+        out_dir: PathBuf,
+        #[arg(long)]
+        created_at: String,
+    },
+    VerifyNationalRelease {
+        #[arg(default_value = "release_staging/nationwide-2020-operational-v1")]
+        bundle: PathBuf,
     },
     RctxBatch {
         #[arg(long, default_value_t = 2)]
@@ -1454,6 +1467,498 @@ fn verify_national_trees(
     Ok(())
 }
 
+fn git_text(args: &[&str]) -> Result<String> {
+    let output = Command::new("git").args(args).output().context("run git")?;
+    if !output.status.success() {
+        bail!("git {} failed", args.join(" "));
+    }
+    Ok(String::from_utf8(output.stdout)?.trim().to_owned())
+}
+
+fn copy_artifact(source: &Path, destination: &Path) -> Result<()> {
+    if let Some(parent) = destination.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::copy(source, destination).with_context(|| {
+        format!(
+            "copy release artifact {} to {}",
+            source.display(),
+            destination.display()
+        )
+    })?;
+    Ok(())
+}
+
+fn release_relative(root: &Path, path: &Path) -> Result<String> {
+    Ok(path
+        .strip_prefix(root)
+        .context("release path outside bundle")?
+        .to_string_lossy()
+        .replace('\\', "/"))
+}
+
+fn release_files(root: &Path) -> Result<Vec<PathBuf>> {
+    fn visit(dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
+        for entry in fs::read_dir(dir)? {
+            let path = entry?.path();
+            if path.is_dir() {
+                visit(&path, files)?;
+            } else {
+                files.push(path);
+            }
+        }
+        Ok(())
+    }
+    let mut files = Vec::new();
+    visit(root, &mut files)?;
+    files.sort_by_key(|path| path.to_string_lossy().to_string());
+    Ok(files)
+}
+
+fn assignment_for_state(state: &str, districts: u64) -> Result<(Value, Vec<u64>, PathBuf)> {
+    let lower = state.to_lowercase();
+    let context_path = PathBuf::from(format!("data/2020/certified/{lower}_blocks_2020.rctx"));
+    let context = read_json(&context_path)?;
+    let unit_count = context
+        .pointer("/units/unit_ids")
+        .and_then(Value::as_array)
+        .context("unit_ids")?
+        .len();
+    let assignment = if districts == 1 {
+        vec![0; unit_count]
+    } else {
+        read_json(
+            &Path::new("data/2020/certified/operational-trees")
+                .join(&lower)
+                .join("operational-tree.json"),
+        )?["assignment"]
+            .as_array()
+            .context("operational assignment")?
+            .iter()
+            .map(|value| value.as_u64().context("assignment label"))
+            .collect::<Result<_>>()?
+    };
+    if assignment.len() != unit_count || assignment.iter().any(|district| *district >= districts) {
+        bail!("release assignment mismatch for {state}");
+    }
+    Ok((context, assignment, context_path))
+}
+
+fn write_assignment_csv(context: &Value, assignment: &[u64], destination: &Path) -> Result<()> {
+    let unit_ids = context
+        .pointer("/units/unit_ids")
+        .and_then(Value::as_array)
+        .context("unit_ids")?;
+    let mut writer = BufWriter::new(File::create(destination)?);
+    writeln!(writer, "geoid,district_zero_based,district_one_based")?;
+    for (unit, district) in unit_ids.iter().zip(assignment) {
+        writeln!(
+            writer,
+            "{},{},{}",
+            unit.as_str().context("unit id")?,
+            district,
+            district + 1
+        )?;
+    }
+    writer.flush()?;
+    Ok(())
+}
+
+fn render_centroid_map(
+    centroids: &[(String, (f64, f64))],
+    unit_ids: &[Value],
+    assignment: &[u64],
+    destination: &Path,
+) -> Result<Value> {
+    if centroids.len() != unit_ids.len() || assignment.len() != unit_ids.len() {
+        bail!("centroid map universe length mismatch");
+    }
+    for ((geoid, _), expected) in centroids.iter().zip(unit_ids) {
+        if Some(geoid.as_str()) != expected.as_str() {
+            bail!("centroid map GEOID order mismatch");
+        }
+    }
+    let (min_x, max_x, min_y, max_y) = centroids.iter().fold(
+        (
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ),
+        |(min_x, max_x, min_y, max_y), (_, (x, y))| {
+            (min_x.min(*x), max_x.max(*x), min_y.min(*y), max_y.max(*y))
+        },
+    );
+    let width = 1200u32;
+    let height = 900u32;
+    let padding = 24.0;
+    let scale = ((width as f64 - 2.0 * padding) / (max_x - min_x).max(1.0))
+        .min((height as f64 - 2.0 * padding) / (max_y - min_y).max(1.0));
+    let drawn_width = (max_x - min_x) * scale;
+    let drawn_height = (max_y - min_y) * scale;
+    let offset_x = (width as f64 - drawn_width) / 2.0;
+    let offset_y = (height as f64 - drawn_height) / 2.0;
+    let scheme = CategoricalScheme::default();
+    let mut pixmap = tiny_skia::Pixmap::new(width, height).context("create release map pixmap")?;
+    pixmap.fill(tiny_skia::Color::WHITE);
+    let pixels = pixmap.pixels_mut();
+    for ((_, (x, y)), district) in centroids.iter().zip(assignment) {
+        let px = ((*x - min_x) * scale + offset_x).round() as i64;
+        let py = ((max_y - *y) * scale + offset_y).round() as i64;
+        let (r, g, b) = scheme.color(*district as usize);
+        let color =
+            tiny_skia::PremultipliedColorU8::from_rgba(r, g, b, 255).context("opaque map color")?;
+        for dy in 0..=1i64 {
+            for dx in 0..=1i64 {
+                let draw_x = px + dx;
+                let draw_y = py + dy;
+                if draw_x >= 0 && draw_y >= 0 && draw_x < width as i64 && draw_y < height as i64 {
+                    pixels[draw_y as usize * width as usize + draw_x as usize] = color;
+                }
+            }
+        }
+    }
+    pixmap.save_png(destination)?;
+    Ok(json!({
+        "kind":"projected-block-centroid-diagnostic",
+        "projection":"EPSG:5070",
+        "width":width,"height":height,"block_count":centroids.len(),
+        "limitation":"Display diagnostic only; points are block centroids and do not represent exact district polygon boundaries."
+    }))
+}
+
+fn count_screening(tree: &Value) -> Result<(u64, u64)> {
+    let mut completed = 0u64;
+    let mut timeouts = 0u64;
+    for node in tree["nodes"].as_array().context("nodes")? {
+        for screen in node["seed_screening"]
+            .as_array()
+            .context("seed screening")?
+        {
+            match screen["status"].as_str() {
+                Some("completed") => completed += 1,
+                Some("timeout") => timeouts += 1,
+                _ => {}
+            }
+        }
+    }
+    Ok((completed, timeouts))
+}
+
+fn build_national_release(out: &Path, created_at: &str) -> Result<()> {
+    if out.exists() {
+        bail!("release bundle already exists: {}", out.display());
+    }
+    if !git_text(&["status", "--porcelain"])?.is_empty() {
+        bail!("release candidate must be generated from a clean working tree");
+    }
+    let git_commit = git_text(&["rev-parse", "HEAD"])?;
+    let required_dirs = [
+        "config",
+        "runs/assignments",
+        "analysis",
+        "reports/maps",
+        "reports/verification",
+        "review",
+        "limitations",
+    ];
+    for dir in required_dirs {
+        fs::create_dir_all(out.join(dir))?;
+    }
+    let config = json!({
+        "schema_version":"nationwide-operational-profile-v1","year":2020,
+        "geography":"2020 Census tabulation blocks","structure":"standard recursive bisection",
+        "seat_schedule":"floor(k/2)/ceil(k/2)","weights":"exact shared-boundary length",
+        "discovery":"deterministic bounded METIS seed screening with population refinement",
+        "population_target":"ratio arithmetic floor at every recursive node",
+        "seed_frontier_max":128,
+        "claim_boundary":"Operational profile; not the single-seed NRS v0.1 conformance profile."
+    });
+    let config_path = out.join("config/operational-profile.json");
+    write_json(&config_path, &config, true)?;
+    for (source, destination) in [
+        (
+            "docs/experiments/nationwide-2020/national-tree-verification.json",
+            "reports/verification/national-tree-verification.json",
+        ),
+        (
+            "docs/experiments/nationwide-2020/national-tree-verification-manifest.json",
+            "reports/verification/national-tree-verification-manifest.json",
+        ),
+        (
+            "docs/experiments/nationwide-2020/bisect-ops-national-tree-verifier-source.rs",
+            "reports/verification/verifier-source.rs",
+        ),
+        (
+            "docs/experiments/nationwide-2020/national-proof-coverage.json",
+            "analysis/national-proof-coverage.json",
+        ),
+        (
+            "docs/experiments/nationwide-2020/BUILDER_CUSTODY_DISPOSITION.md",
+            "review/BUILDER_CUSTODY_DISPOSITION.md",
+        ),
+    ] {
+        copy_artifact(Path::new(source), &out.join(destination))?;
+    }
+    let inventory = read_json(Path::new("docs/experiments/nationwide-2020/inventory.json"))?;
+    let national = read_json(Path::new(
+        "docs/experiments/nationwide-2020/national-tree-verification.json",
+    ))?;
+    let national_rows: BTreeMap<String, Value> = national["states"]
+        .as_array()
+        .context("national states")?
+        .iter()
+        .map(|row| {
+            Ok((
+                row["state"].as_str().context("national state")?.to_owned(),
+                row.clone(),
+            ))
+        })
+        .collect::<Result<_>>()?;
+    let mut package_rows = Vec::new();
+    let mut runtime_rows = Vec::new();
+    let mut map_rows = Vec::new();
+    for state_row in inventory["states"].as_array().context("inventory states")? {
+        let state = state_row["state"].as_str().context("state")?;
+        let fips = state_row["fips"].as_str().context("fips")?;
+        let districts = state_row["districts"].as_u64().context("districts")?;
+        let (context, assignment, context_path) = assignment_for_state(state, districts)?;
+        let assignment_path = out
+            .join("runs/assignments")
+            .join(format!("{}.csv", state.to_lowercase()));
+        write_assignment_csv(&context, &assignment, &assignment_path)?;
+        let shape = PathBuf::from(format!(
+            "data/2020/tiger/blocks/tl_2020_{fips}_tabblock20/tl_2020_{fips}_tabblock20.shp"
+        ));
+        let centroids = read_tiger_block_centroids_projected(&shape)?;
+        let map_path = out
+            .join("reports/maps")
+            .join(format!("{}.png", state.to_lowercase()));
+        let map_metadata = render_centroid_map(
+            &centroids,
+            context
+                .pointer("/units/unit_ids")
+                .and_then(Value::as_array)
+                .context("unit ids")?,
+            &assignment,
+            &map_path,
+        )?;
+        map_rows.push(
+            json!({"state":state,"path":release_relative(out,&map_path)?,"metadata":map_metadata}),
+        );
+        let national_row = national_rows.get(state).context("national state row")?;
+        if districts == 1 {
+            package_rows.push(json!({
+                "state":state,"districts":districts,"context_path":context_path,
+                "context_sha256":sha256(&context_path)?,"assignment_path":release_relative(out,&assignment_path)?,
+                "assignment_sha256":sha256(&assignment_path)?,"tree":"not-applicable-single-district"
+            }));
+            runtime_rows.push(json!({"state":state,"recursive_nodes":0,"completed_screens":0,"timeout_screens":0,"wall_clock_seconds":null,"status":"not-retained"}));
+        } else {
+            let package =
+                Path::new("data/2020/certified/operational-trees").join(state.to_lowercase());
+            let tree_path = package.join("operational-tree.json");
+            let manifest_path = package.join("manifest.json");
+            let tree = read_json(&tree_path)?;
+            let (completed, timeouts) = count_screening(&tree)?;
+            package_rows.push(json!({
+                "state":state,"districts":districts,"context_path":context_path,
+                "context_sha256":sha256(&context_path)?,"tree_path":tree_path,
+                "tree_sha256":sha256(&tree_path)?,"package_manifest_sha256":sha256(&manifest_path)?,
+                "builder_source_custody":national_row["builder_source_custody"],
+                "assignment_path":release_relative(out,&assignment_path)?,
+                "assignment_sha256":sha256(&assignment_path)?
+            }));
+            runtime_rows.push(json!({
+                "state":state,"recursive_nodes":tree["nodes"].as_array().map_or(0,Vec::len),
+                "completed_screens":completed,"timeout_screens":timeouts,"screen_timeout_seconds":180,
+                "wall_clock_seconds":null,"status":"wall-clock-runtime-not-retained"
+            }));
+        }
+        println!("{state}: release assignment and centroid map complete");
+    }
+    write_json(
+        &out.join("runs/state-package-index.json"),
+        &json!({"schema_version":"nationwide-2020-release-state-index-v1","states":package_rows}),
+        true,
+    )?;
+    write_json(
+        &out.join("analysis/runtime-evidence.json"),
+        &json!({
+            "schema_version":"nationwide-2020-runtime-evidence-v1","states":runtime_rows,
+            "limitation":"Per-screen 180-second timeout events are retained. Successful-screen and State wall-clock durations were not retained and cannot be reconstructed."
+        }),
+        true,
+    )?;
+    write_json(
+        &out.join("reports/maps/manifest.json"),
+        &json!({"schema_version":"nationwide-2020-centroid-map-package-v1","maps":map_rows,
+            "claim_boundary":"Cartographic diagnostics based on projected block centroids; not exact district boundary polygons."}),
+        true,
+    )?;
+    fs::write(
+        out.join("README.md"),
+        "# Nationwide 2020 Operational Evidence Package\n\nInternal release candidate covering all 50 States, 435 connected leaves, and 8,126,956 Census blocks. See `limitations/LIMITATIONS.md` before using any result.\n\nReplay verification from the repository root with:\n\n```text\ncargo run -p bisect-ops -- verify-national-trees\ncargo run -p bisect-ops -- verify-national-release release_staging/nationwide-2020-operational-v1\n```\n",
+    )?;
+    fs::write(
+        out.join("limitations/LIMITATIONS.md"),
+        "# Limitations And Non-Claims\n\n- Boundary and canonical optimality are unproved at all 385 nontrivial nodes.\n- Forty legacy packages do not retain matching historical builder bytes; see the custody disposition.\n- Successful-screen and State wall-clock runtimes were not retained.\n- Maps are block-centroid diagnostics, not exact dissolved district boundaries.\n- This bounded multi-seed operational run is not the single-seed NRS v0.1 conformance benchmark.\n- The package does not establish VRA compliance, partisan fairness, legal validity, court admissibility, official adoption, or public-release approval.\n",
+    )?;
+    fs::write(
+        out.join("review/L1_REVIEW.md"),
+        "# Internal L1 Review\n\nStatus: release-candidate pending human L2 review.\n\nThe required BISECT-EVIDENCE-PACKAGE-v1 layout and fields are present. Assignment, context, tree, verifier, analysis, report, map, limitation, and review artifacts are hash-bound. DATUM/SCALE/COMMONS/VAULT public review remains open; this package has not been externally published.\n",
+    )?;
+    let artifact_paths = release_files(out)?;
+    let artifacts: Vec<Value> = artifact_paths
+        .iter()
+        .map(|path| {
+            Ok(json!({
+                "path":release_relative(out,path)?,"sha256":sha256(path)?
+            }))
+        })
+        .collect::<Result<_>>()?;
+    let current_exe = std::env::current_exe()?;
+    let manifest = json!({
+        "contract_id":"BISECT-EVIDENCE-PACKAGE-v1",
+        "label":"nationwide-2020-operational-v1","year":2020,
+        "scope":{"states":inventory["states"].as_array().context("states")?.iter().map(|row|row["state"].clone()).collect::<Vec<_>>(),"chamber":"U.S. House","release_subset":"all-50-states-2020-operational"},
+        "created_at":created_at,"bisect_version":env!("CARGO_PKG_VERSION"),"git_commit":git_commit,
+        "working_tree_status":"clean","build_features":[],
+        "bisect_ops_binary_sha256":sha256(&current_exe)?,
+        "metis_engine":{"refinement":"metis","engine_identity":"not-retained-in-historical-tree-artifacts"},
+        "command_lines":[
+            format!("cargo run -p bisect-ops -- build-national-release --created-at {created_at}"),
+            "cargo run -p bisect-ops -- verify-national-trees",
+            "cargo run -p bisect-ops -- verify-national-release release_staging/nationwide-2020-operational-v1"
+        ],
+        "config_path":"config/operational-profile.json","config_sha256":sha256(&config_path)?,
+        "source_data":{"family":"2020 Census TIGER/Line tabulation blocks and PL 94-171","year":2020,"custody_status":"local-hash-bound-not-redistributed","national_rctx_verification_sha256":sha256(Path::new("docs/experiments/nationwide-2020/rctx-verification.json"))?},
+        "artifacts":artifacts,"verification_status":"pass","claim_status":"release-candidate",
+        "limitations":["limitations/LIMITATIONS.md","review/BUILDER_CUSTODY_DISPOSITION.md"],
+        "non_claims":["exact boundary optimality","canonical tie optimality","NRS v0.1 conformance","VRA compliance","partisan fairness","legal or official adoption","external publication approval"],
+        "supersedes":null
+    });
+    write_json(&out.join("MANIFEST.json"), &manifest, true)?;
+    let mut hashes = String::new();
+    for path in release_files(out)? {
+        if path.file_name().and_then(|value| value.to_str()) == Some("HASHES.sha256") {
+            continue;
+        }
+        hashes.push_str(&format!(
+            "{}  {}\n",
+            sha256(&path)?,
+            release_relative(out, &path)?
+        ));
+    }
+    fs::write(out.join("HASHES.sha256"), hashes)?;
+    verify_national_release(out)?;
+    println!("National release candidate: VERIFIED ({})", out.display());
+    Ok(())
+}
+
+fn verify_national_release(bundle: &Path) -> Result<()> {
+    for required in [
+        "README.md",
+        "MANIFEST.json",
+        "HASHES.sha256",
+        "config",
+        "runs",
+        "analysis",
+        "reports",
+        "review",
+        "limitations",
+    ] {
+        if !bundle.join(required).exists() {
+            bail!("release bundle missing {required}");
+        }
+    }
+    let manifest = read_json(&bundle.join("MANIFEST.json"))?;
+    let required_fields = [
+        "contract_id",
+        "label",
+        "year",
+        "scope",
+        "created_at",
+        "bisect_version",
+        "git_commit",
+        "working_tree_status",
+        "build_features",
+        "metis_engine",
+        "command_lines",
+        "config_path",
+        "config_sha256",
+        "source_data",
+        "artifacts",
+        "verification_status",
+        "claim_status",
+        "limitations",
+        "non_claims",
+        "supersedes",
+    ];
+    for field in required_fields {
+        if manifest.get(field).is_none() {
+            bail!("release manifest missing {field}");
+        }
+    }
+    if manifest["contract_id"] != "BISECT-EVIDENCE-PACKAGE-v1"
+        || manifest["verification_status"] != "pass"
+        || manifest["claim_status"] != "release-candidate"
+        || manifest["working_tree_status"] != "clean"
+    {
+        bail!("release manifest vocabulary or posture mismatch");
+    }
+    if sha256(&bundle.join(manifest["config_path"].as_str().context("config path")?))?
+        != manifest["config_sha256"]
+    {
+        bail!("release config hash mismatch");
+    }
+    for artifact in manifest["artifacts"].as_array().context("artifacts")? {
+        let path = bundle.join(artifact["path"].as_str().context("artifact path")?);
+        if !path.is_file() || sha256(&path)? != artifact["sha256"] {
+            bail!("release artifact hash mismatch: {}", path.display());
+        }
+    }
+    let expected_hashes: BTreeMap<_, _> = fs::read_to_string(bundle.join("HASHES.sha256"))?
+        .lines()
+        .map(|line| {
+            let (hash, path) = line.split_once("  ").context("HASHES line")?;
+            Ok((path.to_owned(), hash.to_owned()))
+        })
+        .collect::<Result<_>>()?;
+    let unhashed_files = release_files(bundle)?
+        .into_iter()
+        .filter(|path| path.file_name().and_then(|value| value.to_str()) != Some("HASHES.sha256"))
+        .count();
+    if expected_hashes.len() != unhashed_files {
+        bail!("HASHES contains duplicate, missing, or extra entries");
+    }
+    for path in release_files(bundle)? {
+        if path.file_name().and_then(|value| value.to_str()) == Some("HASHES.sha256") {
+            continue;
+        }
+        let relative = release_relative(bundle, &path)?;
+        if expected_hashes.get(&relative) != Some(&sha256(&path)?) {
+            bail!("HASHES mismatch for {relative}");
+        }
+    }
+    let index = read_json(&bundle.join("runs/state-package-index.json"))?;
+    if index["states"].as_array().map_or(0, Vec::len) != 50 {
+        bail!("release State index is incomplete");
+    }
+    let map_manifest = read_json(&bundle.join("reports/maps/manifest.json"))?;
+    if map_manifest["maps"].as_array().map_or(0, Vec::len) != 50 {
+        bail!("release map set is incomplete");
+    }
+    for map in map_manifest["maps"].as_array().unwrap() {
+        let bytes = fs::read(bundle.join(map["path"].as_str().context("map path")?))?;
+        if bytes.len() < 1_000 || !bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+            bail!("release map is not a nontrivial PNG");
+        }
+    }
+    println!("National release package verification: PASS");
+    Ok(())
+}
+
 fn component_count(adjacency: &[Vec<usize>]) -> usize {
     let mut seen = vec![false; adjacency.len()];
     let mut count = 0;
@@ -2027,6 +2532,11 @@ fn main() -> Result<()> {
             context_root,
             one_district,
         } => verify_national_trees(&out_dir, &package_root, &context_root, &one_district),
+        Action::BuildNationalRelease {
+            out_dir,
+            created_at,
+        } => build_national_release(&out_dir, &created_at),
+        Action::VerifyNationalRelease { bundle } => verify_national_release(&bundle),
         Action::RctxBatch { workers, limit } => rctx_batch(workers, limit),
         Action::BuildStateRctx {
             state_code,
@@ -2125,6 +2635,29 @@ mod tests {
         let mut broken = tree;
         broken["leaves"][2]["path"] = json!("10");
         assert!(verify_recursive_schedule(&broken).is_err());
+    }
+
+    #[test]
+    fn centroid_release_map_is_nontrivial_png() {
+        let temp = tempfile::tempdir().unwrap();
+        let destination = temp.path().join("map.png");
+        let centroids = vec![
+            ("000000000000001".into(), (0.0, 0.0)),
+            ("000000000000002".into(), (1.0, 0.0)),
+            ("000000000000003".into(), (0.0, 1.0)),
+            ("000000000000004".into(), (1.0, 1.0)),
+        ];
+        let ids = vec![
+            json!("000000000000001"),
+            json!("000000000000002"),
+            json!("000000000000003"),
+            json!("000000000000004"),
+        ];
+        let metadata = render_centroid_map(&centroids, &ids, &[0, 0, 1, 1], &destination).unwrap();
+        let bytes = fs::read(destination).unwrap();
+        assert!(bytes.starts_with(b"\x89PNG\r\n\x1a\n"));
+        assert!(bytes.len() > 1_000);
+        assert_eq!(metadata["block_count"], 4);
     }
 
     #[test]

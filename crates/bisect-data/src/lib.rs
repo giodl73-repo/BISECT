@@ -14,5 +14,6 @@ pub use fiedler::{compute_fiedler, make_certificate, FiedlerCertificate};
 pub use pl94::{read_pl94_block_populations, Pl94BlockPopulation, Pl94Error};
 pub use serialize::{deserialize_adjacency, serialize_adjacency, SerializeError};
 pub use tiger::{
-    read_tiger_blocks_projected, read_tiger_tracts, BlockRecord, TigerError, TractRecord,
+    read_tiger_block_centroids_projected, read_tiger_blocks_projected, read_tiger_tracts,
+    BlockRecord, TigerError, TractRecord,
 };

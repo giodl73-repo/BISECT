@@ -154,6 +154,40 @@ pub fn read_tiger_blocks_projected<P: AsRef<Path>>(
     Ok(records)
 }
 
+/// Read canonical TIGER block identifiers and projected centroids without
+/// retaining polygon WKB. This is the memory-bounded cartographic path for
+/// nationwide assignment previews; analytic geometry continues to use
+/// [`read_tiger_blocks_projected`].
+pub fn read_tiger_block_centroids_projected<P: AsRef<Path>>(
+    shp_path: P,
+) -> Result<Vec<(String, (f64, f64))>, TigerError> {
+    let mut reader = shapefile::Reader::from_path(shp_path.as_ref())
+        .map_err(|error| TigerError::ShapefileError(error.to_string()))?;
+    let mut records = Vec::new();
+    for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
+        let (shape, record) =
+            shape_record.map_err(|error| TigerError::ShapefileError(error.to_string()))?;
+        let geoid = match record.get("GEOID20") {
+            Some(shapefile::dbase::FieldValue::Character(Some(value))) => value.trim().to_string(),
+            _ => return Err(TigerError::MissingGeoid),
+        };
+        if geoid.len() != 15 || !geoid.bytes().all(|byte| byte.is_ascii_digit()) {
+            return Err(TigerError::InvalidBlockGeoid(geoid));
+        }
+        let geographic = shape_to_multipolygon(&shape, idx)?;
+        if geographic.0.is_empty() {
+            continue;
+        }
+        let centroid = project_epsg5070(&geographic)
+            .centroid()
+            .map(|point| (point.x(), point.y()))
+            .ok_or(TigerError::MissingCentroid(idx))?;
+        records.push((geoid, centroid));
+    }
+    records.sort_by(|left, right| left.0.cmp(&right.0));
+    Ok(records)
+}
+
 fn numeric_field(record: &shapefile::dbase::Record, field: &str) -> Option<i64> {
     match record.get(field) {
         Some(shapefile::dbase::FieldValue::Numeric(Some(value))) => Some(*value as i64),

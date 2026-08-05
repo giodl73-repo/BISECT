@@ -417,10 +417,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bisect-data",
+ "bisect-map",
  "clap",
  "rayon",
  "serde_json",
  "sha2",
+ "tempfile",
+ "tiny-skia",
 ]
 
 [[package]]
