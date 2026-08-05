@@ -310,6 +310,18 @@ fn sha256(path: &Path) -> Result<String> {
     Ok(format!("{:x}", digest.finalize()))
 }
 
+fn git_blob_sha256(commit: &str, path: &str) -> Result<String> {
+    let object = format!("{commit}:{path}");
+    let output = Command::new("git")
+        .args(["cat-file", "blob", &object])
+        .output()
+        .with_context(|| format!("read frozen source {object}"))?;
+    if !output.status.success() {
+        bail!("frozen source object is unavailable: {object}");
+    }
+    Ok(format!("{:x}", Sha256::digest(output.stdout)))
+}
+
 fn tiger_archive_member_hashes(path: &Path) -> Result<BTreeMap<String, String>> {
     let source = File::open(path).with_context(|| format!("open {}", path.display()))?;
     let mut archive = zip::ZipArchive::new(source)
@@ -622,12 +634,18 @@ fn verify_nrs_seed_package(package: &Path, context_path: &Path) -> Result<()> {
     {
         bail!("NRS context canonical binding mismatch");
     }
+    let source_commit = standard_profile
+        .pointer("/reference_engine/source_commit")
+        .and_then(Value::as_str)
+        .context("NRS reference engine source commit")?;
     for (relative, expected) in standard_profile
         .pointer("/reference_engine/source_files")
         .and_then(Value::as_object)
         .context("NRS reference engine source files")?
     {
-        if sha256(Path::new(relative))? != expected.as_str().context("NRS source hash")? {
+        if git_blob_sha256(source_commit, relative)?
+            != expected.as_str().context("NRS source hash")?
+        {
             bail!("NRS reference engine source mismatch: {relative}");
         }
     }
