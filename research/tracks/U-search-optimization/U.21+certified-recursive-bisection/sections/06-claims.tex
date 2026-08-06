@@ -14,15 +14,21 @@ of interest, racial representation, or every compactness measure. VRA and
 constitutional application remain separate legal questions.
 
 Nor does the present implementation show that certified recursion ``wins'' on
-nationwide map quality. A defensible superiority study must run the same
-instances through certified and heuristic cut selection, report objective
+nationwide map quality. The precommitted eight-instance suite now runs the same
+bounded root instances through exact certified and heuristic selection without
+choosing seeds after the result. It is a comparison-mechanics result, not a
+representative political or State-scale sample. A defensible superiority study
+must run the same instances through certified and heuristic cut selection, report objective
 agreement and disagreement, measure runtime and proof size, and evaluate final
 plan metrics without selecting favorable states or seeds.
 
 The current conclusion is narrower: relative to heuristic output, solver
 metadata, and RPLAN audit alone, certified recursive bisection provides the
 strongest model-optimality claim architecture currently implemented in the
-project. NRS v0.3 demonstrates that the operational recursion, assignment, and
+project. The bounded comparison shows why proof can matter even when every
+heuristic result is feasible: ten of 40 rows sacrifice the model's
+first-priority population objective for a smaller boundary. NRS v0.3
+demonstrates that the operational recursion, assignment, and
 verification layer can run nationally across three Census cycles. Whether the
 boundary and canonical proof strength can be delivered at that scale remains
 the central open engineering question.

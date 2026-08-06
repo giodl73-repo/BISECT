@@ -13,7 +13,8 @@ All headline quantities match implementation or committed evidence:
 - 66,097 land edges and 64 island bridges;
 - 24-unit bounded oracle;
 - three optimal UNSAT requests and a suboptimal SAT counterexample; and
-- path-8 METIS/certified objective `(0,0,1)`;
+- eight precommitted certified-versus-METIS fixtures and 40 fixed-seed rows,
+  with 30 full-objective and 20 canonical-assignment agreements;
 - three NRS v0.3 national baselines of 50 States, 435 districts, and 385
   recursive nodes each;
 - 1,155/1,155 nodes within tolerance, 13 arithmetic-floor attainments, and
@@ -40,12 +41,19 @@ The paper keeps that result separate from exact-objective certification and
 from political or map-quality evaluation. Cross-census assignment overlap is
 not reported without a valid relationship crosswalk or geometry overlay.
 
+The bounded comparison layer now retains every result from eight precommitted
+synthetic fixtures and five fixed seeds. All 40 heuristic rows are feasible and
+connected. The ten full-objective disagreements occur on the varied ladder and
+unequal grid and favor exact population balance under the frozen lexicographic
+model, despite a larger boundary cut.
+
 ## Remaining Panel Questions
 
 1. Is the sequential-local-optimum failure posture acceptable for legislation?
 2. Which compact connectivity proof encoding should replace static no-goods?
-3. What precommitted benchmark suite is sufficient before empirical
-   superiority can be discussed?
+3. What representative State-scale suite, final-plan metrics, and neutral
+   evaluation protocol are sufficient before empirical superiority can be
+   discussed beyond the bounded comparison-mechanics result?
 
 ## Claim Boundary
 

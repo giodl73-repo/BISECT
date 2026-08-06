@@ -1,0 +1,15 @@
+{
+  "claim_boundary": "Eight precommitted bounded synthetic instances and five fixed seeds only; no State-scale, national, map-quality, fairness, VRA, legal-validity, or adoption claim.",
+  "files": {
+    "README.md": "5df9d700ba6d3f3c19556fee8768062a1ffd57173a6768474ea671637a3b08de",
+    "comparison-suite.json": "878fa88b81f7b74bf6e9fa31feeba66057c8de1f2b0197df6984067bfa00b119"
+  },
+  "generator_path": "crates/bisect-cli/examples/certified_vs_metis_suite.rs",
+  "generator_sha256": "d897abe31489985af8bf78de194410f44d9b911d4eb69ebb6cc16a291d96009d",
+  "package_id": "certified-vs-metis-multi-instance-v1",
+  "protocol_path": "docs/specs/2026-08-06-certified-vs-metis-multi-instance-protocol.md",
+  "protocol_sha256": "54291fd97b0fe6ba1f2ab4a19a208f146106535ddb1847b74e70744d6e5ffdaf",
+  "schema_version": "certified-vs-metis-multi-instance-package-v1",
+  "verifier_path": "scripts/research/verify_certified_vs_metis_suite.py",
+  "verifier_sha256": "0aa2ae6707768d0b6db1c7d3c1ef0155d6d93ed36c26011c8750a8bdba1bc430"
+}

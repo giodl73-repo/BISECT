@@ -46,7 +46,7 @@ optimal cuts?
 
 | Comparison | Current status |
 |---|---|
-| Certified bounded cut vs METIS on same synthetic instance | Methodologically available; package table needed |
+| Certified bounded cut vs METIS on same synthetic instances | Complete for eight precommitted fixtures and 40 fixed-seed rows; 30/40 full-objective and 20/40 canonical-assignment agreements |
 | Exact objective agreement across implementations | Available for E0; generalized independent verifier future work |
 | Runtime scaling | Bounded timings only; no State-scale proof timing |
 | National map-quality superiority | Not available |

@@ -14,6 +14,9 @@ CLI package & Tree, RPLAN, RCTX, audit certificate, and manifest with
 tree-to-plan verification. \\
 Hostile evidence & False optimum, ID tamper, node-order, missing-leaf, and
 leaf-universe substitutions are rejected. \\
+Precommitted comparison & Eight bounded synthetic graphs, five fixed METIS
+seeds per graph, and all 40 heuristic outcomes retained and independently
+recomputed. \\
 Proof prototype & Static and compact OPB requests, a deliberate suboptimal SAT
 counterexample, and pinned RoundingSat/VeriPB population and compact-boundary
 proofs. \\
@@ -58,11 +61,22 @@ recursive evidence tree, and separate national operational completion from
 exact-objective coverage. Nationwide political and map-quality comparisons
 remain future empirical work.
 
-On the committed path-8 root fixture, vendored METIS 5.1.0 with seed 42 selects
-the same assignment and objective as the certified oracle:
-$(\Delta_{\max},\Delta_{\mathrm{total}},\mathrm{cut})=(0,0,1)$ and assignment
-\texttt{00001111}. Certification does not improve that cut; it proves that the
-permitted answer is unique. A deliberate connected control
-\texttt{00011111} has population objective $(400,800)$ and is correctly
-identified as worse. This single synthetic comparison cannot support national
-map-quality or runtime superiority.
+The precommitted comparison expands the original path-8 demonstration to eight
+bounded synthetic graphs and five fixed METIS seeds per graph. All 40 heuristic
+rows are feasible and connected. METIS matches the complete exact primary
+objective in 30 rows and the exact canonical assignment in 20. Path-8, the
+varied 10-cycle, the barbell, and the unequal tree match both assignment and
+objective for all seeds. The weighted grid and 20-cycle match the objective but
+select different tied assignments.
+
+The ten objective disagreements are concentrated in two fixtures. On the
+varied ladder, METIS selects scaled population deviations $(20,40)$ and
+boundary 2 while the exact certified objective selects $(0,0)$ and boundary 4.
+On the unequal $4\times4$ grid, METIS selects $(95,190)$ and boundary 5 while
+the exact result selects $(40,80)$ and boundary 8. These are not contradictions:
+the frozen lexicographic model minimizes population deviation before boundary.
+The independent Python verifier reconstructs the eight instances and hashes,
+recomputes objectives, connectivity, row status, and all aggregates, and binds
+the report to the precommitted protocol. The finite suite demonstrates both
+agreement and meaningful disagreement; it cannot support State-scale,
+national map-quality, or runtime superiority.
