@@ -11,3 +11,4 @@ Cargo.lock text eol=lf
 rust-toolchain.toml text eol=lf
 configs/nrs_reference_v0_1.yml text eol=lf
 docs/fixtures/nrs-reference-v0.1/** text eol=lf
+docs/external/nrs-v0.3-national-verification/** text eol=lf

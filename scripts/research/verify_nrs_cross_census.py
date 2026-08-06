@@ -23,8 +23,19 @@ def load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def sha256_variants(path: Path) -> set[str]:
+    """Return raw and line-ending-normalized hashes for UTF-8 text transport."""
+    data = path.read_bytes()
+    variants = {hashlib.sha256(data).hexdigest()}
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return variants
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    for newline in ("\n", "\r\n"):
+        transported = normalized.replace("\n", newline).encode("utf-8")
+        variants.add(hashlib.sha256(transported).hexdigest())
+    return variants
 
 
 def require(condition: bool, message: str) -> None:
@@ -176,7 +187,10 @@ def verify(package: Path) -> None:
     expected_matrix_hash = next(
         row["sha256"] for row in manifest["files"] if row["path"] == matrix_path.name
     )
-    require(sha256(matrix_path) == expected_matrix_hash, "matrix transport hash mismatch")
+    require(
+        expected_matrix_hash in sha256_variants(matrix_path),
+        "matrix transport hash mismatch",
+    )
     require(
         matrix["schema_version"] == "nrs-cross-census-stability-v1",
         "unknown matrix schema",
@@ -188,7 +202,10 @@ def verify(package: Path) -> None:
         if not path.is_absolute():
             path = ROOT / path
         require(path.is_file(), f"missing snapshot: {path}")
-        require(sha256(path) == artifact["sha256"], f"snapshot hash mismatch: {path}")
+        require(
+            artifact["sha256"] in sha256_variants(path),
+            f"snapshot hash mismatch: {path}",
+        )
         snapshot = load(path)
         require(snapshot["schema_version"] == "nrs-node-snapshot-v1", "unknown snapshot")
         require(snapshot["census_year"] == artifact["census_year"], "snapshot year drift")
