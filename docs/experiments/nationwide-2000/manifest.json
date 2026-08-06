@@ -1,0 +1,14 @@
+{
+  "schema_version": "certified-national-2000-input-inventory-package-v1",
+  "package_id": "nationwide-2000-input-inventory",
+  "status": "incomplete",
+  "files": [
+    {
+      "path": "inventory.json",
+      "sha256": "57ad3f8c05818ee80f4c8dd7a4dc6397f2931e7b6e88f85601cf78ad50d50e7f"
+    }
+  ],
+  "builder_path": "scripts/research/inventory_national_2000.py",
+  "builder_sha256": "06bbaf5438c4b3333292f8dc007546b44ae009c21dd1a0a9d8260d2cc63b4e45",
+  "claim_boundary": "Hash-bound local Census 2000 source and context custody inventory. Official county TIGER/Line archives are required for geometry custody; extracted members are reproducible working files. This report makes no district-generation claim."
+}

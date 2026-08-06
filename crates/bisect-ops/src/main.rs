@@ -3111,20 +3111,24 @@ fn verify_national_rctx(
                 rehashed_keys.insert(*key);
             }
         }
+        let mut missing_tiger_block_files = Vec::new();
         if let Some(files) = context["source_hashes"]["tiger_block_files"].as_object() {
             if files.is_empty() {
                 bail!("{state} TIGER block source map is empty");
             }
             for (relative, expected) in files {
                 let source_path = governed_source_path(&root, relative)?;
-                if !source_path.is_file()
-                    || expected.as_str() != Some(&format!("sha256:{}", sha256(&source_path)?))
-                {
-                    bail!("{state} TIGER block source missing or hash-mismatched: {relative}");
+                if !source_path.is_file() {
+                    missing_tiger_block_files.push(relative.clone());
+                    continue;
+                }
+                if expected.as_str() != Some(&format!("sha256:{}", sha256(&source_path)?)) {
+                    bail!("{state} TIGER block source hash mismatch: {relative}");
                 }
                 rehashed_sources += 1;
             }
         }
+        let mut tiger_bundle_archive_verified = false;
         if let Some(archives) = context["source_hashes"]["tiger_archives"].as_object() {
             if archives.is_empty() {
                 bail!("{state} TIGER archive source map is empty");
@@ -3156,6 +3160,13 @@ fn verify_national_rctx(
                     bail!("{state} TIGER archive member hash mismatch for {filename}");
                 }
             }
+            tiger_bundle_archive_verified = true;
+        }
+        if !missing_tiger_block_files.is_empty() && !tiger_bundle_archive_verified {
+            bail!(
+                "{state} has {} missing extracted TIGER files without verified archive custody",
+                missing_tiger_block_files.len()
+            );
         }
         if let Some(expected_archive_hash) = context["source_hashes"]["tiger_archive"].as_str() {
             let archive_path = root.join(format!(
