@@ -15,11 +15,21 @@ shared-boundary length from the applicable TIGER/Line vintage. METIS minimizes
 the weighted cut while recursively allocating the required number of districts.
 
 This profile excludes election results, party registration, incumbency,
-candidate identity, race, and community-of-interest submissions from benchmark
+candidate identity, race, and community submissions from benchmark
 generation. That exclusion is auditable from the configuration and manifest,
 but it does not make the profile value-free. Tract resolution, recursive
 structure, boundary weighting, population tolerance, random seed, and engine
 version can all affect the output.
+
+The governed operational profile is NRS v0.3. It uses 15-digit Census blocks,
+versioned State adjacency contexts, a fixed floor/ceiling recursive seat
+schedule, manifest-derived seeds, deterministic candidate refinement, and
+one-based canonical district labels. For each Census cycle, the published
+package binds the executable, input inventory, standard and legal profiles,
+State assignment/tree manifests, national proof-coverage summary, and an
+independent verification pass. NRS v0.3 is a later research profile; it does
+not silently amend the v0.1 schedule incorporated by the candidate model
+statute.
 
 Race-conscious VRA-aligned weighting and partisan-weighted analysis are
 separate research or case-specific profiles. They are not part of the default
@@ -44,10 +54,12 @@ The current project supports several structures, weight signals, and search
 modes. Results from one profile do not establish properties of another. The
 candidate national-standard decision record selects standard recursive
 bisection, geographic boundary weights, and one precommitted content-derived
-seed as a comparison benchmark. That seed path and block-level conformance
-remain implementation work; the historical tract outputs analyzed here should
-therefore be treated as research artifacts, not as completed national-standard
-certificates.
+seed as a comparison benchmark. Seed wiring and block-level operational
+conformance are implemented and verified nationally in NRS v0.3. The earlier
+tract outputs analyzed elsewhere in this paper remain separate research
+artifacts; they are not NRS v0.3 certificates and cannot supply missing
+compactness, demographic, partisan, or community evidence for the block-level
+assignments.
 
 \subsection{Population And Contiguity}
 

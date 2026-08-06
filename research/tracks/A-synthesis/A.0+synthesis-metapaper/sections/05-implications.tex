@@ -35,17 +35,32 @@ requirements, and its race-excluded execution profile is not a safe harbor.
 Computational efficiency can support transparent comparison once real ensemble
 generation and convergence evidence are archived~\cite{deluca2026recursive}.
 
-Independent redistricting commissions, established in 14 states to reduce partisan influence, can use algorithms as technical implementation of normative goals. Commissioners retain control over parameters---edge-weighting schemes, compactness metrics, community preservation priorities---while delegating geometric optimization to computational methods. This division parallels how Huntington-Hill apportionment: Congress sets House size (normative choice), the formula allocates seats (technical implementation).
+Independent redistricting commissions can use algorithms as technical
+implementation of publicly selected goals. Commissioners retain control over
+lawful parameters and modification authority while delegating reproducible
+execution to software. This division parallels Huntington--Hill apportionment:
+the governing body selects the rule, and the formula executes it.
 
 \subsection{Implementation Mechanisms}
 
 Translating algorithmic redistricting from technical demonstration to policy practice requires addressing governance questions: who decides parameters, how are conflicts resolved, and how can gaming be prevented?
 
-\textbf{Parameter governance.} Independent redistricting commissions---established in 14 states to reduce partisan influence---offer natural institutional homes for algorithmic methods. Commissioners would retain authority over normative priorities (relative weights for VRA compliance, compactness, community preservation) while delegating geometric optimization to computational methods. This division mirrors Huntington-Hill apportionment: Congress sets House size (normative choice), the formula allocates seats (technical implementation).
+\textbf{Parameter governance.} A credible benchmark freezes
+assignment-affecting inputs and rules before outcomes are viewed. Legally
+required or State-authorized changes belong in a separately documented
+modification layer rather than an undisclosed retuning of the baseline.
 
-\textbf{Workflow example.} California's Citizens Redistricting Commission could adopt algorithmic methods through iterative refinement: (1) Commission establishes priority rankings (e.g., VRA compliance weighted 2×, compactness 1×, county preservation 1.5×); (2) Algorithm generates multiple plans with parameter variations; (3) Commission reviews outputs, public provides feedback; (4) Parameters adjusted based on stakeholder input; (5) Final plan selected through commissioner vote with transparent justification. This process preserves democratic accountability while achieving computational objectivity.
+\textbf{Workflow example.} A commission, including California's, could publish
+the frozen geographic benchmark, receive public and expert evidence, adopt a
+lawful final plan, and publish every block-level departure with its authority,
+alternatives, and reasons. The benchmark supplies a comparison record; it does
+not predetermine the commission's legal judgment.
 
-\textbf{Conflict resolution.} When algorithmic outputs diverge from stakeholder expectations (e.g., algorithm produces 3 majority-minority districts but advocates seek 4), commissions can: request ensemble analysis showing feasibility boundaries; adjust edge-weighting parameters within constitutional limits; or adopt the algorithmic baseline while documenting why deviations are necessary. Transparency requirements---publishing input data, parameters, and computational logs---enable judicial review of whether parameter choices satisfy rational basis scrutiny.
+\textbf{Conflict resolution.} When benchmark outputs diverge from legal or
+community evidence, decision makers can test alternatives and document why the
+final plan departs. A race-excluded benchmark is not a VRA safe harbor, and
+technical verification cannot decide whether a modification is legally
+required.
 
 \textbf{Gaming prevention.} Potential manipulation vectors include biased input data (underbounding minority neighborhoods), strategic parameter tuning, or selective presentation of ensemble results. Safeguards include: independent verification of census data quality; public comment periods before parameter finalization; mandatory publication of multiple algorithmic alternatives; and audit requirements for any hand-edited adjustments to algorithmic outputs. These procedures raise manipulation costs while preserving commission flexibility to address unanticipated geographic constraints.
 
@@ -53,19 +68,27 @@ Translating algorithmic redistricting from technical demonstration to policy pra
 
 While algorithmic redistricting provides procedural improvements over human mapmaking, it does not resolve the fundamental justiciability problem that motivated \emph{Rucho v. Common Cause}. The Supreme Court held partisan gerrymandering claims non-justiciable not because courts lack tools to measure partisan effects---the efficiency gap and other metrics exist---but because courts lack \emph{judicially manageable standards} to determine how much partisan asymmetry is ``too much.'' Chief Justice Roberts wrote: ``Federal judges have no license to reallocate political power between the two major political parties, with no plausible grant of authority in the Constitution, and no legal standards to limit and direct their decisions''~\cite{rucho2019}.
 
-Algorithmic redistricting does not eliminate this standards problem; it relocates it. Instead of asking ``is this map too partisan?'' (the question \emph{Rucho} found non-justiciable), courts must ask ``are these algorithmic parameters correct?'' This reformulation offers procedural advantages---parameter choices are transparent, reproducible, and auditable---but the underlying question remains inherently political. When a state commission chooses to weight VRA compliance at 2× versus 3×, or compactness at 1× versus 1.5×, these are \emph{normative policy choices} rather than technical determinations~\cite{deluca2026edgeweighted}.
+Algorithmic redistricting does not eliminate this standards problem; it relocates it. Instead of asking ``is this map too partisan?'' (the question \emph{Rucho} found non-justiciable), courts must ask ``are these algorithmic parameters correct?'' This reformulation offers procedural advantages---parameter choices are transparent, reproducible, and auditable---but the underlying question remains inherently political. When a state commission assigns one criterion twice the weight of another, these are \emph{normative policy choices} rather than technical determinations~\cite{deluca2026edgeweighted}.
 
-Consider a concrete dispute. Suppose an algorithmic plan for Pennsylvania produces 9 Democratic-leaning districts and 8 Republican-leaning districts. Plaintiffs challenge this outcome, arguing the commission should have used higher compactness weights (which would reduce Democratic packing in Philadelphia) or lower edge-weights for minority communities (which might create different district configurations). How would a court evaluate these claims? Under \emph{Rucho}, courts lack authority to second-guess parameter choices that produce different partisan outcomes, just as they lack authority to second-guess hand-drawn district boundaries that produce partisan advantages.
+\emph{Rucho} holds federal constitutional partisan-gerrymandering claims to be
+nonjusticiable political questions; it does not displace one-person--one-vote,
+racial-gerrymandering, statutory Voting Rights Act, or available State-law
+claims~\cite{rucho2019}. The post-\emph{Callais} framework also makes it
+especially important to disentangle race, politics, and traditional criteria
+instead of treating one algorithmic score as a legal conclusion
+~\cite{callais2026}.
 
-The standard of review matters. Parameter choices likely receive \emph{rational basis} scrutiny: courts ask whether choices are rationally related to legitimate redistricting objectives (VRA compliance, compactness, contiguity, population equality). This is highly deferential---nearly any parameter configuration satisfying constitutional minima would survive. Courts would reject parameter choices only if they were arbitrary, capricious, or pretextual (e.g., intentionally designed to advantage one party). But distinguishing legitimate policy judgments from pretextual manipulation requires courts to evaluate partisan effects and partisan intent---precisely what \emph{Rucho} forbids at the federal level.
-
-State courts retain broader authority. Many state constitutions explicitly prohibit partisan gerrymandering, and state supreme courts can develop state-specific manageable standards~\cite{rucho2019}. Algorithmic redistricting provides these courts with \emph{evidentiary tools}: if enacted plans deviate substantially from algorithmic baselines (e.g., $+7\%$ efficiency gap versus $-3\%$ baseline~\cite{deluca2026efficiency}), this suggests manipulation. But even state courts must determine \emph{which} algorithmic baseline is correct, and parameter disputes remain contested.
+Algorithmic packages can therefore supply evidentiary tools---source custody,
+counterfactual plans, execution logs, and reproducible metrics---but a court
+must apply the governing cause of action and standard of review. Distance from
+one benchmark, an efficiency gap, or a verified manifest does not by itself
+show unlawful intent, effect, or liability.
 
 The value of algorithmic redistricting lies not in resolving justiciability but in improving \emph{transparency and accountability}. Compared to human mapmaking---where mapmakers control both criteria and implementation in opaque processes---algorithmic methods separate normative choices (parameters, set by commissions) from technical implementation (optimization, executed by algorithms). This separation enables:
 
 \begin{itemize}
 \item \textbf{Public scrutiny}: Citizens can evaluate whether parameter weights reflect stated redistricting priorities
-\item \textbf{Ensemble comparison}: Commissioners can generate multiple plans with different parameters, demonstrating tradeoff spaces
+\item \textbf{Ensembles}: Commissioners can generate plans with different parameters, demonstrating tradeoff spaces
 \item \textbf{Reproducibility}: Independent analysts can verify that algorithms produce claimed outputs from specified parameters
 \item \textbf{Audit trails}: Courts can review computational logs showing what data and parameters generated challenged maps
 \end{itemize}
@@ -84,4 +107,11 @@ reproducible evidence, not guaranteed procedural fairness or legitimacy. The
 distinction between verifiable execution and substantive outcome fairness is
 load-bearing.
 
-Important limitations remain. Algorithms cannot eliminate efficiency gaps caused by voter sorting---they can only avoid amplifying geographic patterns through manipulation. Results depend on census tract definitions (MAUP sensitivity), though findings replicate across multiple census years. This research derives from a single computational ecosystem; independent replication would strengthen confidence. These caveats notwithstanding, algorithmic redistricting offers a path toward restoring electoral legitimacy through structural objectivity accessible to contemporary policymakers.
+Important limitations remain. Algorithms cannot eliminate efficiency gaps
+caused by voter sorting, and excluding election data from execution does not
+prove outcome neutrality. NRS v0.3 results depend on Census block vintages,
+adjacency/bridge records, weights, tolerances, seed rules, and refinement. The
+operational evidence has independent software verifiers and an internal
+fresh-clone rehearsal, but a new external physical-machine replay remains
+pending. These limitations make the benchmark useful as auditable evidence,
+not as a self-validating rule of fairness.

@@ -1,11 +1,12 @@
 \section{National-Scale Findings}
 
-Historical recursive-bisection runs cover all 50 states across three census
-decades (2000, 2010, 2020), generating 1,305 congressional district
-assignments total (435 per decade). The quantitative values below are tied to
-those historical artifacts. Several have not yet been regenerated under the
-current Rust pipeline or backed by release-grade evidence packages; they should
-be read as research findings with declared evidence debt.
+Governed NRS v0.3 recursive-bisection runs cover all 50 States across three
+Census decades (2000, 2010, 2020), generating 1,305 district assignments from
+27,398,654 block assignments. The operational counts, structural comparison,
+and proof gaps below are hash-bound and independently verified. Regional,
+compactness, demographic, and partisan values later in this section are tied
+to earlier tract-based research artifacts. They have not been regenerated for
+NRS v0.3 and must not be read as outcomes of the governed block assignments.
 
 \subsection{Regional Context}
 
@@ -34,7 +35,30 @@ confounded. Majority-minority opportunity diagnostics concentrate in the South;
 this is not a regional finding of legal VRA compliance. Compactness also varies
 with state geography and the selected metric~\cite{deluca2026compactness}.
 
-\subsection{Finding 1: Historical National Execution}
+\subsection{Finding 1: Governed National Execution And Proof Boundary}
+
+Each governed cycle contains 50 States, 435 districts, and 385 recursive split
+nodes. Independent verification found every source block assigned once, all
+published districts connected under the frozen graph, and all recursive nodes
+within the frozen population tolerance. Across all cycles, 13 of 1,155 nodes
+attain the arithmetic exact-population floor. Weighted-boundary and canonical
+exact-proof coverage is 0 of 1,155; the remaining outputs are verified
+operational assignments, not exact objective certificates.
+
+Measured generation time in the publication environment was approximately
+44.5 minutes for 2000, 63.4 minutes for 2010, and 52.8 minutes for 2020. These
+are descriptive observations tied to the published executable, inputs, and
+machine environment, not universal performance guarantees.
+
+A precommitted bounded comparison evaluated eight synthetic connected graphs
+under five fixed seeds. All 40 METIS rows were feasible and connected;
+30 matched the complete exact primary objective and 20 matched the canonical
+assignment. Two fixture families disagreed on the population-first objective,
+while two others matched the objective but not canonical tie selection. This
+distinguishes heuristic operational success from exact and canonical proof; it
+does not extrapolate to State-scale optimality or map quality.
+
+\subsection{Historical Tract-Profile Comparisons}
 
 The historical pipeline completed national runs and reported graph contiguity,
 population balance, and compactness diagnostics. Compactness scores
@@ -45,6 +69,8 @@ Table~\ref{tab:compactness-headline}. These are profile-specific comparisons,
 not a constitutional finding or proof that edge weighting optimizes every
 accepted compactness measure~\cite{deluca2026edgeweighted}.
 
+\input{tables/compactness_headline}
+
 Population settings are configurable, but a configured tolerance does not
 ``ensure compliance.'' Congressional districts must approach equality as nearly
 as practicable, and every observed deviation requires reporting and, where
@@ -52,7 +78,10 @@ avoidable, justification. The tract-based runs are therefore engineering
 evidence rather than national legal-conformance certificates
 ~\cite{deluca2026recursive}.
 
-Computational efficiency enables policy adoption: individual states partition in seconds, and the full 50-state redistricting completes in under two hours on standard hardware. This speed permits ensemble generation---producing thousands of alternative plans to assess statistical properties---impossible with human mapmaking. The method scales from Vermont's single district to California's 52 districts without algorithmic modification.
+The historical tract pipeline completed 50-State runs in under two hours in its
+recorded environment. That observation is not an adoption claim and does not
+establish ensemble convergence. The block-level NRS v0.3 runtime observations
+above supersede it for current operational planning.
 
 The real G.1--G.3 package replaces the earlier unsupported six-state tables
 with four-chain Rust and GerryChain traces for Rhode Island, Iowa, and North
@@ -128,7 +157,7 @@ is caused by geography, enacted-map intent, profile selection, or election
 choice. The benchmark value also does not represent the minimum partisan effect
 achievable under geographic constraints~\cite{chen2013unintentional}.
 
-The historical proportionality, mean--median, and seats--votes values provide
+The historical proportionality, mean--median and seats--votes values provide
 additional descriptive views of the same selected plans. Agreement among
 correlated metrics does not establish that the benchmark improves
 proportionality generally or that the enacted differences reflect intentional
@@ -141,12 +170,16 @@ uncertainty rather than a general anti-gerrymandering conclusion
 
 \subsection{Finding 6: Temporal Stability Across Census Cycles}
 
-Comparison of actual bisect pipeline outputs across the 2010 and 2020 census runs reveals that cross-census county disruption averages 66\%, substantially higher than earlier projection-based estimates. This figure reflects \emph{demographic responsiveness}: when 21--42\% of census tracts are split or merged between decennial censuses, METIS re-optimises district boundaries for updated population data~\cite{deluca2026temporal}.
+The governed comparison uses compact recursive-node snapshots rather than
+incompatible historical retention measures. It finds 120 node signatures
+common to all three cycles and 18 States with exact recursive topology in every
+cycle. Pairwise topology Jaccard values are 0.327586 for 2000--2010, 0.283333
+for 2000--2020, and 0.360424 for 2010--2020. These are structural diagnostics,
+not assignment-overlap percentages.
 
-The top-level bisection comparison reports 86\% county-level agreement in
-Georgia and 35\% in Mississippi. Applying the same named profile makes the
-computational difference auditable, but it does not prove that demographics
-alone caused every boundary change~\cite{deluca2026temporal}.
-
-Stability analysis matters because it exposes which inputs and profile choices
-changed between runs rather than assigning an unverified political cause.
+Cross-cycle assignment overlap remains uncomputed. Census block and tract
+identifiers and boundaries change across vintages, so a valid relationship
+crosswalk or geometry overlay must be frozen before such a statistic can be
+interpreted. Raw county or tract split counts likewise cannot establish
+cross-cycle improvement because geography definitions and State seat counts
+change.
