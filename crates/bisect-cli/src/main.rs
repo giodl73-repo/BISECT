@@ -973,7 +973,7 @@ fn main() {
         // ── BISECT exact: exact optimization family reports ─────────────────
         Commands::Exact(args) => {
             run_exact(&args).unwrap_or_else(|e| {
-                eprintln!("ERROR: {e}");
+                eprintln!("ERROR: {e:#}");
                 std::process::exit(1);
             });
         }

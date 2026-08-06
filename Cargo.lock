@@ -420,6 +420,7 @@ dependencies = [
  "bisect-map",
  "clap",
  "rayon",
+ "rplan-io",
  "serde_json",
  "sha2",
  "tempfile",

@@ -2986,7 +2986,11 @@ fn verify_national_rctx(
             missing_states.push(state);
             continue;
         }
-        let context = read_json(&path)?;
+        let context_text = fs::read_to_string(&path)
+            .with_context(|| format!("read {state} RCTX {}", path.display()))?;
+        rplan_io::read_rctx_str(&context_text)
+            .with_context(|| format!("parse {state} RCTX through the public reader"))?;
+        let context: Value = serde_json::from_str(&context_text)?;
         if context["rctx_version"] != "0.1"
             || context.pointer("/units/year") != Some(&json!(year))
             || context.pointer("/units/state") != Some(&json!(state))
@@ -3111,33 +3115,56 @@ fn verify_national_rctx(
                 rehashed_keys.insert(*key);
             }
         }
+        let source_hashes = context["source_hashes"]
+            .as_object()
+            .context("RCTX source_hashes must be an object")?;
+        if source_hashes.values().any(|value| !value.is_string()) {
+            bail!("{state} RCTX source_hashes must be a flat string-to-string map");
+        }
+        let tiger_block_files: BTreeMap<String, String> = source_hashes
+            .iter()
+            .filter_map(|(key, value)| {
+                key.strip_prefix("tiger_block_file:").map(|relative| {
+                    (
+                        relative.to_owned(),
+                        value.as_str().unwrap_or_default().to_owned(),
+                    )
+                })
+            })
+            .collect();
+        let tiger_archives: BTreeMap<String, String> = source_hashes
+            .iter()
+            .filter_map(|(key, value)| {
+                key.strip_prefix("tiger_archive_file:").map(|relative| {
+                    (
+                        relative.to_owned(),
+                        value.as_str().unwrap_or_default().to_owned(),
+                    )
+                })
+            })
+            .collect();
+        if year == 2000 && (tiger_block_files.is_empty() || tiger_archives.is_empty()) {
+            bail!("{state} Census 2000 RCTX is missing flat TIGER file custody hashes");
+        }
         let mut missing_tiger_block_files = Vec::new();
-        if let Some(files) = context["source_hashes"]["tiger_block_files"].as_object() {
-            if files.is_empty() {
-                bail!("{state} TIGER block source map is empty");
+        for (relative, expected) in &tiger_block_files {
+            let source_path = governed_source_path(&root, relative)?;
+            if !source_path.is_file() {
+                missing_tiger_block_files.push(relative.clone());
+                continue;
             }
-            for (relative, expected) in files {
-                let source_path = governed_source_path(&root, relative)?;
-                if !source_path.is_file() {
-                    missing_tiger_block_files.push(relative.clone());
-                    continue;
-                }
-                if expected.as_str() != Some(&format!("sha256:{}", sha256(&source_path)?)) {
-                    bail!("{state} TIGER block source hash mismatch: {relative}");
-                }
-                rehashed_sources += 1;
+            if expected != &format!("sha256:{}", sha256(&source_path)?) {
+                bail!("{state} TIGER block source hash mismatch: {relative}");
             }
+            rehashed_sources += 1;
         }
         let mut tiger_bundle_archive_verified = false;
-        if let Some(archives) = context["source_hashes"]["tiger_archives"].as_object() {
-            if archives.is_empty() {
-                bail!("{state} TIGER archive source map is empty");
-            }
+        if !tiger_archives.is_empty() {
             let mut member_hashes = BTreeMap::new();
-            for (relative, expected) in archives {
+            for (relative, expected) in &tiger_archives {
                 let archive_path = governed_source_path(&root, relative)?;
                 if !archive_path.is_file()
-                    || expected.as_str() != Some(&format!("sha256:{}", sha256(&archive_path)?))
+                    || expected != &format!("sha256:{}", sha256(&archive_path)?)
                 {
                     bail!("{state} TIGER archive missing or hash-mismatched: {relative}");
                 }
@@ -3148,15 +3175,12 @@ fn verify_national_rctx(
                     }
                 }
             }
-            let files = context["source_hashes"]["tiger_block_files"]
-                .as_object()
-                .context("TIGER archive bundle requires extracted block source hashes")?;
-            for (relative, expected) in files {
+            for (relative, expected) in &tiger_block_files {
                 let filename = Path::new(relative)
                     .file_name()
                     .and_then(|value| value.to_str())
                     .context("TIGER block source filename")?;
-                if member_hashes.get(filename).map(String::as_str) != expected.as_str() {
+                if member_hashes.get(filename) != Some(expected) {
                     bail!("{state} TIGER archive member hash mismatch for {filename}");
                 }
             }
@@ -4484,12 +4508,28 @@ fn build_state_rctx(
             sha256(&shapefile.with_extension("shx"))?
         ));
     } else {
-        source_hashes["tiger_block_files"] = hashed_source_map(&tiger_component_files)?;
+        let hashes = source_hashes
+            .as_object_mut()
+            .context("source hashes must be an object")?;
+        for component in &tiger_component_files {
+            hashes.insert(
+                format!("tiger_block_file:{}", portable_path(component)),
+                json!(format!("sha256:{}", sha256(component)?)),
+            );
+        }
     }
     if tiger_archives.len() == 1 && tiger_archive.is_some_and(Path::is_file) {
         source_hashes["tiger_archive"] = json!(format!("sha256:{}", sha256(&tiger_archives[0])?));
     } else if !tiger_archives.is_empty() {
-        source_hashes["tiger_archives"] = hashed_source_map(&tiger_archives)?;
+        let hashes = source_hashes
+            .as_object_mut()
+            .context("source hashes must be an object")?;
+        for archive in &tiger_archives {
+            hashes.insert(
+                format!("tiger_archive_file:{}", portable_path(archive)),
+                json!(format!("sha256:{}", sha256(archive)?)),
+            );
+        }
     }
     let projection = json!({
         "units":units,

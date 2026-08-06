@@ -13,6 +13,7 @@ path = "src/main.rs"
 [dependencies]
 bisect-data = { path = "../bisect-data" }
 bisect-map = { path = "../bisect-map" }
+rplan-io = { path = "../rplan-io" }
 anyhow.workspace = true
 clap.workspace = true
 serde_json.workspace = true
