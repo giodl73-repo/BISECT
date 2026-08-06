@@ -107,6 +107,7 @@ def main() -> None:
     parser.add_argument("--state", action="append", default=[], help="two-letter state filter")
     parser.add_argument("--download-only", action="store_true")
     parser.add_argument("--keep-extracted", action="store_true")
+    parser.add_argument("--skip-compile", action="store_true")
     parser.add_argument("--binary", type=Path, default=ROOT / "target/release/bisect-ops.exe")
     args = parser.parse_args()
 
@@ -117,8 +118,10 @@ def main() -> None:
     if unknown:
         parser.error(f"unknown states: {','.join(sorted(unknown))}")
     order = [state for state in inventory["batch_order"] if not requested or state in requested]
-    if not args.download_only and not args.binary.is_file():
+    if not args.download_only and not args.skip_compile:
         subprocess.run(["cargo", "build", "--release", "-p", "bisect-ops"], cwd=ROOT, check=True)
+    if not args.download_only and not args.binary.is_file():
+        raise FileNotFoundError(f"RCTX builder binary does not exist: {args.binary}")
 
     for position, code in enumerate(order, 1):
         row = by_state[code]
