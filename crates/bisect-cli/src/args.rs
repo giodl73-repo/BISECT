@@ -624,6 +624,9 @@ pub enum DiscoveryRefinementArg {
     /// NRS v0.2 with canonical multi-root fallback after a v0.1 tolerance miss.
     #[value(name = "nrs-v0-2")]
     NrsV02,
+    /// NRS v0.3 with bridge-aware land-component fallback after a v0.2 miss.
+    #[value(name = "nrs-v0-3")]
+    NrsV03,
     /// Apply population repair and bounded 0-, 1-, and 1-to-2 boundary moves.
     Fast,
     /// Apply all deterministic neighborhoods, including bounded 2-to-2 search.

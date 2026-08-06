@@ -1,7 +1,7 @@
 use crate::args::{DiscoveryRefinementArg, ExactArgs, ExactMethodArg};
 use anyhow::{anyhow, Context};
 use serde::Serialize;
-use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet};
+use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet, VecDeque};
 
 struct DiscoveryGraph<'a> {
     adjacency: &'a [Vec<usize>],
@@ -56,6 +56,21 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             .as_ref()
             .ok_or_else(|| anyhow!("RCTX graph is required for certified discovery"))?,
     )?;
+    let land_adjacency = context
+        .graph
+        .as_ref()
+        .expect("certified discovery graph checked above")
+        .adjacency
+        .iter()
+        .map(|edges| {
+            edges
+                .iter()
+                .filter_map(|edge| {
+                    (!matches!(edge.kind, rplan_core::EdgeKind::Bridge)).then_some(edge.to as usize)
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
     let edge_weights = root
         .edges
         .iter()
@@ -64,7 +79,9 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     let units = (0..root.unit_ids.len()).collect::<HashSet<_>>();
     let niter = if matches!(
         args.discovery_refinement,
-        DiscoveryRefinementArg::NrsV01 | DiscoveryRefinementArg::NrsV02
+        DiscoveryRefinementArg::NrsV01
+            | DiscoveryRefinementArg::NrsV02
+            | DiscoveryRefinementArg::NrsV03
     ) {
         100
     } else {
@@ -72,7 +89,9 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     };
     let nrs_profile = matches!(
         args.discovery_refinement,
-        DiscoveryRefinementArg::NrsV01 | DiscoveryRefinementArg::NrsV02
+        DiscoveryRefinementArg::NrsV01
+            | DiscoveryRefinementArg::NrsV02
+            | DiscoveryRefinementArg::NrsV03
     );
     let mut assignment = if nrs_profile {
         let tpwgts = Some(vec![
@@ -177,13 +196,32 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             &mut assignment,
             nrs_profile.then(|| nrs_population_tolerance_scaled_bound(&root)),
         )?;
-        if args.discovery_refinement == DiscoveryRefinementArg::NrsV02
-            && nrs_population_deviation_scaled(&root, &assignment)
-                > nrs_population_tolerance_scaled_bound(&root)
+        if matches!(
+            args.discovery_refinement,
+            DiscoveryRefinementArg::NrsV02 | DiscoveryRefinementArg::NrsV03
+        ) && nrs_population_deviation_scaled(&root, &assignment)
+            > nrs_population_tolerance_scaled_bound(&root)
         {
             let fallback = nrs_v0_2_fallback_candidate(
                 &root,
                 &adjacency,
+                &original_assignment,
+                &assignment,
+                population_improvement_operations,
+                population_improvement_units,
+            )?;
+            assignment = fallback.assignment;
+            population_improvement_operations = fallback.operations;
+            population_improvement_units = fallback.moved_units;
+        }
+        if args.discovery_refinement == DiscoveryRefinementArg::NrsV03
+            && nrs_population_deviation_scaled(&root, &assignment)
+                > nrs_population_tolerance_scaled_bound(&root)
+        {
+            let fallback = nrs_v0_3_bridge_aware_component_candidate(
+                &root,
+                &adjacency,
+                &land_adjacency,
                 &original_assignment,
                 &assignment,
                 population_improvement_operations,
@@ -526,6 +564,232 @@ fn nrs_v0_2_fallback_candidate(
         let key = nrs_v0_2_candidate_key(instance, raw_assignment, &assignment);
         if key < best_key {
             best_key = key;
+            best = NrsFallbackCandidate {
+                assignment,
+                operations,
+                moved_units,
+            };
+        }
+    }
+    Ok(best)
+}
+
+fn nrs_assignment_side_connected(adjacency: &[Vec<usize>], assignment: &[u8], label: u8) -> bool {
+    let Some(first) = assignment.iter().position(|&candidate| candidate == label) else {
+        return false;
+    };
+    let expected = assignment
+        .iter()
+        .filter(|&&candidate| candidate == label)
+        .count();
+    let mut seen = vec![false; assignment.len()];
+    seen[first] = true;
+    let mut queue = VecDeque::from([first]);
+    let mut count = 1_usize;
+    while let Some(unit) = queue.pop_front() {
+        for &neighbor in &adjacency[unit] {
+            if assignment[neighbor] == label && !seen[neighbor] {
+                seen[neighbor] = true;
+                count += 1;
+                queue.push_back(neighbor);
+            }
+        }
+    }
+    count == expected
+}
+
+fn nrs_v0_3_bridge_aware_component_candidate(
+    instance: &bisect_ilp::CertifiedSplitInstance,
+    adjacency: &[Vec<usize>],
+    land_adjacency: &[Vec<usize>],
+    raw_assignment: &[u8],
+    v0_2_assignment: &[u8],
+    v0_2_operations: usize,
+    v0_2_moved_units: usize,
+) -> anyhow::Result<NrsFallbackCandidate> {
+    let mut best = NrsFallbackCandidate {
+        assignment: v0_2_assignment.to_vec(),
+        operations: v0_2_operations,
+        moved_units: v0_2_moved_units,
+    };
+    let mut best_key = nrs_v0_2_candidate_key(instance, raw_assignment, &best.assignment);
+    let mut raw_best: Option<((u128, u64, i64, Vec<u8>), Vec<u8>)> = None;
+    let n = instance.unit_ids.len();
+    let total_population = instance.populations.iter().sum::<i64>();
+    let mut component_of = vec![usize::MAX; n];
+    let mut components = Vec::new();
+    for start in 0..n {
+        if component_of[start] != usize::MAX {
+            continue;
+        }
+        let component_index = components.len();
+        component_of[start] = component_index;
+        let mut component = Vec::new();
+        let mut stack = vec![start];
+        while let Some(unit) = stack.pop() {
+            component.push(unit);
+            for &neighbor in land_adjacency[unit].iter().rev() {
+                if component_of[neighbor] == usize::MAX {
+                    component_of[neighbor] = component_index;
+                    stack.push(neighbor);
+                }
+            }
+        }
+        component.sort_unstable();
+        components.push(component);
+    }
+    for (component_index, component) in components.iter().enumerate() {
+        if component.len() < 2 {
+            continue;
+        }
+        let component_population = component
+            .iter()
+            .map(|&unit| instance.populations[unit])
+            .sum::<i64>();
+        let outside_population = total_population - component_population;
+        let mut roots = (0..16)
+            .map(|quantile| component[quantile * (component.len() - 1) / 15])
+            .collect::<Vec<_>>();
+        roots.sort_unstable();
+        roots.dedup();
+        for root in roots {
+            for breadth_first in [false, true] {
+                let mut parent = vec![usize::MAX; n];
+                let mut order = Vec::with_capacity(component.len());
+                parent[root] = root;
+                if breadth_first {
+                    let mut queue = VecDeque::from([root]);
+                    while let Some(unit) = queue.pop_front() {
+                        order.push(unit);
+                        for &neighbor in &land_adjacency[unit] {
+                            if component_of[neighbor] == component_index
+                                && parent[neighbor] == usize::MAX
+                            {
+                                parent[neighbor] = unit;
+                                queue.push_back(neighbor);
+                            }
+                        }
+                    }
+                } else {
+                    let mut stack = vec![root];
+                    while let Some(unit) = stack.pop() {
+                        order.push(unit);
+                        for &neighbor in land_adjacency[unit].iter().rev() {
+                            if component_of[neighbor] == component_index
+                                && parent[neighbor] == usize::MAX
+                            {
+                                parent[neighbor] = unit;
+                                stack.push(neighbor);
+                            }
+                        }
+                    }
+                }
+                if order.len() != component.len() {
+                    return Err(anyhow!("NRS v0.3 land component traversal is incomplete"));
+                }
+                let mut subtree_population = instance.populations.clone();
+                for &unit in order.iter().skip(1).rev() {
+                    subtree_population[parent[unit]] += subtree_population[unit];
+                }
+                for outside_is_left in [false, true] {
+                    let mut tree_best = u128::MAX;
+                    let mut tree_candidates = Vec::new();
+                    for &candidate in order.iter().skip(1) {
+                        for complement_is_left in [false, true] {
+                            let selected_population = if complement_is_left {
+                                component_population - subtree_population[candidate]
+                            } else {
+                                subtree_population[candidate]
+                            };
+                            let left_population = selected_population
+                                + if outside_is_left {
+                                    outside_population
+                                } else {
+                                    0
+                                };
+                            let deviation = (instance.k_parent as i128
+                                * i128::from(left_population)
+                                - instance.k_left as i128 * i128::from(total_population))
+                            .unsigned_abs();
+                            if deviation < tree_best {
+                                tree_best = deviation;
+                                tree_candidates.clear();
+                            }
+                            if deviation == tree_best {
+                                tree_candidates.push((candidate, complement_is_left));
+                            }
+                        }
+                    }
+                    for (candidate, complement_is_left) in tree_candidates {
+                        let mut in_subtree = vec![false; n];
+                        let mut stack = vec![candidate];
+                        in_subtree[candidate] = true;
+                        while let Some(unit) = stack.pop() {
+                            for &neighbor in &land_adjacency[unit] {
+                                if parent[neighbor] == unit && !in_subtree[neighbor] {
+                                    in_subtree[neighbor] = true;
+                                    stack.push(neighbor);
+                                }
+                            }
+                        }
+                        let mut assignment = (0..n)
+                            .map(|unit| {
+                                if component_of[unit] != component_index {
+                                    if outside_is_left {
+                                        0
+                                    } else {
+                                        1
+                                    }
+                                } else {
+                                    let selected = in_subtree[unit] != complement_is_left;
+                                    if selected {
+                                        0
+                                    } else {
+                                        1
+                                    }
+                                }
+                            })
+                            .collect::<Vec<u8>>();
+                        if instance.k_left == instance.k_right && assignment[0] == 1 {
+                            for label in &mut assignment {
+                                *label = 1 - *label;
+                            }
+                        }
+                        if !nrs_assignment_side_connected(adjacency, &assignment, 0)
+                            || !nrs_assignment_side_connected(adjacency, &assignment, 1)
+                        {
+                            continue;
+                        }
+                        let key = nrs_v0_2_candidate_key(instance, raw_assignment, &assignment);
+                        if raw_best
+                            .as_ref()
+                            .map(|(candidate_key, _)| &key < candidate_key)
+                            .unwrap_or(true)
+                        {
+                            raw_best = Some((key, assignment));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if let Some((raw_key, mut assignment)) = raw_best {
+        if raw_key < best_key {
+            best_key = raw_key;
+            best = NrsFallbackCandidate {
+                assignment: assignment.clone(),
+                operations: 0,
+                moved_units: 0,
+            };
+        }
+        let (operations, moved_units) = improve_discovery_population(
+            instance,
+            adjacency,
+            &mut assignment,
+            Some(nrs_population_tolerance_scaled_bound(instance)),
+        )?;
+        let key = nrs_v0_2_candidate_key(instance, raw_assignment, &assignment);
+        if key < best_key {
             best = NrsFallbackCandidate {
                 assignment,
                 operations,
@@ -2538,6 +2802,71 @@ mod tests {
             .filter_map(|(&population, &label)| (label == 0).then_some(population))
             .sum::<i64>();
         assert_eq!(left_population, 400);
+    }
+
+    #[test]
+    fn nrs_v0_3_bridge_aware_fallback_balances_disconnected_land_components() {
+        let unit_ids = (0..6).map(|unit| format!("u{unit}")).collect::<Vec<_>>();
+        let instance = bisect_ilp::CertifiedSplitInstance {
+            schema_version: bisect_ilp::CERTIFIED_SPLIT_INSTANCE_SCHEMA_VERSION.to_string(),
+            model_id: bisect_ilp::CERTIFIED_SPLIT_MODEL_ID.to_string(),
+            node_path: String::new(),
+            parent_certificate_id: None,
+            unit_universe_hash: bisect_ilp::certified_split_unit_universe_hash(&unit_ids).unwrap(),
+            unit_ids,
+            populations: vec![30, 20, 20, 30, 40, 60],
+            edges: (0..5)
+                .map(|left| bisect_ilp::ExactEdge {
+                    left,
+                    right: left + 1,
+                    weight: 1,
+                })
+                .collect(),
+            k_parent: 2,
+            k_left: 1,
+            k_right: 1,
+            orientation_rule: bisect_ilp::SplitOrientationRule::EqualSeatsUnitZeroLeft,
+        };
+        let adjacency = vec![
+            vec![1],
+            vec![0, 2],
+            vec![1, 3],
+            vec![2, 4],
+            vec![3, 5],
+            vec![4],
+        ];
+        let land_adjacency = vec![vec![1], vec![0, 2], vec![1, 3], vec![2], vec![5], vec![4]];
+        let raw = vec![0, 0, 0, 0, 0, 1];
+        assert!(
+            nrs_population_deviation_scaled(&instance, &raw)
+                > nrs_population_tolerance_scaled_bound(&instance)
+        );
+
+        let candidate = nrs_v0_3_bridge_aware_component_candidate(
+            &instance,
+            &adjacency,
+            &land_adjacency,
+            &raw,
+            &raw,
+            0,
+            0,
+        )
+        .unwrap();
+
+        assert_eq!(
+            nrs_population_deviation_scaled(&instance, &candidate.assignment),
+            0
+        );
+        assert!(nrs_assignment_side_connected(
+            &adjacency,
+            &candidate.assignment,
+            0
+        ));
+        assert!(nrs_assignment_side_connected(
+            &adjacency,
+            &candidate.assignment,
+            1
+        ));
     }
 
     #[test]
