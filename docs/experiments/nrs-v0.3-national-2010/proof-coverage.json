@@ -1,0 +1,34 @@
+{
+  "boundary": {
+    "coverage_rate": 0.0,
+    "proved_nodes": 0,
+    "status": "not-run",
+    "unproved_nodes": 385
+  },
+  "canonical": {
+    "coverage_rate": 0.0,
+    "proved_nodes": 0,
+    "status": "blocked-by-boundary",
+    "unproved_nodes": 385
+  },
+  "claim_boundary": "NRS v0.3 generated and independently verified complete 2010 block assignments for all 50 States and all 435 districts. All 385 recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.",
+  "population_exact": {
+    "coverage_rate": 0.01818181818181818,
+    "proof_kind": "ratio-arithmetic-floor-when-attained",
+    "proved_nodes": 7,
+    "unproved_nodes": 378
+  },
+  "population_tolerance": {
+    "coverage_rate": 1.0,
+    "failed_nodes": 0,
+    "verified_nodes": 385
+  },
+  "recursive_node_count": 385,
+  "schema_version": "nrs-national-proof-coverage-v0.3-v1",
+  "single_district_states": {
+    "count": 7,
+    "objective_proofs": "not-applicable"
+  },
+  "standard_profile_id": "NRS-BASELINE-v0.3-reference-2010",
+  "status": "classified"
+}
