@@ -478,9 +478,27 @@ fn canonical_sha256(value: &Value) -> Result<String> {
 }
 
 fn nrs_seed(input_manifest: &Value) -> Result<(String, u64, u32)> {
+    let mut seed_manifest = input_manifest.clone();
+    if let Some(profile_sha256) = input_manifest
+        .get("seed_compatibility_profile_sha256")
+        .and_then(Value::as_str)
+    {
+        let reference_engine_sha256 = input_manifest
+            .get("seed_compatibility_reference_engine_sha256")
+            .and_then(Value::as_str)
+            .context("NRS seed compatibility reference engine hash")?;
+        seed_manifest["algorithm_profile_sha256"] = Value::String(profile_sha256.to_owned());
+        seed_manifest["reference_engine_sha256"] =
+            Value::String(reference_engine_sha256.to_owned());
+        let object = seed_manifest
+            .as_object_mut()
+            .context("NRS input manifest object")?;
+        object.remove("seed_compatibility_profile_sha256");
+        object.remove("seed_compatibility_reference_engine_sha256");
+    }
     let mut hasher = Sha256::new();
     hasher.update(NRS_SEED_PREFIX);
-    hasher.update(serde_json::to_vec(input_manifest)?);
+    hasher.update(serde_json::to_vec(&seed_manifest)?);
     let digest = hasher.finalize();
     let mut first = [0u8; 8];
     first.copy_from_slice(&digest[..8]);
@@ -602,7 +620,7 @@ fn build_nrs_seed_package(
     let reference_engine = standard_profile
         .get("reference_engine")
         .context("NRS reference engine")?;
-    let input_manifest = json!({
+    let mut input_manifest = json!({
         "adjacency_sha256":canonical_sha256(&Value::Array(adjacency.clone()))?,
         "algorithm_profile_sha256":canonical_sha256(&standard_profile)?,
         "canonicalization_version":"canonical-json-v1",
@@ -614,6 +632,19 @@ fn build_nrs_seed_package(
         "reference_engine_sha256":canonical_sha256(reference_engine)?,
         "unit_index_sha256":canonical_sha256(&unit_index)?
     });
+    if let Some(profile_sha256) = standard_profile
+        .pointer("/search/seed_compatibility_profile_sha256")
+        .and_then(Value::as_str)
+    {
+        let reference_engine_sha256 = standard_profile
+            .pointer("/search/seed_compatibility_reference_engine_sha256")
+            .and_then(Value::as_str)
+            .context("NRS seed compatibility reference engine hash")?;
+        input_manifest["seed_compatibility_profile_sha256"] =
+            Value::String(profile_sha256.to_owned());
+        input_manifest["seed_compatibility_reference_engine_sha256"] =
+            Value::String(reference_engine_sha256.to_owned());
+    }
     let (digest, seed_u64, seed_i32) = nrs_seed(&input_manifest)?;
     fs::create_dir_all(out)?;
     write_json(&out.join("standard_profile.json"), &standard_profile, true)?;
@@ -706,6 +737,20 @@ fn verify_nrs_seed_package(package: &Path, context_path: &Path) -> Result<()> {
     ] {
         if input_manifest[field] != expected {
             bail!("NRS input manifest {field} mismatch");
+        }
+    }
+    for (manifest_field, profile_pointer) in [
+        (
+            "seed_compatibility_profile_sha256",
+            "/search/seed_compatibility_profile_sha256",
+        ),
+        (
+            "seed_compatibility_reference_engine_sha256",
+            "/search/seed_compatibility_reference_engine_sha256",
+        ),
+    ] {
+        if input_manifest.get(manifest_field) != standard_profile.pointer(profile_pointer) {
+            bail!("NRS input manifest {manifest_field} mismatch");
         }
     }
     let context = read_json(context_path)?;
@@ -5149,6 +5194,26 @@ mod tests {
             serde_json::to_vec(&right).unwrap()
         );
         assert_eq!(nrs_seed(&left).unwrap(), nrs_seed(&right).unwrap());
+    }
+
+    #[test]
+    fn nrs_seed_compatibility_hashes_preserve_predecessor_stream() {
+        let predecessor = json!({
+            "algorithm_profile_sha256":"old-profile",
+            "reference_engine_sha256":"old-engine",
+            "state":"HI"
+        });
+        let successor = json!({
+            "algorithm_profile_sha256":"new-profile",
+            "reference_engine_sha256":"new-engine",
+            "seed_compatibility_profile_sha256":"old-profile",
+            "seed_compatibility_reference_engine_sha256":"old-engine",
+            "state":"HI"
+        });
+        assert_eq!(
+            nrs_seed(&predecessor).unwrap(),
+            nrs_seed(&successor).unwrap()
+        );
     }
 
     #[test]

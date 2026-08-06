@@ -196,11 +196,9 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             &mut assignment,
             nrs_profile.then(|| nrs_population_tolerance_scaled_bound(&root)),
         )?;
-        if matches!(
-            args.discovery_refinement,
-            DiscoveryRefinementArg::NrsV02 | DiscoveryRefinementArg::NrsV03
-        ) && nrs_population_deviation_scaled(&root, &assignment)
-            > nrs_population_tolerance_scaled_bound(&root)
+        if args.discovery_refinement == DiscoveryRefinementArg::NrsV02
+            && nrs_population_deviation_scaled(&root, &assignment)
+                > nrs_population_tolerance_scaled_bound(&root)
         {
             let fallback = nrs_v0_2_fallback_candidate(
                 &root,
@@ -598,6 +596,101 @@ fn nrs_assignment_side_connected(adjacency: &[Vec<usize>], assignment: &[u8], la
     count == expected
 }
 
+fn nrs_v0_3_bridge_aware_population_floor(
+    instance: &bisect_ilp::CertifiedSplitInstance,
+    land_adjacency: &[Vec<usize>],
+    components: &[Vec<usize>],
+    component_of: &[usize],
+) -> anyhow::Result<u128> {
+    let total_population = instance.populations.iter().sum::<i64>();
+    let mut best = u128::MAX;
+    let mut subtree_population = vec![0_i64; instance.unit_ids.len()];
+    let mut parent = vec![usize::MAX; instance.unit_ids.len()];
+    for (component_index, component) in components.iter().enumerate() {
+        if component.len() < 2 {
+            continue;
+        }
+        let component_population = component
+            .iter()
+            .map(|&unit| instance.populations[unit])
+            .sum::<i64>();
+        let outside_population = total_population - component_population;
+        let mut roots = (0..16)
+            .map(|quantile| component[quantile * (component.len() - 1) / 15])
+            .collect::<Vec<_>>();
+        roots.sort_unstable();
+        roots.dedup();
+        for root in roots {
+            for breadth_first in [false, true] {
+                for &unit in component {
+                    parent[unit] = usize::MAX;
+                }
+                let mut order = Vec::with_capacity(component.len());
+                parent[root] = root;
+                if breadth_first {
+                    let mut queue = VecDeque::from([root]);
+                    while let Some(unit) = queue.pop_front() {
+                        order.push(unit);
+                        for &neighbor in &land_adjacency[unit] {
+                            if component_of[neighbor] == component_index
+                                && parent[neighbor] == usize::MAX
+                            {
+                                parent[neighbor] = unit;
+                                queue.push_back(neighbor);
+                            }
+                        }
+                    }
+                } else {
+                    let mut stack = vec![root];
+                    while let Some(unit) = stack.pop() {
+                        order.push(unit);
+                        for &neighbor in land_adjacency[unit].iter().rev() {
+                            if component_of[neighbor] == component_index
+                                && parent[neighbor] == usize::MAX
+                            {
+                                parent[neighbor] = unit;
+                                stack.push(neighbor);
+                            }
+                        }
+                    }
+                }
+                if order.len() != component.len() {
+                    return Err(anyhow!("NRS v0.3 land component traversal is incomplete"));
+                }
+                for &unit in component {
+                    subtree_population[unit] = instance.populations[unit];
+                }
+                for &unit in order.iter().skip(1).rev() {
+                    subtree_population[parent[unit]] += subtree_population[unit];
+                }
+                for outside_is_left in [false, true] {
+                    for &candidate in order.iter().skip(1) {
+                        for complement_is_left in [false, true] {
+                            let selected_population = if complement_is_left {
+                                component_population - subtree_population[candidate]
+                            } else {
+                                subtree_population[candidate]
+                            };
+                            let left_population = selected_population
+                                + if outside_is_left {
+                                    outside_population
+                                } else {
+                                    0
+                                };
+                            let deviation = (instance.k_parent as i128
+                                * i128::from(left_population)
+                                - instance.k_left as i128 * i128::from(total_population))
+                            .unsigned_abs();
+                            best = best.min(deviation);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(best)
+}
+
 fn nrs_v0_3_bridge_aware_component_candidate(
     instance: &bisect_ilp::CertifiedSplitInstance,
     adjacency: &[Vec<usize>],
@@ -638,7 +731,18 @@ fn nrs_v0_3_bridge_aware_component_candidate(
         component.sort_unstable();
         components.push(component);
     }
-    for (component_index, component) in components.iter().enumerate() {
+    let population_floor = nrs_v0_3_bridge_aware_population_floor(
+        instance,
+        land_adjacency,
+        &components,
+        &component_of,
+    )?;
+    if population_floor > best_key.0 {
+        return Ok(best);
+    }
+    let mut subtree_population = vec![0_i64; n];
+    let mut parent = vec![usize::MAX; n];
+    'component_search: for (component_index, component) in components.iter().enumerate() {
         if component.len() < 2 {
             continue;
         }
@@ -654,7 +758,9 @@ fn nrs_v0_3_bridge_aware_component_candidate(
         roots.dedup();
         for root in roots {
             for breadth_first in [false, true] {
-                let mut parent = vec![usize::MAX; n];
+                for &unit in component {
+                    parent[unit] = usize::MAX;
+                }
                 let mut order = Vec::with_capacity(component.len());
                 parent[root] = root;
                 if breadth_first {
@@ -687,7 +793,9 @@ fn nrs_v0_3_bridge_aware_component_candidate(
                 if order.len() != component.len() {
                     return Err(anyhow!("NRS v0.3 land component traversal is incomplete"));
                 }
-                let mut subtree_population = instance.populations.clone();
+                for &unit in component {
+                    subtree_population[unit] = instance.populations[unit];
+                }
                 for &unit in order.iter().skip(1).rev() {
                     subtree_population[parent[unit]] += subtree_population[unit];
                 }
@@ -719,6 +827,9 @@ fn nrs_v0_3_bridge_aware_component_candidate(
                                 tree_candidates.push((candidate, complement_is_left));
                             }
                         }
+                    }
+                    if tree_best != population_floor {
+                        continue;
                     }
                     for (candidate, complement_is_left) in tree_candidates {
                         let mut in_subtree = vec![false; n];
@@ -761,13 +872,8 @@ fn nrs_v0_3_bridge_aware_component_candidate(
                             continue;
                         }
                         let key = nrs_v0_2_candidate_key(instance, raw_assignment, &assignment);
-                        if raw_best
-                            .as_ref()
-                            .map(|(candidate_key, _)| &key < candidate_key)
-                            .unwrap_or(true)
-                        {
-                            raw_best = Some((key, assignment));
-                        }
+                        raw_best = Some((key, assignment));
+                        break 'component_search;
                     }
                 }
             }
