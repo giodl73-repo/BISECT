@@ -217,6 +217,29 @@ enum Action {
         #[arg(long, default_value = "docs/experiments/nrs-v0.1-national-2020")]
         report_dir: PathBuf,
     },
+    SnapshotNrsBatch {
+        #[arg(long, default_value_t = 2020)]
+        year: u16,
+        #[arg(
+            long,
+            default_value = "docs/experiments/nationwide-2020/inventory.json"
+        )]
+        inventory: PathBuf,
+        #[arg(long)]
+        standard_profile: Option<PathBuf>,
+        #[arg(long)]
+        legal_profile: Option<PathBuf>,
+        #[arg(long, default_value = "runs/nrs-v0.1/national-2020")]
+        out_dir: PathBuf,
+        #[arg(long)]
+        snapshot: PathBuf,
+    },
+    CompareNrsSnapshots {
+        #[arg(long, value_delimiter = ',', num_args = 2..)]
+        snapshots: Vec<PathBuf>,
+        #[arg(long)]
+        out_dir: PathBuf,
+    },
     RctxBatch {
         #[arg(long, default_value_t = 2020)]
         year: u16,
@@ -2655,6 +2678,374 @@ fn summarize_nrs_batch(
     Ok(())
 }
 
+fn snapshot_nrs_batch(
+    year: u16,
+    inventory_path: &Path,
+    standard_profile_path: &Path,
+    legal_profile_path: &Path,
+    out: &Path,
+    snapshot_path: &Path,
+) -> Result<()> {
+    if snapshot_path.exists() {
+        bail!(
+            "NRS node snapshot already exists: {}",
+            snapshot_path.display()
+        );
+    }
+    verify_nrs_batch(
+        year,
+        inventory_path,
+        standard_profile_path,
+        legal_profile_path,
+        out,
+        true,
+    )?;
+    let inventory = read_json(inventory_path)?;
+    let profile = read_json(standard_profile_path)?;
+    let ledger_path = out.join("ledger.json");
+    let ledger = read_json(&ledger_path)?;
+    let mut states = Vec::new();
+    let mut total_nodes = 0_u64;
+    for inventory_row in inventory["states"].as_array().context("inventory states")? {
+        let state = inventory_row["state"].as_str().context("inventory state")?;
+        let tree_path = out
+            .join("states")
+            .join(state.to_ascii_lowercase())
+            .join("package/baseline-tree.json");
+        let tree = read_json(&tree_path)?;
+        let mut nodes = Vec::new();
+        for node in tree["nodes"].as_array().context("baseline tree nodes")? {
+            let path = node["path"].as_str().context("node path")?;
+            let child_seats = node["child_seats"].as_array().context("node child seats")?;
+            if child_seats.len() != 2 {
+                bail!("{state} node {path} child-seat arity drift");
+            }
+            let deviation = node
+                .pointer("/objective/max_population_deviation_scaled")
+                .and_then(Value::as_u64)
+                .context("node population deviation")?;
+            let tolerance = node["generation_tolerance_scaled_bound"]
+                .as_u64()
+                .context("node population tolerance")?;
+            let cut = node
+                .pointer("/objective/weighted_boundary_cut")
+                .and_then(Value::as_u64)
+                .context("node weighted boundary cut")?;
+            let population = node["parent_population"]
+                .as_u64()
+                .context("node parent population")?;
+            nodes.push(json!({
+                "path":path,
+                "depth":path.len(),
+                "seats":node["seats"],
+                "child_seats":child_seats,
+                "parent_population":population,
+                "max_population_deviation_scaled":deviation,
+                "generation_tolerance_scaled_bound":tolerance,
+                "tolerance_usage":if tolerance == 0 { 0.0 } else { deviation as f64 / tolerance as f64 },
+                "weighted_boundary_cut":cut,
+                "weighted_boundary_cut_per_parent_person":if population == 0 { 0.0 } else { cut as f64 / population as f64 },
+                "population_floor_lower_bound":node.pointer("/population_floor/lower_bound"),
+                "population_floor_attained":node.pointer("/population_floor/attained")
+            }));
+        }
+        nodes.sort_by(|left, right| left["path"].as_str().cmp(&right["path"].as_str()));
+        total_nodes += nodes.len() as u64;
+        let mut leaf_paths = tree["leaves"]
+            .as_array()
+            .context("baseline tree leaves")?
+            .iter()
+            .map(|leaf| {
+                leaf["path"]
+                    .as_str()
+                    .context("leaf path")
+                    .map(str::to_owned)
+            })
+            .collect::<Result<Vec<_>>>()?;
+        leaf_paths.sort();
+        states.push(json!({
+            "state":state,
+            "districts":tree["districts"],
+            "unit_count":tree["unit_count"],
+            "population_total":tree["population_total"],
+            "baseline_tree_sha256":sha256(&tree_path)?,
+            "nodes":nodes,
+            "leaf_paths":leaf_paths
+        }));
+    }
+    states.sort_by(|left, right| left["state"].as_str().cmp(&right["state"].as_str()));
+    if total_nodes
+        != ledger["results"]
+            .as_array()
+            .context("ledger results")?
+            .iter()
+            .map(|row| row["districts"].as_u64().unwrap_or(0).saturating_sub(1))
+            .sum::<u64>()
+    {
+        bail!("NRS node snapshot recursive-node total drift");
+    }
+    if let Some(parent) = snapshot_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    write_json(
+        snapshot_path,
+        &json!({
+            "schema_version":"nrs-node-snapshot-v1",
+            "census_year":year,
+            "standard_profile_id":profile["profile_id"],
+            "standard_profile_canonical_sha256":canonical_sha256(&profile)?,
+            "source_ledger_sha256":sha256(&ledger_path)?,
+            "state_count":states.len(),
+            "district_count":states.iter().map(|state|state["districts"].as_u64().unwrap_or(0)).sum::<u64>(),
+            "recursive_node_count":total_nodes,
+            "states":states,
+            "claim_boundary":"Hash-bound structural and node-objective snapshot of a completely verified NRS batch. Weighted cuts are descriptive incumbents on cycle-specific block graphs; this snapshot does not establish cross-census assignment overlap or objective optimality."
+        }),
+        true,
+    )?;
+    println!("NRS node snapshot: VERIFIED ({year}, {total_nodes} nodes)");
+    Ok(())
+}
+
+fn node_signature(node: &Value) -> Result<String> {
+    let children = node["child_seats"]
+        .as_array()
+        .context("snapshot child seats")?;
+    Ok(format!(
+        "{}:{}:{}:{}",
+        node["path"].as_str().context("snapshot node path")?,
+        node["seats"].as_u64().context("snapshot node seats")?,
+        children[0].as_u64().context("snapshot left seats")?,
+        children[1].as_u64().context("snapshot right seats")?
+    ))
+}
+
+fn snapshot_state_map(snapshot: &Value) -> Result<BTreeMap<String, Value>> {
+    snapshot["states"]
+        .as_array()
+        .context("snapshot states")?
+        .iter()
+        .map(|state| {
+            Ok((
+                state["state"]
+                    .as_str()
+                    .context("snapshot state")?
+                    .to_owned(),
+                state.clone(),
+            ))
+        })
+        .collect()
+}
+
+fn snapshot_node_map(state: &Value) -> Result<BTreeMap<String, Value>> {
+    state["nodes"]
+        .as_array()
+        .context("snapshot nodes")?
+        .iter()
+        .map(|node| Ok((node_signature(node)?, node.clone())))
+        .collect()
+}
+
+fn median(mut values: Vec<f64>) -> Option<f64> {
+    if values.is_empty() {
+        return None;
+    }
+    values.sort_by(|left, right| left.total_cmp(right));
+    let middle = values.len() / 2;
+    Some(if values.len() % 2 == 0 {
+        (values[middle - 1] + values[middle]) / 2.0
+    } else {
+        values[middle]
+    })
+}
+
+fn compare_nrs_snapshots(snapshot_paths: &[PathBuf], out: &Path) -> Result<()> {
+    if snapshot_paths.len() < 2 {
+        bail!("at least two NRS node snapshots are required");
+    }
+    if out.exists() {
+        bail!(
+            "NRS stability report directory already exists: {}",
+            out.display()
+        );
+    }
+    let mut snapshots = snapshot_paths
+        .iter()
+        .map(|path| Ok((read_json(path)?, path.clone())))
+        .collect::<Result<Vec<_>>>()?;
+    for (snapshot, path) in &snapshots {
+        if snapshot["schema_version"] != "nrs-node-snapshot-v1"
+            || snapshot["state_count"] != 50
+            || snapshot["district_count"] != 435
+            || snapshot["recursive_node_count"] != 385
+        {
+            bail!(
+                "incomplete or unknown NRS node snapshot: {}",
+                path.display()
+            );
+        }
+    }
+    snapshots.sort_by_key(|(snapshot, _)| snapshot["census_year"].as_u64());
+    if snapshots
+        .windows(2)
+        .any(|pair| pair[0].0["census_year"] == pair[1].0["census_year"])
+    {
+        bail!("NRS node snapshots must use distinct census years");
+    }
+    let mut pairwise = Vec::new();
+    let mut state_matrix = Vec::new();
+    for left_index in 0..snapshots.len() {
+        for right_index in left_index + 1..snapshots.len() {
+            let (left, _) = &snapshots[left_index];
+            let (right, _) = &snapshots[right_index];
+            let left_year = left["census_year"].as_u64().context("left year")?;
+            let right_year = right["census_year"].as_u64().context("right year")?;
+            let left_states = snapshot_state_map(left)?;
+            let right_states = snapshot_state_map(right)?;
+            let mut exact_topology_states = 0_u64;
+            let mut same_seat_states = 0_u64;
+            let mut matched_nodes = 0_u64;
+            let mut union_nodes = 0_u64;
+            let mut cut_changes = Vec::new();
+            let mut tolerance_changes = Vec::new();
+            for (state, left_state) in &left_states {
+                let right_state = right_states.get(state).context("paired snapshot state")?;
+                let left_nodes = snapshot_node_map(left_state)?;
+                let right_nodes = snapshot_node_map(right_state)?;
+                let left_signatures = left_nodes.keys().cloned().collect::<BTreeSet<_>>();
+                let right_signatures = right_nodes.keys().cloned().collect::<BTreeSet<_>>();
+                let intersection = left_signatures.intersection(&right_signatures).count() as u64;
+                let union = left_signatures.union(&right_signatures).count() as u64;
+                let same_seats = left_state["districts"] == right_state["districts"];
+                let exact_topology = left_signatures == right_signatures
+                    && left_state["leaf_paths"] == right_state["leaf_paths"];
+                same_seat_states += u64::from(same_seats);
+                exact_topology_states += u64::from(exact_topology);
+                matched_nodes += intersection;
+                union_nodes += union;
+                let mut state_cut_changes = Vec::new();
+                let mut state_tolerance_changes = Vec::new();
+                for signature in left_signatures.intersection(&right_signatures) {
+                    let left_node = &left_nodes[signature];
+                    let right_node = &right_nodes[signature];
+                    let left_cut = left_node["weighted_boundary_cut_per_parent_person"]
+                        .as_f64()
+                        .context("left normalized cut")?;
+                    let right_cut = right_node["weighted_boundary_cut_per_parent_person"]
+                        .as_f64()
+                        .context("right normalized cut")?;
+                    if left_cut > 0.0 {
+                        state_cut_changes.push(((right_cut - left_cut) / left_cut).abs());
+                    }
+                    let left_tolerance = left_node["tolerance_usage"]
+                        .as_f64()
+                        .context("left tolerance usage")?;
+                    let right_tolerance = right_node["tolerance_usage"]
+                        .as_f64()
+                        .context("right tolerance usage")?;
+                    state_tolerance_changes.push((right_tolerance - left_tolerance).abs());
+                }
+                cut_changes.extend(state_cut_changes.iter().copied());
+                tolerance_changes.extend(state_tolerance_changes.iter().copied());
+                state_matrix.push(json!({
+                    "left_year":left_year,
+                    "right_year":right_year,
+                    "state":state,
+                    "left_districts":left_state["districts"],
+                    "right_districts":right_state["districts"],
+                    "same_seat_count":same_seats,
+                    "exact_tree_topology":exact_topology,
+                    "matched_node_signatures":intersection,
+                    "union_node_signatures":union,
+                    "tree_topology_jaccard":if union == 0 { 1.0 } else { intersection as f64 / union as f64 },
+                    "median_absolute_relative_normalized_cut_change":median(state_cut_changes),
+                    "median_absolute_tolerance_usage_change":median(state_tolerance_changes)
+                }));
+            }
+            pairwise.push(json!({
+                "left_year":left_year,
+                "right_year":right_year,
+                "same_seat_count_states":same_seat_states,
+                "exact_tree_topology_states":exact_topology_states,
+                "matched_node_signatures":matched_nodes,
+                "union_node_signatures":union_nodes,
+                "tree_topology_jaccard":matched_nodes as f64 / union_nodes as f64,
+                "median_absolute_relative_normalized_cut_change":median(cut_changes),
+                "median_absolute_tolerance_usage_change":median(tolerance_changes)
+            }));
+        }
+    }
+    let state_maps = snapshots
+        .iter()
+        .map(|(snapshot, _)| snapshot_state_map(snapshot))
+        .collect::<Result<Vec<_>>>()?;
+    let mut all_cycle_exact_topology_states = 0_u64;
+    let mut all_cycle_common_node_signatures = 0_u64;
+    for state in state_maps[0].keys() {
+        let signature_sets = state_maps
+            .iter()
+            .map(|states| {
+                snapshot_node_map(states.get(state).expect("all snapshots contain 50 States"))
+                    .map(|nodes| nodes.into_keys().collect::<BTreeSet<_>>())
+            })
+            .collect::<Result<Vec<_>>>()?;
+        all_cycle_exact_topology_states +=
+            u64::from(signature_sets.windows(2).all(|pair| pair[0] == pair[1]));
+        let common = signature_sets
+            .iter()
+            .skip(1)
+            .fold(signature_sets[0].clone(), |accumulator, signatures| {
+                accumulator.intersection(signatures).cloned().collect()
+            });
+        all_cycle_common_node_signatures += common.len() as u64;
+    }
+    fs::create_dir_all(out)?;
+    let matrix_path = out.join("stability-matrix.json");
+    write_json(
+        &matrix_path,
+        &json!({
+            "schema_version":"nrs-cross-census-stability-v1",
+            "census_years":snapshots.iter().map(|(snapshot,_)|snapshot["census_year"].clone()).collect::<Vec<_>>(),
+            "pairwise":pairwise,
+            "all_cycle_exact_topology_states":all_cycle_exact_topology_states,
+            "all_cycle_common_node_signatures":all_cycle_common_node_signatures,
+            "state_matrix":state_matrix,
+            "assignment_overlap":{"status":"not-computed","reason":"Decennial block universes differ; a Census relationship crosswalk or geometry overlay is required for valid assignment Jaccard."},
+            "cut_metric":{"name":"absolute-relative-change-in-weighted-boundary-cut-per-parent-person","posture":"descriptive-cycle-specific-incumbent-drift-not-geographic-overlap-or-optimality"},
+            "claim_boundary":"Compares verified recursive seat-tree signatures and descriptive normalized incumbent objectives. It does not compare block assignments across incompatible Census universes, prove boundary optimality, or establish legal, VRA, partisan, or adoption conclusions."
+        }),
+        true,
+    )?;
+    let snapshot_artifacts = snapshots
+        .iter()
+        .map(|(snapshot, path)| {
+            Ok(json!({
+                "census_year":snapshot["census_year"],
+                "path":portable_path(path),
+                "sha256":sha256(path)?
+            }))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let manifest_path = out.join("manifest.json");
+    write_json(
+        &manifest_path,
+        &json!({
+            "schema_version":"nrs-cross-census-stability-package-v1",
+            "status":"verified-structural-and-objective-comparison",
+            "snapshots":snapshot_artifacts,
+            "files":[{"path":"stability-matrix.json","sha256":sha256(&matrix_path)?}],
+            "claim_boundary":"Hash-bound structural and descriptive objective comparison; cross-census assignment overlap remains uncomputed pending a valid crosswalk."
+        }),
+        true,
+    )?;
+    println!(
+        "NRS cross-census stability: VERIFIED ({} snapshots, {} all-cycle common nodes)",
+        snapshots.len(),
+        all_cycle_common_node_signatures
+    );
+    Ok(())
+}
+
 fn connected(context: &Value, assignment: &[i64], label: i64) -> Result<bool> {
     let members: Vec<usize> = assignment
         .iter()
@@ -5008,6 +5399,28 @@ fn main() -> Result<()> {
                 &report_dir,
             )
         }
+        Action::SnapshotNrsBatch {
+            year,
+            inventory,
+            standard_profile,
+            legal_profile,
+            out_dir,
+            snapshot,
+        } => {
+            let profiles =
+                resolve_nrs_profiles(year, standard_profile.as_deref(), legal_profile.as_deref());
+            snapshot_nrs_batch(
+                year,
+                &inventory,
+                &profiles.0,
+                &profiles.1,
+                &out_dir,
+                &snapshot,
+            )
+        }
+        Action::CompareNrsSnapshots { snapshots, out_dir } => {
+            compare_nrs_snapshots(&snapshots, &out_dir)
+        }
         Action::RctxBatch {
             year,
             inventory,
@@ -5214,6 +5627,65 @@ mod tests {
             nrs_seed(&predecessor).unwrap(),
             nrs_seed(&successor).unwrap()
         );
+    }
+
+    #[test]
+    fn nrs_cross_census_comparison_reports_exact_topology_and_cut_drift() {
+        fn fixture_snapshot(year: u16, cut: u64) -> Value {
+            let nodes = (0..385)
+                .map(|index| {
+                    json!({
+                        "path":format!("n{index:03}"),
+                        "seats":2,
+                        "child_seats":[1,1],
+                        "weighted_boundary_cut_per_parent_person":cut as f64,
+                        "tolerance_usage":0.25
+                    })
+                })
+                .collect::<Vec<_>>();
+            let mut states = vec![json!({
+                "state":"S00",
+                "districts":386,
+                "nodes":nodes,
+                "leaf_paths":[]
+            })];
+            states.extend((1..50).map(|index| {
+                json!({
+                    "state":format!("S{index:02}"),
+                    "districts":1,
+                    "nodes":[],
+                    "leaf_paths":[]
+                })
+            }));
+            json!({
+                "schema_version":"nrs-node-snapshot-v1",
+                "census_year":year,
+                "state_count":50,
+                "district_count":435,
+                "recursive_node_count":385,
+                "states":states
+            })
+        }
+
+        let temp = tempfile::tempdir().unwrap();
+        let left = temp.path().join("2000.json");
+        let right = temp.path().join("2010.json");
+        write_json(&left, &fixture_snapshot(2000, 10), true).unwrap();
+        write_json(&right, &fixture_snapshot(2010, 20), true).unwrap();
+        let out = temp.path().join("comparison");
+
+        compare_nrs_snapshots(&[left, right], &out).unwrap();
+
+        let matrix = read_json(&out.join("stability-matrix.json")).unwrap();
+        assert_eq!(matrix["all_cycle_exact_topology_states"], 50);
+        assert_eq!(matrix["all_cycle_common_node_signatures"], 385);
+        assert_eq!(matrix["pairwise"][0]["matched_node_signatures"], 385);
+        assert_eq!(
+            matrix["pairwise"][0]["median_absolute_relative_normalized_cut_change"],
+            1.0
+        );
+        assert_eq!(matrix["assignment_overlap"]["status"], "not-computed");
+        assert!(out.join("manifest.json").is_file());
     }
 
     #[test]
