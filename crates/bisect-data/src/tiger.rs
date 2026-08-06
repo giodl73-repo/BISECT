@@ -135,10 +135,15 @@ pub fn read_tiger_blocks_projected_for_year<P: AsRef<Path>>(
     for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
         let (shape, record) =
             shape_record.map_err(|error| TigerError::ShapefileError(error.to_string()))?;
-        let geoid = match record.get(&geoid_field) {
-            Some(shapefile::dbase::FieldValue::Character(Some(value))) => value.trim().to_string(),
-            _ => return Err(TigerError::MissingGeoid),
-        };
+        let geoid = [geoid_field.as_str(), "BLKIDFP00"]
+            .into_iter()
+            .find_map(|field| match record.get(field) {
+                Some(shapefile::dbase::FieldValue::Character(Some(value))) => {
+                    Some(value.trim().to_string())
+                }
+                _ => None,
+            })
+            .ok_or(TigerError::MissingGeoid)?;
         if geoid.len() != 15 || !geoid.bytes().all(|byte| byte.is_ascii_digit()) {
             return Err(TigerError::InvalidBlockGeoid(geoid));
         }

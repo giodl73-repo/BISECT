@@ -31,6 +31,8 @@ pub enum Pl94Error {
     },
     #[error("duplicate block LOGRECNO {0}")]
     DuplicateLogrecno(String),
+    #[error("duplicate block GEOID {0}")]
+    DuplicateGeoid(String),
     #[error("population file has no record for block LOGRECNO {0}")]
     MissingPopulation(String),
     #[error("unsupported PL 94-171 census year {0}")]
@@ -56,18 +58,70 @@ pub fn read_pl94_block_populations<G: AsRef<Path>, P: AsRef<Path>>(
 ///
 /// The 2020 release uses pipe-delimited geography and population files. The
 /// 2010 release uses fixed-width geography and comma-delimited population.
+/// The 2000 release carries POP100 directly in its fixed-width geography file.
 pub fn read_pl94_block_populations_for_year<G: AsRef<Path>, P: AsRef<Path>>(
     geo_path: G,
     population_path: P,
     year: u16,
 ) -> Result<Vec<Pl94BlockPopulation>, Pl94Error> {
     let geo = BufReader::new(File::open(geo_path)?);
-    let population = BufReader::new(File::open(population_path)?);
     match year {
-        2020 => parse_pl94_block_populations(geo, population),
-        2010 => parse_pl94_2010_block_populations(geo, population),
+        2000 => parse_pl94_2000_block_populations(geo),
+        2010 => {
+            parse_pl94_2010_block_populations(geo, BufReader::new(File::open(population_path)?))
+        }
+        2020 => parse_pl94_block_populations(geo, BufReader::new(File::open(population_path)?)),
         _ => Err(Pl94Error::UnsupportedYear(year)),
     }
+}
+
+fn parse_pl94_2000_block_populations<G: BufRead>(
+    geo: G,
+) -> Result<Vec<Pl94BlockPopulation>, Pl94Error> {
+    let mut blocks = HashMap::new();
+    for (line_index, line) in geo.split(b'\n').enumerate() {
+        let line_number = line_index + 1;
+        let line = line?;
+        if ascii_trim(&line).is_empty() {
+            continue;
+        }
+        if line.len() < 301 {
+            return Err(malformed(
+                "geography",
+                line_number,
+                "2000 fixed-width record is shorter than 301 bytes",
+            ));
+        }
+        if ascii_trim(&line[8..11]) != BLOCK_SUMLEV {
+            continue;
+        }
+        let mut geoid = Vec::with_capacity(15);
+        geoid.extend_from_slice(ascii_trim(&line[29..31]));
+        geoid.extend_from_slice(ascii_trim(&line[31..34]));
+        geoid.extend_from_slice(ascii_trim(&line[55..61]));
+        geoid.extend_from_slice(ascii_trim(&line[62..66]));
+        if geoid.len() != 15 || !geoid.iter().all(u8::is_ascii_digit) {
+            return Err(malformed(
+                "geography",
+                line_number,
+                "2000 block fields must form a 15-digit GEOID",
+            ));
+        }
+        let geoid = String::from_utf8(geoid).expect("validated ASCII digits");
+        let population = std::str::from_utf8(ascii_trim(&line[292..301]))
+            .map_err(|_| malformed("geography", line_number, "POP100 is not ASCII"))?
+            .parse::<i64>()
+            .map_err(|_| malformed("geography", line_number, "POP100 is not an integer"))?;
+        if blocks.insert(geoid.clone(), population).is_some() {
+            return Err(Pl94Error::DuplicateGeoid(geoid));
+        }
+    }
+    let mut result = blocks
+        .into_iter()
+        .map(|(geoid, population)| Pl94BlockPopulation { geoid, population })
+        .collect::<Vec<_>>();
+    result.sort_by(|left, right| left.geoid.cmp(&right.geoid));
+    Ok(result)
 }
 
 fn parse_pl94_2010_block_populations<G: BufRead, P: BufRead>(
@@ -256,6 +310,28 @@ mod tests {
 
     use super::*;
 
+    #[test]
+    fn parses_2000_fixed_width_block_population() {
+        let mut line = vec![b' '; 400];
+        line[0..6].copy_from_slice(b"uPL   ");
+        line[6..8].copy_from_slice(b"CA");
+        line[8..11].copy_from_slice(b"750");
+        line[29..31].copy_from_slice(b"06");
+        line[31..34].copy_from_slice(b"001");
+        line[55..61].copy_from_slice(b"427100");
+        line[61] = b'1';
+        line[62..66].copy_from_slice(b"1100");
+        line[292..301].copy_from_slice(b"123      ");
+        line.push(b'\n');
+        assert_eq!(
+            parse_pl94_2000_block_populations(Cursor::new(line)).unwrap(),
+            vec![Pl94BlockPopulation {
+                geoid: "060014271001100".to_owned(),
+                population: 123,
+            }]
+        );
+    }
+
     fn geo_line(sumlev: &str, logrecno: &str, geoid: &str) -> String {
         format!("PLST|AA|{sumlev}|||||{logrecno}|{geoid}|unused\n")
     }
@@ -357,8 +433,9 @@ mod tests {
 
     #[test]
     fn reads_local_2010_rhode_island_when_available() {
-        let geo = Path::new("data/2010/redistricting/ri2010.pl/rigeo2010.pl");
-        let population = Path::new("data/2010/redistricting/ri2010.pl/ri000012010.pl");
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let geo = root.join("data/2010/redistricting/ri2010.pl/rigeo2010.pl");
+        let population = root.join("data/2010/redistricting/ri2010.pl/ri000012010.pl");
         if !geo.is_file() || !population.is_file() {
             return;
         }
@@ -367,6 +444,22 @@ mod tests {
         assert_eq!(
             blocks.iter().map(|block| block.population).sum::<i64>(),
             1_052_567
+        );
+        assert!(blocks.windows(2).all(|pair| pair[0].geoid < pair[1].geoid));
+    }
+
+    #[test]
+    fn reads_local_2000_california_when_available() {
+        let geography =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/2000/redistricting/cageo.upl");
+        if !geography.is_file() {
+            return;
+        }
+        let blocks = read_pl94_block_populations_for_year(&geography, &geography, 2000).unwrap();
+        assert_eq!(blocks.len(), 533_163);
+        assert_eq!(
+            blocks.iter().map(|block| block.population).sum::<i64>(),
+            33_871_648
         );
         assert!(blocks.windows(2).all(|pair| pair[0].geoid < pair[1].geoid));
     }
