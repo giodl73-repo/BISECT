@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:ad3262b697c70b47471a08449e22755e5eb182220666994a91b37dc81cb84ddf",
+  "context_hash": "sha256:5370b82bcfa47a66b66a3380aabb1c84cbf99ddd3c465a7cf1962277d4cc5738",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 357710,
   "population_total": 7078515,
-  "rctx_bytes": 38550890,
+  "rctx_bytes": 38560299,
   "rctx_path": "data/2000/certified/va_blocks_2000.rctx",
-  "rctx_sha256": "c94a50fc4a1786448c9a6b2f239826c7d25f0b691adeb17b5e343dbefca4f0ed",
+  "rctx_sha256": "57de27298f552fb1263aaf2281e7c6ad90ca9f2aa128fc30bb3ccf3c364fa376",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "virginia",
   "state_code": "VA",

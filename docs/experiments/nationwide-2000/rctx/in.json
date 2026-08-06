@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:97a73600b08a66ebd1223f1b797f04bba539afa86f26ba68f0f59781e4e857db",
+  "context_hash": "sha256:8cae6649168058c33b3c24868ec97aa173564ea29de00b474f98db98abed8e56",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 483618,
   "population_total": 6080485,
-  "rctx_bytes": 52324451,
+  "rctx_bytes": 52330850,
   "rctx_path": "data/2000/certified/in_blocks_2000.rctx",
-  "rctx_sha256": "788c7b70658716c5bf3e36a97c4a3f5cb4bf726dee1fb646029e8c5aec3c4c38",
+  "rctx_sha256": "e5ddf55a50e95ded530996a2475a3c348a44431d73cd833b8af0d3efd4b8a02f",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "indiana",
   "state_code": "IN",

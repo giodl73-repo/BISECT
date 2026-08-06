@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:6d273eb1809a2bed9e0f55f754fb7f6bc877e0fc889ad75aca4d30876816e355",
+  "context_hash": "sha256:3a508b7699430627bc8c7bfb98b4bbec35e40db84c6427ef24a82ed6761a7a4d",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 1657554,
   "population_total": 20851820,
-  "rctx_bytes": 180401030,
+  "rctx_bytes": 180418769,
   "rctx_path": "data/2000/certified/tx_blocks_2000.rctx",
-  "rctx_sha256": "8371e588d3c915508e63a38f539867ef94d9207b2ea11e3efd47a7521ff0f39e",
+  "rctx_sha256": "fe92bad2c3e61b6f3a3ddbc91657ea9fa867ded2de93a9ccd3f8a017f89c1fa8",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "texas",
   "state_code": "TX",

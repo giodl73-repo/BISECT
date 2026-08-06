@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:8c44a8ebb8f8638a3e7089894219b8cd1906a8c3fba2243c406bdba9d4e347b8",
+  "context_hash": "sha256:5e6d924714a070574923bfa01fc8b349734d088970d4d3818a91b347fc01d1e1",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 348139,
   "population_total": 8414350,
-  "rctx_bytes": 37287143,
+  "rctx_bytes": 37288572,
   "rctx_path": "data/2000/certified/nj_blocks_2000.rctx",
-  "rctx_sha256": "7399a562f9b3fb37d94f9c0544bf9aa7f32dae5ac5c0ab163bbc1bd08f82cc76",
+  "rctx_sha256": "95e58dd62b51dc4620a97bd099715bb180a56d8ba041688b3540f0637a659140",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "new_jersey",
   "state_code": "NJ",

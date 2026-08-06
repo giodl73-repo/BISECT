@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:e0ccdcf1fff0f7a586b346317f3870848e8fdc4b3a1f909a709a48b589da183a",
+  "context_hash": "sha256:56776d605398307b2e2fb8a4f11b0d584e332ef434b06a0d1a32791a43b3c775",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 789288,
   "population_total": 12281054,
-  "rctx_bytes": 85350111,
+  "rctx_bytes": 85354760,
   "rctx_path": "data/2000/certified/pa_blocks_2000.rctx",
-  "rctx_sha256": "0f988b1a429f50cc08cc160c737bb3c021c1b6e6c036a95e5db60cd8255bcd8f",
+  "rctx_sha256": "6b721325c730d389d7d8b826341752ab5f8044fcdc2a373b7a6161912aa64f7b",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "pennsylvania",
   "state_code": "PA",

@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 2,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:0d1b3e7c417fb3b55db62a9935bcb2c5c920d5ad63cb0176ba8dcbd08a0d7bfd",
+  "context_hash": "sha256:3b7c6e4fc50e6d7cb0d905fa0404d7c38ef6c90c38292b973bf182b208e0195a",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 3,
   "land_edge_count": 727608,
   "population_total": 18976457,
-  "rctx_bytes": 78788052,
+  "rctx_bytes": 78792351,
   "rctx_path": "data/2000/certified/ny_blocks_2000.rctx",
-  "rctx_sha256": "8fb60c244ce008318b0b2111960230df1f3f7b202ede795d729d780dbf8f6c8c",
+  "rctx_sha256": "9e854cc7ec04ba7909ff313f449b0a9c432f0e54a851ee8e380e35154fdb345d",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "new_york",
   "state_code": "NY",

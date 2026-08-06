@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:7017a40df9ff84b85fa6108f606f04307be5245d36d0c976f5aed776a9cb391d",
+  "context_hash": "sha256:696f6e3a3653ff40f9a75a27a510618d0ee249e36264987e0f9666c37af05de2",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 624740,
   "population_total": 9938444,
-  "rctx_bytes": 67763595,
+  "rctx_bytes": 67769364,
   "rctx_path": "data/2000/certified/mi_blocks_2000.rctx",
-  "rctx_sha256": "05c16cb73b9d7b3f9431efcc3a0d017aec990df7a95e72bbbcacbc27e266052c",
+  "rctx_sha256": "29c8b0ec5f04987060ce88c07a8cd67826e47cfd98d1a1863e7e0fec21679e84",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "michigan",
   "state_code": "MI",

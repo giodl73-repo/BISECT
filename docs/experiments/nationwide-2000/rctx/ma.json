@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:319c446f0d07b026d93720c6102d6eb4117ed02e0f07bac08913dd00a404ad19",
+  "context_hash": "sha256:3efa19572a7cab687eae926a5abf023f5de14e9aa97f1ba4239e45edc949da2a",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 274911,
   "population_total": 6349097,
-  "rctx_bytes": 29301065,
+  "rctx_bytes": 29302004,
   "rctx_path": "data/2000/certified/ma_blocks_2000.rctx",
-  "rctx_sha256": "fdd1525c3c13e93496b0867343ce3eebeaf51e2967ab6cbe15e4b0ddf67ee48e",
+  "rctx_sha256": "ed3fff28655ae99bbb625a3a2745bc3d350469edd8de26fee5153ff1a3f9d129",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "massachusetts",
   "state_code": "MA",

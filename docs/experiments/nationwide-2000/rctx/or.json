@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:d33b7487a82324402b8955ca5da18641565ae3bc1791b0863ebe788893aa9eed",
+  "context_hash": "sha256:cca9deb03c0b45e8a4c15f19fcd394301f51da897c210e89c5fb1ac3e3b9e92d",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 388699,
   "population_total": 3421399,
-  "rctx_bytes": 41815560,
+  "rctx_bytes": 41818039,
   "rctx_path": "data/2000/certified/or_blocks_2000.rctx",
-  "rctx_sha256": "549a19b80a8fe411a932bd22782e8119ca1bd46c9586f7c5abc4e37728c32679",
+  "rctx_sha256": "76afb443a10c9a36046212308c03ef2c8bb137a6d8682eb931203df23cec5625",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "oregon",
   "state_code": "OR",

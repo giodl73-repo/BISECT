@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:804cfd6a6b554d2f27aa465aeefb91b567481171ccb6da1acf9beb0b476cd449",
+  "context_hash": "sha256:93226837f67441429d6e56d1f629ef8e138a148db90b4d37c0b832dd4bf6fc2e",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 396615,
   "population_total": 2926324,
-  "rctx_bytes": 43023951,
+  "rctx_bytes": 43030840,
   "rctx_path": "data/2000/certified/ia_blocks_2000.rctx",
-  "rctx_sha256": "339983e255667b291593e39e344f88ac855622e16e9f004be9922aca08ff5d7f",
+  "rctx_sha256": "b7f00d28ca504452a2df40a92da59b693e0b52067de2910edeffcd19829abcf9",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "iowa",
   "state_code": "IA",

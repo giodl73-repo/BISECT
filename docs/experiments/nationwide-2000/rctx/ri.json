@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 56,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:ae56082a97681e2d4d9e152b4dea06831d1900f5c35c9ec8df446e5232ddbf9e",
+  "context_hash": "sha256:19414e67cda9d2fdce47f6f47ac3259ac9021be4a5188331c50253228f92a3e3",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 2,
   "land_edge_count": 52774,
   "population_total": 1048319,
-  "rctx_bytes": 5564633,
+  "rctx_bytes": 5564942,
   "rctx_path": "data/2000/certified/ri_blocks_2000.rctx",
-  "rctx_sha256": "229887e5d0842b3a9df58bf766f1dfb341544f423af9350bf38b2628407ee6ce",
+  "rctx_sha256": "ec6800814c02606514be1bcb00b0ee5e241499c67c75da18b65b348a19720694",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "rhode_island",
   "state_code": "RI",

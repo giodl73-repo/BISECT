@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:1ed43b18cce99df59b3cd22d947c2c1a7628213b2b0ab3dbca07e0914f8c5781",
+  "context_hash": "sha256:b006a750166f128f76cbe22be0bece21ae1d3b1b5b8b585f7f0c0f966afa3547",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 151599,
   "population_total": 1998257,
-  "rctx_bytes": 16192757,
+  "rctx_bytes": 16193906,
   "rctx_path": "data/2000/certified/nv_blocks_2000.rctx",
-  "rctx_sha256": "aa25d8968143e1e3e4471ffb01e0c1bf3c27a3de80652985057116d3b5c02f05",
+  "rctx_sha256": "a9d68bbe2ee9eac3e1d9df1f32a8492bf96f6bbb2e21c8b13fbe3cc190270601",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "nevada",
   "state_code": "NV",

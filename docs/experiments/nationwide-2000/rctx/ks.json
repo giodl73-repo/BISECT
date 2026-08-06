@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:8165d1b0763cec5713c1302d4ddba397f4e356af3c737cc5bf005e75b48532c0",
+  "context_hash": "sha256:258945a980c514a1b0edce11844434d5293a51bd02562c89bf325f4d4bd958a3",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 407649,
   "population_total": 2688418,
-  "rctx_bytes": 44278373,
+  "rctx_bytes": 44285682,
   "rctx_path": "data/2000/certified/ks_blocks_2000.rctx",
-  "rctx_sha256": "873432afc4dff03eae5e6effa5287dd04b261009b25ea0a29e6cca1e07342c13",
+  "rctx_sha256": "dd84d9dee6b75295bb421ae15d1499465498adba677eee1d5945bfa2e8336fcb",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "kansas",
   "state_code": "KS",

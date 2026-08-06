@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:fdf582f30ff22738b380efce437e252d9e8dd1bc0c40212642d712eb26bb9520",
+  "context_hash": "sha256:99eec726bdab36ceda7f36fc5a94d79a92ddc859728750e560b910edb4af74b3",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 240936,
   "population_total": 902195,
-  "rctx_bytes": 25889351,
+  "rctx_bytes": 25893230,
   "rctx_path": "data/2000/certified/mt_blocks_2000.rctx",
-  "rctx_sha256": "891c437139427ee149243ec58b0df2d7aec53fdb08cf2dae88c0ee7567b49e71",
+  "rctx_sha256": "7f7a1dff30de9d6981d052703eaf06272254c09eb391d920aa18c56ab44df183",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "montana",
   "state_code": "MT",

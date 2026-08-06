@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:e0345af0f63e9f7d0d2e9217429066c9cbd75fc87ba30dc6fe8fee60696d3a44",
+  "context_hash": "sha256:d427051c84ffabec67184f51f9c4f186800937951326ab8fc82040fa7c9f1140",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 60388,
   "population_total": 608827,
-  "rctx_bytes": 6432534,
+  "rctx_bytes": 6433473,
   "rctx_path": "data/2000/certified/vt_blocks_2000.rctx",
-  "rctx_sha256": "316257995e3f3efacfee6f20c56adf0d083ff66ae7ca2d02fb229dc6bec0b3f5",
+  "rctx_sha256": "73cc24aedf0ee94a5d79a11d1adba41ee889ced2bb253344ce3fb4e1edf71f4d",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "vermont",
   "state_code": "VT",

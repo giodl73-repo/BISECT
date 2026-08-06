@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:a8c5b4d73bb90a5e9b80edb405f4f83342ecaa6945be775ad95d9492cd5e5549",
+  "context_hash": "sha256:2846816180107eb70de2f6432a7e5665f0d84c5ae21400f4c0b8fd8eaae462c2",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 339378,
   "population_total": 1819046,
-  "rctx_bytes": 36500306,
+  "rctx_bytes": 36502575,
   "rctx_path": "data/2000/certified/nm_blocks_2000.rctx",
-  "rctx_sha256": "df7f0f16ddde0a2911b60f81d60396616f575691bbc5b21ab0c22afc50584e17",
+  "rctx_sha256": "9e32283354cee98dd81ad38caa93f042900bff8d2fa7b16172b4b3bb7fa3b99f",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "new_mexico",
   "state_code": "NM",

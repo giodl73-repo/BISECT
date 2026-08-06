@@ -1,13 +1,13 @@
 {
   "builder_executable_path": "target/release/bisect-ops.exe",
-  "builder_executable_sha256": "cd6b9954fdbf0b855c4374743f72dec062233263d8fb141f9d2829e7184fafb1",
-  "builder_path": "bisect-ops-rctx-builder-source-8b9b0fc7933eba39.rs",
-  "builder_sha256": "8b9b0fc7933eba3940829a65448f4e147bc6872035d83aff10bd0083458f5867",
+  "builder_executable_sha256": "c349ae03f8362dd74cf3f07ddb3c5e2d29e8457ab6c2199249381665a8b1a8d9",
+  "builder_path": "bisect-ops-rctx-builder-source-900dd46339bbb753.rs",
+  "builder_sha256": "900dd46339bbb75347ea0dd92947b253304d487a7095beb28b7ec481fe668abc",
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
   "files": [
     {
       "path": "me.json",
-      "sha256": "b411f20256bc46d75d186f18692078811b1f46b79bfad5b6e549aab3e7c2cb6f"
+      "sha256": "a27e8ab9d2b2f9ebf2c0f8a5058698d442756da2af8f4e7c12203df43cacf513"
     }
   ],
   "package_id": "me-2000-block-rctx",

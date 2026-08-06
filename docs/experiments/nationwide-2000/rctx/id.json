@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:828c6f1bb852249a0fb57bcc034752c829bcf754d6b48a555a06a845d5d5ef65",
+  "context_hash": "sha256:461656273e691cde55a06c845fb956a43cc72349530af92da0cee73c6a9ce0af",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 217567,
   "population_total": 1293953,
-  "rctx_bytes": 23307794,
+  "rctx_bytes": 23310833,
   "rctx_path": "data/2000/certified/id_blocks_2000.rctx",
-  "rctx_sha256": "08a4453fb130a27b652c95d20cce9fe3607ff9b4730060aeaac89f75ca23bdd6",
+  "rctx_sha256": "577a71bb22a4c260b3eedd441e7f47e7e5c24c738c0061de3b412b4cdc859184",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "idaho",
   "state_code": "ID",

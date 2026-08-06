@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:0643879f3a1f22dc298ccfc8ec8514ebde232e6c2c6e716ec145f2318735c0d6",
+  "context_hash": "sha256:8c428e2271d1e3ae77b2c0c55b08f18a766b1dc25849ebe881faa0664d2b6e65",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 527202,
   "population_total": 8186453,
-  "rctx_bytes": 57060235,
+  "rctx_bytes": 57071324,
   "rctx_path": "data/2000/certified/ga_blocks_2000.rctx",
-  "rctx_sha256": "791d75a7b19963b3db46fdd7ed9ad8a6f697a8aa47a3fb648f77975fffb672f5",
+  "rctx_sha256": "4dc77b86c522446b5deae598c84352226f2e92c6c5a1047b7e2d27cee7951910",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "georgia",
   "state_code": "GA",

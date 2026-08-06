@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:4bf1a0ab1c767436eb10c677aaa8f2b975448ccc99a5a99f680da4abf83306f7",
+  "context_hash": "sha256:bf455d508c31618bcdb8bf61c2bdd0ffa32f3707e1ebed6a672a1d4d379480fc",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 417063,
   "population_total": 3450654,
-  "rctx_bytes": 45226803,
+  "rctx_bytes": 45232152,
   "rctx_path": "data/2000/certified/ok_blocks_2000.rctx",
-  "rctx_sha256": "c15feb7c112b61e27bdd820e72ec727b5e7008b8bde0d55a68be571c70d76b36",
+  "rctx_sha256": "0b69dca99e88f2dad52076db33ec80256ffb158b0fbb86e584510d2c1d16cedd",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "oklahoma",
   "state_code": "OK",

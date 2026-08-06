@@ -5,7 +5,7 @@
   "files": [
     {
       "path": "inventory.json",
-      "sha256": "c3599f91ae03968a32d3ed81dd081381e806681a4000f2ab40176aee0f20023e"
+      "sha256": "b5ac37093902d0062c6ab83647b7adcd300f23214b6f6d42d6b1f1f00485aca0"
     }
   ],
   "builder_path": "scripts/research/inventory_national_2000.py",

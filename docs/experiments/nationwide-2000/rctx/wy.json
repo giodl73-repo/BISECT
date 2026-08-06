@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:24f25e37650c776bd727f8e21123e55e0362febbb89100d741dd8ae9b73c7af1",
+  "context_hash": "sha256:57cc8d5e1519779c8f29863195d675d28152f7a299393a3e2c320d47783514b3",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 169949,
   "population_total": 493782,
-  "rctx_bytes": 18182892,
+  "rctx_bytes": 18184461,
   "rctx_path": "data/2000/certified/wy_blocks_2000.rctx",
-  "rctx_sha256": "864b26766d6e21d376248fef304ee70961e0a0e3105d5092d1b3134698f9359f",
+  "rctx_sha256": "3a2fc05442c070803950d358242a870eb52b7b975d068548a025ab48f48f10ed",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "wyoming",
   "state_code": "WY",

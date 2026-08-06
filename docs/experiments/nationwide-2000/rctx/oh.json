@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:86adb67521914b4b45468dc94c38b809e22207a1a4d87d086ae00b398d5df203",
+  "context_hash": "sha256:eef483ca401fc0d3b1e1cf0c4b3d5913ce39f9a107b608c4762e24cc6af44a12",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 672385,
   "population_total": 11353140,
-  "rctx_bytes": 72837325,
+  "rctx_bytes": 72843444,
   "rctx_path": "data/2000/certified/oh_blocks_2000.rctx",
-  "rctx_sha256": "c01fa5b98f16da91ec06b433a144845ba7292819203b2e72f42856622f5e5b11",
+  "rctx_sha256": "d54dbd144a048309d9ce22fdb24082697b2d7843610d730d3a22892dc0682980",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "ohio",
   "state_code": "OH",

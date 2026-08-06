@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:0b9d819fc51cf994c4cb7990f7b183c6f6be9789b16e531ac75472bd238b85e6",
+  "context_hash": "sha256:6bc670bba2bd571cb8f8da8200fc8b3724d9447996d91ba91be4f0fea00f5ff3",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 201843,
   "population_total": 1808344,
-  "rctx_bytes": 21536258,
+  "rctx_bytes": 21540067,
   "rctx_path": "data/2000/certified/wv_blocks_2000.rctx",
-  "rctx_sha256": "d0b35e7354131bd1e92eed55082be8e3a8f9789066718132bbc3e2b5792bdbd2",
+  "rctx_sha256": "1bdb03903e48c7c726f56ae84737139ca1dd9977381caac46fcee4edd3e087a7",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "west_virginia",
   "state_code": "WV",

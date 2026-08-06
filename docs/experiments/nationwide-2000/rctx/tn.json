@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:1655277ecdc2a2a9209528c2818b564dd1bf30d0cf7ebc1245258c7e9b2f6c4c",
+  "context_hash": "sha256:e795bf37aa7fbd0ad504b1b405b3de169e1d8fd0a7910d6eca8d6ea076237901",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 453979,
   "population_total": 5689283,
-  "rctx_bytes": 48947539,
+  "rctx_bytes": 48954148,
   "rctx_path": "data/2000/certified/tn_blocks_2000.rctx",
-  "rctx_sha256": "e93f8d248f586879f7ca31b1b0589d20d9546de1727ae16c6ae91080d4447d23",
+  "rctx_sha256": "f38025ef9fb5f559e1610ccac7d2b75debea65c98204c45c3eb8a074dfd261a8",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "tennessee",
   "state_code": "TN",

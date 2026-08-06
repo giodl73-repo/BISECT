@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:1588232040638fb2798a64401cbd2a66109f4c05b5c565fdab7c89bc51d8f84b",
+  "context_hash": "sha256:18a3cc01cd2e4523c87b36a75505820c82584f682d45a2a4236e274083739a3a",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 140908,
   "population_total": 1274923,
-  "rctx_bytes": 15060006,
+  "rctx_bytes": 15061085,
   "rctx_path": "data/2000/certified/me_blocks_2000.rctx",
-  "rctx_sha256": "7f65e238f44a4fbb98a97e4dd8fa0718253e5011925e04a9ff64d1c3f3b2daff",
+  "rctx_sha256": "1129e050ae7b4f244899edfa090b23f70ffcebefb72b401d649434383b6877db",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "maine",
   "state_code": "ME",

@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:d89707cbf5740ff003139f6c6e8d7f7e4f1f64cc2d9b378498d2f89889c81858",
+  "context_hash": "sha256:95743057521117408e70b4b7e868366362538ac6c75ad56d6d36d5c6f417b0aa",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 357686,
   "population_total": 4012012,
-  "rctx_bytes": 38424378,
+  "rctx_bytes": 38427557,
   "rctx_path": "data/2000/certified/sc_blocks_2000.rctx",
-  "rctx_sha256": "1ceeef2fec582d0c894a94b46aef143d8f4d5d94a4b16796583d71e1fe92d0a0",
+  "rctx_sha256": "ef2620488cd1898ba9498c330429853405c0fda6f03c5ad51cd83ceec9b8e601",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "south_carolina",
   "state_code": "SC",

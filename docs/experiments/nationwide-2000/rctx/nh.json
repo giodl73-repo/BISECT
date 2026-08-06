@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:7f9e0eb29bb85abaa7f01413cdfaaf318b95ff508eeb97a38bf8f0ee3eb64a26",
+  "context_hash": "sha256:1480c4383c7185bbcb3d0815a8634921763bc664d31e10bd20caa91078016f2c",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 84190,
   "population_total": 1235786,
-  "rctx_bytes": 8978538,
+  "rctx_bytes": 8979197,
   "rctx_path": "data/2000/certified/nh_blocks_2000.rctx",
-  "rctx_sha256": "6eec484b654abb79246d5254365c0ebd3ad6a575281f2a52c9df254be62fc669",
+  "rctx_sha256": "48688eb53263466f91387bae4c484518368493317b38e91c17ebfa7f93d2705d",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "new_hampshire",
   "state_code": "NH",

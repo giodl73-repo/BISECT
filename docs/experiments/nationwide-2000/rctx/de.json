@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:1edffc6de0dad49ec465aad5b9763df8b388881e5408fecd7d5b2587ef0b71e5",
+  "context_hash": "sha256:f702f8e68339fc09f87bce90991b77a84b472e87b1ffd2f9dda265354eff34fe",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 42023,
   "population_total": 783600,
-  "rctx_bytes": 4447817,
+  "rctx_bytes": 4447986,
   "rctx_path": "data/2000/certified/de_blocks_2000.rctx",
-  "rctx_sha256": "91167f623aba5ba1a7f7afa4f5a1847588935e7bfb97c139e0ac773aa4e08895",
+  "rctx_sha256": "08524f1d5918d065c46a1b425ac4a933035bdf3c14d29fcc0802bdb48f3facfc",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "delaware",
   "state_code": "DE",

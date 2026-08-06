@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:2e25015116f972b59c929827bea8f058e429d2f5bfbf24bb9efc7db6c02a8750",
+  "context_hash": "sha256:e4f9c4aea16def78c8ce02e57fe179991b92185e55c19d0a8a3bbab00f886a9a",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 341342,
   "population_total": 4468976,
-  "rctx_bytes": 36721396,
+  "rctx_bytes": 36725835,
   "rctx_path": "data/2000/certified/la_blocks_2000.rctx",
-  "rctx_sha256": "ba37fb49486c7528f027b07db6551920b647ee882c6f5404f2087411f8d7405e",
+  "rctx_sha256": "fde8ba97bae1e8a08d8a6671127daa014b12755ff32b1445b0a7551cc70547f0",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "louisiana",
   "state_code": "LA",

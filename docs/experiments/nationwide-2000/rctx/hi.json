@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 12300,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:bc5e7c6fab88204709e3c68794f733322dcde5d150d81609ec3f1c9a01a646a1",
+  "context_hash": "sha256:ef94d99d1825e28d0c44150f8ea8891dc4bb6115be6bebe4421913643e90d6c5",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 16,
   "land_edge_count": 47216,
   "population_total": 1211537,
-  "rctx_bytes": 6136198,
+  "rctx_bytes": 6136507,
   "rctx_path": "data/2000/certified/hi_blocks_2000.rctx",
-  "rctx_sha256": "72a99b9e71aa7fa7ab2f725c7c12673cab4714ec6a7e4c764190cd8f12ae5d0b",
+  "rctx_sha256": "9840c42f4a6c683e7059efa316cffd6c3d3707de6549e062cca62d30c697c7b2",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "hawaii",
   "state_code": "HI",

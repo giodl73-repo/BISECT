@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:1af9606fa2ba50ad22232fe2c1d0b643635b21137fc77f669597affb94b6f5c8",
+  "context_hash": "sha256:80394e47467f2933b664973ac7c9adcc5f22ccdbccc239b9a169ac6968af410d",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 343392,
   "population_total": 4301261,
-  "rctx_bytes": 36969046,
+  "rctx_bytes": 36973415,
   "rctx_path": "data/2000/certified/co_blocks_2000.rctx",
-  "rctx_sha256": "488cf399c26ab427dce318f876cde2c35cc15844817ce78feeefbd8cccaad07b",
+  "rctx_sha256": "15375fb29e59e1e0a0b039ed351761632c36c9944b6b474d1f22f1138a16ada8",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "colorado",
   "state_code": "CO",

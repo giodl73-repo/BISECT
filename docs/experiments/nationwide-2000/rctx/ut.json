@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:d33eb70c860aa13562be1ff40b2dda734f819cb310143379ae7dc6c7952b4d3d",
+  "context_hash": "sha256:d089364a53e51d46ee1ba889d820cfbc1cd31c5040dac2e7db0fd8650040671e",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 185234,
   "population_total": 2233169,
-  "rctx_bytes": 19798389,
+  "rctx_bytes": 19800378,
   "rctx_path": "data/2000/certified/ut_blocks_2000.rctx",
-  "rctx_sha256": "de3745b1275a41361ba627895934f57ef10a7ece9cb2b6d2685e795d8193ec71",
+  "rctx_sha256": "bc51525ef684f6267a9ffaeeb8d017ece7ee9f50620d2a20b6e2ffbf7c34870f",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "utah",
   "state_code": "UT",

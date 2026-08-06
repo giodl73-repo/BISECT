@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:7e406381494bdde327af6e5db76e55879feb265b2e4b4d628cb2b9e50aca03e9",
+  "context_hash": "sha256:6670a2b0ab0b57494b4f2f4936b1f796b4cd05080b6bb018b6bd131eb1028df2",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 432660,
   "population_total": 4447100,
-  "rctx_bytes": 46672211,
+  "rctx_bytes": 46676860,
   "rctx_path": "data/2000/certified/al_blocks_2000.rctx",
-  "rctx_sha256": "a668b9e91937c78e81fea953abc74a8175c650a175b73a8878cb6ea3ff6b1eeb",
+  "rctx_sha256": "0d59190fa8e50ca3e154394c70dbb7d2919bfac1a2a0ce0192e00e873e715460",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "alabama",
   "state_code": "AL",

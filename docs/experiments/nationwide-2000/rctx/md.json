@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:d00285b4fa36995578c72eb344ad844e12c61a326e25b1d20a76a3d512e8e10b",
+  "context_hash": "sha256:58e015de58fca946ac60c80d0d663d5edc84a15ebaa824fbbe52f868a7a2c70e",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 193987,
   "population_total": 5296486,
-  "rctx_bytes": 20703512,
+  "rctx_bytes": 20705151,
   "rctx_path": "data/2000/certified/md_blocks_2000.rctx",
-  "rctx_sha256": "dc0c4871a0bf2d82726ea7affd446dd2f8320812824a8baecbf5c2a7a04beb88",
+  "rctx_sha256": "862d33d1b7a98aba90d98edb3532715692ce0892e565297efc492f97c76ae26d",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "maryland",
   "state_code": "MD",

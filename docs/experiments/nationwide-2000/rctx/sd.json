@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:c5f54b058d69e10319614e49ba2ca2193bb4d3b9084ab0f8f9ff5212b82a13db",
+  "context_hash": "sha256:89fe60dfb0a950b540b6f67b0be39fdf058b73f2e079cfe83096e2dcca1fb67d",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 182078,
   "population_total": 754844,
-  "rctx_bytes": 19673602,
+  "rctx_bytes": 19678181,
   "rctx_path": "data/2000/certified/sd_blocks_2000.rctx",
-  "rctx_sha256": "e90a8ed09274af511f994cb2e125358664c6b7ac0b28624797c2b40e69d8c5f4",
+  "rctx_sha256": "41bf34aefd564a9c80ada805cb0181b6a355738a44ed2ff89001580cab9f5022",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "south_dakota",
   "state_code": "SD",

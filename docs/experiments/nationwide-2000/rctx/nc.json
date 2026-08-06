@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:1efae1ebde60d8571a2e6db4d0476b7997c5e7d5cd894b9496f35b679cac18d6",
+  "context_hash": "sha256:2a9b4ae7f68d1ee4415943eec4845d2ecaf5261aec678febd3e30d35acaf1f22",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 570618,
   "population_total": 8049313,
-  "rctx_bytes": 61740667,
+  "rctx_bytes": 61747626,
   "rctx_path": "data/2000/certified/nc_blocks_2000.rctx",
-  "rctx_sha256": "31d1fc3851070ee598d54e2b6130bc72b5b29de62f44a885eee080fd7db74131",
+  "rctx_sha256": "9315f38231ef4f15c6c9981e70ec7dcd64f13eb19905e3b0391a317f8e5468e9",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "north_carolina",
   "state_code": "NC",

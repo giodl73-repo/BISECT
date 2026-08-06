@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:e557ea3719e2d97c1aabfcf4aeba5a3ef39c42894b2fc9b4c2b95f361b095c49",
+  "context_hash": "sha256:b72091c7470b213762356e30bd10a28d9edaf683b863c755952d6bc674417da6",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 195491,
   "population_total": 642200,
-  "rctx_bytes": 21146105,
+  "rctx_bytes": 21149774,
   "rctx_path": "data/2000/certified/nd_blocks_2000.rctx",
-  "rctx_sha256": "e1d859c3560da67a304d43ced20001b90fabdde378db0b088d0fd77d22b6aef5",
+  "rctx_sha256": "8303eae664155bd802c015bb2838e82ddb2a3645720082a57cad4f595c5d2d3e",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "north_dakota",
   "state_code": "ND",

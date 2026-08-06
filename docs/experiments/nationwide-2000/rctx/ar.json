@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 1,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:8d0c97fe7308e87115ef34cd7a3818de273bbb07b68cf75125e79f606848f8f3",
+  "context_hash": "sha256:769f915b6a9b20af440d6b48f52af003ce1a6807c33aefa33467df2b7f42b487",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 2,
   "land_edge_count": 344262,
   "population_total": 2673400,
-  "rctx_bytes": 37107068,
+  "rctx_bytes": 37112277,
   "rctx_path": "data/2000/certified/ar_blocks_2000.rctx",
-  "rctx_sha256": "9319136966983f62bce345f83af363db288fb0cc71ce49ff3a651501dc823e3d",
+  "rctx_sha256": "6408adc1ff787c85511676bf3fd44d0be2fe5e4a3bfab11a04eb4d4270a245b3",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "arkansas",
   "state_code": "AR",

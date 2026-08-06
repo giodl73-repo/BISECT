@@ -36,7 +36,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/de_blocks_2000.rctx",
-      "rctx_bytes": 4447817,
+      "rctx_bytes": 4447986,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/degeo.upl",
@@ -149,7 +149,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/hi_blocks_2000.rctx",
-      "rctx_bytes": 6136198,
+      "rctx_bytes": 6136507,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/higeo.upl",
@@ -310,7 +310,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ri_blocks_2000.rctx",
-      "rctx_bytes": 5564633,
+      "rctx_bytes": 5564942,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/rigeo.upl",
@@ -515,7 +515,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ak_blocks_2000.rctx",
-      "rctx_bytes": 5661414,
+      "rctx_bytes": 5663263,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/akgeo.upl",
@@ -1222,7 +1222,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/vt_blocks_2000.rctx",
-      "rctx_bytes": 6432534,
+      "rctx_bytes": 6433473,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/vtgeo.upl",
@@ -1609,7 +1609,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/nh_blocks_2000.rctx",
-      "rctx_bytes": 8978538,
+      "rctx_bytes": 8979197,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/nhgeo.upl",
@@ -1896,7 +1896,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ct_blocks_2000.rctx",
-      "rctx_bytes": 14370194,
+      "rctx_bytes": 14370713,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/ctgeo.upl",
@@ -2151,7 +2151,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/me_blocks_2000.rctx",
-      "rctx_bytes": 15060006,
+      "rctx_bytes": 15061085,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/megeo.upl",
@@ -2600,7 +2600,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/nv_blocks_2000.rctx",
-      "rctx_bytes": 16192757,
+      "rctx_bytes": 16193906,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/nvgeo.upl",
@@ -3085,7 +3085,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/wy_blocks_2000.rctx",
-      "rctx_bytes": 18182892,
+      "rctx_bytes": 18184461,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/wygeo.upl",
@@ -3726,7 +3726,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ut_blocks_2000.rctx",
-      "rctx_bytes": 19798389,
+      "rctx_bytes": 19800378,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/utgeo.upl",
@@ -4585,7 +4585,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/sd_blocks_2000.rctx",
-      "rctx_bytes": 19673602,
+      "rctx_bytes": 19678181,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/sdgeo.upl",
@@ -6248,7 +6248,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/md_blocks_2000.rctx",
-      "rctx_bytes": 20703512,
+      "rctx_bytes": 20705151,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/mdgeo.upl",
@@ -6965,7 +6965,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/wv_blocks_2000.rctx",
-      "rctx_bytes": 21536258,
+      "rctx_bytes": 21540067,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/wvgeo.upl",
@@ -8422,7 +8422,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/nd_blocks_2000.rctx",
-      "rctx_bytes": 21146105,
+      "rctx_bytes": 21149774,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/ndgeo.upl",
@@ -9813,7 +9813,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/id_blocks_2000.rctx",
-      "rctx_bytes": 23307794,
+      "rctx_bytes": 23310833,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/idgeo.upl",
@@ -11012,7 +11012,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/mt_blocks_2000.rctx",
-      "rctx_bytes": 25889351,
+      "rctx_bytes": 25893230,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/mtgeo.upl",
@@ -12415,7 +12415,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ma_blocks_2000.rctx",
-      "rctx_bytes": 29301065,
+      "rctx_bytes": 29302004,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/mageo.upl",
@@ -13022,7 +13022,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ky_blocks_2000.rctx",
-      "rctx_bytes": 32524490,
+      "rctx_bytes": 32532849,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/kygeo.upl",
@@ -16119,7 +16119,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ne_blocks_2000.rctx",
-      "rctx_bytes": 34071724,
+      "rctx_bytes": 34078193,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/negeo.upl",
@@ -18546,7 +18546,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ms_blocks_2000.rctx",
-      "rctx_bytes": 36003124,
+      "rctx_bytes": 36008823,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/msgeo.upl",
@@ -20611,7 +20611,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/nm_blocks_2000.rctx",
-      "rctx_bytes": 36500306,
+      "rctx_bytes": 36502575,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/nmgeo.upl",
@@ -21562,7 +21562,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/la_blocks_2000.rctx",
-      "rctx_bytes": 36721396,
+      "rctx_bytes": 36725835,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/lageo.upl",
@@ -23255,7 +23255,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/co_blocks_2000.rctx",
-      "rctx_bytes": 36969046,
+      "rctx_bytes": 36973415,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/cogeo.upl",
@@ -24948,7 +24948,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ar_blocks_2000.rctx",
-      "rctx_bytes": 37107068,
+      "rctx_bytes": 37112277,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/argeo.upl",
@@ -26821,7 +26821,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/nj_blocks_2000.rctx",
-      "rctx_bytes": 37287143,
+      "rctx_bytes": 37288572,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/njgeo.upl",
@@ -27448,7 +27448,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/sc_blocks_2000.rctx",
-      "rctx_bytes": 38424378,
+      "rctx_bytes": 38427557,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/scgeo.upl",
@@ -28853,7 +28853,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/va_blocks_2000.rctx",
-      "rctx_bytes": 38550890,
+      "rctx_bytes": 38560299,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/vageo.upl",
@@ -32196,7 +32196,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/or_blocks_2000.rctx",
-      "rctx_bytes": 41815560,
+      "rctx_bytes": 41818039,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/orgeo.upl",
@@ -33121,7 +33121,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/az_blocks_2000.rctx",
-      "rctx_bytes": 42395508,
+      "rctx_bytes": 42396517,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/azgeo.upl",
@@ -33710,7 +33710,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ia_blocks_2000.rctx",
-      "rctx_bytes": 43023951,
+      "rctx_bytes": 43030840,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/iageo.upl",
@@ -36195,7 +36195,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/wa_blocks_2000.rctx",
-      "rctx_bytes": 45054934,
+      "rctx_bytes": 45057623,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/wageo.upl",
@@ -37372,7 +37372,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ks_blocks_2000.rctx",
-      "rctx_bytes": 44278373,
+      "rctx_bytes": 44285682,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/ksgeo.upl",
@@ -40057,7 +40057,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/al_blocks_2000.rctx",
-      "rctx_bytes": 46672211,
+      "rctx_bytes": 46676860,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/algeo.upl",
@@ -41850,7 +41850,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ok_blocks_2000.rctx",
-      "rctx_bytes": 45226803,
+      "rctx_bytes": 45232152,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/okgeo.upl",
@@ -43919,7 +43919,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/tn_blocks_2000.rctx",
-      "rctx_bytes": 48947539,
+      "rctx_bytes": 48954148,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/tngeo.upl",
@@ -46404,7 +46404,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/mn_blocks_2000.rctx",
-      "rctx_bytes": 51701579,
+      "rctx_bytes": 51707628,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/mngeo.upl",
@@ -48667,7 +48667,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/wi_blocks_2000.rctx",
-      "rctx_bytes": 52657696,
+      "rctx_bytes": 52662695,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/wigeo.upl",
@@ -50610,7 +50610,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/in_blocks_2000.rctx",
-      "rctx_bytes": 52324451,
+      "rctx_bytes": 52330850,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/ingeo.upl",
@@ -53167,7 +53167,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ga_blocks_2000.rctx",
-      "rctx_bytes": 57060235,
+      "rctx_bytes": 57071324,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/gageo.upl",
@@ -57214,7 +57214,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/nc_blocks_2000.rctx",
-      "rctx_bytes": 61740667,
+      "rctx_bytes": 61747626,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/ncgeo.upl",
@@ -59875,7 +59875,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/mo_blocks_2000.rctx",
-      "rctx_bytes": 63504873,
+      "rctx_bytes": 63512882,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/mogeo.upl",
@@ -62832,7 +62832,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/mi_blocks_2000.rctx",
-      "rctx_bytes": 67763595,
+      "rctx_bytes": 67769364,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/migeo.upl",
@@ -65031,7 +65031,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/oh_blocks_2000.rctx",
-      "rctx_bytes": 72837325,
+      "rctx_bytes": 72843444,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/ohgeo.upl",
@@ -67298,7 +67298,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ny_blocks_2000.rctx",
-      "rctx_bytes": 78788052,
+      "rctx_bytes": 78792351,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/nygeo.upl",
@@ -68951,7 +68951,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/pa_blocks_2000.rctx",
-      "rctx_bytes": 85350111,
+      "rctx_bytes": 85354760,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/pageo.upl",
@@ -70724,7 +70724,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/fl_blocks_2000.rctx",
-      "rctx_bytes": 96015374,
+      "rctx_bytes": 96020023,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/flgeo.upl",
@@ -72567,7 +72567,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/il_blocks_2000.rctx",
-      "rctx_bytes": 95295735,
+      "rctx_bytes": 95302834,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/ilgeo.upl",
@@ -75162,7 +75162,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/ca_blocks_2000.rctx",
-      "rctx_bytes": 142999172,
+      "rctx_bytes": 143003191,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/cageo.upl",
@@ -77093,7 +77093,7 @@
       ],
       "rctx_ready": true,
       "rctx_path": "data/2000/certified/tx_blocks_2000.rctx",
-      "rctx_bytes": 180401030,
+      "rctx_bytes": 180418769,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/txgeo.upl",

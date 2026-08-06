@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:443f8ad2e5714377d34576311f5b4d221fd03610fe27ee01b16279da7e830be4",
+  "context_hash": "sha256:c793003fe2c48c355a39af8263de6537e87a83fb444c03539c2ddfed59443ca1",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 877677,
   "population_total": 12419293,
-  "rctx_bytes": 95295735,
+  "rctx_bytes": 95302834,
   "rctx_path": "data/2000/certified/il_blocks_2000.rctx",
-  "rctx_sha256": "d3f19d47da95df9bd1bb4f15ac799f2cbcaf2953d393ef8282dd62abce71d218",
+  "rctx_sha256": "28b5ef1f1e5023852960bb167275432bb77d8bf15ca21280374c3d0d9438913d",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "illinois",
   "state_code": "IL",

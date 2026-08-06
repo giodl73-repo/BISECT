@@ -1,7 +1,7 @@
 {
   "bridge_edge_count": 0,
   "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
-  "context_hash": "sha256:772ed4bf9adc01f61fdbb8210cd4735c054d23121bbe7175b811eeee227e7766",
+  "context_hash": "sha256:78ffd51d1a1ed7885ca74e60287b859a98d94ef8d08681019e3f6c31a8b7bd13",
   "final_component_count": 1,
   "geometry_toolchain": {
     "crs": "EPSG:5070",
@@ -11,9 +11,9 @@
   "land_component_count": 1,
   "land_edge_count": 394247,
   "population_total": 5130632,
-  "rctx_bytes": 42395508,
+  "rctx_bytes": 42396517,
   "rctx_path": "data/2000/certified/az_blocks_2000.rctx",
-  "rctx_sha256": "d155b62d16e1c9c83e24254207760b6a1919fa0bb8e257d88950c096d875fad6",
+  "rctx_sha256": "fe11f3db9914758c69a257be59ab2c5d8b2e15bb23ae69bf4dc4108950bc451f",
   "schema_version": "certified-state-block-rctx-v1",
   "state": "arizona",
   "state_code": "AZ",
