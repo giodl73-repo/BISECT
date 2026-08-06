@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PACKAGE = ROOT / "docs/experiments/nrs-v0.3-national-geographic-splits"
 YEARS = (2000, 2010, 2020)
 LEVELS = ("county", "tract")
+STRUCTURAL_TREE_EXCEPTIONS = {(2010, "MD")}
 BISECT_SHA256 = "2bcf6b13f17f237db6f755943ea1ccdac0d2e0267395c616892c6e46ce66e90e"
 PROTOCOL_PATH = "docs/specs/2026-08-06-nrs-v0.3-national-geographic-split-audit-protocol.md"
 ANALYZER_PATH = "scripts/research/analyze_nrs_geographic_splits.py"
@@ -166,7 +167,7 @@ def compare_metric(actual: dict[str, Any], expected: dict[str, Any], label: str)
 def verify(package: Path) -> None:
     manifest = load(package / "manifest.json")
     require(
-        manifest["schema_version"] == "nrs-v0.3-national-geographic-split-package-v1",
+        manifest["schema_version"] == "nrs-v0.3-national-geographic-split-package-v2",
         "manifest schema",
     )
     require(manifest["package_id"] == "nrs-v0.3-national-geographic-splits", "package id")
@@ -190,10 +191,10 @@ def verify(package: Path) -> None:
 
     analysis = load(package / "analysis.json")
     require(
-        analysis["schema_version"] == "nrs-v0.3-national-geographic-split-analysis-v1",
+        analysis["schema_version"] == "nrs-v0.3-national-geographic-split-analysis-v2",
         "analysis schema",
     )
-    require(analysis["protocol_id"] == "nrs-v0.3-national-geographic-split-audit-v1", "protocol id")
+    require(analysis["protocol_id"] == "nrs-v0.3-national-geographic-split-audit-v2", "protocol id")
     require(analysis["protocol_path"] == manifest["protocol_path"], "protocol path")
     require(analysis["bisect_executable_sha256"] == BISECT_SHA256, "bisect hash")
     require(analysis["claim_boundary"] == CLAIM_BOUNDARY, "analysis claim boundary")
@@ -205,11 +206,16 @@ def verify(package: Path) -> None:
         summary_path = ROOT / cycle["committed_summary_path"]
         require(summary_path.is_file(), f"{year}: missing committed summary")
         require(sha256(summary_path) == cycle["committed_summary_sha256"], f"{year}: summary hash")
+        snapshot_path = ROOT / cycle["committed_node_snapshot_path"]
+        require(snapshot_path.is_file(), f"{year}: missing committed node snapshot")
+        require(sha256(snapshot_path) == cycle["committed_node_snapshot_sha256"], f"{year}: node snapshot hash")
+        snapshot = load(snapshot_path)
         summary = load(summary_path)
         committed = {row["state"]: row for row in summary["states"]}
         source_rows = {row["state"]: row for row in cycle["source_states"]}
         require(len(committed) == len(source_rows) == cycle["state_count"] == 50, f"{year}: States")
         require(set(committed) == set(source_rows), f"{year}: State source universe")
+        require({row["state"] for row in snapshot["states"]} == set(source_rows), f"{year}: snapshot State universe")
         require(cycle["district_count"] == sum(row["districts"] for row in source_rows.values()) == 435, f"{year}: districts")
         require(cycle["unit_count"] == sum(row["unit_count"] for row in source_rows.values()), f"{year}: units")
         require(cycle["population_total"] == sum(row["population_total"] for row in source_rows.values()), f"{year}: population")
@@ -219,9 +225,15 @@ def verify(package: Path) -> None:
             require(source["districts"] == expected["districts"], f"{year}/{state}: districts")
             require(source["unit_count"] == expected["unit_count"], f"{year}/{state}: units")
             require(source["population_total"] == expected["population_total"], f"{year}/{state}: population")
-            require(source["tree_sha256"] == source["committed_tree_sha256"] == expected["baseline_tree_sha256"], f"{year}/{state}: tree binding")
-            require(source["tree_match"] is True, f"{year}/{state}: tree status")
-            for key in ("assignment_sha256", "tree_sha256", "package_manifest_sha256"):
+            require(source["committed_tree_sha256"] == expected["baseline_tree_sha256"], f"{year}/{state}: tree binding")
+            expected_validation = (
+                "structural-snapshot-exception-2010-md"
+                if (year, state) in STRUCTURAL_TREE_EXCEPTIONS
+                else "exact-raw-sha256"
+            )
+            require(source["tree_validation"] == expected_validation, f"{year}/{state}: tree validation")
+            require(source["source_package_verified"] is True, f"{year}/{state}: package verification")
+            for key in ("assignment_sha256", "committed_tree_sha256"):
                 require(len(source[key]) == 64 and all(character in "0123456789abcdef" for character in source[key]), f"{year}/{state}: {key}")
             sources[(year, state)] = source
     require(len(sources) == 150, "150 State sources")

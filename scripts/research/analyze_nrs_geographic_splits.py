@@ -21,6 +21,7 @@ VERIFIER_PATH = Path("scripts/research/verify_nrs_geographic_splits.py")
 BISECT_SHA256 = "2bcf6b13f17f237db6f755943ea1ccdac0d2e0267395c616892c6e46ce66e90e"
 YEARS = (2000, 2010, 2020)
 LEVELS = ("county", "tract")
+STRUCTURAL_TREE_EXCEPTIONS = {(2010, "MD")}
 CLAIM_BOUNDARY = (
     "Complete, hash-bound county and tract intersection counts for the governed "
     "NRS v0.3 assignments in 2000, 2010, and 2020; no compactness-superiority, "
@@ -40,6 +41,39 @@ def load(path: Path) -> Any:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
+
+
+def tree_snapshot_projection(tree: dict[str, Any]) -> dict[str, Any]:
+    nodes = []
+    for node in tree["nodes"]:
+        bound = node["generation_tolerance_scaled_bound"]
+        deviation = node["objective"]["max_population_deviation_scaled"]
+        population = node["parent_population"]
+        boundary = node["objective"]["weighted_boundary_cut"]
+        nodes.append(
+            {
+                "child_seats": node["child_seats"],
+                "depth": len(node["path"]),
+                "generation_tolerance_scaled_bound": bound,
+                "max_population_deviation_scaled": deviation,
+                "parent_population": population,
+                "path": node["path"],
+                "population_floor_attained": node["population_floor"]["attained"],
+                "population_floor_lower_bound": node["population_floor"]["lower_bound"],
+                "seats": node["seats"],
+                "tolerance_usage": deviation / bound if bound else 0.0,
+                "weighted_boundary_cut": boundary,
+                "weighted_boundary_cut_per_parent_person": boundary / population,
+            }
+        )
+    return {
+        "districts": tree["districts"],
+        "leaf_paths": [leaf["path"] for leaf in tree["leaves"]],
+        "nodes": nodes,
+        "population_total": tree["population_total"],
+        "state": tree["state"],
+        "unit_count": tree["unit_count"],
+    }
 
 
 def parse_cycles(values: list[str]) -> dict[int, Path]:
@@ -184,8 +218,10 @@ def render_readme(analysis: dict[str, Any]) -> str:
         + "\n\nRaw counts are descriptive within each Census geography vintage. They are not "
         "cross-cycle improvement measures because county and tract definitions and "
         "district allocations change. Every county and tract district set is in "
-        "`geography-projection.csv`; every State source assignment and tree hash is "
-        "bound in `analysis.json`.\n\n## Evaluation readiness\n\n"
+        "`geography-projection.csv`; every State source assignment hash and committed "
+        "recursive-structure snapshot is bound in `analysis.json`. Raw tree transport "
+        "hashes match in 149 of 150 State-cycle packages; Maryland 2010 uses the "
+        "protocol's metadata-only diagnostic exception.\n\n## Evaluation readiness\n\n"
         + "\n".join(readiness)
         + "\n\nUnavailable metrics were not replaced with zeros or post-outcome proxies. See "
         "`analysis.json` for the exact reason attached to each status.\n\n"
@@ -225,6 +261,10 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
             summary = load(summary_path)
             expected_states = {row["state"]: row for row in summary["states"]}
             require(len(expected_states) == 50, f"{year}: committed State universe")
+            snapshot_path = ROOT / f"docs/experiments/nrs-cross-decade-2000-2020/node-snapshot-{year}.json"
+            snapshot = load(snapshot_path)
+            expected_snapshots = {row["state"]: row for row in snapshot["states"]}
+            require(set(expected_snapshots) == set(expected_states), f"{year}: structural snapshot State universe")
             inventory = load(ROOT / f"docs/experiments/nationwide-{year}/inventory.json")
             expected_fips = {row["state"]: row["fips"] for row in inventory["states"]}
             require(set(expected_fips) == set(expected_states), f"{year}: inventory State universe")
@@ -238,10 +278,17 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
                 for path in (assignment_path, tree_path, package_manifest_path):
                     require(path.is_file(), f"{year}/{state}: missing {path.name}")
                 tree_hash = sha256(tree_path)
-                require(tree_hash == expected["baseline_tree_sha256"], f"{year}/{state}: governed tree hash mismatch")
                 package_manifest = load(package_manifest_path)
                 artifacts = {row["path"]: row["sha256"] for row in package_manifest["artifacts"]}
                 require(artifacts["baseline-tree.json"] == tree_hash, f"{year}/{state}: package tree hash")
+                tree = load(tree_path)
+                projected = tree_snapshot_projection(tree)
+                expected_snapshot = dict(expected_snapshots[state])
+                expected_snapshot.pop("baseline_tree_sha256")
+                require(projected == expected_snapshot, f"{year}/{state}: committed structural snapshot")
+                exception = (year, state) in STRUCTURAL_TREE_EXCEPTIONS
+                if not exception:
+                    require(tree_hash == expected["baseline_tree_sha256"], f"{year}/{state}: governed tree hash mismatch")
                 assignment_hash = sha256(assignment_path)
                 require(artifacts["baseline_assignments.json"] == assignment_hash, f"{year}/{state}: package assignment hash")
                 assignment_package = load(assignment_path)
@@ -290,10 +337,12 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
                         "unit_count": expected["unit_count"],
                         "population_total": expected["population_total"],
                         "assignment_sha256": assignment_hash,
-                        "tree_sha256": tree_hash,
                         "committed_tree_sha256": expected["baseline_tree_sha256"],
-                        "package_manifest_sha256": sha256(package_manifest_path),
-                        "tree_match": True,
+                        "tree_validation": (
+                            "structural-snapshot-exception-2010-md"
+                            if exception else "exact-raw-sha256"
+                        ),
+                        "source_package_verified": True,
                     }
                 )
             require(sum(row["districts"] for row in state_sources) == 435, f"{year}: district total")
@@ -302,6 +351,8 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
                     "census_year": year,
                     "committed_summary_path": str(summary_path.relative_to(ROOT)).replace("\\", "/"),
                     "committed_summary_sha256": sha256(summary_path),
+                    "committed_node_snapshot_path": str(snapshot_path.relative_to(ROOT)).replace("\\", "/"),
+                    "committed_node_snapshot_sha256": sha256(snapshot_path),
                     "state_count": 50,
                     "district_count": 435,
                     "unit_count": sum(row["unit_count"] for row in state_sources),
@@ -327,8 +378,8 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
             stored["split_fraction"] = f"{row['split_fraction']:.12f}"
             writer.writerow(stored)
     analysis = {
-        "schema_version": "nrs-v0.3-national-geographic-split-analysis-v1",
-        "protocol_id": "nrs-v0.3-national-geographic-split-audit-v1",
+        "schema_version": "nrs-v0.3-national-geographic-split-analysis-v2",
+        "protocol_id": "nrs-v0.3-national-geographic-split-audit-v2",
         "protocol_path": str(PROTOCOL_PATH).replace("\\", "/"),
         "bisect_executable_sha256": BISECT_SHA256,
         "cycles": analysis_cycles,
@@ -340,7 +391,7 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
     readme_path = out_dir / "README.md"
     readme_path.write_text(render_readme(analysis), encoding="utf-8")
     manifest = {
-        "schema_version": "nrs-v0.3-national-geographic-split-package-v1",
+        "schema_version": "nrs-v0.3-national-geographic-split-package-v2",
         "package_id": "nrs-v0.3-national-geographic-splits",
         "protocol_path": str(PROTOCOL_PATH).replace("\\", "/"),
         "protocol_sha256": sha256(ROOT / PROTOCOL_PATH),

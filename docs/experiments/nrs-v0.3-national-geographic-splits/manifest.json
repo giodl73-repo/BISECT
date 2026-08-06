@@ -1,0 +1,17 @@
+{
+  "analyzer_path": "scripts/research/analyze_nrs_geographic_splits.py",
+  "analyzer_sha256": "9f3c3ed1e580967b445304ab2728ac64a106e2983e2577bf314810ed9c9fb794",
+  "claim_boundary": "Complete, hash-bound county and tract intersection counts for the governed NRS v0.3 assignments in 2000, 2010, and 2020; no compactness-superiority, municipality, community, demographic, partisan, VRA, legal-validity, cross-cycle-improvement, optimality, or adoption claim.",
+  "files": {
+    "README.md": "807abd8f7e3ef551fb7c03d796e696038f6fa3daded178071a5ea58949f2c0c1",
+    "analysis.json": "98c75dffee8092655f2612e8ae42481f938459f876aa2dbc7f3504dca40b82f7",
+    "geography-projection.csv": "be7a18da954d854edd3ff5bb3eac6811e18cde8fe14c2d62f425e403c5a6c250",
+    "state-metrics.csv": "40358aea58ddd4557b32fbaf2cdb5a564962d3692a0004a36b04b581f5610bc1"
+  },
+  "package_id": "nrs-v0.3-national-geographic-splits",
+  "protocol_path": "docs/specs/2026-08-06-nrs-v0.3-national-geographic-split-audit-protocol.md",
+  "protocol_sha256": "6fa666c0f0bef292153883e4ebf373cbcb9398b3b5cc677a2d112482db6d7fe3",
+  "schema_version": "nrs-v0.3-national-geographic-split-package-v2",
+  "verifier_path": "scripts/research/verify_nrs_geographic_splits.py",
+  "verifier_sha256": "9af7eac92a5663c67897162105cbf86d2a74ff846f2b7d1a0d0c50dee39eee4a"
+}
