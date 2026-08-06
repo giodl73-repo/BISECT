@@ -196,9 +196,11 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             &mut assignment,
             nrs_profile.then(|| nrs_population_tolerance_scaled_bound(&root)),
         )?;
-        if args.discovery_refinement == DiscoveryRefinementArg::NrsV02
-            && nrs_population_deviation_scaled(&root, &assignment)
-                > nrs_population_tolerance_scaled_bound(&root)
+        if matches!(
+            args.discovery_refinement,
+            DiscoveryRefinementArg::NrsV02 | DiscoveryRefinementArg::NrsV03
+        ) && nrs_population_deviation_scaled(&root, &assignment)
+            > nrs_population_tolerance_scaled_bound(&root)
         {
             let fallback = nrs_v0_2_fallback_candidate(
                 &root,
