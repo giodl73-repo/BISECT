@@ -1,0 +1,17 @@
+{
+  "claim_boundary": "NRS v0.2 generated and independently verified complete 2010 block assignments for all 50 States and all 435 districts. All 385 recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.",
+  "files": [
+    {
+      "path": "national-summary.json",
+      "sha256": "52b6f676b59c56d4261961a08c2821ad263b37f3306bd7b408b77435adc466d0"
+    },
+    {
+      "path": "proof-coverage.json",
+      "sha256": "85382281fd7851e938137e49cdd33a3e7736b56e8685a4da70d1b385fbfd9980"
+    }
+  ],
+  "schema_version": "nrs-national-summary-package-v0.2-v1",
+  "source_ledger_sha256": "54ec1c951d48bb537aea697fe78d515f712af2358ba567f6c70acd480aca3ab4",
+  "standard_profile_id": "NRS-BASELINE-v0.2-reference-2010",
+  "status": "verified-national-reference-baseline"
+}

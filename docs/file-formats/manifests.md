@@ -51,6 +51,9 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 | `national-summary.json` in an NRS summary package | `nrs-national-summary-v0.1-v1` | `bisect-ops` | NRS v0.1 national publication summary |
 | `proof-coverage.json` in an NRS summary package | `nrs-national-proof-coverage-v0.1-v1` | `bisect-ops` | NRS v0.1 exact-claim classification |
 | `manifest.json` in an NRS summary package | `nrs-national-summary-package-v0.1-v1` | `bisect-ops` | NRS v0.1 national publication summary |
+| `national-summary.json` in an NRS v0.2 summary package | `nrs-national-summary-v0.2-v1` | `bisect-ops` | NRS v0.2 national publication summary |
+| `proof-coverage.json` in an NRS v0.2 summary package | `nrs-national-proof-coverage-v0.2-v1` | `bisect-ops` | NRS v0.2 exact-claim classification |
+| `manifest.json` in an NRS v0.2 summary package | `nrs-national-summary-package-v0.2-v1` | `bisect-ops` | NRS v0.2 national publication summary |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 

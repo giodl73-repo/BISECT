@@ -2330,6 +2330,26 @@ fn summarize_nrs_batch(
         true,
     )?;
     let inventory = read_json(inventory_path)?;
+    let standard_profile = read_json(standard_profile_path)?;
+    let (profile_label, summary_schema, proof_schema, package_schema) =
+        match standard_profile["schema_version"].as_str() {
+            Some("nrs-standard-profile-v0.1-v1") => (
+                "NRS v0.1",
+                "nrs-national-summary-v0.1-v1",
+                "nrs-national-proof-coverage-v0.1-v1",
+                "nrs-national-summary-package-v0.1-v1",
+            ),
+            Some("nrs-standard-profile-v0.2-v1") => (
+                "NRS v0.2",
+                "nrs-national-summary-v0.2-v1",
+                "nrs-national-proof-coverage-v0.2-v1",
+                "nrs-national-summary-package-v0.2-v1",
+            ),
+            _ => bail!("unknown NRS standard profile schema for publication"),
+        };
+    let standard_profile_id = standard_profile["profile_id"]
+        .as_str()
+        .context("NRS standard profile id")?;
     let inventory_rows = inventory["states"]
         .as_array()
         .context("NRS inventory states")?;
@@ -2433,13 +2453,14 @@ fn summarize_nrs_batch(
     }
     fs::create_dir_all(report_dir)?;
     let state_count = rows.len();
-    let claim = format!("NRS v0.1 generated and independently verified complete {year} block assignments for all {state_count} States and all {total_districts} districts. All {total_nodes} recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.");
+    let claim = format!("{profile_label} generated and independently verified complete {year} block assignments for all {state_count} States and all {total_districts} districts. All {total_nodes} recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.");
     let summary_path = report_dir.join("national-summary.json");
     write_json(
         &summary_path,
         &json!({
-            "schema_version":"nrs-national-summary-v0.1-v1",
+            "schema_version":summary_schema,
             "status":"verified-national-reference-baseline",
+            "standard_profile_id":standard_profile_id,
             "census_year":year,
             "state_count":state_count,"district_count":total_districts,
             "recursive_node_count":total_nodes,"unit_count":total_units,
@@ -2449,6 +2470,7 @@ fn summarize_nrs_batch(
             "missing_elapsed_states":missing_elapsed_states,
             "ledger_sha256":sha256(&ledger_path)?,
             "standard_profile_canonical_sha256":ledger["standard_profile_canonical_sha256"],
+            "legal_profile_canonical_sha256":ledger["legal_profile_canonical_sha256"],
             "bisect_executable_sha256":ledger["bisect_executable_sha256"],
             "states":rows,"claim_boundary":claim
         }),
@@ -2458,8 +2480,9 @@ fn summarize_nrs_batch(
     write_json(
         &proof_path,
         &json!({
-            "schema_version":"nrs-national-proof-coverage-v0.1-v1",
+            "schema_version":proof_schema,
             "status":"classified","recursive_node_count":total_nodes,
+            "standard_profile_id":standard_profile_id,
             "population_tolerance":{"verified_nodes":total_nodes,"failed_nodes":0,"coverage_rate":1.0},
             "population_exact":{"proved_nodes":arithmetic_floor_nodes,"unproved_nodes":total_nodes-arithmetic_floor_nodes,"coverage_rate":arithmetic_floor_nodes as f64/total_nodes as f64,"proof_kind":"ratio-arithmetic-floor-when-attained"},
             "boundary":{"proved_nodes":0,"unproved_nodes":total_nodes,"coverage_rate":0.0,"status":"not-run"},
@@ -2473,8 +2496,9 @@ fn summarize_nrs_batch(
     write_json(
         &manifest_path,
         &json!({
-            "schema_version":"nrs-national-summary-package-v0.1-v1",
+            "schema_version":package_schema,
             "status":"verified-national-reference-baseline",
+            "standard_profile_id":standard_profile_id,
             "source_ledger_sha256":sha256(&ledger_path)?,
             "files":[
                 {"path":"national-summary.json","sha256":sha256(&summary_path)?},

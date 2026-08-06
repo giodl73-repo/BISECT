@@ -33,8 +33,8 @@ verified 2020 national baseline.
 | 01 - 2010 source and context inventory | COMPLETE | 50/50 PL packages hash-bound; 0/50 TIGER and RCTX; 11,071,790 blocks inventoried |
 | 02 - 2010 block RCTX generation | COMPLETE | 50/50 archive-backed contexts independently verified; 11,071,790 blocks |
 | 03 - 2010 NRS v0.1 batch execution | COMPLETE | 49 State packages verified; California retained as a deterministic tolerance-failure witness at node `00110` |
-| 04 - 2010 NRS v0.2 amendment and verification | ACTIVE | Govern the canonical multi-root fallback and require complete wall-to-wall coverage |
-| 05 - decade comparison and publication | PENDING | Publish stability, runtime, and exact-proof matrices |
+| 04 - 2010 NRS v0.2 amendment and verification | COMPLETE | Independent `--require-complete` verification passed: 50 States, 435 districts, 385 nodes, 11,071,790 blocks |
+| 05 - decade comparison and publication | ACTIVE | National summary published; cross-decade stability and runtime matrices remain |
 
 ## Versioned amendment
 
@@ -51,8 +51,16 @@ a fixed 16-root canonical DFS fallback only after that candidate misses the
 repair and are ordered by population deviation, weighted cut, moved
 population, and canonical assignment. The exact California witness replay
 achieved `207`, and the complete 53-district California v0.2 package passed
-independent verification. National verification remains open until the v0.2
-batch passes with all 50 States.
+independent verification.
+
+That national gate subsequently passed. The final v0.2 ledger contains 50
+verified States and zero failures; a separate
+`verify-nrs-batch --require-complete` invocation passed all packages. The
+verified aggregate covers 11,071,790 blocks, population 308,143,815, all 435
+districts, and all 385 recursive split nodes. All nodes meet the population
+tolerance. Arithmetic population-floor equality is proved at 7 nodes;
+weighted-boundary and canonical global optimality remain explicitly unproved
+at all 385 nodes.
 
 ## Claim boundary
 
