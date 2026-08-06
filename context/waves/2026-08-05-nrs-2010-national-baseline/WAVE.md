@@ -34,7 +34,7 @@ verified 2020 national baseline.
 | 02 - 2010 block RCTX generation | COMPLETE | 50/50 archive-backed contexts independently verified; 11,071,790 blocks |
 | 03 - 2010 NRS v0.1 batch execution | COMPLETE | 49 State packages verified; California retained as a deterministic tolerance-failure witness at node `00110` |
 | 04 - 2010 NRS v0.2 amendment and verification | COMPLETE | Independent `--require-complete` verification passed: 50 States, 435 districts, 385 nodes, 11,071,790 blocks |
-| 05 - decade comparison and publication | ACTIVE | National summary published; cross-decade stability and runtime matrices remain |
+| 05 - decade comparison and publication | ACTIVE | 2000 NRS v0.3 and 2010 NRS v0.2 national summaries published; aggregate runtime/proof matrix complete; node/tree/cut stability remains |
 
 ## Versioned amendment
 
@@ -61,6 +61,15 @@ districts, and all 385 recursive split nodes. All nodes meet the population
 tolerance. Arithmetic population-floor equality is proved at 7 nodes;
 weighted-boundary and canonical global optimality remain explicitly unproved
 at all 385 nodes.
+
+The Census 2000 extension is also nationally complete. Its v0.2 run retained
+Hawaii as a root tolerance-failure witness (`802,861` achieved versus `6,058`
+allowed). NRS v0.3 preserves the v0.2 seed stream and candidate stages, then
+uses a frozen bridge-aware land-component fallback only after a v0.2 miss.
+The complete v0.3 batch and independent `--require-complete` verifier passed
+50 States, 435 districts, 385 nodes, and 8,199,908 blocks. All nodes satisfy
+population tolerance; arithmetic-floor equality is proved at 2 nodes, while
+boundary and canonical proof coverage remain 0/385.
 
 ## Claim boundary
 

@@ -46,16 +46,16 @@ For every State and Census year:
 
 ### Stage 4 — Nationwide 2010
 
-- [ ] Freeze 2010 block/source custody.
-- [ ] Apply the identical certified procedure.
-- [ ] Publish complete assignments and certificates.
+- [x] Freeze 2010 block/source custody.
+- [x] Apply the versioned certified NRS procedure.
+- [x] Publish complete assignments and certificates.
 - [ ] Compare tree/cut stability with 2020.
 
 ### Stage 5 — Nationwide 2000
 
-- [ ] Freeze 2000 block/source custody and historical crosswalk limitations.
-- [ ] Apply the identical certified procedure.
-- [ ] Publish complete assignments and certificates.
+- [x] Freeze 2000 block/source custody and historical crosswalk limitations.
+- [x] Apply the versioned certified NRS procedure.
+- [x] Publish complete assignments and certificates.
 - [ ] Compare three-decade stability.
 
 ### Stage 6 — National Standard Evidence
@@ -93,13 +93,11 @@ Active wave: `2026-08-05-nrs-2010-national-baseline`.
 
 Current objective:
 
-> Freeze 2010 block/source custody and execute the identical NRS v0.1
-> reference-baseline procedure without weakening the 2020 claim boundary.
+> Compare the verified 2000, 2010, and 2020 national baselines without
+> promoting tolerance conformance to exact boundary or canonical proof.
 
 Next unblocked work:
 
-> Inventory locally available 2010 block geometry, PL 94-171 population, and
-> adjacency/RCTX custody for all States. The completed NRS v0.1 2020 run has 50
-> verified States, 435 districts, 8,126,956 blocks, and 385/385 nodes within the
-> frozen tolerance. Exact proof coverage is population 4/385, boundary 0/385,
-> and canonical 0/385; those gaps remain public and are not promoted.
+> Produce node-, tree-, and cut-level cross-decade stability matrices. The
+> verified national runs now cover 2000 (NRS v0.3), 2010 (NRS v0.2), and 2020;
+> weighted-boundary and canonical exact-proof gaps remain public.

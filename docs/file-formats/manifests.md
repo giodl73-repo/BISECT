@@ -452,9 +452,10 @@ This fixture manifest hashes the positive optimal and negative infeasibility
 packages and names the Python fixture verifier plus Rust certificate/package
 tests.
 
-### 3.25 NRS v0.1 block-reference manifests
+### 3.25 NRS block-reference manifests
 
-Source: `bisect-ops` and `configs/nrs_v0_1/`.
+Source: `bisect-ops` and `configs/nrs_v0_1/`, `configs/nrs_v0_2/`, and
+`configs/nrs_v0_3/`.
 
 `nrs-standard-profile-v0.1-v1` freezes assignment-affecting algorithm and
 reference-engine choices. `nrs-baseline-legal-profile-v1` freezes the common
@@ -466,6 +467,15 @@ assignment-affecting fields enumerated by NRS v0.1 §3.4. It therefore uses
 `canonicalization_version` as its version discriminator rather than adding a
 presentation-only `schema_version` field that would alter the normative seed
 input.
+
+`nrs-standard-profile-v0.2-v1` adds the canonical multi-root fallback.
+`nrs-standard-profile-v0.3-v1` adds the bridge-aware land-component fallback.
+For the narrow v0.3 amendment, the stored input manifest also carries frozen
+`seed_compatibility_profile_sha256` and
+`seed_compatibility_reference_engine_sha256` values. Seed derivation replaces
+the current profile/reference-engine hashes with those predecessor values and
+removes the two compatibility fields before canonical serialization. The
+package still binds and verifies the actual v0.3 profile independently.
 
 `nrs-seed-record-v1` records the canonical input-manifest hash, domain-separated
 digest, unsigned little-endian seed, signed-engine conversion, and generation
@@ -510,6 +520,8 @@ from exact population, boundary, and canonical proof coverage.
 `nrs-national-summary-package-v0.1-v1` binds both reports to their source
 ledger hash. The summary package is evidence about the hash-bound local State
 packages; it is not a substitute for those packages.
+The v0.2 and v0.3 summary, proof-coverage, and summary-package schemas use the
+same fields with their respective version tags.
 
 ---
 
