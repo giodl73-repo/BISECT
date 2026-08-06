@@ -1,0 +1,46 @@
+{
+  "builder_executable_path": "target/release/bisect-ops.exe",
+  "builder_executable_sha256": "cd6b9954fdbf0b855c4374743f72dec062233263d8fb141f9d2829e7184fafb1",
+  "builder_path": "bisect-ops-rctx-builder-source-8b9b0fc7933eba39.rs",
+  "builder_sha256": "8b9b0fc7933eba3940829a65448f4e147bc6872035d83aff10bd0083458f5867",
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "files": [
+    {
+      "path": "wy.json",
+      "sha256": "cee151a05fe26273a654aba9d02b3fc8565111b9cae4f8c42d181aebf7825b6f"
+    }
+  ],
+  "package_id": "wy-2000-block-rctx",
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "status": "ready",
+  "tiger_archive_files": {
+    "data/2000/tiger/archives/wy/tl_2010_56001_tabblock00.zip": "sha256:ad56ed1e8bac244eaae1c5dc6648da7f6339e456b0e052f0b0940aed98b8bffb",
+    "data/2000/tiger/archives/wy/tl_2010_56003_tabblock00.zip": "sha256:767c0aa20f81fa5b2607d28696b2252d83a34f63438296b752cec367a1b85574",
+    "data/2000/tiger/archives/wy/tl_2010_56005_tabblock00.zip": "sha256:3c977c9aec8962505bc425ad049dc913f2fab8de2582176af11c9f1349ef8dbb",
+    "data/2000/tiger/archives/wy/tl_2010_56007_tabblock00.zip": "sha256:4647ec8c8c5b0351ad3a5cc204eece5d85425b715cedd18025a5437a3cad894b",
+    "data/2000/tiger/archives/wy/tl_2010_56009_tabblock00.zip": "sha256:78925dee66bfb2a2c0a347b81f0659c46a3b6b065cee196438626e43bef1bfae",
+    "data/2000/tiger/archives/wy/tl_2010_56011_tabblock00.zip": "sha256:6be63484d6535a708672b3f648212a695c80c102320c14420132da91566fb4dd",
+    "data/2000/tiger/archives/wy/tl_2010_56013_tabblock00.zip": "sha256:8e6d21022a7d01099f73664ca6521588be4bd22878ed1f419eef49d16e69bd08",
+    "data/2000/tiger/archives/wy/tl_2010_56015_tabblock00.zip": "sha256:db628f9a7e1749be121fb2ed1ac342ae8ae5e1c852f83331467cba9f87a79cb4",
+    "data/2000/tiger/archives/wy/tl_2010_56017_tabblock00.zip": "sha256:95bb38e766b6357918e2ee4be2ea23c7521de0ae01ce4f31efc8d2be9782ce42",
+    "data/2000/tiger/archives/wy/tl_2010_56019_tabblock00.zip": "sha256:4ad76fe4bd40025ff7b668d7492a6f071aee9096b9a6bfb607b6c0ef125741a9",
+    "data/2000/tiger/archives/wy/tl_2010_56021_tabblock00.zip": "sha256:ba34e02f9c602277d918fea48221dc9c2ff5432e438773591a16f4b1da718f3c",
+    "data/2000/tiger/archives/wy/tl_2010_56023_tabblock00.zip": "sha256:807b20a70b59a05c42a4e22c19656f69ab8098440a54427a43abe189f401e9a7",
+    "data/2000/tiger/archives/wy/tl_2010_56025_tabblock00.zip": "sha256:643759306596300bd9149f78eaaa83a9b1c38527f68e4b230d86d0cdea9c6316",
+    "data/2000/tiger/archives/wy/tl_2010_56027_tabblock00.zip": "sha256:0ac12dc78f405a0a05e08447fa9f560221c127d0d720209cd0aea350f74fe7b0",
+    "data/2000/tiger/archives/wy/tl_2010_56029_tabblock00.zip": "sha256:004a4094382cb34b71cc467db6a4bb20d27b9e5f44337bb03ac4eb6191db64d1",
+    "data/2000/tiger/archives/wy/tl_2010_56031_tabblock00.zip": "sha256:4d013ec754b85a85202b2a8f7376ebd11e6ac0148b878becc957c38028aa2c90",
+    "data/2000/tiger/archives/wy/tl_2010_56033_tabblock00.zip": "sha256:5a17ae88754586969c17895a6cae69c12b24ecede4a848d6c4d144a8d9fe1210",
+    "data/2000/tiger/archives/wy/tl_2010_56035_tabblock00.zip": "sha256:230b39f77ef84eeeb392d430e9897b227542476da0deeb64bf9531d368dd4938",
+    "data/2000/tiger/archives/wy/tl_2010_56037_tabblock00.zip": "sha256:7f8f94ec4721a0f520547d32fa7043422c13c1b50399015f98dd2c70e1eb6399",
+    "data/2000/tiger/archives/wy/tl_2010_56039_tabblock00.zip": "sha256:ef660db85b8e1ee5bae6bb9a056f4d9fde42d1aa6054fbd5aab207c755a7769e",
+    "data/2000/tiger/archives/wy/tl_2010_56041_tabblock00.zip": "sha256:9107bfef771e3ee7b04c6ceaa9da65dfda404b4fe9385722feedfd6b12441bc8",
+    "data/2000/tiger/archives/wy/tl_2010_56043_tabblock00.zip": "sha256:84c6f5225ede4a0a5855c4d64e91016510d3785d8f8344d31669b01cda307c0f",
+    "data/2000/tiger/archives/wy/tl_2010_56045_tabblock00.zip": "sha256:dc46d023a0d16c9ca083cbb02ee519b0dbd6fea3f61e871e5885dd09ab842e46"
+  },
+  "tiger_archive_path": null,
+  "tiger_archive_sha256": null,
+  "tiger_input_path": "data/2000/tiger/blocks/wy",
+  "tiger_source_file_count": 69,
+  "year": 2000
+}

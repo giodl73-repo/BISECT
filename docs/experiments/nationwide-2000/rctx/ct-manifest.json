@@ -1,0 +1,31 @@
+{
+  "builder_executable_path": "target/release/bisect-ops.exe",
+  "builder_executable_sha256": "cd6b9954fdbf0b855c4374743f72dec062233263d8fb141f9d2829e7184fafb1",
+  "builder_path": "bisect-ops-rctx-builder-source-8b9b0fc7933eba39.rs",
+  "builder_sha256": "8b9b0fc7933eba3940829a65448f4e147bc6872035d83aff10bd0083458f5867",
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "files": [
+    {
+      "path": "ct.json",
+      "sha256": "600d25ebf053dd2fb66207a822499d9e87fcf62170524368a07dfff4ddb95083"
+    }
+  ],
+  "package_id": "ct-2000-block-rctx",
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "status": "ready",
+  "tiger_archive_files": {
+    "data/2000/tiger/archives/ct/tl_2010_09001_tabblock00.zip": "sha256:c0c6e126f059023ebf40b91ae28edba243a8fd6be95412ee01ffca981c42fe22",
+    "data/2000/tiger/archives/ct/tl_2010_09003_tabblock00.zip": "sha256:5783d4892fe3c1a8683261b39b63e987e404177a1c060e82a902962943fcaab2",
+    "data/2000/tiger/archives/ct/tl_2010_09005_tabblock00.zip": "sha256:9b2bf2902cf6a3d2e550b0f1736247a514c6b4f0cc14d1319932f8ff027ffbc2",
+    "data/2000/tiger/archives/ct/tl_2010_09007_tabblock00.zip": "sha256:89ebbd4355a07f6ef217cfa316501d75f3ae80e7343b87c5578ead4f99ba963a",
+    "data/2000/tiger/archives/ct/tl_2010_09009_tabblock00.zip": "sha256:be858c1430cdad078eef458d99ed7cfaaf331d24593247ff688c492337b112e5",
+    "data/2000/tiger/archives/ct/tl_2010_09011_tabblock00.zip": "sha256:d8e2ff3a0df275c445cc6f616f3ff2a962f45d835c4d6dddc3d90b20ca5fc41a",
+    "data/2000/tiger/archives/ct/tl_2010_09013_tabblock00.zip": "sha256:484604c23416153aa10c82bafba660a81681783a95e32916f81b4809dca36bf0",
+    "data/2000/tiger/archives/ct/tl_2010_09015_tabblock00.zip": "sha256:c6f57c4e6f45e10f2e69a014c37b74b3ffa84751dc856d6adeff3b0bd04be934"
+  },
+  "tiger_archive_path": null,
+  "tiger_archive_sha256": null,
+  "tiger_input_path": "data/2000/tiger/blocks/ct",
+  "tiger_source_file_count": 24,
+  "year": 2000
+}

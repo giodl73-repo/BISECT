@@ -1,0 +1,37 @@
+{
+  "builder_executable_path": "target/release/bisect-ops.exe",
+  "builder_executable_sha256": "cd6b9954fdbf0b855c4374743f72dec062233263d8fb141f9d2829e7184fafb1",
+  "builder_path": "bisect-ops-rctx-builder-source-8b9b0fc7933eba39.rs",
+  "builder_sha256": "8b9b0fc7933eba3940829a65448f4e147bc6872035d83aff10bd0083458f5867",
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "files": [
+    {
+      "path": "vt.json",
+      "sha256": "ebe1cb0b8880dcca968ec63b15493a7d2117dd62ba5a94ae76ab9e72170dd288"
+    }
+  ],
+  "package_id": "vt-2000-block-rctx",
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "status": "ready",
+  "tiger_archive_files": {
+    "data/2000/tiger/archives/vt/tl_2010_50001_tabblock00.zip": "sha256:a057def03a6958060f3f3ea7d0d322ec823e5b37b79af68eeef9b572bc6d9fd4",
+    "data/2000/tiger/archives/vt/tl_2010_50003_tabblock00.zip": "sha256:94faf17756952b01a77f43f32216496fd71f3e3a09a1f52434f36abe5345b5d4",
+    "data/2000/tiger/archives/vt/tl_2010_50005_tabblock00.zip": "sha256:e26e9d7c449a5ea6183355ab177cad44620e1036d073f37adc9d38c69b770509",
+    "data/2000/tiger/archives/vt/tl_2010_50007_tabblock00.zip": "sha256:9c5292ed98e44b53e33df01fd3e9745ffafe402dbdec65cfdd8b32c6ace136ee",
+    "data/2000/tiger/archives/vt/tl_2010_50009_tabblock00.zip": "sha256:3c1b2d9d49bc45028822b33df9369328c6e30c33b2fb16b3f011d016f7832b25",
+    "data/2000/tiger/archives/vt/tl_2010_50011_tabblock00.zip": "sha256:f38024c5fa937b34184a708a2983b50a2af1c951414740b8ed60fbb5c919606a",
+    "data/2000/tiger/archives/vt/tl_2010_50013_tabblock00.zip": "sha256:ced4b2b70413754b2522720faf1f4022973c15b50c5c21edaa76c3165f8fdcb6",
+    "data/2000/tiger/archives/vt/tl_2010_50015_tabblock00.zip": "sha256:56f52ce8d3f0490302677507019fc4bc10277429312f5a1774d67e284722215e",
+    "data/2000/tiger/archives/vt/tl_2010_50017_tabblock00.zip": "sha256:2675a6be7325c61347d2bc25470a9eb9b61a73cc9d1cc3b08750e1224ec7d00a",
+    "data/2000/tiger/archives/vt/tl_2010_50019_tabblock00.zip": "sha256:4b46fbf534f9ffabd6799a60b1ad69861e1de1018363c56807228e74f8a9b587",
+    "data/2000/tiger/archives/vt/tl_2010_50021_tabblock00.zip": "sha256:94b66a14abb4482b6f1e6d17bc51f4760b5c29137651a4ff73d2d756f3f9f154",
+    "data/2000/tiger/archives/vt/tl_2010_50023_tabblock00.zip": "sha256:6eaab3dce183795bfb7e284f450c71acf4478ae0e7b89ac4629b128f556d6a5e",
+    "data/2000/tiger/archives/vt/tl_2010_50025_tabblock00.zip": "sha256:60b9668eb7e229da5048c3b3e23fdbc4ea666c2dd110050635208e660c539931",
+    "data/2000/tiger/archives/vt/tl_2010_50027_tabblock00.zip": "sha256:1afd132daae442a81d02bd83a843305622354730b7f6080278f521fa6349a666"
+  },
+  "tiger_archive_path": null,
+  "tiger_archive_sha256": null,
+  "tiger_input_path": "data/2000/tiger/blocks/vt",
+  "tiger_source_file_count": 42,
+  "year": 2000
+}

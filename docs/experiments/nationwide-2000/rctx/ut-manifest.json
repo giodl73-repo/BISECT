@@ -1,0 +1,52 @@
+{
+  "builder_executable_path": "target/release/bisect-ops.exe",
+  "builder_executable_sha256": "cd6b9954fdbf0b855c4374743f72dec062233263d8fb141f9d2829e7184fafb1",
+  "builder_path": "bisect-ops-rctx-builder-source-8b9b0fc7933eba39.rs",
+  "builder_sha256": "8b9b0fc7933eba3940829a65448f4e147bc6872035d83aff10bd0083458f5867",
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "files": [
+    {
+      "path": "ut.json",
+      "sha256": "362479210238794edf2e86dea2a1a08a9f2de74544f4a56f0bae9be88928478c"
+    }
+  ],
+  "package_id": "ut-2000-block-rctx",
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "status": "ready",
+  "tiger_archive_files": {
+    "data/2000/tiger/archives/ut/tl_2010_49001_tabblock00.zip": "sha256:e928fe80fb2fbb55ff9279d55d015c71315f81d8a9392b7d00810a09ef66f28c",
+    "data/2000/tiger/archives/ut/tl_2010_49003_tabblock00.zip": "sha256:028eb8e27fef85a18935afcadfa5b1cfe4fe7612103bb3ee69d107cc169c7546",
+    "data/2000/tiger/archives/ut/tl_2010_49005_tabblock00.zip": "sha256:ec72fdcd31b504b096a89c37a27d72e95618010c381d56d7aabc07cdcb4361ec",
+    "data/2000/tiger/archives/ut/tl_2010_49007_tabblock00.zip": "sha256:d03c31845faad5adf0ac980507e36027cdb3defe7016464f2dfed3452a6177ba",
+    "data/2000/tiger/archives/ut/tl_2010_49009_tabblock00.zip": "sha256:0dab017adf0b19b93b323eb6a4e1dfc5cb48b695cdb76fe8a3a9e9928ad10429",
+    "data/2000/tiger/archives/ut/tl_2010_49011_tabblock00.zip": "sha256:aa193bfdfc5d30e062266bd3ccc9c526b178a19eb6325245306815192a54c3b5",
+    "data/2000/tiger/archives/ut/tl_2010_49013_tabblock00.zip": "sha256:4f72529372661f37eef602492620966e6933300d9f119db86fc46cc9d2f07965",
+    "data/2000/tiger/archives/ut/tl_2010_49015_tabblock00.zip": "sha256:c55bc0d66cd91bd195082341d8bbebb0cc554db1577050cbbb6cd86ebd50458c",
+    "data/2000/tiger/archives/ut/tl_2010_49017_tabblock00.zip": "sha256:eb9fc4412d2bc81b1b7547d8de0067a8a6f9a48f1647ac017af8a12a23779a7c",
+    "data/2000/tiger/archives/ut/tl_2010_49019_tabblock00.zip": "sha256:003bbdd575a1dda7045e2001114282dd374a63cad0840a51d60657a45446f7c6",
+    "data/2000/tiger/archives/ut/tl_2010_49021_tabblock00.zip": "sha256:fae12a8ee7f3950273eb3558a78b04511e1cf8281a4de372d7637243792ad43e",
+    "data/2000/tiger/archives/ut/tl_2010_49023_tabblock00.zip": "sha256:eab1064d12df11fc9295125116037924f517c19515e796ec7decad666e38d23c",
+    "data/2000/tiger/archives/ut/tl_2010_49025_tabblock00.zip": "sha256:b5a9cb2c1ca4922184cde1a0f7b75057f40b400c8caea9cba7882a6c36fb2cf7",
+    "data/2000/tiger/archives/ut/tl_2010_49027_tabblock00.zip": "sha256:ba2acf3be4bd12309e3d37c65f0c6caf4e613d8b1c10cdc5e546ab96c31b61c4",
+    "data/2000/tiger/archives/ut/tl_2010_49029_tabblock00.zip": "sha256:df20eddee72505fc58819afd74ded3de8544c4d5b269e6f9a82c4b6b1a69c4a9",
+    "data/2000/tiger/archives/ut/tl_2010_49031_tabblock00.zip": "sha256:8d12fe61efff72384fbae311d2f22afe7c662fc9be71e4adb2874e1fcba58f63",
+    "data/2000/tiger/archives/ut/tl_2010_49033_tabblock00.zip": "sha256:13fd66a4614357bf0c84e2568ac5007f6adce366e312b1a52adb938db5bf0695",
+    "data/2000/tiger/archives/ut/tl_2010_49035_tabblock00.zip": "sha256:eae771f3e8a76bb5ca671ca9e46efc108806858ed9db26e1cf54261057bb86cd",
+    "data/2000/tiger/archives/ut/tl_2010_49037_tabblock00.zip": "sha256:aca7bf810e2faab6aafd010324608470b2a8d5b04fe3d5a2cc5001c4ff8f3cee",
+    "data/2000/tiger/archives/ut/tl_2010_49039_tabblock00.zip": "sha256:902e7c30aa5db6fb3c5770ab3b302448c3cd32a8f0723a3da2ebaffe88cf1a84",
+    "data/2000/tiger/archives/ut/tl_2010_49041_tabblock00.zip": "sha256:57256d4b0b6d813652a68d7d76ab4862b4c361f5f94fab845fe0ceb4b0c77b39",
+    "data/2000/tiger/archives/ut/tl_2010_49043_tabblock00.zip": "sha256:b874edb9ee2fc02149e4c960d6a341cfa8c263f0caa2b59cfdaaaf07d2843f76",
+    "data/2000/tiger/archives/ut/tl_2010_49045_tabblock00.zip": "sha256:923539bb6e2b807c66b143d357989c3d39a60845b99dd8af3e8214b805eae9b2",
+    "data/2000/tiger/archives/ut/tl_2010_49047_tabblock00.zip": "sha256:ce35d3806b82311fdff97071ee17e75c6bad0510687699c70462bfe62635368b",
+    "data/2000/tiger/archives/ut/tl_2010_49049_tabblock00.zip": "sha256:bce9de2c2472bc6b2e1d0279f1999f1e7ad137784c04b27fc7b5e2587add04da",
+    "data/2000/tiger/archives/ut/tl_2010_49051_tabblock00.zip": "sha256:d192eedd383baccb160c4af9df8942076639ebad11d09c2bafc6638b9cc329e3",
+    "data/2000/tiger/archives/ut/tl_2010_49053_tabblock00.zip": "sha256:926300431c49c7aeeddcae4037bf1feaa2b8893c40475479ea37b739b82866ab",
+    "data/2000/tiger/archives/ut/tl_2010_49055_tabblock00.zip": "sha256:17f2cd989f3bb92d560af6f7f108eff65673e9a60fbd60a491bad968acdb5327",
+    "data/2000/tiger/archives/ut/tl_2010_49057_tabblock00.zip": "sha256:a0e7e7660e046cf2904608950aa8b38ffe5cf39e43ccdad9aa4bbed87fdb116b"
+  },
+  "tiger_archive_path": null,
+  "tiger_archive_sha256": null,
+  "tiger_input_path": "data/2000/tiger/blocks/ut",
+  "tiger_source_file_count": 87,
+  "year": 2000
+}

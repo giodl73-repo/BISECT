@@ -1,0 +1,28 @@
+{
+  "builder_executable_path": "target/release/bisect-ops.exe",
+  "builder_executable_sha256": "cd6b9954fdbf0b855c4374743f72dec062233263d8fb141f9d2829e7184fafb1",
+  "builder_path": "bisect-ops-rctx-builder-source-8b9b0fc7933eba39.rs",
+  "builder_sha256": "8b9b0fc7933eba3940829a65448f4e147bc6872035d83aff10bd0083458f5867",
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "files": [
+    {
+      "path": "hi.json",
+      "sha256": "dbf8ddba05d4a782c0a5cc9c72b26942aea3695593615505e2f84904cae61ed9"
+    }
+  ],
+  "package_id": "hi-2000-block-rctx",
+  "schema_version": "certified-state-block-rctx-package-v1",
+  "status": "ready",
+  "tiger_archive_files": {
+    "data/2000/tiger/archives/hi/tl_2010_15001_tabblock00.zip": "sha256:0048b4e4b0ffbdd682890e525a09626600c4380a30c6479e81aebdf916e55fde",
+    "data/2000/tiger/archives/hi/tl_2010_15003_tabblock00.zip": "sha256:cb27478dc05ff271b405bc052f13391808741993c46b6c7c26e84639d874adf1",
+    "data/2000/tiger/archives/hi/tl_2010_15005_tabblock00.zip": "sha256:09fc93b964ba12e64d40a5a07f344216dc27de7fd8ee6a58385e44d9acd0ddb4",
+    "data/2000/tiger/archives/hi/tl_2010_15007_tabblock00.zip": "sha256:c61cad99a5f542d4ccb6785ab3cf68a8d80f3cbd28c6f9d10af4a920b4512c3d",
+    "data/2000/tiger/archives/hi/tl_2010_15009_tabblock00.zip": "sha256:2f53c32969b9079f6899e24e29ce4c55afcff607b1e763643f2bc071b086e4ca"
+  },
+  "tiger_archive_path": null,
+  "tiger_archive_sha256": null,
+  "tiger_input_path": "data/2000/tiger/blocks/hi",
+  "tiger_source_file_count": 15,
+  "year": 2000
+}

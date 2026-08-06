@@ -1,11 +1,11 @@
 {
   "schema_version": "certified-national-2000-input-inventory-package-v1",
   "package_id": "nationwide-2000-input-inventory",
-  "status": "incomplete",
+  "status": "ready",
   "files": [
     {
       "path": "inventory.json",
-      "sha256": "beff18fbd9b17ebce73171d0b20f2351fa73a001c08a3bbf1f06ba54de91f5d1"
+      "sha256": "c3599f91ae03968a32d3ed81dd081381e806681a4000f2ab40176aee0f20023e"
     }
   ],
   "builder_path": "scripts/research/inventory_national_2000.py",

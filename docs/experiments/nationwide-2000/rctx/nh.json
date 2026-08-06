@@ -1,0 +1,41 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:7f9e0eb29bb85abaa7f01413cdfaaf318b95ff508eeb97a38bf8f0ee3eb64a26",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 84190,
+  "population_total": 1235786,
+  "rctx_bytes": 8978538,
+  "rctx_path": "data/2000/certified/nh_blocks_2000.rctx",
+  "rctx_sha256": "6eec484b654abb79246d5254365c0ebd3ad6a575281f2a52c9df254be62fc669",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "new_hampshire",
+  "state_code": "NH",
+  "state_fips": "33",
+  "status": "ready",
+  "tiger_archive_files": {
+    "data/2000/tiger/archives/nh/tl_2010_33001_tabblock00.zip": "sha256:6145506431deacf3301670897fbddf1dd14a25767d99f18510f22b9dfe7477e8",
+    "data/2000/tiger/archives/nh/tl_2010_33003_tabblock00.zip": "sha256:1086d3ec8f62774472484af05bb216eafecef3e3772d731605bd8aca4aca0d58",
+    "data/2000/tiger/archives/nh/tl_2010_33005_tabblock00.zip": "sha256:4a87e8218dec045864628b36834c141029b803fda70966bf0ea74acf916bda18",
+    "data/2000/tiger/archives/nh/tl_2010_33007_tabblock00.zip": "sha256:f53637ecd9a9ed95269452ecacff0f053004cd8d20b40ef52c7054fcf5a693ac",
+    "data/2000/tiger/archives/nh/tl_2010_33009_tabblock00.zip": "sha256:d272b4f05b59a93fef26324c785237a0724b8e5d3d9cf681721585b3e2c6843c",
+    "data/2000/tiger/archives/nh/tl_2010_33011_tabblock00.zip": "sha256:41b5b85e186bf0f2f5ce28d825818d7af133786762ded0274c9ce95f0eb3e9b0",
+    "data/2000/tiger/archives/nh/tl_2010_33013_tabblock00.zip": "sha256:53b442c72568d289e5aaee4db20243ac73cd788c64b3dd38a0a9f49c34eb45dc",
+    "data/2000/tiger/archives/nh/tl_2010_33015_tabblock00.zip": "sha256:d137799a4f309df3e1a49b9ab0da6261374d65644c490eb555e2789bca394ef6",
+    "data/2000/tiger/archives/nh/tl_2010_33017_tabblock00.zip": "sha256:1e3cb80d240681be59020e8f69333148f621a6fc1e4eb3944d06fec8aee1ab1e",
+    "data/2000/tiger/archives/nh/tl_2010_33019_tabblock00.zip": "sha256:01393c47510f41bbfb23ea6a3c965a6c0b842067c72e4f326d4a0f19e0b2700f"
+  },
+  "tiger_archive_path": null,
+  "tiger_archive_sha256": null,
+  "tiger_input_path": "data/2000/tiger/blocks/nh",
+  "tiger_source_file_count": 30,
+  "unit_count": 34728,
+  "unit_universe_hash": "sha256:e43b02c1399b81cda9fe4a970f30452c84e47c9428ba41ebf0e43bc1c59862f1",
+  "year": 2000
+}
