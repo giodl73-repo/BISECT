@@ -62,12 +62,18 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         .map(|edge| ((edge.left, edge.right), edge.weight as f64))
         .collect::<HashMap<_, _>>();
     let units = (0..root.unit_ids.len()).collect::<HashSet<_>>();
-    let niter = if args.discovery_refinement == DiscoveryRefinementArg::NrsV01 {
+    let niter = if matches!(
+        args.discovery_refinement,
+        DiscoveryRefinementArg::NrsV01 | DiscoveryRefinementArg::NrsV02
+    ) {
         100
     } else {
         10
     };
-    let nrs_profile = args.discovery_refinement == DiscoveryRefinementArg::NrsV01;
+    let nrs_profile = matches!(
+        args.discovery_refinement,
+        DiscoveryRefinementArg::NrsV01 | DiscoveryRefinementArg::NrsV02
+    );
     let mut assignment = if nrs_profile {
         let tpwgts = Some(vec![
             root.k_left as f32 / root.k_parent as f32,
@@ -127,7 +133,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     };
     let original_assignment = assignment.clone();
     if nrs_profile {
-        assignment = nrs_dfs_tree_cut_candidate(&root, &adjacency, &assignment)?;
+        assignment = nrs_dfs_tree_cut_candidate(&root, &adjacency, &assignment, 0)?;
     } else {
         let left = assignment
             .iter()
@@ -169,9 +175,24 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             &root,
             &adjacency,
             &mut assignment,
-            (args.discovery_refinement == DiscoveryRefinementArg::NrsV01)
-                .then(|| nrs_population_tolerance_scaled_bound(&root)),
+            nrs_profile.then(|| nrs_population_tolerance_scaled_bound(&root)),
         )?;
+        if args.discovery_refinement == DiscoveryRefinementArg::NrsV02
+            && nrs_population_deviation_scaled(&root, &assignment)
+                > nrs_population_tolerance_scaled_bound(&root)
+        {
+            let fallback = nrs_v0_2_fallback_candidate(
+                &root,
+                &adjacency,
+                &original_assignment,
+                &assignment,
+                population_improvement_operations,
+                population_improvement_units,
+            )?;
+            assignment = fallback.assignment;
+            population_improvement_operations = fallback.operations;
+            population_improvement_units = fallback.moved_units;
+        }
     }
     if matches!(
         args.discovery_refinement,
@@ -238,12 +259,16 @@ fn nrs_dfs_tree_cut_candidate(
     instance: &bisect_ilp::CertifiedSplitInstance,
     adjacency: &[Vec<usize>],
     assignment: &[u8],
+    root: usize,
 ) -> anyhow::Result<Vec<u8>> {
     let n = assignment.len();
+    if root >= n {
+        return Err(anyhow!("NRS DFS root is outside the unit index"));
+    }
     let mut parent = vec![usize::MAX; n];
     let mut order = Vec::with_capacity(n);
-    let mut stack = vec![0_usize];
-    parent[0] = 0;
+    let mut stack = vec![root];
+    parent[root] = root;
     while let Some(unit) = stack.pop() {
         order.push(unit);
         let mut neighbors = adjacency[unit].clone();
@@ -259,13 +284,15 @@ fn nrs_dfs_tree_cut_candidate(
         return Err(anyhow!("NRS input graph is disconnected"));
     }
     let mut children = vec![Vec::new(); n];
-    for unit in 1..n {
-        children[parent[unit]].push(unit);
+    for unit in 0..n {
+        if unit != root {
+            children[parent[unit]].push(unit);
+        }
     }
     let mut entry = vec![0_usize; n];
     let mut exit = vec![0_usize; n];
     let mut clock = 0_usize;
-    let mut traversal = vec![(0_usize, false)];
+    let mut traversal = vec![(root, false)];
     while let Some((unit, leaving)) = traversal.pop() {
         if leaving {
             exit[unit] = clock;
@@ -286,19 +313,22 @@ fn nrs_dfs_tree_cut_candidate(
         .collect::<Vec<_>>();
     let mut subtree_minimum = (0..n).collect::<Vec<_>>();
     for &unit in order.iter().rev() {
-        if unit != 0 {
+        if unit != root {
             let ancestor = parent[unit];
             subtree_population[ancestor] += subtree_population[unit];
             subtree_initial_left_population[ancestor] += subtree_initial_left_population[unit];
             subtree_minimum[ancestor] = subtree_minimum[ancestor].min(subtree_minimum[unit]);
         }
     }
-    let total_population = subtree_population[0];
+    let total_population = subtree_population[root];
     let target_numerator = instance.k_left as i128 * i128::from(total_population);
-    let total_initial_left_population = subtree_initial_left_population[0];
+    let total_initial_left_population = subtree_initial_left_population[root];
     let mut best_deviation = u128::MAX;
     let mut candidates = Vec::new();
-    for candidate in 1..n {
+    for candidate in 0..n {
+        if candidate == root {
+            continue;
+        }
         for complement_is_left in [false, true] {
             let population = if complement_is_left {
                 total_population - subtree_population[candidate]
@@ -315,7 +345,11 @@ fn nrs_dfs_tree_cut_candidate(
             let moved_population = (population - candidate_initial_left_population)
                 + (total_initial_left_population - candidate_initial_left_population);
             let minimum = if complement_is_left {
-                0
+                (0..n)
+                    .find(|&unit| {
+                        !(entry[candidate] <= entry[unit] && entry[unit] < exit[candidate])
+                    })
+                    .context("NRS DFS complement is empty")?
             } else {
                 subtree_minimum[candidate]
             };
@@ -413,6 +447,93 @@ fn nrs_population_tolerance_scaled_bound(instance: &bisect_ilp::CertifiedSplitIn
     let population = instance.populations.iter().sum::<i64>() as u128;
     let smaller_child_seats = instance.k_left.min(instance.k_right) as u128;
     (5 * smaller_child_seats * population + 999) / 1_000
+}
+
+fn nrs_population_deviation_scaled(
+    instance: &bisect_ilp::CertifiedSplitInstance,
+    assignment: &[u8],
+) -> u128 {
+    let total_population = instance.populations.iter().sum::<i64>();
+    let right_population = instance
+        .populations
+        .iter()
+        .zip(assignment)
+        .filter_map(|(&population, &label)| (label == 1).then_some(population))
+        .sum::<i64>();
+    (instance.k_parent as i128 * i128::from(right_population)
+        - instance.k_right as i128 * i128::from(total_population))
+    .unsigned_abs()
+}
+
+struct NrsFallbackCandidate {
+    assignment: Vec<u8>,
+    operations: usize,
+    moved_units: usize,
+}
+
+fn nrs_v0_2_candidate_key(
+    instance: &bisect_ilp::CertifiedSplitInstance,
+    raw_assignment: &[u8],
+    assignment: &[u8],
+) -> (u128, u64, i64, Vec<u8>) {
+    let deviation = nrs_population_deviation_scaled(instance, assignment);
+    let cut = instance
+        .edges
+        .iter()
+        .filter_map(|edge| (assignment[edge.left] != assignment[edge.right]).then_some(edge.weight))
+        .sum::<u64>();
+    let moved_population = instance
+        .populations
+        .iter()
+        .zip(assignment.iter().zip(raw_assignment))
+        .filter_map(|(&population, (&after, &before))| (after != before).then_some(population))
+        .sum::<i64>();
+    (deviation, cut, moved_population, assignment.to_vec())
+}
+
+fn nrs_v0_2_fallback_candidate(
+    instance: &bisect_ilp::CertifiedSplitInstance,
+    adjacency: &[Vec<usize>],
+    raw_assignment: &[u8],
+    v0_1_assignment: &[u8],
+    v0_1_operations: usize,
+    v0_1_moved_units: usize,
+) -> anyhow::Result<NrsFallbackCandidate> {
+    let mut best = NrsFallbackCandidate {
+        assignment: v0_1_assignment.to_vec(),
+        operations: v0_1_operations,
+        moved_units: v0_1_moved_units,
+    };
+    let mut best_key = nrs_v0_2_candidate_key(instance, raw_assignment, &best.assignment);
+    let mut roots = (0..16)
+        .map(|quantile| quantile * (raw_assignment.len() - 1) / 15)
+        .collect::<Vec<_>>();
+    roots.sort_unstable();
+    roots.dedup();
+    for root in roots.into_iter().filter(|&root| root != 0) {
+        let mut assignment = nrs_dfs_tree_cut_candidate(instance, adjacency, raw_assignment, root)?;
+        if instance.k_left == instance.k_right && assignment[0] == 1 {
+            for label in &mut assignment {
+                *label = 1 - *label;
+            }
+        }
+        let (operations, moved_units) = improve_discovery_population(
+            instance,
+            adjacency,
+            &mut assignment,
+            Some(nrs_population_tolerance_scaled_bound(instance)),
+        )?;
+        let key = nrs_v0_2_candidate_key(instance, raw_assignment, &assignment);
+        if key < best_key {
+            best_key = key;
+            best = NrsFallbackCandidate {
+                assignment,
+                operations,
+                moved_units,
+            };
+        }
+    }
+    Ok(best)
 }
 
 fn best_connected_population_subtree_move(
@@ -2371,8 +2492,8 @@ mod tests {
         let instance = certified_root_instance_from_context(&context, 5).unwrap();
         let adjacency = graph_adjacency(context.graph.as_ref().unwrap()).unwrap();
         let raw = (0..10).map(|unit| (unit % 2) as u8).collect::<Vec<_>>();
-        let first = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw).unwrap();
-        let second = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw).unwrap();
+        let first = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 0).unwrap();
+        let second = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 0).unwrap();
         assert_eq!(first, second);
         assert!(
             rgraph_core::assignment_labels_connected(&adjacency, &first, [0_u8, 1_u8]).unwrap()
@@ -2387,13 +2508,25 @@ mod tests {
     }
 
     #[test]
+    fn nrs_dfs_tree_cut_supports_nonzero_root() {
+        let context = path_context(10);
+        let instance = certified_root_instance_from_context(&context, 5).unwrap();
+        let adjacency = graph_adjacency(context.graph.as_ref().unwrap()).unwrap();
+        let raw = (0..10).map(|unit| (unit % 2) as u8).collect::<Vec<_>>();
+        let candidate = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 9).unwrap();
+        assert!(
+            rgraph_core::assignment_labels_connected(&adjacency, &candidate, [0_u8, 1_u8]).unwrap()
+        );
+    }
+
+    #[test]
     fn nrs_dfs_tree_cut_replaces_connected_unbalanced_candidate() {
         let context = path_context(10);
         let instance = certified_root_instance_from_context(&context, 5).unwrap();
         let adjacency = graph_adjacency(context.graph.as_ref().unwrap()).unwrap();
         let raw = vec![0, 0, 0, 0, 0, 0, 1, 1, 1, 1];
         assert!(rgraph_core::assignment_labels_connected(&adjacency, &raw, [0_u8, 1_u8]).unwrap());
-        let candidate = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw).unwrap();
+        let candidate = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 0).unwrap();
         assert_ne!(candidate, raw);
         assert!(
             rgraph_core::assignment_labels_connected(&adjacency, &candidate, [0_u8, 1_u8]).unwrap()
