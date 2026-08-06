@@ -1,0 +1,17 @@
+{
+  "claim_boundary": "NRS v0.3 generated and independently verified complete 2020 block assignments for all 50 States and all 435 districts. All 385 recursive nodes satisfy the frozen population tolerance. Arithmetic-floor, weighted-boundary, and canonical proof coverage are reported separately; no legal validity, VRA, partisan-fairness, or official-adoption claim is made.",
+  "files": [
+    {
+      "path": "national-summary.json",
+      "sha256": "51915975a0e42d305207524cfedfeeb6a3606fab9d5a8ed8a24fe6a933cb8b8a"
+    },
+    {
+      "path": "proof-coverage.json",
+      "sha256": "f5268c72be7dbe0e1be31b45231ed4d9a8b40147c5420885e93d852c85e38808"
+    }
+  ],
+  "schema_version": "nrs-national-summary-package-v0.3-v1",
+  "source_ledger_sha256": "d589d02a45e4c4a99817ecd6810d8836937ff45633200d76f96c4809c9aa0ca8",
+  "standard_profile_id": "NRS-BASELINE-v0.3-reference-2020",
+  "status": "verified-national-reference-baseline"
+}
