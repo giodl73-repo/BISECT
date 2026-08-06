@@ -34,15 +34,18 @@ The script independently verifies:
 - the 2000, 2010, and 2020 publication manifests;
 - all three compact node snapshots;
 - the cross-census comparison manifest;
+- the complete 231,765-row county/tract geographic audit;
 - every national, pairwise, and per-State statistic through the separate
-  Python implementation.
+  Python implementations; and
+- the frozen county-split counts (1,812, 1,819, 1,823) and tract-split counts
+  (17,268, 18,800, 20,288).
 
 Manifest checks accept raw bytes or the same UTF-8 text with only LF/CRLF
 transport normalization. Binary files remain byte-exact, and the Python audit
 still recomputes every reported statistic from parsed content.
 
 A Level 1 pass verifies the committed evidence package. It does not prove that
-the second laptop independently regenerated all 24.4 million block
+the second laptop independently regenerated all 27,398,654 block
 assignments.
 
 The older v0.1 hostile challenge bundle is a separate historical gate and is
@@ -86,8 +89,11 @@ The script performs, for all three cycles:
 4. a separate `verify-nrs-batch --require-complete` pass;
 5. national summary and proof-coverage publication;
 6. compact node snapshot generation;
-7. three-cycle comparison generation; and
-8. independent Python recomputation of the comparison.
+7. three-cycle comparison generation;
+8. independent Python recomputation of the comparison;
+9. verification of the committed county/tract audit; and
+10. exact comparison of all 150 regenerated assignment hashes to the governed
+    audit anchors.
 
 Outputs and a transcript remain under `runs/nrs-v0.3/external-replay/`. Do not
 delete them until the record has been reviewed.
@@ -105,6 +111,10 @@ On systems where Python 3 is named `python3`, add
 
 The expected comparison contains 120 all-cycle common node signatures and 18
 all-cycle exact-topology States.
+
+The expected geographic audit contains 231,765 State/level geography rows.
+Maryland 2010 has a disclosed metadata-only tree-hash exception, but its
+assignment hash must match exactly like every other State-cycle assignment.
 
 ## Claim boundary
 

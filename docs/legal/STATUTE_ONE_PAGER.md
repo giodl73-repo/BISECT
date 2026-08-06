@@ -93,13 +93,20 @@ NRS v0.3 packages cover all 50 States, 435 districts, and 385 recursive nodes
 for each of the 2000, 2010, and 2020 Census cycles, totaling 27,398,654 assigned
 blocks with zero population-tolerance or connectivity failures. The three-cycle
 structural comparison and a precommitted 40-row bounded certified-versus-METIS
-study have independent Python verifiers.
+study have independent Python verifiers. A precommitted county/tract audit also
+publishes and verifies 231,765 geography rows: county splits number 1,812,
+1,819, and 1,823 in the 2000, 2010, and 2020 vintages; tract splits number
+17,268, 18,800, and 20,288. These are descriptive within-vintage results, not
+cross-cycle improvement or State-law compliance findings. The audit discloses
+one metadata-only raw-tree-hash exception for Maryland 2010 while binding its
+byte-identical assignment and committed substantive recursive snapshot.
 
 These are operational and reproducibility results, not exact national
 optimization or legal certification. Exact weighted-boundary and canonical
 proof coverage remains 0 of 1,155 national recursive nodes. A physical
-second-laptop v0.3 replication record, the remaining neutral evaluation
-families, external peer review, legislative adoption, and readiness
+second-laptop v0.3 replication record, the neutral evaluation families whose
+input/protocol blockers are published but unresolved, external peer review,
+legislative adoption, and readiness
 certification remain incomplete. NRS v0.3 is a proposed technical successor;
 it does not silently replace the v0.1 schedule incorporated by the candidate
 model statute.

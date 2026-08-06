@@ -282,7 +282,7 @@
     },
     {
       "path": "docs/legal/NRS_TECHNICAL_SCHEDULE_V0.1.md",
-      "sha256": "eed30d81ec47acfbca6f6729ede9491711ce46163d65ef1d9ffb3dbe38d1baa3"
+      "sha256": "22ecaf6ae08fa97fa3de03e10bb5e0b69fbb40916d45908a12732c4a92e47470"
     },
     {
       "path": "docs/legal/NRS_EVALUATION_SCHEDULE_V0.1.md",
@@ -290,7 +290,7 @@
     },
     {
       "path": "docs/legal/STATUTE_ONE_PAGER.md",
-      "sha256": "42a427c30f2f2e099dd0f45d86918d3b61ef158f7558d870bf03af30f8a826da"
+      "sha256": "c670d1290209a68d0e15c786c5a468dcf4284757edf400a60303877b7bc2807b"
     },
     {
       "path": "docs/fixtures/nrs-reference-v0.1/reference_manifest.json",
@@ -314,11 +314,11 @@
     },
     {
       "path": "docs/papers/A.0+synthesis-metapaper.pdf",
-      "sha256": "122045845f93432892a59be7c4ec3846c28f82b52a0f798987931eb5312a15a5"
+      "sha256": "224129c189dee4786f5f78da0bf58ef167d27edd086c6489bdb5efe252cbd9a5"
     },
     {
       "path": "docs/papers/A.5+policy-brief.pdf",
-      "sha256": "d9e0b4aa8041c5f693b265d3a992f0e72e6184fd8bf859bc40219322930df7d3"
+      "sha256": "b9f9bbc71cf7b51bbbe51b2967b4e4cd596f6253c00afed0a084e98d96f41ddb"
     },
     {
       "path": "docs/papers/U.21+certified-recursive-bisection.pdf",

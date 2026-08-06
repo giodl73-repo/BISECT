@@ -98,6 +98,28 @@ try {
         & $PythonCommand scripts/research/verify_nrs_cross_census.py $comparison
         if ($LASTEXITCODE -ne 0) { throw "Independent comparison verification failed" }
 
+        & $PythonCommand scripts/research/verify_nrs_geographic_splits.py
+        if ($LASTEXITCODE -ne 0) { throw "Committed geographic-split verification failed" }
+        $governedGeographic = Get-Content -LiteralPath `
+            "docs/experiments/nrs-v0.3-national-geographic-splits/analysis.json" `
+            -Raw | ConvertFrom-Json
+        $assignmentHashesMatched = 0
+        foreach ($cycle in $governedGeographic.cycles) {
+            $year = [int]$cycle.census_year
+            foreach ($source in $cycle.source_states) {
+                $assignment = Join-Path $outputRootResolved `
+                    "national-$year/states/$($source.state.ToLowerInvariant())/package/baseline_assignments.json"
+                $actual = (Get-FileHash -LiteralPath $assignment -Algorithm SHA256).Hash.ToLowerInvariant()
+                if ($actual -ne $source.assignment_sha256) {
+                    throw "$year/$($source.state) assignment hash differs from governed audit"
+                }
+                $assignmentHashesMatched++
+            }
+        }
+        if ($assignmentHashesMatched -ne 150) {
+            throw "Expected 150 governed assignment hash matches; found $assignmentHashesMatched"
+        }
+
         $matrix = Get-Content -LiteralPath (Join-Path $comparison "stability-matrix.json") -Raw | ConvertFrom-Json
         $record = [ordered]@{
             schema_version = "nrs-v0.3-external-full-replay-v1"
@@ -129,8 +151,10 @@ try {
             })
             all_cycle_common_node_signatures = $matrix.all_cycle_common_node_signatures
             all_cycle_exact_topology_states = $matrix.all_cycle_exact_topology_states
+            governed_assignment_hashes_matched = $assignmentHashesMatched
+            geographic_rows_verified = 231765
             matrix_sha256 = (Get-FileHash -LiteralPath (Join-Path $comparison "stability-matrix.json") -Algorithm SHA256).Hash.ToLowerInvariant()
-            claim_boundary = "Operational replay; no legal, fairness, VRA, adoption, or exact boundary/canonical claim."
+            claim_boundary = "Operational replay and assignment identity; no legal, fairness, VRA, adoption, cross-cycle improvement, or exact boundary/canonical claim."
         }
         $record | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath `
             (Join-Path $outputRootResolved "replication-record.json") -Encoding utf8

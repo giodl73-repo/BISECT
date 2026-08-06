@@ -68,14 +68,14 @@ For every State and Census year:
   - [x] Execute a precommitted multi-instance comparison with runtime and proof metrics.
 - [ ] Compactness, subdivision, partisan, demographic, and community analysis.
   - [x] Precommit the three-cycle county/tract geographic-split audit.
-  - [ ] Execute and independently verify the three-cycle geographic-split audit.
-  - [ ] Resolve or publish the input/protocol blockers for the remaining metric families.
-- [ ] Updated U.21 and synthesis/policy papers.
+  - [x] Execute and independently verify the three-cycle geographic-split audit.
+  - [x] Resolve or publish the input/protocol blockers for the remaining metric families.
+- [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
-  - [ ] Update the synthesis and policy papers after the neutral analysis is complete.
-- [ ] Public technical schedule, verifier bundle, and adoption package.
+  - [x] Update the synthesis and policy papers after the neutral analysis is complete.
+- [x] Public technical schedule, verifier bundle, and adoption package.
   - [x] Publish an independent Python verifier for the three-cycle stability package.
-  - [ ] Update the technical schedule and assemble the final adoption package.
+  - [x] Update the technical schedule and assemble the final adoption package.
 
 ## Autonomous Execution Contract
 
@@ -110,12 +110,12 @@ Current objective:
 
 Next unblocked work:
 
-> Complete the precommitted three-cycle geographic-split audit, publish the
-> blockers for neutral metric families that lack frozen national inputs or
-> protocols, update the synthesis/policy and adoption materials, and obtain an
-> external v0.3 replication record. The verified NRS v0.3 runs cover 2000,
+> Update the remaining adoption materials, rehearse the final verifier bundle,
+> and obtain an external v0.3 replication record. The verified NRS v0.3 runs cover 2000,
 > 2010, and 2020; the governed structural/cut matrix and precommitted
-> multi-instance certified-versus-METIS comparison are published. Cross-census
+> multi-instance certified-versus-METIS comparison are published. The governed
+> county/tract audit publishes all 231,765 State-level geography rows and the
+> blockers for the remaining neutral metric families. Cross-census
 > assignment overlap remains uncomputed pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.

@@ -60,6 +60,8 @@ try {
 
     & $PythonCommand scripts/research/verify_nrs_cross_census.py
     if ($LASTEXITCODE -ne 0) { throw "Independent cross-census verifier failed" }
+    & $PythonCommand scripts/research/verify_nrs_geographic_splits.py
+    if ($LASTEXITCODE -ne 0) { throw "Independent geographic-split verifier failed" }
     $matrix = Get-Content -LiteralPath `
         "docs/experiments/nrs-cross-decade-2000-2020/comparison/stability-matrix.json" `
         -Raw | ConvertFrom-Json
@@ -67,9 +69,22 @@ try {
         "docs/experiments/nrs-cross-decade-2000-2020/comparison/manifest.json" `
         -Raw | ConvertFrom-Json
     $governedMatrixHash = ($comparisonManifest.files | Where-Object path -eq "stability-matrix.json").sha256
+    $geographic = Get-Content -LiteralPath `
+        "docs/experiments/nrs-v0.3-national-geographic-splits/analysis.json" `
+        -Raw | ConvertFrom-Json
+    $geographicCycles = @($geographic.cycles | Sort-Object census_year)
     if ($matrix.all_cycle_common_node_signatures -ne 120 -or
         $matrix.all_cycle_exact_topology_states -ne 18) {
         throw "Cross-census headline counts drifted"
+    }
+    $expectedCountySplits = @(1812, 1819, 1823)
+    $expectedTractSplits = @(17268, 18800, 20288)
+    for ($index = 0; $index -lt 3; $index++) {
+        $national = $geographicCycles[$index].national.all_states
+        if ($national.county.split_geographies -ne $expectedCountySplits[$index] -or
+            $national.tract.split_geographies -ne $expectedTractSplits[$index]) {
+            throw "Geographic-split headline counts drifted"
+        }
     }
 
     $record = [ordered]@{
@@ -90,11 +105,14 @@ try {
         verified_nodes_per_cycle = 385
         all_cycle_common_node_signatures = 120
         all_cycle_exact_topology_states = 18
+        geographic_rows_verified = 231765
+        county_splits = $expectedCountySplits
+        tract_splits = $expectedTractSplits
         matrix_sha256 = $governedMatrixHash
         matrix_transport_sha256 = (Get-FileHash -LiteralPath `
             "docs/experiments/nrs-cross-decade-2000-2020/comparison/stability-matrix.json" `
             -Algorithm SHA256).Hash.ToLowerInvariant()
-        claim_boundary = "Artifact verification only; no assignment regeneration, legal, fairness, VRA, adoption, or exact boundary/canonical claim."
+        claim_boundary = "Artifact verification only; no assignment regeneration, legal, fairness, VRA, adoption, cross-cycle improvement, or exact boundary/canonical claim."
     }
     $resolvedRecord = Join-Path $repoRoot $RecordPath
     $recordDir = Split-Path -Parent $resolvedRecord

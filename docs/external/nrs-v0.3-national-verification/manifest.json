@@ -4,7 +4,7 @@
   "files": [
     {
       "path": "README.md",
-      "sha256": "7c4e22befa3ab5d47641d05f5b270e8e93e0a72e4553ca9a2cc3b3b057f8cbfd"
+      "sha256": "39f9dc64f06c375c494505b4addef4ecc2eb42309e3449f16722fde546428357"
     },
     {
       "path": "replication-record-template.md",
@@ -12,11 +12,11 @@
     },
     {
       "path": "replay-national.ps1",
-      "sha256": "a6c83577e4ada1c4bdbf503586494dac291c2957c230fb02d43b98d3378187f8"
+      "sha256": "df7b20957d2348f13d7f1888b264189f63b8e4fbad5014a628dfe2bef604776d"
     },
     {
       "path": "verify-artifacts.ps1",
-      "sha256": "e2526606ff2fcb31a16d5e29983f0f94d8a5fb674acd7fa805b2027903a42ddc"
+      "sha256": "ada0ae4b7a2729bc31cb888f15d89ba7fb8267762627dfb408fd97c46568d169"
     }
   ],
   "claim_boundary": "Transport integrity for the verification instructions and scripts; this manifest is not an external replication result."
