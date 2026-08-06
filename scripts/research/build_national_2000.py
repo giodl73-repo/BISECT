@@ -37,7 +37,8 @@ def download(url: str, destination: Path) -> None:
     partial = destination.with_suffix(destination.suffix + ".part")
     for attempt in range(1, 5):
         try:
-            request = urllib.request.Request(url, headers={"User-Agent": "BISECT-NRS-custody/0.2"})
+            request_url = url if attempt == 1 else f"{url}?download=1"
+            request = urllib.request.Request(request_url, headers={"User-Agent": "BISECT-NRS-custody/0.2"})
             with urllib.request.urlopen(request, timeout=120) as response, partial.open("wb") as target:
                 expected = response.headers.get("Content-Length")
                 copied = 0
