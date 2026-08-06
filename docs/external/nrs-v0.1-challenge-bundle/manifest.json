@@ -122,7 +122,7 @@
     },
     {
       "path": "docs/experiments/exact-canonical/README.md",
-      "sha256": "6b0c76f77251ee29a7d03d14db792097b29fb661db4721a5e9eb24faab877ac1"
+      "sha256": "4805c212aa234cd07a05452a492426b40bd76bd77c7265e42c2805451c19910d"
     },
     {
       "path": "docs/experiments/exact-canonical/ri-2020-block-frontier.json",
@@ -130,7 +130,7 @@
     },
     {
       "path": "docs/experiments/certified-recursive/README.md",
-      "sha256": "534ea66bf2e4f5cc447dfa613132817c90024c2d4b70505c21543bc6fdf999a6"
+      "sha256": "0ddb3aa3cd799bbe94121eaaf0eef795d247471f4713ca245bcef329287776ef"
     },
     {
       "path": "docs/experiments/certified-recursive/manifest.json",
@@ -269,14 +269,6 @@
       "sha256": "0a7c3f2c8910f8ca4c8067cd9b83f38663bf16cd78cfefc767307b0bf0c4be29"
     },
     {
-      "path": "scripts/research/analyze_small_state_exact_frontier.py",
-      "sha256": "bbb1f2bc8557e363fbc24f43cf05f453fb21ce3b89bf712dd05be41e780fd1a2"
-    },
-    {
-      "path": "scripts/research/build_ri_block_rctx.py",
-      "sha256": "ca0621f32fa7a2d19f56a150cbedeb02fe44dc3339af122da60a63dd3fffac97"
-    },
-    {
       "path": "scripts/research/analyze_ri_certified_discovery.py",
       "sha256": "7856f79efb4de4b23c0b6050a2b046443a7ba942cc147b0d105e6cfe79fd4e93"
     },
@@ -290,7 +282,7 @@
     },
     {
       "path": "docs/legal/NRS_TECHNICAL_SCHEDULE_V0.1.md",
-      "sha256": "7d5dd2cb025e4050973ca32e8ebbf1b0c51801cb9a9943d22cc7b374a9f95996"
+      "sha256": "8af089f4b5785842bf8bb2c37d95c2d32985e62d58976caa36c17c12024c7af2"
     },
     {
       "path": "docs/legal/NRS_EVALUATION_SCHEDULE_V0.1.md",
@@ -330,7 +322,7 @@
     },
     {
       "path": "docs/papers/U.21+certified-recursive-bisection.pdf",
-      "sha256": "f66938888a5266a5410611fbbdcf034bba1c0f1624abf84995acf651d204c8a0"
+      "sha256": "f639e341961eca35288289cf97df198522db67615a3562fe2e12ceb8551f09b6"
     },
     {
       "path": "docs/papers/B.02+one-federal-law.pdf",

@@ -57,6 +57,16 @@ rule. Inferring overlap from GEOID strings or topology would be invalid.
 - 2020 snapshot SHA-256: `b4d59ae8d0ca3587298282bfc9d35652a75d12976461d3767f35267bfc2a4da7`
 - Matrix SHA-256: `d5f6eb6e5a120d63bc00dec8ae4f773fc2bcf296555c73445318c59421801339`
 
+Run the independent Python implementation from the repository root:
+
+```powershell
+python scripts\research\verify_nrs_cross_census.py
+```
+
+It re-hashes the matrix and all three snapshots, validates national counts,
+and recomputes every pairwise and per-State statistic without invoking the
+Rust comparison command.
+
 ## Claim boundary
 
 This is a structural and descriptive incumbent-objective comparison. It does

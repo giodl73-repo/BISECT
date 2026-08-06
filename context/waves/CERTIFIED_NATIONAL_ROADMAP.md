@@ -61,10 +61,18 @@ For every State and Census year:
 ### Stage 6 — National Standard Evidence
 
 - [ ] Independent hostile replication.
+  - [x] Preserve the successful automated non-author v0.1 challenge record.
+  - [ ] Obtain a new independent external record for the v0.3 national package.
 - [ ] METIS-versus-certified objective/runtime comparison.
+  - [x] Preserve the hash-bound path-8 agreement fixture.
+  - [ ] Execute a precommitted multi-instance comparison with runtime and proof metrics.
 - [ ] Compactness, subdivision, partisan, demographic, and community analysis.
 - [ ] Updated U.21 and synthesis/policy papers.
+  - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
+  - [ ] Update the synthesis and policy papers after the neutral analysis is complete.
 - [ ] Public technical schedule, verifier bundle, and adoption package.
+  - [x] Publish an independent Python verifier for the three-cycle stability package.
+  - [ ] Update the technical schedule and assemble the final adoption package.
 
 ## Autonomous Execution Contract
 

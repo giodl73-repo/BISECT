@@ -82,8 +82,6 @@ def main() -> None:
         "scripts/research/verify_certified_vs_metis.py",
         "scripts/research/verify_proof_toolchain_smoke.py",
         "scripts/research/verify_ri_proof_frontier.py",
-        "scripts/research/analyze_small_state_exact_frontier.py",
-        "scripts/research/build_ri_block_rctx.py",
         "scripts/research/analyze_ri_certified_discovery.py",
         "scripts/research/analyze_ri_model_package.py",
         "docs/legal/MODEL_FEDERAL_STATUTE.md",

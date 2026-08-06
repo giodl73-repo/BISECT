@@ -13,7 +13,12 @@ All headline quantities match implementation or committed evidence:
 - 66,097 land edges and 64 island bridges;
 - 24-unit bounded oracle;
 - three optimal UNSAT requests and a suboptimal SAT counterexample; and
-- path-8 METIS/certified objective `(0,0,1)`.
+- path-8 METIS/certified objective `(0,0,1)`;
+- three NRS v0.3 national baselines of 50 States, 435 districts, and 385
+  recursive nodes each;
+- 1,155/1,155 nodes within tolerance, 13 arithmetic-floor attainments, and
+  0/1,155 exact weighted-boundary or canonical proofs; and
+- 120 all-cycle common node signatures and 18 all-cycle exact-topology States.
 
 ## Contract
 
@@ -27,6 +32,13 @@ The initial VeriPB citation was misattributed. It now cites:
 
 > Gocht and Nordstrom (2021), “Certifying Parity Reasoning Efficiently Using
 > Pseudo-Boolean Proofs,” AAAI 35(7):6002–6011.
+
+## August 2026 Evidence Update
+
+The operational national layer is now demonstrated for 2000, 2010, and 2020.
+The paper keeps that result separate from exact-objective certification and
+from political or map-quality evaluation. Cross-census assignment overlap is
+not reported without a valid relationship crosswalk or geometry overlay.
 
 ## Remaining Panel Questions
 
