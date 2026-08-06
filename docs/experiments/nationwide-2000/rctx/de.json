@@ -1,0 +1,34 @@
+{
+  "bridge_edge_count": 0,
+  "claim_boundary": "Hash-bound connected block context built by Rust; not a district certificate.",
+  "context_hash": "sha256:1edffc6de0dad49ec465aad5b9763df8b388881e5408fecd7d5b2587ef0b71e5",
+  "final_component_count": 1,
+  "geometry_toolchain": {
+    "crs": "EPSG:5070",
+    "implementation": "bisect-data",
+    "language": "rust"
+  },
+  "land_component_count": 1,
+  "land_edge_count": 42023,
+  "population_total": 783600,
+  "rctx_bytes": 4447817,
+  "rctx_path": "data/2000/certified/de_blocks_2000.rctx",
+  "rctx_sha256": "91167f623aba5ba1a7f7afa4f5a1847588935e7bfb97c139e0ac773aa4e08895",
+  "schema_version": "certified-state-block-rctx-v1",
+  "state": "delaware",
+  "state_code": "DE",
+  "state_fips": "10",
+  "status": "ready",
+  "tiger_archive_files": {
+    "data/2000/tiger/archives/de/tl_2010_10001_tabblock00.zip": "sha256:60848a093ebd7ea79663536b272ad5769e1b19affdb95ad29de5bf39c2a718c0",
+    "data/2000/tiger/archives/de/tl_2010_10003_tabblock00.zip": "sha256:ac5414dd448f52d0dd8c423a34a704079b5f8ee05f54034cf985d80c18da7fc4",
+    "data/2000/tiger/archives/de/tl_2010_10005_tabblock00.zip": "sha256:bd719c398a130257745f6ea375332f0aa3ee6fbc4afacf17de2df750781cf49e"
+  },
+  "tiger_archive_path": null,
+  "tiger_archive_sha256": null,
+  "tiger_input_path": "data/2000/tiger/blocks/de",
+  "tiger_source_file_count": 9,
+  "unit_count": 17483,
+  "unit_universe_hash": "sha256:6acdfcc674e9c5fdb55ccbbed27eabf7a5c2f813faedbdd37ac869762f2f6410",
+  "year": 2000
+}

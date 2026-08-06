@@ -7,8 +7,8 @@
   "total_blocks": 8199908,
   "county_archive_count": 3140,
   "pl_custody_ready_states": 50,
-  "tiger_ready_states": 0,
-  "existing_rctx_states": 0,
+  "tiger_ready_states": 1,
+  "existing_rctx_states": 1,
   "missing_pl_states": [],
   "missing_tiger_states": [
     "AK",
@@ -18,7 +18,6 @@
     "CA",
     "CO",
     "CT",
-    "DE",
     "FL",
     "GA",
     "HI",
@@ -70,7 +69,6 @@
     "CA",
     "CO",
     "CT",
-    "DE",
     "FL",
     "GA",
     "HI",
@@ -128,17 +126,17 @@
         "005"
       ],
       "pl_custody_ready": true,
-      "tiger_ready": false,
-      "tiger_custody_ready": false,
+      "tiger_ready": true,
+      "tiger_custody_ready": true,
       "tiger_extracted_ready": false,
       "tiger_source_urls": [
         "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2000/tl_2010_10001_tabblock00.zip",
         "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2000/tl_2010_10003_tabblock00.zip",
         "https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2000/tl_2010_10005_tabblock00.zip"
       ],
-      "rctx_ready": false,
+      "rctx_ready": true,
       "rctx_path": "data/2000/certified/de_blocks_2000.rctx",
-      "rctx_bytes": null,
+      "rctx_bytes": 4447817,
       "sources": {
         "pl_geography_and_population": {
           "path": "data/2000/redistricting/degeo.upl",
@@ -149,21 +147,21 @@
         "tiger_archives": [
           {
             "path": "data/2000/tiger/archives/de/tl_2010_10001_tabblock00.zip",
-            "ready": false,
-            "bytes": null,
-            "sha256": null
+            "ready": true,
+            "bytes": 2287315,
+            "sha256": "60848a093ebd7ea79663536b272ad5769e1b19affdb95ad29de5bf39c2a718c0"
           },
           {
             "path": "data/2000/tiger/archives/de/tl_2010_10003_tabblock00.zip",
-            "ready": false,
-            "bytes": null,
-            "sha256": null
+            "ready": true,
+            "bytes": 3809158,
+            "sha256": "ac5414dd448f52d0dd8c423a34a704079b5f8ee05f54034cf985d80c18da7fc4"
           },
           {
             "path": "data/2000/tiger/archives/de/tl_2010_10005_tabblock00.zip",
-            "ready": false,
-            "bytes": null,
-            "sha256": null
+            "ready": true,
+            "bytes": 4867210,
+            "sha256": "bd719c398a130257745f6ea375332f0aa3ee6fbc4afacf17de2df750781cf49e"
           }
         ],
         "tiger_components": [
@@ -83307,7 +83305,6 @@
     }
   ],
   "batch_order": [
-    "DE",
     "HI",
     "RI",
     "AK",

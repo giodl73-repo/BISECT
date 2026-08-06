@@ -1,0 +1,15 @@
+{
+  "claim_boundary": "Local 2000 block contexts listed as verified are independently checked for hash validity, canonical unit coverage, symmetric connected adjacency, and available source hashes. Complete national context coverage is claimed only when all 50 States pass; no district assignments are claimed.",
+  "files": [
+    {
+      "path": "rctx-verification.json",
+      "sha256": "f7302717e612ca71e5bbe1d8e69aeba6831492957821cc8f6302cff1e012c484"
+    }
+  ],
+  "package_id": "nationwide-2000-rctx-verification",
+  "schema_version": "certified-national-rctx-verification-package-v2",
+  "status": "partial",
+  "verifier_path": "bisect-ops-rctx-verifier-source-8b9b0fc7933eba39.rs",
+  "verifier_sha256": "8b9b0fc7933eba3940829a65448f4e147bc6872035d83aff10bd0083458f5867",
+  "year": 2000
+}
