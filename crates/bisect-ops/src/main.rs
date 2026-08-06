@@ -475,8 +475,10 @@ fn build_nrs_seed_package(
     let context = read_json(context_path)?;
     let standard_profile = read_json(standard_profile_path)?;
     let legal_profile = read_json(legal_profile_path)?;
-    if standard_profile["schema_version"] != "nrs-standard-profile-v0.1-v1"
-        || legal_profile["schema_version"] != "nrs-baseline-legal-profile-v1"
+    if !matches!(
+        standard_profile["schema_version"].as_str(),
+        Some("nrs-standard-profile-v0.1-v1" | "nrs-standard-profile-v0.2-v1")
+    ) || legal_profile["schema_version"] != "nrs-baseline-legal-profile-v1"
     {
         bail!("unknown NRS profile schema");
     }
@@ -1157,6 +1159,7 @@ struct NrsBuildState<'a> {
     out: &'a Path,
     original: &'a Value,
     engine_seed: u64,
+    discovery_refinement: String,
     assignment: Vec<i64>,
     nodes: Vec<Value>,
     leaves: Vec<Value>,
@@ -1207,7 +1210,7 @@ impl NrsBuildState<'_> {
             seats,
             &node_dir,
             self.engine_seed,
-            "nrs-v0-1",
+            &self.discovery_refinement,
             None,
         )?
         .context("NRS discovery unexpectedly timed out")?;
@@ -1219,7 +1222,10 @@ impl NrsBuildState<'_> {
                     && method.contains(
                         "candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
                     )
-                    && method.contains("refinement=nrsv01")
+                    && method.contains(&format!(
+                        "refinement={}",
+                        self.discovery_refinement.replace('-', "")
+                    ))
             })
         {
             bail!("NRS discovery profile mismatch at node {path}");
@@ -1343,6 +1349,15 @@ fn build_nrs_state(
     }
     verify_nrs_seed_package(seed_package, context_path)?;
     let seed_record = read_json(&seed_package.join("seed_record.json"))?;
+    let standard_profile = read_json(&seed_package.join("standard_profile.json"))?;
+    let discovery_refinement = standard_profile
+        .pointer("/search/discovery_refinement")
+        .and_then(Value::as_str)
+        .unwrap_or("nrs-v0-1")
+        .to_owned();
+    if !matches!(discovery_refinement.as_str(), "nrs-v0-1" | "nrs-v0-2") {
+        bail!("unsupported NRS discovery refinement: {discovery_refinement}");
+    }
     let engine_seed = seed_record["engine_seed_i32"]
         .as_u64()
         .context("NRS engine seed")?;
@@ -1372,6 +1387,7 @@ fn build_nrs_state(
         out,
         original: &context,
         engine_seed,
+        discovery_refinement,
         assignment: vec![-1; unit_ids.len()],
         nodes: Vec::new(),
         leaves: Vec::new(),

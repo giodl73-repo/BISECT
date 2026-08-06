@@ -1,0 +1,96 @@
+{
+  "schema_version": "nrs-standard-profile-v0.2-v1",
+  "BISECT_version": "0.1.0",
+  "BISECT_build_commit": "2bff12206df3324458c0ac22d5ca7ae777472452",
+  "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)",
+  "created_at": "2026-08-05T00:00:00Z",
+  "profile_id": "NRS-BASELINE-v0.2-reference-2010",
+  "creation_authority": "BISECT repository interim custodian",
+  "effective_census_cycles": [
+    2010
+  ],
+  "canonicalization_version": "canonical-json-v1",
+  "unit_kind": "2010-census-tabulation-block",
+  "structure": "standard-bisect",
+  "child_seat_schedule": "floor(k/2),ceil(k/2)",
+  "child_orientation": "child-containing-lexicographically-smallest-geoid-receives-lower-label-range",
+  "edge_weights": {
+    "kind": "geographic-shared-boundary",
+    "unit": "millimetre",
+    "rounding": "nearest-ties-to-even",
+    "point_contacts": "excluded",
+    "bridge_edges": "versioned-zero-weight-county-first-nearest-centroid-rule"
+  },
+  "search": {
+    "mode": "canonical-multi-root-fallback",
+    "discovery_refinement": "nrs-v0-2",
+    "seed_derivation": "sha256-ascii-prefix-plus-canonical-input-manifest-u64le",
+    "seed_prefix": "NRS_BASELINE_V0_1",
+    "signed_engine_conversion": "seed-u64-mod-2147483647",
+    "node_seed_application": "reuse-the-one-converted-seed-at-every-recursive-node",
+    "candidate_retries": 0,
+    "fallback_trigger": "only-when-v0.1-candidate-exceeds-0.5-percent-scaled-population-tolerance",
+    "fallback_roots": "16-evenly-spaced-canonical-unit-index-quantiles-including-the-v0.1-root",
+    "fallback_selection_order": [
+      "maximum-absolute-population-deviation",
+      "weighted-boundary-cut",
+      "moved-population-from-raw-metis-labels",
+      "canonical-assignment"
+    ]
+  },
+  "population": {
+    "optimizer_ufactor": 5,
+    "optimizer_imbalance_percent": 0.5,
+    "zero_population_vertex_weight_floor": 1,
+    "repair": "connectivity-preserving-improving-dfs-subtree-moves",
+    "repair_stop": "first-assignment-at-or-below-0.5-percent-scaled-population-tolerance",
+    "repair_tree_roots": "16-evenly-spaced-canonical-heavy-child-unit-indices",
+    "repair_order": [
+      "maximum-absolute-population-deviation",
+      "weighted-cut-increase",
+      "moved-population",
+      "geoid"
+    ]
+  },
+  "reference_engine": {
+    "family": "METIS-5.1",
+    "rust_crate": "metis-0.2.2",
+    "sys_crate": "metis-sys-0.3.2",
+    "partition_type": "recursive-bisection",
+    "objective": "edge-cut",
+    "contiguous_parts_option": "disabled-unsupported-for-recursive",
+    "minimize_subdomain_connectivity": false,
+    "candidate_initialization": {
+      "kind": "canonical-sorted-dfs-tree-edge-cut-with-multi-root-fallback",
+      "applies_when": "every-recursive-split",
+      "primary_root": "lexicographically-smallest-geoid",
+      "fallback_roots": "16-evenly-spaced-canonical-unit-index-quantiles",
+      "neighbor_order": "ascending-geoid",
+      "fallback_applies_when": "primary-root-candidate-misses-population-tolerance"
+    },
+    "niter": 100,
+    "source_commit": "2bff12206df3324458c0ac22d5ca7ae777472452",
+    "source_files": {
+      "Cargo.lock": "0bc43653b35df0f5e04601222982b8dcaa0dd9035ddb039fbd326b5d25b58903",
+      "crates/bisect-cli/src/args.rs": "08e1a080f38a36f0e94a73a03581e87ba1d4c3b6fa0665dc63a4e5eaeeeb19db",
+      "crates/bisect-cli/src/exact_cmd.rs": "f00a27b5bc5701bd7121bd0f9a4bfdc6add33c9cf6aeb313c7a2c0511abd1b51",
+      "crates/bisect-runner/src/bisection_runner/core.rs": "794115e289441e543c58d25be6dd7665d3296af3a21612022d9aaea7ead4bafe",
+      "crates/bisect-runner/src/bisection_runner/nway_geo.rs": "54a2afa3a0c52bb6b40f08242686a17ad739538ccbde0c941ae683ebd71728d2"
+    },
+    "source_git_blob_sha256": {
+      "Cargo.lock": "0bc43653b35df0f5e04601222982b8dcaa0dd9035ddb039fbd326b5d25b58903",
+      "crates/bisect-cli/src/args.rs": "c951535659e14cc61baa9a61ec47ac8450f66bcf65335826f6fa5c97a18d36e5",
+      "crates/bisect-cli/src/exact_cmd.rs": "f00a27b5bc5701bd7121bd0f9a4bfdc6add33c9cf6aeb313c7a2c0511abd1b51",
+      "crates/bisect-runner/src/bisection_runner/core.rs": "f183e9e26063dd371f13b0fd961184317431dd0cef2f3284aeeb4bc21e1cdf52",
+      "crates/bisect-runner/src/bisection_runner/nway_geo.rs": "8725cd4e8ea0767ca133afa057eb9ef973cb11c27c76b414720d1df10bb7e4d9"
+    }
+  },
+  "prohibited_baseline_inputs": [
+    "partisan",
+    "racial",
+    "incumbency",
+    "candidate",
+    "community-of-interest"
+  ],
+  "claim_boundary": "Candidate reference implementation profile for the NRS v0.2 geographic baseline; a deterministic population-tolerance fallback refinement of v0.1, not enacted law, VRA compliance, fairness, or global optimality. This profile applies the frozen reference algorithm to the governed 2010 Census inputs."
+}
