@@ -581,6 +581,19 @@ fn validate_nrs_profile_cycle(
     Ok(())
 }
 
+fn validate_nrs_inventory_cycle(year: u16, inventory: &Value) -> Result<()> {
+    match inventory.get("census_year").and_then(Value::as_u64) {
+        Some(inventory_year) if inventory_year == u64::from(year) => Ok(()),
+        None
+            if year == 2020
+                && inventory["schema_version"] == "certified-national-2020-inventory-v1" =>
+        {
+            Ok(())
+        }
+        _ => bail!("NRS inventory census year does not match --year {year}"),
+    }
+}
+
 fn build_nrs_seed_package(
     context_path: &Path,
     districts: usize,
@@ -2029,9 +2042,7 @@ fn nrs_batch(
     retry_failed: bool,
 ) -> Result<()> {
     let inventory = read_json(inventory_path)?;
-    if inventory["census_year"].as_u64() != Some(u64::from(year)) {
-        bail!("NRS inventory census year does not match --year {year}");
-    }
+    validate_nrs_inventory_cycle(year, &inventory)?;
     let standard_profile = read_json(standard_profile_path)?;
     let legal_profile = read_json(legal_profile_path)?;
     validate_nrs_profile_cycle(year, &standard_profile, &legal_profile)?;
@@ -2352,9 +2363,7 @@ fn verify_nrs_batch(
 ) -> Result<()> {
     let inventory = read_json(inventory_path)?;
     let ledger = read_json(&out.join("ledger.json"))?;
-    if inventory["census_year"].as_u64() != Some(u64::from(year)) {
-        bail!("NRS inventory census year does not match --year {year}");
-    }
+    validate_nrs_inventory_cycle(year, &inventory)?;
     let standard_profile = read_json(standard_profile_path)?;
     let legal_profile = read_json(legal_profile_path)?;
     validate_nrs_profile_cycle(year, &standard_profile, &legal_profile)?;
@@ -5501,6 +5510,28 @@ mod tests {
             anyhow::Error::new(std::io::Error::new(std::io::ErrorKind::NotFound, "missing"));
         assert!(is_transient_file_lock(&locked));
         assert!(!is_transient_file_lock(&ordinary));
+    }
+
+    #[test]
+    fn nrs_inventory_cycle_accepts_only_the_hash_bound_legacy_2020_schema() {
+        validate_nrs_inventory_cycle(
+            2020,
+            &json!({"schema_version":"certified-national-2020-inventory-v1"}),
+        )
+        .unwrap();
+        validate_nrs_inventory_cycle(2010, &json!({"census_year":2010})).unwrap();
+
+        assert!(validate_nrs_inventory_cycle(
+            2020,
+            &json!({"schema_version":"some-other-schema"})
+        )
+        .is_err());
+        assert!(validate_nrs_inventory_cycle(
+            2010,
+            &json!({"schema_version":"certified-national-2020-inventory-v1"})
+        )
+        .is_err());
+        assert!(validate_nrs_inventory_cycle(2020, &json!({"census_year":2010})).is_err());
     }
 
     #[test]
