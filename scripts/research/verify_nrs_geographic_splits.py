@@ -91,6 +91,13 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def canonical_json_sha256(value: Any) -> str:
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -205,12 +212,19 @@ def verify(package: Path) -> None:
     for year, cycle in cycles.items():
         summary_path = ROOT / cycle["committed_summary_path"]
         require(summary_path.is_file(), f"{year}: missing committed summary")
-        require(sha256(summary_path) == cycle["committed_summary_sha256"], f"{year}: summary hash")
+        summary = load(summary_path)
+        require(
+            canonical_json_sha256(summary) == cycle["committed_summary_canonical_sha256"],
+            f"{year}: summary canonical hash",
+        )
         snapshot_path = ROOT / cycle["committed_node_snapshot_path"]
         require(snapshot_path.is_file(), f"{year}: missing committed node snapshot")
-        require(sha256(snapshot_path) == cycle["committed_node_snapshot_sha256"], f"{year}: node snapshot hash")
         snapshot = load(snapshot_path)
-        summary = load(summary_path)
+        require(
+            canonical_json_sha256(snapshot)
+            == cycle["committed_node_snapshot_canonical_sha256"],
+            f"{year}: node snapshot canonical hash",
+        )
         committed = {row["state"]: row for row in summary["states"]}
         source_rows = {row["state"]: row for row in cycle["source_states"]}
         require(len(committed) == len(source_rows) == cycle["state_count"] == 50, f"{year}: States")

@@ -34,6 +34,13 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def canonical_json_sha256(value: Any) -> str:
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -355,9 +362,9 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
                 {
                     "census_year": year,
                     "committed_summary_path": str(summary_path.relative_to(ROOT)).replace("\\", "/"),
-                    "committed_summary_sha256": sha256(summary_path),
+                    "committed_summary_canonical_sha256": canonical_json_sha256(summary),
                     "committed_node_snapshot_path": str(snapshot_path.relative_to(ROOT)).replace("\\", "/"),
-                    "committed_node_snapshot_sha256": sha256(snapshot_path),
+                    "committed_node_snapshot_canonical_sha256": canonical_json_sha256(snapshot),
                     "state_count": 50,
                     "district_count": 435,
                     "unit_count": sum(row["unit_count"] for row in state_sources),
