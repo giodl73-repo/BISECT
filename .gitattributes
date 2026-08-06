@@ -16,3 +16,7 @@ docs/specs/2026-08-06-certified-vs-metis-multi-instance-protocol.md text eol=lf
 crates/bisect-cli/examples/certified_vs_metis_suite.rs text eol=lf
 scripts/research/verify_certified_vs_metis_suite.py text eol=lf
 docs/experiments/certified-vs-metis-multi-instance/** text eol=lf
+docs/specs/2026-08-06-nrs-v0.3-national-geographic-split-audit-protocol.md text eol=lf
+scripts/research/analyze_nrs_geographic_splits.py text eol=lf
+scripts/research/verify_nrs_geographic_splits.py text eol=lf
+docs/experiments/nrs-v0.3-national-geographic-splits/** text eol=lf
