@@ -49,14 +49,14 @@ For every State and Census year:
 - [x] Freeze 2010 block/source custody.
 - [x] Apply the versioned certified NRS procedure.
 - [x] Publish complete assignments and certificates.
-- [ ] Compare tree/cut stability with 2020.
+- [x] Compare tree/cut stability with 2020.
 
 ### Stage 5 — Nationwide 2000
 
 - [x] Freeze 2000 block/source custody and historical crosswalk limitations.
 - [x] Apply the versioned certified NRS procedure.
 - [x] Publish complete assignments and certificates.
-- [ ] Compare three-decade stability.
+- [x] Compare three-decade stability.
 
 ### Stage 6 — National Standard Evidence
 
@@ -89,15 +89,21 @@ The agent should:
 
 ## Current Position
 
-Active wave: `2026-08-05-nrs-2010-national-baseline`.
+Active wave: national-standard evidence (Stage 6).
 
 Current objective:
 
-> Compare the verified 2000, 2010, and 2020 national baselines without
-> promoting tolerance conformance to exact boundary or canonical proof.
+> Extend the verified national baselines into independently reproducible
+> comparison, analysis, verifier, and adoption evidence without promoting
+> tolerance conformance to exact boundary or canonical proof.
 
 Next unblocked work:
 
-> Produce node-, tree-, and cut-level cross-decade stability matrices. The
-> verified national runs now cover 2000 (NRS v0.3), 2010 (NRS v0.2), and 2020;
+> Precommit and execute the national-standard evidence program: hostile
+> replication; certified-versus-METIS objective/runtime comparison; neutral
+> compactness, subdivision, partisan, demographic, and community analysis;
+> updated synthesis/policy papers; and a public verifier/adoption bundle. The
+> verified NRS v0.3 runs now cover 2000, 2010, and 2020, and the governed
+> structural/cut matrix is published. Cross-census assignment overlap remains
+> uncomputed pending a valid relationship crosswalk or geometry overlay;
 > weighted-boundary and canonical exact-proof gaps remain public.

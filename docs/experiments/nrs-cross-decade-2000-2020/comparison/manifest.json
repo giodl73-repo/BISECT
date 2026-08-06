@@ -1,0 +1,28 @@
+{
+  "claim_boundary": "Hash-bound structural and descriptive objective comparison; cross-census assignment overlap remains uncomputed pending a valid crosswalk.",
+  "files": [
+    {
+      "path": "stability-matrix.json",
+      "sha256": "d5f6eb6e5a120d63bc00dec8ae4f773fc2bcf296555c73445318c59421801339"
+    }
+  ],
+  "schema_version": "nrs-cross-census-stability-package-v1",
+  "snapshots": [
+    {
+      "census_year": 2000,
+      "path": "docs/experiments/nrs-cross-decade-2000-2020/node-snapshot-2000.json",
+      "sha256": "ff59e7639ece3d413c6f45e25f9d05e9afe4957e3494b3afcb84e6f5154651d5"
+    },
+    {
+      "census_year": 2010,
+      "path": "docs/experiments/nrs-cross-decade-2000-2020/node-snapshot-2010.json",
+      "sha256": "02314ca1c2a494c20586221c9bf2a6599ce827882def7f84d299de0c94911b42"
+    },
+    {
+      "census_year": 2020,
+      "path": "docs/experiments/nrs-cross-decade-2000-2020/node-snapshot-2020.json",
+      "sha256": "b4d59ae8d0ca3587298282bfc9d35652a75d12976461d3767f35267bfc2a4da7"
+    }
+  ],
+  "status": "verified-structural-and-objective-comparison"
+}
