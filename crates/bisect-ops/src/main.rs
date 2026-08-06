@@ -2,7 +2,7 @@ use anyhow::{bail, Context, Result};
 use bisect_data::{
     build_adjacency_graph, connect_island_components, read_pl94_block_populations,
     read_pl94_block_populations_for_year, read_tiger_block_centroids_projected,
-    read_tiger_blocks_projected, read_tiger_blocks_projected_for_year,
+    read_tiger_blocks_projected, read_tiger_blocks_projected_for_year, BlockRecord,
 };
 use bisect_map::CategoricalScheme;
 use clap::{Parser, Subcommand};
@@ -15,7 +15,7 @@ use std::{
     fs,
     fs::File,
     io::{BufWriter, Read, Write},
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
     process::{Command, Stdio},
     thread,
     time::{Duration, Instant},
@@ -356,6 +356,88 @@ fn tiger_archive_member_hashes(path: &Path) -> Result<BTreeMap<String, String>> 
         hashes.insert(name, format!("sha256:{:x}", digest.finalize()));
     }
     Ok(hashes)
+}
+
+fn files_with_extension(root: &Path, extension: &str) -> Result<Vec<PathBuf>> {
+    if root.is_file() {
+        let matches = root
+            .extension()
+            .and_then(|value| value.to_str())
+            .is_some_and(|value| value.eq_ignore_ascii_case(extension));
+        return Ok(if matches {
+            vec![root.to_path_buf()]
+        } else {
+            Vec::new()
+        });
+    }
+    if !root.is_dir() {
+        bail!("source path does not exist: {}", root.display());
+    }
+    let mut pending = vec![root.to_path_buf()];
+    let mut files = Vec::new();
+    while let Some(directory) = pending.pop() {
+        for entry in fs::read_dir(&directory)
+            .with_context(|| format!("read source directory {}", directory.display()))?
+        {
+            let entry = entry?;
+            let file_type = entry.file_type()?;
+            if file_type.is_dir() {
+                pending.push(entry.path());
+            } else if file_type.is_file()
+                && entry
+                    .path()
+                    .extension()
+                    .and_then(|value| value.to_str())
+                    .is_some_and(|value| value.eq_ignore_ascii_case(extension))
+            {
+                files.push(entry.path());
+            }
+        }
+    }
+    files.sort_by_key(|path| portable_path(path));
+    Ok(files)
+}
+
+fn read_tiger_block_bundle(path: &Path, year: u16) -> Result<(Vec<BlockRecord>, Vec<PathBuf>)> {
+    let shapefiles = files_with_extension(path, "shp")?;
+    if shapefiles.is_empty() {
+        bail!("TIGER input contains no shapefiles: {}", path.display());
+    }
+    let mut blocks = Vec::new();
+    for shapefile in &shapefiles {
+        blocks.extend(read_tiger_blocks_projected_for_year(shapefile, year)?);
+    }
+    blocks.sort_by(|left, right| left.geoid.cmp(&right.geoid));
+    if let Some(pair) = blocks
+        .windows(2)
+        .find(|pair| pair[0].geoid == pair[1].geoid)
+    {
+        bail!("duplicate TIGER block GEOID {}", pair[0].geoid);
+    }
+    Ok((blocks, shapefiles))
+}
+
+fn hashed_source_map(paths: &[PathBuf]) -> Result<Value> {
+    let mut hashes = Map::new();
+    for path in paths {
+        hashes.insert(
+            portable_path(path),
+            json!(format!("sha256:{}", sha256(path)?)),
+        );
+    }
+    Ok(Value::Object(hashes))
+}
+
+fn governed_source_path(root: &Path, relative: &str) -> Result<PathBuf> {
+    let relative = Path::new(relative);
+    if relative.is_absolute()
+        || relative
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
+    {
+        bail!("source custody path is not a safe relative path: {relative:?}");
+    }
+    Ok(root.join(relative))
 }
 
 fn custody_source(path: &Path) -> PathBuf {
@@ -2873,8 +2955,8 @@ fn verify_national_rctx(
     context_root: &Path,
     require_complete: bool,
 ) -> Result<()> {
-    if !matches!(year, 2010 | 2020) {
-        bail!("national RCTX verification currently supports census years 2010 and 2020");
+    if !matches!(year, 2000 | 2010 | 2020) {
+        bail!("national RCTX verification currently supports census years 2000, 2010, and 2020");
     }
     let root = std::env::current_dir()?;
     let inventory = read_json(&out.join("inventory.json"))?;
@@ -2987,7 +3069,9 @@ fn verify_national_rctx(
             .count()
             / 2;
         let population: i64 = populations.iter().map(|v| v.as_i64().unwrap_or(0)).sum();
-        let suffix = if year == 2010 {
+        let suffix = if year == 2000 {
+            "00"
+        } else if year == 2010 {
             "10"
         } else if year == 2020 {
             "20"
@@ -2995,18 +3079,24 @@ fn verify_national_rctx(
             ""
         };
         let lower = state.to_lowercase();
-        let tiger_base = root.join(format!("data/{year}/tiger/blocks/tl_{year}_{fips}_tabblock{suffix}/tl_{year}_{fips}_tabblock{suffix}"));
-        let pl_dir = root.join(format!("data/{year}/redistricting/{lower}{year}.pl"));
-        let source_checks = [
-            ("tiger_block_shp", tiger_base.with_extension("shp")),
-            ("tiger_block_dbf", tiger_base.with_extension("dbf")),
-            ("tiger_block_shx", tiger_base.with_extension("shx")),
-            ("pl_geo", pl_dir.join(format!("{lower}geo{year}.pl"))),
-            (
-                "pl_population",
-                pl_dir.join(format!("{lower}00001{year}.pl")),
-            ),
-        ];
+        let tiger_year = if year == 2000 { 2010 } else { year };
+        let tiger_base = root.join(format!("data/{year}/tiger/blocks/tl_{tiger_year}_{fips}_tabblock{suffix}/tl_{tiger_year}_{fips}_tabblock{suffix}"));
+        let source_checks = if year == 2000 {
+            let geography = root.join(format!("data/2000/redistricting/{lower}geo.upl"));
+            vec![("pl_geo", geography.clone()), ("pl_population", geography)]
+        } else {
+            let pl_dir = root.join(format!("data/{year}/redistricting/{lower}{year}.pl"));
+            vec![
+                ("tiger_block_shp", tiger_base.with_extension("shp")),
+                ("tiger_block_dbf", tiger_base.with_extension("dbf")),
+                ("tiger_block_shx", tiger_base.with_extension("shx")),
+                ("pl_geo", pl_dir.join(format!("{lower}geo{year}.pl"))),
+                (
+                    "pl_population",
+                    pl_dir.join(format!("{lower}00001{year}.pl")),
+                ),
+            ]
+        };
         let mut rehashed_sources = 0usize;
         let mut rehashed_keys = BTreeSet::new();
         for (key, source_path) in &source_checks {
@@ -3021,6 +3111,52 @@ fn verify_national_rctx(
                 rehashed_keys.insert(*key);
             }
         }
+        if let Some(files) = context["source_hashes"]["tiger_block_files"].as_object() {
+            if files.is_empty() {
+                bail!("{state} TIGER block source map is empty");
+            }
+            for (relative, expected) in files {
+                let source_path = governed_source_path(&root, relative)?;
+                if !source_path.is_file()
+                    || expected.as_str() != Some(&format!("sha256:{}", sha256(&source_path)?))
+                {
+                    bail!("{state} TIGER block source missing or hash-mismatched: {relative}");
+                }
+                rehashed_sources += 1;
+            }
+        }
+        if let Some(archives) = context["source_hashes"]["tiger_archives"].as_object() {
+            if archives.is_empty() {
+                bail!("{state} TIGER archive source map is empty");
+            }
+            let mut member_hashes = BTreeMap::new();
+            for (relative, expected) in archives {
+                let archive_path = governed_source_path(&root, relative)?;
+                if !archive_path.is_file()
+                    || expected.as_str() != Some(&format!("sha256:{}", sha256(&archive_path)?))
+                {
+                    bail!("{state} TIGER archive missing or hash-mismatched: {relative}");
+                }
+                rehashed_sources += 1;
+                for (name, hash) in tiger_archive_member_hashes(&archive_path)? {
+                    if member_hashes.insert(name.clone(), hash).is_some() {
+                        bail!("{state} duplicate TIGER archive member filename: {name}");
+                    }
+                }
+            }
+            let files = context["source_hashes"]["tiger_block_files"]
+                .as_object()
+                .context("TIGER archive bundle requires extracted block source hashes")?;
+            for (relative, expected) in files {
+                let filename = Path::new(relative)
+                    .file_name()
+                    .and_then(|value| value.to_str())
+                    .context("TIGER block source filename")?;
+                if member_hashes.get(filename).map(String::as_str) != expected.as_str() {
+                    bail!("{state} TIGER archive member hash mismatch for {filename}");
+                }
+            }
+        }
         if let Some(expected_archive_hash) = context["source_hashes"]["tiger_archive"].as_str() {
             let archive_path = root.join(format!(
                 "data/{year}/tiger/archives/tl_{year}_{fips}_tabblock{suffix}.zip"
@@ -3032,7 +3168,7 @@ fn verify_national_rctx(
             }
             rehashed_sources += 1;
             let members = tiger_archive_member_hashes(&archive_path)?;
-            for (key, source_path) in &source_checks[..3] {
+            for (key, source_path) in source_checks.iter().take(3) {
                 let filename = source_path
                     .file_name()
                     .and_then(|value| value.to_str())
@@ -4224,7 +4360,7 @@ fn build_state_rctx(
     let state_code = state_code.to_uppercase();
     let lower = state_code.to_lowercase();
     println!("{state_code}: reading and projecting TIGER blocks");
-    let blocks = read_tiger_blocks_projected_for_year(shapefile, year)?;
+    let (blocks, tiger_shapefiles) = read_tiger_block_bundle(shapefile, year)?;
     println!("{state_code}: reading PL94 populations");
     let populations = read_pl94_block_populations_for_year(pl_geo, pl_population, year)?;
     let block_geoids: Vec<_> = blocks.iter().map(|block| block.geoid.clone()).collect();
@@ -4296,10 +4432,28 @@ fn build_state_rctx(
     let tiger_source = Path::new("crates/bisect-data/src/tiger.rs");
     let pl94_source = Path::new("crates/bisect-data/src/pl94.rs");
     let projection_source = Path::new("crates/bisect-data/src/projection.rs");
+    let mut tiger_component_files = Vec::with_capacity(tiger_shapefiles.len() * 3);
+    for tiger_shapefile in &tiger_shapefiles {
+        for extension in ["shp", "dbf", "shx"] {
+            let component = tiger_shapefile.with_extension(extension);
+            if !component.is_file() {
+                bail!(
+                    "{state_code}: TIGER shapefile component is missing: {}",
+                    component.display()
+                );
+            }
+            tiger_component_files.push(component);
+        }
+    }
+    tiger_component_files.sort_by_key(|path| portable_path(path));
+    let tiger_archives = tiger_archive
+        .map(|path| files_with_extension(path, "zip"))
+        .transpose()?
+        .unwrap_or_default();
+    if tiger_archive.is_some() && tiger_archives.is_empty() {
+        bail!("{state_code}: TIGER archive input contains no ZIP files");
+    }
     let mut source_hashes = json!({
-        "tiger_block_shp":format!("sha256:{}",sha256(shapefile)?),
-        "tiger_block_dbf":format!("sha256:{}",sha256(&shapefile.with_extension("dbf"))?),
-        "tiger_block_shx":format!("sha256:{}",sha256(&shapefile.with_extension("shx"))?),
         "pl_geo":format!("sha256:{}",sha256(pl_geo)?),
         "pl_population":format!("sha256:{}",sha256(pl_population)?),
         "bridge_rule_source":format!("sha256:{}",sha256(bridge_source)?),
@@ -4308,14 +4462,23 @@ fn build_state_rctx(
         "pl94_reader_source":format!("sha256:{}",sha256(pl94_source)?),
         "projection_source":format!("sha256:{}",sha256(projection_source)?),
     });
-    if let Some(archive) = tiger_archive {
-        if !archive.is_file() {
-            bail!(
-                "{state_code}: TIGER archive does not exist: {}",
-                archive.display()
-            );
-        }
-        source_hashes["tiger_archive"] = json!(format!("sha256:{}", sha256(archive)?));
+    if shapefile.is_file() {
+        source_hashes["tiger_block_shp"] = json!(format!("sha256:{}", sha256(shapefile)?));
+        source_hashes["tiger_block_dbf"] = json!(format!(
+            "sha256:{}",
+            sha256(&shapefile.with_extension("dbf"))?
+        ));
+        source_hashes["tiger_block_shx"] = json!(format!(
+            "sha256:{}",
+            sha256(&shapefile.with_extension("shx"))?
+        ));
+    } else {
+        source_hashes["tiger_block_files"] = hashed_source_map(&tiger_component_files)?;
+    }
+    if tiger_archives.len() == 1 && tiger_archive.is_some_and(Path::is_file) {
+        source_hashes["tiger_archive"] = json!(format!("sha256:{}", sha256(&tiger_archives[0])?));
+    } else if !tiger_archives.is_empty() {
+        source_hashes["tiger_archives"] = hashed_source_map(&tiger_archives)?;
     }
     let projection = json!({
         "units":units,
@@ -4348,8 +4511,11 @@ fn build_state_rctx(
         "bridge_edge_count":bridges.len(),
         "final_component_count":final_component_count,
         "geometry_toolchain":{"implementation":"bisect-data","language":"rust","crs":"EPSG:5070"},
-        "tiger_archive_path":tiger_archive.map(portable_path),
-        "tiger_archive_sha256":tiger_archive.map(sha256).transpose()?,
+        "tiger_input_path":portable_path(shapefile),
+        "tiger_source_file_count":tiger_component_files.len(),
+        "tiger_archive_path":tiger_archive.filter(|path| path.is_file()).map(portable_path),
+        "tiger_archive_sha256":tiger_archive.filter(|path| path.is_file()).map(sha256).transpose()?,
+        "tiger_archive_files":hashed_source_map(&tiger_archives)?,
         "claim_boundary":claim
     });
     write_json(report_path, &report, true)?;
@@ -4370,8 +4536,11 @@ fn build_state_rctx(
         "schema_version":"certified-state-block-rctx-package-v1",
         "package_id":format!("{lower}-{year}-block-rctx"),
         "year":year,
-        "tiger_archive_path":tiger_archive.map(portable_path),
-        "tiger_archive_sha256":tiger_archive.map(sha256).transpose()?,
+        "tiger_input_path":portable_path(shapefile),
+        "tiger_source_file_count":tiger_component_files.len(),
+        "tiger_archive_path":tiger_archive.filter(|path| path.is_file()).map(portable_path),
+        "tiger_archive_sha256":tiger_archive.filter(|path| path.is_file()).map(sha256).transpose()?,
+        "tiger_archive_files":hashed_source_map(&tiger_archives)?,
         "status":"ready",
         "files":[{"path":report_name,"sha256":sha256(report_path)?}],
         "builder_path":source_name,
@@ -4400,9 +4569,10 @@ fn rctx_batch(
         bail!("workers must be positive");
     }
     let suffix = match year {
+        2000 => "00",
         2010 => "10",
         2020 => "20",
-        _ => bail!("RCTX batch currently supports census years 2010 and 2020"),
+        _ => bail!("RCTX batch currently supports census years 2000, 2010, and 2020"),
     };
     let root = std::env::current_dir()?;
     let inventory_path = inventory_path
@@ -4450,17 +4620,20 @@ fn rctx_batch(
     let results:Vec<Value>=pool.install(||pending.par_iter().map(|row|{
         let state=row["state"].as_str().unwrap(); let lower=state.to_lowercase(); let state_name=row["name"].as_str().unwrap_or(state).to_lowercase().replace(' ',"_");
         let fips=row["fips"].as_str().unwrap_or("");
-        let tiger_year=year;
-        let shapefile=root.join(format!("data/{year}/tiger/blocks/tl_{tiger_year}_{fips}_tabblock{suffix}/tl_{tiger_year}_{fips}_tabblock{suffix}.shp"));
-        let pl_dir=root.join(format!("data/{year}/redistricting/{lower}{year}.pl"));
-        let pl_geo=pl_dir.join(format!("{lower}geo{year}.pl"));
-        let pl_population=pl_dir.join(format!("{lower}00001{year}.pl"));
+        let tiger_year=if year == 2000 { 2010 } else { year };
+        let (shapefile, tiger_archive, pl_geo, pl_population) = if year == 2000 {
+            let geography=root.join(format!("data/2000/redistricting/{lower}geo.upl"));
+            (root.join(format!("data/2000/tiger/blocks/{lower}")), Some(root.join(format!("data/2000/tiger/archives/{lower}"))), geography.clone(), geography)
+        } else {
+            let pl_dir=root.join(format!("data/{year}/redistricting/{lower}{year}.pl"));
+            let archive=root.join(format!("data/{year}/tiger/archives/tl_{tiger_year}_{fips}_tabblock{suffix}.zip"));
+            (root.join(format!("data/{year}/tiger/blocks/tl_{tiger_year}_{fips}_tabblock{suffix}/tl_{tiger_year}_{fips}_tabblock{suffix}.shp")), archive.is_file().then_some(archive), pl_dir.join(format!("{lower}geo{year}.pl")), pl_dir.join(format!("{lower}00001{year}.pl")))
+        };
         let rctx=root.join(format!("data/{year}/certified/{lower}_blocks_{year}.rctx"));
         let report=report_root.join(format!("rctx/{lower}.json"));
         let manifest=report_root.join(format!("rctx/{lower}-manifest.json"));
-        let tiger_archive=root.join(format!("data/{year}/tiger/archives/tl_{tiger_year}_{fips}_tabblock{suffix}.zip"));
-        let tiger_archive=tiger_archive.is_file().then_some(tiger_archive.as_path());
-        let result=build_state_rctx(year,state,fips,&state_name,&shapefile,tiger_archive,&pl_geo,&pl_population,&rctx,&report,&manifest);
+        let tiger_archive=tiger_archive.filter(|path| path.exists());
+        let result=build_state_rctx(year,state,fips,&state_name,&shapefile,tiger_archive.as_deref(),&pl_geo,&pl_population,&rctx,&report,&manifest);
         match result { Ok(())=>json!({"state":state,"year":year,"block_count":row["block_count"],"status":"built","exit_code":0,"command":["bisect-ops","build-state-rctx",format!("--year={year}")],"output":"Rust-native state RCTX build completed."}),Err(error)=>json!({"state":state,"year":year,"block_count":row["block_count"],"status":"failed","exit_code":1,"command":["bisect-ops","build-state-rctx",format!("--year={year}")],"output":format!("{error:#}")}) }
     }).collect());
     let mut merged: BTreeMap<String, Value> = if ledger_path.is_file() {
@@ -4912,6 +5085,29 @@ mod tests {
             serde_json::to_vec(&right).unwrap()
         );
         assert_eq!(nrs_seed(&left).unwrap(), nrs_seed(&right).unwrap());
+    }
+
+    #[test]
+    fn tiger_bundle_inventory_is_recursive_sorted_and_extension_filtered() {
+        let temp = tempfile::tempdir().unwrap();
+        let county = temp.path().join("county");
+        fs::create_dir(&county).unwrap();
+        fs::write(temp.path().join("b.SHP"), b"").unwrap();
+        fs::write(county.join("a.shp"), b"").unwrap();
+        fs::write(county.join("a.dbf"), b"").unwrap();
+        let files = files_with_extension(temp.path(), "shp").unwrap();
+        assert_eq!(files, vec![temp.path().join("b.SHP"), county.join("a.shp")]);
+    }
+
+    #[test]
+    fn source_custody_paths_reject_escape_and_absolute_paths() {
+        let root = Path::new("workspace");
+        assert_eq!(
+            governed_source_path(root, "data/2000/source.zip").unwrap(),
+            root.join("data/2000/source.zip")
+        );
+        assert!(governed_source_path(root, "../outside.zip").is_err());
+        assert!(governed_source_path(root, "C:/outside.zip").is_err());
     }
 
     #[test]
