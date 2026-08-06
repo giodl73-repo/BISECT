@@ -1,0 +1,23 @@
+{
+  "schema_version": "nrs-baseline-legal-profile-v1",
+  "BISECT_version": "0.1.0",
+  "BISECT_build_commit": "877ebf3b5a47aa528741f3fa4b22584797ee8fb7",
+  "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)",
+  "created_at": "2026-08-05T00:00:00Z",
+  "profile_id": "NRS-BASELINE-FEDERAL-FLOOR-2000-v1",
+  "creation_authority": "BISECT repository interim custodian",
+  "census_cycle": 2000,
+  "chamber": "U.S. House",
+  "district_count_source": "2000 decennial apportionment",
+  "population_basis": "official PL 94-171 resident population",
+  "contiguity_required": true,
+  "population_rule": "equality-as-nearly-exact-as-practicable",
+  "baseline_modifications": [],
+  "assignment_affecting_state_law": null,
+  "partisan_inputs": null,
+  "racial_inputs": null,
+  "incumbency_inputs": null,
+  "candidate_inputs": null,
+  "community_of_interest_inputs": null,
+  "claim_boundary": "Machine profile for baseline input purity and the common federal floor only; not a jurisdiction-specific legal conclusion or VRA determination. District counts are the governed 2000 decennial apportionment values in the national inventory."
+}
