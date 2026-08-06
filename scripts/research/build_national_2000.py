@@ -20,9 +20,19 @@ INVENTORY = ROOT / "docs/experiments/nationwide-2000/inventory.json"
 COMPONENT_EXTENSIONS = {".shp", ".dbf", ".shx"}
 
 
+def valid_zip(path: Path) -> bool:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            return archive.testzip() is None
+    except (OSError, zipfile.BadZipFile):
+        return False
+
+
 def download(url: str, destination: Path) -> None:
-    if destination.is_file():
+    if destination.is_file() and valid_zip(destination):
         return
+    if destination.exists():
+        destination.unlink()
     destination.parent.mkdir(parents=True, exist_ok=True)
     partial = destination.with_suffix(destination.suffix + ".part")
     for attempt in range(1, 5):
@@ -36,6 +46,8 @@ def download(url: str, destination: Path) -> None:
                     copied += len(chunk)
             if expected is not None and copied != int(expected):
                 raise OSError(f"short download: expected {expected} bytes, received {copied}")
+            if not valid_zip(partial):
+                raise OSError("downloaded response is not a valid ZIP archive")
             os.replace(partial, destination)
             return
         except Exception:
@@ -117,7 +129,12 @@ def main() -> None:
     unknown = requested - set(by_state)
     if unknown:
         parser.error(f"unknown states: {','.join(sorted(unknown))}")
-    order = [state for state in inventory["batch_order"] if not requested or state in requested]
+    order = [
+        state
+        for state in inventory["batch_order"]
+        if (not requested or state in requested)
+        and not (ROOT / f"data/2000/certified/{state.lower()}_blocks_2000.rctx").is_file()
+    ]
     if not args.download_only and not args.skip_compile:
         subprocess.run(["cargo", "build", "--release", "-p", "bisect-ops"], cwd=ROOT, check=True)
     if not args.download_only and not args.binary.is_file():
