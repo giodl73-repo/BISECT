@@ -559,7 +559,11 @@ fn build_nrs_seed_package(
     let legal_profile = read_json(legal_profile_path)?;
     if !matches!(
         standard_profile["schema_version"].as_str(),
-        Some("nrs-standard-profile-v0.1-v1" | "nrs-standard-profile-v0.2-v1")
+        Some(
+            "nrs-standard-profile-v0.1-v1"
+                | "nrs-standard-profile-v0.2-v1"
+                | "nrs-standard-profile-v0.3-v1"
+        )
     ) || legal_profile["schema_version"] != "nrs-baseline-legal-profile-v1"
     {
         bail!("unknown NRS profile schema");
@@ -1437,7 +1441,10 @@ fn build_nrs_state(
         .and_then(Value::as_str)
         .unwrap_or("nrs-v0-1")
         .to_owned();
-    if !matches!(discovery_refinement.as_str(), "nrs-v0-1" | "nrs-v0-2") {
+    if !matches!(
+        discovery_refinement.as_str(),
+        "nrs-v0-1" | "nrs-v0-2" | "nrs-v0-3"
+    ) {
         bail!("unsupported NRS discovery refinement: {discovery_refinement}");
     }
     let engine_seed = seed_record["engine_seed_i32"]
@@ -1603,7 +1610,7 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
         .pointer("/search/discovery_refinement")
         .and_then(Value::as_str)
         .unwrap_or("nrs-v0-1");
-    if !matches!(discovery_refinement, "nrs-v0-1" | "nrs-v0-2") {
+    if !matches!(discovery_refinement, "nrs-v0-1" | "nrs-v0-2" | "nrs-v0-3") {
         bail!("unsupported NRS discovery refinement: {discovery_refinement}");
     }
     if manifest["input_manifest_canonical_sha256"] != seed_record["input_manifest_canonical_sha256"]
@@ -2426,6 +2433,12 @@ fn summarize_nrs_batch(
                 "nrs-national-summary-v0.2-v1",
                 "nrs-national-proof-coverage-v0.2-v1",
                 "nrs-national-summary-package-v0.2-v1",
+            ),
+            Some("nrs-standard-profile-v0.3-v1") => (
+                "NRS v0.3",
+                "nrs-national-summary-v0.3-v1",
+                "nrs-national-proof-coverage-v0.3-v1",
+                "nrs-national-summary-package-v0.3-v1",
             ),
             _ => bail!("unknown NRS standard profile schema for publication"),
         };
