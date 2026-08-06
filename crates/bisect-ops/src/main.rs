@@ -1516,6 +1516,14 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
         }
     }
     let seed_record = read_json(&package.join("seed/seed_record.json"))?;
+    let standard_profile = read_json(&package.join("seed/standard_profile.json"))?;
+    let discovery_refinement = standard_profile
+        .pointer("/search/discovery_refinement")
+        .and_then(Value::as_str)
+        .unwrap_or("nrs-v0-1");
+    if !matches!(discovery_refinement, "nrs-v0-1" | "nrs-v0-2") {
+        bail!("unsupported NRS discovery refinement: {discovery_refinement}");
+    }
     if manifest["input_manifest_canonical_sha256"] != seed_record["input_manifest_canonical_sha256"]
         || manifest["seed_u64_little_endian"] != seed_record["seed_u64_little_endian"]
         || manifest["engine_seed_i32"] != seed_record["engine_seed_i32"]
@@ -1658,7 +1666,10 @@ fn verify_nrs_state(package: &Path, context_path: &Path) -> Result<()> {
                     && method.contains(
                         "candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut",
                     )
-                    && method.contains("refinement=nrsv01")
+                    && method.contains(&format!(
+                        "refinement={}",
+                        discovery_refinement.replace('-', "")
+                    ))
             })
             || objective(&discovery)? != &node["objective"]
         {
