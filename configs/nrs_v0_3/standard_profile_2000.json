@@ -1,7 +1,7 @@
 {
   "schema_version": "nrs-standard-profile-v0.3-v1",
   "BISECT_version": "0.1.0",
-  "BISECT_build_commit": "f48ebbc2dcea1545b8ab81292562b91c12544220",
+  "BISECT_build_commit": "7e28c880cf0b3f2315ccc8127960518374d68b21",
   "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)",
   "created_at": "2026-08-05T00:00:00Z",
   "profile_id": "NRS-BASELINE-v0.3-reference-2000",
@@ -22,16 +22,16 @@
     "bridge_edges": "versioned-zero-weight-county-first-nearest-centroid-rule"
   },
   "search": {
-    "mode": "canonical-multi-root-and-bridge-aware-land-component-fallback",
+    "mode": "canonical-bridge-aware-land-component-fallback",
     "discovery_refinement": "nrs-v0-3",
-    "seed_derivation": "sha256-ascii-prefix-plus-canonical-input-manifest-u64le",
+    "seed_derivation": "sha256-ascii-prefix-plus-canonical-input-manifest-with-v0.2-profile-and-reference-engine-hash-compatibility-u64le",
     "seed_prefix": "NRS_BASELINE_V0_1",
+    "seed_compatibility_profile_sha256": "f73297cd39ef5e91d21a1fa171bcf0f246df50630e577572e10b9b281a07e0e4",
+    "seed_compatibility_reference_engine_sha256": "bc242e0ad26594a180de4b3930b8f5f1f8db297fd0235843a42ce01393d1a195",
     "signed_engine_conversion": "seed-u64-mod-2147483647",
     "node_seed_application": "reuse-the-one-converted-seed-at-every-recursive-node",
     "candidate_retries": 0,
-    "v0_2_fallback_trigger": "only-when-v0.1-candidate-exceeds-0.5-percent-scaled-population-tolerance",
-    "v0_2_fallback_roots": "16-evenly-spaced-canonical-unit-index-quantiles-including-the-v0.1-root",
-    "bridge_aware_fallback_trigger": "only-when-v0.2-candidate-exceeds-0.5-percent-scaled-population-tolerance",
+    "bridge_aware_fallback_trigger": "only-when-v0.1-candidate-exceeds-0.5-percent-scaled-population-tolerance",
     "bridge_aware_components": "connected-components-after-removing-versioned-bridge-edges",
     "bridge_aware_roots": "16-evenly-spaced-canonical-unit-index-quantiles-within-each-nonsingleton-land-component",
     "bridge_aware_traversals": [
@@ -40,7 +40,9 @@
     ],
     "bridge_aware_candidates": "each-nonroot-tree-subtree-and-its-complement-with-all-outside-components-placed-together-on-either-side",
     "bridge_aware_connectivity_gate": "both-labels-connected-in-the-full-graph-including-versioned-bridge-edges",
-    "bridge_aware_repair": "apply-population-repair-once-to-the-globally-selected-raw-candidate",
+    "bridge_aware_population_filter": "compute-the-global-minimum-scaled-population-deviation-before-materializing-full-graph-assignments",
+    "bridge_aware_tie_order": "component-index-then-root-index-then-depth-first-before-breadth-first-then-outside-right-before-outside-left-then-tree-traversal-order-then-subtree-before-complement",
+    "bridge_aware_repair": "select-the-first-globally-minimum-deviation-candidate-that-passes-the-full-graph-connectivity-gate-and-apply-population-repair-once",
     "fallback_selection_order": [
       "maximum-absolute-population-deviation",
       "weighted-boundary-cut",
@@ -71,27 +73,25 @@
     "contiguous_parts_option": "disabled-unsupported-for-recursive",
     "minimize_subdomain_connectivity": false,
     "candidate_initialization": {
-      "kind": "canonical-sorted-dfs-tree-edge-cut-with-multi-root-and-bridge-aware-land-component-fallback",
+      "kind": "canonical-sorted-dfs-tree-edge-cut-with-bridge-aware-land-component-fallback",
       "applies_when": "every-recursive-split",
       "primary_root": "lexicographically-smallest-geoid",
-      "v0_2_fallback_roots": "16-evenly-spaced-canonical-unit-index-quantiles",
       "neighbor_order": "ascending-geoid",
-      "v0_2_fallback_applies_when": "primary-root-candidate-misses-population-tolerance",
-      "bridge_aware_fallback_applies_when": "v0.2-candidate-misses-population-tolerance"
+      "bridge_aware_fallback_applies_when": "primary-root-candidate-misses-population-tolerance"
     },
     "niter": 100,
-    "source_commit": "f48ebbc2dcea1545b8ab81292562b91c12544220",
+    "source_commit": "7e28c880cf0b3f2315ccc8127960518374d68b21",
     "source_files": {
       "Cargo.lock": "f5e8f6605c4fa5975ed6e8d3d0798d9be13c5627e614c7cde04dfe4cbeb350f2",
       "crates/bisect-cli/src/args.rs": "0bfde842b0bcdb199fe141a4e2e9a9066a5497fc45c937b9513f92ce8cf63e3a",
-      "crates/bisect-cli/src/exact_cmd.rs": "4ee1f3e75212b81d151948badbd3bfbf14d7f0eb9b6b5d9273e660ac9829c595",
+      "crates/bisect-cli/src/exact_cmd.rs": "c21c8569f740d0c53121198147daaee491c48541bb8444bcb0800e4e11c14a83",
       "crates/bisect-runner/src/bisection_runner/core.rs": "794115e289441e543c58d25be6dd7665d3296af3a21612022d9aaea7ead4bafe",
       "crates/bisect-runner/src/bisection_runner/nway_geo.rs": "54a2afa3a0c52bb6b40f08242686a17ad739538ccbde0c941ae683ebd71728d2"
     },
     "source_git_blob_sha256": {
       "Cargo.lock": "f5e8f6605c4fa5975ed6e8d3d0798d9be13c5627e614c7cde04dfe4cbeb350f2",
       "crates/bisect-cli/src/args.rs": "62f234d4bfaea364b4e536902e7ae9f3da7e066b203147ba1ad2ccc53d705d82",
-      "crates/bisect-cli/src/exact_cmd.rs": "4ee1f3e75212b81d151948badbd3bfbf14d7f0eb9b6b5d9273e660ac9829c595",
+      "crates/bisect-cli/src/exact_cmd.rs": "c21c8569f740d0c53121198147daaee491c48541bb8444bcb0800e4e11c14a83",
       "crates/bisect-runner/src/bisection_runner/core.rs": "f183e9e26063dd371f13b0fd961184317431dd0cef2f3284aeeb4bc21e1cdf52",
       "crates/bisect-runner/src/bisection_runner/nway_geo.rs": "8725cd4e8ea0767ca133afa057eb9ef973cb11c27c76b414720d1df10bb7e4d9"
     }

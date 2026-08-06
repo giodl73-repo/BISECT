@@ -41,13 +41,14 @@ versioned zero-weight bridge edges. The largest-by-unit-count bridge anchor is
 not the largest-by-population island, and the v0.2 full-graph DFS fallback does
 not expose a population-balanced connected subtree.
 
-NRS v0.3 is a narrow deterministic refinement. It always evaluates v0.1 and
-v0.2 first. Only after a v0.2 tolerance miss does it remove bridge edges for
-candidate discovery, enumerate canonical DFS and BFS tree cuts within each
-land component, place the other land components together on either side,
-require both resulting labels to be connected in the full graph, and rank
-candidates by the existing v0.2 selection order. The population tolerance is
-unchanged.
+NRS v0.3 is a narrow deterministic refinement. It preserves the v0.2 seed
+stream and evaluates the v0.1 primary candidate first. Only after that
+candidate misses tolerance does it remove bridge edges for candidate
+discovery, enumerate canonical DFS and BFS tree cuts within each land
+component, place the other land components together on either side, and
+select the first globally minimum-deviation candidate in the frozen
+enumeration order that leaves both labels connected in the full graph. The
+population tolerance is unchanged.
 
 A direct production-path Hawaii pilot using v0.3 and the retained v0.2 seed
 returned scaled deviation `41`, inside the unchanged `6,058` bound. That pilot
