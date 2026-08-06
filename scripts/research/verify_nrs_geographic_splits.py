@@ -18,12 +18,63 @@ DEFAULT_PACKAGE = ROOT / "docs/experiments/nrs-v0.3-national-geographic-splits"
 YEARS = (2000, 2010, 2020)
 LEVELS = ("county", "tract")
 BISECT_SHA256 = "2bcf6b13f17f237db6f755943ea1ccdac0d2e0267395c616892c6e46ce66e90e"
+PROTOCOL_PATH = "docs/specs/2026-08-06-nrs-v0.3-national-geographic-split-audit-protocol.md"
+ANALYZER_PATH = "scripts/research/analyze_nrs_geographic_splits.py"
+VERIFIER_PATH = "scripts/research/verify_nrs_geographic_splits.py"
+PACKAGE_FILES = {
+    "README.md",
+    "analysis.json",
+    "geography-projection.csv",
+    "state-metrics.csv",
+}
 CLAIM_BOUNDARY = (
     "Complete, hash-bound county and tract intersection counts for the governed "
     "NRS v0.3 assignments in 2000, 2010, and 2020; no compactness-superiority, "
     "municipality, community, demographic, partisan, VRA, legal-validity, "
     "cross-cycle-improvement, optimality, or adoption claim."
 )
+READINESS = [
+    (
+        "population-and-contiguity",
+        "complete-in-national-baselines",
+        "All assignments, districts, recursive children, and population tolerances were independently verified in the governed national packages.",
+    ),
+    (
+        "county-and-tract-splits",
+        "complete-in-this-package",
+        "Every block GEOID deterministically projects to a county and tract prefix, and every geography-to-district set is published.",
+    ),
+    (
+        "municipality-splits",
+        "not-computed",
+        "No uniform hash-bound block-to-municipality input is frozen for all three cycles.",
+    ),
+    (
+        "geometric-compactness",
+        "not-computed",
+        "District dissolve, projection, water, and perimeter rules are not yet precommitted and versioned.",
+    ),
+    (
+        "racial-and-language-opportunity",
+        "not-computed",
+        "Retained nationwide demographic tables are tract-level and no frozen within-tract allocation rule is available for split tracts.",
+    ),
+    (
+        "partisan-diagnostics",
+        "not-computed",
+        "The retained national election allocation does not provide two presidential and two House elections with a published precinct-to-block crosswalk.",
+    ),
+    (
+        "100-seed-sensitivity",
+        "not-computed",
+        "The diagnostic seed profile and 100 governed runs have not been executed.",
+    ),
+    (
+        "ensemble-percentiles",
+        "not-computed",
+        "No four-chain national ensemble satisfying the frozen convergence and effective-sample-size rules has been produced.",
+    ),
+]
 
 
 def fail(message: str) -> None:
@@ -118,7 +169,12 @@ def verify(package: Path) -> None:
         manifest["schema_version"] == "nrs-v0.3-national-geographic-split-package-v1",
         "manifest schema",
     )
+    require(manifest["package_id"] == "nrs-v0.3-national-geographic-splits", "package id")
     require(manifest["claim_boundary"] == CLAIM_BOUNDARY, "manifest claim boundary")
+    require(manifest["protocol_path"] == PROTOCOL_PATH, "manifest protocol path")
+    require(manifest["analyzer_path"] == ANALYZER_PATH, "manifest analyzer path")
+    require(manifest["verifier_path"] == VERIFIER_PATH, "manifest verifier path")
+    require(set(manifest["files"]) == PACKAGE_FILES, "manifest package-file universe")
     for path_key, hash_key in (
         ("protocol_path", "protocol_sha256"),
         ("analyzer_path", "analyzer_sha256"),
@@ -171,6 +227,7 @@ def verify(package: Path) -> None:
     require(len(sources) == 150, "150 State sources")
 
     derived: defaultdict[tuple[int, str, str], dict[str, Any]] = defaultdict(empty_metric)
+    geography_rows: dict[tuple[int, str, str, str], tuple[set[int], int]] = {}
     previous_key: tuple[int, str, str, str] | None = None
     with (package / "geography-projection.csv").open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -204,6 +261,7 @@ def verify(package: Path) -> None:
             require(split is (district_count > 1), f"projection split status at line {line_number}")
             blocks = int(row["source_block_count"])
             require(blocks > 0, f"projection block count at line {line_number}")
+            geography_rows[key] = (set(labels), blocks)
             metric = derived[(year, state, level)]
             metric["total_geographies"] += 1
             metric["split_geographies"] += int(split)
@@ -220,6 +278,26 @@ def verify(package: Path) -> None:
         source = sources[(year, state)]
         require(metric["source_blocks"] == source["unit_count"], f"{year}/{state}/{level}: block coverage")
         require(metric["labels"] == set(range(1, source["districts"] + 1)), f"{year}/{state}/{level}: district coverage")
+    for (year, state), source in sources.items():
+        county_rows = {
+            geoid: value
+            for (row_year, row_state, level, geoid), value in geography_rows.items()
+            if row_year == year and row_state == state and level == "county"
+        }
+        tract_rows = {
+            geoid: value
+            for (row_year, row_state, level, geoid), value in geography_rows.items()
+            if row_year == year and row_state == state and level == "tract"
+        }
+        tract_blocks: defaultdict[str, int] = defaultdict(int)
+        tract_labels: defaultdict[str, set[int]] = defaultdict(set)
+        for tract, (labels, blocks) in tract_rows.items():
+            tract_blocks[tract[:5]] += blocks
+            tract_labels[tract[:5]].update(labels)
+        require(set(tract_blocks) == set(county_rows), f"{year}/{state}: county/tract universe")
+        for county, (labels, blocks) in county_rows.items():
+            require(tract_blocks[county] == blocks, f"{year}/{state}/{county}: county/tract block consistency")
+            require(tract_labels[county] == labels, f"{year}/{state}/{county}: county/tract label consistency")
 
     metric_rows: dict[tuple[int, str, str], dict[str, Any]] = {}
     with (package / "state-metrics.csv").open(encoding="utf-8", newline="") as handle:
@@ -263,14 +341,26 @@ def verify(package: Path) -> None:
             compare_metric(cycle["national"]["all_states"][level], expected_all[level], f"{year}/all/{level}")
             compare_metric(cycle["national"]["multi_district_states"][level], expected_multi[level], f"{year}/multi/{level}")
 
-    readiness = {row["metric_family"]: row["status"] for row in analysis["evaluation_readiness"]}
-    require(len(readiness) == len(analysis["evaluation_readiness"]) == 8, "readiness universe")
-    require(readiness["population-and-contiguity"] == "complete-in-national-baselines", "population readiness")
-    require(readiness["county-and-tract-splits"] == "complete-in-this-package", "split readiness")
-    require(
-        all(status == "not-computed" for name, status in readiness.items() if name not in {"population-and-contiguity", "county-and-tract-splits"}),
-        "unavailable metric status",
-    )
+    expected_readiness = [
+        {"metric_family": name, "status": status, "reason": reason}
+        for name, status, reason in READINESS
+    ]
+    require(analysis["evaluation_readiness"] == expected_readiness, "evaluation-readiness matrix")
+
+    readme = (package / "README.md").read_text(encoding="utf-8")
+    expected_headlines = []
+    for year in YEARS:
+        all_states = cycles[year]["national"]["all_states"]
+        expected_headlines.append(
+            f"| {year} | {all_states['county']['split_geographies']:,} / "
+            f"{all_states['county']['total_geographies']:,} | "
+            f"{all_states['county']['excess_pieces']:,} | "
+            f"{all_states['tract']['split_geographies']:,} / "
+            f"{all_states['tract']['total_geographies']:,} | "
+            f"{all_states['tract']['excess_pieces']:,} |"
+        )
+    require(all(readme.count(row) == 1 for row in expected_headlines), "README headline drift")
+    require(readme.count(CLAIM_BOUNDARY) == 1, "README claim boundary")
     print(
         "NRS v0.3 national geographic split independent verification: PASS "
         f"({sum(row['total_geographies'] for row in metric_rows.values()):,} State/level geographies)"
