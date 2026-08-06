@@ -239,6 +239,7 @@ redist/**/*.pyd
 release_staging/
 runs/nrs-v0.1/
 runs/nrs-v0.2/
+runs/nrs-v0.3/
 reports/
 .claude/worktrees/
 
