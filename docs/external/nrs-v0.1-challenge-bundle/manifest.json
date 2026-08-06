@@ -282,7 +282,7 @@
     },
     {
       "path": "docs/legal/NRS_TECHNICAL_SCHEDULE_V0.1.md",
-      "sha256": "8af089f4b5785842bf8bb2c37d95c2d32985e62d58976caa36c17c12024c7af2"
+      "sha256": "eed30d81ec47acfbca6f6729ede9491711ce46163d65ef1d9ffb3dbe38d1baa3"
     },
     {
       "path": "docs/legal/NRS_EVALUATION_SCHEDULE_V0.1.md",
@@ -290,7 +290,7 @@
     },
     {
       "path": "docs/legal/STATUTE_ONE_PAGER.md",
-      "sha256": "534dbb60c30018d2cd1ff99d7862832288307f60f7b5d462f6018d8216d32462"
+      "sha256": "42a427c30f2f2e099dd0f45d86918d3b61ef158f7558d870bf03af30f8a826da"
     },
     {
       "path": "docs/fixtures/nrs-reference-v0.1/reference_manifest.json",

@@ -1,8 +1,16 @@
 # Statutory Technical Schedule A: Geographic Benchmark v0.1
 
 **Status:** Candidate schedule incorporated by the model statute
-**Current implementation status:** Specification complete; block-level
-reference implementation not yet certified
+**Readiness status:** Not certified for enactment
+**Current implementation evidence:** The block-level reference path, seed
+wiring, conformance fixtures, and hostile-verifier corpus are implemented. A
+later operational research profile, NRS v0.3, has generated and independently
+verified complete 50-State, 435-district assignments for each of the 2000,
+2010, and 2020 Census cycles. That evidence does not silently amend this v0.1
+candidate schedule or establish enactment readiness: v0.3 remains a proposed
+technical successor, exact weighted-boundary and canonical proof coverage is
+0 of 1,155 national recursive nodes, a new external v0.3 replication record is
+pending, and the full evaluation schedule is incomplete.
 
 ## 1. Source identity
 
