@@ -38,6 +38,11 @@ def load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def write_text_lf(path: Path, content: str) -> None:
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(content)
+
+
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
@@ -387,9 +392,9 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
         "claim_boundary": CLAIM_BOUNDARY,
     }
     analysis_path = out_dir / "analysis.json"
-    analysis_path.write_text(json.dumps(analysis, indent=2) + "\n", encoding="utf-8")
+    write_text_lf(analysis_path, json.dumps(analysis, indent=2) + "\n")
     readme_path = out_dir / "README.md"
-    readme_path.write_text(render_readme(analysis), encoding="utf-8")
+    write_text_lf(readme_path, render_readme(analysis))
     manifest = {
         "schema_version": "nrs-v0.3-national-geographic-split-package-v2",
         "package_id": "nrs-v0.3-national-geographic-splits",
@@ -405,8 +410,8 @@ def build(cycles: dict[int, Path], out_dir: Path) -> None:
         },
         "claim_boundary": CLAIM_BOUNDARY,
     }
-    (out_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    write_text_lf(
+        out_dir / "manifest.json", json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )
     print("NRS v0.3 national geographic split analysis: PASS")
 
