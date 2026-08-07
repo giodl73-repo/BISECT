@@ -6,6 +6,10 @@
 
 **Time:** 10–15 minutes for VT / DE; longer for AL / TX.
 
+**Show path:** cold open is [`../../SHOWCASE.md`](../../SHOWCASE.md) and the
+[researcher brief](../show/researcher-brief.md). This page is the hands-on lab
+after that pitch.
+
 ---
 
 ## Steps

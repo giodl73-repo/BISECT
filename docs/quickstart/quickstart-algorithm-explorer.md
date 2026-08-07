@@ -6,6 +6,10 @@
 
 **Time:** 15–30 minutes for NC; under 10 minutes for VT or DE.
 
+**Show path:** cold open is [`../../SHOWCASE.md`](../../SHOWCASE.md) and the
+[implementer brief](../show/implementer-brief.md). This page is the controlled
+bakeoff lab after that pitch.
+
 ---
 
 ## The three-layer compositor

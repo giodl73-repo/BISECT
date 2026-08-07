@@ -71,31 +71,28 @@ Vermont has 1 congressional district. It's the fastest possible smoke test.
 
 ```bash
 # Step 1: Clone the repo
-git clone https://github.com/your-org/apportionment.git
-cd apportionment
+git clone https://github.com/giodl73-repo/BISECT.git
+cd BISECT
 
 # Step 2: Build the Rust binary (one-time)
-cargo build --release --manifest-path Cargo.toml
+cargo build --release -p bisect-cli
+# put target/release on PATH, or invoke via cargo run -p bisect-cli --
 
-# Step 3: Download Vermont census data
-bisect fetch --states VT --year 2020
-
-# Step 4: Download pre-built adjacency files (requires gh auth login)
-bisect fetch --states VT --year 2020 --release
-python scripts/data/generate_adj_bin.py --year 2020 --states VT
-
-# Step 5: Run Vermont redistricting
-bisect state --state VT --year 2020 --version V3
+# Step 3–5: Canonical Vermont walkthrough (fetch → draw → analyze → report)
+bash examples/vermont-2020-walkthrough/run.sh    # Windows: run.bat
 ```
 
-**Expected output** (under `outputs/V3/2020/vermont/`):
-```
-[OK] VT in 512ms
+Prefer the walkthrough over ad-hoc paths when showing the project. See also
+[`../SHOWCASE.md`](../SHOWCASE.md) for researcher vs implementer entry points.
+
+**Expected:** walkthrough completes in a few minutes once data is cached; then:
+
+```bash
+bisect doctor --check-tutorial-data --tutorial vermont-2020
 ```
 
-Files created:
-- `final_assignments.json` — tract → district mapping
-- `vra_analysis.json` — majority-minority district analysis
+Typical artifacts include assignments, analysis JSON, and HTML/JSON reports under
+the walkthrough’s output locations (see the walkthrough README).
 
 ### Option 2: All 50 states — ~15 seconds
 

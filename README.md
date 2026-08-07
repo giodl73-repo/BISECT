@@ -6,6 +6,41 @@
 [ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
 repository-local review panels.
 
+## Show someone (start here)
+
+Hand the repo to an election researcher or an algorithm implementer without a
+maintainer tour:
+
+| Audience | Path | Time |
+|---|---|---|
+| **Election researcher / journalist** | [SHOWCASE.md](SHOWCASE.md) → [researcher brief](docs/show/researcher-brief.md) → [dashboards](https://giodl73-repo.github.io/BISECT/) | 15–25 min |
+| **Algorithm implementer** | [SHOWCASE.md](SHOWCASE.md) → [implementer brief](docs/show/implementer-brief.md) → [algorithm explorer](docs/quickstart/quickstart-algorithm-explorer.md) | 20–40 min |
+| **Either, hands-on** | [Vermont 2020 walkthrough](examples/vermont-2020-walkthrough/README.md) | 2–5 min after build |
+
+Research demonstration only — not court-ready, not an official score, not a
+fairness certificate. Claim boundaries:
+[docs/vtrace/COMMUNICATIONS_STRATEGY.md](docs/vtrace/COMMUNICATIONS_STRATEGY.md).
+
+## R package family
+
+BISECT is the primary application consumer of a reusable civic-evidence family:
+
+```text
+                    ┌→ RPLAN  — district-plan packages, IO, and audits ─┐
+RLINE — kernels ────┤                                                   ├→ BISECT
+                    └→ RCOUNT — count packages and audit replay ────────┘
+```
+
+| Repo | Responsibility |
+|------|----------------|
+| [RLINE](https://github.com/giodl73-repo/RLINE) | Product-neutral graph, context, statistics, optimization, and history kernels. |
+| [RPLAN](https://github.com/giodl73-repo/RPLAN) | Portable district-plan representation, interchange, hashing, and audit certificates. |
+| [RCOUNT](https://github.com/giodl73-repo/RCOUNT) | Election-count package verification, reconciliation, aggregation, and audit replay. |
+| **BISECT** | Redistricting generation, analysis, maps, reports, verification, and research workflows. |
+
+Reusable contracts move outward into RLINE, RPLAN, or RCOUNT; BISECT retains
+application policy, algorithms, maps, reports, and research.
+
 `bisect` draws congressional and state-legislative districts that are compact, population-balanced, and reviewable from first principles for supported chambers, states, and census years. Evidence-producing label-pipeline runs record hashes and provenance for byte-level verification; historical outputs may need regeneration or supplemental manifests before release-level replay claims.
 
 ## How it works
