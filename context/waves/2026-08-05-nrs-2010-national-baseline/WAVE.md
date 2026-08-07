@@ -34,7 +34,8 @@ verified 2020 national baseline.
 | 02 - 2010 block RCTX generation | COMPLETE | 50/50 archive-backed contexts independently verified; 11,071,790 blocks |
 | 03 - 2010 NRS v0.1 batch execution | COMPLETE | 49 State packages verified; California retained as a deterministic tolerance-failure witness at node `00110` |
 | 04 - 2010 NRS v0.2 amendment and verification | COMPLETE | Independent `--require-complete` verification passed: 50 States, 435 districts, 385 nodes, 11,071,790 blocks |
-| 05 - decade comparison and publication | ACTIVE | 2000 NRS v0.3 and 2010 NRS v0.2 national summaries published; aggregate runtime/proof matrix complete; node/tree/cut stability remains |
+| 05 - decade comparison and publication | COMPLETE | Three-cycle NRS v0.3 summaries, node/tree/cut stability, certified-versus-METIS evidence, and county/tract split audit published |
+| 06 - independent replication and closeout | ACTIVE | Author-machine fresh-clone Level 1 rehearsal passed at `d0053ff3`; independent external v0.3 record remains |
 
 ## Versioned amendment
 
@@ -70,6 +71,20 @@ The complete v0.3 batch and independent `--require-complete` verifier passed
 50 States, 435 districts, 385 nodes, and 8,199,908 blocks. All nodes satisfy
 population tolerance; arithmetic-floor equality is proved at 2 nodes, while
 boundary and canonical proof coverage remain 0/385.
+
+## Closeout status
+
+The three-cycle stability matrix, national geographic split audit, verifier
+bundle, technical schedule, and adoption materials are published. On
+2026-08-07, the Level 1 artifact verifier passed from a clean clone of commit
+`d0053ff3`, including recomputation of the 120 all-cycle common node signatures
+and all 231,765 State/level geographic rows by the separate verifier
+implementations.
+
+That rehearsal was executed on the author machine. It confirms that the
+fresh-clone artifact path works, but it is not the required independent
+external replication record. The remaining wave gate requires a non-author
+machine and reviewer record under the published independence protocol.
 
 ## Claim boundary
 

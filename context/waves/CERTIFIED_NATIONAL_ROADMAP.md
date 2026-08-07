@@ -110,12 +110,13 @@ Current objective:
 
 Next unblocked work:
 
-> Update the remaining adoption materials, rehearse the final verifier bundle,
-> and obtain an external v0.3 replication record. The verified NRS v0.3 runs cover 2000,
-> 2010, and 2020; the governed structural/cut matrix and precommitted
-> multi-instance certified-versus-METIS comparison are published. The governed
-> county/tract audit publishes all 231,765 State-level geography rows and the
-> blockers for the remaining neutral metric families. Cross-census
+> Obtain a non-author external v0.3 replication record and then close the
+> active wave. The final verifier bundle passed a fresh-clone Level 1 rehearsal
+> on the author machine at commit `d0053ff3`; this does not satisfy the
+> independence gate. The verified NRS v0.3 runs cover 2000, 2010, and 2020;
+> the governed structural/cut matrix, precommitted multi-instance
+> certified-versus-METIS comparison, 231,765-row county/tract audit, papers,
+> technical schedule, and adoption package are published. Cross-census
 > assignment overlap remains uncomputed pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.
