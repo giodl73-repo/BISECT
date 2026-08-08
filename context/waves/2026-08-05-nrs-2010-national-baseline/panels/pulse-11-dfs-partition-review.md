@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-08
 **Roles:** MERIDIAN, DATUM, SCALE, BENCHMARK, BOUNDARY
-**Posture:** protocol review before instrumentation
+**Posture:** post-census interpretation
 
 ## Findings
 
@@ -18,6 +18,10 @@
 
 ## Decision
 
-Proceed with the behavior-preserving partition counter and exact 44-State
-replay. Further physical-cut sensitivity requires at least one root with more
-than one distinct unlabeled minimum-deviation/minimum-cut partition.
+The exact 44-State replay found one distinct unlabeled
+minimum-deviation/minimum-cut partition in every root. The 29 oriented ties
+are entirely complementary labelings of one equal-seat physical cut.
+
+Stop initial root-0 physical-cut seed expansion. Do not promote this result to
+label or full-plan invariance: equal-seat orientation remains seed-eligible,
+and child nodes plus fallback paths remain uninstrumented.

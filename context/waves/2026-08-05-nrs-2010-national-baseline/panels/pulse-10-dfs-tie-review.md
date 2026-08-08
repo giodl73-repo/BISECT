@@ -30,3 +30,6 @@ from the 29 opportunity States before execution, retain previously tested RI,
 NH, and GA as negative controls, and report final assignment variation
 separately from initial candidate opportunity. The current counters do not
 cover child nodes or fallback paths.
+
+**Superseded by Pulse 11:** all 29 oriented ties collapse to one physical
+bipartition per root. No initial root-0 physical-cut seed batch is warranted.

@@ -1,0 +1,62 @@
+{
+  "schema_version": "nrs-v0.3-initial-dfs-partition-census-analysis-v1",
+  "protocol_id": "nrs-v0.3-initial-dfs-partition-census-v1",
+  "status": "pass",
+  "census_year": 2020,
+  "state_root_count": 44,
+  "accepted_state_count": 44,
+  "rejected_state_count": 0,
+  "assignment_preservation_count": 44,
+  "objective_preservation_count": 44,
+  "minimum_deviation_cut_candidate_distribution": {
+    "minimum": 1,
+    "maximum": 2,
+    "counts": {
+      "1": 15,
+      "2": 29
+    }
+  },
+  "minimum_deviation_cut_partition_distribution": {
+    "minimum": 1,
+    "maximum": 1,
+    "counts": {
+      "1": 44
+    }
+  },
+  "orientation_only_tie_count": 29,
+  "orientation_only_tie_states": [
+    "AR",
+    "CA",
+    "CO",
+    "FL",
+    "GA",
+    "HI",
+    "IA",
+    "ID",
+    "KS",
+    "KY",
+    "LA",
+    "MD",
+    "ME",
+    "MN",
+    "MO",
+    "MS",
+    "MT",
+    "NC",
+    "NH",
+    "NJ",
+    "NV",
+    "NY",
+    "OR",
+    "RI",
+    "TX",
+    "UT",
+    "WA",
+    "WI",
+    "WV"
+  ],
+  "physical_cut_opportunity_count": 0,
+  "physical_cut_opportunity_states": [],
+  "failures": [],
+  "claim_boundary": "Unlabeled initial root-0 DFS tree-edge bipartitions for governed 2020 State roots only; no seed-invariant label, child-node, fallback, full-plan, national robustness, optimality, or legal-quality claim."
+}

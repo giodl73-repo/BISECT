@@ -74,8 +74,9 @@ For every State and Census year:
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
   - [x] Execute and exactly regenerate the precommitted NH/NM/GA 300-pair root slice.
   - [x] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
-  - [ ] Collapse complementary orientations and census distinct initial DFS bipartitions.
-  - [ ] Expand sensitivity to a precommitted national node sample only if the instrumentation identifies seed-sensitive ties.
+  - [x] Collapse complementary orientations and census distinct initial DFS bipartitions.
+  - [x] Stop initial root-0 physical-cut expansion after all 44 roots yielded one unlabeled bipartition.
+  - [ ] Instrument child-node and fallback opportunities before any broader seed sample.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
@@ -126,12 +127,13 @@ Next unblocked work:
 > technical schedule, adoption package, national enacted-plan Tier 1 bakeoff,
 > and Rhode Island 100-seed sensitivity slice are published. The Rhode Island
 > and NH/NM/GA diagnostic seeds all reproduced their governed root assignments.
-> The exact 44-State initial DFS census preserved every governed assignment and
-> objective; 29 roots expose two minimum-deviation/minimum-cut candidates and
-> therefore satisfy the necessary opportunity gate for bounded, precommitted
-> follow-up sensitivity. RI, NH, and GA show that this opportunity is not
-> sufficient for final assignment variation, while NM has no initial
-> opportunity. Cross-census assignment overlap remains uncomputed
+> The exact 44-State initial DFS censuses preserved every governed assignment
+> and objective. Twenty-nine equal-seat roots expose two oriented
+> minimum-deviation/minimum-cut candidates, but all 44 roots have exactly one
+> unlabeled physical bipartition. Initial root-0 physical-cut seed expansion is
+> therefore closed; label orientation, child nodes, and fallback paths remain
+> separate unproved sensitivity surfaces. Cross-census assignment overlap
+> remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.

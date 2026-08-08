@@ -1,7 +1,7 @@
 ---
 pulse: 11
 title: Initial DFS partition census
-status: active
+status: complete
 wave: nrs-2010-national-baseline
 validation_level: L2 governed diagnostic evidence
 ---
@@ -18,10 +18,21 @@ runs.
 
 - [x] Audit the 44-State oriented tie pattern.
 - [x] Precommit the unlabeled partition definition and stop rule.
-- [ ] Add behavior-preserving distinct-partition instrumentation.
-- [ ] Add synthetic orientation and multi-partition tests.
-- [ ] Replay and exactly verify all 44 governed roots.
-- [ ] Publish the corrected sensitivity gate.
+- [x] Add behavior-preserving distinct-partition instrumentation.
+- [x] Add synthetic orientation and multi-partition tests.
+- [x] Replay and exactly verify all 44 governed roots.
+- [x] Publish the corrected sensitivity gate.
+
+## Result
+
+All 44 roots preserved their governed assignments and objectives. Every root
+had exactly one distinct unlabeled minimum-deviation/minimum-cut bipartition.
+The 29 roots with two oriented candidates were exactly the equal-child-seat
+roots, and both candidates collapsed to the same physical cut.
+
+The preregistered physical-cut expansion gate is therefore closed for the
+initial root-0 DFS stage. Further sensitivity work requires a separate
+label-orientation, child-node, or fallback thesis.
 
 ## Governing Boundary
 

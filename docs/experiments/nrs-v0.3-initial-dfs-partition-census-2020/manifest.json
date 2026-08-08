@@ -1,0 +1,572 @@
+{
+  "schema_version": "nrs-v0.3-initial-dfs-partition-census-manifest-v1",
+  "protocol_id": "nrs-v0.3-initial-dfs-partition-census-v1",
+  "status": "pass",
+  "inputs": [
+    {
+      "path": "target/release/bisect.exe",
+      "sha256": "916a4a8b10cd6c0f4484835bf83dd0425d29e01659e111851315946d2836a709"
+    },
+    {
+      "path": "data/2020/certified/al_blocks_2020.rctx",
+      "sha256": "5d9acbcfddbac6fd3995f5ed4982535b458777c5cbe43d020bea317e3a376c90"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/al/package/baseline-tree.json",
+      "sha256": "fe21c14cf60b55d6e3029c75e1f6dbc348741f3dd917647f6b9abdcc4d49cfa6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/al/package/nodes/root/certified-discovery.json",
+      "sha256": "16241bdcafe6c54264d161f02b59e4791dfc38968327c8ab2bdf4bff5c94389a"
+    },
+    {
+      "path": "data/2020/certified/ar_blocks_2020.rctx",
+      "sha256": "ee37bd496c00a4f01bfff6f0bebafaf3e845080d16e1ec86f0866fd5165b03cc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ar/package/baseline-tree.json",
+      "sha256": "e5c36bc9bcc0496c06afb78f6f3e4576c50914080ab218c7c32176740d717a81"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ar/package/nodes/root/certified-discovery.json",
+      "sha256": "880dc57a350854ab09ec66ee3e0ed148dd99efa593acc94f158471e02e909149"
+    },
+    {
+      "path": "data/2020/certified/az_blocks_2020.rctx",
+      "sha256": "266f05a0820c2bacb9bd9e4d9546a82bc17dde995d6eff4c27785bb7fb059067"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/az/package/baseline-tree.json",
+      "sha256": "fa04735452ede7be56fd9c2ed5c42b32f6dbc722b23311d2e807ea748b76f76c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/az/package/nodes/root/certified-discovery.json",
+      "sha256": "04932112891d3524aeaac9d1fe71403e5711d96022dfe2e5c37a7dd757e204df"
+    },
+    {
+      "path": "data/2020/certified/ca_blocks_2020.rctx",
+      "sha256": "8c8509a8d1f685c4a0756e8b45bac1340840514041562c8b33c00394b68303ce"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ca/package/baseline-tree.json",
+      "sha256": "924d153173e3090e86e5437fa1df9319eea4e848a263f4f971150032987abc12"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ca/package/nodes/root/certified-discovery.json",
+      "sha256": "68cccfab99337528c561488fff07eea18f36ccebb4628a93d7236116c6041afd"
+    },
+    {
+      "path": "data/2020/certified/co_blocks_2020.rctx",
+      "sha256": "9897646633a4071560afead6ff5c243f55aecd45a0d1d22e778f9fa2d9460242"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/co/package/baseline-tree.json",
+      "sha256": "33edde12a94f555cc2e9fe2546e521c63cb338f722088032cdc0dfda42d48349"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/co/package/nodes/root/certified-discovery.json",
+      "sha256": "c3c324f486a2c00fc6ccb368b05b05d28fda8ad58401cf10faeb7d8ea11425fb"
+    },
+    {
+      "path": "data/2020/certified/ct_blocks_2020.rctx",
+      "sha256": "7c39aef1dfd49fc955af9de40e824f46b0119fc1650240a6081c0b3b72470675"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ct/package/baseline-tree.json",
+      "sha256": "4d097cc6ae18b5a8876a1df1c12a5343edf12f68b1e2678f3b2f4a04c990ab92"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ct/package/nodes/root/certified-discovery.json",
+      "sha256": "d60f03370c754140cec5de2fbddbdffd4395803040d2a1ff31b3be111808173c"
+    },
+    {
+      "path": "data/2020/certified/fl_blocks_2020.rctx",
+      "sha256": "fc6445ae9c73e8f26e5b734a999fb36b881f8fbda9a3a21b7e8af5ade0f8b05a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/fl/package/baseline-tree.json",
+      "sha256": "ff0e7a950dc9c6bf21f3807e05163c95b264c34d1a76099264a1e04055e1f65f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/fl/package/nodes/root/certified-discovery.json",
+      "sha256": "16dfefc9637d9a86a684d843a50df2496d1f479e2eb7306e89d7bf4896bff154"
+    },
+    {
+      "path": "data/2020/certified/ga_blocks_2020.rctx",
+      "sha256": "80029d0119f8d67017a79c8a550c9ff55722207ab79536cc87247188323c1939"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/baseline-tree.json",
+      "sha256": "437a37f318f451df235710d7ebae4f29ddfea948491b55b8b1ed110a9e35ebc9"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/nodes/root/certified-discovery.json",
+      "sha256": "7e908aa442ca61ae4633db06d3156080d41afcf09ab59dcc2c4c2834ceb61b77"
+    },
+    {
+      "path": "data/2020/certified/hi_blocks_2020.rctx",
+      "sha256": "6caf64b658d1a172b371a38b491313eae194bb4d3b28758413b2d19e3a49b600"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/hi/package/baseline-tree.json",
+      "sha256": "799cd5b23bb81a5979876c191be1e34aa0e341fb68a0b96d4c55dccbc8165d47"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/hi/package/nodes/root/certified-discovery.json",
+      "sha256": "5292ec351eb765d2ec38555083f2adcedb5e91119bf309f2c77a2205b4b9b4e5"
+    },
+    {
+      "path": "data/2020/certified/ia_blocks_2020.rctx",
+      "sha256": "a4e65f196156aafd5fba20040cab3d2331dd50ec4b4e23d497dab7073857f55e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ia/package/baseline-tree.json",
+      "sha256": "d55cb11ad42536bd9aea86958c52790d46077a41eeca588717f73b9fa014971a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ia/package/nodes/root/certified-discovery.json",
+      "sha256": "6b5da26ccd06981e67ec89f92533f246a21042fcbee07d6906732c0f79e6f2ab"
+    },
+    {
+      "path": "data/2020/certified/id_blocks_2020.rctx",
+      "sha256": "54eadb1e406ddfdb03dc4acf5c647b86f9b257600180380e789966e41ab6b342"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/id/package/baseline-tree.json",
+      "sha256": "2d50679c485fcd08cdcfec0a4d43532874a9c19fb8b365e3e1c50ed29cfee3e9"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/id/package/nodes/root/certified-discovery.json",
+      "sha256": "36ce2f8dcbcb6c00f6e41b21e8c5b474cffb12e775ff86ab3913fc8110bbcfe1"
+    },
+    {
+      "path": "data/2020/certified/il_blocks_2020.rctx",
+      "sha256": "d2b4b3988e3871c2315655dab6d48d963b0f0c8edc8570ab4c6584b9459f5ee5"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/il/package/baseline-tree.json",
+      "sha256": "a8543d9e2e4dc7ba7681f5a9892f49014690d60e6cadb818579f097dc799f547"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/il/package/nodes/root/certified-discovery.json",
+      "sha256": "f0f9afee7fe97081253f592b5d1281be6fb3dc11cc152ce57c77c8a77386b8b0"
+    },
+    {
+      "path": "data/2020/certified/in_blocks_2020.rctx",
+      "sha256": "65d280efb8714808adc970b0d457ea3fad7a160f389a910371936b3d31937180"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/in/package/baseline-tree.json",
+      "sha256": "1ed242af91d54b7f78bc51edd87ae62b94a7f72683578d00618280a5532237a2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/in/package/nodes/root/certified-discovery.json",
+      "sha256": "b0a844c04307cfd414f6357f6a9eb67b1171a414a0e906f30c9a4cb0e05c2a91"
+    },
+    {
+      "path": "data/2020/certified/ks_blocks_2020.rctx",
+      "sha256": "b97d42329955aa1b7e328b86a355c670d9681e4ef483d3584bd77ae0af3fe9b1"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ks/package/baseline-tree.json",
+      "sha256": "0b56252d39c7012ebbb99b11d5ff80f4ca0b55cf107e98e4364a1ada06def4ef"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ks/package/nodes/root/certified-discovery.json",
+      "sha256": "aec978c6c78c6f46af06af1d60a5c468ed7c94cd7f554021e183b2e0305e5dd8"
+    },
+    {
+      "path": "data/2020/certified/ky_blocks_2020.rctx",
+      "sha256": "81b65a65568e674c02116c9eb1bc81d4992d9e761a9c751e94912e434bf6d338"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ky/package/baseline-tree.json",
+      "sha256": "75e7628504881338e4de803fa79f0430ffc2e0b7641b56923c4901b79119925e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ky/package/nodes/root/certified-discovery.json",
+      "sha256": "672813cfede34c03e701a3fa9f871a17b30a86ce961fd2d513accf8793bcb310"
+    },
+    {
+      "path": "data/2020/certified/la_blocks_2020.rctx",
+      "sha256": "de493a10b5d933d55d9237d14590c0df7a6db5662a1e6ec0dd6f32f4a9a23d2b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/la/package/baseline-tree.json",
+      "sha256": "9215ecfb6c37b46ec4ad5ca508726a9f972af1f1f4c85a0546b981de946e2096"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/la/package/nodes/root/certified-discovery.json",
+      "sha256": "89b9336f7c90cf3583dbfa9b6096ef82a532a2b8e5e338489188be50f1d92652"
+    },
+    {
+      "path": "data/2020/certified/ma_blocks_2020.rctx",
+      "sha256": "fce93622c990566eef8e6c19aec9c66a41fdc2a93157319ccbbdef943fdcd784"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ma/package/baseline-tree.json",
+      "sha256": "eea3c926e7f37fe5fee79ceb8b5308fd25d861070b70e4cfc3b0e488fdd3dadd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ma/package/nodes/root/certified-discovery.json",
+      "sha256": "a77b26e8ee2072f92fd4994aa9faed1412fc6ee5b4b16f098028170c34b902f4"
+    },
+    {
+      "path": "data/2020/certified/md_blocks_2020.rctx",
+      "sha256": "1de800093a0c946e95c98fcc0a1dfcb04cc1c457f8c1d5fd23fd3c15c4c5fabd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/md/package/baseline-tree.json",
+      "sha256": "4fad94b5231a10bdd39dfecd4c6ab80aed6bb9da631a641d89470e5bc423ade2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/md/package/nodes/root/certified-discovery.json",
+      "sha256": "598eb4d83f6d8927091fca6c9438057207df68a16dfbb26b8c9d53aa087a4d1a"
+    },
+    {
+      "path": "data/2020/certified/me_blocks_2020.rctx",
+      "sha256": "cbcae291c238bb09807fb1447372ea4da499f5527d8f6b9ce9a1653e564b344a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/me/package/baseline-tree.json",
+      "sha256": "bb87bcd9297cbd222dae1f9d1ce75e816324e08e2d6357dcb483ccd88a4f7295"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/me/package/nodes/root/certified-discovery.json",
+      "sha256": "571d46ede842b593843db9ac4fbdb803ecb99df69ba2ac7d524f084e34d0bace"
+    },
+    {
+      "path": "data/2020/certified/mi_blocks_2020.rctx",
+      "sha256": "3fce90c420d818a265aec3a18bfec628f52210fabe302a73ab107a8310674dfd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mi/package/baseline-tree.json",
+      "sha256": "afdfe5d57f1d58731325fc1978fe34bf2ae22866780c2b3841344416ff861c17"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mi/package/nodes/root/certified-discovery.json",
+      "sha256": "a974327323b29323764407d73420e2736291a5f63ac5041546a35abd58e31354"
+    },
+    {
+      "path": "data/2020/certified/mn_blocks_2020.rctx",
+      "sha256": "24b02b7467a93dd6138e07796ba9f3df3f083bcbe0da2626c9c4528f121338cb"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mn/package/baseline-tree.json",
+      "sha256": "ec7f5324a6bc87fcd989b09ef09577463f99d3f22f3b29381febc44692a58862"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mn/package/nodes/root/certified-discovery.json",
+      "sha256": "77fdb0517d33f48c84b799776109b966fdab5b63e4fa865c890316795b0e7eea"
+    },
+    {
+      "path": "data/2020/certified/mo_blocks_2020.rctx",
+      "sha256": "41d79caab52f5c5fd35b5cd45357cf80416d84f154feeb465266200cea3943d8"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mo/package/baseline-tree.json",
+      "sha256": "f1968d27315a477c4ce41a442b75c5a916fd4ba88ad5914e8dca1fc388de8bd5"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mo/package/nodes/root/certified-discovery.json",
+      "sha256": "5cec902030619b4cf0eb5a6b993281d03428fcd220618d076c890eedeae414ee"
+    },
+    {
+      "path": "data/2020/certified/ms_blocks_2020.rctx",
+      "sha256": "49e494baea46907c210b56bff544e07b99c9782d34a8b57fbd78271485e1cb3a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ms/package/baseline-tree.json",
+      "sha256": "b525af6cb8a4cb25691715b5976491a46466ee7e712832df30cad6ae6f2214dc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ms/package/nodes/root/certified-discovery.json",
+      "sha256": "73a0dc49f4a281bacf4530a140fcda0a1edfc62277d5d89e5535f52ff2103679"
+    },
+    {
+      "path": "data/2020/certified/mt_blocks_2020.rctx",
+      "sha256": "79fe32dfe26c5ec8fa32e8b90fb2a220822eb5dd94c08289804539b1020b3a8b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mt/package/baseline-tree.json",
+      "sha256": "1bd33cb8f49211fa80bc21cc8d2cc74a1f0a1fffc06c7fdf10ad08a26de39b89"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mt/package/nodes/root/certified-discovery.json",
+      "sha256": "2beb5cacee2bc38bc54675a8def6b0f02c3d22c527820cbfa1de8874190bc332"
+    },
+    {
+      "path": "data/2020/certified/nc_blocks_2020.rctx",
+      "sha256": "9bddeecbdca04bd89cc7b86cb4402f1cf113a9c7b9b6915da990daccb1af3c2d"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nc/package/baseline-tree.json",
+      "sha256": "6e9bbab1ab446fdda2eb7948a2df6e14983b1a12c7fb753b07d79d6f3690015e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nc/package/nodes/root/certified-discovery.json",
+      "sha256": "5ab898b74e779eee0a217c1146d196d20f8a92b042fc8f40cb8f90e7f53f0cd5"
+    },
+    {
+      "path": "data/2020/certified/ne_blocks_2020.rctx",
+      "sha256": "7ea301e08666fbc56fe3d6f5478cf092b706cf536476403dc318c51b5fd151ee"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ne/package/baseline-tree.json",
+      "sha256": "cc745ba15ef0f17b11b2401c83114edd185255b094c1fcd3e2bafb865f96b403"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ne/package/nodes/root/certified-discovery.json",
+      "sha256": "999eb8ac1ddd007b70a7e5147f33d12dcff5cc0dfd76ec58b9cfbcbf37b01f97"
+    },
+    {
+      "path": "data/2020/certified/nh_blocks_2020.rctx",
+      "sha256": "fed430c5d4e7c2e53d1dc5d164f0f2b22afa7898ba97821365b18a8bc3aca77c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nh/package/baseline-tree.json",
+      "sha256": "b778806e0876240a1736dd945cc5487a21ff8db903737caec3f3f55f418793c0"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nh/package/nodes/root/certified-discovery.json",
+      "sha256": "8b92f34f11b0ad08b17e8f25a062f84b9ec8bdf48f674a1890804a0f6cffad83"
+    },
+    {
+      "path": "data/2020/certified/nj_blocks_2020.rctx",
+      "sha256": "8efff4b2389194a901e6860284ff2d4b169f9462bc1c99c903e283a45792e2a6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nj/package/baseline-tree.json",
+      "sha256": "01fca4d37c54c9d9e15a888f70b73eff6b8b9f08c9a118150990de5c9cc3d413"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nj/package/nodes/root/certified-discovery.json",
+      "sha256": "8d06f5fa0d652bb57a07ccfafbff2bb4225db528c166a9dce8ec50e90be589bb"
+    },
+    {
+      "path": "data/2020/certified/nm_blocks_2020.rctx",
+      "sha256": "6ec8526daac0349be74bcf01119a14b4d37ba3c6d65577d07503cf2ec5d868bc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nm/package/baseline-tree.json",
+      "sha256": "d08682f90d1590415c344d7c0e49035eb6956dcbe168bfa8ed54e71ce59c89a4"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nm/package/nodes/root/certified-discovery.json",
+      "sha256": "563dee5a5584ca50d914f09d38f18361d7952887c6512feaaa53b3abc1920224"
+    },
+    {
+      "path": "data/2020/certified/nv_blocks_2020.rctx",
+      "sha256": "e6324a63cd65ca9ea94f07019da74b1dbbc076c026341f802940693fe3ded3dc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nv/package/baseline-tree.json",
+      "sha256": "834179a40e7d4052748fb548b371a50db9cc6f429a3b2af1b08698d053c67833"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nv/package/nodes/root/certified-discovery.json",
+      "sha256": "70a36edf383c18cf9641e6c4c884c36e32e8c90edc84e1eafb0fb9f4b7a6bcc8"
+    },
+    {
+      "path": "data/2020/certified/ny_blocks_2020.rctx",
+      "sha256": "d553991acc1e9124a38572fec3ba0c080dad62a239b1ba89bcbaaad9c4f41019"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ny/package/baseline-tree.json",
+      "sha256": "fe941c7fcc21c1214605515db50a38aead58334cb0ad3b48254632afa13c1d78"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ny/package/nodes/root/certified-discovery.json",
+      "sha256": "3aab4d0e48c4f51f3a7e218a17138be86796b039271f9e593f1b59432526531b"
+    },
+    {
+      "path": "data/2020/certified/oh_blocks_2020.rctx",
+      "sha256": "b06f219d27aa6e40ad1b2bdf6051817305238953f8d2d341baf12b37e33e797a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/oh/package/baseline-tree.json",
+      "sha256": "45c116480023e9bf6ebd05babb802abc1ac1f7eca19daca48cf372e02439802e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/oh/package/nodes/root/certified-discovery.json",
+      "sha256": "3da957b31cf04bc94dd8e3966a97f3a49bb3441ae9c747d7e1b3d2cd64b4dd9f"
+    },
+    {
+      "path": "data/2020/certified/ok_blocks_2020.rctx",
+      "sha256": "f999c0d19e5ee14c42bf23d014a5aeb3e7491f0a0676a74af588d93c0572b55d"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ok/package/baseline-tree.json",
+      "sha256": "e16537fbd6e76d7e2af397d66f19aea59b244b3e7398bef5adb9376f30ed95fe"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ok/package/nodes/root/certified-discovery.json",
+      "sha256": "679f772e03aff34c383f8cebcdcbccaea9900e3cd4d7ecca901f33afabed62c9"
+    },
+    {
+      "path": "data/2020/certified/or_blocks_2020.rctx",
+      "sha256": "8af7e26e3b37eaacb30a6ca3b5dbc773d5cfbe8e8112734b7acda2f88c8be0e2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/or/package/baseline-tree.json",
+      "sha256": "e2ccd2e2817ab1f64c105f1fcce47fadc72ccdfbae3d0182496fc010d87d538f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/or/package/nodes/root/certified-discovery.json",
+      "sha256": "9e6b13970fcc95181231831f1c2e3388318eada3b710f54441d3a05cf244dbf0"
+    },
+    {
+      "path": "data/2020/certified/pa_blocks_2020.rctx",
+      "sha256": "39afac1e32df7eed4e88f8af739c6808cc128353998f914a9ff81f712e8f404b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/pa/package/baseline-tree.json",
+      "sha256": "8f84cb1d9e627d690de830da2e8bac00102c1d0279a739e77c958fa401656fcd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/pa/package/nodes/root/certified-discovery.json",
+      "sha256": "f40c8e8d1b969c017c66ba74457cf6a2458bc236407673b48b8b0a88dc70082f"
+    },
+    {
+      "path": "data/2020/certified/ri_blocks_2020.rctx",
+      "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/baseline-tree.json",
+      "sha256": "dacb581e78b554725516316554d9c835fddde125e1431084f903fe247611cc98"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/nodes/root/certified-discovery.json",
+      "sha256": "1fa5775fda7b9370f4341e81268df8a24fa256eb2a32e013544b20e67edb265f"
+    },
+    {
+      "path": "data/2020/certified/sc_blocks_2020.rctx",
+      "sha256": "4e098e9c43c3d31fbf48362d3a82ee55c2632df2700228d8861b7b122c8e2a60"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/sc/package/baseline-tree.json",
+      "sha256": "c13148bce958f39da54b1bff9ce2f119d4bc90c16231670c997746f3f777e17b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/sc/package/nodes/root/certified-discovery.json",
+      "sha256": "6a053c04a8971ad1186afd40c38b22a33742ec429d6afe3f88231ae8e8c2d412"
+    },
+    {
+      "path": "data/2020/certified/tn_blocks_2020.rctx",
+      "sha256": "466a9fdd514c9e30e8567c63bac486864b1ebab0f3a6b35ba8d9301bf0d01b31"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/tn/package/baseline-tree.json",
+      "sha256": "50288bb0953399f05f30cb9855ea1ccfdfa97f0adb1277125e5c498a587a1954"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/tn/package/nodes/root/certified-discovery.json",
+      "sha256": "f7992739314df9e6f3366860e9030e2cf5c462e0f3277683acd65d2b9fb0bb18"
+    },
+    {
+      "path": "data/2020/certified/tx_blocks_2020.rctx",
+      "sha256": "7965ce00ebdc781a5935b605bf81f0498f41c4e3444144cf8daa8467fecd0858"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/tx/package/baseline-tree.json",
+      "sha256": "c30507fcabfe915e29256fdc07a0ed3d18d2ed861013300ae697ede03b016138"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/tx/package/nodes/root/certified-discovery.json",
+      "sha256": "0319224acb2ab923d6b3eb044d2a18384a5cbc240ecbfd6520c4677c77f1973e"
+    },
+    {
+      "path": "data/2020/certified/ut_blocks_2020.rctx",
+      "sha256": "c81f22ee6a26ff5e39db5994084c59417317be58a2b00699f5e04ca3535dba05"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ut/package/baseline-tree.json",
+      "sha256": "bc2d69ff8162118b81317f76ed3f8a192701bd51ce75c67a8f415973de371ea7"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ut/package/nodes/root/certified-discovery.json",
+      "sha256": "e5b7b82a67a03a75e3b98241f393253a0df29a8fe3417b552fb69a30313dc0b5"
+    },
+    {
+      "path": "data/2020/certified/va_blocks_2020.rctx",
+      "sha256": "49cb2352ea4a71ff064d50b52bd5efa62585dbe5ef09c28d9a507a897b02444c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/va/package/baseline-tree.json",
+      "sha256": "1009c7a7a268d5a0685612de8d4c66d8deaf28ca90ec455f941fc46ca1cfdf2b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/va/package/nodes/root/certified-discovery.json",
+      "sha256": "fe0c687b6fa9e49dee387edfb0d2f0246388d0d4f0f63429218535873e0cf852"
+    },
+    {
+      "path": "data/2020/certified/wa_blocks_2020.rctx",
+      "sha256": "c58477933b5f0eb07551a3a00b4e00e3e836d34a7413ea1abfeccbafc8ad77a2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wa/package/baseline-tree.json",
+      "sha256": "44214494151451bba1cf8121fdf9ecd87897d94fccff30ba221732259b8c7435"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wa/package/nodes/root/certified-discovery.json",
+      "sha256": "ca7880ae91c0314074e28c5391f60cebeef24d808c5bfc4ba0850ba8444defa3"
+    },
+    {
+      "path": "data/2020/certified/wi_blocks_2020.rctx",
+      "sha256": "34e1485b05ac8d6489fab2f49da194069587de6a48bbaf363d5bd71d8f2a88d5"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wi/package/baseline-tree.json",
+      "sha256": "589a81454bb552444e729df8a3b3fa4dc20daca84880da50af23a0f3b6671c51"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wi/package/nodes/root/certified-discovery.json",
+      "sha256": "a8b9410bb0ad8167897615c218e56a64b4915e6da89af665b8fa4593ded8625e"
+    },
+    {
+      "path": "data/2020/certified/wv_blocks_2020.rctx",
+      "sha256": "048f043b72dd2b7fb4f29d625a601d8f535fb5f7399b8c6f24d2ddf7e96c7073"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wv/package/baseline-tree.json",
+      "sha256": "88dd38ad6896f619e9ceef51936282d0b52f0ee1d77009fc4118ddd9fb30220c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wv/package/nodes/root/certified-discovery.json",
+      "sha256": "c32629e0cff8ee536a972751832c24ab4b4ffd3085ead77785f365b7967e46c8"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-dfs-partition-census-protocol.md",
+      "sha256": "adc14efaf16d348c78652b1739db90fe992748e1f38c8ba6c6b6bcd3299f8ae8"
+    },
+    {
+      "path": "crates/bisect-cli/src/exact_cmd.rs",
+      "sha256": "c67e1a03142b72dcbe1903b70715dee4ebf44df6e65c566f55c200590b182dbb"
+    },
+    {
+      "path": "scripts/research/run_nrs_dfs_tie_census.py",
+      "sha256": "7c1f4f9810546f3eb512cbc7d62a61968017978d9ebaa64f21aecdb5624f1b64"
+    },
+    {
+      "path": "scripts/research/run_nrs_dfs_partition_census.py",
+      "sha256": "312fb6d2e432b3c519a2995f0d2e589b4a2a899c4cd119df898279a27bf334b4"
+    },
+    {
+      "path": "scripts/research/verify_nrs_dfs_partition_census.py",
+      "sha256": "c5a995c3085ea4a3c5ab09f1a2827d619658f9b31f639720b4605a36fc5c1a03"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "662de2f9736d27f0ec2a3f0b0a3b6e0fd017f7c92351cee4f15ba5a3424a26bc",
+    "state-results.csv": "a3a24567c5c97590228bff9f67f55f20689d7fd8af499e0b688e59aea66a6399",
+    "README.md": "4ec730b0a8c74672fda689963bee2355485bcf103efa33b85851379f07191274"
+  },
+  "reproduction": {
+    "binary": "target/release/bisect.exe",
+    "workers": 6,
+    "display_output_dir": "docs/experiments/nrs-v0.3-initial-dfs-partition-census-2020"
+  },
+  "claim_boundary": "Unlabeled initial root-0 DFS tree-edge bipartitions for governed 2020 State roots only; no seed-invariant label, child-node, fallback, full-plan, national robustness, optimality, or legal-quality claim."
+}
