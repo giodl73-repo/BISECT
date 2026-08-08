@@ -229,7 +229,9 @@ def write_package(
         "claim_boundary": CLAIM_BOUNDARY,
     }
     analysis_path = output_dir / "analysis.json"
-    analysis_path.write_text(json.dumps(analysis, indent=2) + "\n", encoding="utf-8")
+    analysis_path.write_text(
+        json.dumps(analysis, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
 
     canonical_output = display_dir or tie.relative_path(output_dir)
     readme = f"""# NRS v0.3 Cross-Census Complete-Tree DFS Census
@@ -265,7 +267,7 @@ python scripts/research/verify_nrs_cross_census_dfs.py `
 {CLAIM_BOUNDARY}
 """
     readme_path = output_dir / "README.md"
-    readme_path.write_text(readme, encoding="utf-8")
+    readme_path.write_text(readme, encoding="utf-8", newline="\n")
 
     input_paths = [bisect, ops]
     for row in inputs:
@@ -315,7 +317,7 @@ python scripts/research/verify_nrs_cross_census_dfs.py `
         "claim_boundary": CLAIM_BOUNDARY,
     }
     (output_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
 
 
