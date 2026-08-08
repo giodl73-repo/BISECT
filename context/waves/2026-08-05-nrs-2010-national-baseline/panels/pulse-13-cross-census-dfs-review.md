@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-08
 **Roles:** MERIDIAN, DATUM, SCALE, BENCHMARK, BOUNDARY
-**Posture:** protocol review before replay
+**Posture:** post-census interpretation
 
 ## Findings
 
@@ -18,5 +18,10 @@
 
 ## Decision
 
-Proceed with the exact cross-census replay. Instrument internal fallback
-candidate multiplicity only for the activated nodes found by this ledger.
+The replay preserved all 86 State assignments and all 770 node
+assignments/objectives. No node had multiple physical initial cuts. Seven
+nodes activated v0.2, and 2000 HI/root alone activated v0.3.
+
+Restrict deeper fallback instrumentation to those seven nodes. Preserve the
+other 763 nodes as explicit nonactivated exclusions rather than expanding seed
+execution nationally.

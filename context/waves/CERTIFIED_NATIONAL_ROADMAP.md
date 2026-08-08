@@ -78,7 +78,8 @@ For every State and Census year:
   - [x] Stop initial root-0 physical-cut expansion after all 44 roots yielded one unlabeled bipartition.
   - [x] Census child-node physical partitions and fallback activation before any broader seed sample.
   - [x] Stop broader 2020 DFS/fallback seed expansion after 385 nodes yielded one physical cut and zero fallback activations.
-  - [ ] Extend complete-tree DFS and fallback diagnostics to governed 2000/2010 nodes.
+  - [x] Extend complete-tree DFS and fallback diagnostics to governed 2000/2010 nodes.
+  - [ ] Instrument candidate multiplicity inside the seven activated v0.2 nodes and one activated v0.3 node.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
@@ -136,8 +137,10 @@ Next unblocked work:
 > to all 385 governed 2020 split nodes: 266 orientation-only ties, zero
 > competing physical initial cuts, and zero v0.2 or v0.3 fallback activations.
 > Broader 2020 DFS/fallback seed expansion is therefore closed, without
-> claiming seed-invariant labels or full plans. Cross-census assignment overlap
-> remains uncomputed
+> claiming seed-invariant labels or full plans. The exact 2000/2010 replay also
+> found one physical initial cut at all 770 nodes, while bounding fallback work
+> to seven v0.2 activations (six in 2000 and California 2010) and one v0.3
+> activation (Hawaii 2000). Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.

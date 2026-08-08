@@ -42,7 +42,7 @@ verified 2020 national baseline.
 | 10 - Initial DFS tie census | COMPLETE | All 44 roots preserved governed assignments/objectives; 29 expose two minimum-deviation/minimum-cut initial candidates |
 | 11 - Initial DFS partition census | COMPLETE | All 44 roots have one physical minimum-deviation/minimum-cut partition; 29 oriented ties are equal-seat label symmetry |
 | 12 - Complete-tree DFS and fallback census | COMPLETE | All 385 nodes have one physical initial cut; 266 orientation-only ties; zero v0.2/v0.3 fallback activations |
-| 13 - Cross-census complete-tree DFS census | ACTIVE | Precommitted replay covers all 770 governed 2000/2010 split nodes and documented fallback witnesses |
+| 13 - Cross-census complete-tree DFS census | COMPLETE | All 770 nodes have one physical initial cut; seven v0.2 activations and one v0.3 activation form the bounded fallback universe |
 
 ## Versioned amendment
 

@@ -1,0 +1,60 @@
+{
+  "schema_version": "nrs-v0.3-cross-census-complete-tree-dfs-analysis-v1",
+  "protocol_id": "nrs-v0.3-cross-census-complete-tree-dfs-v1",
+  "status": "pass",
+  "census_years": [
+    2000,
+    2010
+  ],
+  "state_count": 86,
+  "accepted_state_count": 86,
+  "rejected_state_count": 0,
+  "split_node_count": 770,
+  "assignment_preserving_state_count": 86,
+  "assignment_preserving_node_count": 770,
+  "objective_preserving_node_count": 770,
+  "minimum_deviation_cut_partition_distribution": {
+    "minimum": 1,
+    "maximum": 1,
+    "counts": {
+      "1": 770
+    }
+  },
+  "orientation_only_tie_node_count": 525,
+  "physical_cut_opportunity_node_count": 0,
+  "physical_cut_opportunity_nodes": [],
+  "nrs_v0_2_fallback_activation_count": 7,
+  "nrs_v0_2_fallback_activation_nodes": [
+    "2000/AZ/10",
+    "2000/CA/11010",
+    "2000/GA/100",
+    "2000/HI/root",
+    "2000/TX/100",
+    "2000/TX/0100",
+    "2010/CA/00110"
+  ],
+  "nrs_v0_3_fallback_activation_count": 1,
+  "nrs_v0_3_fallback_activation_nodes": [
+    "2000/HI/root"
+  ],
+  "year_summaries": {
+    "2000": {
+      "state_count": 43,
+      "split_node_count": 385,
+      "orientation_only_tie_node_count": 262,
+      "physical_cut_opportunity_node_count": 0,
+      "nrs_v0_2_fallback_activation_count": 6,
+      "nrs_v0_3_fallback_activation_count": 1
+    },
+    "2010": {
+      "state_count": 43,
+      "split_node_count": 385,
+      "orientation_only_tie_node_count": 263,
+      "physical_cut_opportunity_node_count": 0,
+      "nrs_v0_2_fallback_activation_count": 1,
+      "nrs_v0_3_fallback_activation_count": 0
+    }
+  },
+  "failures": [],
+  "claim_boundary": "Governed 2000/2010 complete-tree initial DFS partition and fallback activation diagnostics only; no seed-invariant label or plan, national robustness, optimality, partisan, legal-quality, or assignment-overlap claim."
+}
