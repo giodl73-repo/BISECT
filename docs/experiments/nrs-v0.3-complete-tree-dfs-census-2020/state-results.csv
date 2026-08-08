@@ -1,45 +1,45 @@
 state,districts,node_count,status,failure,state_assignment_match,node_assignment_match_count,node_objective_match_count
-AL,7,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-AR,4,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-AZ,9,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-CA,52,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-CO,8,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-CT,5,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-FL,28,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-GA,14,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-HI,2,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-IA,4,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-ID,2,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-IL,17,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-IN,9,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-KS,4,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-KY,6,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-LA,6,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-MA,9,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-MD,8,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-ME,2,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-MI,13,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-MN,8,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-MO,8,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-MS,4,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-MT,2,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-NC,14,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-NE,3,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-NH,2,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-NJ,12,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-NM,3,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-NV,4,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-NY,26,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-OH,15,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-OK,5,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-OR,6,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-PA,17,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-RI,2,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-SC,7,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-TN,9,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-TX,38,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-UT,4,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-VA,11,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-WA,10,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-WI,8,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
-WV,2,,rejected,Error: frozen source object is unavailable: 266aa98364bccc30dcae9db8ad32a785c9e0271a:Cargo.lock,,,
+AL,7,6,accepted,,true,6,6
+AR,4,3,accepted,,true,3,3
+AZ,9,8,accepted,,true,8,8
+CA,52,51,accepted,,true,51,51
+CO,8,7,accepted,,true,7,7
+CT,5,4,accepted,,true,4,4
+FL,28,27,accepted,,true,27,27
+GA,14,13,accepted,,true,13,13
+HI,2,1,accepted,,true,1,1
+IA,4,3,accepted,,true,3,3
+ID,2,1,accepted,,true,1,1
+IL,17,16,accepted,,true,16,16
+IN,9,8,accepted,,true,8,8
+KS,4,3,accepted,,true,3,3
+KY,6,5,accepted,,true,5,5
+LA,6,5,accepted,,true,5,5
+MA,9,8,accepted,,true,8,8
+MD,8,7,accepted,,true,7,7
+ME,2,1,accepted,,true,1,1
+MI,13,12,accepted,,true,12,12
+MN,8,7,accepted,,true,7,7
+MO,8,7,accepted,,true,7,7
+MS,4,3,accepted,,true,3,3
+MT,2,1,accepted,,true,1,1
+NC,14,13,accepted,,true,13,13
+NE,3,2,accepted,,true,2,2
+NH,2,1,accepted,,true,1,1
+NJ,12,11,accepted,,true,11,11
+NM,3,2,accepted,,true,2,2
+NV,4,3,accepted,,true,3,3
+NY,26,25,accepted,,true,25,25
+OH,15,14,accepted,,true,14,14
+OK,5,4,accepted,,true,4,4
+OR,6,5,accepted,,true,5,5
+PA,17,16,accepted,,true,16,16
+RI,2,1,accepted,,true,1,1
+SC,7,6,accepted,,true,6,6
+TN,9,8,accepted,,true,8,8
+TX,38,37,accepted,,true,37,37
+UT,4,3,accepted,,true,3,3
+VA,11,10,accepted,,true,10,10
+WA,10,9,accepted,,true,9,9
+WI,8,7,accepted,,true,7,7
+WV,2,1,accepted,,true,1,1

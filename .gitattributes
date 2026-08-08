@@ -20,3 +20,4 @@ docs/specs/2026-08-06-nrs-v0.3-national-geographic-split-audit-protocol.md text 
 scripts/research/analyze_nrs_geographic_splits.py text eol=lf
 scripts/research/verify_nrs_geographic_splits.py text eol=lf
 docs/experiments/nrs-v0.3-national-geographic-splits/** text eol=lf
+docs/experiments/nrs-v0.3-complete-tree-dfs-census-2020/** text eol=lf
