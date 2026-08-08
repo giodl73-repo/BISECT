@@ -76,7 +76,8 @@ For every State and Census year:
   - [x] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
   - [x] Collapse complementary orientations and census distinct initial DFS bipartitions.
   - [x] Stop initial root-0 physical-cut expansion after all 44 roots yielded one unlabeled bipartition.
-  - [ ] Census child-node physical partitions and fallback activation before any broader seed sample.
+  - [x] Census child-node physical partitions and fallback activation before any broader seed sample.
+  - [x] Stop broader 2020 DFS/fallback seed expansion after 385 nodes yielded one physical cut and zero fallback activations.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
@@ -130,9 +131,11 @@ Next unblocked work:
 > The exact 44-State initial DFS censuses preserved every governed assignment
 > and objective. Twenty-nine equal-seat roots expose two oriented
 > minimum-deviation/minimum-cut candidates, but all 44 roots have exactly one
-> unlabeled physical bipartition. Initial root-0 physical-cut seed expansion is
-> therefore closed; label orientation, child nodes, and fallback paths remain
-> separate unproved sensitivity surfaces. Cross-census assignment overlap
+> unlabeled physical bipartition. The complete-tree replay extends that result
+> to all 385 governed 2020 split nodes: 266 orientation-only ties, zero
+> competing physical initial cuts, and zero v0.2 or v0.3 fallback activations.
+> Broader 2020 DFS/fallback seed expansion is therefore closed, without
+> claiming seed-invariant labels or full plans. Cross-census assignment overlap
 > remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain

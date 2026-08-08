@@ -1,0 +1,29 @@
+{
+  "schema_version": "nrs-v0.3-complete-tree-dfs-census-analysis-v1",
+  "protocol_id": "nrs-v0.3-complete-tree-dfs-census-v1",
+  "status": "pass",
+  "census_year": 2020,
+  "state_count": 44,
+  "accepted_state_count": 44,
+  "rejected_state_count": 0,
+  "split_node_count": 385,
+  "assignment_preserving_state_count": 44,
+  "assignment_preserving_node_count": 385,
+  "objective_preserving_node_count": 385,
+  "minimum_deviation_cut_partition_distribution": {
+    "minimum": 1,
+    "maximum": 1,
+    "counts": {
+      "1": 385
+    }
+  },
+  "orientation_only_tie_node_count": 266,
+  "physical_cut_opportunity_node_count": 0,
+  "physical_cut_opportunity_nodes": [],
+  "nrs_v0_2_fallback_activation_count": 0,
+  "nrs_v0_2_fallback_activation_nodes": [],
+  "nrs_v0_3_fallback_activation_count": 0,
+  "nrs_v0_3_fallback_activation_nodes": [],
+  "failures": [],
+  "claim_boundary": "Governed 2020 complete-tree initial DFS partition and fallback activation diagnostics only; no seed-invariant label or plan, cross-census, national robustness, optimality, partisan, or legal-quality claim."
+}

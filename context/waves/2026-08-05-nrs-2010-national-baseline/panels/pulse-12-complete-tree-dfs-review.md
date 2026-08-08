@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-08
 **Roles:** MERIDIAN, DATUM, SCALE, BENCHMARK, BOUNDARY
-**Posture:** protocol review before instrumentation
+**Posture:** post-census interpretation
 
 ## Findings
 
@@ -18,5 +18,10 @@
 
 ## Decision
 
-Proceed with the exact 385-node replay. Add deeper fallback candidate
-instrumentation only if an activation is observed.
+The exact replay preserved all 44 State assignments and all 385 node
+assignments/objectives. Every node had one physical initial DFS partition;
+266 nodes had orientation-only ties. Neither fallback stage activated.
+
+Stop broader 2020 DFS/fallback seed expansion. Do not infer seed-invariant
+labels or full plans, and retain fallback candidate instrumentation as a
+cross-census question only if a governed activation is observed there.
