@@ -10,7 +10,7 @@
   existing return values.
 - DATUM: distinguish evaluated candidates, oriented ties, and distinct
   unlabeled partitions after deviation and cut.
-- SCALE: replay seven State packages sequentially; do not rerun 1,155 nodes.
+- SCALE: replay six State packages sequentially; do not rerun 1,155 nodes.
 - BENCHMARK: require complete containing-State assignment preservation, not
   only local node equality.
 - BOUNDARY: v0.3 is a first-feasible algorithm, so its diagnostics must not be

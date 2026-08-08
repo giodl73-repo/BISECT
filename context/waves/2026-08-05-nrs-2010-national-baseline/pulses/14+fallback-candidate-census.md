@@ -19,7 +19,7 @@ the single activated v0.3 stage before any fallback seed execution.
 - [x] Freeze the eight activated stage/node pairs.
 - [ ] Add behavior-preserving candidate diagnostics.
 - [ ] Add synthetic selection and emitted-method tests.
-- [ ] Replay the seven containing State packages with one worker.
+- [ ] Replay the six containing State packages with one worker.
 - [ ] Verify governed assignments/objectives and publish the stop/advance gate.
 
 ## Governing Boundary
