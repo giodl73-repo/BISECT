@@ -5871,7 +5871,7 @@
     },
     {
       "path": "scripts/research/run_nrs_cross_census_dfs.py",
-      "sha256": "4e87825356feed6ea41729546e9e65bb84aebfd1e3797e3a5e62b7912ba60769"
+      "sha256": "8e2c5969df3502fed5c1787fa8b013183d450c5ba9111a433f9641a699cda2a9"
     },
     {
       "path": "scripts/research/verify_nrs_cross_census_dfs.py",
@@ -5879,15 +5879,15 @@
     }
   ],
   "outputs": {
-    "analysis.json": "39ed7fc5895e99c2326209fcf95c2660ea8ca54c4fc24a867d6b798f92d9b13d",
+    "analysis.json": "eeb3b338ec77601b0ea84e6d4e316813bd639027f8bcc181a80c9ed33fb2c5a1",
     "state-results.csv": "cb4e4fc22835679dec94b4c1833d0ec62cdb8ede6a0556901349dc38ff3adde8",
     "node-results.csv": "e9a09eaa453111f0f391b2fd3ae8ed2f95357d6e341fa362ee509a707c5439fc",
-    "README.md": "561dcfc396a2638346fc5a530d967b8286ff96872092f070f268af65c4652ade"
+    "README.md": "ed5771db65656f376bc471bf8b152b308239d6e3238ad7c9236beb988d934798"
   },
   "reproduction": {
     "bisect": "target/release/bisect.exe",
     "ops": "target/release/bisect-ops.exe",
-    "workers": 4,
+    "workers": 1,
     "display_output_dir": "docs/experiments/nrs-v0.3-cross-census-complete-tree-dfs"
   },
   "claim_boundary": "Governed 2000/2010 complete-tree initial DFS partition and fallback activation diagnostics only; no seed-invariant label or plan, national robustness, optimality, partisan, legal-quality, or assignment-overlap claim."
