@@ -1,0 +1,57 @@
+{
+  "schema_version": "nrs-v0.3-ri-sensitivity-manifest-v1",
+  "protocol_id": "nrs-v0.3-ri-sensitivity-v1",
+  "status": "complete",
+  "inputs": [
+    {
+      "path": "target/release/bisect.exe",
+      "sha256": "2bcf6b13f17f237db6f755943ea1ccdac0d2e0267395c616892c6e46ce66e90e"
+    },
+    {
+      "path": "data/2020/certified/ri_blocks_2020.rctx",
+      "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/seed/input_manifest.json",
+      "sha256": "d778b36bd6699615bc1fa9b80233ffa942749858f4ae8d573794600d9d2b1b0d"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/nodes/root/certified-discovery.json",
+      "sha256": "1fa5775fda7b9370f4341e81268df8a24fa256eb2a32e013544b20e67edb265f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/baseline-tree.json",
+      "sha256": "dacb581e78b554725516316554d9c835fddde125e1431084f903fe247611cc98"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-ri-sensitivity-protocol.md",
+      "sha256": "a34c2fffa6adc130552d1e9f59786d5530f769888443fcbffa941d92a00ace51"
+    },
+    {
+      "path": "scripts/research/run_nrs_ri_sensitivity.py",
+      "sha256": "6d4066f79972ab7b2132e1fae77c8becf6677b7c644f8128d6dc094858224ecb"
+    },
+    {
+      "path": "scripts/research/verify_nrs_ri_sensitivity.py",
+      "sha256": "a4d0a709754ec9fbdd064c617608c8249b63ae40d65ad196fbfb3262ba4b25f7"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "e4a908e5eee63cf7448880ccf2f25d69c548979b5ce037d443ac55eb1bf1fc8f",
+    "seed-results.csv": "852e5654bc1b48b06cf351c12375e3a23f8119cf828ebf0068fdc99b51d07804",
+    "assignments.bin": "aea6b8901c684b7348d7108c20a3e8dbdfea65097defc290ee730a2e53a85a32",
+    "README.md": "1ba41b7836f335808157189d00fe8eb64f49f666939b68c9941d7801a3df21a2"
+  },
+  "reproduction": {
+    "binary": "target/release/bisect.exe",
+    "context": "data/2020/certified/ri_blocks_2020.rctx",
+    "input_manifest": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/seed/input_manifest.json",
+    "benchmark_discovery": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/nodes/root/certified-discovery.json",
+    "benchmark_tree": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/baseline-tree.json",
+    "workers": 4,
+    "display_output_dir": "docs/experiments/nrs-v0.3-ri-sensitivity-2020"
+  },
+  "claim_boundary": "Rhode Island 2020 root sensitivity diagnostic only; no national robustness, ensemble convergence, random-sampling, partisan, compactness, demographic, VRA, legal-validity, optimality, or benchmark-replacement claim."
+}

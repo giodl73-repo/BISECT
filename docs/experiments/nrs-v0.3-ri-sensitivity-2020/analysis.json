@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-ri-sensitivity-analysis-v1",
+  "protocol_id": "nrs-v0.3-ri-sensitivity-v1",
+  "status": "complete",
+  "state": "RI",
+  "census_year": 2020,
+  "diagnostic_seed_count": 100,
+  "accepted_seed_count": 100,
+  "rejected_seed_count": 0,
+  "duplicate_engine_seed_count": 0,
+  "unit_count": 25649,
+  "population_tolerance_scaled": 5487,
+  "population_tolerance_pass_count": 100,
+  "benchmark": {
+    "engine_seed": 1983447153,
+    "discovery_sha256": "1fa5775fda7b9370f4341e81268df8a24fa256eb2a32e013544b20e67edb265f",
+    "assignment_sha256": "c90463a5154f90c2e41a4bf18737abb06737d8eac3651fb974968eaab442e807",
+    "objective": {
+      "max_population_deviation_scaled": 1303,
+      "total_population_deviation_scaled": 2606,
+      "weighted_boundary_cut": 243087025
+    },
+    "exact_assignment_reproduction_count": 100,
+    "objective_rank": {
+      "diagnostic_seeds_better": 0,
+      "diagnostic_seeds_tied": 100,
+      "rank_min": 1,
+      "rank_max": 101,
+      "rank_denominator": 101
+    }
+  },
+  "assignment_similarity": {
+    "minimum": 1.0,
+    "median": 1.0,
+    "mean": 1.0,
+    "maximum": 1.0
+  },
+  "unique_assignment_count": 1,
+  "objective_distributions": {
+    "max_population_deviation_scaled": {
+      "minimum": 1303,
+      "median": 1303.0,
+      "mean": 1303.0,
+      "maximum": 1303
+    },
+    "total_population_deviation_scaled": {
+      "minimum": 2606,
+      "median": 2606.0,
+      "mean": 2606.0,
+      "maximum": 2606
+    },
+    "weighted_boundary_cut": {
+      "minimum": 243087025,
+      "median": 243087025.0,
+      "mean": 243087025.0,
+      "maximum": 243087025
+    }
+  },
+  "failures": [],
+  "unavailable_metrics": {
+    "partisan": "No frozen election and precinct-to-block package is available.",
+    "compactness": "This sensitivity slice evaluates assignments and the engine objective only.",
+    "national_robustness": "Only the Rhode Island two-district root was run.",
+    "ensemble_inference": "The diagnostic seeds are not a converged random sample."
+  },
+  "mechanism_note": "For the NRS v0.3 path, the seeded METIS assignment informs the moved-population tie-break among equal-deviation deterministic DFS cut candidates. Complete invariance at this root is therefore a mechanism-specific finding, not proof of general seed insensitivity.",
+  "claim_boundary": "Rhode Island 2020 root sensitivity diagnostic only; no national robustness, ensemble convergence, random-sampling, partisan, compactness, demographic, VRA, legal-validity, optimality, or benchmark-replacement claim."
+}

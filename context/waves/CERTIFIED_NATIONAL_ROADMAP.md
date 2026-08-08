@@ -70,6 +70,10 @@ For every State and Census year:
   - [x] Precommit the three-cycle county/tract geographic-split audit.
   - [x] Execute and independently verify the three-cycle geographic-split audit.
   - [x] Resolve or publish the input/protocol blockers for the remaining metric families.
+- [ ] Sensitivity and ensemble analysis.
+  - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
+  - [ ] Expand sensitivity to a precommitted multi-State or national node sample.
+  - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
   - [x] Update the synthesis and policy papers after the neutral analysis is complete.
@@ -116,7 +120,11 @@ Next unblocked work:
 > independence gate. The verified NRS v0.3 runs cover 2000, 2010, and 2020;
 > the governed structural/cut matrix, precommitted multi-instance
 > certified-versus-METIS comparison, 231,765-row county/tract audit, papers,
-> technical schedule, and adoption package are published. Cross-census
+> technical schedule, adoption package, national enacted-plan Tier 1 bakeoff,
+> and Rhode Island 100-seed sensitivity slice are published. The Rhode Island
+> seeds all reproduced one assignment because this root did not exercise the
+> seeded moved-population tie-break; that result is not national robustness.
+> Cross-census
 > assignment overlap remains uncomputed pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.

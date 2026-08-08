@@ -32,3 +32,12 @@
 
 Proceed with the 100 frozen diagnostic indices. Stop with a structured package
 even if every seed fails or the benchmark is atypical.
+
+## Post-Execution Disposition
+
+All 100 indices accepted and reproduced the benchmark assignment and objective
+exactly. Source inspection shows that the NRS v0.3 path uses the seeded METIS
+assignment only for the moved-population tie-break among equal-deviation
+deterministic DFS candidates. The panel therefore accepts the package as a
+complete Rhode Island mechanism-specific sensitivity result while rejecting
+any broader national or algorithm-wide robustness wording.
