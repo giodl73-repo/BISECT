@@ -191,6 +191,8 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     }
     let mut population_improvement_operations = 0;
     let mut population_improvement_units = 0;
+    let mut nrs_v0_2_fallback_activated = false;
+    let mut nrs_v0_3_fallback_activated = false;
     let mut zero_population_cut_moves = 0;
     let mut same_population_swap_moves = 0;
     let mut one_to_two_swap_moves = 0;
@@ -211,6 +213,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         ) && nrs_population_deviation_scaled(&root, &assignment)
             > nrs_population_tolerance_scaled_bound(&root)
         {
+            nrs_v0_2_fallback_activated = true;
             let fallback = nrs_v0_2_fallback_candidate(
                 &root,
                 &adjacency,
@@ -227,6 +230,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             && nrs_population_deviation_scaled(&root, &assignment)
                 > nrs_population_tolerance_scaled_bound(&root)
         {
+            nrs_v0_3_fallback_activated = true;
             let fallback = nrs_v0_3_bridge_aware_component_candidate(
                 &root,
                 &adjacency,
@@ -267,13 +271,15 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; initial-dfs-minimum-deviation-candidates={}; initial-dfs-minimum-deviation-cut-candidates={}; initial-dfs-minimum-deviation-cut-partitions={}; candidate-initialization-moves={}; connected-subtree-population-operations={}; connected-subtree-population-units={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; initial-dfs-minimum-deviation-candidates={}; initial-dfs-minimum-deviation-cut-candidates={}; initial-dfs-minimum-deviation-cut-partitions={}; nrs-v0-2-fallback-activated={}; nrs-v0-3-fallback-activated={}; candidate-initialization-moves={}; connected-subtree-population-operations={}; connected-subtree-population-units={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
             niter,
             partition_type,
             initial_dfs_minimum_deviation_candidates,
             initial_dfs_minimum_deviation_cut_candidates,
             initial_dfs_minimum_deviation_cut_partitions,
+            nrs_v0_2_fallback_activated,
+            nrs_v0_3_fallback_activated,
             contiguity_repair_moves,
             population_improvement_operations,
             population_improvement_units,
@@ -2921,6 +2927,12 @@ mod tests {
         assert!(discovery
             .method
             .contains("initial-dfs-minimum-deviation-cut-partitions=2"));
+        assert!(discovery
+            .method
+            .contains("nrs-v0-2-fallback-activated=false"));
+        assert!(discovery
+            .method
+            .contains("nrs-v0-3-fallback-activated=false"));
         assert!(discovery.method.contains("refinement=nrsv01"));
         assert!(bisect_ilp::certified_split_children_connected(
             &instance,
