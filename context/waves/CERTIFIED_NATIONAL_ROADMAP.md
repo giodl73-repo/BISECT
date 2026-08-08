@@ -78,6 +78,7 @@ For every State and Census year:
   - [x] Stop initial root-0 physical-cut expansion after all 44 roots yielded one unlabeled bipartition.
   - [x] Census child-node physical partitions and fallback activation before any broader seed sample.
   - [x] Stop broader 2020 DFS/fallback seed expansion after 385 nodes yielded one physical cut and zero fallback activations.
+  - [ ] Extend complete-tree DFS and fallback diagnostics to governed 2000/2010 nodes.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
