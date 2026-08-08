@@ -1,0 +1,96 @@
+{
+  "schema_version": "nrs-v0.3-fallback-candidate-census-analysis-v1",
+  "protocol_id": "nrs-v0.3-fallback-candidate-census-v1",
+  "status": "pass",
+  "state_package_count": 6,
+  "activated_stage_node_count": 8,
+  "assignment_preserving_state_count": 6,
+  "assignment_preserving_stage_node_count": 8,
+  "objective_preserving_stage_node_count": 8,
+  "physical_partition_opportunity_count": 0,
+  "physical_partition_opportunities": [],
+  "stage_results": [
+    {
+      "year": 2000,
+      "state": "AZ",
+      "path": "10",
+      "stage": "v0.2",
+      "evaluated_candidates": 16,
+      "minimum_deviation_candidates": 1,
+      "minimum_deviation_cut_candidates": 1,
+      "minimum_deviation_cut_partitions": 1
+    },
+    {
+      "year": 2000,
+      "state": "CA",
+      "path": "11010",
+      "stage": "v0.2",
+      "evaluated_candidates": 16,
+      "minimum_deviation_candidates": 1,
+      "minimum_deviation_cut_candidates": 1,
+      "minimum_deviation_cut_partitions": 1
+    },
+    {
+      "year": 2000,
+      "state": "GA",
+      "path": "100",
+      "stage": "v0.2",
+      "evaluated_candidates": 16,
+      "minimum_deviation_candidates": 1,
+      "minimum_deviation_cut_candidates": 1,
+      "minimum_deviation_cut_partitions": 1
+    },
+    {
+      "year": 2000,
+      "state": "HI",
+      "path": "root",
+      "stage": "v0.2",
+      "evaluated_candidates": 16,
+      "minimum_deviation_candidates": 16,
+      "minimum_deviation_cut_candidates": 5,
+      "minimum_deviation_cut_partitions": 1
+    },
+    {
+      "year": 2000,
+      "state": "HI",
+      "path": "root",
+      "stage": "v0.3",
+      "evaluated_candidates": 3,
+      "minimum_deviation_candidates": 2,
+      "minimum_deviation_cut_candidates": 2,
+      "minimum_deviation_cut_partitions": 1
+    },
+    {
+      "year": 2000,
+      "state": "TX",
+      "path": "100",
+      "stage": "v0.2",
+      "evaluated_candidates": 16,
+      "minimum_deviation_candidates": 1,
+      "minimum_deviation_cut_candidates": 1,
+      "minimum_deviation_cut_partitions": 1
+    },
+    {
+      "year": 2000,
+      "state": "TX",
+      "path": "0100",
+      "stage": "v0.2",
+      "evaluated_candidates": 16,
+      "minimum_deviation_candidates": 1,
+      "minimum_deviation_cut_candidates": 1,
+      "minimum_deviation_cut_partitions": 1
+    },
+    {
+      "year": 2010,
+      "state": "CA",
+      "path": "00110",
+      "stage": "v0.2",
+      "evaluated_candidates": 16,
+      "minimum_deviation_candidates": 1,
+      "minimum_deviation_cut_candidates": 1,
+      "minimum_deviation_cut_partitions": 1
+    }
+  ],
+  "failures": [],
+  "claim_boundary": "Candidates evaluated by the current v0.2 and v0.3 fallback algorithms at eight activated governed stage/node pairs only; no seed-invariant candidate generation, label, plan, robustness, optimality, partisan, or legal-quality claim."
+}

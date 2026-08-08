@@ -1,0 +1,9 @@
+year,state,path,stage,evaluated_candidates,minimum_deviation_candidates,minimum_deviation_cut_candidates,minimum_deviation_cut_partitions,physical_partition_opportunity,assignment_match,objective_match
+2000,AZ,10,v0.2,16,1,1,1,false,true,true
+2000,CA,11010,v0.2,16,1,1,1,false,true,true
+2000,GA,100,v0.2,16,1,1,1,false,true,true
+2000,HI,root,v0.2,16,16,5,1,false,true,true
+2000,HI,root,v0.3,3,2,2,1,false,true,true
+2000,TX,100,v0.2,16,1,1,1,false,true,true
+2000,TX,0100,v0.2,16,1,1,1,false,true,true
+2010,CA,00110,v0.2,16,1,1,1,false,true,true

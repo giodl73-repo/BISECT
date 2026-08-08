@@ -1,0 +1,7 @@
+year,state,districts,node_count,status,failure,state_assignment_match,node_assignment_match_count,node_objective_match_count
+2000,AZ,8,7,accepted,,true,7,7
+2000,CA,53,52,accepted,,true,52,52
+2000,GA,13,12,accepted,,true,12,12
+2000,HI,2,1,accepted,,true,1,1
+2000,TX,32,31,accepted,,true,31,31
+2010,CA,53,52,accepted,,true,52,52

@@ -43,7 +43,7 @@ verified 2020 national baseline.
 | 11 - Initial DFS partition census | COMPLETE | All 44 roots have one physical minimum-deviation/minimum-cut partition; 29 oriented ties are equal-seat label symmetry |
 | 12 - Complete-tree DFS and fallback census | COMPLETE | All 385 nodes have one physical initial cut; 266 orientation-only ties; zero v0.2/v0.3 fallback activations |
 | 13 - Cross-census complete-tree DFS census | COMPLETE | All 770 nodes have one physical initial cut; seven v0.2 activations and one v0.3 activation form the bounded fallback universe |
-| 14 - Fallback candidate census | ACTIVE | Precommitted diagnostics target only seven v0.2 nodes and 2000 Hawaii's v0.3 stage |
+| 14 - Fallback candidate census | COMPLETE | All eight activated stages preserved assignments/objectives; candidate ties at 2000 HI/root collapse to one physical partition, closing fallback seed expansion |
 
 ## Versioned amendment
 

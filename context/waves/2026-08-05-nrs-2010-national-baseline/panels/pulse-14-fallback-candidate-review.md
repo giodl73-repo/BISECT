@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-08
 **Roles:** MERIDIAN, DATUM, SCALE, BENCHMARK, BOUNDARY
-**Posture:** protocol review before instrumentation
+**Posture:** post-census interpretation
 
 ## Findings
 
@@ -18,5 +18,12 @@
 
 ## Decision
 
-Proceed with stage-specific diagnostics. Seed execution requires multiple
-physical fallback partitions tied before moved population.
+The replay preserved all six State assignments and all eight activated
+stage/node assignments and objectives. Candidate-level ties occurred only at
+2000 HI/root: v0.2 had five minimum-deviation/minimum-cut finalists and v0.3
+had two. Both finalist sets represented one unlabeled physical partition.
+
+Stop governed fallback seed expansion because no stage met the precommitted
+multiple-physical-partition gate. Retain the diagnostics as evidence and do
+not reinterpret this bounded mechanism result as plan robustness or
+optimality.

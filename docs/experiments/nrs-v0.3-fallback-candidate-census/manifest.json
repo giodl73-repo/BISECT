@@ -1,0 +1,870 @@
+{
+  "schema_version": "nrs-v0.3-fallback-candidate-census-manifest-v1",
+  "protocol_id": "nrs-v0.3-fallback-candidate-census-v1",
+  "status": "pass",
+  "inputs": [
+    {
+      "path": "target/release/bisect.exe",
+      "sha256": "066ec613e52621449040ea15b584f17ecd4832fb30555adc7eb26c61f8c04470"
+    },
+    {
+      "path": "target/release/bisect-ops.exe",
+      "sha256": "316e0162e52689795463496fe5a240a3261081ced9e0ec5a6c7a36943de70f66"
+    },
+    {
+      "path": "data/2000/certified/az_blocks_2000.rctx",
+      "sha256": "fe11f3db9914758c69a257be59ab2c5d8b2e15bb23ae69bf4dc4108950bc451f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/baseline-tree.json",
+      "sha256": "3d26105fd9f38c517c74be87fc1cdaeed7d6050c1680d55f28b42c9ebaec96fd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/seed/input_manifest.json",
+      "sha256": "1e1b79c2cd3c366235461e3a44e7b3df3712c131144cfced9e2b35aed7dd00fc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/seed/legal_profile.json",
+      "sha256": "60081fbc7e3c6da27f4ae2ca3bad54c976aa613eafedd1b30282be9f09f3fbcd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/seed/manifest.json",
+      "sha256": "e8bc44b33cd550ab5e820268a3736f0052484acf7562055a4690d01243ab3932"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/seed/seed_record.json",
+      "sha256": "92ed8ccc4ddb6b30f33271c8bf1f9a83ad0be6f6e36c2f4eeed2621904654d69"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/seed/standard_profile.json",
+      "sha256": "fd5661f40e29aac50e7d9f084ecf50147288ef13b643ceaef119a43ad759d032"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/seed/unit_index.json",
+      "sha256": "36a48760195c999b9dad2b276a7081438f27f4ca1583972c50159716a8ef5571"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/nodes/root/certified-discovery.json",
+      "sha256": "b9b1bbc8b9827c8f86bd538c73377870c4ad00e23e3705638c793e22641b549c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/nodes/node-0/certified-discovery.json",
+      "sha256": "e0f2a9479077e8e84786be48a6a681544f77a94986ac7e671db664c64f388a5f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/nodes/node-00/certified-discovery.json",
+      "sha256": "d15ca1905ababffe25724b1fdbabb812055667cc5dec2012e5bd9219fd8e89ce"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/nodes/node-01/certified-discovery.json",
+      "sha256": "44f17aa0d0df31bc1e7d792e39bcff2735a64f9a4dd0e4cca822ab753a131cde"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/nodes/node-1/certified-discovery.json",
+      "sha256": "ded02b98eb04300495be4f8a81f22d1ccdfea2cf2b6f85870fa048d2851a24e4"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/nodes/node-10/certified-discovery.json",
+      "sha256": "9f8e4ee6df14db828fe7959ca1ca48b3ba5a9ee2d883fd582a103da01b5829e5"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/az/package/nodes/node-11/certified-discovery.json",
+      "sha256": "4f5f8939c688947c6a33b3caff24fce432781b7bcf81b5b6757427232b75ae4c"
+    },
+    {
+      "path": "data/2000/certified/ca_blocks_2000.rctx",
+      "sha256": "b33356af212cc73d88e7315c6d4f4cef7bdf07a27eacfcf891c1bebf6f6038f8"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/baseline-tree.json",
+      "sha256": "23e887bef76bcaa971875053d6cb638bd8ccd4b9f20af02df1278eed516962a3"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/seed/input_manifest.json",
+      "sha256": "04845532630600f0c208f988808f42a4e5c5dbbd861aa7a73fd7376740346189"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/seed/legal_profile.json",
+      "sha256": "60081fbc7e3c6da27f4ae2ca3bad54c976aa613eafedd1b30282be9f09f3fbcd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/seed/manifest.json",
+      "sha256": "137988e12c501dc81e9673e2bf783c7725175f91fa39eb4988c3e8905db18b6f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/seed/seed_record.json",
+      "sha256": "e424303963465a74e28bb29b696f36ee052fd294a579c0e4bdccb0d67845f80a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/seed/standard_profile.json",
+      "sha256": "fd5661f40e29aac50e7d9f084ecf50147288ef13b643ceaef119a43ad759d032"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/seed/unit_index.json",
+      "sha256": "dfb639edd2ef3a3058c72e7d155450750ab378c1983547332f0422211d53b5ff"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/root/certified-discovery.json",
+      "sha256": "b7962cb7a053dd1b58aed6f3934accb3d76bf3951772595738544f65e14115df"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0/certified-discovery.json",
+      "sha256": "42f176aaf8a8e97b49eabd761016fd4c201ffb813267cddc75b9e1f4f265e675"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-00/certified-discovery.json",
+      "sha256": "8ab6dd3bcfa5bb0814521774ec43a17303b8a3a007872857c01b96885a55dd1d"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-000/certified-discovery.json",
+      "sha256": "e8440443a16edca3f214fef1e61396ff7b124b172d6e63ca9a0fa897fb5a90c3"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0000/certified-discovery.json",
+      "sha256": "01d8783a59b859117f66db366b1ce3442c06ae3c57989af532af6cb4c916a160"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-00000/certified-discovery.json",
+      "sha256": "7c404369937bd03ff0fbfd3f4634ae7bcb5541eca96019fd28cebcb3adf85842"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0001/certified-discovery.json",
+      "sha256": "ffce6ca97743d890f581c2c9fa60d99064c4e17793942acce0a7dff55f23cc5b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-00011/certified-discovery.json",
+      "sha256": "2c56065470338a976f32f3a28746893ac324fc63a3ed8fbba3dcedd912b70af6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-001/certified-discovery.json",
+      "sha256": "d0b83a52e731e5434331ebadc1efe773b8d1ed862559178b2ef6f0ad45e37810"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0010/certified-discovery.json",
+      "sha256": "a427a995be90ca89c518101e0f84e5ee7a7059642f8b0cdc359f77c60cfebc56"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-00100/certified-discovery.json",
+      "sha256": "61a2327baefd7e76205bba8bd53df2fcdcbf32069f027b0b0bf73e573a22e7d2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-00101/certified-discovery.json",
+      "sha256": "8eb8932d77aa14ec2b0da8064d8858913b73b41e5806d45e2c4eddd9f4ea9baf"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0011/certified-discovery.json",
+      "sha256": "cd31ccaa62870e601c2c9811e5f5b38f605d24cd10eee80b8dfb7a569a2de180"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-00111/certified-discovery.json",
+      "sha256": "c75bb4ce155c5ac1fa5cb2bc27a2fe4f0b4ee197936bc4332ab0a7ac106ef8ab"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-01/certified-discovery.json",
+      "sha256": "2b7950cf4817a1b278734998c824eb5d544338a08262db721477b78e08383750"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-010/certified-discovery.json",
+      "sha256": "28e7b6a29e6874ebd4b602dd1908c9e8a1ac532e56cdd1e367cad7e7ca0da640"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0100/certified-discovery.json",
+      "sha256": "ebd15a3dcf592927b8245c936c8b677b8854618dc5f5e91d2e689eca52b261d7"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-01000/certified-discovery.json",
+      "sha256": "6257af576ef3af56c924bf4607c911f765f7f63183b77175354c36b8c8d9f240"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-01001/certified-discovery.json",
+      "sha256": "fd969f569c4dc0541d8fdb02181e3bfe9a4d0f0e51aea22b36e97403d84e47c7"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0101/certified-discovery.json",
+      "sha256": "1b7cbffb48f836c5d81625fc8e1004d220dde053c6af7452b83e0ca38992793e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-01011/certified-discovery.json",
+      "sha256": "d61337584fccfa45a1bdb09cb2d3e3ad60f8fb06ca943d18eb8cf374b4dfdb30"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-011/certified-discovery.json",
+      "sha256": "a9408b873d76b30693e0f4b1ac12d6828939be3ded3c1c2984f22d2aedfc1282"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0110/certified-discovery.json",
+      "sha256": "644e2749a413929580bd0539b10e30caec98b9198de542870598c519ee5e5287"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-01100/certified-discovery.json",
+      "sha256": "1a6974abac2bef42fcb971b31072df2368a028805dd2fcfaa7def3db1aa24ac6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-01101/certified-discovery.json",
+      "sha256": "09b511d52b0aaf20f3f6763bff7a857f5e0f1baaf2468d322fd2a9e78cbd80ee"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-0111/certified-discovery.json",
+      "sha256": "920967c7842dfb94c1a89020906b3c0598559273e1c8dd4f02a354fc5f183327"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-01110/certified-discovery.json",
+      "sha256": "82c445ce3a64fd21ae2e0146e916f5ffa22335779bca07cb9d0fc2e9b37ac90a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1/certified-discovery.json",
+      "sha256": "0ff0d2017b36b9ced20df0be8f550aeab4d42384c8a0d8546c716617fcdb8504"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-10/certified-discovery.json",
+      "sha256": "ef13dda8ce1aac8ead79a16c228fa2117884fa367b37d1f5c39b16ec2fef6c9e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-100/certified-discovery.json",
+      "sha256": "cb515a62e829bb65a0a1ef6518c8982fc41d3d3a16963f318fed612ca3d36664"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1000/certified-discovery.json",
+      "sha256": "67c8c8e437f4614f22d240e324a2754dd9a965a7bc1e87414a623b39209371cc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-10001/certified-discovery.json",
+      "sha256": "469e3f891a4aa5e5226698c780fb9c3ef8d806215ffa47958b47f0fc4a2c83bd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1001/certified-discovery.json",
+      "sha256": "19f05c7339f402c35d6abda935d3f1ee1eeb3cece1141bea42cce135a2adfd73"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-10011/certified-discovery.json",
+      "sha256": "148ce43af94eae51b7d587a868e101ecff8852129eaefb9010d2a9912883edfb"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-101/certified-discovery.json",
+      "sha256": "eae20719a27d0fba184490b57a71d4a8ad44cf24c713bd53709404b2945527c0"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1010/certified-discovery.json",
+      "sha256": "3e953629ba47434859e5ccc9b0ecec69275ec150244cf237c6ac7caa98c9c61e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-10101/certified-discovery.json",
+      "sha256": "8d06890e18576c91ab36783808c9e4b1bb3395f8eb94f25533ebeaa0895025ba"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1011/certified-discovery.json",
+      "sha256": "3928486af544a59e4f45585524af0bbd5023b55855651e74078b03e1069991cc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-10110/certified-discovery.json",
+      "sha256": "fa4888e88ca562bc3e98b078e0245b023ff8f7507045b4fd8eb919f2987862ce"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-10111/certified-discovery.json",
+      "sha256": "a747c80dc644b9cbed25a715c15640017b8227c3a79d0552c34bea0ad0249860"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-11/certified-discovery.json",
+      "sha256": "f57d7010c92ac8623f695cce192f2d754772d25ddaf357f9c9bbe2e429f17f56"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-110/certified-discovery.json",
+      "sha256": "becabab8635942332314569877455ed5c7eb96f22d1f41f0a85091e884a3bd80"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1100/certified-discovery.json",
+      "sha256": "2c18902dac68a12e5986944df6aea0a0e6519dae630f87f57404e19b38014dde"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-11001/certified-discovery.json",
+      "sha256": "ea37c4c1c1204da014d388ca2d55c3e752b7a3dbf6a5aeeaa1b98101f25ae53c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1101/certified-discovery.json",
+      "sha256": "5d8f03fe020d11f31a0196bfd28a45d17ca8d3bce7e5e70b0707c13b518f13cf"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-11010/certified-discovery.json",
+      "sha256": "7a29156e7123c2313e34b50c35dca1d98e71721ea11b7a3dfe754c297e9f65e6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-111/certified-discovery.json",
+      "sha256": "9aec003bce5095a0870612e02588db1b445e842ae3361b5bdf2369fd3495ccbc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1110/certified-discovery.json",
+      "sha256": "093a0f9fa20eec923a13cb8d967bb241fd37538f87daee9dd52cabf1aeab5369"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-11100/certified-discovery.json",
+      "sha256": "5018512e76123add3feed389d0eeac51f71d35a8038a8b9b61dea2ab9d2e6a4c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-11101/certified-discovery.json",
+      "sha256": "cfea3b78007b053fcdb56d0a4eaa3f34c30aa87a7f31f29dfa0e3c4307af5a84"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-1111/certified-discovery.json",
+      "sha256": "82228640611b98224c09bd69235acdef42823cc4fb647ceb9186eb2368d60b9f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ca/package/nodes/node-11111/certified-discovery.json",
+      "sha256": "b572e6484f4749d9404bb0b7f97e95c1c0eb4e549e40a93df1de669e0f160a21"
+    },
+    {
+      "path": "data/2000/certified/ga_blocks_2000.rctx",
+      "sha256": "4dc77b86c522446b5deae598c84352226f2e92c6c5a1047b7e2d27cee7951910"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/baseline-tree.json",
+      "sha256": "ad43836258ef9032ac8eb71bcf5b4a10cfb20d0bcd77182ff95824c310642e96"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/seed/input_manifest.json",
+      "sha256": "2c7dfc14179cf54cd5fcd1d27066dd5df277b01459c08be223c64424fb4ce622"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/seed/legal_profile.json",
+      "sha256": "60081fbc7e3c6da27f4ae2ca3bad54c976aa613eafedd1b30282be9f09f3fbcd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/seed/manifest.json",
+      "sha256": "acd9fb8206e8d14c7724adb0ff93710c0a6b918c5ce31a00d5557d640a9b7c60"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/seed/seed_record.json",
+      "sha256": "1a05be03e0ee5d71f58ec197544c1dbbf28c89a82546d331922856fc769b507c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/seed/standard_profile.json",
+      "sha256": "fd5661f40e29aac50e7d9f084ecf50147288ef13b643ceaef119a43ad759d032"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/seed/unit_index.json",
+      "sha256": "814f07ced83bd80ed83305f71893c08291226ed731664702c06ceac5a007f393"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/root/certified-discovery.json",
+      "sha256": "a6f8446464da9237e3593b20673d5d17649fd8cc21ec160dfb84ecddd704b2d1"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-0/certified-discovery.json",
+      "sha256": "8da544c98249df10f00c0e2eb43d08dbfff9fbf44458d30c6eb560002e1dd654"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-00/certified-discovery.json",
+      "sha256": "d80925770f0718b282a7ecdc87137eed0f3e4fbbb30c8f48beaa46c2b58cba4c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-000/certified-discovery.json",
+      "sha256": "93db114e5f40dcb7d70ee3755360eed82e2e68fe54e0260ac741eb5d82c92edb"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-01/certified-discovery.json",
+      "sha256": "e2978b84f6965840da33c1d9bbe7ecf418b5a3ef860758db044efa2b0da90ab3"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-010/certified-discovery.json",
+      "sha256": "a4d059df794da0aa4a1b10e84412f9ed7b5a50952a65fe6567d1615cc5361e81"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-011/certified-discovery.json",
+      "sha256": "670fb58aef5280392a671fa2bea241559c830c7caf37a2204508a4e275fb5db9"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-1/certified-discovery.json",
+      "sha256": "f84b54369d7c379511369bbd18e98bae8465bb3c2b6dba4b4d05f90f55c0b357"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-10/certified-discovery.json",
+      "sha256": "600fb9065249088ea2c723745ae655c94b56f150003f21a7871d5f9c8c74c66b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-100/certified-discovery.json",
+      "sha256": "9665c7ab7db0d037018e10b3f8a209938d678679614c09519b939778c7f53270"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-11/certified-discovery.json",
+      "sha256": "d03ecbdd678f8df1b5707bc02f98d2272592250de53c240b47472c37cb443497"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/ga/package/nodes/node-110/certified-discovery.json",
+      "sha256": "1a33d1ff12f26c35b274fb8a1f5578db6a9847bfd2a3e1557062a7c934923b05"
+    },
+    {
+      "path": "data/2000/certified/hi_blocks_2000.rctx",
+      "sha256": "9840c42f4a6c683e7059efa316cffd6c3d3707de6549e062cca62d30c697c7b2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/package/baseline-tree.json",
+      "sha256": "e22e1d6fcec094258f20ba31e6d260e753ef334c4fb0c647905e580d00e58cb2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/seed/input_manifest.json",
+      "sha256": "c02c71b11efa8c07c31f1a9f5e1aa332761ff6c048eee71b12a14e54e339bf8b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/seed/legal_profile.json",
+      "sha256": "60081fbc7e3c6da27f4ae2ca3bad54c976aa613eafedd1b30282be9f09f3fbcd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/seed/manifest.json",
+      "sha256": "513de810697a1fdf5283f8d86ea096d57cc3e8aa686f967d372379a0249a7504"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/seed/seed_record.json",
+      "sha256": "2d265bc90b28c85304789a36151d42066226c0b996a77a7b81365f28afd812f3"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/seed/standard_profile.json",
+      "sha256": "fd5661f40e29aac50e7d9f084ecf50147288ef13b643ceaef119a43ad759d032"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/seed/unit_index.json",
+      "sha256": "973048e7311271d2610eefc942ed1659e4aef73bd166de1ccf25879fa159c7dc"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/hi/package/nodes/root/certified-discovery.json",
+      "sha256": "8cef5f36b037424b44e9aacf130fe68eea21c60eec6b8eae3c162a021a9af702"
+    },
+    {
+      "path": "data/2000/certified/tx_blocks_2000.rctx",
+      "sha256": "fe92bad2c3e61b6f3a3ddbc91657ea9fa867ded2de93a9ccd3f8a017f89c1fa8"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/baseline-tree.json",
+      "sha256": "16ab6fc7c95c6266182e1ad73a9bf4f3c05545487224fb78ae132cbe434ffbb0"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/seed/input_manifest.json",
+      "sha256": "2dde3ee3eff8e287d547ce91a9120226a99bbe2ce8e120612b0f937d1538970c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/seed/legal_profile.json",
+      "sha256": "60081fbc7e3c6da27f4ae2ca3bad54c976aa613eafedd1b30282be9f09f3fbcd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/seed/manifest.json",
+      "sha256": "219e4e2fb8454c14dc77c91f34aad7fe3d24be3a5cedf167ddf8a864558cc9a6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/seed/seed_record.json",
+      "sha256": "e7f1b67cfa187ee528063458df12d9759f1e45b7fcd148e51e2e290370354e81"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/seed/standard_profile.json",
+      "sha256": "fd5661f40e29aac50e7d9f084ecf50147288ef13b643ceaef119a43ad759d032"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/seed/unit_index.json",
+      "sha256": "680c34542b2e37724bb8714e0d1c0974110b0175b0f8d3781d1e171958d599e7"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/root/certified-discovery.json",
+      "sha256": "714500192e9f8a27be72ca21d4e25728a2bf7f52cc91cc69e06182b4386bf6a8"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0/certified-discovery.json",
+      "sha256": "e262c4c81884b307f6f5125d5d6712add72492354e34a736cb754e3c61e63f6e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-00/certified-discovery.json",
+      "sha256": "1f6867366f516db44521edd034659a5b4826503facf287ae92434e40d6d2304f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-000/certified-discovery.json",
+      "sha256": "23ea05aacd09f380ae233e979f9564b48cdb27431f7d4eb8f0d829755eff9f7f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0000/certified-discovery.json",
+      "sha256": "6c30f9cd043859ea80d028676a4170597269c0ee50b594619ef1834fcb44f8bd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0001/certified-discovery.json",
+      "sha256": "aa5c31cf69138f9508bf8b2e3904ca8f552724accef351ac341ff68eab15442e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-001/certified-discovery.json",
+      "sha256": "7045f4a3c1fef89a4a127d8e2388e3cf4bab05fc6892fdb3b186a4a3a01c0423"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0010/certified-discovery.json",
+      "sha256": "9456501d9c470adeff627d0c763c02bfd832ad9e5cac31c28f5cba5d1955f198"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0011/certified-discovery.json",
+      "sha256": "961533e197cef5d086d68d5a60f3f6a2988885b20470c45f1a07ca361ba88551"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-01/certified-discovery.json",
+      "sha256": "665bb0ab99ca30a5161a6b8b46842fd50fa7dc8e5800de8361108fe2359c2857"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-010/certified-discovery.json",
+      "sha256": "a8d35d843a8da527c8d8ba2750e42d942199be9a8eb61a0ac2179d7c99d5839c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0100/certified-discovery.json",
+      "sha256": "299841374117dfdeb93b96317d4577818c20b1d4d7beb09cdfcc6c2e675a1372"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0101/certified-discovery.json",
+      "sha256": "6b7d98982272da34fc7cf595b6cd3be05651e2462a5eb53d4610935d5fd2639a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-011/certified-discovery.json",
+      "sha256": "d4f69ce3b9c29e2247ce706bb5bca19d2c95989c3ee706e01054097477fed72d"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0110/certified-discovery.json",
+      "sha256": "6a031b0819eddc515c025c22625333b02e63934ac7a6b7221eb52ca534106650"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-0111/certified-discovery.json",
+      "sha256": "d99eab41941ad389afdff4be09ed9849ca0b07d2be8468d941e0f6b3e5c57562"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1/certified-discovery.json",
+      "sha256": "dc81c5922daf9fb789085365f7c84193d7f9d92df66ce8512d7df0ac356c6b20"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-10/certified-discovery.json",
+      "sha256": "dd4c118aa3c28dd00c6bcf6078be4860fc95434c0bec1d721b92450f8a4e993b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-100/certified-discovery.json",
+      "sha256": "35a94b78bfba6ce039509c786533d95132407116e245bcb4d8fb2d3a34ea05ea"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1000/certified-discovery.json",
+      "sha256": "387b870ef367d81af71fa17c1cc27180e01bdd5394980c9f364022c209d4f46b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1001/certified-discovery.json",
+      "sha256": "d4b6d07b1b3fc9950ffa5505edf47647aed1bdb312997f87e076275b3bfcc259"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-101/certified-discovery.json",
+      "sha256": "3963671d7ea6e00481dbcdd79844f7f8bd1fa57b209b7bad3901a7371875133c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1010/certified-discovery.json",
+      "sha256": "255994950a74f8df80d3060ec926d39547846f7ff954a2d5872fdc37de0d599c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1011/certified-discovery.json",
+      "sha256": "195062d4681e7516dd2c9d03c6cb52b01216445b3069474be8fbb5cab8fbb11c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-11/certified-discovery.json",
+      "sha256": "b06c83a731b4207a6c4518f5e60bb54fbc346eec7daaf80cf5ed3cff95a32617"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-110/certified-discovery.json",
+      "sha256": "88bfebaa9f9e8b1eeb7c4381fa95a0fba6dfcecef7843b9f4788b656fdcb92c6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1100/certified-discovery.json",
+      "sha256": "49ac77d344f7a0bbcfe1e58722dbd6a6b5d1586c37e58b373380b932ed8b0256"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1101/certified-discovery.json",
+      "sha256": "d059a0a66be4e378ec5db62c03434896b09c6a389cff4d785decfdf37c71db7a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-111/certified-discovery.json",
+      "sha256": "77b0eed9240d0a57713d1d6fa8c4a416eab19d4b41200add06d4289da0822afe"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1110/certified-discovery.json",
+      "sha256": "a0e5dfe05e5b2575139ce7e4aa0bfc65991e2437b918e5e50435a9973bc8d996"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2000/states/tx/package/nodes/node-1111/certified-discovery.json",
+      "sha256": "b64e8054c397f2bb9456f9ac4e5f6bfc335f9bff4d7f0c0964794e0fae8d6dfe"
+    },
+    {
+      "path": "data/2010/certified/ca_blocks_2010.rctx",
+      "sha256": "d6e3afd8950c8b2867d51cea6dac3b9ccff6fd5d9b5720baab81fc83ed3314b7"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/baseline-tree.json",
+      "sha256": "c9ab370811e26b623d8c791fce0077eadd8599566066bbca9e86df357565a3ab"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/seed/input_manifest.json",
+      "sha256": "4c0e61f7072766f873a6a94a720835c64853c94b6f74e9fb0ad00e1db045d0f5"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/seed/legal_profile.json",
+      "sha256": "0cdf091e6b4371cd7ef6664a8113b2d2e3eb5389a9dac7aa3cb0d6311ae54ed6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/seed/manifest.json",
+      "sha256": "8b49ec6f47909f6947f03051465d3fe0c9b0a86d43e8e10ce6ee6307d173560a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/seed/seed_record.json",
+      "sha256": "0285cf870f9b67a31a482af9c2392a8b2fb7893645301886632cd7387ffc449d"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/seed/standard_profile.json",
+      "sha256": "dc08f6f07bb0859ef0d372f661b65d60ffe2386a19821ae368570eb92028f0ad"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/seed/unit_index.json",
+      "sha256": "5b5b8fbb54bd57b3abf6785d67813cc836c60ac7829da5f948b93fc9786e3e21"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/root/certified-discovery.json",
+      "sha256": "402e0dd5809372f22624fb6558cbf855bf2bdb3b0df3080675ff62196e6967dd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0/certified-discovery.json",
+      "sha256": "afa6b34a6f928eafd877b956d879570fd5f29623d317c7367c2276726aad4581"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-00/certified-discovery.json",
+      "sha256": "1bbff930e65910caae8fccf9e55a2a63eec061f80771c293ee2e6d2e7d1e81b7"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-000/certified-discovery.json",
+      "sha256": "14469ef398d41a118d025c926a14d41be830083528042e806feb6d12c49dbb67"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0000/certified-discovery.json",
+      "sha256": "0695b6878d362776667e1a0bb866ca76d75e96a63c429a0efe684d129cf1acd4"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-00001/certified-discovery.json",
+      "sha256": "4cffab8fa4a51539a403189ad308edaa4d2428ce98ee262392e1460febefde21"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0001/certified-discovery.json",
+      "sha256": "b9fb0ce81b84d2ec0eda8d35be554b395c3ba5c414d1b90f8ec8bf97c045be63"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-00011/certified-discovery.json",
+      "sha256": "25d7e7891ad7a6235b1f9a4524958ef2477a8944ba288a89711eb26b5090a007"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-001/certified-discovery.json",
+      "sha256": "07c9671c8d3e1ebb113172626e031de42b209e461b262f53c11754d2798146a6"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0010/certified-discovery.json",
+      "sha256": "7baa7379d7b39a27a95ccdfd4c3cc95be251919b789f7d1b86ba068a4994f690"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-00100/certified-discovery.json",
+      "sha256": "ce330f0f1a29f840ea65f8b013926a3671235672d74f1339452ba0ea326b13ea"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-00101/certified-discovery.json",
+      "sha256": "d086e4db8e904f3107ce6cf03d14aac8db08a3fb88cda68bca27815e59505368"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0011/certified-discovery.json",
+      "sha256": "80262226d23239ff6a8e38cf5068c3b25b5309274fbb4be1d4c3f235fee4a1ef"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-00110/certified-discovery.json",
+      "sha256": "a8bc70acf2a87a3b3afe715492922336b741c556a93552d4efabbd65496a818a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-01/certified-discovery.json",
+      "sha256": "e89e776ebd4d2cdc6043c06bc0e8395250c49e87e9a159d192becd797f3f76c3"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-010/certified-discovery.json",
+      "sha256": "7de83f7f47c30902d3499c17ab27fddb0dab112d1c6453caa6f29205f7a94900"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0100/certified-discovery.json",
+      "sha256": "ca4edd78327cf19c4c046fa8cbb247b4d80e45002c276469ca840c56964d17ac"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-01000/certified-discovery.json",
+      "sha256": "e36ede872d3925d9591ad31f40932dcf01a0adf080c032bde79e640bdadaf2db"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0101/certified-discovery.json",
+      "sha256": "8cb3b88e4d7ad0d44e93374a276cb7bf4866e23e763bb409e32fe7a1a3abd7c4"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-01010/certified-discovery.json",
+      "sha256": "2a6f4e01b7309a42c2a9d03229f97a3a7076484603b52faa3c7f72a5dad2f2f0"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-011/certified-discovery.json",
+      "sha256": "184dc44ef8283791a89cab2f8a965066b9eb25d728e8e88913db2248a775b9fd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0110/certified-discovery.json",
+      "sha256": "ae32b6667498258c238c1408b5f9215de49a1b2d11c9719eaa7db31438aa8d2b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-01100/certified-discovery.json",
+      "sha256": "dc3784cc4a6e88f19b1551f68cfecbaa8726a6f053f5c73119473c1473e8964c"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-01101/certified-discovery.json",
+      "sha256": "1b9df69dba65f375ba284c48bb709005b53dc10441e6dd90830054c8d04989dd"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-0111/certified-discovery.json",
+      "sha256": "dcc6ffa1fa1555238542346c0283faf591c7097a025bba28ad005a71cecca622"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-01110/certified-discovery.json",
+      "sha256": "a2581adbcfead79b6508677317ec6033c05d4f1c0257127d99b3bae45c078f5f"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1/certified-discovery.json",
+      "sha256": "28a4f33ea9883fb8c2e05c8903f1970315078f9ea3b5f2a019be1893d652e93a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-10/certified-discovery.json",
+      "sha256": "563fa8fce7ff5890bdd9755cda38f412f10deeea406fa3a48a943c38d936303a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-100/certified-discovery.json",
+      "sha256": "221870aed15d5c35392c55f9937247d89024d95d53913449afc2abb16704c85a"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1000/certified-discovery.json",
+      "sha256": "2c2ef5f944858b00b0a1505755cb62ee8c1b7e6e6b206d242d8dc1434ae44954"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-10000/certified-discovery.json",
+      "sha256": "9f2429db5b4a76e976eec6825b88b5190f232e12e53fffc45e56ca116af5e959"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-10001/certified-discovery.json",
+      "sha256": "81f088fd226ca2a78c3e4e3711741b70611c8364755ff8c299d1c8b8ce5f6285"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1001/certified-discovery.json",
+      "sha256": "171d21fd65f3070edb48e3eccd768e320d39cc8a2c3f09d57a2379d282b19eaa"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-10010/certified-discovery.json",
+      "sha256": "f076af2d5b90141baa5ff40f0d91d7a386e147e82f1a468b52d1fee0b381f0b2"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-101/certified-discovery.json",
+      "sha256": "847dc1d4d1a7f09cdc51e5b449dda455060588e33d66e0269a3a0e4b8f78d088"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1010/certified-discovery.json",
+      "sha256": "e30433eb68e17640ee330954e0f0e8614f8061ffd3c23814a65ac7a1a189e59b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-10100/certified-discovery.json",
+      "sha256": "5bc0f2ec259677777e6e74780eec6c1161c14160b98d3a6a98938490beb3de50"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1011/certified-discovery.json",
+      "sha256": "f6afe146ad0f6c27420f0b009063895b449f9c903d172149a0dfe1503ccbe6e7"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-10111/certified-discovery.json",
+      "sha256": "e0b4685151be4b9fc6aaef9340a8ac4213434e313427e4d3a2f59cd2b1d82243"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-11/certified-discovery.json",
+      "sha256": "6ed6f525a70d1851270b6fc58f35df67d28708e65af27028d863386c9cfec3ce"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-110/certified-discovery.json",
+      "sha256": "334e5b0dcd45f6b5b39834cbc185bf842fef19859e7767a6da23a2f53a7043d4"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1100/certified-discovery.json",
+      "sha256": "93b39084e0e689a431066e1759abd5dee349ca2c17d2163f3a13d2f3e0b98489"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-11001/certified-discovery.json",
+      "sha256": "2e4362f02f660fe086aeb3cb3864c10185d88ef484e47e5902b4821c51110868"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1101/certified-discovery.json",
+      "sha256": "e473838fa51b31e4f5bcb4bc34ec49b0191483ec5e6e551874dbb3c80d934cd1"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-11010/certified-discovery.json",
+      "sha256": "dac098862c59ec81904966340c295689370ec06d5e98549a206c38696b1be910"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-11011/certified-discovery.json",
+      "sha256": "a4e4318f3cb62cbd4a3dbbe2f03ad400103b97de656b4f476ee8377513449364"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-111/certified-discovery.json",
+      "sha256": "d9f9a66a88994552ed399e5f4e990678b6a10ed9705e1fb1842ff41eb6b97ad0"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1110/certified-discovery.json",
+      "sha256": "4e73317c17f3265c201cfbf8b5602869c38e097821f94b3e84205426194841b3"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-11100/certified-discovery.json",
+      "sha256": "489cc59a885105bd02ae59c8bb17f265eca6d9198ce0b5576c6c68d229612851"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-11101/certified-discovery.json",
+      "sha256": "e3768b1e5101954f687c6cdaa0e11bfebab4277b4b1abc049073f06c58b0643b"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-1111/certified-discovery.json",
+      "sha256": "d9fcc30b8a09586b08573a8f38c166dbf164b05db5e4d92e75694ec861f0b52e"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2010/states/ca/package/nodes/node-11110/certified-discovery.json",
+      "sha256": "92f0a7cc2c24a0c2733570160fdb504feef3e85c211ad8fad6282711845804cc"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-fallback-candidate-census-protocol.md",
+      "sha256": "9e5075ef479af57366cd132aae7ca91a5fc6c8c3e5ada4bff7dfb774a15924e0"
+    },
+    {
+      "path": "crates/bisect-cli/src/exact_cmd.rs",
+      "sha256": "7b1fbe008fd4675204bc88daf8aebf3d45de2a89dda41bebb05fe9b3993628d4"
+    },
+    {
+      "path": "crates/bisect-ops/src/main.rs",
+      "sha256": "c1c4562bca511a4a29dd6e04d412745ef306f6067e47991ef3c4b5e384527f45"
+    },
+    {
+      "path": "scripts/research/run_nrs_dfs_tie_census.py",
+      "sha256": "7c1f4f9810546f3eb512cbc7d62a61968017978d9ebaa64f21aecdb5624f1b64"
+    },
+    {
+      "path": "scripts/research/run_nrs_tree_dfs_census.py",
+      "sha256": "0540f9b714c7e5d17eb9f23665d9bbafa9e475f36ca87e85b1c6f8e50d675144"
+    },
+    {
+      "path": "scripts/research/run_nrs_fallback_candidate_census.py",
+      "sha256": "e5062dd3d289cdda4c9b86c7b3a59baf146aae5e773dcbf22d1036b09f91ea75"
+    },
+    {
+      "path": "scripts/research/verify_nrs_fallback_candidate_census.py",
+      "sha256": "4b5cdf9eb11298646e0858c658e153730663bad25e90b12917069e52c8a0bb3b"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "7d025467516154f5fbce0c8ee61ee54ca541c755fb9b0246971600bbbddbdaae",
+    "state-results.csv": "7c665ac8a63de31513861300537a929fb3680da5ad0f88fdf2e888732d4e123e",
+    "stage-results.csv": "66be8ff48d11def834f3206aa7e828bcdac47119cb3b9c8179e901225ae93b8a",
+    "README.md": "808a19448d66be4a8b0c9c986daf399b1c5f46ce9301b7adb0f78b8facbfd221"
+  },
+  "reproduction": {
+    "bisect": "target/release/bisect.exe",
+    "ops": "target/release/bisect-ops.exe",
+    "display_output_dir": "docs/experiments/nrs-v0.3-fallback-candidate-census",
+    "workers": 1
+  },
+  "claim_boundary": "Candidates evaluated by the current v0.2 and v0.3 fallback algorithms at eight activated governed stage/node pairs only; no seed-invariant candidate generation, label, plan, robustness, optimality, partisan, or legal-quality claim."
+}
