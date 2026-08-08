@@ -1,0 +1,151 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "OH",
+  "state_fips": "39",
+  "census_year": 2020,
+  "atomic_unit": "2020-census-tabulation-block",
+  "atomic_universe": {
+    "source_blocks": 276428,
+    "excluded_water_only_blocks": 6135,
+    "analyzed_land_containing_blocks": 270293
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "blocks": 270293,
+    "districts": 15,
+    "county_splits": {
+      "units": 88,
+      "split_units": 65,
+      "excess_pieces": 130
+    },
+    "tract_splits": {
+      "units": 3162,
+      "split_units": 784,
+      "excess_pieces": 871
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "blocks": 270293,
+    "districts": 15,
+    "county_splits": {
+      "units": 88,
+      "split_units": 14,
+      "excess_pieces": 14
+    },
+    "tract_splits": {
+      "units": 3162,
+      "split_units": 113,
+      "excess_pieces": 113
+    },
+    "projection_diagnostics": {
+      "method": "block-representative-point-within-exactly-one-polygon",
+      "projection": "EPSG:5070",
+      "comparator_session": "118",
+      "source_blocks": 276428,
+      "excluded_water_only_blocks": 6135,
+      "excluded_non_district_labels": [],
+      "unmatched_blocks": 0,
+      "multiply_matched_blocks": 0
+    }
+  },
+  "comparison": {
+    "label_matching": [
+      {
+        "benchmark_district": 1,
+        "comparator_district": 9,
+        "matched_blocks": 15674
+      },
+      {
+        "benchmark_district": 2,
+        "comparator_district": 4,
+        "matched_blocks": 10126
+      },
+      {
+        "benchmark_district": 3,
+        "comparator_district": 10,
+        "matched_blocks": 8953
+      },
+      {
+        "benchmark_district": 4,
+        "comparator_district": 8,
+        "matched_blocks": 5794
+      },
+      {
+        "benchmark_district": 5,
+        "comparator_district": 1,
+        "matched_blocks": 1720
+      },
+      {
+        "benchmark_district": 6,
+        "comparator_district": 6,
+        "matched_blocks": 14298
+      },
+      {
+        "benchmark_district": 7,
+        "comparator_district": 2,
+        "matched_blocks": 6724
+      },
+      {
+        "benchmark_district": 8,
+        "comparator_district": 11,
+        "matched_blocks": 7786
+      },
+      {
+        "benchmark_district": 9,
+        "comparator_district": 7,
+        "matched_blocks": 3399
+      },
+      {
+        "benchmark_district": 10,
+        "comparator_district": 5,
+        "matched_blocks": 9439
+      },
+      {
+        "benchmark_district": 11,
+        "comparator_district": 14,
+        "matched_blocks": 5323
+      },
+      {
+        "benchmark_district": 12,
+        "comparator_district": 13,
+        "matched_blocks": 6481
+      },
+      {
+        "benchmark_district": 13,
+        "comparator_district": 3,
+        "matched_blocks": 3857
+      },
+      {
+        "benchmark_district": 14,
+        "comparator_district": 12,
+        "matched_blocks": 8971
+      },
+      {
+        "benchmark_district": 15,
+        "comparator_district": 15,
+        "matched_blocks": 5565
+      }
+    ],
+    "matched_blocks": 114110,
+    "moved_blocks": 156183,
+    "matched_block_rate": 0.42217149537723875,
+    "comparator_minus_benchmark": {
+      "county_split_units": -51,
+      "county_excess_pieces": -116,
+      "tract_split_units": -671,
+      "tract_excess_pieces": -758
+    }
+  },
+  "unavailable_metrics": {
+    "population": "No comparator block-population allocation is frozen in Tier 1.",
+    "geometric_compactness": "The national geometry/perimeter protocol is not frozen.",
+    "partisan": "The evaluation schedule election and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "sensitivity": "The 100 diagnostic seed package has not been run.",
+    "ensemble": "No block-level preregistered ensemble exists for this slice."
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

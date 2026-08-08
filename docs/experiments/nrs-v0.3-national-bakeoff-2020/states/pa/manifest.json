@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "PA",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/pa/package/baseline_assignments.json",
+      "sha256": "f6cd31d06709dbbcb6deb849fe9697e6775ef2a8cc62aa2f2ab9319f20bf387f"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_42_tabblock20/tl_2020_42_tabblock20.shp",
+      "sha256": "900352e031035bb10db5a6049a8721d9dfa1524a32273f9e2083a4631e4c6083"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_42_tabblock20/tl_2020_42_tabblock20.shx",
+      "sha256": "f5752e28b7e7ad944ac20c2d82b40a3bd08d88cc26f5620643cd8069b9e80ba1"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_42_tabblock20/tl_2020_42_tabblock20.dbf",
+      "sha256": "617d276dc04860342218500735f934e908f32867048c2dfbd0aba38c426d0dd9"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_42_tabblock20/tl_2020_42_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_42_tabblock20/tl_2020_42_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_42_cd118.zip",
+      "sha256": "d8134a327d0960704fbb077f0655a9578e5544447a5e554ff15a9b18e1e4610c"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "01f22d7ca012ee83a55a5d52363641a536592891be4914cd6308264c61dd9a17",
+    "README.md": "bb00e3a40eb6a5f0d091991495deb0aa4aa98d2b0a4c71a214ef53031278d3de"
+  },
+  "reproduction": {
+    "state_fips": "42",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/pa",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/pa/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_42_tabblock20/tl_2020_42_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_42_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

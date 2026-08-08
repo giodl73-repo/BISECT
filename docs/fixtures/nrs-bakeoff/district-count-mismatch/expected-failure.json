@@ -1,0 +1,12 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-failure-fixture-v1",
+  "benchmark": {
+    "440010001001000": 1,
+    "440030002001000": 2
+  },
+  "comparator": {
+    "440010001001000": 1,
+    "440030002001000": 1
+  },
+  "expected_error": "[INPUT] district-count-mismatch"
+}

@@ -1,0 +1,286 @@
+{
+  "schema_version": "nrs-v0.3-national-bakeoff-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "census_year": 2020,
+  "state_manifests": [
+    {
+      "state": "AK",
+      "path": "states/ak/manifest.json",
+      "sha256": "89f167ba68f64576db00d083a608af61e91cb0f7a7a3c6f7afbdcfd2a457f492"
+    },
+    {
+      "state": "AL",
+      "path": "states/al/manifest.json",
+      "sha256": "10054ba993cebca8e152c32b7f0d36d6d55140b230b894735cbf950bd64b5ec7"
+    },
+    {
+      "state": "AR",
+      "path": "states/ar/manifest.json",
+      "sha256": "4eb65f7626cc0b926eb578be9f40a94e7e4e8273b414d6d5219f40f0b323121d"
+    },
+    {
+      "state": "AZ",
+      "path": "states/az/manifest.json",
+      "sha256": "c2b4c3b43045d50806335de88d48c0a7c967633587b0baf073d83c26596b07f3"
+    },
+    {
+      "state": "CA",
+      "path": "states/ca/manifest.json",
+      "sha256": "244a3dbc44bd71c77b0190f9bcfbc7eb2f2302359387038b8012b9825bb3d4cc"
+    },
+    {
+      "state": "CO",
+      "path": "states/co/manifest.json",
+      "sha256": "ccddb878624ad214f1f765ab51cb9284f307920bead610b387050f51c3ce8ad8"
+    },
+    {
+      "state": "CT",
+      "path": "states/ct/manifest.json",
+      "sha256": "164a033058b11db2083a5c168dbbb8f2fe399b711ae030a3bea17259dd681e79"
+    },
+    {
+      "state": "DE",
+      "path": "states/de/manifest.json",
+      "sha256": "ee96235ceb91282818600450b823405c3f67294059b51238878ab182df3d0963"
+    },
+    {
+      "state": "FL",
+      "path": "states/fl/manifest.json",
+      "sha256": "f43dccfdda3afea4ac6477aa9ac500716fdb5fb2be1ba9fa94ff8efca47e8cf0"
+    },
+    {
+      "state": "GA",
+      "path": "states/ga/manifest.json",
+      "sha256": "e3a40eff9a9ea2fdf5dbf2efc21d05243915eab76df65e6ea12df67339b40fa2"
+    },
+    {
+      "state": "HI",
+      "path": "states/hi/manifest.json",
+      "sha256": "2af3a48d90456c4ffdd8aa502cc19081f634a95d05c187e2f55628991222d24e"
+    },
+    {
+      "state": "IA",
+      "path": "states/ia/manifest.json",
+      "sha256": "6feec72584e546d49a30568b5c6c18bf9762ce4ba0345348429f7278189bda73"
+    },
+    {
+      "state": "ID",
+      "path": "states/id/manifest.json",
+      "sha256": "d8f6ee9f1ff6cc27ebe0a86099a6ec5773fb907738d016c05c8c215685735b2e"
+    },
+    {
+      "state": "IL",
+      "path": "states/il/manifest.json",
+      "sha256": "130c63a3211ac76b62d0cad9206a846b6ca0e9a51c19dfce6d7a3bd0a95ca7a7"
+    },
+    {
+      "state": "IN",
+      "path": "states/in/manifest.json",
+      "sha256": "7299487b17c888ab3ece3130f2f8c8f4ab17334a29d28d4fae67bf8588f45d1f"
+    },
+    {
+      "state": "KS",
+      "path": "states/ks/manifest.json",
+      "sha256": "d50209d57b27529133302acaa9dd859d50d8a0311aeecfa0ff4722e208377f03"
+    },
+    {
+      "state": "KY",
+      "path": "states/ky/manifest.json",
+      "sha256": "5f1ebbb26a44f46d209fc8fab57896fe0363553cbd26defe25823ff8348736bb"
+    },
+    {
+      "state": "LA",
+      "path": "states/la/manifest.json",
+      "sha256": "a0cb1cc42cee88b02c6dd8858b153a8288a4d4a4499a0d22d41f9dd61eb596a3"
+    },
+    {
+      "state": "MA",
+      "path": "states/ma/manifest.json",
+      "sha256": "4574a3eddcd16e1de0b9ce4ff0b5a9fe984408926ba8d6f50e111f7d60f99c26"
+    },
+    {
+      "state": "MD",
+      "path": "states/md/manifest.json",
+      "sha256": "cae2a6937f1fdf636e7b36103d5e5179809900fd3b22c8fb448d582b69e8ae36"
+    },
+    {
+      "state": "ME",
+      "path": "states/me/manifest.json",
+      "sha256": "10b414ff9b4c653ffbed03a5f1ab85d8bec5e6db156bb39eb601e61e8e2e8916"
+    },
+    {
+      "state": "MI",
+      "path": "states/mi/manifest.json",
+      "sha256": "cc0945c54dd035f851d001b25864e221b5a69ad0c80476501a3883d03e1c0b73"
+    },
+    {
+      "state": "MN",
+      "path": "states/mn/manifest.json",
+      "sha256": "35734ba16388f100358502c0a52cb4ba543e3961d9ac5e1048e06cd22a57ccba"
+    },
+    {
+      "state": "MO",
+      "path": "states/mo/manifest.json",
+      "sha256": "4e3090e35b1986161ac9450db22451cd23b8724523b2939a9896b9d9036db54c"
+    },
+    {
+      "state": "MS",
+      "path": "states/ms/manifest.json",
+      "sha256": "2227afa790feeec1631fa720469e972fd48404cef4f1587ec8ef2a55cd176ee9"
+    },
+    {
+      "state": "MT",
+      "path": "states/mt/manifest.json",
+      "sha256": "4d0cfa8fc02bb34d45161ffe521077fb8668b645f43fa8f1bf505c8368b5c1db"
+    },
+    {
+      "state": "NC",
+      "path": "states/nc/manifest.json",
+      "sha256": "0f9036e32bf8fd8b2143348e880c67577de8b629eaea6751e432812afe9efb11"
+    },
+    {
+      "state": "ND",
+      "path": "states/nd/manifest.json",
+      "sha256": "3701f3a8e5158c0d858b5c005391d4c97d62ab7790e1ecc2b76f1b3248116e59"
+    },
+    {
+      "state": "NE",
+      "path": "states/ne/manifest.json",
+      "sha256": "8cca5d26c3503e6e4b85be7e4224c71a28e10dcc38d5d6f376a25b9f03571bb5"
+    },
+    {
+      "state": "NH",
+      "path": "states/nh/manifest.json",
+      "sha256": "1334099ac8c52137b5a00c82858e54d2c50ac8fd2b4af3cf4fff4d7b05a43504"
+    },
+    {
+      "state": "NJ",
+      "path": "states/nj/manifest.json",
+      "sha256": "700fa82105e380fa95fb278d1e4a6b94b9d15f0b6b0f48b412277a3d25ffa11b"
+    },
+    {
+      "state": "NM",
+      "path": "states/nm/manifest.json",
+      "sha256": "8db37d11bb66bdfccbf359d86ae51c17c134f32d2027cdf9867befd5c1dda644"
+    },
+    {
+      "state": "NV",
+      "path": "states/nv/manifest.json",
+      "sha256": "10d6c3c56450baf49084bf40a8368097171c175557fa280a08e7262031c3e67b"
+    },
+    {
+      "state": "NY",
+      "path": "states/ny/manifest.json",
+      "sha256": "fec6019d31db0611bb29d67449908daed1235695c93d2a1603e723c03010b405"
+    },
+    {
+      "state": "OH",
+      "path": "states/oh/manifest.json",
+      "sha256": "ca4073f14e637cb89d0828ac43cff4f5966900a6add1a1afe35d44f0d28f226e"
+    },
+    {
+      "state": "OK",
+      "path": "states/ok/manifest.json",
+      "sha256": "45eefa3997a732a905087cf862964e500bfada8986735bcc88ddae7ea3ae5571"
+    },
+    {
+      "state": "OR",
+      "path": "states/or/manifest.json",
+      "sha256": "3c00b45775101dd5054c24fcb8f53f62892aa1697592c150cf9771db65cc954f"
+    },
+    {
+      "state": "PA",
+      "path": "states/pa/manifest.json",
+      "sha256": "53e62f7b0d703e97bd41e502b0de2ddab73fce7eb76129f7d8bf038cc6d38893"
+    },
+    {
+      "state": "RI",
+      "path": "states/ri/manifest.json",
+      "sha256": "73cfc9735c85c6aa61b92b85b2a3403529a64a780f04b492b9af952cfa4b6fae"
+    },
+    {
+      "state": "SC",
+      "path": "states/sc/manifest.json",
+      "sha256": "05bec009c5b902f700a581b44c50ab772c7973e4aeb303706257bf4dbf7223fb"
+    },
+    {
+      "state": "SD",
+      "path": "states/sd/manifest.json",
+      "sha256": "1751dfdc20860b32752a88b033fc3f2d2238d14ecce7a34bafdf1f7b3574b244"
+    },
+    {
+      "state": "TN",
+      "path": "states/tn/manifest.json",
+      "sha256": "434a861ba86e4cd30f54bf414bf148df39a5533bdcddc1ba57a113c0e909c841"
+    },
+    {
+      "state": "TX",
+      "path": "states/tx/manifest.json",
+      "sha256": "d1750c1ca7952363b7502b18c9e30c581b9374cf1242eb667ec8208ef0daa457"
+    },
+    {
+      "state": "UT",
+      "path": "states/ut/manifest.json",
+      "sha256": "5e0a7b36cf1d5ed72efdbc20882f6e0d4e2a672017c3cbc489fba8de6398932b"
+    },
+    {
+      "state": "VA",
+      "path": "states/va/manifest.json",
+      "sha256": "c5c10bcece492d7f4ea88248d43f14892fae16f75a3e40409cd7680785fd404e"
+    },
+    {
+      "state": "VT",
+      "path": "states/vt/manifest.json",
+      "sha256": "5f6533ce3a13ecdb161bcb581e8decc0c424792f28cfadc0d04ed05f8c26670e"
+    },
+    {
+      "state": "WA",
+      "path": "states/wa/manifest.json",
+      "sha256": "b04a6fe30a78b4260521824ed1573dd38d72661d8a2ac391be95aeee6690ef98"
+    },
+    {
+      "state": "WI",
+      "path": "states/wi/manifest.json",
+      "sha256": "e3e233239d0d25e5650ea1cbe6b1110dae83cea8e63244965a9914d53f041cd8"
+    },
+    {
+      "state": "WV",
+      "path": "states/wv/manifest.json",
+      "sha256": "3fff083038e4efedb7501b8cd78fcafdc0e7714603284b44596becc7227e2ffe"
+    },
+    {
+      "state": "WY",
+      "path": "states/wy/manifest.json",
+      "sha256": "97790d1ad1c755afac12ffa93daa37d2323f55d2fc8f1fa6b1a72ce12046e258"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    },
+    {
+      "path": "scripts/research/run_nrs_bakeoff_national.py",
+      "sha256": "cd7914469d359400033d4e5f5abd2dda593016fa0b083f4bcaba9ab998973237"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_national.py",
+      "sha256": "c84b695dcdae579e1d4c7ffcc90453281c8f22570232bd3f57aaa1da84a5edd2"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "7127c473ad257bb08e457a9da220916e06e3cdb2bc337daf2bee52ab67295052",
+    "state-summary.csv": "574e2ef3eadf24877d5b6d7c0482c1c8939969c68e0343a95897864055ea5dec",
+    "README.md": "4195525acda138b3bfc93eb3c1eb4bef5c1fbc6e0d67298e3555e7dad036020c"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

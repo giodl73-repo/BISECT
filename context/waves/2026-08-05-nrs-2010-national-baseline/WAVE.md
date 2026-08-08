@@ -36,7 +36,7 @@ verified 2020 national baseline.
 | 04 - 2010 NRS v0.2 amendment and verification | COMPLETE | Independent `--require-complete` verification passed: 50 States, 435 districts, 385 nodes, 11,071,790 blocks |
 | 05 - decade comparison and publication | COMPLETE | Three-cycle NRS v0.3 summaries, node/tree/cut stability, certified-versus-METIS evidence, and county/tract split audit published |
 | 06 - independent replication and closeout | ACTIVE | Author-machine fresh-clone Level 1 rehearsal passed at `d0053ff3`; independent external v0.3 record remains |
-| 07 - NRS v0.3 national bakeoff | ACTIVE | Tiered protocol precommitted; Rhode Island 2020 Tier 1 accepted/failure slice next |
+| 07 - NRS v0.3 national bakeoff | ACTIVE | National 2020 Tier 1 enacted-plan package passed for 50 States and 435 districts; later comparator and metric tiers remain |
 
 ## Versioned amendment
 

@@ -36,3 +36,24 @@
 
 Proceed with the Rhode Island 2020 Tier 1 slice. National expansion remains
 gated on accepted/failure proof and exact analyzer/verifier agreement.
+
+## Source-Identity Disposition
+
+The first comparator candidate was rejected because its internal congressional
+session was 116 despite a filename containing `cd118`. The accepted slice uses
+the official Census Rhode Island CD118 archive and enforces the session field
+before projection. This is an input-integrity correction, not an
+outcome-selected comparator change.
+
+## Post-Execution Disposition
+
+The first national run preserved failures in Connecticut, Illinois, and New
+Hampshire. Their official archives contain water-only `ZZ` polygons identified
+as congressional districts not defined. The protocol was amended uniformly to
+retain only blocks with `ALAND20 > 0`, exclude non-numbered comparator
+polygons, and keep any unassigned retained block as a hard failure.
+
+The amended run passed 50 States and 435 districts. The national verifier then
+regenerated every State package exactly. Tier 1 is accepted; geometry,
+elections, demographics, sensitivity, ensembles, and non-enacted national
+comparators remain gated.

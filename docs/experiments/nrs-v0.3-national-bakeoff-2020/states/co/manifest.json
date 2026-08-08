@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "CO",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/co/package/baseline_assignments.json",
+      "sha256": "32ba7188bcc532c421151716d29cd7b36f1e85765f732e462ea21bae1747317d"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_08_tabblock20/tl_2020_08_tabblock20.shp",
+      "sha256": "437d35cfcf2d2ea4be20d73323b9522fb3d8c12802f1af4d54bc113e69e4f09c"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_08_tabblock20/tl_2020_08_tabblock20.shx",
+      "sha256": "8f882a87e68f7aefb7bf617d01373db234fed842fb1b6f692a9b26beed1f346c"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_08_tabblock20/tl_2020_08_tabblock20.dbf",
+      "sha256": "7463a7496eb69be0f9ed8c4ec4f2f59168b15afdc2e55f054d22651fec5a767c"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_08_tabblock20/tl_2020_08_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_08_tabblock20/tl_2020_08_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_08_cd118.zip",
+      "sha256": "231de5d59d210095e8f74c388a458704c52b2072b6d3ab7651579863a3a292d4"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "460086ea94ee6ed36df7c6dc0507e1d52d4c3a7b4b9b601fbc17090e99020bd3",
+    "README.md": "1a93d124e9dd4bf23b85d007b94ebf26867f549ca442b2ffe57282da70dd53df"
+  },
+  "reproduction": {
+    "state_fips": "08",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/co",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/co/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_08_tabblock20/tl_2020_08_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_08_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

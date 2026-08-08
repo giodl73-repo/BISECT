@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "WV",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wv/package/baseline_assignments.json",
+      "sha256": "487212a4991eb000ec942b8466dd9f5632d8a76ca5ea437f5a733aa491a21d97"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_54_tabblock20/tl_2020_54_tabblock20.shp",
+      "sha256": "df2d3668505882090f0ac0224968095a0f23583550a5026b98a11307aad377d5"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_54_tabblock20/tl_2020_54_tabblock20.shx",
+      "sha256": "b15cc32189740cce7e7dc1dc3e7fce26d0b0e289debabedbf96356e4ae7a5462"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_54_tabblock20/tl_2020_54_tabblock20.dbf",
+      "sha256": "53136032d7bbb00bff6de909a910b8fa942218ba10d2c34c71273540ec02414e"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_54_tabblock20/tl_2020_54_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_54_tabblock20/tl_2020_54_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_54_cd118.zip",
+      "sha256": "677dee9263b3d1195a370c755a6406244e7f5426bfb79f72f290490c73a74587"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "4f4b44f1c557edb563dcc9c1fffaf95b8dda9c887992bf8bbf71d2a4a07a248a",
+    "README.md": "02ec28f252cd612744e87ecfac74513a4f099b0d61f131e6fea5fc5ccfaf8a6a"
+  },
+  "reproduction": {
+    "state_fips": "54",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/wv",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wv/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_54_tabblock20/tl_2020_54_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_54_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

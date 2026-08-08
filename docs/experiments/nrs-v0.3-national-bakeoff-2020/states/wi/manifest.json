@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "WI",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wi/package/baseline_assignments.json",
+      "sha256": "d994cd39f71f3abb41684d38c4808df07e54b2edcd83bbb752ee4d6a67b123ad"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_55_tabblock20/tl_2020_55_tabblock20.shp",
+      "sha256": "3dfd3cf3ad2bf83aaf8b4aa0019d07a8ffa6d12e79c39ef4170628cf3caef533"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_55_tabblock20/tl_2020_55_tabblock20.shx",
+      "sha256": "e5620f51ea11be3e96cd33e597bab21a607b502e6e56b64248eb01fe2f4961d1"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_55_tabblock20/tl_2020_55_tabblock20.dbf",
+      "sha256": "8f9504797582cc06b5febc0494086f2dc403208ff802f457e2c278866183b3dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_55_tabblock20/tl_2020_55_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_55_tabblock20/tl_2020_55_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_55_cd118.zip",
+      "sha256": "e9b0cf4daaed12363bccf11ff96a068927c6a634f57fd98790f03051776619c2"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "90ca98c0ed16ed226d28eed9dd470eddc039bb9c1e735fbdbf96584bb7b55cbd",
+    "README.md": "10030f8cc55f6ef28ecbf9a6067b3f99214296ef8f957407aa36e37aa2b8655b"
+  },
+  "reproduction": {
+    "state_fips": "55",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/wi",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wi/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_55_tabblock20/tl_2020_55_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_55_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

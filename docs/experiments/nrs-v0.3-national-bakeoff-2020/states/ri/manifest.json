@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "RI",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/baseline_assignments.json",
+      "sha256": "e9bdc209225b8667221218eb6aa76523bf7d48dfbb54f468fe8d9bee335d3785"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.shp",
+      "sha256": "2528ad254d42db9368b17b02376f79b5a6021983db77a61e47503d9a91fd72c5"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.shx",
+      "sha256": "fe549c9af889a9aa837e3a365f9aad6133daa6983ae580a01efe8f988ff1d22f"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.dbf",
+      "sha256": "46aeacfdcf81ee580c50cb555d6dd5b165219463f64208912d1d304e410a6e06"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_44_cd118.zip",
+      "sha256": "bf30582f8ce0227ccafbb65ba69cbb9c54c0c028ae6ddd8d6f70f67cda325fa7"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "943316b41dee4dc9bf4abc915e65fe3868e07477dcee461d444e39349f2f34e9",
+    "README.md": "086085ed26301f6498de75aa67c21845bf3ce6e56f7fbf95d4b7a90d70bd7abf"
+  },
+  "reproduction": {
+    "state_fips": "44",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/ri",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_44_tabblock20/tl_2020_44_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_44_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "LA",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/la/package/baseline_assignments.json",
+      "sha256": "14492a88e5c46d97c55ec0da7dd316043a24ec330649188ff7651cb28dfc60e8"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_22_tabblock20/tl_2020_22_tabblock20.shp",
+      "sha256": "f8cbae72285da22a6ba62fd9780f557da10491115b600cdaa7c823c7c38e91f0"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_22_tabblock20/tl_2020_22_tabblock20.shx",
+      "sha256": "f41afb339f291da8e310cb996ad9f8a56e03f974776d2176cf669ed75c050dda"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_22_tabblock20/tl_2020_22_tabblock20.dbf",
+      "sha256": "2300743742b2a9eb470b3a1da2a70d95fe6eadd0a1909a64e4b12fa8b07e5a58"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_22_tabblock20/tl_2020_22_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_22_tabblock20/tl_2020_22_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_22_cd118.zip",
+      "sha256": "bfded99394149901981aea26bc65cfb969e67348a73bab9000e1474585b57432"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "201bd4d6073f591fa3a08e44e4da3c9725da74e2237894642ccecde459e85293",
+    "README.md": "591217a9169e682c119a0b6b55dadb0a8f7cecad837b8e810fac180fb2058cc8"
+  },
+  "reproduction": {
+    "state_fips": "22",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/la",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/la/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_22_tabblock20/tl_2020_22_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_22_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

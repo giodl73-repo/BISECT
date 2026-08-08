@@ -1,0 +1,141 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "MI",
+  "state_fips": "26",
+  "census_year": 2020,
+  "atomic_unit": "2020-census-tabulation-block",
+  "atomic_universe": {
+    "source_blocks": 254730,
+    "excluded_water_only_blocks": 10332,
+    "analyzed_land_containing_blocks": 244398
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "blocks": 244398,
+    "districts": 13,
+    "county_splits": {
+      "units": 83,
+      "split_units": 47,
+      "excess_pieces": 104
+    },
+    "tract_splits": {
+      "units": 2971,
+      "split_units": 812,
+      "excess_pieces": 889
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "blocks": 244398,
+    "districts": 13,
+    "county_splits": {
+      "units": 83,
+      "split_units": 15,
+      "excess_pieces": 21
+    },
+    "tract_splits": {
+      "units": 2971,
+      "split_units": 47,
+      "excess_pieces": 47
+    },
+    "projection_diagnostics": {
+      "method": "block-representative-point-within-exactly-one-polygon",
+      "projection": "EPSG:5070",
+      "comparator_session": "118",
+      "source_blocks": 254730,
+      "excluded_water_only_blocks": 10332,
+      "excluded_non_district_labels": [],
+      "unmatched_blocks": 0,
+      "multiply_matched_blocks": 0
+    }
+  },
+  "comparison": {
+    "label_matching": [
+      {
+        "benchmark_district": 1,
+        "comparator_district": 1,
+        "matched_blocks": 46127
+      },
+      {
+        "benchmark_district": 2,
+        "comparator_district": 2,
+        "matched_blocks": 15820
+      },
+      {
+        "benchmark_district": 3,
+        "comparator_district": 3,
+        "matched_blocks": 7457
+      },
+      {
+        "benchmark_district": 4,
+        "comparator_district": 4,
+        "matched_blocks": 3599
+      },
+      {
+        "benchmark_district": 5,
+        "comparator_district": 8,
+        "matched_blocks": 5690
+      },
+      {
+        "benchmark_district": 6,
+        "comparator_district": 7,
+        "matched_blocks": 4671
+      },
+      {
+        "benchmark_district": 7,
+        "comparator_district": 9,
+        "matched_blocks": 4410
+      },
+      {
+        "benchmark_district": 8,
+        "comparator_district": 10,
+        "matched_blocks": 3962
+      },
+      {
+        "benchmark_district": 9,
+        "comparator_district": 13,
+        "matched_blocks": 5493
+      },
+      {
+        "benchmark_district": 10,
+        "comparator_district": 11,
+        "matched_blocks": 2609
+      },
+      {
+        "benchmark_district": 11,
+        "comparator_district": 12,
+        "matched_blocks": 6385
+      },
+      {
+        "benchmark_district": 12,
+        "comparator_district": 5,
+        "matched_blocks": 11142
+      },
+      {
+        "benchmark_district": 13,
+        "comparator_district": 6,
+        "matched_blocks": 7164
+      }
+    ],
+    "matched_blocks": 124529,
+    "moved_blocks": 119869,
+    "matched_block_rate": 0.5095336295714368,
+    "comparator_minus_benchmark": {
+      "county_split_units": -32,
+      "county_excess_pieces": -83,
+      "tract_split_units": -765,
+      "tract_excess_pieces": -842
+    }
+  },
+  "unavailable_metrics": {
+    "population": "No comparator block-population allocation is frozen in Tier 1.",
+    "geometric_compactness": "The national geometry/perimeter protocol is not frozen.",
+    "partisan": "The evaluation schedule election and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "sensitivity": "The 100 diagnostic seed package has not been run.",
+    "ensemble": "No block-level preregistered ensemble exists for this slice."
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

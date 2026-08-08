@@ -1,0 +1,116 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "WI",
+  "state_fips": "55",
+  "census_year": 2020,
+  "atomic_unit": "2020-census-tabulation-block",
+  "atomic_universe": {
+    "source_blocks": 203059,
+    "excluded_water_only_blocks": 9680,
+    "analyzed_land_containing_blocks": 193379
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "blocks": 193379,
+    "districts": 8,
+    "county_splits": {
+      "units": 72,
+      "split_units": 49,
+      "excess_pieces": 74
+    },
+    "tract_splits": {
+      "units": 1526,
+      "split_units": 347,
+      "excess_pieces": 370
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "blocks": 193379,
+    "districts": 8,
+    "county_splits": {
+      "units": 72,
+      "split_units": 12,
+      "excess_pieces": 13
+    },
+    "tract_splits": {
+      "units": 1526,
+      "split_units": 57,
+      "excess_pieces": 57
+    },
+    "projection_diagnostics": {
+      "method": "block-representative-point-within-exactly-one-polygon",
+      "projection": "EPSG:5070",
+      "comparator_session": "118",
+      "source_blocks": 203059,
+      "excluded_water_only_blocks": 9680,
+      "excluded_non_district_labels": [],
+      "unmatched_blocks": 0,
+      "multiply_matched_blocks": 0
+    }
+  },
+  "comparison": {
+    "label_matching": [
+      {
+        "benchmark_district": 1,
+        "comparator_district": 8,
+        "matched_blocks": 21861
+      },
+      {
+        "benchmark_district": 2,
+        "comparator_district": 6,
+        "matched_blocks": 14055
+      },
+      {
+        "benchmark_district": 3,
+        "comparator_district": 7,
+        "matched_blocks": 35464
+      },
+      {
+        "benchmark_district": 4,
+        "comparator_district": 3,
+        "matched_blocks": 16179
+      },
+      {
+        "benchmark_district": 5,
+        "comparator_district": 2,
+        "matched_blocks": 10207
+      },
+      {
+        "benchmark_district": 6,
+        "comparator_district": 4,
+        "matched_blocks": 7608
+      },
+      {
+        "benchmark_district": 7,
+        "comparator_district": 5,
+        "matched_blocks": 6370
+      },
+      {
+        "benchmark_district": 8,
+        "comparator_district": 1,
+        "matched_blocks": 12220
+      }
+    ],
+    "matched_blocks": 123964,
+    "moved_blocks": 69415,
+    "matched_block_rate": 0.6410416849813061,
+    "comparator_minus_benchmark": {
+      "county_split_units": -37,
+      "county_excess_pieces": -61,
+      "tract_split_units": -290,
+      "tract_excess_pieces": -313
+    }
+  },
+  "unavailable_metrics": {
+    "population": "No comparator block-population allocation is frozen in Tier 1.",
+    "geometric_compactness": "The national geometry/perimeter protocol is not frozen.",
+    "partisan": "The evaluation schedule election and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "sensitivity": "The 100 diagnostic seed package has not been run.",
+    "ensemble": "No block-level preregistered ensemble exists for this slice."
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "nrs-v0.3-national-bakeoff-analysis-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "census_year": 2020,
+  "comparator": "official-census-cd118-state-archives",
+  "states_passed": 50,
+  "states_failed": 0,
+  "failures": [],
+  "national_totals": {
+    "districts": 435,
+    "source_blocks": 8126956,
+    "excluded_water_only_blocks": 237762,
+    "blocks": 7889194,
+    "matched_blocks": 4194107,
+    "moved_blocks": 3695087,
+    "matched_block_rate": 0.5316268049689233,
+    "nrs_county_splits": 1808,
+    "comparator_county_splits": 404,
+    "nrs_tract_splits": 19789,
+    "comparator_tract_splits": 4720
+  },
+  "state_weighted": {
+    "mean_matched_block_rate": 0.6095982760920029,
+    "mean_county_split_difference": -28.08,
+    "mean_tract_split_difference": -301.38
+  },
+  "district_weighted": {
+    "mean_matched_block_rate": 0.5089213208760455,
+    "mean_county_split_difference": -44.44827586206897,
+    "mean_tract_split_difference": -655.2873563218391
+  },
+  "unavailable_metrics": {
+    "population": "Tier 1 does not freeze comparator block-population allocation.",
+    "geometric_compactness": "The national geometry/perimeter protocol is not frozen.",
+    "partisan": "The evaluation schedule election and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen national within-unit allocation or legal analysis.",
+    "sensitivity": "The 100 diagnostic seed package has not been run.",
+    "ensemble": "No block-level preregistered national ensemble exists."
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

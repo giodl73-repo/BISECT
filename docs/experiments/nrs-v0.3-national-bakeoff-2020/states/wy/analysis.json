@@ -1,0 +1,81 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "WY",
+  "state_fips": "56",
+  "census_year": 2020,
+  "atomic_unit": "2020-census-tabulation-block",
+  "atomic_universe": {
+    "source_blocks": 53769,
+    "excluded_water_only_blocks": 888,
+    "analyzed_land_containing_blocks": 52881
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "blocks": 52881,
+    "districts": 1,
+    "county_splits": {
+      "units": 23,
+      "split_units": 0,
+      "excess_pieces": 0
+    },
+    "tract_splits": {
+      "units": 160,
+      "split_units": 0,
+      "excess_pieces": 0
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "blocks": 52881,
+    "districts": 1,
+    "county_splits": {
+      "units": 23,
+      "split_units": 0,
+      "excess_pieces": 0
+    },
+    "tract_splits": {
+      "units": 160,
+      "split_units": 0,
+      "excess_pieces": 0
+    },
+    "projection_diagnostics": {
+      "method": "block-representative-point-within-exactly-one-polygon",
+      "projection": "EPSG:5070",
+      "comparator_session": "118",
+      "source_blocks": 53769,
+      "excluded_water_only_blocks": 888,
+      "excluded_non_district_labels": [],
+      "unmatched_blocks": 0,
+      "multiply_matched_blocks": 0
+    }
+  },
+  "comparison": {
+    "label_matching": [
+      {
+        "benchmark_district": 1,
+        "comparator_district": 0,
+        "matched_blocks": 52881
+      }
+    ],
+    "matched_blocks": 52881,
+    "moved_blocks": 0,
+    "matched_block_rate": 1.0,
+    "comparator_minus_benchmark": {
+      "county_split_units": 0,
+      "county_excess_pieces": 0,
+      "tract_split_units": 0,
+      "tract_excess_pieces": 0
+    }
+  },
+  "unavailable_metrics": {
+    "population": "No comparator block-population allocation is frozen in Tier 1.",
+    "geometric_compactness": "The national geometry/perimeter protocol is not frozen.",
+    "partisan": "The evaluation schedule election and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "sensitivity": "The 100 diagnostic seed package has not been run.",
+    "ensemble": "No block-level preregistered ensemble exists for this slice."
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

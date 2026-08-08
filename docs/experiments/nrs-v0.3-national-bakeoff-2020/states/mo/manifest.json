@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "MO",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mo/package/baseline_assignments.json",
+      "sha256": "6f8d23def0c5469df768993ecf539c5cb960606d92d3abbe976b91845624eca9"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_29_tabblock20/tl_2020_29_tabblock20.shp",
+      "sha256": "814d01cd630d33dbc95b0359e7bc309178c61014a351c9de95e7075a52cafc5b"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_29_tabblock20/tl_2020_29_tabblock20.shx",
+      "sha256": "47bfa72917b881cf39d0a09e4da3010f6708d1f4790ec6b890205b0359e791fb"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_29_tabblock20/tl_2020_29_tabblock20.dbf",
+      "sha256": "a42e2fe81c26d1b017b5638113ea9878a6b2a499c6431f1cfd8aeec51675a63c"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_29_tabblock20/tl_2020_29_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_29_tabblock20/tl_2020_29_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_29_cd118.zip",
+      "sha256": "9e345b2c4e1a5f1d6266b99f65241afedd7a61e1f9683cb9f7380315a7dff631"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "c6c13aa41fb68079945595a307efa9db334219573755377c4092c552cfcdae18",
+    "README.md": "3a8dd842664aa00ec4f95aab354c884aceed388f6d20606dbd5165f0e6a62415"
+  },
+  "reproduction": {
+    "state_fips": "29",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/mo",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/mo/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_29_tabblock20/tl_2020_29_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_29_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

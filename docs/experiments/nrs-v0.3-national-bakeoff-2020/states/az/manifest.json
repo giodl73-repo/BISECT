@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "AZ",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/az/package/baseline_assignments.json",
+      "sha256": "b7bcc4477ca11afd8a43b85ef7e0ffe6fe77fb282de87cbf31330397fc0158ce"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_04_tabblock20/tl_2020_04_tabblock20.shp",
+      "sha256": "94c01a56ffed3c9d1d00883b3feedcc20632a46feaa099e2ad577184b0c69df0"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_04_tabblock20/tl_2020_04_tabblock20.shx",
+      "sha256": "5d78f92df66c89c1b10052fde7b4e4730950b52fa0a329050382898ff9da0bcc"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_04_tabblock20/tl_2020_04_tabblock20.dbf",
+      "sha256": "f67f1a5f32ceeaf747c61ea9e85d42e4df0ba6779183b69c8fee9d6ec9d91b17"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_04_tabblock20/tl_2020_04_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_04_tabblock20/tl_2020_04_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_04_cd118.zip",
+      "sha256": "a8816a3dfcb0cf9f4f782d67ba458fee608c60a441eb331ee8545c35a89eabba"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "6579426a30d3a896c3796be9d0b73faba1765740529aab9f4935b772d0f0d806",
+    "README.md": "f0c548ca3af9ec46aa2d0cfcbb235aa65f5914e45511e0f7483642d67acc3e75"
+  },
+  "reproduction": {
+    "state_fips": "04",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/az",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/az/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_04_tabblock20/tl_2020_04_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_04_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "ID",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/id/package/baseline_assignments.json",
+      "sha256": "5e3873c83be3c3accf92d9b6ec60e6d5e45476fa8244081e90711b36484395f6"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_16_tabblock20/tl_2020_16_tabblock20.shp",
+      "sha256": "9daed03b661d6b0fd3345ff1275a8452bd4e8c4e4dc48ac7fc8a35174a235852"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_16_tabblock20/tl_2020_16_tabblock20.shx",
+      "sha256": "45e34599ba3dd361c79350b1d9f17041e38b9f9df6ae6de51064a59f97885a34"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_16_tabblock20/tl_2020_16_tabblock20.dbf",
+      "sha256": "3144009d6886015aae65927795d239efd7585fea5ec501029647ad4f33383d3e"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_16_tabblock20/tl_2020_16_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_16_tabblock20/tl_2020_16_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_16_cd118.zip",
+      "sha256": "a889d4cf61e63c4fc6ff264827768118ae254ede0653060487b8cacfce6a3dae"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "8f18bc2f90b9c6df2eea585c28b5efeb9d0e96e1cd599c8907988aec54c32113",
+    "README.md": "679186571ca71c77e876d2de8c4306d0d887b9600db7b58a748de1191d32e212"
+  },
+  "reproduction": {
+    "state_fips": "16",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/id",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/id/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_16_tabblock20/tl_2020_16_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_16_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

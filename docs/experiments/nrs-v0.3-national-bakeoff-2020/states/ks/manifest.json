@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "KS",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ks/package/baseline_assignments.json",
+      "sha256": "8a4e93ca3e584b4d782e1932cfb2f028423c7229c12dce30cd40a83acfe38651"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_20_tabblock20/tl_2020_20_tabblock20.shp",
+      "sha256": "41f9cdad6c2e834e59486502051259834eb22b884adca534b9249bc29565a085"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_20_tabblock20/tl_2020_20_tabblock20.shx",
+      "sha256": "3b12c95c7e532947ad6acecdb41f6902e36021f2a736dff4d54765b5dba1f754"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_20_tabblock20/tl_2020_20_tabblock20.dbf",
+      "sha256": "11650d1f4a06b7f129518490415478a6fd43fd986783553db19f6053986501e4"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_20_tabblock20/tl_2020_20_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_20_tabblock20/tl_2020_20_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_20_cd118.zip",
+      "sha256": "5e6f5ad93516481eef11aa5d5c5c98a8bae921c7d9970036c55a3958a352cc58"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "7105d8e17b405ded632398579fbbd3a551f5b9c77d65880302a7ded8333a330b",
+    "README.md": "caa4d3f8a51d061a98ad57bd0c9ae742dd5bb3e980ca9d969647803e9b518a23"
+  },
+  "reproduction": {
+    "state_fips": "20",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/ks",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ks/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_20_tabblock20/tl_2020_20_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_20_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

@@ -1,0 +1,266 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "TX",
+  "state_fips": "48",
+  "census_year": 2020,
+  "atomic_unit": "2020-census-tabulation-block",
+  "atomic_universe": {
+    "source_blocks": 668757,
+    "excluded_water_only_blocks": 13636,
+    "analyzed_land_containing_blocks": 655121
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "blocks": 655121,
+    "districts": 38,
+    "county_splits": {
+      "units": 254,
+      "split_units": 184,
+      "excess_pieces": 356
+    },
+    "tract_splits": {
+      "units": 6883,
+      "split_units": 2059,
+      "excess_pieces": 2268
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "blocks": 655121,
+    "districts": 38,
+    "county_splits": {
+      "units": 254,
+      "split_units": 30,
+      "excess_pieces": 59
+    },
+    "tract_splits": {
+      "units": 6883,
+      "split_units": 774,
+      "excess_pieces": 787
+    },
+    "projection_diagnostics": {
+      "method": "block-representative-point-within-exactly-one-polygon",
+      "projection": "EPSG:5070",
+      "comparator_session": "118",
+      "source_blocks": 668757,
+      "excluded_water_only_blocks": 13636,
+      "excluded_non_district_labels": [],
+      "unmatched_blocks": 0,
+      "multiply_matched_blocks": 0
+    }
+  },
+  "comparison": {
+    "label_matching": [
+      {
+        "benchmark_district": 1,
+        "comparator_district": 1,
+        "matched_blocks": 22830
+      },
+      {
+        "benchmark_district": 2,
+        "comparator_district": 13,
+        "matched_blocks": 28486
+      },
+      {
+        "benchmark_district": 3,
+        "comparator_district": 4,
+        "matched_blocks": 7380
+      },
+      {
+        "benchmark_district": 4,
+        "comparator_district": 26,
+        "matched_blocks": 3465
+      },
+      {
+        "benchmark_district": 5,
+        "comparator_district": 32,
+        "matched_blocks": 4452
+      },
+      {
+        "benchmark_district": 6,
+        "comparator_district": 19,
+        "matched_blocks": 36230
+      },
+      {
+        "benchmark_district": 7,
+        "comparator_district": 12,
+        "matched_blocks": 2324
+      },
+      {
+        "benchmark_district": 8,
+        "comparator_district": 24,
+        "matched_blocks": 3297
+      },
+      {
+        "benchmark_district": 9,
+        "comparator_district": 30,
+        "matched_blocks": 6040
+      },
+      {
+        "benchmark_district": 10,
+        "comparator_district": 33,
+        "matched_blocks": 4023
+      },
+      {
+        "benchmark_district": 11,
+        "comparator_district": 3,
+        "matched_blocks": 8751
+      },
+      {
+        "benchmark_district": 12,
+        "comparator_district": 5,
+        "matched_blocks": 3142
+      },
+      {
+        "benchmark_district": 13,
+        "comparator_district": 6,
+        "matched_blocks": 5761
+      },
+      {
+        "benchmark_district": 14,
+        "comparator_district": 25,
+        "matched_blocks": 8934
+      },
+      {
+        "benchmark_district": 15,
+        "comparator_district": 17,
+        "matched_blocks": 10119
+      },
+      {
+        "benchmark_district": 16,
+        "comparator_district": 8,
+        "matched_blocks": 4663
+      },
+      {
+        "benchmark_district": 17,
+        "comparator_district": 18,
+        "matched_blocks": 1241
+      },
+      {
+        "benchmark_district": 18,
+        "comparator_district": 38,
+        "matched_blocks": 2433
+      },
+      {
+        "benchmark_district": 19,
+        "comparator_district": 2,
+        "matched_blocks": 3410
+      },
+      {
+        "benchmark_district": 20,
+        "comparator_district": 11,
+        "matched_blocks": 12038
+      },
+      {
+        "benchmark_district": 21,
+        "comparator_district": 31,
+        "matched_blocks": 3415
+      },
+      {
+        "benchmark_district": 22,
+        "comparator_district": 37,
+        "matched_blocks": 4824
+      },
+      {
+        "benchmark_district": 23,
+        "comparator_district": 23,
+        "matched_blocks": 8006
+      },
+      {
+        "benchmark_district": 24,
+        "comparator_district": 16,
+        "matched_blocks": 10105
+      },
+      {
+        "benchmark_district": 25,
+        "comparator_district": 20,
+        "matched_blocks": 5396
+      },
+      {
+        "benchmark_district": 26,
+        "comparator_district": 21,
+        "matched_blocks": 5641
+      },
+      {
+        "benchmark_district": 27,
+        "comparator_district": 10,
+        "matched_blocks": 8363
+      },
+      {
+        "benchmark_district": 28,
+        "comparator_district": 29,
+        "matched_blocks": 4132
+      },
+      {
+        "benchmark_district": 29,
+        "comparator_district": 36,
+        "matched_blocks": 1056
+      },
+      {
+        "benchmark_district": 30,
+        "comparator_district": 9,
+        "matched_blocks": 3497
+      },
+      {
+        "benchmark_district": 31,
+        "comparator_district": 7,
+        "matched_blocks": 1802
+      },
+      {
+        "benchmark_district": 32,
+        "comparator_district": 35,
+        "matched_blocks": 978
+      },
+      {
+        "benchmark_district": 33,
+        "comparator_district": 22,
+        "matched_blocks": 4974
+      },
+      {
+        "benchmark_district": 34,
+        "comparator_district": 27,
+        "matched_blocks": 9971
+      },
+      {
+        "benchmark_district": 35,
+        "comparator_district": 14,
+        "matched_blocks": 14582
+      },
+      {
+        "benchmark_district": 36,
+        "comparator_district": 15,
+        "matched_blocks": 4203
+      },
+      {
+        "benchmark_district": 37,
+        "comparator_district": 28,
+        "matched_blocks": 9119
+      },
+      {
+        "benchmark_district": 38,
+        "comparator_district": 34,
+        "matched_blocks": 9688
+      }
+    ],
+    "matched_blocks": 288771,
+    "moved_blocks": 366350,
+    "matched_block_rate": 0.4407903272830515,
+    "comparator_minus_benchmark": {
+      "county_split_units": -154,
+      "county_excess_pieces": -297,
+      "tract_split_units": -1285,
+      "tract_excess_pieces": -1481
+    }
+  },
+  "unavailable_metrics": {
+    "population": "No comparator block-population allocation is frozen in Tier 1.",
+    "geometric_compactness": "The national geometry/perimeter protocol is not frozen.",
+    "partisan": "The evaluation schedule election and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "sensitivity": "The 100 diagnostic seed package has not been run.",
+    "ensemble": "No block-level preregistered ensemble exists for this slice."
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

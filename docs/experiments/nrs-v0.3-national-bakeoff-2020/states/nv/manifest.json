@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "NV",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nv/package/baseline_assignments.json",
+      "sha256": "fc5909c6b89e7788f09fde048aa027051b350e79f244c6df14638aa04cf96c99"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_32_tabblock20/tl_2020_32_tabblock20.shp",
+      "sha256": "ad2891fd4ddb705f59e0ee135f01bbc7395150c9cc16273b07ed736a65da129c"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_32_tabblock20/tl_2020_32_tabblock20.shx",
+      "sha256": "4367f40b9afe0d0a9722b34b50346ab16f11f0d1fe504bf77073a592cd9cd3b9"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_32_tabblock20/tl_2020_32_tabblock20.dbf",
+      "sha256": "fa95bf56a5e21bb1ca7009179ee0d25b60c8c5214a690d89da43ee4fd34fb8b1"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_32_tabblock20/tl_2020_32_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_32_tabblock20/tl_2020_32_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_32_cd118.zip",
+      "sha256": "ec8b10c7ba307e6c5ec5b0440dff003d8ca21202e1ea5101f043a6ebfabaf836"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "0f418c408fd5db2ec6a4a4d0c90f2e3dcd02b291c7ff69cbab3b7f42ba118e00",
+    "README.md": "084af279bc92cffaab60ce5d57537598f3ace1261e842a173c25fb85c2dfef99"
+  },
+  "reproduction": {
+    "state_fips": "32",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/nv",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/nv/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_32_tabblock20/tl_2020_32_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_32_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

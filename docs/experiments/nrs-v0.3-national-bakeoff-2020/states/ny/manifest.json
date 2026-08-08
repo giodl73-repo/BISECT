@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "NY",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ny/package/baseline_assignments.json",
+      "sha256": "6757742eb096a1953b33290fcb7dff5d264fd0e14cc1ffd5367446de272a77db"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_36_tabblock20/tl_2020_36_tabblock20.shp",
+      "sha256": "9eff19746d07b054923a2b0c98392121545a647fda5a133fc4f48f375a2d13de"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_36_tabblock20/tl_2020_36_tabblock20.shx",
+      "sha256": "82b83662912e3cd806b76a606058d1eff15c3feea69faec0130eaa5c4384f64d"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_36_tabblock20/tl_2020_36_tabblock20.dbf",
+      "sha256": "7974555de141bd5c1aa249da81c8227a5f22caf516689ba332293e6ddc15bb83"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_36_tabblock20/tl_2020_36_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_36_tabblock20/tl_2020_36_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_36_cd118.zip",
+      "sha256": "c703b2bcd76240d7709a69c48016269e59ada09f1627dd751c03f30a86f4a6ff"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "7c8b30e08d4f15fc10c86ef0d0b044c174465562697ead7306d1dc8b35eb4e9d",
+    "README.md": "87e59ff8fbff665c95bbabaf809036f62aa1460cdd7db087f8c4ef05deb3e753"
+  },
+  "reproduction": {
+    "state_fips": "36",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/ny",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ny/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_36_tabblock20/tl_2020_36_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_36_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

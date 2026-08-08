@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "AK",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ak/package/baseline_assignments.json",
+      "sha256": "ac3a801e2c35cd54b84b62fd8c0f4572ad8e6992470e044c6cd0a5c6b20c28f3"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_02_tabblock20/tl_2020_02_tabblock20.shp",
+      "sha256": "356d2dd0b0d8921bdf92175f8008dd05a8881ea7624f64a1b0a91e443fa6e459"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_02_tabblock20/tl_2020_02_tabblock20.shx",
+      "sha256": "1d13cb42a27bda126788d60f20cd55b15e36a7cdf6a88438070b7aa147b07959"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_02_tabblock20/tl_2020_02_tabblock20.dbf",
+      "sha256": "e9c5f1e783bf2733364712607838ea012d50e5fd9ac77ee36dea45a375f3d21c"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_02_tabblock20/tl_2020_02_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_02_tabblock20/tl_2020_02_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_02_cd118.zip",
+      "sha256": "36ba4a7bdde8c6dd3b02c10f33f35d12aa41f416a28b1c904b9024a35229414d"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "0df49f8fe12262d543d635b55f89473878d916d723f0b7ec5cbfcfdb4a561dd9",
+    "README.md": "119b5749be6544a7f2de0a081d06d6083a2bcfa313ec0dd1c520184f4309e762"
+  },
+  "reproduction": {
+    "state_fips": "02",
+    "projection": "EPSG:3338",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/ak",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ak/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_02_tabblock20/tl_2020_02_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_02_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}

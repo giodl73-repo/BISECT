@@ -1,0 +1,68 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-bakeoff-v1",
+  "status": "pass",
+  "state": "MA",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ma/package/baseline_assignments.json",
+      "sha256": "a0878a9af1baf516c7a881122c95662d2946b2795b564901ab335052ab8da264"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_25_tabblock20/tl_2020_25_tabblock20.shp",
+      "sha256": "debeadcab8fb3e411d145158513a7b12c1f87a6106e631ea39176a49b36749db"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_25_tabblock20/tl_2020_25_tabblock20.shx",
+      "sha256": "e5e89c1ea816f48670255b3d2b2c8f59ad916d0ac5f3ee6fd70db64d0746b125"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_25_tabblock20/tl_2020_25_tabblock20.dbf",
+      "sha256": "c99e6fdb591a0a798c56e2b0f5bd715c707e271f0105f27b0ba412e9942ca845"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_25_tabblock20/tl_2020_25_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_25_tabblock20/tl_2020_25_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_25_cd118.zip",
+      "sha256": "a9e7671f86f005aa72c16a4bba19e4c571fc33018b254ec8d80a3b78e068a089"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-national-bakeoff-protocol.md",
+      "sha256": "50646e56f059fd73b1503cd8e578d3bb892444236c88695b867756d7db00f74f"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_slice.py",
+      "sha256": "bba2cbe978e285a8200db62c686b441f75b99aaeb0859799a2d7cb669a5a92c0"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "a11d03a77bd38a5326dd0d14350dd9ccddceb8fb95939acb8c24392b74d04e41",
+    "README.md": "b143672e80c967eebe0bcf2f30ed84b0ad1e1b4b98f5daa8447cbfa968d3c5da"
+  },
+  "reproduction": {
+    "state_fips": "25",
+    "projection": "EPSG:5070",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-2020/states/ma",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ma/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_25_tabblock20/tl_2020_25_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_25_cd118.zip"
+  },
+  "claim_boundary": "Descriptive same-vintage atomic-block assignment overlap and county/tract split counts only; no compactness, population, partisan, demographic, VRA, legal-validity, optimality, superiority, or adoption claim."
+}
