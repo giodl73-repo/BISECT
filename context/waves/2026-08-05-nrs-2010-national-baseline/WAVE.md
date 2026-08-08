@@ -39,6 +39,7 @@ verified 2020 national baseline.
 | 07 - NRS v0.3 national bakeoff | ACTIVE | National 2020 Tier 1 enacted-plan package passed for 50 States and 435 districts; later comparator and metric tiers remain |
 | 08 - Rhode Island NRS v0.3 sensitivity | COMPLETE | All 100 frozen seeds reproduced one benchmark assignment/objective; result is mechanism-specific, not national robustness |
 | 09 - Multi-State NRS v0.3 root sensitivity | COMPLETE | All 300 pairs reproduced State benchmarks; candidate-tie instrumentation now gates broader seed expansion |
+| 10 - Initial DFS tie census | ACTIVE | Behavior-preserving counters and 44-State root census protocol frozen before instrumented replay |
 
 ## Versioned amendment
 

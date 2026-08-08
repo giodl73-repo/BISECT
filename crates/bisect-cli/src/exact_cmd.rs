@@ -151,8 +151,14 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             .collect::<Vec<_>>()
     };
     let original_assignment = assignment.clone();
+    let mut initial_dfs_minimum_deviation_candidates = 0;
+    let mut initial_dfs_minimum_deviation_cut_candidates = 0;
     if nrs_profile {
-        assignment = nrs_dfs_tree_cut_candidate(&root, &adjacency, &assignment, 0)?;
+        let candidate = nrs_dfs_tree_cut_candidate(&root, &adjacency, &assignment, 0)?;
+        initial_dfs_minimum_deviation_candidates = candidate.minimum_deviation_candidate_count;
+        initial_dfs_minimum_deviation_cut_candidates =
+            candidate.minimum_deviation_cut_candidate_count;
+        assignment = candidate.assignment;
     } else {
         let left = assignment
             .iter()
@@ -258,10 +264,12 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; candidate-initialization-moves={}; connected-subtree-population-operations={}; connected-subtree-population-units={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; initial-dfs-minimum-deviation-candidates={}; initial-dfs-minimum-deviation-cut-candidates={}; candidate-initialization-moves={}; connected-subtree-population-operations={}; connected-subtree-population-units={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
             niter,
             partition_type,
+            initial_dfs_minimum_deviation_candidates,
+            initial_dfs_minimum_deviation_cut_candidates,
             contiguity_repair_moves,
             population_improvement_operations,
             population_improvement_units,
@@ -293,12 +301,19 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     write_discovery_manifest(args, &root, &discovery)
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct NrsDfsTreeCutCandidate {
+    assignment: Vec<u8>,
+    minimum_deviation_candidate_count: usize,
+    minimum_deviation_cut_candidate_count: usize,
+}
+
 fn nrs_dfs_tree_cut_candidate(
     instance: &bisect_ilp::CertifiedSplitInstance,
     adjacency: &[Vec<usize>],
     assignment: &[u8],
     root: usize,
-) -> anyhow::Result<Vec<u8>> {
+) -> anyhow::Result<NrsDfsTreeCutCandidate> {
     let n = assignment.len();
     if root >= n {
         return Err(anyhow!("NRS DFS root is outside the unit index"));
@@ -400,7 +415,8 @@ fn nrs_dfs_tree_cut_candidate(
             }
         }
     }
-    let mut best: Option<((u64, i64, usize), usize, bool)> = None;
+    let minimum_deviation_candidate_count = candidates.len();
+    let mut scored_candidates = Vec::with_capacity(candidates.len());
     for (candidate, complement_is_left, moved_population, minimum) in candidates {
         let cut = instance
             .edges
@@ -413,13 +429,32 @@ fn nrs_dfs_tree_cut_candidate(
                 (left_in != right_in).then_some(edge.weight)
             })
             .sum::<u64>();
+        scored_candidates.push((
+            cut,
+            moved_population,
+            minimum,
+            candidate,
+            complement_is_left,
+        ));
+    }
+    let minimum_cut = scored_candidates
+        .iter()
+        .map(|(cut, _, _, _, _)| *cut)
+        .min()
+        .context("NRS DFS tree has no cut edge")?;
+    let minimum_deviation_cut_candidate_count = scored_candidates
+        .iter()
+        .filter(|(cut, _, _, _, _)| *cut == minimum_cut)
+        .count();
+    let mut best: Option<((u64, i64, usize), usize, bool)> = None;
+    for (cut, moved_population, minimum, candidate, complement_is_left) in scored_candidates {
         let key = (cut, moved_population, minimum);
         if best.as_ref().is_none_or(|(current, _, _)| key < *current) {
             best = Some((key, candidate, complement_is_left));
         }
     }
     let (_, candidate, complement_is_left) = best.context("NRS DFS tree has no cut edge")?;
-    Ok((0..n)
+    let assignment = (0..n)
         .map(|unit| {
             let in_subtree = entry[candidate] <= entry[unit] && entry[unit] < exit[candidate];
             if in_subtree != complement_is_left {
@@ -428,7 +463,12 @@ fn nrs_dfs_tree_cut_candidate(
                 1
             }
         })
-        .collect())
+        .collect();
+    Ok(NrsDfsTreeCutCandidate {
+        assignment,
+        minimum_deviation_candidate_count,
+        minimum_deviation_cut_candidate_count,
+    })
 }
 
 fn improve_discovery_population(
@@ -549,7 +589,8 @@ fn nrs_v0_2_fallback_candidate(
     roots.sort_unstable();
     roots.dedup();
     for root in roots.into_iter().filter(|&root| root != 0) {
-        let mut assignment = nrs_dfs_tree_cut_candidate(instance, adjacency, raw_assignment, root)?;
+        let mut assignment =
+            nrs_dfs_tree_cut_candidate(instance, adjacency, raw_assignment, root)?.assignment;
         if instance.k_left == instance.k_right && assignment[0] == 1 {
             for label in &mut assignment {
                 *label = 1 - *label;
@@ -2850,6 +2891,12 @@ mod tests {
         assert_eq!((instance.k_left, instance.k_right), (2, 3));
         assert_eq!(discovery.objective.canonical_assignment.len(), 10);
         assert!(discovery.method.contains("partition-type=recursive"));
+        assert!(discovery
+            .method
+            .contains("initial-dfs-minimum-deviation-candidates=2"));
+        assert!(discovery
+            .method
+            .contains("initial-dfs-minimum-deviation-cut-candidates=2"));
         assert!(discovery.method.contains("refinement=nrsv01"));
         assert!(bisect_ilp::certified_split_children_connected(
             &instance,
@@ -2867,13 +2914,18 @@ mod tests {
         let first = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 0).unwrap();
         let second = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 0).unwrap();
         assert_eq!(first, second);
-        assert!(
-            rgraph_core::assignment_labels_connected(&adjacency, &first, [0_u8, 1_u8]).unwrap()
-        );
+        assert_eq!(first.minimum_deviation_candidate_count, 2);
+        assert_eq!(first.minimum_deviation_cut_candidate_count, 2);
+        assert!(rgraph_core::assignment_labels_connected(
+            &adjacency,
+            &first.assignment,
+            [0_u8, 1_u8]
+        )
+        .unwrap());
         let left_population = instance
             .populations
             .iter()
-            .zip(&first)
+            .zip(&first.assignment)
             .filter_map(|(&population, &label)| (label == 0).then_some(population))
             .sum::<i64>();
         assert_eq!(left_population, 400);
@@ -2886,9 +2938,12 @@ mod tests {
         let adjacency = graph_adjacency(context.graph.as_ref().unwrap()).unwrap();
         let raw = (0..10).map(|unit| (unit % 2) as u8).collect::<Vec<_>>();
         let candidate = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 9).unwrap();
-        assert!(
-            rgraph_core::assignment_labels_connected(&adjacency, &candidate, [0_u8, 1_u8]).unwrap()
-        );
+        assert!(rgraph_core::assignment_labels_connected(
+            &adjacency,
+            &candidate.assignment,
+            [0_u8, 1_u8]
+        )
+        .unwrap());
     }
 
     #[test]
@@ -2899,14 +2954,17 @@ mod tests {
         let raw = vec![0, 0, 0, 0, 0, 0, 1, 1, 1, 1];
         assert!(rgraph_core::assignment_labels_connected(&adjacency, &raw, [0_u8, 1_u8]).unwrap());
         let candidate = nrs_dfs_tree_cut_candidate(&instance, &adjacency, &raw, 0).unwrap();
-        assert_ne!(candidate, raw);
-        assert!(
-            rgraph_core::assignment_labels_connected(&adjacency, &candidate, [0_u8, 1_u8]).unwrap()
-        );
+        assert_ne!(candidate.assignment, raw);
+        assert!(rgraph_core::assignment_labels_connected(
+            &adjacency,
+            &candidate.assignment,
+            [0_u8, 1_u8]
+        )
+        .unwrap());
         let left_population = instance
             .populations
             .iter()
-            .zip(&candidate)
+            .zip(&candidate.assignment)
             .filter_map(|(&population, &label)| (label == 0).then_some(population))
             .sum::<i64>();
         assert_eq!(left_population, 400);
