@@ -18,6 +18,12 @@ The portfolio-wide algorithm-paper triage scorecard is
 VTRACE evidence posture for indexed papers is controlled in
 [`docs/vtrace/PAPER_EVIDENCE_INVENTORY.md`](vtrace/PAPER_EVIDENCE_INVENTORY.md).
 
+The current governed national evidence is summarized in A.0, A.5, and U.21:
+NRS v0.3 covers 2000, 2010, and 2020 with complete operational assignments,
+an independently checked structural comparison, and explicit exact-proof
+gaps. Older papers retain their experiment-specific data vintages and should
+not be read as if they analyzed the NRS v0.3 assignments.
+
 ---
 
 ## Track B — Algorithm Foundations
@@ -100,7 +106,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | [PDF](papers/U.18+large-neighborhood-search.pdf) | reviewed draft; public lineage and benchmark packages |
 | U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | [PDF](papers/U.19+evolutionary-search-comparison.pdf) | reviewed draft; public selected-frontier package |
 | U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | [PDF](papers/U.20+plan-audit-certificates.pdf) | reviewed draft; public package corpus and audit benchmark |
-| U.21 | Certified Recursive Bisection — proof-carrying cuts and recursive certificate trees | [PDF](papers/U.21+certified-recursive-bisection.pdf) | bounded implementation and RI input frontier; State proof pending |
+| U.21 | Certified Recursive Bisection — proof-carrying cuts and recursive certificate trees | [PDF](papers/U.21+certified-recursive-bisection.pdf) | three-cycle operational evidence and bounded comparison published; exact State proof pending |
 
 U.0 and U.12-U.21 are reviewed or evidence-bounded drafts with PDFs and paper-level simulated
 review/revision artifacts. Search/optimization additions through U.21 are
@@ -193,7 +199,7 @@ Validation: does the algorithm produce robust results across resolutions, census
 | C.0 | Validation Overview (Track C synthesis) | [PDF](papers/C.0+validation-overview.pdf) |
 | C.1 | MAUP Sensitivity — robust across 130× unit-count range | [PDF](papers/C.1+maup-sensitivity.pdf) |
 | C.2 | Cross-Census Validation — PP varies only ~10% across decades | [PDF](papers/C.2+cross-census-validation.pdf) |
-| C.3 | Cross-Census Temporal Stability | [PDF](papers/C.3+temporal-stability.pdf) |
+| C.3 | Cross-Census Temporal Stability — five-State 2010–2020 tract-overlap pilot; separate NRS v0.3 national structural comparison | [PDF](papers/C.3+temporal-stability.pdf) |
 | C.4 | Twenty Years of Congressional Redistricting | [PDF](papers/C.4+longitudinal-analysis.pdf) |
 | C.5 | Efficiency Gap Analysis — near-zero EG as byproduct | [PDF](papers/C.5+efficiency-gap-analysis.pdf) |
 | C.6 | User Study Protocol — planned survey with synthetic illustrative outputs | [PDF](papers/C.6+user-study.pdf) |
@@ -272,12 +278,12 @@ Synthesis, guides, and practitioner materials.
 
 | Code | Title | PDF |
 |------|-------|-----|
-| A.0 | National-Scale Demonstration — bounded synthesis with declared evidence gaps | [PDF](papers/A.0+synthesis-metapaper.pdf) |
+| A.0 | National-Scale Demonstration — governed three-cycle synthesis with declared proof and metric gaps | [PDF](papers/A.0+synthesis-metapaper.pdf) |
 | A.1 | Research Portfolio Guide | [PDF](papers/A.1+portfolio-guide.pdf) |
 | A.2 | Portfolio Summary | [PDF](papers/A.2+portfolio-summary.pdf) |
 | A.3 | Portfolio Visualization — visual guide for non-technical audiences | [PDF](papers/A.3+portfolio-visualization.pdf) |
 | A.4 | Replication Materials — AEA-compliant reproducibility package | [PDF](papers/A.4+replication-materials.pdf) |
-| A.5 | Policy Brief — evidence standard now, exact canonical benchmark next | [PDF](papers/A.5+policy-brief.pdf) |
+| A.5 | Policy Brief — verified national evidence standard now, exact canonical benchmark next | [PDF](papers/A.5+policy-brief.pdf) |
 
 ---
 

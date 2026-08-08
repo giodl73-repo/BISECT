@@ -20,18 +20,20 @@ results, not court findings. Wording rules:
 3. **Design choices still matter.** Especially the **tree structure** (how `k`
    factors). That is the interesting causal story for election researchers —
    not a claim of neutrality-as-virtue.
-4. **Stronger claim is optional and incomplete.** “Certified” BISECT would prove
-   each cut unique under fixed rules. Parts exist; a full State proof is still
-   the frontier. Until then, nationwide maps are **heuristic baselines**.
+4. **Operational verification and exact proof are different.** NRS v0.3 has
+   complete, independently verified block assignments for all three Census
+   cycles. A fully certified BISECT would additionally prove each cut unique
+   under fixed objectives; a full State boundary/canonical proof is still the
+   frontier.
 
 ## What to open first (no install)
 
-1. **Dashboards:** https://giodl73-repo.github.io/BISECT/  
-   Round-by-round maps, multi-year views. Treat numbers as *current dashboard
-   claims* — re-run verify/analyze before citing as final.
+1. **NRS v0.3 national verification bundle:**
+   [`../external/nrs-v0.3-national-verification/README.md`](../external/nrs-v0.3-national-verification/README.md)
+   — three-cycle counts, replay levels, and claim boundaries.
 2. **Root README → Results at a glance**  
-   Compactness table and NC structure anecdote, with evidence caveats on the
-   same page.
+   Governed block-level evidence first; legacy tract/dashboard claims are
+   separately labeled.
 3. **This brief’s “talk track”** below.
 
 ## Talk track (for a 10-minute conversation)
@@ -40,8 +42,8 @@ results, not court findings. Wording rules:
 |---|---|---|
 | 0–2 | “Geographic recursive bisection: freeze the rule, turn politics off in the objective.” | README “How it works” |
 | 2–5 | “You still choose structure, weights, search — structure moves seats more than people expect.” | NC 7–7 vs 5–9 story (below) |
-| 5–7 | “Nationwide compactness improves vs many enacted maps under this procedure — research metric, not fairness proof.” | Results table / dashboard |
-| 7–10 | “We are honest about what is proved: METIS is heuristic; certificates are the north star.” | Certified concept doc |
+| 5–7 | “Three governed Census-cycle assignments pass operational checks; structure and subdivision audits are published.” | NRS v0.3 results table / verifier bundle |
+| 7–10 | “Operational conformance is verified; exact boundary and canonical optimality are still unproved.” | Certified concept doc |
 
 ## Structure dominates (the NC story)
 
@@ -62,7 +64,16 @@ Reproduce the controlled bakeoff:
 
 ## Headline metrics (how to cite)
 
-From the root README (2020 congressional research snapshot):
+Governed NRS v0.3 evidence:
+
+| Claim | How to phrase it | How not to phrase it |
+|---|---|---|
+| 27,398,654 blocks across three cycles | “The governed assignments cover 50 States and 435 districts in each cycle.” | “One persistent map was reused across decades.” |
+| 1,155/1,155 operational nodes pass | “All nodes pass the frozen population-tolerance and connectivity checks.” | “All nodes are mathematically optimal.” |
+| 120 common node signatures; 18 exact-topology States | “The recursive structures have these measured similarities.” | “District assignments overlap by this amount.” |
+| County/tract split counts | “Descriptive within each Census geography vintage.” | “Splits improved or worsened across vintages.” |
+
+Separate legacy 2020 tract-level research snapshot:
 
 | Claim | How to phrase it | How not to phrase it |
 |---|---|---|
@@ -75,7 +86,8 @@ Before any external article or briefing deck:
 
 1. Re-run or cite the specific label/manifest hashes you used.
 2. Note tract vs block resolution if relevant.
-3. Link paper/dashboard source; check `docs/PAPERS.md` and paper quality docs.
+3. Link the exact package, paper, or dashboard source; do not merge legacy
+   tract metrics into the NRS v0.3 block-level claim.
 4. Keep VTRACE posture: not release-final unless a cited gate says so.
 
 ## Hands-on (optional)
@@ -104,7 +116,7 @@ bisect label-report vt_demo --year 2020 --format html json
 - VRA §2 proof packages without expert design (there is a separate Callais
   quickstart; it is advanced and mode-explicit).
 - Declaring a map “fair” because it is compact.
-- Instant nationwide certified uniqueness (not achieved).
+- Exact nationwide boundary/canonical uniqueness (not achieved).
 
 ## Package context (one slide)
 

@@ -78,7 +78,12 @@ Congress should enact.
 - positive and hostile certificate corpora;
 - OPB decision compilation with SAT counterexample detection; and
 - a connected Rhode Island RCTX containing 25,649 blocks and 66,161 edges,
-  including 64 deterministic island bridges.
+  including 64 deterministic island bridges;
+- complete, independently verified NRS v0.3 operational assignments for 2000,
+  2010, and 2020: 150 State-cycle packages, 1,305 districts, and 1,155
+  recursive nodes; and
+- a portable artifact verifier, three-cycle structural comparison,
+  certified-versus-METIS benchmark, and county/tract split audit.
 
 ## Remaining frontier
 
@@ -90,7 +95,9 @@ The first State certificate still requires:
 4. production VeriPB checking; and
 5. publication of every proof, model hash, and failure.
 
-Until those gates close, nationwide METIS results remain heuristic benchmarks.
+Until those gates close, the nationwide assignments can claim verified
+operational conformance, but their METIS-derived weighted-boundary and
+canonical objectives remain heuristic and unproved.
 
 ## What “comes out on top” can mean
 
@@ -98,10 +105,11 @@ Certified BISECT already has the strongest **claim posture** among the project�
 construction methods: it defines how a unique answer could be proved rather
 than merely scored or audited.
 
-It has not yet demonstrated superior nationwide runtime, compactness, partisan
-outcomes, or community preservation. Those comparisons require a separate
-evidence package. A paper may claim stronger verifiability now; it must treat
-empirical map-quality superiority as an open hypothesis.
+A precommitted multi-instance package now compares certified and METIS
+incumbents on bounded instances. It does not establish superior nationwide
+compactness, partisan outcomes, or community preservation. A paper may claim
+stronger verifiability and complete operational coverage now; it must treat
+empirical map-quality superiority and exact national optimality as open.
 
 ## Public claim boundary
 

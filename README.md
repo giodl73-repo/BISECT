@@ -95,8 +95,10 @@ within each required step.
 | Rhode Island population-optimality stage | Proved by RoundingSat and VeriPB |
 | Rhode Island boundary/canonical stages | Unresolved after documented timeouts |
 | Rhode Island current connected incumbent | Weighted cut 43,047,238 |
-| NRS v0.1 2020 national reference baseline | 50 States, 435 districts, 385/385 nodes within frozen population tolerance |
-| NRS v0.1 exact proof coverage | Population 4/385; weighted boundary 0/385; canonical tie 0/385 |
+| NRS v0.3 national operational baselines | 2000/2010/2020; 150 State-cycle packages; 27,398,654 blocks; 1,305 districts |
+| NRS v0.3 population-tolerance coverage | 1,155/1,155 recursive nodes independently verified |
+| NRS v0.3 arithmetic-floor equality | 13/1,155 nodes proved |
+| NRS v0.3 weighted-boundary / canonical proof | 0/1,155 nodes; exact-objective frontier remains open |
 | Rhode Island zero-population cut cleanup | 36,496 weighted-cut reduction at unchanged population |
 | Rhode Island equal-population swaps | Additional 429,150 cut reduction |
 | Rhode Island 1-to-2 balanced exchanges | Additional 3,844,797 cut reduction |
@@ -234,7 +236,26 @@ bisect label-report official_2020 --year 2020 --format html json pdf
 
 ## Results at a glance
 
-**2020 Census, 50 states, 435 congressional districts:**
+**Governed block-level NRS v0.3 evidence:**
+
+| Evidence | Result |
+|---|---|
+| National coverage | 2000, 2010, and 2020; 50 States and 435 districts per cycle |
+| Population and connectivity | 1,155/1,155 recursive nodes passed the frozen operational checks |
+| Structural stability | 120 node signatures common to all cycles; 18 States retain exact all-cycle tree topology |
+| County splits | 1,812 / 1,819 / 1,823 for 2000 / 2010 / 2020 |
+| Tract splits | 17,268 / 18,800 / 20,288 for 2000 / 2010 / 2020 |
+| Exact proof coverage | Arithmetic floor 13/1,155; weighted boundary 0/1,155; canonical 0/1,155 |
+
+These results cover operational assignment conformance and descriptive
+structure/subdivision metrics. They do **not** establish partisan fairness,
+VRA compliance, legal validity, cross-cycle improvement, or exact
+weighted-boundary/canonical optimality. Start with the
+[three-cycle comparison](docs/experiments/nrs-cross-decade-2000-2020/comparison/README.md),
+[geographic audit](docs/experiments/nrs-v0.3-national-geographic-splits/README.md),
+and [fresh-clone verifier bundle](docs/external/nrs-v0.3-national-verification/README.md).
+
+**Legacy tract-level 2020 research snapshot (not the NRS v0.3 block baseline):**
 
 | Metric | Algorithmic | Enacted | Change |
 |--------|-------------|---------|--------|
@@ -246,7 +267,11 @@ North Carolina ($k=14=7\times 2$): ApportionRegions gives **7D/7R** vs. standard
 
 **[View all dashboards →](https://giodl73-repo.github.io/BISECT/)** — 2020, 2010, VRA results, round-by-round bisection maps.
 
-**Evidence status:** these headline metrics are empirical research claims, not legal conclusions. Treat them as current-paper/dashboard claims tied to the cited reports and paper index; rerun `bisect label-verify`, inspect manifests, and check `docs/papers/PAPER-QUALITY-REVIEW.md` / `docs/papers/ALGORITHM-PAPER-SCORECARD.md` before citing them as release-final numbers.
+**Evidence status:** the tract-level compactness and election-overlay metrics
+above are historical empirical research claims, not outputs of the governed
+NRS v0.3 assignments and not legal conclusions. Cite their specific
+paper/dashboard provenance rather than combining them with the block-level
+national package.
 
 **VTRACE status:** the control baseline starts at
 [`docs/vtrace/INDEX.md`](docs/vtrace/INDEX.md). Current posture is
@@ -261,7 +286,12 @@ before changing public/operator wording or claim posture.
 
 ## Track record
 
-The same algorithm, unchanged, on 2010 data: Polsby–Popper **0.320** — only 10% lower than 2020, despite a decade of demographic change. Geographic structure is stable; political environments aren't.
+The governed NRS v0.3 procedure now has complete, independently verified
+operational baselines for 2000, 2010, and 2020. The structural comparison finds
+120 common node signatures and 18 States with exact tree topology across all
+three cycles. Cross-cycle district-assignment overlap remains uncomputed
+because the block universes require a valid relationship crosswalk or geometry
+overlay.
 
 ---
 
@@ -283,10 +313,11 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 with enacted axioms, lexicographic optimization, canonical tie-breaking, and
 an independently verified proof certificate. Bounded split/tree certificates,
 hostile verifier corpora, proof-request compilation, and Rhode Island's
-connected block RCTX are implemented. NRS v0.1 now has a complete,
-independently verified 2020 national reference-baseline run. The remaining
-frontier is scalable external proof generation/checking; METIS-derived split
-incumbents remain heuristic for every unproved exact objective.
+connected block RCTX are implemented. The versioned NRS program progressed
+from the complete 2020 v0.1 reference run to NRS v0.3 operational baselines for
+2000, 2010, and 2020. The remaining frontier is scalable external proof
+generation/checking; METIS-derived split incumbents remain heuristic for every
+unproved exact objective.
 
 ---
 
@@ -360,7 +391,7 @@ The U-track now includes the full search/certification spine through U.21.
 |--|--|
 | [C.1](docs/papers/C.1+maup-sensitivity.pdf) | MAUP sensitivity: robust across 130× unit-count range |
 | [C.2](docs/papers/C.2+cross-census-validation.pdf) | Cross-census validation: compactness varies only ~10% across decades |
-| [C.3](docs/papers/C.3+temporal-stability.pdf) | Temporal stability: geographic clustering drives predictability |
+| [C.3](docs/papers/C.3+temporal-stability.pdf) | Five-State 2010–2020 tract-overlap pilot; separate from the NRS v0.3 national structural comparison |
 | [C.4](docs/papers/C.4+longitudinal-analysis.pdf) | 20-year longitudinal analysis: enacted maps improving, gap narrowing |
 | [C.5](docs/papers/C.5+efficiency-gap-analysis.pdf) | Efficiency gap: near-zero gaps as byproduct of geometric neutrality |
 

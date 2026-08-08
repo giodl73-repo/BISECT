@@ -2,7 +2,11 @@ Our findings open several promising research directions:
 
 \subsection{Extended Temporal Analysis}
 
-\textbf{Three-Cycle Study:} Add 2000 census data to create 2000-2010-2020 three-cycle analysis. This would:
+\textbf{Three-Cycle Assignment Study:} The governed NRS v0.3 evidence already
+provides a 2000--2010--2020 national comparison of recursive topology and
+normalized incumbent cuts. Extend the present work with a valid crosswalk or
+geometry overlay so it can compare district assignments and resident
+continuity across all three cycles. This would:
 \begin{itemize}
     \item Validate whether stability advantages persist across multiple decades
     \item Test if top-level splits remain stable for 20 years (not just 10)
@@ -96,7 +100,9 @@ For authors wishing to build on this work immediately:
 \begin{enumerate}
     \item \textbf{Validate Results:} Reproduce our findings on the 5 southern states using our publicly available code and census data.
 
-    \item \textbf{Add 2000 Data:} Extend to three-cycle analysis (2000-2010-2020) for Alabama and Georgia (most data-complete states).
+    \item \textbf{Add 2000 Assignment Crosswalks:} Extend the tract-level
+    assignment metrics to 2000--2010--2020 for Alabama and Georgia without
+    inferring continuity from GEOID strings or recursive topology.
 
     \item \textbf{Test Hybrid Method:} Implement hierarchical-initialized n-way and measure whether it achieves intermediate performance-stability balance.
 

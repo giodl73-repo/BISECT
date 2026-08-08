@@ -5,8 +5,9 @@ nondeterminism, what is proved, and which crate owns the type?”
 
 **Time:** 20–40 minutes cold; longer to run VT + one bakeoff state.
 
-**Posture:** engineering demonstration. Not a claim that the certified
-nationwide pipeline is finished.
+**Posture:** engineering demonstration. The NRS v0.3 operational assignments
+are complete for three Census cycles; exact nationwide boundary/canonical
+certification is not.
 
 ## Problem statement BISECT optimizes
 
@@ -84,15 +85,17 @@ crate over growing `bisect-cli/src/runner/ (`mod.rs` + `support.rs` + `tests.rs`
 | Data vintage | TIGER/adjacency hashes must match manifests |
 | Certified path | Aims for unique cut under fixed rules + proofs |
 
-Replay posture today is **candidate / local smoke** unless a cited VTRACE
-reproducibility gate says otherwise. Do not advertise “clean full-scale
-reproducible release” without that gate.
+The published NRS v0.3 bundle supports fresh-clone Level 1 verification of the
+committed evidence. Level 2 regeneration requires the hash-bound RCTX corpus,
+and the external non-author replication record remains open. Other historical
+pipelines retain their own VTRACE reproducibility posture.
 
 ## Proof / exact frontier (read before overclaiming)
 
 Implemented pieces include bounded certificates, recursive certificate trees,
 RPLAN binding, hostile corpora, RI connected block RCTX, small-state operational
-coverage, and population-optimality stages on named instances.
+coverage, population-optimality stages on named instances, and complete NRS
+v0.3 operational baselines for 2000, 2010, and 2020.
 
 **Not done:** first full large-State wall-to-wall certificate with boundary +
 canonical stages proved end-to-end for production citation.

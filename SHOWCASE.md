@@ -25,7 +25,9 @@ targets. Default mode uses **no partisan or racial inputs**.
 That procedure is a **published algorithmic baseline**, not a black-box optimizer
 score and not a legal conclusion. A stronger **certified** path aims to prove
 each cut is unique under enacted rules (population, then boundary, then
-canonical tie-break)—implemented in pieces, not yet a full nationwide proof.
+canonical tie-break). The operational NRS v0.3 assignments are complete and
+independently verified for 2000, 2010, and 2020; exact weighted-boundary and
+canonical proof coverage remains 0/1,155 nodes.
 
 ## Two doors
 
@@ -37,24 +39,31 @@ design choices move the outcome?*
 
 | Step | What to look at | Why |
 |---|---|---|
-| 1 | [Public dashboards](https://giodl73-repo.github.io/BISECT/) | Round-by-round maps and 2020/2010 views without installing anything |
-| 2 | [Researcher brief](docs/show/researcher-brief.md) | Headline metrics, structure-vs-outcome story, citation rules |
-| 3 | README “Results at a glance” | Current paper/dashboard claims with evidence caveats |
+| 1 | [NRS v0.3 verifier bundle](docs/external/nrs-v0.3-national-verification/README.md) | Governed three-cycle counts, claim boundary, and fresh-clone verification |
+| 2 | [Researcher brief](docs/show/researcher-brief.md) | Governed evidence, legacy metrics, structure-vs-outcome story, citation rules |
+| 3 | README “Results at a glance” | Current national evidence plus separately labeled historical research claims |
 | 4 | Optional: VT or NC bakeoff | Hands-on plan labels and CSV metrics |
 
 **Headline research claims (cite with caveats):**
 
-- 2020 tract pipeline: mean Polsby–Popper **~0.361** algorithmic vs **~0.296**
+- NRS v0.3: 150 verified State-cycle packages assign **27,398,654 blocks**
+  across 2000, 2010, and 2020; all **1,155** recursive nodes pass the frozen
+  population tolerance and connectivity checks.
+- The governed structural comparison reports **120** all-cycle common node
+  signatures and **18** all-cycle exact-topology States.
+- The governed county/tract audit reports **231,765** State/level geography
+  rows. It does not compute compactness, demographics, or partisanship.
+- Legacy 2020 tract pipeline: mean Polsby–Popper **~0.361** algorithmic vs **~0.296**
   enacted (**~+22%**), 37/44 states beating enacted on that metric — *empirical
-  research claim, not a legal finding; re-verify before treating as final.*
+  research claim, not an NRS v0.3 result or legal finding.*
 - **Structure dominates** partisan composition in bakeoffs: NC `k=14=7×2` under
   ApportionRegions often near **7D/7R** vs standard binary bisection closer to
   **5D/9R** in documented explorer runs — *structure choice, not “fairness.”*
-- Same algorithm on 2010: PP **~0.320** — geographic structure is relatively
-  stable across a decade of politics.
+- In the same legacy tract program, the 2010 run reports PP **~0.320**. This
+  is separate from the governed NRS v0.3 structural comparison.
 
-**Do not say:** official result, court-ready, certified nationwide map, or that
-compactness proves non-partisanship.
+**Do not say:** official result, court-ready, exact-certified nationwide map,
+or that compactness proves non-partisanship.
 
 ### B. Algorithm implementer path
 
@@ -73,6 +82,8 @@ METIS sit, what is proved today, and which packages own graph/plan/count?*
 - **Compositor:** structure (`--partition-mode`) × weights × search — change one
   layer at a time.
 - **Heuristic core:** METIS cut at each node; fast nationwide baselines.
+- **Operational evidence:** NRS v0.3 has complete verified assignments for all
+  three Census cycles and a portable Level 1 artifact verifier.
 - **Certified core:** lexicographic uniqueness + independent proof checking;
   RI and small-state operational coverage exist; full-state boundary/canonical
   proof still the frontier ([roadmap](context/waves/CERTIFIED_NATIONAL_ROADMAP.md)).
@@ -99,7 +110,7 @@ quickstart (needs 2020 adjacency/data).
 | Audience | Election researchers/journalists; algorithm implementers. |
 | Evidence | README results table; public dashboards; certified concept doc; VT walkthrough; algorithm explorer quickstart; VTRACE communications strategy. |
 | Validation | L0/L1 documentation and existing tutorial path; not L2 external-user validation. |
-| Limitations | Not public-release ready; not legal/court certified; dashboards/papers need re-verify for release-final citation; certified nationwide incomplete. |
+| Limitations | Not legal/court certified; external non-author v0.3 replication remains; exact nationwide boundary/canonical certification is incomplete. |
 | Non-claims | Fairness, VRA compliance, election certification, official scores. |
 | Review lane | COMMONS / DATUM / SCALE; BOUNDARY if legal wording is extended. |
 
