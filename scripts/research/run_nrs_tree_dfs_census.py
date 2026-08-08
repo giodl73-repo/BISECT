@@ -237,7 +237,7 @@ def run_state(inputs: dict, temp_root: Path) -> tuple[dict, list[dict]]:
 
 def write_csv(path: Path, fields: list[str], rows: list[dict]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow(
