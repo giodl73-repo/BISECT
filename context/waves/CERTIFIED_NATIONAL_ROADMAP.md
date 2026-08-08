@@ -73,7 +73,7 @@ For every State and Census year:
 - [ ] Sensitivity and ensemble analysis.
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
   - [x] Execute and exactly regenerate the precommitted NH/NM/GA 300-pair root slice.
-  - [ ] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
+  - [x] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
   - [ ] Expand sensitivity to a precommitted national node sample only if the instrumentation identifies seed-sensitive ties.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
@@ -125,9 +125,12 @@ Next unblocked work:
 > technical schedule, adoption package, national enacted-plan Tier 1 bakeoff,
 > and Rhode Island 100-seed sensitivity slice are published. The Rhode Island
 > and NH/NM/GA diagnostic seeds all reproduced their governed root assignments.
-> These roots did not exercise the seeded moved-population tie-break, so broader
-> seed expansion is gated on candidate-tie instrumentation and the result is
-> not national robustness. Cross-census assignment overlap remains uncomputed
+> The exact 44-State initial DFS census preserved every governed assignment and
+> objective; 29 roots expose two minimum-deviation/minimum-cut candidates and
+> therefore satisfy the necessary opportunity gate for bounded, precommitted
+> follow-up sensitivity. RI, NH, and GA show that this opportunity is not
+> sufficient for final assignment variation, while NM has no initial
+> opportunity. Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.

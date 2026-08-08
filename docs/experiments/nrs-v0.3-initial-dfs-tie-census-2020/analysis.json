@@ -1,0 +1,64 @@
+{
+  "schema_version": "nrs-v0.3-initial-dfs-tie-census-analysis-v1",
+  "protocol_id": "nrs-v0.3-initial-dfs-tie-census-v1",
+  "status": "pass",
+  "census_year": 2020,
+  "state_root_count": 44,
+  "accepted_state_count": 44,
+  "rejected_state_count": 0,
+  "assignment_preservation_count": 44,
+  "objective_preservation_count": 44,
+  "minimum_deviation_candidate_distribution": {
+    "minimum": 1,
+    "maximum": 10,
+    "counts": {
+      "1": 11,
+      "2": 24,
+      "3": 2,
+      "4": 6,
+      "10": 1
+    }
+  },
+  "minimum_deviation_cut_candidate_distribution": {
+    "minimum": 1,
+    "maximum": 2,
+    "counts": {
+      "1": 15,
+      "2": 29
+    }
+  },
+  "seed_sensitive_tie_opportunity_count": 29,
+  "seed_sensitive_tie_opportunity_states": [
+    "AR",
+    "CA",
+    "CO",
+    "FL",
+    "GA",
+    "HI",
+    "IA",
+    "ID",
+    "KS",
+    "KY",
+    "LA",
+    "MD",
+    "ME",
+    "MN",
+    "MO",
+    "MS",
+    "MT",
+    "NC",
+    "NH",
+    "NJ",
+    "NV",
+    "NY",
+    "OR",
+    "RI",
+    "TX",
+    "UT",
+    "WA",
+    "WI",
+    "WV"
+  ],
+  "failures": [],
+  "claim_boundary": "Initial root-0 DFS candidate multiplicity for governed 2020 State roots only; no alternate-root fallback, child-node, final seed-sensitivity, national robustness, optimality, or legal-quality claim."
+}

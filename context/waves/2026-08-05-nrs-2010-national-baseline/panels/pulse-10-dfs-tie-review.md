@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-07
 **Roles:** MERIDIAN, DATUM, SCALE, BENCHMARK, BOUNDARY
-**Posture:** instrumentation and census review before national replay
+**Posture:** post-census interpretation and next-gate review
 
 ## Findings
 
@@ -20,6 +20,13 @@
 
 ## Decision
 
-Proceed with the instrumented benchmark-seed replay. Stop before further
-100-seed work unless at least one root exposes a minimum-cut candidate count
-above one.
+The exact census passed for all 44 roots without changing any governed
+assignment or objective. Twenty-nine roots expose two
+minimum-deviation/minimum-cut candidates, so the preregistered stop condition
+for further seed work was not met.
+
+Do not expand blindly across all roots. Freeze a bounded sensitivity sample
+from the 29 opportunity States before execution, retain previously tested RI,
+NH, and GA as negative controls, and report final assignment variation
+separately from initial candidate opportunity. The current counters do not
+cover child nodes or fallback paths.
