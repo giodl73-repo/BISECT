@@ -72,7 +72,9 @@ For every State and Census year:
   - [x] Resolve or publish the input/protocol blockers for the remaining metric families.
 - [ ] Sensitivity and ensemble analysis.
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
-  - [ ] Expand sensitivity to a precommitted multi-State or national node sample.
+  - [x] Execute and exactly regenerate the precommitted NH/NM/GA 300-pair root slice.
+  - [ ] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
+  - [ ] Expand sensitivity to a precommitted national node sample only if the instrumentation identifies seed-sensitive ties.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
@@ -122,9 +124,10 @@ Next unblocked work:
 > certified-versus-METIS comparison, 231,765-row county/tract audit, papers,
 > technical schedule, adoption package, national enacted-plan Tier 1 bakeoff,
 > and Rhode Island 100-seed sensitivity slice are published. The Rhode Island
-> seeds all reproduced one assignment because this root did not exercise the
-> seeded moved-population tie-break; that result is not national robustness.
-> Cross-census
-> assignment overlap remains uncomputed pending a valid relationship crosswalk
+> and NH/NM/GA diagnostic seeds all reproduced their governed root assignments.
+> These roots did not exercise the seeded moved-population tie-break, so broader
+> seed expansion is gated on candidate-tie instrumentation and the result is
+> not national robustness. Cross-census assignment overlap remains uncomputed
+> pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.

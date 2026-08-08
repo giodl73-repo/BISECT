@@ -1,0 +1,54 @@
+{
+  "schema_version": "nrs-v0.3-multistate-root-sensitivity-manifest-v1",
+  "protocol_id": "nrs-v0.3-multistate-root-sensitivity-v1",
+  "status": "complete",
+  "state_manifests": [
+    {
+      "state": "GA",
+      "path": "states/ga/manifest.json",
+      "sha256": "fddbdf17250c5e42b51e6535f34552b5100a85488fdec679140fe91b9b9f4fbc"
+    },
+    {
+      "state": "NH",
+      "path": "states/nh/manifest.json",
+      "sha256": "d85dda3b439dd44d60293c75284c73f9775fe9bf66bc85a0221db92c36565038"
+    },
+    {
+      "state": "NM",
+      "path": "states/nm/manifest.json",
+      "sha256": "cfdf1084f9a36935ff3f5414ff58141a49a9de7249214daaa1b4c3a5824fb231"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-multistate-root-sensitivity-protocol.md",
+      "sha256": "c43d1961aaa9d9604211bafcf5aa91fdfbd1b46768f2448591bfab621a9a7914"
+    },
+    {
+      "path": "docs/experiments/2026-08-07-nrs-sensitivity-node-audit.md",
+      "sha256": "a2f1edb060157e8557eea8965b97a534565cf80fc5c530ca9f66efc90051589f"
+    },
+    {
+      "path": "scripts/research/run_nrs_multistate_root_sensitivity.py",
+      "sha256": "6786b5c2de4d0c50ccec0543effd41be18ea5c1cecf000dfd509ad410cb9f138"
+    },
+    {
+      "path": "scripts/research/verify_nrs_multistate_root_sensitivity.py",
+      "sha256": "9d7cc2098931dc6e0fc40bd334097174aa80b08c193b1c1438d038b4c07bd285"
+    },
+    {
+      "path": "scripts/research/run_nrs_ri_sensitivity.py",
+      "sha256": "6d4066f79972ab7b2132e1fae77c8becf6677b7c644f8128d6dc094858224ecb"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "9910e55be3310dd16754da1d432bad8e6a1d9841413d5c6dacff8ada1d315747",
+    "README.md": "a90ef87bb58337d71e3228207a2031e3cd20c33af23ae7f313c661e505992555"
+  },
+  "reproduction": {
+    "binary": "target/release/bisect.exe",
+    "workers": 6,
+    "display_output_dir": "docs/experiments/nrs-v0.3-multistate-root-sensitivity-2020"
+  },
+  "claim_boundary": "Three selected 2020 State roots only; no national node census, ensemble, random-sampling, partisan, compactness, demographic, VRA, legal-validity, optimality, or benchmark-replacement claim."
+}

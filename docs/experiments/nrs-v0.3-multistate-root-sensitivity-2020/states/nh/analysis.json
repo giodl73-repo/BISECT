@@ -1,0 +1,66 @@
+{
+  "schema_version": "nrs-v0.3-root-sensitivity-analysis-v1",
+  "protocol_id": "nrs-v0.3-multistate-root-sensitivity-v1",
+  "status": "complete",
+  "state": "NH",
+  "census_year": 2020,
+  "districts": 2,
+  "root_child_seats": [
+    1,
+    1
+  ],
+  "unit_count": 31948,
+  "diagnostic_seed_count": 100,
+  "accepted_seed_count": 100,
+  "rejected_seed_count": 0,
+  "duplicate_engine_seed_count": 0,
+  "population_tolerance_scaled": 6888,
+  "population_tolerance_pass_count": 100,
+  "benchmark": {
+    "engine_seed": 828041789,
+    "discovery_sha256": "8b92f34f11b0ad08b17e8f25a062f84b9ec8bdf48f674a1890804a0f6cffad83",
+    "assignment_sha256": "f27176f8ff0951e6be092edac769bc4824b505b0ecb41e8562b765f334b60bbb",
+    "objective": {
+      "max_population_deviation_scaled": 11,
+      "total_population_deviation_scaled": 22,
+      "weighted_boundary_cut": 583467453
+    },
+    "exact_assignment_reproduction_count": 100,
+    "objective_rank": {
+      "diagnostic_seeds_better": 0,
+      "diagnostic_seeds_tied": 100,
+      "rank_min": 1,
+      "rank_max": 101,
+      "rank_denominator": 101
+    }
+  },
+  "assignment_similarity": {
+    "minimum": 1.0,
+    "median": 1.0,
+    "mean": 1.0,
+    "maximum": 1.0
+  },
+  "unique_assignment_count": 1,
+  "objective_distributions": {
+    "max_population_deviation_scaled": {
+      "minimum": 11,
+      "median": 11.0,
+      "mean": 11.0,
+      "maximum": 11
+    },
+    "total_population_deviation_scaled": {
+      "minimum": 22,
+      "median": 22.0,
+      "mean": 22.0,
+      "maximum": 22
+    },
+    "weighted_boundary_cut": {
+      "minimum": 583467453,
+      "median": 583467453.0,
+      "mean": 583467453.0,
+      "maximum": 583467453
+    }
+  },
+  "failures": [],
+  "claim_boundary": "Three selected 2020 State roots only; no national node census, ensemble, random-sampling, partisan, compactness, demographic, VRA, legal-validity, optimality, or benchmark-replacement claim."
+}

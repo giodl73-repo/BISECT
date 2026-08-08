@@ -1,0 +1,58 @@
+{
+  "schema_version": "nrs-v0.3-root-sensitivity-manifest-v1",
+  "protocol_id": "nrs-v0.3-multistate-root-sensitivity-v1",
+  "status": "complete",
+  "state": "GA",
+  "inputs": [
+    {
+      "path": "target/release/bisect.exe",
+      "sha256": "2bcf6b13f17f237db6f755943ea1ccdac0d2e0267395c616892c6e46ce66e90e"
+    },
+    {
+      "path": "data/2020/certified/ga_blocks_2020.rctx",
+      "sha256": "80029d0119f8d67017a79c8a550c9ff55722207ab79536cc87247188323c1939"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/seed/input_manifest.json",
+      "sha256": "1bd39195e5e43871cba6bdce6fcf1fd0edd1ea36e104cbf1ad01c097418f5bc9"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/nodes/root/certified-discovery.json",
+      "sha256": "7e908aa442ca61ae4633db06d3156080d41afcf09ab59dcc2c4c2834ceb61b77"
+    },
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/baseline-tree.json",
+      "sha256": "437a37f318f451df235710d7ebae4f29ddfea948491b55b8b1ed110a9e35ebc9"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-07-nrs-v0.3-multistate-root-sensitivity-protocol.md",
+      "sha256": "c43d1961aaa9d9604211bafcf5aa91fdfbd1b46768f2448591bfab621a9a7914"
+    },
+    {
+      "path": "docs/experiments/2026-08-07-nrs-sensitivity-node-audit.md",
+      "sha256": "a2f1edb060157e8557eea8965b97a534565cf80fc5c530ca9f66efc90051589f"
+    },
+    {
+      "path": "scripts/research/run_nrs_multistate_root_sensitivity.py",
+      "sha256": "6786b5c2de4d0c50ccec0543effd41be18ea5c1cecf000dfd509ad410cb9f138"
+    },
+    {
+      "path": "scripts/research/verify_nrs_multistate_root_sensitivity.py",
+      "sha256": "9d7cc2098931dc6e0fc40bd334097174aa80b08c193b1c1438d038b4c07bd285"
+    },
+    {
+      "path": "scripts/research/run_nrs_ri_sensitivity.py",
+      "sha256": "6d4066f79972ab7b2132e1fae77c8becf6677b7c644f8128d6dc094858224ecb"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "50daa7f8c315f8e52c41ee3d543194a1881af08af1e30349b78c70ec8756d881",
+    "seed-results.csv": "e7e614b6af8af6d39d99ee9d9e80cb90edd340824b78179daf5e1d1fe7bdf86d",
+    "assignments.bin": "4a1c264ae3ba481da93272bd64fdbaf50c709b0810dd816ef48bae2dd8741d92",
+    "README.md": "049727b891bbc8037a5c5554f49ae11a48a99534f8e73f6a81916d9dd2b3a200"
+  },
+  "display_output_dir": "docs/experiments/nrs-v0.3-multistate-root-sensitivity-2020/states/ga",
+  "claim_boundary": "Three selected 2020 State roots only; no national node census, ensemble, random-sampling, partisan, compactness, demographic, VRA, legal-validity, optimality, or benchmark-replacement claim."
+}

@@ -33,7 +33,7 @@ zero-operation root.
 - **Georgia:** bounded higher-seat equal root, selected between the smaller
   Colorado and substantially larger New York/California roots.
 
-The three roots cover 372,641 blocks and root seat schedules `1:1`, `1:2`, and
+The three roots cover 371,880 blocks and root seat schedules `1:1`, `1:2`, and
 `7:7`.
 
 ## Benchmark Replay

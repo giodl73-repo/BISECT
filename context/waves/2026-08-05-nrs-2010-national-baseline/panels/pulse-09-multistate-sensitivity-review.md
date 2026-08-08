@@ -22,3 +22,11 @@
 
 Proceed with New Hampshire, New Mexico, and Georgia. Do not add or replace a
 State after outcomes are observed.
+
+## Post-Execution Disposition
+
+All 300 pairs accepted and exactly reproduced their State benchmark. The three
+roots exercised population-improvement operations but did not exercise the
+seed-dependent moved-population tie-break. The panel accepts the package as a
+complete negative sensitivity result and blocks blind national seed expansion
+until candidate-tie multiplicity is observable.

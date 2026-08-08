@@ -1,0 +1,66 @@
+{
+  "schema_version": "nrs-v0.3-root-sensitivity-analysis-v1",
+  "protocol_id": "nrs-v0.3-multistate-root-sensitivity-v1",
+  "status": "complete",
+  "state": "NM",
+  "census_year": 2020,
+  "districts": 3,
+  "root_child_seats": [
+    1,
+    2
+  ],
+  "unit_count": 107215,
+  "diagnostic_seed_count": 100,
+  "accepted_seed_count": 100,
+  "rejected_seed_count": 0,
+  "duplicate_engine_seed_count": 0,
+  "population_tolerance_scaled": 10588,
+  "population_tolerance_pass_count": 100,
+  "benchmark": {
+    "engine_seed": 1922790591,
+    "discovery_sha256": "563dee5a5584ca50d914f09d38f18361d7952887c6512feaaa53b3abc1920224",
+    "assignment_sha256": "ee9d5895fd53adfffb48aef694b51bf2b737e18a85bcdf1c8ae4cc33c3157a07",
+    "objective": {
+      "max_population_deviation_scaled": 4,
+      "total_population_deviation_scaled": 8,
+      "weighted_boundary_cut": 1633545912
+    },
+    "exact_assignment_reproduction_count": 100,
+    "objective_rank": {
+      "diagnostic_seeds_better": 0,
+      "diagnostic_seeds_tied": 100,
+      "rank_min": 1,
+      "rank_max": 101,
+      "rank_denominator": 101
+    }
+  },
+  "assignment_similarity": {
+    "minimum": 1.0,
+    "median": 1.0,
+    "mean": 1.0,
+    "maximum": 1.0
+  },
+  "unique_assignment_count": 1,
+  "objective_distributions": {
+    "max_population_deviation_scaled": {
+      "minimum": 4,
+      "median": 4.0,
+      "mean": 4.0,
+      "maximum": 4
+    },
+    "total_population_deviation_scaled": {
+      "minimum": 8,
+      "median": 8.0,
+      "mean": 8.0,
+      "maximum": 8
+    },
+    "weighted_boundary_cut": {
+      "minimum": 1633545912,
+      "median": 1633545912.0,
+      "mean": 1633545912.0,
+      "maximum": 1633545912
+    }
+  },
+  "failures": [],
+  "claim_boundary": "Three selected 2020 State roots only; no national node census, ensemble, random-sampling, partisan, compactness, demographic, VRA, legal-validity, optimality, or benchmark-replacement claim."
+}

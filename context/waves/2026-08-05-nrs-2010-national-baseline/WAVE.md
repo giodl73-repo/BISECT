@@ -38,7 +38,7 @@ verified 2020 national baseline.
 | 06 - independent replication and closeout | ACTIVE | Author-machine fresh-clone Level 1 rehearsal passed at `d0053ff3`; independent external v0.3 record remains |
 | 07 - NRS v0.3 national bakeoff | ACTIVE | National 2020 Tier 1 enacted-plan package passed for 50 States and 435 districts; later comparator and metric tiers remain |
 | 08 - Rhode Island NRS v0.3 sensitivity | COMPLETE | All 100 frozen seeds reproduced one benchmark assignment/objective; result is mechanism-specific, not national robustness |
-| 09 - Multi-State NRS v0.3 root sensitivity | ACTIVE | NH/NM/GA structural sample and 300-run protocol frozen before execution |
+| 09 - Multi-State NRS v0.3 root sensitivity | COMPLETE | All 300 pairs reproduced State benchmarks; candidate-tie instrumentation now gates broader seed expansion |
 
 ## Versioned amendment
 
