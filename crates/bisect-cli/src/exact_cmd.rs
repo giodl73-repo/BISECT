@@ -193,6 +193,8 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
     let mut population_improvement_units = 0;
     let mut nrs_v0_2_fallback_activated = false;
     let mut nrs_v0_3_fallback_activated = false;
+    let mut nrs_v0_2_fallback_diagnostics = NrsFallbackDiagnostics::default();
+    let mut nrs_v0_3_fallback_diagnostics = NrsFallbackDiagnostics::default();
     let mut zero_population_cut_moves = 0;
     let mut same_population_swap_moves = 0;
     let mut one_to_two_swap_moves = 0;
@@ -225,6 +227,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             assignment = fallback.assignment;
             population_improvement_operations = fallback.operations;
             population_improvement_units = fallback.moved_units;
+            nrs_v0_2_fallback_diagnostics = fallback.diagnostics;
         }
         if args.discovery_refinement == DiscoveryRefinementArg::NrsV03
             && nrs_population_deviation_scaled(&root, &assignment)
@@ -243,6 +246,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             assignment = fallback.assignment;
             population_improvement_operations = fallback.operations;
             population_improvement_units = fallback.moved_units;
+            nrs_v0_3_fallback_diagnostics = fallback.diagnostics;
         }
     }
     if matches!(
@@ -271,7 +275,7 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
         "METIS",
         Some(bisect_runner::bisection_runner::detect_gpmetis_version()),
         format!(
-            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; initial-dfs-minimum-deviation-candidates={}; initial-dfs-minimum-deviation-cut-candidates={}; initial-dfs-minimum-deviation-cut-partitions={}; nrs-v0-2-fallback-activated={}; nrs-v0-3-fallback-activated={}; candidate-initialization-moves={}; connected-subtree-population-operations={}; connected-subtree-population-units={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
+            "standard-bisect-discovery; seed={}; niter={}; ufactor=1.005; partition-type={}; zero-population-vertex-floor=1; metis-edge-scaling=heuristic; candidate-initialization=minimum-geoid-rooted-sorted-dfs-tree-edge-cut; initial-dfs-minimum-deviation-candidates={}; initial-dfs-minimum-deviation-cut-candidates={}; initial-dfs-minimum-deviation-cut-partitions={}; nrs-v0-2-fallback-activated={}; nrs-v0-2-fallback-evaluated-candidates={}; nrs-v0-2-fallback-minimum-deviation-candidates={}; nrs-v0-2-fallback-minimum-deviation-cut-candidates={}; nrs-v0-2-fallback-minimum-deviation-cut-partitions={}; nrs-v0-3-fallback-activated={}; nrs-v0-3-fallback-evaluated-candidates={}; nrs-v0-3-fallback-minimum-deviation-candidates={}; nrs-v0-3-fallback-minimum-deviation-cut-candidates={}; nrs-v0-3-fallback-minimum-deviation-cut-partitions={}; candidate-initialization-moves={}; connected-subtree-population-operations={}; connected-subtree-population-units={}; zero-population-cut-moves={}; same-population-swap-moves={}; one-to-two-swap-moves={}; two-to-two-swap-moves={}; certified-objective=raw-u64{}",
             args.discovery_seed,
             niter,
             partition_type,
@@ -279,7 +283,15 @@ fn run_certified_discovery(args: &ExactArgs) -> anyhow::Result<()> {
             initial_dfs_minimum_deviation_cut_candidates,
             initial_dfs_minimum_deviation_cut_partitions,
             nrs_v0_2_fallback_activated,
+            nrs_v0_2_fallback_diagnostics.evaluated_candidate_count,
+            nrs_v0_2_fallback_diagnostics.minimum_deviation_candidate_count,
+            nrs_v0_2_fallback_diagnostics.minimum_deviation_cut_candidate_count,
+            nrs_v0_2_fallback_diagnostics.minimum_deviation_cut_partition_count,
             nrs_v0_3_fallback_activated,
+            nrs_v0_3_fallback_diagnostics.evaluated_candidate_count,
+            nrs_v0_3_fallback_diagnostics.minimum_deviation_candidate_count,
+            nrs_v0_3_fallback_diagnostics.minimum_deviation_cut_candidate_count,
+            nrs_v0_3_fallback_diagnostics.minimum_deviation_cut_partition_count,
             contiguity_repair_moves,
             population_improvement_operations,
             population_improvement_units,
@@ -570,10 +582,84 @@ fn nrs_population_deviation_scaled(
     .unsigned_abs()
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct NrsFallbackDiagnostics {
+    evaluated_candidate_count: usize,
+    minimum_deviation_candidate_count: usize,
+    minimum_deviation_cut_candidate_count: usize,
+    minimum_deviation_cut_partition_count: usize,
+}
+
+#[derive(Default)]
+struct NrsFallbackDiagnosticAccumulator {
+    diagnostics: NrsFallbackDiagnostics,
+    minimum_deviation: Option<u128>,
+    minimum_cut: Option<u64>,
+    partitions: HashSet<Vec<u8>>,
+}
+
+impl NrsFallbackDiagnosticAccumulator {
+    fn observe(&mut self, key: &(u128, u64, i64, Vec<u8>), assignment: &[u8]) {
+        let deviation = key.0;
+        let cut = key.1;
+        self.diagnostics.evaluated_candidate_count += 1;
+        match self.minimum_deviation {
+            None => {
+                self.minimum_deviation = Some(deviation);
+                self.minimum_cut = Some(cut);
+                self.diagnostics.minimum_deviation_candidate_count = 1;
+                self.diagnostics.minimum_deviation_cut_candidate_count = 1;
+                self.partitions.clear();
+                self.partitions
+                    .insert(canonical_unlabeled_assignment(assignment));
+            }
+            Some(current_deviation) if deviation < current_deviation => {
+                self.minimum_deviation = Some(deviation);
+                self.minimum_cut = Some(cut);
+                self.diagnostics.minimum_deviation_candidate_count = 1;
+                self.diagnostics.minimum_deviation_cut_candidate_count = 1;
+                self.partitions.clear();
+                self.partitions
+                    .insert(canonical_unlabeled_assignment(assignment));
+            }
+            Some(current_deviation) if deviation == current_deviation => {
+                self.diagnostics.minimum_deviation_candidate_count += 1;
+                match self.minimum_cut {
+                    Some(current_cut) if cut < current_cut => {
+                        self.minimum_cut = Some(cut);
+                        self.diagnostics.minimum_deviation_cut_candidate_count = 1;
+                        self.partitions.clear();
+                        self.partitions
+                            .insert(canonical_unlabeled_assignment(assignment));
+                    }
+                    Some(current_cut) if cut == current_cut => {
+                        self.diagnostics.minimum_deviation_cut_candidate_count += 1;
+                        self.partitions
+                            .insert(canonical_unlabeled_assignment(assignment));
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn finish(mut self) -> NrsFallbackDiagnostics {
+        self.diagnostics.minimum_deviation_cut_partition_count = self.partitions.len();
+        self.diagnostics
+    }
+}
+
+fn canonical_unlabeled_assignment(assignment: &[u8]) -> Vec<u8> {
+    let first = assignment.first().copied().unwrap_or(0);
+    assignment.iter().map(|&label| label ^ first).collect()
+}
+
 struct NrsFallbackCandidate {
     assignment: Vec<u8>,
     operations: usize,
     moved_units: usize,
+    diagnostics: NrsFallbackDiagnostics,
 }
 
 fn nrs_v0_2_candidate_key(
@@ -608,8 +694,11 @@ fn nrs_v0_2_fallback_candidate(
         assignment: v0_1_assignment.to_vec(),
         operations: v0_1_operations,
         moved_units: v0_1_moved_units,
+        diagnostics: NrsFallbackDiagnostics::default(),
     };
     let mut best_key = nrs_v0_2_candidate_key(instance, raw_assignment, &best.assignment);
+    let mut diagnostics = NrsFallbackDiagnosticAccumulator::default();
+    diagnostics.observe(&best_key, &best.assignment);
     let mut roots = (0..16)
         .map(|quantile| quantile * (raw_assignment.len() - 1) / 15)
         .collect::<Vec<_>>();
@@ -630,15 +719,18 @@ fn nrs_v0_2_fallback_candidate(
             Some(nrs_population_tolerance_scaled_bound(instance)),
         )?;
         let key = nrs_v0_2_candidate_key(instance, raw_assignment, &assignment);
+        diagnostics.observe(&key, &assignment);
         if key < best_key {
             best_key = key;
             best = NrsFallbackCandidate {
                 assignment,
                 operations,
                 moved_units,
+                diagnostics: NrsFallbackDiagnostics::default(),
             };
         }
     }
+    best.diagnostics = diagnostics.finish();
     Ok(best)
 }
 
@@ -774,8 +866,11 @@ fn nrs_v0_3_bridge_aware_component_candidate(
         assignment: v0_2_assignment.to_vec(),
         operations: v0_2_operations,
         moved_units: v0_2_moved_units,
+        diagnostics: NrsFallbackDiagnostics::default(),
     };
     let mut best_key = nrs_v0_2_candidate_key(instance, raw_assignment, &best.assignment);
+    let mut diagnostics = NrsFallbackDiagnosticAccumulator::default();
+    diagnostics.observe(&best_key, &best.assignment);
     let mut raw_best: Option<((u128, u64, i64, Vec<u8>), Vec<u8>)> = None;
     let n = instance.unit_ids.len();
     let total_population = instance.populations.iter().sum::<i64>();
@@ -808,6 +903,7 @@ fn nrs_v0_3_bridge_aware_component_candidate(
         &component_of,
     )?;
     if population_floor > best_key.0 {
+        best.diagnostics = diagnostics.finish();
         return Ok(best);
     }
     let mut subtree_population = vec![0_i64; n];
@@ -950,12 +1046,14 @@ fn nrs_v0_3_bridge_aware_component_candidate(
         }
     }
     if let Some((raw_key, mut assignment)) = raw_best {
+        diagnostics.observe(&raw_key, &assignment);
         if raw_key < best_key {
             best_key = raw_key;
             best = NrsFallbackCandidate {
                 assignment: assignment.clone(),
                 operations: 0,
                 moved_units: 0,
+                diagnostics: NrsFallbackDiagnostics::default(),
             };
         }
         let (operations, moved_units) = improve_discovery_population(
@@ -965,14 +1063,17 @@ fn nrs_v0_3_bridge_aware_component_candidate(
             Some(nrs_population_tolerance_scaled_bound(instance)),
         )?;
         let key = nrs_v0_2_candidate_key(instance, raw_assignment, &assignment);
+        diagnostics.observe(&key, &assignment);
         if key < best_key {
             best = NrsFallbackCandidate {
                 assignment,
                 operations,
                 moved_units,
+                diagnostics: NrsFallbackDiagnostics::default(),
             };
         }
     }
+    best.diagnostics = diagnostics.finish();
     Ok(best)
 }
 
@@ -2932,7 +3033,13 @@ mod tests {
             .contains("nrs-v0-2-fallback-activated=false"));
         assert!(discovery
             .method
+            .contains("nrs-v0-2-fallback-evaluated-candidates=0"));
+        assert!(discovery
+            .method
             .contains("nrs-v0-3-fallback-activated=false"));
+        assert!(discovery
+            .method
+            .contains("nrs-v0-3-fallback-evaluated-candidates=0"));
         assert!(discovery.method.contains("refinement=nrsv01"));
         assert!(bisect_ilp::certified_split_children_connected(
             &instance,
@@ -2978,6 +3085,20 @@ mod tests {
         assert_eq!((instance.k_left, instance.k_right), (2, 2));
         assert_eq!(candidate.minimum_deviation_cut_candidate_count, 2);
         assert_eq!(candidate.minimum_deviation_cut_partition_count, 1);
+    }
+
+    #[test]
+    fn nrs_fallback_diagnostics_collapse_complementary_assignments() {
+        let mut diagnostics = NrsFallbackDiagnosticAccumulator::default();
+        diagnostics.observe(&(10, 5, 4, vec![0, 0, 1]), &[0, 0, 1]);
+        diagnostics.observe(&(10, 5, 4, vec![1, 1, 0]), &[1, 1, 0]);
+        diagnostics.observe(&(10, 5, 4, vec![0, 1, 0]), &[0, 1, 0]);
+        let result = diagnostics.finish();
+
+        assert_eq!(result.evaluated_candidate_count, 3);
+        assert_eq!(result.minimum_deviation_candidate_count, 3);
+        assert_eq!(result.minimum_deviation_cut_candidate_count, 3);
+        assert_eq!(result.minimum_deviation_cut_partition_count, 2);
     }
 
     #[test]
