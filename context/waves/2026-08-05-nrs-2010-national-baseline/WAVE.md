@@ -40,6 +40,7 @@ verified 2020 national baseline.
 | 08 - Rhode Island NRS v0.3 sensitivity | COMPLETE | All 100 frozen seeds reproduced one benchmark assignment/objective; result is mechanism-specific, not national robustness |
 | 09 - Multi-State NRS v0.3 root sensitivity | COMPLETE | All 300 pairs reproduced State benchmarks; candidate-tie instrumentation now gates broader seed expansion |
 | 10 - Initial DFS tie census | COMPLETE | All 44 roots preserved governed assignments/objectives; 29 expose two minimum-deviation/minimum-cut initial candidates |
+| 11 - Initial DFS partition census | ACTIVE | Precommitted unlabeled-partition counter will separate physical cuts from equal-seat orientation symmetry |
 
 ## Versioned amendment
 

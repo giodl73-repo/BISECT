@@ -74,6 +74,7 @@ For every State and Census year:
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
   - [x] Execute and exactly regenerate the precommitted NH/NM/GA 300-pair root slice.
   - [x] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
+  - [ ] Collapse complementary orientations and census distinct initial DFS bipartitions.
   - [ ] Expand sensitivity to a precommitted national node sample only if the instrumentation identifies seed-sensitive ties.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
