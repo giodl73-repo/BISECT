@@ -41,6 +41,7 @@ verified 2020 national baseline.
 | 09 - Multi-State NRS v0.3 root sensitivity | COMPLETE | All 300 pairs reproduced State benchmarks; candidate-tie instrumentation now gates broader seed expansion |
 | 10 - Initial DFS tie census | COMPLETE | All 44 roots preserved governed assignments/objectives; 29 expose two minimum-deviation/minimum-cut initial candidates |
 | 11 - Initial DFS partition census | COMPLETE | All 44 roots have one physical minimum-deviation/minimum-cut partition; 29 oriented ties are equal-seat label symmetry |
+| 12 - Complete-tree DFS and fallback census | ACTIVE | Precommitted replay extends partition counts and fallback activation diagnostics to all 385 governed 2020 split nodes |
 
 ## Versioned amendment
 

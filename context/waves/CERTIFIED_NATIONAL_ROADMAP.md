@@ -76,7 +76,7 @@ For every State and Census year:
   - [x] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
   - [x] Collapse complementary orientations and census distinct initial DFS bipartitions.
   - [x] Stop initial root-0 physical-cut expansion after all 44 roots yielded one unlabeled bipartition.
-  - [ ] Instrument child-node and fallback opportunities before any broader seed sample.
+  - [ ] Census child-node physical partitions and fallback activation before any broader seed sample.
   - [ ] Run converged block-level ensembles only after their separate gate is frozen.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
