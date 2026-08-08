@@ -335,7 +335,7 @@ def main() -> None:
         default=ROOT
         / "docs/experiments/nrs-v0.3-cross-census-complete-tree-dfs",
     )
-    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--display-output-dir")
     args = parser.parse_args()
     write_package(
