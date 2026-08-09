@@ -23,3 +23,4 @@ docs/experiments/nrs-v0.3-national-geographic-splits/** text eol=lf
 docs/experiments/nrs-v0.3-complete-tree-dfs-census-2020/** text eol=lf
 docs/experiments/nrs-v0.3-cross-census-complete-tree-dfs/** text eol=lf
 docs/experiments/nrs-v0.3-fallback-candidate-census/** text eol=lf
+docs/experiments/nrs-v0.3-bakeoff-geometry-ri-2020/** text eol=lf
