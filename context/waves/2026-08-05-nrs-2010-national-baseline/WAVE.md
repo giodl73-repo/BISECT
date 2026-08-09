@@ -44,7 +44,7 @@ verified 2020 national baseline.
 | 12 - Complete-tree DFS and fallback census | COMPLETE | All 385 nodes have one physical initial cut; 266 orientation-only ties; zero v0.2/v0.3 fallback activations |
 | 13 - Cross-census complete-tree DFS census | COMPLETE | All 770 nodes have one physical initial cut; seven v0.2 activations and one v0.3 activation form the bounded fallback universe |
 | 14 - Fallback candidate census | COMPLETE | All eight activated stages preserved assignments/objectives; candidate ties at 2000 HI/root collapse to one physical partition, closing fallback seed expansion |
-| 15 - Tier 2 geometry bakeoff | ACTIVE | Rhode Island protocol freezes common retained-block geometry, projection, perimeter, metrics, and exact-regeneration gate |
+| 15 - Tier 2 geometry bakeoff | COMPLETE | Rhode Island common-block geometry passed; compactness metric direction is mixed, and national expansion requires a separate sequential protocol |
 
 ## Versioned amendment
 

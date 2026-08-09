@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-08
 **Roles:** MERIDIAN, CONTOUR, DATUM, SCALE, BENCHMARK, BOUNDARY
-**Posture:** protocol review before implementation
+**Posture:** post-slice interpretation
 
 ## Findings
 
@@ -23,6 +23,12 @@
 
 ## Decision
 
-Proceed with a two-district Rhode Island slice using `EPSG:32130`,
-Polsby--Popper, exact GEOS minimum-bounding-circle Reock, convex-hull ratio,
-and Schwartzberg. National Tier 2 remains gated on accepted and failure proof.
+The two-district slice preserved the complete 24,831-block universe and
+produced valid dissolved geometries without repair. Metric direction was
+mixed: the comparator was higher on mean Polsby--Popper and convex-hull ratio,
+while NRS was higher on mean exact Reock.
+
+Accept the bounded evidence and reject any winner or composite interpretation.
+National Tier 2 may proceed only after a separate protocol freezes
+State-specific projections, one-worker execution, aggregation estimands,
+runtime limits, and failure disposition.

@@ -69,6 +69,8 @@ For every State and Census year:
 - [ ] Compactness, subdivision, partisan, demographic, and community analysis.
   - [x] Precommit the three-cycle county/tract geographic-split audit.
   - [x] Execute and independently verify the three-cycle geographic-split audit.
+  - [x] Execute and exactly regenerate the Rhode Island common-block Tier 2 geometry slice.
+  - [ ] Freeze and execute the national Tier 2 geometry protocol.
   - [x] Resolve or publish the input/protocol blockers for the remaining metric families.
 - [ ] Sensitivity and ensemble analysis.
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
@@ -145,7 +147,11 @@ Next unblocked work:
 > six containing State assignments and all eight stage/node objectives. Hawaii
 > 2000 exposed candidate-level ties at both fallback stages, but every tied
 > finalist set collapsed to one unlabeled physical partition; governed
-> fallback seed expansion is therefore closed. Cross-census assignment overlap remains uncomputed
+> fallback seed expansion is therefore closed. The Rhode Island Tier 2
+> geometry slice also passed on one common 24,831-block universe. Compactness
+> metric direction was mixed across Polsby--Popper, exact Reock, and
+> convex-hull ratio, so no winner or composite interpretation is supported.
+> Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
 > public.

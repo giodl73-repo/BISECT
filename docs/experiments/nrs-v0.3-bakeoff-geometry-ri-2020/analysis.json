@@ -1,0 +1,108 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "RI",
+  "state_fips": "44",
+  "census_year": 2020,
+  "geometry_contract": {
+    "atomic_unit": "2020-census-tabulation-block",
+    "projection": "EPSG:32130",
+    "source_blocks": 25649,
+    "excluded_water_only_blocks": 818,
+    "retained_blocks": 24831,
+    "dissolve": "GEOS unary union by complete block assignment",
+    "perimeter": "complete dissolved boundary including multipart components and interior rings",
+    "repair": "none",
+    "comparator_geometry": "Tier 1 block projection, not original district polygon linework"
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "districts": 2,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 10786,
+        "area_m2": 524390177.97386247,
+        "perimeter_m": 654799.91834986,
+        "minimum_bounding_radius_m": 24894.671976034013,
+        "polsby_popper": 0.0153690555192148,
+        "reock": 0.26933442078244796,
+        "convex_hull_ratio": 0.5015556683233864,
+        "schwartzberg": 8.066337892000888,
+        "component_count": 11,
+        "interior_ring_count": 46
+      },
+      {
+        "district": 2,
+        "block_count": 14045,
+        "area_m2": 2277283356.9795713,
+        "perimeter_m": 1508421.3369536742,
+        "minimum_bounding_radius_m": 47093.86501230234,
+        "polsby_popper": 0.012577131517301767,
+        "reock": 0.32684250491470335,
+        "convex_hull_ratio": 0.5585088480511434,
+        "schwartzberg": 8.91680355484492,
+        "component_count": 31,
+        "interior_ring_count": 134
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.013973093518258282,
+      "reock": 0.29808846284857565,
+      "convex_hull_ratio": 0.530032258187265,
+      "schwartzberg": 8.491570723422903
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "districts": 2,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 11086,
+        "area_m2": 740939390.2894452,
+        "perimeter_m": 845244.7166173342,
+        "minimum_bounding_radius_m": 35663.9380372245,
+        "polsby_popper": 0.013032496533004173,
+        "reock": 0.1854275319036197,
+        "convex_hull_ratio": 0.46193246710285707,
+        "schwartzberg": 8.759638646294572,
+        "component_count": 21,
+        "interior_ring_count": 57
+      },
+      {
+        "district": 2,
+        "block_count": 13745,
+        "area_m2": 2060734144.6639884,
+        "perimeter_m": 987927.2810268764,
+        "minimum_bounding_radius_m": 48690.03075351724,
+        "polsby_popper": 0.026532726132640752,
+        "reock": 0.27668906556149564,
+        "convex_hull_ratio": 0.6751907503727647,
+        "schwartzberg": 6.139161564089765,
+        "component_count": 14,
+        "interior_ring_count": 125
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.019782611332822463,
+      "reock": 0.23105829873255768,
+      "convex_hull_ratio": 0.5685616087378109,
+      "schwartzberg": 7.4494001051921686
+    }
+  },
+  "comparator_minus_benchmark_unweighted_mean": {
+    "polsby_popper": 0.00580951781456418,
+    "reock": -0.06703016411601798,
+    "convex_hull_ratio": 0.03852935055054596,
+    "schwartzberg": -1.0421706182307346
+  },
+  "unavailable_metrics": {
+    "population": "Not part of the Tier 2 geometry contract.",
+    "partisan": "Named elections and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "ensemble": "No converged block-level ensemble exists for this comparison."
+  },
+  "claim_boundary": "Descriptive compactness measurements of Rhode Island block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}
