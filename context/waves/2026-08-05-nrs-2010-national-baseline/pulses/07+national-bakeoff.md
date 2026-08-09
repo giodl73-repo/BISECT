@@ -26,6 +26,7 @@ plans without changing the generator or promoting incomplete metric families.
 - [x] Exact regeneration of all 50 State packages.
 - [x] Rhode Island Tier 2 geometry proof slice.
 - [x] National Tier 2 geometry execution across 50 States.
+- [x] Exact regeneration of the national Tier 2 geometry package.
 
 ## Slice Result
 

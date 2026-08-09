@@ -1,7 +1,7 @@
 ---
 pulse: 16
 title: National Tier 2 geometry
-status: active
+status: complete
 wave: nrs-2010-national-baseline
 validation_level: L2 governed empirical evidence
 ---
@@ -21,8 +21,8 @@ semantics.
 - [x] Freeze State-weighted and district-weighted estimands.
 - [x] Generalize the accepted analyzer and add national runner tests.
 - [x] Execute all States sequentially and preserve all failures.
-- [ ] Exactly regenerate the complete national package.
-- [x] Publish the provisional result and claim boundary.
+- [x] Exactly regenerate the complete national package.
+- [x] Publish the result and claim boundary.
 
 ## Result
 
@@ -36,9 +36,10 @@ contain 435 districts over the same 7,889,194 retained blocks.
 | Convex-hull ratio | 0.557042985 | 0.702220801 |
 | Schwartzberg | 7.847347095 | 5.656288737 |
 
-State-weighted means have the same direction. Exact regeneration remains the
-final package gate. The result describes frozen block-projected geometry and
-does not establish superiority or evaluate the original enacted linework.
+State-weighted means have the same direction. Clean-tree sequential
+regeneration reproduced the complete package exactly. The result describes
+frozen block-projected geometry and does not establish superiority or evaluate
+the original enacted linework.
 
 ## Governing Boundary
 

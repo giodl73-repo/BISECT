@@ -26,7 +26,7 @@ The sequential run passed all 50 States, both 435-district plan families, and
 the complete 7,889,194-block universe with no failures. State-weighted and
 district-weighted summaries agree in direction across all four frozen metrics.
 
-Provisionally accept the descriptive national result pending exact
-regeneration. Do not convert aligned aggregate direction into a superiority
-claim: the analysis uses common block-projected geometry, excludes legal and
-electoral criteria, and does not measure original comparator polygon linework.
+Accept the exactly regenerated descriptive national package. Do not convert
+aligned aggregate direction into a superiority claim: the analysis uses common
+block-projected geometry, excludes legal and electoral criteria, and does not
+measure original comparator polygon linework.

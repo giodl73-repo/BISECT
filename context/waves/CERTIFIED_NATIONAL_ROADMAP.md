@@ -155,7 +155,8 @@ Next unblocked work:
 > 435-district plan families, and 7,889,194 retained blocks with zero failures.
 > State-weighted and district-weighted summaries align in direction across all
 > four frozen metrics, but remain descriptive block-projected geometry rather
-> than original-linework or superiority evidence.
+> than original-linework or superiority evidence. The complete national
+> geometry package regenerated exactly with one State active at a time.
 > Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain
