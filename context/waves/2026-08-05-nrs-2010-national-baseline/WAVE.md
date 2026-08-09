@@ -45,6 +45,7 @@ verified 2020 national baseline.
 | 13 - Cross-census complete-tree DFS census | COMPLETE | All 770 nodes have one physical initial cut; seven v0.2 activations and one v0.3 activation form the bounded fallback universe |
 | 14 - Fallback candidate census | COMPLETE | All eight activated stages preserved assignments/objectives; candidate ties at 2000 HI/root collapse to one physical partition, closing fallback seed expansion |
 | 15 - Tier 2 geometry bakeoff | COMPLETE | Rhode Island common-block geometry passed; compactness metric direction is mixed, and national expansion requires a separate sequential protocol |
+| 16 - National Tier 2 geometry | ACTIVE | Frozen 50-State common-block execution uses one State at a time, regional equal-area projections, two estimands, and complete failure retention |
 
 ## Versioned amendment
 
