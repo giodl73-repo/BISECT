@@ -44,6 +44,17 @@ CLAIM_BOUNDARY = (
 )
 
 
+def claim_boundary_for_state(state: str, expected_session: str) -> str:
+    if state.upper() == "RI" and expected_session == "118":
+        return CLAIM_BOUNDARY
+    return (
+        f"Descriptive compactness measurements of {state.upper()} block-projected "
+        f"NRS v0.3 and enacted CD{expected_session} assignments under one frozen "
+        "geometry contract; no compactness superiority, fairness, intent, VRA, "
+        "legal-validity, community, robustness, optimality, or adoption claim."
+    )
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -205,10 +216,11 @@ def write_package(
     benchmark_rows = dissolve_assignments(blocks, benchmark)
     comparator_rows = dissolve_assignments(blocks, comparator)
     require(
-        len(benchmark_rows) == len(comparator_rows) == 2,
+        len(benchmark_rows) == len(comparator_rows) and benchmark_rows,
         "INPUT",
-        "Rhode Island district count is not two",
+        "plan district counts differ or are empty",
     )
+    claim_boundary = claim_boundary_for_state(state, expected_session)
     benchmark_summary = summarize_plan(benchmark_rows, "NRS-v0.3")
     comparator_summary = summarize_plan(
         comparator_rows, f"enacted-congressional-session-{expected_session}"
@@ -251,7 +263,7 @@ def write_package(
             "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
             "ensemble": "No converged block-level ensemble exists for this comparison.",
         },
-        "claim_boundary": CLAIM_BOUNDARY,
+        "claim_boundary": claim_boundary,
     }
 
     package_dir.mkdir(parents=True, exist_ok=True)
@@ -292,7 +304,7 @@ python scripts/research/verify_nrs_bakeoff_geometry_slice.py {canonical_output_d
 
 ## Claim Boundary
 
-{CLAIM_BOUNDARY}
+{claim_boundary}
 """
     readme_path = package_dir / "README.md"
     readme_path.write_text(readme, encoding="utf-8", newline="\n")
@@ -340,7 +352,7 @@ python scripts/research/verify_nrs_bakeoff_geometry_slice.py {canonical_output_d
             "expected_session": expected_session,
             "display_output_dir": canonical_output_dir,
         },
-        "claim_boundary": CLAIM_BOUNDARY,
+        "claim_boundary": claim_boundary,
     }
     (package_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n",

@@ -41,7 +41,7 @@
     },
     {
       "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
-      "sha256": "c46025f98fb727c3a878ca27504c22d1c9843f782d8aa79b266cfcc026131419"
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
     },
     {
       "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
