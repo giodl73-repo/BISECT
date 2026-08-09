@@ -1,0 +1,65 @@
+{
+  "schema_version": "nrs-v0.3-national-bakeoff-geometry-analysis-v1",
+  "protocol_id": "nrs-v0.3-national-tier2-geometry-v1",
+  "status": "pass",
+  "census_year": 2020,
+  "states_passed": 50,
+  "states_failed": 0,
+  "failures": [],
+  "districts": {
+    "nrs": 435,
+    "comparator": 435
+  },
+  "retained_blocks": 7889194,
+  "metrics": {
+    "polsby_popper": {
+      "state_weighted": {
+        "nrs": 0.026240108531882033,
+        "comparator": 0.055924740113818226,
+        "comparator_minus_nrs": 0.029684631581936193
+      },
+      "district_weighted": {
+        "nrs": 0.02538033931212984,
+        "comparator": 0.06108781927381493,
+        "comparator_minus_nrs": 0.03570747996168509
+      }
+    },
+    "reock": {
+      "state_weighted": {
+        "nrs": 0.2740100655828004,
+        "comparator": 0.3831486057003754,
+        "comparator_minus_nrs": 0.10913854011757501
+      },
+      "district_weighted": {
+        "nrs": 0.24555226202831634,
+        "comparator": 0.3772382831397541,
+        "comparator_minus_nrs": 0.13168602111143776
+      }
+    },
+    "convex_hull_ratio": {
+      "state_weighted": {
+        "nrs": 0.6013853415862059,
+        "comparator": 0.7180234841260044,
+        "comparator_minus_nrs": 0.11663814253979843
+      },
+      "district_weighted": {
+        "nrs": 0.5570429853544532,
+        "comparator": 0.7022208005574418,
+        "comparator_minus_nrs": 0.14517781520298867
+      }
+    },
+    "schwartzberg": {
+      "state_weighted": {
+        "nrs": 8.153083769101984,
+        "comparator": 6.431816096375981,
+        "comparator_minus_nrs": -1.721267672726003
+      },
+      "district_weighted": {
+        "nrs": 7.847347095100339,
+        "comparator": 5.656288737192469,
+        "comparator_minus_nrs": -2.1910583579078704
+      }
+    }
+  },
+  "claim_boundary": "Descriptive national compactness summaries for 2020 NRS v0.3 and official CD118 assignments projected to identical retained Census-block geometry; no original-linework, compactness-superiority, fairness, intent, VRA, legal, community, robustness, optimality, causal, or adoption claim."
+}

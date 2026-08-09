@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "IL",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/il/package/baseline_assignments.json",
+      "sha256": "ae8759005981c6c5ab6801583bb7590b0ff3bef9fdfa51e7cf126c44b2320440"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_17_tabblock20/tl_2020_17_tabblock20.shp",
+      "sha256": "99dabb89da617902b01a97ae0d9a7b1a4173af6fefc501c879b000e1a74e2397"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_17_tabblock20/tl_2020_17_tabblock20.shx",
+      "sha256": "e914a1e4e72743c0bbb291110595eec0f4a2c7c0dcf5bf1c2bb4092e8d4fcde9"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_17_tabblock20/tl_2020_17_tabblock20.dbf",
+      "sha256": "790a8b712b1f194fb62c0a4cc135444061e88bbbe4086bfca30b0420465a3e00"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_17_tabblock20/tl_2020_17_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_17_tabblock20/tl_2020_17_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_17_cd118.zip",
+      "sha256": "52c06735a58c73124bb163896d5ec01b2e97f264c38d289360288c8a4e3a56b0"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "d2274ca45a86f7a9b4f72e52c1a0c306d27ef56b4a11b30c7c14b12b1517919f",
+    "README.md": "6f56b6c736ee1f5de2bab948117c0787b0be14dd6df8b1be9c39ef3c9fd09a82"
+  },
+  "reproduction": {
+    "state": "IL",
+    "state_fips": "17",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/il/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_17_tabblock20/tl_2020_17_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_17_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/il"
+  },
+  "claim_boundary": "Descriptive compactness measurements of IL block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

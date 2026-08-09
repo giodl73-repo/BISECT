@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "VT",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/vt/package/baseline_assignments.json",
+      "sha256": "0b4bc8517c9811f84a605fdf20181a8259630bb531e86906f863a2d7b9c72a67"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_50_tabblock20/tl_2020_50_tabblock20.shp",
+      "sha256": "235c5af97738c272932b2644c5e417db984bb74c6a0df6871ac7c12eb5d2a313"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_50_tabblock20/tl_2020_50_tabblock20.shx",
+      "sha256": "3e007aa4beece78b0d4aed58e0bd2290d7d61586851886c45ffa3341b0a00798"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_50_tabblock20/tl_2020_50_tabblock20.dbf",
+      "sha256": "4d4e6f45e5a46ba711766186925012810e85178bc0fa54aebd4eb8104b6bcf5d"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_50_tabblock20/tl_2020_50_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_50_tabblock20/tl_2020_50_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_50_cd118.zip",
+      "sha256": "bdc1a6697701ccae3ff3f6470aa19bb32f44e2c5de3bbe2ca8aeb1ac3e099d2f"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "ae41b55c9f33d40cee1d5d6448bfb6f2917bac816de582571918557b26dde705",
+    "README.md": "81bb53b4cb88bf73354c221ae904a8489b1cf68536a08ce6996b9ddcd550a0fe"
+  },
+  "reproduction": {
+    "state": "VT",
+    "state_fips": "50",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/vt/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_50_tabblock20/tl_2020_50_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_50_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/vt"
+  },
+  "claim_boundary": "Descriptive compactness measurements of VT block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

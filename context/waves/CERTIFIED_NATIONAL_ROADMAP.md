@@ -70,7 +70,7 @@ For every State and Census year:
   - [x] Precommit the three-cycle county/tract geographic-split audit.
   - [x] Execute and independently verify the three-cycle geographic-split audit.
   - [x] Execute and exactly regenerate the Rhode Island common-block Tier 2 geometry slice.
-  - [ ] Freeze and execute the national Tier 2 geometry protocol.
+  - [x] Freeze and execute the national Tier 2 geometry protocol.
   - [x] Resolve or publish the input/protocol blockers for the remaining metric families.
 - [ ] Sensitivity and ensemble analysis.
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
@@ -151,6 +151,11 @@ Next unblocked work:
 > geometry slice also passed on one common 24,831-block universe. Compactness
 > metric direction was mixed across Polsby--Popper, exact Reock, and
 > convex-hull ratio, so no winner or composite interpretation is supported.
+> The sequential national Tier 2 extension then passed all 50 States, both
+> 435-district plan families, and 7,889,194 retained blocks with zero failures.
+> State-weighted and district-weighted summaries align in direction across all
+> four frozen metrics, but remain descriptive block-projected geometry rather
+> than original-linework or superiority evidence.
 > Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain

@@ -1,0 +1,82 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "VT",
+  "state_fips": "50",
+  "census_year": 2020,
+  "geometry_contract": {
+    "atomic_unit": "2020-census-tabulation-block",
+    "projection": "EPSG:5070",
+    "source_blocks": 24611,
+    "excluded_water_only_blocks": 1755,
+    "retained_blocks": 22856,
+    "dissolve": "GEOS unary union by complete block assignment",
+    "perimeter": "complete dissolved boundary including multipart components and interior rings",
+    "repair": "none",
+    "comparator_geometry": "Tier 1 block projection, not original district polygon linework"
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "districts": 1,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 22856,
+        "area_m2": 24410637747.48481,
+        "perimeter_m": 5400958.111607305,
+        "minimum_bounding_radius_m": 145767.2055834385,
+        "polsby_popper": 0.010515922379958968,
+        "reock": 0.3656870631454943,
+        "convex_hull_ratio": 0.8110384152771293,
+        "schwartzberg": 9.751609776267403,
+        "component_count": 10,
+        "interior_ring_count": 517
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.010515922379958968,
+      "reock": 0.3656870631454943,
+      "convex_hull_ratio": 0.8110384152771293,
+      "schwartzberg": 9.751609776267403
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "districts": 1,
+    "district_metrics": [
+      {
+        "district": 0,
+        "block_count": 22856,
+        "area_m2": 24410637747.48481,
+        "perimeter_m": 5400958.111607305,
+        "minimum_bounding_radius_m": 145767.2055834385,
+        "polsby_popper": 0.010515922379958968,
+        "reock": 0.3656870631454943,
+        "convex_hull_ratio": 0.8110384152771293,
+        "schwartzberg": 9.751609776267403,
+        "component_count": 10,
+        "interior_ring_count": 517
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.010515922379958968,
+      "reock": 0.3656870631454943,
+      "convex_hull_ratio": 0.8110384152771293,
+      "schwartzberg": 9.751609776267403
+    }
+  },
+  "comparator_minus_benchmark_unweighted_mean": {
+    "polsby_popper": 0.0,
+    "reock": 0.0,
+    "convex_hull_ratio": 0.0,
+    "schwartzberg": 0.0
+  },
+  "unavailable_metrics": {
+    "population": "Not part of the Tier 2 geometry contract.",
+    "partisan": "Named elections and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "ensemble": "No converged block-level ensemble exists for this comparison."
+  },
+  "claim_boundary": "Descriptive compactness measurements of VT block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

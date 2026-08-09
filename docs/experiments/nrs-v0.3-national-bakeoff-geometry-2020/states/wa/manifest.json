@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "WA",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wa/package/baseline_assignments.json",
+      "sha256": "8d873c6fd49217661cf02fe9bc17d825f99c755bd0b84635ca4031ef88da8ca7"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_53_tabblock20/tl_2020_53_tabblock20.shp",
+      "sha256": "961a82ca782bf251d63435d338865766d8af329e952d7501f44914d53ca3b5f3"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_53_tabblock20/tl_2020_53_tabblock20.shx",
+      "sha256": "90b878da01fbfb0821c2252f15459a5f8714c907bdbb9de22340f2e7340aa8fd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_53_tabblock20/tl_2020_53_tabblock20.dbf",
+      "sha256": "5b1e1999ecca02cd2290cb2b7adc09efa2a39e77e2fca169d16d042b26859ca5"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_53_tabblock20/tl_2020_53_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_53_tabblock20/tl_2020_53_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_53_cd118.zip",
+      "sha256": "4c7b5752e2599859fd650aaf42aeccedb94e844b53b769cd9530e76b4517baed"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "5be4eed029785ca43a4cd866569fcb2ffcf01037eacee13a049cb6f6b6c4f907",
+    "README.md": "24ab4129b007241ac39f11df056bdb605ac0d48d1e317a4f699674b6786db90d"
+  },
+  "reproduction": {
+    "state": "WA",
+    "state_fips": "53",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/wa/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_53_tabblock20/tl_2020_53_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_53_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/wa"
+  },
+  "claim_boundary": "Descriptive compactness measurements of WA block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

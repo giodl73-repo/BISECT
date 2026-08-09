@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "OK",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ok/package/baseline_assignments.json",
+      "sha256": "f4e233eb4dad752cac564a1daedb859afaeb3f16ce73be2c1f4bdbf533beb33d"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_40_tabblock20/tl_2020_40_tabblock20.shp",
+      "sha256": "c02da355c2eb0296befdc6b5043d1ebb478186bd9f891f80a12713b4682a7e7f"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_40_tabblock20/tl_2020_40_tabblock20.shx",
+      "sha256": "3c5e22d0a003ac0193cbcc8c4c1ffe5e3c06a41f6f6a1b96c9481128fb6097a2"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_40_tabblock20/tl_2020_40_tabblock20.dbf",
+      "sha256": "1e0de5c43104172ab23755630408ac69c752363eb6b7db97544b3cfcf136e39e"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_40_tabblock20/tl_2020_40_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_40_tabblock20/tl_2020_40_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_40_cd118.zip",
+      "sha256": "17eb97a389589d1ae0ceb3e5e49e32956e6b2b50ee99a35f276820d782740e2d"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "a60f8fd2d84c2de0873a0af954e3779f7dbb88255561fe3b194cb971adc616c3",
+    "README.md": "da4c92866c8995a6f20f0be3ddee58ae9baa0dd3c16bdda60f115b5fd5068cf4"
+  },
+  "reproduction": {
+    "state": "OK",
+    "state_fips": "40",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ok/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_40_tabblock20/tl_2020_40_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_40_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/ok"
+  },
+  "claim_boundary": "Descriptive compactness measurements of OK block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

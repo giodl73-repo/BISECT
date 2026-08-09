@@ -1,0 +1,212 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "OR",
+  "state_fips": "41",
+  "census_year": 2020,
+  "geometry_contract": {
+    "atomic_unit": "2020-census-tabulation-block",
+    "projection": "EPSG:5070",
+    "source_blocks": 130807,
+    "excluded_water_only_blocks": 2771,
+    "retained_blocks": 128036,
+    "dissolve": "GEOS unary union by complete block assignment",
+    "perimeter": "complete dissolved boundary including multipart components and interior rings",
+    "repair": "none",
+    "comparator_geometry": "Tier 1 block projection, not original district polygon linework"
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "districts": 6,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 25099,
+        "area_m2": 39015690981.00759,
+        "perimeter_m": 3988777.6114367493,
+        "minimum_bounding_radius_m": 296414.5077440355,
+        "polsby_popper": 0.03081552135685446,
+        "reock": 0.14134827675318062,
+        "convex_hull_ratio": 0.49070605925769234,
+        "schwartzberg": 5.696593632625098,
+        "component_count": 14,
+        "interior_ring_count": 111
+      },
+      {
+        "district": 2,
+        "block_count": 9894,
+        "area_m2": 2751113954.377033,
+        "perimeter_m": 741690.7385631936,
+        "minimum_bounding_radius_m": 54110.27142838816,
+        "polsby_popper": 0.06284528957429186,
+        "reock": 0.2990882021449626,
+        "convex_hull_ratio": 0.6989103952187631,
+        "schwartzberg": 3.9889963062187133,
+        "component_count": 3,
+        "interior_ring_count": 12
+      },
+      {
+        "district": 3,
+        "block_count": 11586,
+        "area_m2": 10630569974.805857,
+        "perimeter_m": 2574372.727535863,
+        "minimum_bounding_radius_m": 170451.21857548354,
+        "polsby_popper": 0.020156891712211206,
+        "reock": 0.11646795689201182,
+        "convex_hull_ratio": 0.36878679500345457,
+        "schwartzberg": 7.043495130025512,
+        "component_count": 4,
+        "interior_ring_count": 39
+      },
+      {
+        "district": 4,
+        "block_count": 20094,
+        "area_m2": 34615368187.30818,
+        "perimeter_m": 4660269.912816854,
+        "minimum_bounding_radius_m": 249273.51613125627,
+        "polsby_popper": 0.020028880608147743,
+        "reock": 0.17732370762856633,
+        "convex_hull_ratio": 0.46822986705135095,
+        "schwartzberg": 7.065967916038275,
+        "component_count": 22,
+        "interior_ring_count": 61
+      },
+      {
+        "district": 5,
+        "block_count": 29750,
+        "area_m2": 100183330143.79485,
+        "perimeter_m": 6596085.621156534,
+        "minimum_bounding_radius_m": 327037.6646136098,
+        "polsby_popper": 0.028935617773417927,
+        "reock": 0.2981604570158594,
+        "convex_hull_ratio": 0.6734921642540197,
+        "schwartzberg": 5.878731438593514,
+        "component_count": 12,
+        "interior_ring_count": 143
+      },
+      {
+        "district": 6,
+        "block_count": 31613,
+        "area_m2": 63044739711.47972,
+        "perimeter_m": 6757466.383175952,
+        "minimum_bounding_radius_m": 277693.3460809298,
+        "polsby_popper": 0.017349658559724614,
+        "reock": 0.2602363962307041,
+        "convex_hull_ratio": 0.7660706888960376,
+        "schwartzberg": 7.5919708836822055,
+        "component_count": 76,
+        "interior_ring_count": 245
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.0300219765974413,
+      "reock": 0.21543749944421417,
+      "convex_hull_ratio": 0.5776993282802197,
+      "schwartzberg": 6.210959217863887
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "districts": 6,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 14665,
+        "area_m2": 8840977735.930876,
+        "perimeter_m": 1131833.2436504362,
+        "minimum_bounding_radius_m": 77369.70097261627,
+        "polsby_popper": 0.08672519191617453,
+        "reock": 0.47011984847554095,
+        "convex_hull_ratio": 0.7673126492807867,
+        "schwartzberg": 3.3956847576743776,
+        "component_count": 31,
+        "interior_ring_count": 48
+      },
+      {
+        "district": 2,
+        "block_count": 49742,
+        "area_m2": 188032500279.9317,
+        "perimeter_m": 5171477.221739696,
+        "minimum_bounding_radius_m": 358576.5578662428,
+        "polsby_popper": 0.0883514238088495,
+        "reock": 0.4654995445397778,
+        "convex_hull_ratio": 0.8702805418717451,
+        "schwartzberg": 3.3642884426922217,
+        "component_count": 5,
+        "interior_ring_count": 243
+      },
+      {
+        "district": 3,
+        "block_count": 12638,
+        "area_m2": 3654619952.155452,
+        "perimeter_m": 704457.5573948734,
+        "minimum_bounding_radius_m": 55472.38021753767,
+        "polsby_popper": 0.09254275402687279,
+        "reock": 0.37804086315620106,
+        "convex_hull_ratio": 0.775131915914908,
+        "schwartzberg": 3.287220147931595,
+        "component_count": 3,
+        "interior_ring_count": 56
+      },
+      {
+        "district": 4,
+        "block_count": 23103,
+        "area_m2": 30257526569.184708,
+        "perimeter_m": 4790305.718268849,
+        "minimum_bounding_radius_m": 173507.2900011767,
+        "polsby_popper": 0.01656978316548284,
+        "reock": 0.3199249401483643,
+        "convex_hull_ratio": 0.6434424672768686,
+        "schwartzberg": 7.768579015753987,
+        "component_count": 84,
+        "interior_ring_count": 200
+      },
+      {
+        "district": 5,
+        "block_count": 16136,
+        "area_m2": 14536256577.471352,
+        "perimeter_m": 1525387.0962590596,
+        "minimum_bounding_radius_m": 104567.40681034965,
+        "polsby_popper": 0.07850590195942386,
+        "reock": 0.4231652839065352,
+        "convex_hull_ratio": 0.6582944903927683,
+        "schwartzberg": 3.569018886854342,
+        "component_count": 7,
+        "interior_ring_count": 54
+      },
+      {
+        "district": 6,
+        "block_count": 11752,
+        "area_m2": 4918931838.097855,
+        "perimeter_m": 751420.4840240914,
+        "minimum_bounding_radius_m": 56933.47868040405,
+        "polsby_popper": 0.10947491299760578,
+        "reock": 0.48304266434815274,
+        "convex_hull_ratio": 0.7936875163022814,
+        "schwartzberg": 3.0223356620832114,
+        "component_count": 2,
+        "interior_ring_count": 22
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.07869499464573489,
+      "reock": 0.4232988574290954,
+      "convex_hull_ratio": 0.7513582635065598,
+      "schwartzberg": 4.067854485498289
+    }
+  },
+  "comparator_minus_benchmark_unweighted_mean": {
+    "polsby_popper": 0.04867301804829359,
+    "reock": 0.20786135798488123,
+    "convex_hull_ratio": 0.17365893522634002,
+    "schwartzberg": -2.1431047323655976
+  },
+  "unavailable_metrics": {
+    "population": "Not part of the Tier 2 geometry contract.",
+    "partisan": "Named elections and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "ensemble": "No converged block-level ensemble exists for this comparison."
+  },
+  "claim_boundary": "Descriptive compactness measurements of OR block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

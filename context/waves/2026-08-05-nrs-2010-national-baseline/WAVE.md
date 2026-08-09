@@ -36,7 +36,7 @@ verified 2020 national baseline.
 | 04 - 2010 NRS v0.2 amendment and verification | COMPLETE | Independent `--require-complete` verification passed: 50 States, 435 districts, 385 nodes, 11,071,790 blocks |
 | 05 - decade comparison and publication | COMPLETE | Three-cycle NRS v0.3 summaries, node/tree/cut stability, certified-versus-METIS evidence, and county/tract split audit published |
 | 06 - independent replication and closeout | ACTIVE | Author-machine fresh-clone Level 1 rehearsal passed at `d0053ff3`; independent external v0.3 record remains |
-| 07 - NRS v0.3 national bakeoff | ACTIVE | National 2020 Tier 1 enacted-plan package passed for 50 States and 435 districts; later comparator and metric tiers remain |
+| 07 - NRS v0.3 national bakeoff | ACTIVE | National 2020 Tiers 1 and 2 passed for 50 States and 435 districts; elections, demographics, ensembles, and non-enacted comparators remain |
 | 08 - Rhode Island NRS v0.3 sensitivity | COMPLETE | All 100 frozen seeds reproduced one benchmark assignment/objective; result is mechanism-specific, not national robustness |
 | 09 - Multi-State NRS v0.3 root sensitivity | COMPLETE | All 300 pairs reproduced State benchmarks; candidate-tie instrumentation now gates broader seed expansion |
 | 10 - Initial DFS tie census | COMPLETE | All 44 roots preserved governed assignments/objectives; 29 expose two minimum-deviation/minimum-cut initial candidates |
@@ -45,7 +45,7 @@ verified 2020 national baseline.
 | 13 - Cross-census complete-tree DFS census | COMPLETE | All 770 nodes have one physical initial cut; seven v0.2 activations and one v0.3 activation form the bounded fallback universe |
 | 14 - Fallback candidate census | COMPLETE | All eight activated stages preserved assignments/objectives; candidate ties at 2000 HI/root collapse to one physical partition, closing fallback seed expansion |
 | 15 - Tier 2 geometry bakeoff | COMPLETE | Rhode Island common-block geometry passed; compactness metric direction is mixed, and national expansion requires a separate sequential protocol |
-| 16 - National Tier 2 geometry | ACTIVE | Frozen 50-State common-block execution uses one State at a time, regional equal-area projections, two estimands, and complete failure retention |
+| 16 - National Tier 2 geometry | ACTIVE | Sequential execution passed 50 States, 435 districts per plan, and 7,889,194 retained blocks; exact regeneration remains |
 
 ## Versioned amendment
 

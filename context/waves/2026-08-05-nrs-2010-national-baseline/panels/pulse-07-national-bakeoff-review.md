@@ -53,7 +53,11 @@ as congressional districts not defined. The protocol was amended uniformly to
 retain only blocks with `ALAND20 > 0`, exclude non-numbered comparator
 polygons, and keep any unassigned retained block as a hard failure.
 
-The amended run passed 50 States and 435 districts. The national verifier then
-regenerated every State package exactly. Tier 1 is accepted; geometry,
-elections, demographics, sensitivity, ensembles, and non-enacted national
-comparators remain gated.
+The amended Tier 1 run passed 50 States and 435 districts. Its national
+verifier regenerated every State package exactly.
+
+The later Tier 2 execution also passed 50 States and 435 districts per plan
+family on the common 7,889,194-block universe. Both national estimands align
+across the four frozen metrics, but they measure block-projected geometry, not
+original comparator linework. Tiers 1 and 2 are accepted; elections,
+demographics, ensembles, and non-enacted national comparators remain gated.

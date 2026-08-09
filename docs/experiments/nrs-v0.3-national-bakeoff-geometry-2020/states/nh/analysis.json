@@ -1,0 +1,108 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "NH",
+  "state_fips": "33",
+  "census_year": 2020,
+  "geometry_contract": {
+    "atomic_unit": "2020-census-tabulation-block",
+    "projection": "EPSG:5070",
+    "source_blocks": 31948,
+    "excluded_water_only_blocks": 1450,
+    "retained_blocks": 30498,
+    "dissolve": "GEOS unary union by complete block assignment",
+    "perimeter": "complete dissolved boundary including multipart components and interior rings",
+    "repair": "none",
+    "comparator_geometry": "Tier 1 block projection, not original district polygon linework"
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "districts": 2,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 18242,
+        "area_m2": 17929336381.678226,
+        "perimeter_m": 4226124.246238758,
+        "minimum_bounding_radius_m": 139748.62145093078,
+        "polsby_popper": 0.012615066882336054,
+        "reock": 0.29222628542740553,
+        "convex_hull_ratio": 0.7168405963135787,
+        "schwartzberg": 8.903386389280179,
+        "component_count": 35,
+        "interior_ring_count": 422
+      },
+      {
+        "district": 2,
+        "block_count": 12256,
+        "area_m2": 5728257035.015711,
+        "perimeter_m": 1562963.5866227099,
+        "minimum_bounding_radius_m": 69714.50158598486,
+        "polsby_popper": 0.02946691300766676,
+        "reock": 0.37516850344688657,
+        "convex_hull_ratio": 0.6810162625140662,
+        "schwartzberg": 5.825492929878016,
+        "component_count": 5,
+        "interior_ring_count": 146
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.021040989945001407,
+      "reock": 0.3336973944371461,
+      "convex_hull_ratio": 0.6989284294138225,
+      "schwartzberg": 7.364439659579098
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "districts": 2,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 12535,
+        "area_m2": 5804363873.300732,
+        "perimeter_m": 2141050.2862672117,
+        "minimum_bounding_radius_m": 86140.42020181668,
+        "polsby_popper": 0.01591148666789633,
+        "reock": 0.24899509145283752,
+        "convex_hull_ratio": 0.5544268724836974,
+        "schwartzberg": 7.927652779381723,
+        "component_count": 28,
+        "interior_ring_count": 199
+      },
+      {
+        "district": 2,
+        "block_count": 17963,
+        "area_m2": 17853229543.393223,
+        "perimeter_m": 3354528.3203838966,
+        "minimum_bounding_radius_m": 153848.51446733376,
+        "polsby_popper": 0.01993717988815291,
+        "reock": 0.24009344429052298,
+        "convex_hull_ratio": 0.7295596224594381,
+        "schwartzberg": 7.082199173261885,
+        "component_count": 18,
+        "interior_ring_count": 343
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.01792433327802462,
+      "reock": 0.24454426787168027,
+      "convex_hull_ratio": 0.6419932474715677,
+      "schwartzberg": 7.504925976321804
+    }
+  },
+  "comparator_minus_benchmark_unweighted_mean": {
+    "polsby_popper": -0.003116656666976785,
+    "reock": -0.08915312656546581,
+    "convex_hull_ratio": -0.056935181942254776,
+    "schwartzberg": 0.14048631674270595
+  },
+  "unavailable_metrics": {
+    "population": "Not part of the Tier 2 geometry contract.",
+    "partisan": "Named elections and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "ensemble": "No converged block-level ensemble exists for this comparison."
+  },
+  "claim_boundary": "Descriptive compactness measurements of NH block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

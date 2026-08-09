@@ -1,0 +1,637 @@
+{
+  "schema_version": "nrs-v0.3-national-bakeoff-geometry-manifest-v1",
+  "protocol_id": "nrs-v0.3-national-tier2-geometry-v1",
+  "status": "pass",
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-national-tier2-geometry-protocol.md",
+      "sha256": "c8f3ff25dda30a8f0d7a21ab58d3921eaf7d902359d086210850d1d74ee9512d"
+    },
+    {
+      "path": "scripts/research/run_nrs_bakeoff_geometry_national.py",
+      "sha256": "a1011dcb5b20d97415d2588e84bc97b17b9ae555fd971c5d7571ee909ed3c9e0"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_national.py",
+      "sha256": "ec72bc6e21fdc082bb235548adf97bc8d7369e4bc6ab73405b072aebdd4c58eb"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    }
+  ],
+  "state_package_files": [
+    {
+      "path": "states/ak/analysis.json",
+      "sha256": "a53b89b566d2863a4cd944dcebf6233b4add8430ee71f6a0e6da3d1bf5f292ef"
+    },
+    {
+      "path": "states/ak/manifest.json",
+      "sha256": "e1c99f893a646fae7e64746174fa5cc2ae37e77a9c2f34952fe87714bc1d1a80"
+    },
+    {
+      "path": "states/ak/README.md",
+      "sha256": "3ae1354226d09de13c9f17b969f106c308d9cca93599970724df1722c01e65b6"
+    },
+    {
+      "path": "states/al/analysis.json",
+      "sha256": "5fb2586a7e92fb1f58beb5f81107bc8a4255624523f9fa9fa2aafdf8024077b5"
+    },
+    {
+      "path": "states/al/manifest.json",
+      "sha256": "e3205cd17c33489d82de695a34d4790c5bb89a1da6560eb16a5a5f1cdd558400"
+    },
+    {
+      "path": "states/al/README.md",
+      "sha256": "d4d7c09d713664a32d153a7c062cb45680a3c1a0288ec6707f368091e7c868de"
+    },
+    {
+      "path": "states/ar/analysis.json",
+      "sha256": "bf0086ceb0d5bd53ae75ab30daf8bd856f182181cc047e8d4575d01ada5a16ed"
+    },
+    {
+      "path": "states/ar/manifest.json",
+      "sha256": "c5b13d4ab64aad6452959b9963e1f5a7688f351d1354857addfa9c8bc140ddb6"
+    },
+    {
+      "path": "states/ar/README.md",
+      "sha256": "924f2e24426e51d803f8bdd927e8900f80f9348f4fda70f440f322eb33b58b49"
+    },
+    {
+      "path": "states/az/analysis.json",
+      "sha256": "453988dc2134ad114ed6e7bd7aa3e6922b113adf0b605329b573d29e4cfb7679"
+    },
+    {
+      "path": "states/az/manifest.json",
+      "sha256": "5b3d8b8b00502e6debf84ff0479edacf0a4c2094b1f296150b4fb0c0973c01f9"
+    },
+    {
+      "path": "states/az/README.md",
+      "sha256": "1089123ce3848c0a39d83acc96309c861952e7ad4322c69c7307435d0c753438"
+    },
+    {
+      "path": "states/ca/analysis.json",
+      "sha256": "f1b5a8228e767ab73c81046aaf6d35c93bf005c82d65293b7c88d3b19480c66b"
+    },
+    {
+      "path": "states/ca/manifest.json",
+      "sha256": "562de47f3530b7eb286da75bd8e4784b0b5bd056c25dd3251feddeedbde0b6df"
+    },
+    {
+      "path": "states/ca/README.md",
+      "sha256": "261ef2dc08dc113120dd86124a14a47f621abfa3e4697efdda9884a2201bb480"
+    },
+    {
+      "path": "states/co/analysis.json",
+      "sha256": "c157ffbb4c64a3879c49cc4a58d9ec8f9b993e400930d213097ec17856f0e5c1"
+    },
+    {
+      "path": "states/co/manifest.json",
+      "sha256": "40c0153faefdb8a553d9b247193ec0ddca03a0d055dd0b1d9906d5c64b991953"
+    },
+    {
+      "path": "states/co/README.md",
+      "sha256": "08208bab8107931670a55de1c99ef0f95c090c6f9254a755e93caa079998292a"
+    },
+    {
+      "path": "states/ct/analysis.json",
+      "sha256": "d0c1d42e2f53f03e721dfca4444f289d6909e565af1ae7568d390746159845b7"
+    },
+    {
+      "path": "states/ct/manifest.json",
+      "sha256": "74cba4941e7844264e2ee088220b437f331dc2ad18e5e3e5aacb0dd5adfc8692"
+    },
+    {
+      "path": "states/ct/README.md",
+      "sha256": "d98b67a7a3ccc8dd8797fbb8e49729b6c7f2a91162e28e92d4198899d3f60ecc"
+    },
+    {
+      "path": "states/de/analysis.json",
+      "sha256": "9af1b9ee54ec242e9fcf88977e976e0d08a23fa4996583246b1ff570af843d7b"
+    },
+    {
+      "path": "states/de/manifest.json",
+      "sha256": "c62028b8501e07039d26927869acd69d7b47eaac3f08969ba69a581d21edca20"
+    },
+    {
+      "path": "states/de/README.md",
+      "sha256": "c177b938af47c6665414dfeefe70c08f069558682d622259f0ce15cb92b14eef"
+    },
+    {
+      "path": "states/fl/analysis.json",
+      "sha256": "18bb433c575541d287fc0f600061785573a110201cbf90bb99a3d6e1547663d6"
+    },
+    {
+      "path": "states/fl/manifest.json",
+      "sha256": "7932965a46bf3d06e7892274ec65811569b87f0f4df7f4fac1e200f294d53c93"
+    },
+    {
+      "path": "states/fl/README.md",
+      "sha256": "0b2b00bdeeb5d1cff55128e82e757ab8531eee3c67b1ba5584b052081ad2a64c"
+    },
+    {
+      "path": "states/ga/analysis.json",
+      "sha256": "68221d0ddd3533884d3855e7ce3997d6d59651e446294cc008f4ec825bc93d02"
+    },
+    {
+      "path": "states/ga/manifest.json",
+      "sha256": "ad4bc314b562d6c8528faf02b0401f996b94c8d835c07ddb6ba4a4490743701e"
+    },
+    {
+      "path": "states/ga/README.md",
+      "sha256": "45fb0536e64a3826440545f036c8fb8558674515993aadd3df46acf755b24d27"
+    },
+    {
+      "path": "states/hi/analysis.json",
+      "sha256": "0356e4784d6d0b45040707bf0a097db5216469ebfd7cf96b5a523c061501b6d2"
+    },
+    {
+      "path": "states/hi/manifest.json",
+      "sha256": "34d698368edeef4834dd8ea2f9a9165e64538099e52b398997edf4395e6ca9f6"
+    },
+    {
+      "path": "states/hi/README.md",
+      "sha256": "f9f55a4d27ea25c2f23af5fd5916bde7239ed875ffbe27694adb2181ba80c6cf"
+    },
+    {
+      "path": "states/ia/analysis.json",
+      "sha256": "be9cf5a6021379a0cf5f416f44579288bfa2e40af499a22db79c054bd6e98b21"
+    },
+    {
+      "path": "states/ia/manifest.json",
+      "sha256": "74af66371be477ef4146349b3d5e97de5404da4bdf47d625374c94fd293c11ba"
+    },
+    {
+      "path": "states/ia/README.md",
+      "sha256": "40f07037b69a2ff79c1113383d8ce21ec9ae4eeee7697cdc2d84f5b4d02037c5"
+    },
+    {
+      "path": "states/id/analysis.json",
+      "sha256": "f05c81f8b9f4fde16a34a2a0e16a6b975a24c7edff5b8b0ba2bee8db3970d440"
+    },
+    {
+      "path": "states/id/manifest.json",
+      "sha256": "ea544a4f7c11c33bccdb3656380106923d384e2a9cb902a3c58edca65c9f4cef"
+    },
+    {
+      "path": "states/id/README.md",
+      "sha256": "1c491b31059529e488c60a54eb708799570dbf625f8262b38fc0a8e5ef775c92"
+    },
+    {
+      "path": "states/il/analysis.json",
+      "sha256": "d2274ca45a86f7a9b4f72e52c1a0c306d27ef56b4a11b30c7c14b12b1517919f"
+    },
+    {
+      "path": "states/il/manifest.json",
+      "sha256": "2646f441356106ebac77245103f3a99ee6053ead6e7f4d73eb30dab1e6fc1f66"
+    },
+    {
+      "path": "states/il/README.md",
+      "sha256": "6f56b6c736ee1f5de2bab948117c0787b0be14dd6df8b1be9c39ef3c9fd09a82"
+    },
+    {
+      "path": "states/in/analysis.json",
+      "sha256": "4f281cbb2b10c6d9f26d0d577e8ab6b84d25ebdcc8358bdbaec27d3f6e71ad7a"
+    },
+    {
+      "path": "states/in/manifest.json",
+      "sha256": "259486542656571b8b1ce1bab0746c73488c2e53a7f5b5a51ce369620f90d2d6"
+    },
+    {
+      "path": "states/in/README.md",
+      "sha256": "d18257667bab1f37672d8de8926bf5acc94eba61ec6f64082f0d9fd7c1cc313c"
+    },
+    {
+      "path": "states/ks/analysis.json",
+      "sha256": "b6561dddf919b0f58105d113a23831e38f77a9e15f2b811d90a50a98fbf89baa"
+    },
+    {
+      "path": "states/ks/manifest.json",
+      "sha256": "9b1336f25d2f61c217f1cdb4d36651d9dbe3f2ea925857d08056aeede6f7d79e"
+    },
+    {
+      "path": "states/ks/README.md",
+      "sha256": "e53a4ecdd1d6a5fa28ec932698b4d6bb5e706f74f04fabf830049bc461862010"
+    },
+    {
+      "path": "states/ky/analysis.json",
+      "sha256": "c73973952c762c4db90853f7380ea6e548783cf30bb59804b428eb9352f23a7d"
+    },
+    {
+      "path": "states/ky/manifest.json",
+      "sha256": "7b67b7b8c2ec00d6da278b3667cbcc6b284cc30f188a81c22038c5f110663e6f"
+    },
+    {
+      "path": "states/ky/README.md",
+      "sha256": "eb49bd4b32a7bd6587cb482732b9c7095a7b3249d30ee1fb7ec11c972b68a6a4"
+    },
+    {
+      "path": "states/la/analysis.json",
+      "sha256": "7453f7b9b5c11728c9f7bc080b781b01278a67d4559501f434f169d30a11ee79"
+    },
+    {
+      "path": "states/la/manifest.json",
+      "sha256": "534fb18e0859876a862c7b3565c3dadb2b0388b04665dad76e1a1f37fcd805d6"
+    },
+    {
+      "path": "states/la/README.md",
+      "sha256": "d60e296484044f54101f68a70d7fc8ed9a5ee5f8cf8b95231f917a4099826253"
+    },
+    {
+      "path": "states/ma/analysis.json",
+      "sha256": "36fd68c9c311a48792a098995a4ac3fd20a00640f42939df4e82dbae85403c6a"
+    },
+    {
+      "path": "states/ma/manifest.json",
+      "sha256": "b9d87192fbefe9709da35e9e254a1e5b0379cbcfbcc5532a517c3925bd574028"
+    },
+    {
+      "path": "states/ma/README.md",
+      "sha256": "63ba852e585b84db9f2e8dadc9f751dded0def4873553e115dd701760438e74d"
+    },
+    {
+      "path": "states/md/analysis.json",
+      "sha256": "78927e1d2080669944456589237fe9b2db24280b8e5b4c1058f7d3c21403a4a1"
+    },
+    {
+      "path": "states/md/manifest.json",
+      "sha256": "70af6ca06630ea800bc8f39e016a066dc4a33dcaafe344e757ac3824eec407f9"
+    },
+    {
+      "path": "states/md/README.md",
+      "sha256": "931890a48e05f16d388eb7df833402739647ab851a9a577f24d9dc3548ec810b"
+    },
+    {
+      "path": "states/me/analysis.json",
+      "sha256": "25b49cf1f5d3bc2e47fd57811727654a716e6479a2469b9ee82d39e637022eba"
+    },
+    {
+      "path": "states/me/manifest.json",
+      "sha256": "ee1aa2059e1c23222dded8c2eb3b0c297b2abbfa827b336a994a1038144f26bb"
+    },
+    {
+      "path": "states/me/README.md",
+      "sha256": "c20d73b5fcc18a53ee8eabee23639ccaec61adfe6da24e0df27fa47b0a9f9fa9"
+    },
+    {
+      "path": "states/mi/analysis.json",
+      "sha256": "045ed6dd8eada3a7f1669cd8347437fff9f0515991b32ce4bf1570efc9c2ee30"
+    },
+    {
+      "path": "states/mi/manifest.json",
+      "sha256": "df39531d2d49cf4cb2c35a1b3e42a1fafda1d349cbbe7570247a7d08b18ba974"
+    },
+    {
+      "path": "states/mi/README.md",
+      "sha256": "fad074f4e2738f93ca30367c464dd91d8e621de5fcb1fc3d11933a8aca2ac82b"
+    },
+    {
+      "path": "states/mn/analysis.json",
+      "sha256": "d849eddd438fb2dd99ecf5f6f854b8a124d1c166da80ea33107c028e5fa06e69"
+    },
+    {
+      "path": "states/mn/manifest.json",
+      "sha256": "733f64222b4fa9634f1e66140958afd5b00e2828dd7cdb1c9ededf37d21b23b7"
+    },
+    {
+      "path": "states/mn/README.md",
+      "sha256": "e46a2efbcafdf48ab9ff011ee009aa73d33d36bac0361a3bb1988993d1d50d2a"
+    },
+    {
+      "path": "states/mo/analysis.json",
+      "sha256": "bfa417e9fe0eaf1030c27c76a4751395855b1ecc7bc8612455823ba553af2666"
+    },
+    {
+      "path": "states/mo/manifest.json",
+      "sha256": "7a423e218012cda54b0a5fe838b86119b508458d16f028bb6b2a97febd42ecfa"
+    },
+    {
+      "path": "states/mo/README.md",
+      "sha256": "b60c7844fc1897f17c0846b475b91f38be9c0ce2933d4e828abb0425fdb127e4"
+    },
+    {
+      "path": "states/ms/analysis.json",
+      "sha256": "988220ee1b0b54cd434f158d1d3f2d70115b10787ffd5f129811a73281fcb87c"
+    },
+    {
+      "path": "states/ms/manifest.json",
+      "sha256": "ea35159135dafe90bfcb7be444f77df9ad7768dbd864e9b6a0f485704c10ab0b"
+    },
+    {
+      "path": "states/ms/README.md",
+      "sha256": "69047609e41d14c3586ed5a9c2d122be8b949063dc6dcf2d2bb709de0e290e59"
+    },
+    {
+      "path": "states/mt/analysis.json",
+      "sha256": "7f0afcc812b6762eb64154163f3aec87eccf7085beae3190e59e5b29753f11f6"
+    },
+    {
+      "path": "states/mt/manifest.json",
+      "sha256": "f008cc905fd4f77334f0803262e0dc165b7a9a66155b30441e7b85f498245822"
+    },
+    {
+      "path": "states/mt/README.md",
+      "sha256": "2889acd3f35f46f02c22b4c0d294708d7d7333e94417fed6e673d732350adbc0"
+    },
+    {
+      "path": "states/nc/analysis.json",
+      "sha256": "5f468422189d2d22372c5cf14a2da8e69d729737d5682023b81d0c37308971fa"
+    },
+    {
+      "path": "states/nc/manifest.json",
+      "sha256": "358f63ab8c0a83eb8f8ff39eaa8fae562f264cf6926f9e87de8375077792ea36"
+    },
+    {
+      "path": "states/nc/README.md",
+      "sha256": "539e08a25c3c94af98386b21a6655e0feb4a95a2a07ac41d5f03009d866fb2cc"
+    },
+    {
+      "path": "states/nd/analysis.json",
+      "sha256": "f03f125fad34c7cf03717566fe7a551e4b3af770f0432ae8abcc6af1fe1cb310"
+    },
+    {
+      "path": "states/nd/manifest.json",
+      "sha256": "f6bcbbd5b72a0821ae0a8d056956cb2dd1df1441e0d943e80242720dafd4d280"
+    },
+    {
+      "path": "states/nd/README.md",
+      "sha256": "1919479f0c9a2fe0c271c3d01411fd817de752be979d5bde1dd99a494ad73706"
+    },
+    {
+      "path": "states/ne/analysis.json",
+      "sha256": "ea33f6ad0c97ea1f11a25ba0ecd52545fe1e4165e1749085bfcd0d2da4c9fa45"
+    },
+    {
+      "path": "states/ne/manifest.json",
+      "sha256": "2fba57487d568e4b691f77d4c170eef3bd3ba4e39bd8e7baccf0b60a68572ff1"
+    },
+    {
+      "path": "states/ne/README.md",
+      "sha256": "23c797b87ae528e1701a7d9fbe5f5c4fd0eb17ab54718792cd27a631f15da5ef"
+    },
+    {
+      "path": "states/nh/analysis.json",
+      "sha256": "757c400130d59fa436fd30cc5ef94307acfaa42d16cdc71994ed0743101b2b3a"
+    },
+    {
+      "path": "states/nh/manifest.json",
+      "sha256": "e0195be27f41dff260f1348ebd2a8d985810319f7ac7137bd1d2e39e261b4fdc"
+    },
+    {
+      "path": "states/nh/README.md",
+      "sha256": "53c1cb2bedc1f75e0ff081ed11a15f35c86eb16283f7b85bc79b097e38538293"
+    },
+    {
+      "path": "states/nj/analysis.json",
+      "sha256": "57a30c559e3c990ebfef11208e968b6412e4a92f6d632508e71abb581684f015"
+    },
+    {
+      "path": "states/nj/manifest.json",
+      "sha256": "1bf1d1d559aa65366f87ac4965f7e4700bb6c8b10ce134e418e9b3d5564ee286"
+    },
+    {
+      "path": "states/nj/README.md",
+      "sha256": "6420c32cd7c795511aa960916899124099d4005f87b72fbf37ba4681cb763fe7"
+    },
+    {
+      "path": "states/nm/analysis.json",
+      "sha256": "cc3dd9b7b9b5119de74becd991eb63f6d9f0aa354adbb8a58bba104402cf7b18"
+    },
+    {
+      "path": "states/nm/manifest.json",
+      "sha256": "ceee537ba6145782ea6650719f0379b41fa1d87e56a879bb01f691ff859ac8a4"
+    },
+    {
+      "path": "states/nm/README.md",
+      "sha256": "2069217fc79b58003ccdab3a79e1310b54ff35b5a4c631a0a9dc48ba50533789"
+    },
+    {
+      "path": "states/nv/analysis.json",
+      "sha256": "05fc141342a5303e837ecf72c21780c033c5cc8ab6a139338018238ff01c4b4f"
+    },
+    {
+      "path": "states/nv/manifest.json",
+      "sha256": "9aeae734924884038df0f4cb2c1af534185ff0184f97a0b3cdbcd39f7ec94a06"
+    },
+    {
+      "path": "states/nv/README.md",
+      "sha256": "0788ae92a30397beb76cf0ea022187ef15fc100a8e615e345f8bc9655d720231"
+    },
+    {
+      "path": "states/ny/analysis.json",
+      "sha256": "0e9c1ad4198e2a6edec644da9281395e4aa8f026aee6eb7d54ebeca9d91a7537"
+    },
+    {
+      "path": "states/ny/manifest.json",
+      "sha256": "be38e04fbe4d920e9c2d4a3f1ed0f55b2f863e1b3d1bb20ac9abff74755b93ea"
+    },
+    {
+      "path": "states/ny/README.md",
+      "sha256": "3587f30588dead11af1a86b0bbfd4e7ef8d38d63717cb91ec2e11458db2ce0e3"
+    },
+    {
+      "path": "states/oh/analysis.json",
+      "sha256": "e93dd86ecdd7fa80295fe8b16b227ef03d701bf95f161b63ba9b31d454f1fb86"
+    },
+    {
+      "path": "states/oh/manifest.json",
+      "sha256": "b5219401a2845e9d673b4a96ebc60c2aa7d80e9f0ee7cc234ca4ab151ae782c9"
+    },
+    {
+      "path": "states/oh/README.md",
+      "sha256": "8c71e48551020d7110e7797b45bc12d9628e45de1495bfcf8a83590df02ad78e"
+    },
+    {
+      "path": "states/ok/analysis.json",
+      "sha256": "a60f8fd2d84c2de0873a0af954e3779f7dbb88255561fe3b194cb971adc616c3"
+    },
+    {
+      "path": "states/ok/manifest.json",
+      "sha256": "d7a7a9a4e451063c8eb8e0dc1335b319592303bbf8c989c2b691ab8d46723308"
+    },
+    {
+      "path": "states/ok/README.md",
+      "sha256": "da4c92866c8995a6f20f0be3ddee58ae9baa0dd3c16bdda60f115b5fd5068cf4"
+    },
+    {
+      "path": "states/or/analysis.json",
+      "sha256": "1dc7764ea99eb1962eb2f8e1873288689644b2a35345283110b85e3244283378"
+    },
+    {
+      "path": "states/or/manifest.json",
+      "sha256": "19b703dd0291aac88fff5edae8f99c46213a26c825800b59d39bd7fc6b20ff59"
+    },
+    {
+      "path": "states/or/README.md",
+      "sha256": "f809b8ff213face70ffd9b0b99a1955204805427e2d8fdaccfee8ee4bdc9a71a"
+    },
+    {
+      "path": "states/pa/analysis.json",
+      "sha256": "b647c6722debaa308d86518323d7ae3e1f3103d5efa239b8cc62017cb15e03ab"
+    },
+    {
+      "path": "states/pa/manifest.json",
+      "sha256": "4734bd71024f6539466a8096025394102d1d325c8521528c1cf497a621838751"
+    },
+    {
+      "path": "states/pa/README.md",
+      "sha256": "62e54caa455324b7927a93128af94c2576ed681dc2dbb96c1f0234b7e62f152f"
+    },
+    {
+      "path": "states/ri/analysis.json",
+      "sha256": "6e8b41386faa4ca5ecc0f7a4e3768085e254c1d8640bbf671089e6c468cf827a"
+    },
+    {
+      "path": "states/ri/manifest.json",
+      "sha256": "833252bf797dbcbd5c7f209c5d1079b692adea28a97a00a051a814d1f032e8b3"
+    },
+    {
+      "path": "states/ri/README.md",
+      "sha256": "ce8a4937b2c7cc029f65d1b21445831f8695f20541307f03ad2937ead8efb2b7"
+    },
+    {
+      "path": "states/sc/analysis.json",
+      "sha256": "3d62b40476d797a0cb853dfc6502fe1e9b7f16f68873ce86508c0a7142542e6c"
+    },
+    {
+      "path": "states/sc/manifest.json",
+      "sha256": "ef98a7d87c8ad4c7ca935e37ae7d92ebb161a5ca31648ca96155d06f5a935f8f"
+    },
+    {
+      "path": "states/sc/README.md",
+      "sha256": "fc930d546a7821d6f58149470640064a307b4fdb4569ca43b4fb6905f64c6f22"
+    },
+    {
+      "path": "states/sd/analysis.json",
+      "sha256": "9369b4b9d953efa0e0a4eacde690753105340f9db88d0b20fc74d6182b936cb9"
+    },
+    {
+      "path": "states/sd/manifest.json",
+      "sha256": "2f03bf6efd47c360a3332fc4be554ab23c6e92e2ae097f1db3d69ef98fb9cf79"
+    },
+    {
+      "path": "states/sd/README.md",
+      "sha256": "bf87a4dd20584a07d9edb976503d2bd932816dee730524f9bdd1f30576ddf911"
+    },
+    {
+      "path": "states/tn/analysis.json",
+      "sha256": "8b8a972140251640e5b34ea665fecf6a8006f01820a987e95a736816fc8c2eb7"
+    },
+    {
+      "path": "states/tn/manifest.json",
+      "sha256": "1f8bc920aa66e3326b9722d6ddf8ae7c6d92307335d5b2566e2e064fa29d01ac"
+    },
+    {
+      "path": "states/tn/README.md",
+      "sha256": "07cc048d2a73186b495a9d9fd562320340729a222d89eb4a672ee167c78cac19"
+    },
+    {
+      "path": "states/tx/analysis.json",
+      "sha256": "bf9aac941df31a6b1889b46cc5bb25fd3cbb9d10b1902f062db0f44ba78bc4ae"
+    },
+    {
+      "path": "states/tx/manifest.json",
+      "sha256": "4faa628ddc35e97fd9cb489113f1216711044733ec803bff22ca0c2e7c33bf17"
+    },
+    {
+      "path": "states/tx/README.md",
+      "sha256": "368f4cae51a7de4f0a13de75d63db9b08fda2522fb5ffac196b1701cf3238ba6"
+    },
+    {
+      "path": "states/ut/analysis.json",
+      "sha256": "507429c481324a7aa20247258012a281b68afe016df07b26f17adb08550bee4b"
+    },
+    {
+      "path": "states/ut/manifest.json",
+      "sha256": "04ceac6e6d7c56cfa92cb0548995dd61882c4c59573d558304d696f7f71c23f7"
+    },
+    {
+      "path": "states/ut/README.md",
+      "sha256": "2cd4d025d48225476aecbd25e095d49a37a82a0a36c0e0310e50a121878682df"
+    },
+    {
+      "path": "states/va/analysis.json",
+      "sha256": "e2fde653fb014eb2e3e69f613ad78a72ddfead29749b89374274fd83cc2240e7"
+    },
+    {
+      "path": "states/va/manifest.json",
+      "sha256": "1f8787866dcde79fc7188586ca81910b3105ff063930939b15175259c2a14ffe"
+    },
+    {
+      "path": "states/va/README.md",
+      "sha256": "2d245a708aa324fa283cb73b843fd77e2124e726e8de4c95e0e4f441cb009e3d"
+    },
+    {
+      "path": "states/vt/analysis.json",
+      "sha256": "ae41b55c9f33d40cee1d5d6448bfb6f2917bac816de582571918557b26dde705"
+    },
+    {
+      "path": "states/vt/manifest.json",
+      "sha256": "1729ea93d86c9ac303229ae79a2492b59f16d6a65eb698b9a9599d8361b31c7e"
+    },
+    {
+      "path": "states/vt/README.md",
+      "sha256": "81bb53b4cb88bf73354c221ae904a8489b1cf68536a08ce6996b9ddcd550a0fe"
+    },
+    {
+      "path": "states/wa/analysis.json",
+      "sha256": "5be4eed029785ca43a4cd866569fcb2ffcf01037eacee13a049cb6f6b6c4f907"
+    },
+    {
+      "path": "states/wa/manifest.json",
+      "sha256": "097e9868e3b4cad2a06623040999b4792ae95ef0e8faa3c77d36709d4f70a8da"
+    },
+    {
+      "path": "states/wa/README.md",
+      "sha256": "24ab4129b007241ac39f11df056bdb605ac0d48d1e317a4f699674b6786db90d"
+    },
+    {
+      "path": "states/wi/analysis.json",
+      "sha256": "8f8d3161e50b1c83fcffff2b097527a08c786bb6b9c813725d608ff1d5f646f4"
+    },
+    {
+      "path": "states/wi/manifest.json",
+      "sha256": "aab9482534f2549c22e05af3054fda465d76a48e26e65339db11448504eda7d8"
+    },
+    {
+      "path": "states/wi/README.md",
+      "sha256": "c84f5565512bf62de08b28c03e0688481d49d19cce34f8415f352660bac947bb"
+    },
+    {
+      "path": "states/wv/analysis.json",
+      "sha256": "275d628a650574d5853e3c447bf299ce51da1ef853caff0f4668169f86994ec4"
+    },
+    {
+      "path": "states/wv/manifest.json",
+      "sha256": "6b90beb835c87879b39f24ecdaf0dafdd54f0dfe34f2baa02b8616f897b3ce37"
+    },
+    {
+      "path": "states/wv/README.md",
+      "sha256": "e99605ae568f48d519624128365d3286de8e43da2a77e374d0c2786c8955924c"
+    },
+    {
+      "path": "states/wy/analysis.json",
+      "sha256": "7e71e093a6efdeb9cc6c03bf0a8e49f1db04ea32c8a8f813b67e409410dec126"
+    },
+    {
+      "path": "states/wy/manifest.json",
+      "sha256": "f3138ac13d5683ce8454700db4ac6c8340f1b5f95192a6b2beaed18b3cc2fea2"
+    },
+    {
+      "path": "states/wy/README.md",
+      "sha256": "c19eb27fbea8ab93cba09c37189dea25e8ea4adc75c908d073cb5410219f277a"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "45a855fe8e46c185ce4b1a176dd70a218ac6cb97555cb8d2b6eebe1b2456eba1",
+    "district-results.csv": "e0385a068a33c9fc14a37ebb3732c211d6d630b299f8822b78a7f2e1aa451b83",
+    "state-results.csv": "f12411a639669524320d6964e4c2a963be8b5f2a8cd9da251947393a2d0b0ab1",
+    "README.md": "c49901e20708ce0b8b55448f64090f0aeb5f8e93f8ff3a15976138f8e9d61e4d"
+  },
+  "reproduction": {
+    "nrs_root": "runs/nrs-v0.3/neutral-analysis/national-2020",
+    "output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020",
+    "workers": 1
+  },
+  "claim_boundary": "Descriptive national compactness summaries for 2020 NRS v0.3 and official CD118 assignments projected to identical retained Census-block geometry; no original-linework, compactness-superiority, fairness, intent, VRA, legal, community, robustness, optimality, causal, or adoption claim."
+}

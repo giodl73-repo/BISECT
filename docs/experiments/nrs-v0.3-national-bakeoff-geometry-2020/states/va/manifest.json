@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "VA",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/va/package/baseline_assignments.json",
+      "sha256": "2bb64d55086866308832fd577595f4bb18dcdf5122012a3c9245d573417bc709"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_51_tabblock20/tl_2020_51_tabblock20.shp",
+      "sha256": "7bc441a26f2cc5611bd58e1855ebff81ad4ceacb47d0227d4d49a27725ddc8a9"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_51_tabblock20/tl_2020_51_tabblock20.shx",
+      "sha256": "502990c72bf76ba4e8824d59da72d76dbfa4a50b4a1f362dca788a4d1f8e6d10"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_51_tabblock20/tl_2020_51_tabblock20.dbf",
+      "sha256": "ddea69bd6a299444a24381f4ae51120dd6ad9b6de5288f69c78be2f4c5cc6778"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_51_tabblock20/tl_2020_51_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_51_tabblock20/tl_2020_51_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_51_cd118.zip",
+      "sha256": "af58d93151e8c8145f1b8927946da60ccdfb6d8ae6161ec742bf8c171dfe29b6"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "e2fde653fb014eb2e3e69f613ad78a72ddfead29749b89374274fd83cc2240e7",
+    "README.md": "2d245a708aa324fa283cb73b843fd77e2124e726e8de4c95e0e4f441cb009e3d"
+  },
+  "reproduction": {
+    "state": "VA",
+    "state_fips": "51",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/va/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_51_tabblock20/tl_2020_51_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_51_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/va"
+  },
+  "claim_boundary": "Descriptive compactness measurements of VA block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

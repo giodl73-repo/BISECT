@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "GA",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/baseline_assignments.json",
+      "sha256": "8a771cf190e6c346793b1e3ebc5c8cfff9c81ce57855d2c82e704414dfc35fff"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_13_tabblock20/tl_2020_13_tabblock20.shp",
+      "sha256": "3b70fc86f138b1159e7245498a1b7969cf216601408daf7131d63ab55cce83d8"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_13_tabblock20/tl_2020_13_tabblock20.shx",
+      "sha256": "3ad3f1cabd16bcf98090e1f67704c6f84473b5dafe2aa6c280782ab850df0ebd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_13_tabblock20/tl_2020_13_tabblock20.dbf",
+      "sha256": "c50bee517d2f118a8105bea35c226842ef7d016c3a291473e57d58b0fe2018be"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_13_tabblock20/tl_2020_13_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_13_tabblock20/tl_2020_13_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_13_cd118.zip",
+      "sha256": "4eb30662755029442b5a1bbb61377e234612bca2bf397cf141f19dc6a7d68de8"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "68221d0ddd3533884d3855e7ce3997d6d59651e446294cc008f4ec825bc93d02",
+    "README.md": "45fb0536e64a3826440545f036c8fb8558674515993aadd3df46acf755b24d27"
+  },
+  "reproduction": {
+    "state": "GA",
+    "state_fips": "13",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_13_tabblock20/tl_2020_13_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_13_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/ga"
+  },
+  "claim_boundary": "Descriptive compactness measurements of GA block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

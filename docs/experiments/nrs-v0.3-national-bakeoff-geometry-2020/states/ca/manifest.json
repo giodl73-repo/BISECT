@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "CA",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ca/package/baseline_assignments.json",
+      "sha256": "209bbe17ae9dccd114e87c64aa66caf306e37f286dc1bb68f5d8f4710397304e"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_06_tabblock20/tl_2020_06_tabblock20.shp",
+      "sha256": "52e8fd49849cc84054291b1d93325db40e37114afc32347e34cc195aea2f6cdc"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_06_tabblock20/tl_2020_06_tabblock20.shx",
+      "sha256": "9819b25ef578c41bc21424a14ae7742b68970d5f79bbffaaf489b984d13151c1"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_06_tabblock20/tl_2020_06_tabblock20.dbf",
+      "sha256": "442a4f016980dbfae4c4451e1f2868e4f4524acf9fb159c274bfd96c36cb9f84"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_06_tabblock20/tl_2020_06_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_06_tabblock20/tl_2020_06_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_06_cd118.zip",
+      "sha256": "0b2e5235d92bec3cea962ad722b0a951d78e1b8623f92a70ebf6c8542eebc3fc"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "f1b5a8228e767ab73c81046aaf6d35c93bf005c82d65293b7c88d3b19480c66b",
+    "README.md": "261ef2dc08dc113120dd86124a14a47f621abfa3e4697efdda9884a2201bb480"
+  },
+  "reproduction": {
+    "state": "CA",
+    "state_fips": "06",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/ca/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_06_tabblock20/tl_2020_06_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_06_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/ca"
+  },
+  "claim_boundary": "Descriptive compactness measurements of CA block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

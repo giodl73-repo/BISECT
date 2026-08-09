@@ -1,0 +1,74 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-manifest-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "TX",
+  "census_year": 2020,
+  "inputs": [
+    {
+      "path": "runs/nrs-v0.3/neutral-analysis/national-2020/states/tx/package/baseline_assignments.json",
+      "sha256": "9aa031f60d16592450f77b4b491883b394d308d59ecddba5af74f122a5371be2"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_48_tabblock20/tl_2020_48_tabblock20.shp",
+      "sha256": "320365c396459d395bbfaf6c67a61d5077173ae770bc24f9ddd9999e99b65ae3"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_48_tabblock20/tl_2020_48_tabblock20.shx",
+      "sha256": "908fa2fc6163a7f782cc75066a255d6056d6f9c833bbffbfc1cfd22b9fef14b5"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_48_tabblock20/tl_2020_48_tabblock20.dbf",
+      "sha256": "f3b41f801bd65ccba9940bf0a16898067cbee71b42733f95484a5aa0ae5c79a0"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_48_tabblock20/tl_2020_48_tabblock20.prj",
+      "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd"
+    },
+    {
+      "path": "data/2020/tiger/blocks/tl_2020_48_tabblock20/tl_2020_48_tabblock20.cpg",
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/enacted_districts/tl_2020_48_cd118.zip",
+      "sha256": "36dcc3b87d6ce72011f40b7751c053e6b877c9e221cb11523c98e09ad5297b64"
+    }
+  ],
+  "code": [
+    {
+      "path": "docs/specs/2026-08-08-nrs-v0.3-tier2-geometry-protocol.md",
+      "sha256": "90ba0cdb5a53040f19860bb8e28d3e9cb45ddc36a0409bcaecfc44c1418bdfd9"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
+      "sha256": "1d798538492c3e42966eb33ae297a47beca5b62fff992189f8db06ad55b6e748"
+    },
+    {
+      "path": "scripts/research/verify_nrs_bakeoff_geometry_slice.py",
+      "sha256": "bf344d44fb0d94da97c8e97f1ba277e638cacd4c7ff7c54a4a35382cafeaa85e"
+    },
+    {
+      "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
+      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "bf9aac941df31a6b1889b46cc5bb25fd3cbb9d10b1902f062db0f44ba78bc4ae",
+    "README.md": "368f4cae51a7de4f0a13de75d63db9b08fda2522fb5ffac196b1701cf3238ba6"
+  },
+  "reproduction": {
+    "state": "TX",
+    "state_fips": "48",
+    "year": 2020,
+    "projection": "EPSG:5070",
+    "nrs_assignment": "runs/nrs-v0.3/neutral-analysis/national-2020/states/tx/package/baseline_assignments.json",
+    "block_shapefile": "data/2020/tiger/blocks/tl_2020_48_tabblock20/tl_2020_48_tabblock20.shp",
+    "comparator_source": "data/enacted_districts/tl_2020_48_cd118.zip",
+    "comparator_state_column": "STATEFP20",
+    "comparator_district_column": "CD118FP",
+    "comparator_session_column": "CDSESSN",
+    "expected_session": "118",
+    "display_output_dir": "docs/experiments/nrs-v0.3-national-bakeoff-geometry-2020/states/tx"
+  },
+  "claim_boundary": "Descriptive compactness measurements of TX block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}

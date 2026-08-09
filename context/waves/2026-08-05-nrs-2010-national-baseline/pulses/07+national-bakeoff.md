@@ -24,6 +24,8 @@ plans without changing the generator or promoting incomplete metric families.
 - [x] National Tier 1 execution plan.
 - [x] National Tier 1 execution across 50 States.
 - [x] Exact regeneration of all 50 State packages.
+- [x] Rhode Island Tier 2 geometry proof slice.
+- [x] National Tier 2 geometry execution across 50 States.
 
 ## Slice Result
 
@@ -53,11 +55,23 @@ the two plan families under the frozen atomic universe; they do not establish
 superiority, compactness, population balance, partisanship, or legal validity.
 The national verifier re-hashed inputs and regenerated every State package.
 
+## National Tier 2 Geometry Result
+
+The sequential geometry package passed 50 States, 435 districts per plan
+family, and 7,889,194 retained blocks with zero failures. Under the common
+block-projected geometry contract, both State-weighted and district-weighted
+means place the comparator above NRS on Polsby--Popper, exact Reock, and
+convex-hull ratio and below NRS on Schwartzberg.
+
+These are aligned descriptive compactness summaries, not measurements of
+original enacted linework and not a superiority, fairness, or legal finding.
+
 ## Governing Boundary
 
-Tier 1 covers common-unit assignment and county/tract splits. Geometry,
-elections, demographics, sensitivity, and ensembles remain separate gates.
-No output may use winner, fairness, neutrality, or legal-compliance framing.
+Tier 1 covers common-unit assignment and county/tract splits. Tier 2 covers
+common-block geometry. Elections, demographics, ensembles, and non-enacted
+national comparators remain separate gates. No output may use winner,
+fairness, neutrality, or legal-compliance framing.
 
 ## Validation
 

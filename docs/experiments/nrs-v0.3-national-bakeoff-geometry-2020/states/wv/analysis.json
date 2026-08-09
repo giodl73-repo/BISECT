@@ -1,0 +1,108 @@
+{
+  "schema_version": "nrs-v0.3-bakeoff-geometry-slice-analysis-v1",
+  "protocol_id": "nrs-v0.3-tier2-geometry-v1",
+  "status": "pass",
+  "state": "WV",
+  "state_fips": "54",
+  "census_year": 2020,
+  "geometry_contract": {
+    "atomic_unit": "2020-census-tabulation-block",
+    "projection": "EPSG:5070",
+    "source_blocks": 72558,
+    "excluded_water_only_blocks": 3550,
+    "retained_blocks": 69008,
+    "dissolve": "GEOS unary union by complete block assignment",
+    "perimeter": "complete dissolved boundary including multipart components and interior rings",
+    "repair": "none",
+    "comparator_geometry": "Tier 1 block projection, not original district polygon linework"
+  },
+  "benchmark": {
+    "plan_family": "NRS-v0.3",
+    "districts": 2,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 33211,
+        "area_m2": 25665739053.180054,
+        "perimeter_m": 5806824.109788298,
+        "minimum_bounding_radius_m": 175595.45296481383,
+        "polsby_popper": 0.00956502910296218,
+        "reock": 0.264958203442005,
+        "convex_hull_ratio": 0.5158600176818597,
+        "schwartzberg": 10.224847799887398,
+        "component_count": 16,
+        "interior_ring_count": 234
+      },
+      {
+        "district": 2,
+        "block_count": 35797,
+        "area_m2": 36764987043.41916,
+        "perimeter_m": 7233288.289213323,
+        "minimum_bounding_radius_m": 192499.473473393,
+        "polsby_popper": 0.008830244563154439,
+        "reock": 0.31580969094014305,
+        "convex_hull_ratio": 0.7003126202418817,
+        "schwartzberg": 10.641764258659164,
+        "component_count": 13,
+        "interior_ring_count": 405
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.009197636833058308,
+      "reock": 0.290383947191074,
+      "convex_hull_ratio": 0.6080863189618707,
+      "schwartzberg": 10.43330602927328
+    }
+  },
+  "comparator": {
+    "plan_family": "enacted-congressional-session-118",
+    "districts": 2,
+    "district_metrics": [
+      {
+        "district": 1,
+        "block_count": 36260,
+        "area_m2": 37232284495.362755,
+        "perimeter_m": 7220644.693837801,
+        "minimum_bounding_radius_m": 158579.45810353014,
+        "polsby_popper": 0.008973825042004726,
+        "reock": 0.47127668279803536,
+        "convex_hull_ratio": 0.7914410191954493,
+        "schwartzberg": 10.556287287748162,
+        "component_count": 11,
+        "interior_ring_count": 428
+      },
+      {
+        "district": 2,
+        "block_count": 32748,
+        "area_m2": 25198441601.236732,
+        "perimeter_m": 4653501.9669643715,
+        "minimum_bounding_radius_m": 172774.73430658758,
+        "polsby_popper": 0.014622571143923855,
+        "reock": 0.26869732470860525,
+        "convex_hull_ratio": 0.49854513271550543,
+        "schwartzberg": 8.26966902970387,
+        "component_count": 16,
+        "interior_ring_count": 213
+      }
+    ],
+    "unweighted_mean": {
+      "polsby_popper": 0.01179819809296429,
+      "reock": 0.3699870037533203,
+      "convex_hull_ratio": 0.6449930759554774,
+      "schwartzberg": 9.412978158726016
+    }
+  },
+  "comparator_minus_benchmark_unweighted_mean": {
+    "polsby_popper": 0.0026005612599059817,
+    "reock": 0.07960305656224625,
+    "convex_hull_ratio": 0.03690675699360668,
+    "schwartzberg": -1.0203278705472645
+  },
+  "unavailable_metrics": {
+    "population": "Not part of the Tier 2 geometry contract.",
+    "partisan": "Named elections and precinct-to-block inputs are not frozen.",
+    "demographic_and_vra": "No frozen within-unit demographic allocation or legal analysis.",
+    "ensemble": "No converged block-level ensemble exists for this comparison."
+  },
+  "claim_boundary": "Descriptive compactness measurements of WV block-projected NRS v0.3 and enacted CD118 assignments under one frozen geometry contract; no compactness superiority, fairness, intent, VRA, legal-validity, community, robustness, optimality, or adoption claim."
+}
