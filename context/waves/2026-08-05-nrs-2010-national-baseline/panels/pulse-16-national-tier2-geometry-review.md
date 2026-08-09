@@ -12,8 +12,9 @@
   the accepted complete-boundary rule.
 - DATUM: publish district and State ledgers, both national estimands, source
   counts, and all failures.
-- SCALE: process exactly one State at a time and record elapsed time. Do not
-  parallelize regeneration.
+- SCALE: process exactly one State at a time and record elapsed time in the
+  execution transcript, not deterministic package content. Do not parallelize
+  regeneration.
 - BENCHMARK: require 50 States, 435 districts per plan family, exact ledger
   recomputation, and byte-identical clean-tree regeneration.
 - BOUNDARY: heterogeneous State geometry makes a national mean descriptive
