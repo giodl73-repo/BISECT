@@ -9,7 +9,7 @@
     },
     {
       "path": "scripts/research/run_nrs_bakeoff_geometry_national.py",
-      "sha256": "0e6b7f0a07614bb0d9e30198457498378bf293dea84446134177e875c7166de2"
+      "sha256": "e3fa4e8840b29244ef455085adac47468e57f046deaa1b51d4aa8261ce3d8b0a"
     },
     {
       "path": "scripts/research/verify_nrs_bakeoff_geometry_national.py",

@@ -313,7 +313,7 @@ python scripts/research/verify_nrs_bakeoff_geometry_national.py `
         },
         "reproduction": {
             "nrs_root": nrs_root.resolve().relative_to(ROOT.resolve()).as_posix(),
-            "output_dir": output_dir.resolve().relative_to(ROOT.resolve()).as_posix(),
+            "output_dir": canonical_dir,
             "workers": 1,
         },
         "claim_boundary": CLAIM_BOUNDARY,
