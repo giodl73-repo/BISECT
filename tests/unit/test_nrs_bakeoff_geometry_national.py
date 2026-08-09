@@ -7,13 +7,24 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "research"))
 
-from run_nrs_bakeoff_geometry_national import metric_summary, projection_for_state
+from run_nrs_bakeoff_geometry_national import (
+    canonical_output_dir,
+    metric_summary,
+    projection_for_state,
+)
 
 
 def test_projection_selection_matches_frozen_regions() -> None:
     assert projection_for_state("AK") == "EPSG:3338"
     assert projection_for_state("HI") == "EPSG:3759"
     assert projection_for_state("RI") == "EPSG:5070"
+
+
+def test_explicit_display_path_supports_temporary_regeneration(tmp_path) -> None:
+    assert (
+        canonical_output_dir(tmp_path / "package", "docs/experiments/package")
+        == "docs/experiments/package"
+    )
 
 
 def test_metric_summary_separates_state_and_district_estimands() -> None:

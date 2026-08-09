@@ -94,9 +94,23 @@ def metric_summary(state_rows: list[dict], district_rows: list[dict]) -> dict:
     return result
 
 
-def run_national(nrs_root: Path, output_dir: Path) -> None:
+def canonical_output_dir(output_dir: Path, display_output_dir: str | None) -> str:
+    if display_output_dir:
+        return display_output_dir.replace("\\", "/").rstrip("/")
+    try:
+        return output_dir.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError as error:
+        raise ValueError(
+            "--display-output-dir is required when --output-dir is outside the repository"
+        ) from error
+
+
+def run_national(
+    nrs_root: Path, output_dir: Path, display_output_dir: str | None = None
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     states_dir = output_dir / "states"
+    canonical_dir = canonical_output_dir(output_dir, display_output_dir)
     state_rows: list[dict] = []
     district_rows: list[dict] = []
     failures: list[dict] = []
@@ -134,10 +148,7 @@ def run_national(nrs_root: Path, output_dir: Path) -> None:
                 comparator_district_column="CD118FP",
                 comparator_session_column="CDSESSN",
                 expected_session="118",
-                display_output_dir=(
-                    f"{output_dir.resolve().relative_to(ROOT.resolve()).as_posix()}"
-                    f"/states/{state.lower()}"
-                ),
+                display_output_dir=f"{canonical_dir}/states/{state.lower()}",
             )
             analysis = json.loads(
                 (state_dir / "analysis.json").read_text(encoding="utf-8")
@@ -322,8 +333,9 @@ def main() -> None:
         default=Path("runs/nrs-v0.3/neutral-analysis/national-2020"),
     )
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--display-output-dir")
     args = parser.parse_args()
-    run_national(args.nrs_root, args.output_dir)
+    run_national(args.nrs_root, args.output_dir, args.display_output_dir)
 
 
 if __name__ == "__main__":

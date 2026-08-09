@@ -75,6 +75,8 @@ def main() -> None:
                 manifest["reproduction"]["nrs_root"],
                 "--output-dir",
                 str(regenerated),
+                "--display-output-dir",
+                manifest["reproduction"]["output_dir"],
             ],
             cwd=root,
             check=False,

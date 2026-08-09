@@ -9,11 +9,11 @@
     },
     {
       "path": "scripts/research/run_nrs_bakeoff_geometry_national.py",
-      "sha256": "a1011dcb5b20d97415d2588e84bc97b17b9ae555fd971c5d7571ee909ed3c9e0"
+      "sha256": "0e6b7f0a07614bb0d9e30198457498378bf293dea84446134177e875c7166de2"
     },
     {
       "path": "scripts/research/verify_nrs_bakeoff_geometry_national.py",
-      "sha256": "ec72bc6e21fdc082bb235548adf97bc8d7369e4bc6ab73405b072aebdd4c58eb"
+      "sha256": "88fd589ccd3453a43a04647afae99e74ea6d9b1315618cc86b01dd8d6ae2cd6d"
     },
     {
       "path": "scripts/research/analyze_nrs_bakeoff_geometry_slice.py",
