@@ -1,0 +1,40 @@
+{
+  "schema_version": "nrs-block-ensemble-preflight-summary-v1",
+  "status": "pass",
+  "execution_class": "excluded-engineering-preflight",
+  "state": "RI",
+  "units": 25649,
+  "districts": 2,
+  "steps_per_kernel": 25,
+  "chains_per_kernel": 1,
+  "base_seed": 20260810,
+  "population_tolerance": 0.005,
+  "runner_source_sha256": "a81f40baf5d6a58f916b4cba3e3c99d47d272687e7faf6b5cc1c9bb6b95df94f",
+  "runner_executable_sha256": "4ce59061f9fa117e950ddd971806bfa00222d567433071b210aaeb96d18edb96",
+  "kernels": {
+    "wilson": {
+      "accepted_steps": 25,
+      "acceptance_rate": 1.0,
+      "mean_step_runtime_ms": 177.758,
+      "maximum_step_runtime_ms": 355.522,
+      "maximum_population_deviation": 0.00491443695500493,
+      "snapshot_count": 2,
+      "trace_bytes": 108012,
+      "trace_sha256": "948aaab0ac0d1d1fadf554904d7e090e28ce9acaf4fd82991fb680e37089b30b",
+      "normalized_replay": "pass"
+    },
+    "kruskal": {
+      "accepted_steps": 25,
+      "acceptance_rate": 1.0,
+      "mean_step_runtime_ms": 61.259,
+      "maximum_step_runtime_ms": 153.93,
+      "maximum_population_deviation": 0.00462647806853056,
+      "snapshot_count": 2,
+      "trace_bytes": 108012,
+      "trace_sha256": "5285d41d3a5a8c7978f3a5b2a712be12797501ce92f87f04c6c0d99e91e96b52",
+      "normalized_replay": "pass"
+    }
+  },
+  "decision": "Stage 0 engineering feasibility passed; implement governed trace analysis and verification before Stage 1 execution.",
+  "claim_boundary": "These excluded samples cannot enter percentiles, convergence diagnostics, paper tables, or stopping decisions."
+}

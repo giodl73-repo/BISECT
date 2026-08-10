@@ -167,7 +167,7 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
-| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | package/diagnostic framing updated |
+| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | tract package plus governed RI block-kernel sensitivity integrated |
 | G.1 | Real ReCom Comparison — RI/IA/NC, Rust vs GerryChain | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | active real package; WI eligibility failure retained |
 | G.2 | 2020 Presidential Seat Distributions — RI/IA/NC | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | active real package; 2016 excluded for tract mismatch |
 | G.3 | Tract Cut-Fraction Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | active real package; polygon compactness claims withdrawn |
@@ -183,10 +183,20 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.13 | VRA-Aware Ensemble — chains preserving majority-minority districts | [PDF](papers/G.13+vra-aware-ensemble.pdf) | **Accepted** 3.8/4 — `--search vra-recom` |
 | G.14 | A Practitioner's Comparison of Redistricting Ensemble Algorithms | [PDF](papers/G.14+ensemble-comparison.pdf) | **Accepted** 4.0/4 |
 
-**Evidence package (G.1-G.3):** `docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/`
-is hash-bound and validates the current gap: headline compactness and partisan
-percentiles still require archived external traces, election/metric inputs,
-diagnostics, and RPLAN/RCTX plan packages before being cited as final findings.
+**Evidence package (G.1-G.3):** `docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020/`
+is the active, hash-bound RI/IA/NC package. It archives Rust and GerryChain
+traces, election/metric inputs, diagnostics, and audited RPLAN/RCTX baselines.
+The retained findings are tract cut-fraction and 2020 presidential-seat
+diagnostics only; the package does not support national, polygon-compactness,
+cross-election, legal, or block-level ensemble claims. The older synthetic and
+missing-evidence packages remain as development history.
+
+**Block-level Stage 1 evidence:**
+`docs/experiments/nrs-v0.3-block-ensemble-gate/` is the frozen Rhode Island
+block package. Its four Wilson and four Kruskal chains passed the registered
+scalar rules and regenerated normalized traces exactly. The differing cut
+distributions support kernel-sensitivity reporting only; multi-State and
+national expansion remain closed behind a separate resource/protocol gate.
 
 ---
 

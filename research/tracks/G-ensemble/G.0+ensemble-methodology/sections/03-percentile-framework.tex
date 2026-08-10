@@ -66,32 +66,31 @@ partisan sorting (Georgia, Texas).
 The percentile $\pi_f(P^*)$ depends on the choice of ensemble $\mathcal{E}$.
 Different chain types (flip vs.\ \recom{}) produce different distributions;
 different ensemble sizes affect statistical precision; different population
-tolerance bounds affect plan diversity.  In G.1, we use published ensemble
-results from \citet{herschlag2020quantifying} for North Carolina and
-\citet{deford2021recombination} for other states, acknowledging that these
-are \recom{} ensembles with $N \geq 10{,}000$ and population tolerance
-$\pm 0.5\%$.
-
-Where published ensembles are unavailable, we use literature-reported
-distributional summaries (mean, standard deviation, approximate percentile
-bounds) to bound $\pi_f(P^*)$.  These bounds are marked with \est{} throughout
-the G-track papers.
+tolerance bounds affect plan diversity. G.1 applies this framework to
+preregistered Rust and GerryChain ReCom chains for Rhode Island, Iowa, and
+North Carolina. Each implementation uses four 2,000-step chains, a 500-step
+burn-in, and 0.5\% population tolerance. The archived package retains low-ESS
+and cross-tool-disagreement results rather than substituting literature
+summaries or an adaptively extended run.
 
 \subsection{Package Evidence Boundary}
 
 The percentile in Equation~\ref{eq:percentile} is an evidence claim only when
 both sides of the comparison are archived.  A complete G-track package must bind
 the external trace, the deterministic \textsc{bisect} plan, the RCTX context, the
-metric output, and any election-input model used for partisan seats.  The current
-repository records two complementary fixtures:
+metric output, and any election-input model used for partisan seats.  The
+repository records an active real package plus two historical fixtures:
 \begin{itemize}
+  \item \texttt{docs/examples/g-ensemble-evidence-packages/G.1-G.3+real-2020/}
+    is the active RI/IA/NC empirical package, with real traces, diagnostics,
+    election inputs, audited BISECT plans, and RCTX contexts.
   \item \texttt{docs/examples/g-ensemble-evidence-packages/G.1-G.3+active-synthetic/}
-    is an active synthetic package that exercises every required artifact role.
+    is the earlier synthetic contract fixture.
   \item \texttt{docs/examples/g-ensemble-evidence-packages/G.1-G.3+missing-evidence/}
-    records the remaining real external-trace, election, metric, diagnostic,
-    RPLAN, and RCTX gaps for headline G.1--G.3 empirical percentiles.
+    preserves the previously declared evidence gap.
 \end{itemize}
 
-Thus, G.0 should be read as the methodology contract.  The synthetic package
-shows that the contract is executable; real state percentile claims require real
-packages with the same roles.
+Thus, G.0 remains the methodology contract. The real package supports only its
+declared tract cut-fraction and 2020 presidential-seat results. It does not
+upgrade those three states into national, block-level, polygon-compactness, or
+legal evidence.

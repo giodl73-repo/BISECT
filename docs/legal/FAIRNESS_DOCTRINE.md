@@ -96,8 +96,14 @@ The bisection accepts additional constraints — VRA-awareness (`partition-mode 
 A single bisection produces one plan, and many plans satisfy the constraints.
 An adequately sampled ensemble can estimate a distribution under one
 precommitted legal and algorithmic profile. It cannot bound every neutral
-output or define neutrality. Current G.1--G.3 packages remain synthetic with
-missing real traces, so exact percentile claims are not release-grade evidence.
+output or define neutrality. The active G.1--G.3 package archives real RI/IA/NC
+Rust and GerryChain traces, but supports only the reported tract cut-fraction
+and 2020 presidential-seat diagnostics. Iowa and North Carolina retain ESS
+limitations, and the package is not national or block-level evidence.
+A separate governed Rhode Island block package completed four chains per
+kernel, passed its registered scalar rules, and regenerated exactly. Its
+material Wilson-versus-Kruskal differences support kernel sensitivity, not
+sampler equivalence, mixing proof, or national inference.
 
 The just-shipped `bisect-analysis::ensemble_diagnostics` module provides the convergence diagnostics a court can use to verify the ensemble was sufficient:
 
@@ -105,7 +111,11 @@ The just-shipped `bisect-analysis::ensemble_diagnostics` module provides the con
 - **Effective Sample Size (ESS)** on summary statistics (efficiency gap, mean-median, MM count) — flag if ESS < 100 (indicates excessive autocorrelation)
 - **Hamming-distance autocorrelation** on the partition trajectory itself, with integrated autocorrelation time `tau_int` (partition-space mixing measure that ESS-on-statistics can't capture)
 
-The ensemble GENERATION (MCMC wrapper around GerryChain) is a deferred Researcher Toolkit task; the diagnostic MATH that validates an ensemble exists today.
+Real ensemble generation and diagnostic replay exist today for the bounded
+G.1--G.3 tract package and the separate Rhode Island block slice. A national
+block-level expansion remains deferred until its own protocol freezes the
+graph, starting plans, samplers, stopping rules, instrumented resource budget,
+and claim boundary.
 
 ---
 
@@ -124,18 +134,20 @@ The ensemble GENERATION (MCMC wrapper around GerryChain) is a deferred Researche
 
 ---
 
-## 3. What courts can verify after the deferred work lands
+## 3. What remains beyond the bounded ensemble package
 
 The full Rucho-overcoming methodology requires a small number of additional pieces. Each is documented in a per-capability plan with explicit deferral notes.
 
 | Question | What's needed | Deferred by |
 |---|---|---|
-| "Where does this plan fall in the distribution of all neutral alternatives?" | MCMC ensemble generator + percentile-rank computation | Researcher Toolkit Task 5 + 6 (`BISECT research validate-ensemble`, `scripts/research/mcmc_ensemble.py`) |
-| "Did the ensemble explore enough partition space to bound neutrality?" | R-hat / ESS / Hamming tau_int on the actual generated ensemble | Researcher Toolkit Task 7 (the math just shipped — needs ensemble generation to consume it) |
+| "Where does this plan fall in a national block-level distribution?" | A separately frozen and executed national block-level ensemble protocol; the completed Rhode Island kernel-sensitivity slice is not national evidence | Certified National Roadmap Stage 6 ensemble expansion gate |
+| "Did the ensemble explore enough partition space to support a tail claim?" | R-hat / ESS / Hamming tau_int on each generated ensemble; the RI/IA/NC package demonstrates these gates and retains failures | Extend only under the frozen protocol; do not reuse tract-level diagnostics as national evidence |
 | "Court-formatted PDF/A-2b expert report" | Typst rendering + verapdf gate | Court Submission Reports Tasks 4-7 |
 | "Civic-friendly comparison narrative for press release / public-comment record" | Narrative renderer + `[DRAFT]` gate (shipped as library); CLI dispatch | Plan Comparison Task 11 |
 
-The narrative-renderer + ensemble-diagnostics + provenance-chain pieces are shipped. The ensemble GENERATION is the missing connector.
+The narrative-renderer, ensemble generation, diagnostics, and provenance-chain
+pieces are exercised by the bounded real package. The missing connector is a
+separately governed national block-level execution, not basic MCMC capability.
 
 ---
 

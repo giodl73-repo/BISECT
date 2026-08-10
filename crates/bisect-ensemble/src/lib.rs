@@ -5,6 +5,7 @@
 //! Solomon 2021). Uses Wilson's loop-erased random walk for uniform random
 //! spanning trees.
 
+pub mod block_input;
 pub mod chain;
 pub mod evidence_manifest;
 pub mod forest_recom;
