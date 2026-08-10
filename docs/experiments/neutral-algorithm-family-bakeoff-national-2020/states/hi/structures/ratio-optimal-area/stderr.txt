@@ -1,0 +1,3 @@
+NOTE: Running congressional (2D). HI also has house (51D) and senate (25D). Use --chamber house or --chamber senate.
+[partition-time] HI: k=2 n=461 -> 6.4ms
+[OK] HI in 172ms

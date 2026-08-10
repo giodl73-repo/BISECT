@@ -1,0 +1,30 @@
+{
+  "protocol_id": "neutral-algorithm-family-bakeoff-v1",
+  "structure": "ratio-optimal",
+  "status": "pass",
+  "requested_seed": 0,
+  "command": [
+    "target/release/bisect.exe",
+    "state",
+    "--state",
+    "WI",
+    "--year",
+    "2020",
+    "--output-dir",
+    "{PACKAGE}/structures/ratio-optimal/native",
+    "--partition-mode",
+    "edge-weighted",
+    "--structure",
+    "ratio-optimal",
+    "--weights-override",
+    "geographic",
+    "--search",
+    "single",
+    "--seed",
+    "0",
+    "--manifest",
+    "--force",
+    "--time-partition"
+  ],
+  "returncode": 0
+}

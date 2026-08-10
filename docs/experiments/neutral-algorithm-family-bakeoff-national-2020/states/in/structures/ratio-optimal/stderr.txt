@@ -1,0 +1,27 @@
+NOTE: Running congressional (9D). IN also has house (100D) and senate (50D). Use --chamber house or --chamber senate.
+[geosection] trying 4 ratios x 1 seeds for k=9
+[geosection]   ratio 1:8 best=152km  normalised=152.1
+[geosection]   ratio 2:7 best=339km  normalised=239.4
+[geosection]   ratio 3:6 best=392km  normalised=226.1
+[geosection]   ratio 4:5 best=345km  normalised=172.4
+[geosection] natural ratio 1:8 at 152km (normalised=152.1)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=149km  normalised=148.8
+[geosection]   ratio 2:6 best=269km  normalised=190.4
+[geosection]   ratio 3:5 best=360km  normalised=207.8
+[geosection]   ratio 4:4 best=387km  normalised=193.7
+[geosection] natural ratio 1:7 at 149km (normalised=148.8)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=242km  normalised=242.1
+[geosection]   ratio 2:5 best=348km  normalised=246.3
+[geosection]   ratio 3:4 best=282km  normalised=162.6
+[geosection] natural ratio 3:4 at 282km (normalised=162.6)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=261km  normalised=260.9
+[geosection] natural ratio 1:2 at 261km (normalised=260.9)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=220km  normalised=220.5
+[geosection]   ratio 2:2 best=304km  normalised=215.2
+[geosection] natural ratio 2:2 at 304km (normalised=215.2)
+[partition-time] IN: k=9 n=1696 -> 447.9ms
+[OK] IN in 617ms

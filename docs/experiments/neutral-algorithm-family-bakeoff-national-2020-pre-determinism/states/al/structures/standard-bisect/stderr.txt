@@ -1,0 +1,3 @@
+NOTE: Running congressional (7D). AL also has house (105D) and senate (35D). Use --chamber house or --chamber senate.
+[partition-time] AL: k=7 n=1437 -> 88.1ms
+[OK] AL in 462ms

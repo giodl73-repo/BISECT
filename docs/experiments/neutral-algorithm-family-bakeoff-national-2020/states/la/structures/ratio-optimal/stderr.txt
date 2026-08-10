@@ -1,0 +1,14 @@
+NOTE: Running congressional (6D). LA also has house (105D) and senate (39D). Use --chamber house or --chamber senate.
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=669km  normalised=669.3
+[geosection]   ratio 2:4 best=392km  normalised=277.3
+[geosection]   ratio 3:3 best=354km  normalised=204.3
+[geosection] natural ratio 3:3 at 354km (normalised=204.3)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=391km  normalised=391.0
+[geosection] natural ratio 1:2 at 391km (normalised=391.0)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=163km  normalised=163.5
+[geosection] natural ratio 1:2 at 163km (normalised=163.5)
+[partition-time] LA: k=6 n=1388 -> 297.5ms
+[OK] LA in 461ms

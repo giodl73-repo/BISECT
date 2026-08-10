@@ -1,0 +1,216 @@
+{
+  "state": "IL",
+  "state_slug": "illinois",
+  "expected_districts": 17,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "IL",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3265,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 2742417.954142,
+      "canonical_assignment_sha256": "12ad9fa3bf832eef5a7952c44fa98eafd64cc40f32e504d9afc21853d20d9069",
+      "adjacency_sha256": "68899a83d024080fbd8a12e30f6d2e31f2541b5dabd84d62e9ebc64ca92ddf5a",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "IL",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3265,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 2326489.554731,
+      "canonical_assignment_sha256": "ccae8358befe68b7e1c62b65c7963b65287a9966aad2d741f92a559575b69fe7",
+      "adjacency_sha256": "68899a83d024080fbd8a12e30f6d2e31f2541b5dabd84d62e9ebc64ca92ddf5a",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.848335153005
+    },
+    {
+      "state": "IL",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3265,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 2877760.041849,
+      "canonical_assignment_sha256": "60b1f40b025347f95587ce36b8765a8fc09b0335d56975fc796c51e794613343",
+      "adjacency_sha256": "68899a83d024080fbd8a12e30f6d2e31f2541b5dabd84d62e9ebc64ca92ddf5a",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.049351371662
+    },
+    {
+      "state": "IL",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3265,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 2945870.00655,
+      "canonical_assignment_sha256": "8c1d53396b1963b633f9501249fc51ae79396f63ac9907a5c6b77c34290a56db",
+      "adjacency_sha256": "68899a83d024080fbd8a12e30f6d2e31f2541b5dabd84d62e9ebc64ca92ddf5a",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.074187106346
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "68899a83d024080fbd8a12e30f6d2e31f2541b5dabd84d62e9ebc64ca92ddf5a"
+      ],
+      "binary_sha256": [
+        "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "3265"
+      ],
+      "districts": [
+        "17"
+      ],
+      "expected_districts": [
+        "17"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "IL",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1929,
+      "different_units": 1336,
+      "matched_unit_rate": 0.590811638591118
+    },
+    {
+      "state": "IL",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 1568,
+      "different_units": 1697,
+      "matched_unit_rate": 0.48024502297090355
+    },
+    {
+      "state": "IL",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1875,
+      "different_units": 1390,
+      "matched_unit_rate": 0.5742725880551302
+    },
+    {
+      "state": "IL",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 2013,
+      "different_units": 1252,
+      "matched_unit_rate": 0.6165390505359878
+    },
+    {
+      "state": "IL",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 2033,
+      "different_units": 1232,
+      "matched_unit_rate": 0.6226646248085758
+    },
+    {
+      "state": "IL",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 2006,
+      "different_units": 1259,
+      "matched_unit_rate": 0.6143950995405819
+    }
+  ]
+}

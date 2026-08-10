@@ -1,0 +1,216 @@
+{
+  "state": "CT",
+  "state_slug": "connecticut",
+  "expected_districts": 5,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "CT",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 883,
+      "districts": 5,
+      "expected_districts": 5,
+      "edge_cut": 433833.201493,
+      "canonical_assignment_sha256": "7387a23998c760177c419d9fb32c294dcc4c5045eb113bdb12236bc118793f0e",
+      "adjacency_sha256": "20a272b97f76ea16d1fedfdd38f1f07e66f438b2bfe4236e439032a2dc35f743",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "CT",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 883,
+      "districts": 5,
+      "expected_districts": 5,
+      "edge_cut": 442812.773053,
+      "canonical_assignment_sha256": "59eca329905cb4199655865eaf7f1e4daa9656172312f8d9b4721fcbaf77f16d",
+      "adjacency_sha256": "20a272b97f76ea16d1fedfdd38f1f07e66f438b2bfe4236e439032a2dc35f743",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.02069821196
+    },
+    {
+      "state": "CT",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 883,
+      "districts": 5,
+      "expected_districts": 5,
+      "edge_cut": 425718.943118,
+      "canonical_assignment_sha256": "672a397fc2ef9e5b9e757be9943a365fab08cbcb9e1175b567a2863fe03101fe",
+      "adjacency_sha256": "20a272b97f76ea16d1fedfdd38f1f07e66f438b2bfe4236e439032a2dc35f743",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.981296363794
+    },
+    {
+      "state": "CT",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 883,
+      "districts": 5,
+      "expected_districts": 5,
+      "edge_cut": 480035.518019,
+      "canonical_assignment_sha256": "fe265a1c3a28418b5d2d9432e7ee2cd431cc95dea981f1f311de0846b9cdf299",
+      "adjacency_sha256": "20a272b97f76ea16d1fedfdd38f1f07e66f438b2bfe4236e439032a2dc35f743",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.106497880676
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "20a272b97f76ea16d1fedfdd38f1f07e66f438b2bfe4236e439032a2dc35f743"
+      ],
+      "binary_sha256": [
+        "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "883"
+      ],
+      "districts": [
+        "5"
+      ],
+      "expected_districts": [
+        "5"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "CT",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 615,
+      "different_units": 268,
+      "matched_unit_rate": 0.6964892412231031
+    },
+    {
+      "state": "CT",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 583,
+      "different_units": 300,
+      "matched_unit_rate": 0.6602491506228766
+    },
+    {
+      "state": "CT",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 751,
+      "different_units": 132,
+      "matched_unit_rate": 0.8505096262740657
+    },
+    {
+      "state": "CT",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 740,
+      "different_units": 143,
+      "matched_unit_rate": 0.8380520951302378
+    },
+    {
+      "state": "CT",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 624,
+      "different_units": 259,
+      "matched_unit_rate": 0.7066817667044167
+    },
+    {
+      "state": "CT",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 580,
+      "different_units": 303,
+      "matched_unit_rate": 0.6568516421291053
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:6d868e1d5d7a120815121a594266e42c2755d38cab699a334a2ce82ac256e031",
+  "generated_at_utc": "2026-08-09T20:41:49Z",
+  "content_hash": "sha256:6d868e1d5d7a120815121a594266e42c2755d38cab699a334a2ce82ac256e031",
+  "plan_hash": "sha256:b2ad8cb6a16c90df11362adef82661a9949e19a2d3561707f7971712a884e70b",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:abcad1294a5d632a2aecf53b55c309e38db7b5ca0c9dd90a407c065b36b9a647",
+  "legal_profile_hash": "sha256:610db7c18a7218928ff4b59f799cb881b72053755a64764a49e7ef38b38585d1",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "NH",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:a05017152e173f7e86dfe3f3b27d2b38eb0b5117f21ed77e67ed606c43d3e6d7",
+    "geometry": "sha256:7a8a6c4bceff1e4d2cfed60474756185fb13cba50f670ab77b471fd67911bd3d"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "4 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "33011",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 103
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "33013",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 39
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "33015",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 73
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "33017",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 30
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "350 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-NH-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 350
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

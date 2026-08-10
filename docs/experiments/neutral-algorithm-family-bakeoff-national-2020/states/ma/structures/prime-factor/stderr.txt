@@ -1,0 +1,3 @@
+NOTE: Running congressional (9D). MA also has house (160D) and senate (40D). Use --chamber house or --chamber senate.
+[partition-time] MA: k=9 n=1620 -> 3.7ms
+[OK] MA in 150ms

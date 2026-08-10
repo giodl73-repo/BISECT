@@ -1,0 +1,216 @@
+{
+  "state": "NH",
+  "state_slug": "new_hampshire",
+  "expected_districts": 2,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "NH",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 350,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 224591.48316,
+      "canonical_assignment_sha256": "fc575929f71024a3b32cb71ef0faf82581d0358fc2aa92dbd80ed837d5c4d473",
+      "adjacency_sha256": "a05017152e173f7e86dfe3f3b27d2b38eb0b5117f21ed77e67ed606c43d3e6d7",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NH",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 350,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 224591.48316,
+      "canonical_assignment_sha256": "fc575929f71024a3b32cb71ef0faf82581d0358fc2aa92dbd80ed837d5c4d473",
+      "adjacency_sha256": "a05017152e173f7e86dfe3f3b27d2b38eb0b5117f21ed77e67ed606c43d3e6d7",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NH",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 350,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 224591.48316,
+      "canonical_assignment_sha256": "fc575929f71024a3b32cb71ef0faf82581d0358fc2aa92dbd80ed837d5c4d473",
+      "adjacency_sha256": "a05017152e173f7e86dfe3f3b27d2b38eb0b5117f21ed77e67ed606c43d3e6d7",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NH",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 350,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 139988.16813,
+      "canonical_assignment_sha256": "d40b197c6f621f6300cecd1a4e8725c655867a86ac26e88b1a31e83d76d9abd0",
+      "adjacency_sha256": "a05017152e173f7e86dfe3f3b27d2b38eb0b5117f21ed77e67ed606c43d3e6d7",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.62330132096
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "a05017152e173f7e86dfe3f3b27d2b38eb0b5117f21ed77e67ed606c43d3e6d7"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "350"
+      ],
+      "districts": [
+        "2"
+      ],
+      "expected_districts": [
+        "2"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "NH",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 350,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "NH",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 350,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "NH",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 237,
+      "different_units": 113,
+      "matched_unit_rate": 0.6771428571428572
+    },
+    {
+      "state": "NH",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 350,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "NH",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 237,
+      "different_units": 113,
+      "matched_unit_rate": 0.6771428571428572
+    },
+    {
+      "state": "NH",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 237,
+      "different_units": 113,
+      "matched_unit_rate": 0.6771428571428572
+    }
+  ]
+}

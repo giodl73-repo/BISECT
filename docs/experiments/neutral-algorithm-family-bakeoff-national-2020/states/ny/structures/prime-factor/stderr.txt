@@ -1,0 +1,3 @@
+NOTE: Running congressional (26D). NY also has house (150D) and senate (63D). Use --chamber house or --chamber senate.
+[partition-time] NY: k=26 n=5411 -> 14.0ms
+[OK] NY in 266ms

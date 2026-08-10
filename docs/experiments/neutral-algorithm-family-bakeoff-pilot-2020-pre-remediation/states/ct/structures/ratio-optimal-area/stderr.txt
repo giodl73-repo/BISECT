@@ -1,0 +1,14 @@
+NOTE: Running congressional (5D). CT also has house (151D) and senate (36D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 89.8% of population -> natural split ~4:1
+[areasection]   ratio 1:4 (20.0% pop): Lorenz area range [1.5%-68.2%] -> feasible
+[areasection]   ratio 2:3 (40.0% pop): Lorenz area range [5.4%-86.3%] -> feasible
+[areasection] 2 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:4 best=242km  normalised=242.4  area_left=43.2%
+[areasection]   ratio 2:3 best=169km  normalised=119.3  area_left=48.6%
+[areasection] natural ratio 2:3 at 169km (normalised=119.3)
+[areasection] winner: area=48.6% (target 50% ±10%, OK) pop=40.0% (target 40.0%)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=86km  normalised=85.5
+[geosection] natural ratio 1:2 at 86km (normalised=85.5)
+[partition-time] CT: k=5 n=883 -> 156.4ms
+[OK] CT in 306ms

@@ -1,0 +1,359 @@
+NOTE: Running congressional (52D). CA also has house (80D) and senate (40D). Use --chamber house or --chamber senate.
+[geosection] trying 26 ratios x 1 seeds for k=52
+[geosection]   ratio 1:51 best=48km  normalised=47.5
+[geosection]   ratio 2:50 best=96km  normalised=68.1
+[geosection]   ratio 3:49 best=102km  normalised=58.9
+[geosection]   ratio 4:48 best=155km  normalised=77.4
+[geosection]   ratio 5:47 best=140km  normalised=62.6
+[geosection]   ratio 6:46 best=147km  normalised=59.9
+[geosection]   ratio 7:45 best=192km  normalised=72.7
+[geosection]   ratio 8:44 best=190km  normalised=67.1
+[geosection]   ratio 9:43 best=188km  normalised=62.8
+[geosection]   ratio 10:42 best=214km  normalised=67.5
+[geosection]   ratio 11:41 best=224km  normalised=67.6
+[geosection]   ratio 12:40 best=247km  normalised=71.3
+[geosection]   ratio 13:39 best=247km  normalised=68.6
+[geosection]   ratio 14:38 best=395km  normalised=105.4
+[geosection]   ratio 15:37 best=378km  normalised=97.7
+[geosection]   ratio 16:36 best=477km  normalised=119.3
+[geosection]   ratio 17:35 best=343km  normalised=83.2
+[geosection]   ratio 18:34 best=469km  normalised=110.5
+[geosection]   ratio 19:33 best=409km  normalised=93.8
+[geosection]   ratio 20:32 best=522km  normalised=116.8
+[geosection]   ratio 21:31 best=515km  normalised=112.3
+[geosection]   ratio 22:30 best=579km  normalised=123.5
+[geosection]   ratio 23:29 best=636km  normalised=132.6
+[geosection]   ratio 24:28 best=797km  normalised=162.7
+[geosection]   ratio 25:27 best=747km  normalised=149.5
+[geosection]   ratio 26:26 best=699km  normalised=137.0
+[geosection] natural ratio 1:51 at 48km (normalised=47.5)
+[geosection] trying 25 ratios x 1 seeds for k=51
+[geosection]   ratio 1:50 best=54km  normalised=53.6
+[geosection]   ratio 2:49 best=84km  normalised=59.7
+[geosection]   ratio 3:48 best=215km  normalised=124.1
+[geosection]   ratio 4:47 best=119km  normalised=59.6
+[geosection]   ratio 5:46 best=124km  normalised=55.2
+[geosection]   ratio 6:45 best=120km  normalised=48.9
+[geosection]   ratio 7:44 best=160km  normalised=60.6
+[geosection]   ratio 8:43 best=213km  normalised=75.2
+[geosection]   ratio 9:42 best=192km  normalised=63.9
+[geosection]   ratio 10:41 best=234km  normalised=73.9
+[geosection]   ratio 11:40 best=332km  normalised=100.1
+[geosection]   ratio 12:39 best=254km  normalised=73.2
+[geosection]   ratio 13:38 best=298km  normalised=82.5
+[geosection]   ratio 14:37 best=298km  normalised=79.6
+[geosection]   ratio 15:36 best=271km  normalised=70.0
+[geosection]   ratio 16:35 best=416km  normalised=103.9
+[geosection]   ratio 17:34 best=470km  normalised=114.1
+[geosection]   ratio 18:33 best=430km  normalised=101.3
+[geosection]   ratio 19:32 best=505km  normalised=115.8
+[geosection]   ratio 20:31 best=559km  normalised=124.9
+[geosection]   ratio 21:30 best=653km  normalised=142.4
+[geosection]   ratio 22:29 best=560km  normalised=119.3
+[geosection]   ratio 23:28 best=592km  normalised=123.4
+[geosection]   ratio 24:27 best=635km  normalised=129.7
+[geosection]   ratio 25:26 best=920km  normalised=184.1
+[geosection] natural ratio 6:45 at 120km (normalised=48.9)
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=33km  normalised=33.5
+[geosection]   ratio 2:4 best=59km  normalised=41.4
+[geosection]   ratio 3:3 best=65km  normalised=37.5
+[geosection] natural ratio 1:5 at 33km (normalised=33.5)
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=61km  normalised=61.3
+[geosection]   ratio 2:3 best=47km  normalised=32.9
+[geosection] natural ratio 2:3 at 47km (normalised=32.9)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=36km  normalised=36.1
+[geosection] natural ratio 1:2 at 36km (normalised=36.1)
+[geosection] trying 22 ratios x 1 seeds for k=45
+[geosection]   ratio 1:44 best=128km  normalised=127.6
+[geosection]   ratio 2:43 best=85km  normalised=60.1
+[geosection]   ratio 3:42 best=115km  normalised=66.4
+[geosection]   ratio 4:41 best=150km  normalised=75.0
+[geosection]   ratio 5:40 best=173km  normalised=77.4
+[geosection]   ratio 6:39 best=220km  normalised=89.7
+[geosection]   ratio 7:38 best=232km  normalised=87.8
+[geosection]   ratio 8:37 best=253km  normalised=89.6
+[geosection]   ratio 9:36 best=330km  normalised=109.9
+[geosection]   ratio 10:35 best=344km  normalised=108.8
+[geosection]   ratio 11:34 best=395km  normalised=119.1
+[geosection]   ratio 12:33 best=397km  normalised=114.7
+[geosection]   ratio 13:32 best=436km  normalised=120.8
+[geosection]   ratio 14:31 best=386km  normalised=103.1
+[geosection]   ratio 15:30 best=949km  normalised=245.1
+[geosection]   ratio 16:29 best=457km  normalised=114.1
+[geosection]   ratio 17:28 best=501km  normalised=121.5
+[geosection]   ratio 18:27 best=544km  normalised=128.3
+[geosection]   ratio 19:26 best=679km  normalised=155.9
+[geosection]   ratio 20:25 best=576km  normalised=128.8
+[geosection]   ratio 21:24 best=699km  normalised=152.6
+[geosection]   ratio 22:23 best=819km  normalised=174.6
+[geosection] natural ratio 2:43 at 85km (normalised=60.1)
+[geosection] trying 21 ratios x 1 seeds for k=43
+[geosection]   ratio 1:42 best=62km  normalised=62.3
+[geosection]   ratio 2:41 best=96km  normalised=68.1
+[geosection]   ratio 3:40 best=164km  normalised=94.6
+[geosection]   ratio 4:39 best=149km  normalised=74.7
+[geosection]   ratio 5:38 best=178km  normalised=79.8
+[geosection]   ratio 6:37 best=164km  normalised=67.0
+[geosection]   ratio 7:36 best=278km  normalised=104.9
+[geosection]   ratio 8:35 best=329km  normalised=116.3
+[geosection]   ratio 9:34 best=392km  normalised=130.8
+[geosection]   ratio 10:33 best=411km  normalised=130.0
+[geosection]   ratio 11:32 best=400km  normalised=120.5
+[geosection]   ratio 12:31 best=370km  normalised=106.9
+[geosection]   ratio 13:30 best=405km  normalised=112.2
+[geosection]   ratio 14:29 best=417km  normalised=111.5
+[geosection]   ratio 15:28 best=460km  normalised=118.7
+[geosection]   ratio 16:27 best=460km  normalised=115.1
+[geosection]   ratio 17:26 best=548km  normalised=133.0
+[geosection]   ratio 18:25 best=606km  normalised=142.8
+[geosection]   ratio 19:24 best=652km  normalised=149.7
+[geosection]   ratio 20:23 best=879km  normalised=196.6
+[geosection]   ratio 21:22 best=940km  normalised=205.1
+[geosection] natural ratio 1:42 at 62km (normalised=62.3)
+[geosection] trying 21 ratios x 1 seeds for k=42
+[geosection]   ratio 1:41 best=159km  normalised=159.4
+[geosection]   ratio 2:40 best=92km  normalised=65.1
+[geosection]   ratio 3:39 best=123km  normalised=70.8
+[geosection]   ratio 4:38 best=138km  normalised=69.2
+[geosection]   ratio 5:37 best=214km  normalised=95.6
+[geosection]   ratio 6:36 best=355km  normalised=145.0
+[geosection]   ratio 7:35 best=341km  normalised=129.1
+[geosection]   ratio 8:34 best=251km  normalised=88.9
+[geosection]   ratio 9:33 best=353km  normalised=117.7
+[geosection]   ratio 10:32 best=458km  normalised=144.8
+[geosection]   ratio 11:31 best=405km  normalised=122.1
+[geosection]   ratio 12:30 best=372km  normalised=107.5
+[geosection]   ratio 13:29 best=376km  normalised=104.2
+[geosection]   ratio 14:28 best=484km  normalised=129.4
+[geosection]   ratio 15:27 best=534km  normalised=138.0
+[geosection]   ratio 16:26 best=848km  normalised=212.1
+[geosection]   ratio 17:25 best=544km  normalised=132.1
+[geosection]   ratio 18:24 best=660km  normalised=155.5
+[geosection]   ratio 19:23 best=879km  normalised=201.6
+[geosection]   ratio 20:22 best=1376km  normalised=307.6
+[geosection]   ratio 21:21 best=1413km  normalised=308.4
+[geosection] natural ratio 2:40 at 92km (normalised=65.1)
+[geosection] trying 20 ratios x 1 seeds for k=40
+[geosection]   ratio 1:39 best=212km  normalised=211.5
+[geosection]   ratio 2:38 best=136km  normalised=96.0
+[geosection]   ratio 3:37 best=245km  normalised=141.6
+[geosection]   ratio 4:36 best=216km  normalised=108.0
+[geosection]   ratio 5:35 best=286km  normalised=128.0
+[geosection]   ratio 6:34 best=389km  normalised=158.6
+[geosection]   ratio 7:33 best=278km  normalised=105.2
+[geosection]   ratio 8:32 best=476km  normalised=168.2
+[geosection]   ratio 9:31 best=403km  normalised=134.3
+[geosection]   ratio 10:30 best=567km  normalised=179.3
+[geosection]   ratio 11:29 best=430km  normalised=129.7
+[geosection]   ratio 12:28 best=449km  normalised=129.6
+[geosection]   ratio 13:27 best=474km  normalised=131.4
+[geosection]   ratio 14:26 best=604km  normalised=161.3
+[geosection]   ratio 15:25 best=956km  normalised=246.7
+[geosection]   ratio 16:24 best=536km  normalised=133.9
+[geosection]   ratio 17:23 best=579km  normalised=140.5
+[geosection]   ratio 18:22 best=849km  normalised=200.2
+[geosection]   ratio 19:21 best=764km  normalised=175.2
+[geosection]   ratio 20:20 best=678km  normalised=151.7
+[geosection] natural ratio 2:38 at 136km (normalised=96.0)
+[geosection] trying 19 ratios x 1 seeds for k=38
+[geosection]   ratio 1:37 best=241km  normalised=240.5
+[geosection]   ratio 2:36 best=180km  normalised=127.4
+[geosection]   ratio 3:35 best=162km  normalised=93.8
+[geosection]   ratio 4:34 best=244km  normalised=122.0
+[geosection]   ratio 5:33 best=294km  normalised=131.5
+[geosection]   ratio 6:32 best=331km  normalised=135.0
+[geosection]   ratio 7:31 best=399km  normalised=150.7
+[geosection]   ratio 8:30 best=360km  normalised=127.3
+[geosection]   ratio 9:29 best=377km  normalised=125.7
+[geosection]   ratio 10:28 best=427km  normalised=135.1
+[geosection]   ratio 11:27 best=571km  normalised=172.3
+[geosection]   ratio 12:26 best=482km  normalised=139.2
+[geosection]   ratio 13:25 best=585km  normalised=162.2
+[geosection]   ratio 14:24 best=680km  normalised=181.6
+[geosection]   ratio 15:23 best=591km  normalised=152.5
+[geosection]   ratio 16:22 best=631km  normalised=157.8
+[geosection]   ratio 17:21 best=768km  normalised=186.3
+[geosection]   ratio 18:20 best=643km  normalised=151.5
+[geosection]   ratio 19:19 best=715km  normalised=164.1
+[geosection] natural ratio 3:35 at 162km (normalised=93.8)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=33km  normalised=33.1
+[geosection] natural ratio 1:2 at 33km (normalised=33.1)
+[geosection] trying 17 ratios x 1 seeds for k=35
+[geosection]   ratio 1:34 best=84km  normalised=84.0
+[geosection]   ratio 2:33 best=288km  normalised=203.6
+[geosection]   ratio 3:32 best=194km  normalised=112.0
+[geosection]   ratio 4:31 best=786km  normalised=393.0
+[geosection]   ratio 5:30 best=277km  normalised=124.0
+[geosection]   ratio 6:29 best=344km  normalised=140.2
+[geosection]   ratio 7:28 best=591km  normalised=223.4
+[geosection]   ratio 8:27 best=343km  normalised=121.2
+[geosection]   ratio 9:26 best=443km  normalised=147.8
+[geosection]   ratio 10:25 best=672km  normalised=212.7
+[geosection]   ratio 11:24 best=500km  normalised=150.7
+[geosection]   ratio 12:23 best=581km  normalised=167.7
+[geosection]   ratio 13:22 best=600km  normalised=166.5
+[geosection]   ratio 14:21 best=574km  normalised=153.5
+[geosection]   ratio 15:20 best=1165km  normalised=300.7
+[geosection]   ratio 16:19 best=749km  normalised=187.3
+[geosection]   ratio 17:18 best=655km  normalised=158.9
+[geosection] natural ratio 1:34 at 84km (normalised=84.0)
+[geosection] trying 17 ratios x 1 seeds for k=34
+[geosection]   ratio 1:33 best=143km  normalised=142.5
+[geosection]   ratio 2:32 best=176km  normalised=124.2
+[geosection]   ratio 3:31 best=198km  normalised=114.2
+[geosection]   ratio 4:30 best=285km  normalised=142.4
+[geosection]   ratio 5:29 best=296km  normalised=132.3
+[geosection]   ratio 6:28 best=355km  normalised=144.7
+[geosection]   ratio 7:27 best=316km  normalised=119.5
+[geosection]   ratio 8:26 best=521km  normalised=184.2
+[geosection]   ratio 9:25 best=488km  normalised=162.7
+[geosection]   ratio 10:24 best=651km  normalised=206.0
+[geosection]   ratio 11:23 best=647km  normalised=195.0
+[geosection]   ratio 12:22 best=520km  normalised=150.1
+[geosection]   ratio 13:21 best=684km  normalised=189.7
+[geosection]   ratio 14:20 best=623km  normalised=166.5
+[geosection]   ratio 15:19 best=824km  normalised=212.8
+[geosection]   ratio 16:18 best=512km  normalised=127.9
+[geosection]   ratio 17:17 best=1064km  normalised=258.1
+[geosection] natural ratio 3:31 at 198km (normalised=114.2)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=58km  normalised=57.5
+[geosection] natural ratio 1:2 at 58km (normalised=57.5)
+[geosection] trying 15 ratios x 1 seeds for k=31
+[geosection]   ratio 1:30 best=231km  normalised=231.1
+[geosection]   ratio 2:29 best=211km  normalised=149.1
+[geosection]   ratio 3:28 best=295km  normalised=170.5
+[geosection]   ratio 4:27 best=257km  normalised=128.4
+[geosection]   ratio 5:26 best=268km  normalised=119.7
+[geosection]   ratio 6:25 best=360km  normalised=147.0
+[geosection]   ratio 7:24 best=429km  normalised=162.3
+[geosection]   ratio 8:23 best=564km  normalised=199.3
+[geosection]   ratio 9:22 best=569km  normalised=189.6
+[geosection]   ratio 10:21 best=547km  normalised=173.0
+[geosection]   ratio 11:20 best=445km  normalised=134.1
+[geosection]   ratio 12:19 best=581km  normalised=167.7
+[geosection]   ratio 13:18 best=598km  normalised=165.8
+[geosection]   ratio 14:17 best=790km  normalised=211.1
+[geosection]   ratio 15:16 best=710km  normalised=183.4
+[geosection] natural ratio 5:26 at 268km (normalised=119.7)
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=54km  normalised=54.1
+[geosection]   ratio 2:3 best=83km  normalised=58.4
+[geosection] natural ratio 1:4 at 54km (normalised=54.1)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=70km  normalised=70.1
+[geosection]   ratio 2:2 best=73km  normalised=51.7
+[geosection] natural ratio 2:2 at 73km (normalised=51.7)
+[geosection] trying 13 ratios x 1 seeds for k=26
+[geosection]   ratio 1:25 best=234km  normalised=233.5
+[geosection]   ratio 2:24 best=224km  normalised=158.4
+[geosection]   ratio 3:23 best=417km  normalised=240.6
+[geosection]   ratio 4:22 best=436km  normalised=217.8
+[geosection]   ratio 5:21 best=458km  normalised=204.8
+[geosection]   ratio 6:20 best=575km  normalised=234.9
+[geosection]   ratio 7:19 best=493km  normalised=186.4
+[geosection]   ratio 8:18 best=365km  normalised=128.9
+[geosection]   ratio 9:17 best=681km  normalised=227.1
+[geosection]   ratio 10:16 best=369km  normalised=116.8
+[geosection]   ratio 11:15 best=514km  normalised=154.9
+[geosection]   ratio 12:14 best=672km  normalised=194.0
+[geosection]   ratio 13:13 best=681km  normalised=189.0
+[geosection] natural ratio 10:16 at 369km (normalised=116.8)
+[geosection] trying 5 ratios x 1 seeds for k=10
+[geosection]   ratio 1:9 best=121km  normalised=120.7
+[geosection]   ratio 2:8 best=168km  normalised=118.8
+[geosection]   ratio 3:7 best=245km  normalised=141.4
+[geosection]   ratio 4:6 best=310km  normalised=154.9
+[geosection]   ratio 5:5 best=448km  normalised=200.2
+[geosection] natural ratio 2:8 at 168km (normalised=118.8)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=157km  normalised=156.7
+[geosection]   ratio 2:6 best=235km  normalised=166.2
+[geosection]   ratio 3:5 best=323km  normalised=186.3
+[geosection]   ratio 4:4 best=480km  normalised=240.1
+[geosection] natural ratio 1:7 at 157km (normalised=156.7)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=109km  normalised=108.8
+[geosection]   ratio 2:5 best=200km  normalised=141.5
+[geosection]   ratio 3:4 best=370km  normalised=213.5
+[geosection] natural ratio 1:6 at 109km (normalised=108.8)
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=203km  normalised=202.9
+[geosection]   ratio 2:4 best=272km  normalised=192.5
+[geosection]   ratio 3:3 best=446km  normalised=257.5
+[geosection] natural ratio 2:4 at 272km (normalised=192.5)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=287km  normalised=287.1
+[geosection]   ratio 2:2 best=510km  normalised=360.4
+[geosection] natural ratio 1:3 at 287km (normalised=287.1)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=133km  normalised=133.2
+[geosection] natural ratio 1:2 at 133km (normalised=133.2)
+[geosection] trying 8 ratios x 1 seeds for k=16
+[geosection]   ratio 1:15 best=274km  normalised=273.7
+[geosection]   ratio 2:14 best=211km  normalised=149.3
+[geosection]   ratio 3:13 best=265km  normalised=152.8
+[geosection]   ratio 4:12 best=386km  normalised=193.2
+[geosection]   ratio 5:11 best=424km  normalised=189.5
+[geosection]   ratio 6:10 best=479km  normalised=195.4
+[geosection]   ratio 7:9 best=853km  normalised=322.3
+[geosection]   ratio 8:8 best=735km  normalised=260.0
+[geosection] natural ratio 2:14 at 211km (normalised=149.3)
+[geosection] trying 7 ratios x 1 seeds for k=14
+[geosection]   ratio 1:13 best=144km  normalised=143.5
+[geosection]   ratio 2:12 best=325km  normalised=229.8
+[geosection]   ratio 3:11 best=627km  normalised=362.0
+[geosection]   ratio 4:10 best=602km  normalised=300.9
+[geosection]   ratio 5:9 best=702km  normalised=313.9
+[geosection]   ratio 6:8 best=803km  normalised=327.8
+[geosection]   ratio 7:7 best=706km  normalised=266.8
+[geosection] natural ratio 1:13 at 144km (normalised=143.5)
+[geosection] trying 6 ratios x 1 seeds for k=13
+[geosection]   ratio 1:12 best=123km  normalised=123.4
+[geosection]   ratio 2:11 best=306km  normalised=216.3
+[geosection]   ratio 3:10 best=542km  normalised=313.0
+[geosection]   ratio 4:9 best=610km  normalised=305.2
+[geosection]   ratio 5:8 best=655km  normalised=292.9
+[geosection]   ratio 6:7 best=671km  normalised=273.9
+[geosection] natural ratio 1:12 at 123km (normalised=123.4)
+[geosection] trying 6 ratios x 1 seeds for k=12
+[geosection]   ratio 1:11 best=264km  normalised=264.2
+[geosection]   ratio 2:10 best=628km  normalised=444.3
+[geosection]   ratio 3:9 best=418km  normalised=241.4
+[geosection]   ratio 4:8 best=673km  normalised=336.4
+[geosection]   ratio 5:7 best=655km  normalised=292.8
+[geosection]   ratio 6:6 best=735km  normalised=299.9
+[geosection] natural ratio 3:9 at 418km (normalised=241.4)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=170km  normalised=170.0
+[geosection] natural ratio 1:2 at 170km (normalised=170.0)
+[geosection] trying 4 ratios x 1 seeds for k=9
+[geosection]   ratio 1:8 best=237km  normalised=237.1
+[geosection]   ratio 2:7 best=472km  normalised=334.0
+[geosection]   ratio 3:6 best=539km  normalised=311.3
+[geosection]   ratio 4:5 best=652km  normalised=326.0
+[geosection] natural ratio 1:8 at 237km (normalised=237.1)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=231km  normalised=230.6
+[geosection]   ratio 2:6 best=661km  normalised=467.1
+[geosection]   ratio 3:5 best=719km  normalised=415.3
+[geosection]   ratio 4:4 best=620km  normalised=309.8
+[geosection] natural ratio 1:7 at 231km (normalised=230.6)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=469km  normalised=468.9
+[geosection]   ratio 2:5 best=424km  normalised=299.5
+[geosection]   ratio 3:4 best=577km  normalised=332.9
+[geosection] natural ratio 2:5 at 424km (normalised=299.5)
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=259km  normalised=259.5
+[geosection]   ratio 2:3 best=346km  normalised=244.6
+[geosection] natural ratio 2:3 at 346km (normalised=244.6)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=317km  normalised=317.5
+[geosection] natural ratio 1:2 at 317km (normalised=317.5)
+[partition-time] CA: k=52 n=9129 -> 595906.4ms
+[OK] CA in 596437ms

@@ -1,0 +1,245 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:d199d53cddc8841414115d7dbcdace502cd60947d4df7badb65c085406cea836",
+  "generated_at_utc": "2026-08-10T02:07:35Z",
+  "content_hash": "sha256:d199d53cddc8841414115d7dbcdace502cd60947d4df7badb65c085406cea836",
+  "plan_hash": "sha256:a36767194a17dfea9fab83efd6da37e879ad6970efc577adb74cd611c22e10eb",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:d3b6d93d4f1d130155bbfd30f3e72aabaa5f1be3014925242c15b17c2fee1de1",
+  "legal_profile_hash": "sha256:2f97ee2b8938a2afed767e2f729e6fea003e7546828491938e94116a9928d171",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "CO",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:e53c4b1407a418b6bc1b121b1684bdf8e0b2c41546f0987bd0ab62a2501ba542",
+    "geometry": "sha256:4a839a436f1210b2f89ce8b49e1f26ec2276b2343cb53e14263bc008cf8f8451"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "15 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08001",
+          "district_ids": [
+            0,
+            1,
+            3,
+            4
+          ],
+          "unit_count": 107
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08005",
+          "district_ids": [
+            2,
+            3,
+            4
+          ],
+          "unit_count": 161
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08013",
+          "district_ids": [
+            0,
+            6
+          ],
+          "unit_count": 78
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08014",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 24
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08015",
+          "district_ids": [
+            6,
+            7
+          ],
+          "unit_count": 6
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08031",
+          "district_ids": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ],
+          "unit_count": 178
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08035",
+          "district_ids": [
+            2,
+            4,
+            7
+          ],
+          "unit_count": 72
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08039",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 7
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08041",
+          "district_ids": [
+            5,
+            7
+          ],
+          "unit_count": 167
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08043",
+          "district_ids": [
+            6,
+            7
+          ],
+          "unit_count": 15
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08045",
+          "district_ids": [
+            6,
+            7
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08059",
+          "district_ids": [
+            1,
+            3,
+            7
+          ],
+          "unit_count": 146
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08069",
+          "district_ids": [
+            0,
+            4,
+            6
+          ],
+          "unit_count": 86
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08101",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 58
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "08123",
+          "district_ids": [
+            0,
+            4
+          ],
+          "unit_count": 83
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1447 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-CO-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1447
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

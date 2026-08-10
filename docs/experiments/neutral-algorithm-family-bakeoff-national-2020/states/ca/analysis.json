@@ -1,0 +1,216 @@
+{
+  "state": "CA",
+  "state_slug": "california",
+  "expected_districts": 52,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "CA",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 9129,
+      "districts": 52,
+      "expected_districts": 52,
+      "edge_cut": 8764596.60532,
+      "canonical_assignment_sha256": "8d1eb41cc40a7ac7516f10954531c1a8b20615e4aa7100f524516b9c4a09e519",
+      "adjacency_sha256": "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "CA",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 9129,
+      "districts": 52,
+      "expected_districts": 52,
+      "edge_cut": 8132678.36594,
+      "canonical_assignment_sha256": "e63859e620c68af8c536e0354ffdaf7c2857fc2e3e7cd9778d8d73473fa74e8d",
+      "adjacency_sha256": "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.927901046924
+    },
+    {
+      "state": "CA",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 9129,
+      "districts": 52,
+      "expected_districts": 52,
+      "edge_cut": 7971960.76785,
+      "canonical_assignment_sha256": "4eeb67fdd34118c9e408c04f98c792bcc38404dc8c80b3905da53b6a20e3fbc2",
+      "adjacency_sha256": "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.909563911134
+    },
+    {
+      "state": "CA",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 9129,
+      "districts": 52,
+      "expected_districts": 52,
+      "edge_cut": 8431517.31672,
+      "canonical_assignment_sha256": "0b1469b2432c899e6f7550ff82d30b3687b032045a735517b8cda30744f5988e",
+      "adjacency_sha256": "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.961997191246
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "9129"
+      ],
+      "districts": [
+        "52"
+      ],
+      "expected_districts": [
+        "52"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "CA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 5165,
+      "different_units": 3964,
+      "matched_unit_rate": 0.5657793843794501
+    },
+    {
+      "state": "CA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 4865,
+      "different_units": 4264,
+      "matched_unit_rate": 0.5329170774455033
+    },
+    {
+      "state": "CA",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 4963,
+      "different_units": 4166,
+      "matched_unit_rate": 0.5436520977105926
+    },
+    {
+      "state": "CA",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 5595,
+      "different_units": 3534,
+      "matched_unit_rate": 0.6128820243181071
+    },
+    {
+      "state": "CA",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 4479,
+      "different_units": 4650,
+      "matched_unit_rate": 0.49063424252382515
+    },
+    {
+      "state": "CA",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 4968,
+      "different_units": 4161,
+      "matched_unit_rate": 0.5441998028261584
+    }
+  ]
+}

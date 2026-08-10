@@ -1,0 +1,7 @@
+NOTE: Running congressional (4D). MS also has house (122D) and senate (52D). Use --chamber house or --chamber senate.
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=232km  normalised=231.7
+[geosection]   ratio 2:2 best=320km  normalised=226.4
+[geosection] natural ratio 2:2 at 320km (normalised=226.4)
+[partition-time] MS: k=4 n=878 -> 1372.2ms
+[OK] MS in 1530ms

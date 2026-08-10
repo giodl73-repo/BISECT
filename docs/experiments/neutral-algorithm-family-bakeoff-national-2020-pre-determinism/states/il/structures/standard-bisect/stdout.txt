@@ -1,0 +1,4 @@
+STATUS:1:IL: loading adjacency
+STATUS:1:IL: recursive bisection into 17 districts
+STATUS:1:IL: balance OK, writing outputs
+STATUS:1:IL: complete (17D, 0ms)

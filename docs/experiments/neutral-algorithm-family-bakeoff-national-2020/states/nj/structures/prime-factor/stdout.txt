@@ -1,0 +1,5 @@
+STATUS:1:NJ: loading adjacency
+STATUS:1:NJ: apportion-regions partition into 12 districts (F=[2, 2, 3], depth=3)
+STATUS:1:NJ: balance 0.34% (cache hits=0)
+STATUS:1:NJ: balance OK, writing outputs
+STATUS:1:NJ: complete (12D, 0ms)

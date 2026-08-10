@@ -1,0 +1,35 @@
+NOTE: Running congressional (11D). VA also has house (100D) and senate (40D). Use --chamber house or --chamber senate.
+[geosection] trying 5 ratios x 1 seeds for k=11
+[geosection]   ratio 1:10 best=55km  normalised=54.6
+[geosection]   ratio 2:9 best=87km  normalised=61.8
+[geosection]   ratio 3:8 best=126km  normalised=73.0
+[geosection]   ratio 4:7 best=345km  normalised=172.7
+[geosection]   ratio 5:6 best=504km  normalised=225.4
+[geosection] natural ratio 1:10 at 55km (normalised=54.6)
+[geosection] trying 5 ratios x 1 seeds for k=10
+[geosection]   ratio 1:9 best=101km  normalised=100.9
+[geosection]   ratio 2:8 best=118km  normalised=83.6
+[geosection]   ratio 3:7 best=321km  normalised=185.3
+[geosection]   ratio 4:6 best=363km  normalised=181.6
+[geosection]   ratio 5:5 best=528km  normalised=235.9
+[geosection] natural ratio 2:8 at 118km (normalised=83.6)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=157km  normalised=156.8
+[geosection]   ratio 2:6 best=472km  normalised=333.4
+[geosection]   ratio 3:5 best=314km  normalised=181.2
+[geosection]   ratio 4:4 best=372km  normalised=186.1
+[geosection] natural ratio 1:7 at 157km (normalised=156.8)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=302km  normalised=302.1
+[geosection]   ratio 2:5 best=461km  normalised=325.7
+[geosection]   ratio 3:4 best=486km  normalised=280.7
+[geosection] natural ratio 3:4 at 486km (normalised=280.7)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=158km  normalised=158.2
+[geosection] natural ratio 1:2 at 158km (normalised=158.2)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=170km  normalised=170.2
+[geosection]   ratio 2:2 best=167km  normalised=117.8
+[geosection] natural ratio 2:2 at 167km (normalised=117.8)
+[partition-time] VA: k=11 n=2198 -> 6969.2ms
+[OK] VA in 7218ms

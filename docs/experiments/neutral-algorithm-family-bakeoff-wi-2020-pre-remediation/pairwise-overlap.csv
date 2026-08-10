@@ -1,0 +1,7 @@
+left,right,matched_units,different_units,matched_unit_rate
+standard-bisect,ratio-optimal,837,705,0.5428015564202334
+standard-bisect,ratio-optimal-area,983,559,0.6374837872892347
+standard-bisect,prime-factor,989,553,0.6413748378728924
+ratio-optimal,ratio-optimal-area,900,642,0.5836575875486382
+ratio-optimal,prime-factor,747,795,0.48443579766536965
+ratio-optimal-area,prime-factor,844,698,0.5473411154345007

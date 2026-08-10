@@ -1,0 +1,480 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:7c445859edc68114d6b5a67f22b255d311c6f7c421100db0caf7481d9c14933a",
+  "generated_at_utc": "2026-08-09T18:08:03Z",
+  "content_hash": "sha256:7c445859edc68114d6b5a67f22b255d311c6f7c421100db0caf7481d9c14933a",
+  "plan_hash": "sha256:24531a7b3e0c955715fc62ec0e38ee4e8176b42931ef1c530c8677a8de551d81",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:5cc957141ee5e706bd3651181b921d8a59005f16a7c2ed47a267311e8bee0f65",
+  "legal_profile_hash": "sha256:cd085ad78af3c55816696e61e2b8fece62a0d2661db11a0919ac60960dc1d6a5",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "CA",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463",
+    "geometry": "sha256:655d4a13f36bf8e61f39ffc3a32c22fc44ff961f18cefe042b3c26258cadc0af"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "33 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06001",
+          "district_ids": [
+            24,
+            25,
+            26,
+            27
+          ],
+          "unit_count": 379
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06007",
+          "district_ids": [
+            34,
+            35
+          ],
+          "unit_count": 54
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06013",
+          "district_ids": [
+            26,
+            27,
+            28,
+            31,
+            33
+          ],
+          "unit_count": 242
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06019",
+          "district_ids": [
+            43,
+            48,
+            51
+          ],
+          "unit_count": 225
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06025",
+          "district_ids": [
+            41,
+            42
+          ],
+          "unit_count": 40
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06029",
+          "district_ids": [
+            46,
+            47,
+            50
+          ],
+          "unit_count": 236
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06031",
+          "district_ids": [
+            43,
+            50,
+            51
+          ],
+          "unit_count": 31
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06037",
+          "district_ids": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            15,
+            16,
+            17,
+            39,
+            45,
+            46
+          ],
+          "unit_count": 2498
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06047",
+          "district_ids": [
+            44,
+            48,
+            51
+          ],
+          "unit_count": 63
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06051",
+          "district_ids": [
+            47,
+            48
+          ],
+          "unit_count": 4
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06055",
+          "district_ids": [
+            33,
+            35
+          ],
+          "unit_count": 40
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06057",
+          "district_ids": [
+            32,
+            34
+          ],
+          "unit_count": 26
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06059",
+          "district_ids": [
+            10,
+            11,
+            12,
+            13,
+            16,
+            36
+          ],
+          "unit_count": 614
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06061",
+          "district_ids": [
+            30,
+            32
+          ],
+          "unit_count": 92
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06065",
+          "district_ids": [
+            14,
+            36,
+            37,
+            38,
+            40,
+            41,
+            42
+          ],
+          "unit_count": 518
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06067",
+          "district_ids": [
+            29,
+            30,
+            31,
+            32
+          ],
+          "unit_count": 363
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06071",
+          "district_ids": [
+            12,
+            14,
+            15,
+            38,
+            40,
+            41,
+            45,
+            47
+          ],
+          "unit_count": 466
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06073",
+          "district_ids": [
+            18,
+            19,
+            20,
+            37,
+            42
+          ],
+          "unit_count": 737
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06075",
+          "district_ids": [
+            0,
+            25,
+            33
+          ],
+          "unit_count": 244
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06077",
+          "district_ids": [
+            26,
+            28,
+            30,
+            31,
+            44
+          ],
+          "unit_count": 174
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06079",
+          "district_ids": [
+            50,
+            51
+          ],
+          "unit_count": 70
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06081",
+          "district_ids": [
+            0,
+            22,
+            23
+          ],
+          "unit_count": 174
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06083",
+          "district_ids": [
+            49,
+            50
+          ],
+          "unit_count": 109
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06085",
+          "district_ids": [
+            21,
+            22,
+            23,
+            24,
+            44
+          ],
+          "unit_count": 408
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06087",
+          "district_ids": [
+            23,
+            44,
+            51
+          ],
+          "unit_count": 70
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06095",
+          "district_ids": [
+            31,
+            33,
+            35
+          ],
+          "unit_count": 100
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06097",
+          "district_ids": [
+            33,
+            35
+          ],
+          "unit_count": 122
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06099",
+          "district_ids": [
+            28,
+            32,
+            44,
+            47,
+            48
+          ],
+          "unit_count": 112
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06101",
+          "district_ids": [
+            32,
+            34,
+            35
+          ],
+          "unit_count": 21
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06107",
+          "district_ids": [
+            43,
+            47,
+            48,
+            50
+          ],
+          "unit_count": 103
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06111",
+          "district_ids": [
+            39,
+            46,
+            49
+          ],
+          "unit_count": 190
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06113",
+          "district_ids": [
+            31,
+            32,
+            35
+          ],
+          "unit_count": 53
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "06115",
+          "district_ids": [
+            32,
+            34,
+            35
+          ],
+          "unit_count": 19
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "9129 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-CA-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 9129
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

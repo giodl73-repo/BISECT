@@ -1,0 +1,38 @@
+NOTE: Running congressional (10D). WA also has house (98D) and senate (49D). Use --chamber house or --chamber senate.
+[geosection] trying 5 ratios x 1 seeds for k=10
+[geosection]   ratio 1:9 best=111km  normalised=111.0
+[geosection]   ratio 2:8 best=185km  normalised=130.7
+[geosection]   ratio 3:7 best=243km  normalised=140.1
+[geosection]   ratio 4:6 best=563km  normalised=281.4
+[geosection]   ratio 5:5 best=501km  normalised=224.2
+[geosection] natural ratio 1:9 at 111km (normalised=111.0)
+[geosection] trying 4 ratios x 1 seeds for k=9
+[geosection]   ratio 1:8 best=158km  normalised=158.0
+[geosection]   ratio 2:7 best=245km  normalised=173.5
+[geosection]   ratio 3:6 best=541km  normalised=312.6
+[geosection]   ratio 4:5 best=509km  normalised=254.3
+[geosection] natural ratio 1:8 at 158km (normalised=158.0)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=166km  normalised=165.6
+[geosection]   ratio 2:6 best=278km  normalised=196.4
+[geosection]   ratio 3:5 best=502km  normalised=289.6
+[geosection]   ratio 4:4 best=492km  normalised=245.8
+[geosection] natural ratio 1:7 at 166km (normalised=165.6)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=269km  normalised=268.7
+[geosection]   ratio 2:5 best=449km  normalised=317.4
+[geosection]   ratio 3:4 best=503km  normalised=290.6
+[geosection] natural ratio 1:6 at 269km (normalised=268.7)
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=375km  normalised=374.8
+[geosection]   ratio 2:4 best=559km  normalised=394.9
+[geosection]   ratio 3:3 best=567km  normalised=327.4
+[geosection] natural ratio 3:3 at 567km (normalised=327.4)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=298km  normalised=298.1
+[geosection] natural ratio 1:2 at 298km (normalised=298.1)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=819km  normalised=819.2
+[geosection] natural ratio 1:2 at 819km (normalised=819.2)
+[partition-time] WA: k=10 n=1784 -> 703.6ms
+[OK] WA in 888ms

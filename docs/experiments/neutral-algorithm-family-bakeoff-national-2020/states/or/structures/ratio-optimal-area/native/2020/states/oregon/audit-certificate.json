@@ -1,0 +1,180 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:d24fb26e3f3d7f8e0a0000905a81bb089592427747f6bfa28bff958a88b90013",
+  "generated_at_utc": "2026-08-10T02:07:30Z",
+  "content_hash": "sha256:d24fb26e3f3d7f8e0a0000905a81bb089592427747f6bfa28bff958a88b90013",
+  "plan_hash": "sha256:860c8fa5ac9fa8ecb6dd1746c031289f01c40af5935be2409dff26dd6e07f4ff",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:3108b12ffdc2cfb18f9adff54cd0a5fb769af45aea4e1ddc410da00c280c7e63",
+  "legal_profile_hash": "sha256:1724bb83f5c263ef7621c7c405d9af98e5de74de791d9626d30470fded35abfe",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "OR",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:ed105d3cad550248a34f008301e3dfbb17fcd070cc5a3ea30a4631dd5f401fa5",
+    "geometry": "sha256:bc3621d9f994062c676ba9aba9a8eb3a041230973ebe4bdf2eef0ae3405f0e67"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "9 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41003",
+          "district_ids": [
+            3,
+            4
+          ],
+          "unit_count": 22
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41005",
+          "district_ids": [
+            0,
+            1,
+            3
+          ],
+          "unit_count": 87
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41019",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 30
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41039",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 93
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41041",
+          "district_ids": [
+            2,
+            4
+          ],
+          "unit_count": 19
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41043",
+          "district_ids": [
+            3,
+            4,
+            5
+          ],
+          "unit_count": 28
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41047",
+          "district_ids": [
+            3,
+            5
+          ],
+          "unit_count": 65
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41051",
+          "district_ids": [
+            0,
+            1,
+            2
+          ],
+          "unit_count": 197
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "41067",
+          "district_ids": [
+            1,
+            2,
+            3
+          ],
+          "unit_count": 134
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1001 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-OR-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1001
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

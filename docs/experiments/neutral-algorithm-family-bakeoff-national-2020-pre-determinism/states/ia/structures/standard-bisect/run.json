@@ -1,0 +1,31 @@
+{
+  "protocol_id": "neutral-algorithm-family-national-bakeoff-v1",
+  "state": "IA",
+  "structure": "standard-bisect",
+  "status": "pass",
+  "requested_seed": 0,
+  "command": [
+    "target/release/bisect.exe",
+    "state",
+    "--state",
+    "IA",
+    "--year",
+    "2020",
+    "--output-dir",
+    "{PACKAGE}/states/ia/structures/standard-bisect/native",
+    "--partition-mode",
+    "edge-weighted",
+    "--structure",
+    "standard-bisect",
+    "--weights-override",
+    "geographic",
+    "--search",
+    "single",
+    "--seed",
+    "0",
+    "--manifest",
+    "--force",
+    "--time-partition"
+  ],
+  "returncode": 0
+}

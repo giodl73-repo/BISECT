@@ -1,0 +1,11 @@
+NOTE: Running congressional (4D). UT also has house (75D) and senate (29D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 99.1% of population -> natural split ~3:1
+[areasection]   ratio 1:3 (25.0% pop): Lorenz area range [0.1%-99.1%] -> feasible
+[areasection]   ratio 2:2 (50.0% pop): Lorenz area range [0.4%-99.6%] -> feasible
+[areasection] 2 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:3 best=1569km  normalised=1569.3  area_left=70.4%
+[areasection]   ratio 2:2 best=1714km  normalised=1212.2  area_left=75.9%
+[areasection] natural ratio 2:2 at 1714km (normalised=1212.2)
+[areasection] winner: area=75.9% (target 50% ±10%, VIOLATED) pop=50.0% (target 50.0%)
+[partition-time] UT: k=4 n=716 -> 3551.8ms
+[OK] UT in 3695ms

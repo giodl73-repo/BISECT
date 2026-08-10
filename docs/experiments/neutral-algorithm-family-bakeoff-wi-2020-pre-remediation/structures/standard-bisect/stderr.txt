@@ -1,0 +1,5 @@
+NOTE: Running congressional (8D). WI also has house (99D) and senate (33D). Use --chamber house or --chamber senate.
+[partition-time] WI: k=8 n=1542 -> 153.1ms
+[partition-time] WI: k=8 n=1542 -> 333.9ms
+[partition-time] WI: k=8 n=1542 -> 105.0ms
+[OK] WI in 754ms

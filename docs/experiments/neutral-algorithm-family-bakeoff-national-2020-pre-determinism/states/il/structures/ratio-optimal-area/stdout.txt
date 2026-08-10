@@ -1,0 +1,5 @@
+STATUS:1:IL: loading adjacency
+STATUS:1:IL: AreaSection 8 ratios x 1 seeds (pop+area dual, ncon=2, init=RatioOptimal)
+STATUS:1:IL: natural ratio 3:14 at 994km
+STATUS:1:IL: balance OK, writing outputs
+STATUS:1:IL: complete (17D, 0ms)

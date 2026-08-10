@@ -1,0 +1,257 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:99b1bc5b88511880965db290f83ab3ba48c7081f7c2ec0becc6307e5f2b5cb57",
+  "generated_at_utc": "2026-08-09T20:45:18Z",
+  "content_hash": "sha256:99b1bc5b88511880965db290f83ab3ba48c7081f7c2ec0becc6307e5f2b5cb57",
+  "plan_hash": "sha256:0d7c4e90ba20f9797198e3f2468a713d2e6ca0f2e942d6ddfeea429b2b05e901",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:8c2f8abed695210bb2ebf1cfb27490557895857e403ee06e3f7dae5db15e1469",
+  "legal_profile_hash": "sha256:90e7e9adfaefaaf479c429acd9904c343eed16bc60c8bb8b8ee0d66e755dff9c",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "NJ",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:0da95c08035c0c8e93953c71cd7a667d191386df0b608bb39e26097122b96516",
+    "geometry": "sha256:5150c52902e5ab20936ac91984bf589ce79420f295271b92b7314551d7e7c135"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "16 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34001",
+          "district_ids": [
+            2,
+            9
+          ],
+          "unit_count": 74
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34003",
+          "district_ids": [
+            0,
+            4,
+            5,
+            7
+          ],
+          "unit_count": 203
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34005",
+          "district_ids": [
+            8,
+            9,
+            11
+          ],
+          "unit_count": 117
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34007",
+          "district_ids": [
+            2,
+            8,
+            9
+          ],
+          "unit_count": 129
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34013",
+          "district_ids": [
+            0,
+            1,
+            7
+          ],
+          "unit_count": 211
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34015",
+          "district_ids": [
+            2,
+            9
+          ],
+          "unit_count": 69
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34017",
+          "district_ids": [
+            0,
+            4
+          ],
+          "unit_count": 183
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34019",
+          "district_ids": [
+            6,
+            11
+          ],
+          "unit_count": 30
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34023",
+          "district_ids": [
+            1,
+            10,
+            11
+          ],
+          "unit_count": 192
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34025",
+          "district_ids": [
+            3,
+            10,
+            11
+          ],
+          "unit_count": 155
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34027",
+          "district_ids": [
+            1,
+            6,
+            7
+          ],
+          "unit_count": 110
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34029",
+          "district_ids": [
+            3,
+            9,
+            11
+          ],
+          "unit_count": 145
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34031",
+          "district_ids": [
+            5,
+            7
+          ],
+          "unit_count": 120
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34035",
+          "district_ids": [
+            1,
+            6,
+            11
+          ],
+          "unit_count": 74
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34037",
+          "district_ids": [
+            6,
+            7
+          ],
+          "unit_count": 42
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "34039",
+          "district_ids": [
+            0,
+            1,
+            10
+          ],
+          "unit_count": 120
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "2181 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-NJ-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 2181
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

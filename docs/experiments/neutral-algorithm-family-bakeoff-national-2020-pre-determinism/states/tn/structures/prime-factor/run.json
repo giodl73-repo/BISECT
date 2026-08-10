@@ -1,0 +1,31 @@
+{
+  "protocol_id": "neutral-algorithm-family-national-bakeoff-v1",
+  "state": "TN",
+  "structure": "prime-factor",
+  "status": "pass",
+  "requested_seed": 0,
+  "command": [
+    "target/release/bisect.exe",
+    "state",
+    "--state",
+    "TN",
+    "--year",
+    "2020",
+    "--output-dir",
+    "{PACKAGE}/states/tn/structures/prime-factor/native",
+    "--partition-mode",
+    "edge-weighted",
+    "--structure",
+    "prime-factor",
+    "--weights-override",
+    "geographic",
+    "--search",
+    "single",
+    "--seed",
+    "0",
+    "--manifest",
+    "--force",
+    "--time-partition"
+  ],
+  "returncode": 0
+}

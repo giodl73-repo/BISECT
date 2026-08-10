@@ -1,0 +1,3 @@
+NOTE: Running congressional (5D). OK also has house (101D) and senate (48D). Use --chamber house or --chamber senate.
+[partition-time] OK: k=5 n=1205 -> 60.5ms
+[OK] OK in 354ms

@@ -1,0 +1,3 @@
+NOTE: Running congressional (52D). CA also has house (80D) and senate (40D). Use --chamber house or --chamber senate.
+[partition-time] CA: k=52 n=9129 -> 55.7ms
+[OK] CA in 689ms

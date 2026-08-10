@@ -1,0 +1,5 @@
+STATUS:1:WV: loading adjacency
+STATUS:1:WV: GeoSection 1 ratios ? 1 seeds
+STATUS:1:WV: natural ratio 1:1 at 349km
+STATUS:1:WV: balance OK, writing outputs
+STATUS:1:WV: complete (2D, 0ms)

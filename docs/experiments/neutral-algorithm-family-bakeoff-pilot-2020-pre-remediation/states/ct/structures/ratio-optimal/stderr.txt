@@ -1,0 +1,11 @@
+NOTE: Running congressional (5D). CT also has house (151D) and senate (36D). Use --chamber house or --chamber senate.
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=91km  normalised=91.1
+[geosection]   ratio 2:3 best=149km  normalised=105.3
+[geosection] natural ratio 1:4 at 91km (normalised=91.1)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=145km  normalised=144.8
+[geosection]   ratio 2:2 best=150km  normalised=106.2
+[geosection] natural ratio 2:2 at 150km (normalised=106.2)
+[partition-time] CT: k=5 n=883 -> 56.4ms
+[OK] CT in 301ms

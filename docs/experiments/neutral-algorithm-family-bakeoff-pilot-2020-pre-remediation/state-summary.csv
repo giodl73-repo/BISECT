@@ -1,0 +1,9 @@
+state,status,expected_districts,units,structures_passed
+RI,pass,2,250,4
+NE,pass,3,553,4
+CT,pass,5,883,4
+KY,pass,6,1306,4
+SC,pass,7,1323,4
+WI,pass,8,1542,4
+AZ,fail,9,1765,2
+CA,fail,52,9129,1

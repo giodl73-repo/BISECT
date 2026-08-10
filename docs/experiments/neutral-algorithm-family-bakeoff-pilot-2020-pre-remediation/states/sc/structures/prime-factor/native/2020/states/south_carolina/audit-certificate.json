@@ -1,0 +1,259 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:8be747979e6f46dc2ac39b49ea967a0d6e3a06f1643d131428cb9ebc3a6fd96a",
+  "generated_at_utc": "2026-08-09T15:25:04Z",
+  "content_hash": "sha256:8be747979e6f46dc2ac39b49ea967a0d6e3a06f1643d131428cb9ebc3a6fd96a",
+  "plan_hash": "sha256:45537aada89fe8d4c4a3f779094e6cb42371d377b8f0f6d64a197baa1e9b7b81",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:db2d765260a8efa617922ab0d3d846dc231f9ea4ded5bb86080222eef6d5539e",
+  "legal_profile_hash": "sha256:48008586d6645c559903fac45f3a3cafb263503ab43b445ada77bfde39fc1acb",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "SC",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:8fbd5f004f2657667831bb11547b577f39fcbee03de812e5cebb8fa3ef895c1f",
+    "geometry": "sha256:8abfe3ac055d07ab373ff0707b582a03d83158fc4380eaef7af2de52eeace851"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "17 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45011",
+          "district_ids": [
+            2,
+            4
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45015",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 48
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45019",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 99
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45021",
+          "district_ids": [
+            3,
+            5
+          ],
+          "unit_count": 16
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45027",
+          "district_ids": [
+            0,
+            1,
+            2
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45035",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 31
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45043",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 21
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45045",
+          "district_ids": [
+            5,
+            6
+          ],
+          "unit_count": 123
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45055",
+          "district_ids": [
+            0,
+            3
+          ],
+          "unit_count": 18
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45059",
+          "district_ids": [
+            5,
+            6
+          ],
+          "unit_count": 20
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45063",
+          "district_ids": [
+            2,
+            3,
+            4
+          ],
+          "unit_count": 92
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45065",
+          "district_ids": [
+            4,
+            6
+          ],
+          "unit_count": 3
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45071",
+          "district_ids": [
+            3,
+            6
+          ],
+          "unit_count": 10
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45079",
+          "district_ids": [
+            2,
+            3,
+            4
+          ],
+          "unit_count": 98
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45081",
+          "district_ids": [
+            4,
+            6
+          ],
+          "unit_count": 6
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45085",
+          "district_ids": [
+            0,
+            2
+          ],
+          "unit_count": 26
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "45089",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 12
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1323 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-SC-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1323
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,126 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:face1cf68e1654858453548b7d500a3dec4f211b307eccc2ba7e6e54f759105a",
+  "generated_at_utc": "2026-08-09T20:41:50Z",
+  "content_hash": "sha256:face1cf68e1654858453548b7d500a3dec4f211b307eccc2ba7e6e54f759105a",
+  "plan_hash": "sha256:de35da2a56b88912bd49077d3660ab624363e6190177e70699dcf33c18d6248f",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:94a615452dbda5f3988fa96d3fb5dd622fc8ad823beab7a8d32964fb7a356d7a",
+  "legal_profile_hash": "sha256:e8c981da6b67d75014582b6e616bc4af6fa1ec7809cdd0603c4fb589c2471fde",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "NM",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:7f46f8df06dbc7ab772acadbbafb4e8c68f8348fe28a056e856e3d4794e01ced",
+    "geometry": "sha256:67efdb0b2a894645529e412906b10ed081fd1fc2157d22424c81ece58e757f78"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "4 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "35001",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 176
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "35006",
+          "district_ids": [
+            0,
+            2
+          ],
+          "unit_count": 9
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "35043",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 35
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "35061",
+          "district_ids": [
+            0,
+            2
+          ],
+          "unit_count": 25
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "612 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-NM-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 612
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,226 @@
+{
+  "state": "AZ",
+  "state_slug": "arizona",
+  "expected_districts": 9,
+  "status": "fail",
+  "structures": [
+    {
+      "state": "AZ",
+      "structure": "standard-bisect",
+      "status": "fail",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "fail",
+      "audit_certificate_result": "fail",
+      "failed_audit_checks": [
+        {
+          "name": "contiguity",
+          "summary": "one or more districts are disconnected"
+        }
+      ],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1765,
+      "districts": 9,
+      "expected_districts": 9,
+      "edge_cut": 2110074.931103,
+      "canonical_assignment_sha256": "f9d3aef2985d21e5a583a93f010863efdc99a4cef861580645c09a52c929a505",
+      "adjacency_sha256": "a0667dc38fabb093f044675fe31168e62eccd07a4f301c0015cf48bca0760a9f",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "AZ",
+      "structure": "ratio-optimal",
+      "status": "fail",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "fail",
+      "audit_certificate_result": "fail",
+      "failed_audit_checks": [
+        {
+          "name": "contiguity",
+          "summary": "one or more districts are disconnected"
+        }
+      ],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1765,
+      "districts": 9,
+      "expected_districts": 9,
+      "edge_cut": 1923691.048218,
+      "canonical_assignment_sha256": "6f0d99dc8355a2be364e3f6a9e29b8be4b069949587fc8bf61eb1379fc3cf214",
+      "adjacency_sha256": "a0667dc38fabb093f044675fe31168e62eccd07a4f301c0015cf48bca0760a9f",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.91166954304
+    },
+    {
+      "state": "AZ",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1765,
+      "districts": 9,
+      "expected_districts": 9,
+      "edge_cut": 2169511.666766,
+      "canonical_assignment_sha256": "ee13fe98255cc6ed987784ab9da397eb98ba28c39ed4af301d3b96bf2fccde18",
+      "adjacency_sha256": "a0667dc38fabb093f044675fe31168e62eccd07a4f301c0015cf48bca0760a9f",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.02816806872
+    },
+    {
+      "state": "AZ",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1765,
+      "districts": 9,
+      "expected_districts": 9,
+      "edge_cut": 2125757.741494,
+      "canonical_assignment_sha256": "d4186e3fe06cd30928abea352b4c1495c7224d537988f85cdfc80c0c31f6ef6a",
+      "adjacency_sha256": "a0667dc38fabb093f044675fe31168e62eccd07a4f301c0015cf48bca0760a9f",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.007432347619
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "a0667dc38fabb093f044675fe31168e62eccd07a4f301c0015cf48bca0760a9f"
+      ],
+      "binary_sha256": [
+        "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "1765"
+      ],
+      "districts": [
+        "9"
+      ],
+      "expected_districts": [
+        "9"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "AZ",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1014,
+      "different_units": 751,
+      "matched_unit_rate": 0.5745042492917847
+    },
+    {
+      "state": "AZ",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 914,
+      "different_units": 851,
+      "matched_unit_rate": 0.5178470254957507
+    },
+    {
+      "state": "AZ",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1054,
+      "different_units": 711,
+      "matched_unit_rate": 0.5971671388101983
+    },
+    {
+      "state": "AZ",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 1223,
+      "different_units": 542,
+      "matched_unit_rate": 0.6929178470254957
+    },
+    {
+      "state": "AZ",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 1188,
+      "different_units": 577,
+      "matched_unit_rate": 0.6730878186968838
+    },
+    {
+      "state": "AZ",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 971,
+      "different_units": 794,
+      "matched_unit_rate": 0.5501416430594901
+    }
+  ]
+}

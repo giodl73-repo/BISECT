@@ -1,0 +1,9 @@
+NOTE: Running congressional (52D). CA also has house (80D) and senate (40D). Use --chamber house or --chamber senate.
+[partition-time] CA: k=52 n=9129 -> 6281.0ms
+[partition-time] CA: k=52 n=9129 -> 5888.8ms
+[partition-time] CA: k=52 n=9129 -> 6785.2ms
+[partition-time] CA: k=52 n=9129 -> 7630.4ms
+[partition-time] CA: k=52 n=9129 -> 5790.9ms
+METIS Error: A contiguous partition is requested for a non-contiguous input graph.
+
+FAILED CA: CA: bisection failed: depth 2 node '11': METIS kway bisection failed: METIS returned an error

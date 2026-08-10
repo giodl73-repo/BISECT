@@ -1,0 +1,5 @@
+STATUS:1:NE: loading adjacency
+STATUS:1:NE: apportion-regions partition into 3 districts (F=[3], depth=1)
+STATUS:1:NE: balance 0.37% (cache hits=0)
+STATUS:1:NE: balance OK, writing outputs
+STATUS:1:NE: complete (3D, 0ms)

@@ -1,0 +1,3 @@
+NOTE: Running congressional (2D). NH also has house (400D) and senate (24D). Use --chamber house or --chamber senate.
+[partition-time] NH: k=2 n=350 -> 1.2ms
+[OK] NH in 88ms

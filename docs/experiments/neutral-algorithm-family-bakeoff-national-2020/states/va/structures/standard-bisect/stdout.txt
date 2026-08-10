@@ -1,0 +1,4 @@
+STATUS:1:VA: loading adjacency
+STATUS:1:VA: recursive bisection into 11 districts
+STATUS:1:VA: balance OK, writing outputs
+STATUS:1:VA: complete (11D, 0ms)

@@ -1,0 +1,216 @@
+{
+  "state": "NM",
+  "state_slug": "new_mexico",
+  "expected_districts": 3,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "NM",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 612,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 978902.1835,
+      "canonical_assignment_sha256": "cb8e8f365e6cd4826ae05dccf8446f1fd36be141b9f07552315d11aa5b60b8e6",
+      "adjacency_sha256": "7f46f8df06dbc7ab772acadbbafb4e8c68f8348fe28a056e856e3d4794e01ced",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NM",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 612,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 978902.1835,
+      "canonical_assignment_sha256": "cb8e8f365e6cd4826ae05dccf8446f1fd36be141b9f07552315d11aa5b60b8e6",
+      "adjacency_sha256": "7f46f8df06dbc7ab772acadbbafb4e8c68f8348fe28a056e856e3d4794e01ced",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NM",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 612,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 1193327.22147,
+      "canonical_assignment_sha256": "5f26e6cedfd9f32fd892253d453a876f720296a852c4934061432362367c216b",
+      "adjacency_sha256": "7f46f8df06dbc7ab772acadbbafb4e8c68f8348fe28a056e856e3d4794e01ced",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.219046439557
+    },
+    {
+      "state": "NM",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 612,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 1011022.72121,
+      "canonical_assignment_sha256": "0c4f36183447e6829cf4da902383e3451c6e31bb969581f33327d20d10d29bd6",
+      "adjacency_sha256": "7f46f8df06dbc7ab772acadbbafb4e8c68f8348fe28a056e856e3d4794e01ced",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.032812816491
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "7f46f8df06dbc7ab772acadbbafb4e8c68f8348fe28a056e856e3d4794e01ced"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "612"
+      ],
+      "districts": [
+        "3"
+      ],
+      "expected_districts": [
+        "3"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "NM",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 612,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "NM",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 587,
+      "different_units": 25,
+      "matched_unit_rate": 0.9591503267973857
+    },
+    {
+      "state": "NM",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 558,
+      "different_units": 54,
+      "matched_unit_rate": 0.9117647058823529
+    },
+    {
+      "state": "NM",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 587,
+      "different_units": 25,
+      "matched_unit_rate": 0.9591503267973857
+    },
+    {
+      "state": "NM",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 558,
+      "different_units": 54,
+      "matched_unit_rate": 0.9117647058823529
+    },
+    {
+      "state": "NM",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 573,
+      "different_units": 39,
+      "matched_unit_rate": 0.9362745098039216
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+NOTE: Running congressional (4D). KS also has house (125D) and senate (40D). Use --chamber house or --chamber senate.
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=192km  normalised=191.8
+[geosection]   ratio 2:2 best=513km  normalised=363.0
+[geosection] natural ratio 1:3 at 192km (normalised=191.8)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=469km  normalised=468.6
+[geosection] natural ratio 1:2 at 469km (normalised=468.6)
+[partition-time] KS: k=4 n=829 -> 59.6ms
+[OK] KS in 267ms

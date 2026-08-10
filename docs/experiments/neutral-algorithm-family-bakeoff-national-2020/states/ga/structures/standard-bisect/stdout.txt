@@ -1,0 +1,4 @@
+STATUS:1:GA: loading adjacency
+STATUS:1:GA: recursive bisection into 14 districts
+STATUS:1:GA: balance OK, writing outputs
+STATUS:1:GA: complete (14D, 0ms)

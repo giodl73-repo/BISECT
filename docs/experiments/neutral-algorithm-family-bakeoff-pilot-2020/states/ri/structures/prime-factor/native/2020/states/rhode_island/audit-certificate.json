@@ -1,0 +1,96 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:fe7e560f6a31f7b72e60c29ba37a536c892c6c91baf354a87eee12426e987ad8",
+  "generated_at_utc": "2026-08-09T17:58:14Z",
+  "content_hash": "sha256:fe7e560f6a31f7b72e60c29ba37a536c892c6c91baf354a87eee12426e987ad8",
+  "plan_hash": "sha256:2d96b40d0c4fc18b67d4659dffe17fb26e1d428cd16fc67cae091c6755ba1ddb",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:2d4b978dfe15e676832013f54104f87ced6d633251352ce30db2954f3d92b4b9",
+  "legal_profile_hash": "sha256:81cdaf9ad279db6de755a55feb8aee21c4261f9282a33e5cdd8a0c3e1ccc0841",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "RI",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d",
+    "geometry": "sha256:977bc64c912101776391c4d2a3c50aa95d7eb8efe3235fdeaa341b12c7e78fc5"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "44007",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 145
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "250 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-RI-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 250
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

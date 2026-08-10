@@ -1,0 +1,657 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:2a4810633066fd6a0e46fd7b82ff2b930d8b10c317635aa65da28ccc9f459cf7",
+  "generated_at_utc": "2026-08-10T02:52:24Z",
+  "content_hash": "sha256:2a4810633066fd6a0e46fd7b82ff2b930d8b10c317635aa65da28ccc9f459cf7",
+  "plan_hash": "sha256:3901bfdb9972a28179f0c0e29709d1b94db13f45f46b05614e5f8cc4aee64e87",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:48b6e524802d0c3ed2eefc8257f9ef06da7f3256a92c8cbfed824aa415ee6ea4",
+  "legal_profile_hash": "sha256:003ae6935f5cf020a7dff94b1e349a66b2915002b55d37747479776b9df1dce7",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "TX",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:0693c2622f8b4a2474008363bcc2d60a809f811c88e81a20f6387b4438970543",
+    "geometry": "sha256:69fb16bb5aad6a3ed5c6ea50634e4d37a68e3a0355e35ca6301cabff2e9df718"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "53 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48001",
+          "district_ids": [
+            16,
+            17
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48021",
+          "district_ids": [
+            2,
+            32
+          ],
+          "unit_count": 21
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48027",
+          "district_ids": [
+            16,
+            24,
+            25
+          ],
+          "unit_count": 87
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48029",
+          "district_ids": [
+            24,
+            30,
+            31,
+            36,
+            37
+          ],
+          "unit_count": 375
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48035",
+          "district_ids": [
+            18,
+            27
+          ],
+          "unit_count": 7
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48039",
+          "district_ids": [
+            2,
+            3,
+            36
+          ],
+          "unit_count": 78
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48051",
+          "district_ids": [
+            2,
+            16
+          ],
+          "unit_count": 7
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48055",
+          "district_ids": [
+            2,
+            32
+          ],
+          "unit_count": 11
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48057",
+          "district_ids": [
+            2,
+            36
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48085",
+          "district_ids": [
+            8,
+            9,
+            21
+          ],
+          "unit_count": 220
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48091",
+          "district_ids": [
+            24,
+            31,
+            32
+          ],
+          "unit_count": 33
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48099",
+          "district_ids": [
+            24,
+            27
+          ],
+          "unit_count": 19
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48113",
+          "district_ids": [
+            9,
+            10,
+            11,
+            13,
+            21,
+            28,
+            29
+          ],
+          "unit_count": 645
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48121",
+          "district_ids": [
+            20,
+            21
+          ],
+          "unit_count": 193
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48141",
+          "district_ids": [
+            22,
+            23
+          ],
+          "unit_count": 188
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48143",
+          "district_ids": [
+            18,
+            27
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48157",
+          "district_ids": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "unit_count": 133
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48167",
+          "district_ids": [
+            3,
+            15,
+            36
+          ],
+          "unit_count": 103
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48187",
+          "district_ids": [
+            2,
+            31,
+            32,
+            36,
+            37
+          ],
+          "unit_count": 41
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48201",
+          "district_ids": [
+            0,
+            1,
+            3,
+            4,
+            5,
+            6,
+            7,
+            14,
+            15,
+            16
+          ],
+          "unit_count": 1115
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48209",
+          "district_ids": [
+            24,
+            25,
+            31,
+            32
+          ],
+          "unit_count": 46
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48213",
+          "district_ids": [
+            11,
+            13,
+            17
+          ],
+          "unit_count": 28
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48215",
+          "district_ids": [
+            34,
+            35
+          ],
+          "unit_count": 212
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48217",
+          "district_ids": [
+            11,
+            18
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48225",
+          "district_ids": [
+            16,
+            17
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48231",
+          "district_ids": [
+            8,
+            12,
+            13
+          ],
+          "unit_count": 21
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48241",
+          "district_ids": [
+            15,
+            17
+          ],
+          "unit_count": 10
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48251",
+          "district_ids": [
+            11,
+            18
+          ],
+          "unit_count": 39
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48255",
+          "district_ids": [
+            36,
+            37
+          ],
+          "unit_count": 5
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48257",
+          "district_ids": [
+            11,
+            13
+          ],
+          "unit_count": 27
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48281",
+          "district_ids": [
+            24,
+            25
+          ],
+          "unit_count": 6
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48291",
+          "district_ids": [
+            14,
+            15,
+            17
+          ],
+          "unit_count": 17
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48293",
+          "district_ids": [
+            11,
+            17
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48297",
+          "district_ids": [
+            36,
+            37
+          ],
+          "unit_count": 4
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48321",
+          "district_ids": [
+            2,
+            36
+          ],
+          "unit_count": 13
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48323",
+          "district_ids": [
+            23,
+            37
+          ],
+          "unit_count": 13
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48325",
+          "district_ids": [
+            24,
+            37
+          ],
+          "unit_count": 11
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48329",
+          "district_ids": [
+            23,
+            26
+          ],
+          "unit_count": 37
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48339",
+          "district_ids": [
+            1,
+            14,
+            16,
+            17
+          ],
+          "unit_count": 133
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48351",
+          "district_ids": [
+            15,
+            17
+          ],
+          "unit_count": 5
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48375",
+          "district_ids": [
+            26,
+            27
+          ],
+          "unit_count": 35
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48381",
+          "district_ids": [
+            26,
+            27
+          ],
+          "unit_count": 33
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48401",
+          "district_ids": [
+            12,
+            17
+          ],
+          "unit_count": 14
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48423",
+          "district_ids": [
+            12,
+            13,
+            17
+          ],
+          "unit_count": 56
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48439",
+          "district_ids": [
+            11,
+            18,
+            19,
+            20,
+            28,
+            29
+          ],
+          "unit_count": 449
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48453",
+          "district_ids": [
+            25,
+            32,
+            33
+          ],
+          "unit_count": 290
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48471",
+          "district_ids": [
+            16,
+            17
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48473",
+          "district_ids": [
+            1,
+            2,
+            16
+          ],
+          "unit_count": 11
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48477",
+          "district_ids": [
+            2,
+            16
+          ],
+          "unit_count": 9
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48479",
+          "district_ids": [
+            34,
+            37
+          ],
+          "unit_count": 69
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48491",
+          "district_ids": [
+            16,
+            25,
+            33
+          ],
+          "unit_count": 135
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48493",
+          "district_ids": [
+            36,
+            37
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "48499",
+          "district_ids": [
+            12,
+            13
+          ],
+          "unit_count": 12
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "6896 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-TX-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 6896
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

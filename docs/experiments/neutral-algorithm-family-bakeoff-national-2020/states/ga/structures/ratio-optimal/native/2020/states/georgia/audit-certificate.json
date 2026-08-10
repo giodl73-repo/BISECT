@@ -1,0 +1,439 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:c49a9369303a8d02df59f6ca8e81a304b0d2499cf27eb21d72bc098b819b157f",
+  "generated_at_utc": "2026-08-10T02:16:27Z",
+  "content_hash": "sha256:c49a9369303a8d02df59f6ca8e81a304b0d2499cf27eb21d72bc098b819b157f",
+  "plan_hash": "sha256:078f9bbdc9abfc7ac89d910cfa62f954cccdcb83d03c51338e69d3afbc7d16f6",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:5dd27a19dc0c3017a67296937f964e2b1a45ade371c0c2c851b7056e030279aa",
+  "legal_profile_hash": "sha256:27d58e9dbbc891940c436011917e81cc895e372b0088fef125f2014fecc02b6d",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "GA",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:2f8d5fdebc76659f683091df4b74826d3ab734e6b8c73369cbc523c7c77386b0",
+    "geometry": "sha256:808b6557639ce39c0127445e0d97243f88e560c53fb1ea1efebb3f1c0f0fcb27"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "34 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13045",
+          "district_ids": [
+            3,
+            7
+          ],
+          "unit_count": 28
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13053",
+          "district_ids": [
+            9,
+            10
+          ],
+          "unit_count": 5
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13057",
+          "district_ids": [
+            3,
+            4
+          ],
+          "unit_count": 56
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13063",
+          "district_ids": [
+            6,
+            7,
+            9
+          ],
+          "unit_count": 70
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13067",
+          "district_ids": [
+            1,
+            3
+          ],
+          "unit_count": 186
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13077",
+          "district_ids": [
+            7,
+            9
+          ],
+          "unit_count": 27
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13089",
+          "district_ids": [
+            0,
+            1,
+            6
+          ],
+          "unit_count": 203
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13097",
+          "district_ids": [
+            1,
+            7
+          ],
+          "unit_count": 31
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13105",
+          "district_ids": [
+            8,
+            13
+          ],
+          "unit_count": 6
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13107",
+          "district_ids": [
+            11,
+            12
+          ],
+          "unit_count": 9
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13113",
+          "district_ids": [
+            7,
+            9
+          ],
+          "unit_count": 24
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13115",
+          "district_ids": [
+            3,
+            4
+          ],
+          "unit_count": 26
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13117",
+          "district_ids": [
+            2,
+            5
+          ],
+          "unit_count": 48
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13121",
+          "district_ids": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "unit_count": 327
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13123",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13133",
+          "district_ids": [
+            8,
+            13
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13135",
+          "district_ids": [
+            0,
+            2,
+            5,
+            6,
+            8
+          ],
+          "unit_count": 220
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13143",
+          "district_ids": [
+            3,
+            7
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13151",
+          "district_ids": [
+            6,
+            8,
+            9,
+            13
+          ],
+          "unit_count": 59
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13153",
+          "district_ids": [
+            10,
+            13
+          ],
+          "unit_count": 38
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13157",
+          "district_ids": [
+            5,
+            8
+          ],
+          "unit_count": 17
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13171",
+          "district_ids": [
+            9,
+            13
+          ],
+          "unit_count": 4
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13179",
+          "district_ids": [
+            11,
+            12
+          ],
+          "unit_count": 18
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13185",
+          "district_ids": [
+            10,
+            11
+          ],
+          "unit_count": 29
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13217",
+          "district_ids": [
+            8,
+            13
+          ],
+          "unit_count": 22
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13227",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 9
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13235",
+          "district_ids": [
+            10,
+            11
+          ],
+          "unit_count": 4
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13237",
+          "district_ids": [
+            8,
+            13
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13245",
+          "district_ids": [
+            12,
+            13
+          ],
+          "unit_count": 56
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13247",
+          "district_ids": [
+            6,
+            8
+          ],
+          "unit_count": 24
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13255",
+          "district_ids": [
+            9,
+            13
+          ],
+          "unit_count": 17
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13269",
+          "district_ids": [
+            10,
+            13
+          ],
+          "unit_count": 4
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13293",
+          "district_ids": [
+            9,
+            13
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "13297",
+          "district_ids": [
+            6,
+            8
+          ],
+          "unit_count": 20
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "2796 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-GA-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 2796
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

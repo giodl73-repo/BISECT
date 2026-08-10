@@ -1,0 +1,116 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:e915edb01eb61826c139d59de9eae8557ef1fdcf427e6096825cb35da1b492f6",
+  "generated_at_utc": "2026-08-09T20:41:48Z",
+  "content_hash": "sha256:e915edb01eb61826c139d59de9eae8557ef1fdcf427e6096825cb35da1b492f6",
+  "plan_hash": "sha256:371212558089999f30379002115d760e3182bf6a2527f6a82e277b6f6eefb93b",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:303f2ee040e2f1f877a4448bf40dbbd2e7ba87083800caec9c050b5a8985ffee",
+  "legal_profile_hash": "sha256:b0ad7d949b775457b6659ad06e30b0a73141f09788a2ab6475fffd135c78b882",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "ME",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:63171c8f55c38c5621573c2a972a97f6e49b770bc742ddcb3e9ee25f958a9676",
+    "geometry": "sha256:942e11574d9b5138ee86486ea3dc08760dbc63286838822635248449c7366cbc"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "3 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "23001",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 32
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "23015",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 10
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "23017",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 19
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "407 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-ME-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 407
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

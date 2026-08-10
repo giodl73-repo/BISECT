@@ -1,0 +1,4 @@
+STATUS:1:NV: loading adjacency
+STATUS:1:NV: recursive bisection into 4 districts
+STATUS:1:NV: balance OK, writing outputs
+STATUS:1:NV: complete (4D, 0ms)

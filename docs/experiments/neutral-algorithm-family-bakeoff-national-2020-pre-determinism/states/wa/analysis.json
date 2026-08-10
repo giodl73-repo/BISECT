@@ -1,0 +1,216 @@
+{
+  "state": "WA",
+  "state_slug": "washington",
+  "expected_districts": 10,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "WA",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1784,
+      "districts": 10,
+      "expected_districts": 10,
+      "edge_cut": 2397418.060096,
+      "canonical_assignment_sha256": "d385660342802b639a7cfad83f0b67c4db05658305d79f10d445734694789b33",
+      "adjacency_sha256": "60df6e6a3d572bf39483af2417ae9165c5fc1115bdba54a5717dc8cc4e6b5dd7",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "WA",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1784,
+      "districts": 10,
+      "expected_districts": 10,
+      "edge_cut": 2886583.200482,
+      "canonical_assignment_sha256": "054b19b8e2b8d286e7893d4f258f261ab3d9c87c02cd5d262376cc8358cca99a",
+      "adjacency_sha256": "60df6e6a3d572bf39483af2417ae9165c5fc1115bdba54a5717dc8cc4e6b5dd7",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.204038314605
+    },
+    {
+      "state": "WA",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1784,
+      "districts": 10,
+      "expected_districts": 10,
+      "edge_cut": 2188447.717275,
+      "canonical_assignment_sha256": "6f33ef95ede03f5df66ec04e90a2a0a2cfde5e5cc97974edda8e1725f8d4af3f",
+      "adjacency_sha256": "60df6e6a3d572bf39483af2417ae9165c5fc1115bdba54a5717dc8cc4e6b5dd7",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.912835251265
+    },
+    {
+      "state": "WA",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1784,
+      "districts": 10,
+      "expected_districts": 10,
+      "edge_cut": 2487589.403707,
+      "canonical_assignment_sha256": "3725956348d3d7d5b42509d2b6ec4db34ed8aa72c66d55dff148495483c22c32",
+      "adjacency_sha256": "60df6e6a3d572bf39483af2417ae9165c5fc1115bdba54a5717dc8cc4e6b5dd7",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.037611856318
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "60df6e6a3d572bf39483af2417ae9165c5fc1115bdba54a5717dc8cc4e6b5dd7"
+      ],
+      "binary_sha256": [
+        "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "1784"
+      ],
+      "districts": [
+        "10"
+      ],
+      "expected_districts": [
+        "10"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "WA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1226,
+      "different_units": 558,
+      "matched_unit_rate": 0.6872197309417041
+    },
+    {
+      "state": "WA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 1303,
+      "different_units": 481,
+      "matched_unit_rate": 0.7303811659192825
+    },
+    {
+      "state": "WA",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1347,
+      "different_units": 437,
+      "matched_unit_rate": 0.7550448430493274
+    },
+    {
+      "state": "WA",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 1136,
+      "different_units": 648,
+      "matched_unit_rate": 0.6367713004484304
+    },
+    {
+      "state": "WA",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 1145,
+      "different_units": 639,
+      "matched_unit_rate": 0.6418161434977578
+    },
+    {
+      "state": "WA",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 1220,
+      "different_units": 564,
+      "matched_unit_rate": 0.6838565022421524
+    }
+  ]
+}

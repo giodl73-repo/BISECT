@@ -1,0 +1,5 @@
+STATUS:1:VA: loading adjacency
+STATUS:1:VA: apportion-regions partition into 11 districts (F=[11], depth=3)
+STATUS:1:VA: balance 0.20% (cache hits=0)
+STATUS:1:VA: balance OK, writing outputs
+STATUS:1:VA: complete (11D, 0ms)
