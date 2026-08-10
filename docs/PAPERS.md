@@ -32,7 +32,7 @@ The mathematical and computational foundations. Start here if you are new to the
 
 | Code | Title | PDF |
 |------|-------|-----|
-| B.0 | Bakeoff — all 8 algorithm modes on 6 competitive states | [PDF](papers/B.0+algorithm-design-overview.pdf) |
+| B.0 | Exploratory bakeoff — 8 algorithm modes on 4 states | [PDF](papers/B.0+algorithm-design-overview.pdf) | mixed matrix retained; Wisconsin, eight-State pilot, and frozen 44-State/176-cell structure packages regenerated exactly; bounded mechanics only, no national ranking |
 | B.1 | Recursive Bisection for Congressional Redistricting | [PDF](papers/B.1+recursive-bisection.pdf) |
 | B.2 | Edge-Weighted Recursive Bisection (+22% compactness) | [PDF](papers/B.2+edge-weighted-bisection.pdf) |
 | B.3 | Single-Objective vs. Multi-Constraint METIS | [PDF](papers/B.3+multi-vs-edge.pdf) |
@@ -106,7 +106,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | [PDF](papers/U.18+large-neighborhood-search.pdf) | reviewed draft; public lineage and benchmark packages |
 | U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | [PDF](papers/U.19+evolutionary-search-comparison.pdf) | reviewed draft; public selected-frontier package |
 | U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | [PDF](papers/U.20+plan-audit-certificates.pdf) | reviewed draft; public package corpus and audit benchmark |
-| U.21 | Certified Recursive Bisection — proof-carrying cuts and recursive certificate trees | [PDF](papers/U.21+certified-recursive-bisection.pdf) | three-cycle operational evidence and bounded comparison published; exact State proof pending |
+| U.21 | Certified Recursive Bisection — proof-carrying cuts and recursive certificate trees | [PDF](papers/U.21+certified-recursive-bisection.pdf) | three-cycle operational evidence, bounded exact/METIS comparison, and governed 2020 NRS/CD118 Tier 1--2 bakeoff published; exact State proof pending |
 
 U.0 and U.12-U.21 are reviewed or evidence-bounded drafts with PDFs and paper-level simulated
 review/revision artifacts. Search/optimization additions through U.21 are
@@ -278,7 +278,7 @@ Synthesis, guides, and practitioner materials.
 
 | Code | Title | PDF |
 |------|-------|-----|
-| A.0 | National-Scale Demonstration — governed three-cycle synthesis with declared proof and metric gaps | [PDF](papers/A.0+synthesis-metapaper.pdf) |
+| A.0 | National-Scale Demonstration — governed three-cycle synthesis with declared proof and metric gaps | [PDF](papers/A.0+synthesis-metapaper.pdf) | governed 2020 NRS/CD118 common-block Tier 1--2 bakeoff integrated; elections, demographics, ensembles, and alternative comparators remain gated |
 | A.1 | Research Portfolio Guide | [PDF](papers/A.1+portfolio-guide.pdf) |
 | A.2 | Portfolio Summary | [PDF](papers/A.2+portfolio-summary.pdf) |
 | A.3 | Portfolio Visualization — visual guide for non-technical audiences | [PDF](papers/A.3+portfolio-visualization.pdf) |
@@ -327,7 +327,7 @@ One paper per compactness metric: mathematical definition, properties, implement
 
 | Code | Title | PDF | Status |
 |------|-------|-----|--------|
-| K.0 | Compactness Taxonomy and Overview | [PDF](papers/K.0+compactness-overview.pdf) | exact-MBC smoke package added |
+| K.0 | Compactness Taxonomy and Overview | [PDF](papers/K.0+compactness-overview.pdf) | K-series tract/algorithm fixtures separated from governed national common-block geometry evidence |
 | K.1 | Polsby-Popper Score | [PDF](papers/K.1+polsby-popper.pdf) | **Accepted** |
 | K.2 | Reock Score | [PDF](papers/K.2+reock.pdf) | exact-MBC smoke package added |
 | K.3 | Convex Hull Ratio | [PDF](papers/K.3+convex-hull.pdf) | **Accepted** |

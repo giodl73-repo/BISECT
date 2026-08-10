@@ -3,10 +3,11 @@
 Governed NRS v0.3 recursive-bisection runs cover all 50 States across three
 Census decades (2000, 2010, 2020), generating 1,305 district assignments from
 27,398,654 block assignments. The operational counts, structural comparison,
-and proof gaps below are hash-bound and independently verified. Regional,
-compactness, demographic, and partisan values later in this section are tied
-to earlier tract-based research artifacts. They have not been regenerated for
-NRS v0.3 and must not be read as outcomes of the governed block assignments.
+and proof gaps below are hash-bound and independently verified. The governed
+2020 bakeoff adds same-vintage assignment, subdivision, and block-projected
+geometry comparisons with official CD118. Regional, demographic, partisan,
+and older compactness values later in this section remain tied to earlier
+tract-based research artifacts and must not be read as NRS v0.3 outcomes.
 
 \subsection{Regional Context}
 
@@ -76,10 +77,52 @@ manifest-rehashed tampering. Raw recursive-tree transport hashes reproduce for
 across two regenerations but a nondeterministic diagnostic move count in one
 node; the audit therefore binds its assignment hash and exact committed
 substantive node snapshot rather than treating that raw metadata hash as an
-assignment anchor. Municipality, geometric compactness, demographic,
-partisan, seed-sensitivity, and ensemble metrics remain unavailable under the
-frozen readiness rules because their national inputs or protocols are not yet
-complete.
+assignment anchor. Municipality, demographic, partisan, and ensemble metrics
+remain unavailable under the frozen readiness rules because their national
+inputs or protocols are not yet complete. Governed seed diagnostics and the
+separately frozen 2020 geometry bakeoff are reported below, within their
+narrower claim boundaries.
+
+\subsection{Finding 1B: Governed 2020 Plan-Family Bakeoff}
+
+The precommitted Tier 1 comparison passed all 50 States and both 435-district
+plan families. A uniform \texttt{ALAND20 > 0} rule retained 7,889,194 of
+8,126,956 source Census blocks. After maximum-overlap district-label matching
+within each State, 4,194,107 assignments match and 3,695,087 differ, for
+53.162680\% block-weighted agreement. NRS splits 1,808 county units and 19,789
+tract units; the official CD118 block projection splits 404 county units and
+4,720 tract units. These are descriptive counts on one common atomic universe,
+not evidence that either plan family is legally or substantively superior.
+
+Tier 2 dissolves the same retained blocks by plan assignment. Table~\ref{tab:nrs-national-geometry}
+reports district-weighted national means; State-weighted means have the same
+direction.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Metric & NRS v0.3 & Official CD118 block projection \\
+\midrule
+Polsby--Popper & 0.025380339 & 0.061087819 \\
+Exact Reock & 0.245552262 & 0.377238283 \\
+Convex-hull ratio & 0.557042985 & 0.702220801 \\
+Schwartzberg & 7.847347095 & 5.656288737 \\
+\bottomrule
+\end{tabular}
+\caption{Governed 2020 common-block geometry bakeoff. Values are descriptive
+district-weighted means over block-projected geometry, not original enacted
+linework or a composite quality ranking.}
+\label{tab:nrs-national-geometry}
+\end{table}
+
+The comparator is higher on Polsby--Popper, exact Reock, and convex-hull ratio
+and lower on Schwartzberg. The complete package regenerated exactly with one
+State active at a time. Because all four measures use reconstructed common-
+block geometry, the result supports neither an original-linework comparison
+nor a winner, fairness, intent, VRA, community, legal, causal, robustness, or
+adoption claim. Elections, demographics, non-enacted comparators, alternative
+BISECT structures, and converged block-level ensembles remain separate gates.
 
 \subsection{Historical Tract-Profile Comparisons}
 
@@ -90,7 +133,9 @@ Compared with a different baseline---enacted 2020 congressional maps---the
 reported improvement was 22\% (mean 0.367 versus 0.305); see
 Table~\ref{tab:compactness-headline}. These are profile-specific comparisons,
 not a constitutional finding or proof that edge weighting optimizes every
-accepted compactness measure~\cite{deluca2026edgeweighted}.
+accepted compactness measure~\cite{deluca2026edgeweighted}. They use a
+different tract-level profile and geometry contract and are not substitutes
+for the governed NRS v0.3 common-block bakeoff above.
 
 \input{tables/compactness_headline}
 

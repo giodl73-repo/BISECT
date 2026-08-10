@@ -176,24 +176,25 @@ For Alabama:
   \item GeoSection (stated political goal: efficient district layout):
     0D, 1 MM district.
   \item VRASection: 1D, \textbf{2 MM districts} (confirmed, T.7).
-  \item Strong-inference test: \textbf{satisfied}.
-    The state's goals (compact, population-balanced districts) could have been
-    achieved with two minority-opportunity districts.
-    The \allenmilligan{} remedy is computable from the toolbox.
+  \item Research diagnostic: the fixture produces a second threshold-based
+    minority-opportunity district. This does not adjudicate strong inference or
+    establish an \allenmilligan{} remedy.
 \end{itemize}
 
 For Georgia:
 \begin{itemize}
   \item GeoSection: 5D, 1 MM district (estimated).
   \item VRASection: 5D, 3 MM districts (estimated).
-  \item Strong-inference test: satisfied (same seat count, better minority outcomes).
+  \item Strong-inference status: unavailable because both comparison rows are
+    estimated.
 \end{itemize}
 
 For North Carolina:
 \begin{itemize}
   \item GeoSection: 5D, 1 MM district.
   \item VRASection: 5D, 2 MM districts (estimated, Charlotte/Raleigh isolation).
-  \item Strong-inference test: satisfied.
+  \item Strong-inference status: unavailable because the VRASection row is
+    estimated.
 \end{itemize}
 
 \paragraph{Strong-inference interpretation.}
@@ -204,17 +205,14 @@ alignment signal ($w_\text{vra} > 0$).
 To isolate the alignment signal's causal contribution, T.7 includes an ablation
 in which VRASection is run with $w_\text{vra} = 0$, which reduces to GeoSection
 in the ratio-selection step.
-The ablation confirms that the $w_\text{vra} > 0$ alignment signal is the causal
-mechanism: at $w_\text{vra} = 0$, Alabama produces $3:4$ first-bisection and
+The ablation isolates the alignment signal within the Alabama fixture: at
+$w_\text{vra} = 0$, Alabama produces $3:4$ first-bisection and
 1 MM district (identical to GeoSection); at $w_\text{vra} = 0.40$, Alabama
 produces $2:5$ and 2 MM districts.
-To falsify the hypothesis that algorithm choice is partisan-neutral, we would
-need to find a state where all six algorithm modes produce the same partisan
-outcome.
-No such state exists in the competitive subset ($n=34$).
-The 12.8\,pp range (GeoSection vs.\ ApportionRegions in Wisconsin) is
-approximately $4\times$ the within-algorithm seed variance (CV $< 2\,\%$),
-confirming that algorithm selection, not seed choice, drives partisan outcomes.
+This mechanism result does not identify causal partisan effects. The broader
+six-mode claim is not testable from this matrix because some algorithm rows are
+pending or estimated; comparison with within-algorithm seed variance likewise
+requires a completed common-input execution.
 
 \subsection{Separation of Legal Signals: A Formal Statement}
 
