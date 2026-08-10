@@ -1,0 +1,28 @@
+{
+  "schema_version": "nrs-block-ensemble-package-v1",
+  "protocol_id": "nrs-v0.3-block-ensemble-gate-v1",
+  "status": "complete",
+  "state": "RI",
+  "year": 2020,
+  "artifacts": {
+    "governed-wilson.json": "c02fd333e7f55a5585a2bc2019a8124a641c67f83b95beff995cfb1fc5f69157",
+    "governed-kruskal.json": "360a29575e780382b5e77902bd25e27b4424f8a9a7ae413d5c1b9d250cc05b35",
+    "analysis.json": "c2860e797153a345d1253756e3de4394b5f4c0d04b42840a1ce436c67036a189",
+    "summary.csv": "0c52205289df4f69d698926b367937ef390d0e7ee7e835f4968a4fc79c5db002",
+    "README.md": "5dbd558f855bd29ea855c5c1ac2fd8078eb3136947c945f41c0d2b20740eb2ae",
+    "commands.md": "589b0022f83c02de4dff8b17dd714352809337651af56f15c097e76a9b660b28",
+    "deviations.md": "d603e87a4c5a6710bec4a4664845181476a869c8e3730bd102ce94b471344bd2"
+  },
+  "sources": {
+    "docs/specs/2026-08-10-nrs-v0.3-block-ensemble-gate.md": "0eb2f17501febab3fdc94d6b660dbf370939bfac358a2b6ac161032d44e60903",
+    "crates/bisect-ensemble/src/block_input.rs": "c9fd70597cb276d253d3eac67338e200909cba2f01b0c22c6b438b13d1c7171a",
+    "crates/bisect-ensemble/examples/validate_block_input.rs": "88ccbcbe78489cb2e8da9f8e5d06e7f71db18bafe3f274a53c38c984411d51d1",
+    "crates/bisect-ensemble/examples/block_trace.rs": "a81f40baf5d6a58f916b4cba3e3c99d47d272687e7faf6b5cc1c9bb6b95df94f",
+    "scripts/research/analyze_block_ensemble.py": "90637cf3ed04bcbbefb40d131701e8e72aee723e721e77f181cffe9eef7d62c1",
+    "scripts/research/verify_block_ensemble_gate.py": "72cc9284f43febdb73eee81340298742feacc6d7125d849f482c7fc2675a3b9c",
+    "data/2020/certified/ri_blocks_2020.rctx": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371",
+    "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/baseline_assignments.json": "e9bdc209225b8667221218eb6aa76523bf7d48dfbb54f468fe8d9bee335d3785"
+  },
+  "normalization": "runtime_ms is set to 0.0 before deterministic replay comparison",
+  "claim_boundary": "Rhode Island block-graph kernel sensitivity only; no national, neutrality, legal, mixing-proof, or sampler-equivalence claim."
+}

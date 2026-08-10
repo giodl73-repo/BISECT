@@ -56,7 +56,8 @@ mapmaker would achieve.
 
 The $T = 600$ threshold for \cs{} was certified in U.1 using empirical data
 from B.7 (50-state seed sweep).%
-\footnote{The T=600 ConvergenceSweep formula is certified in U.1~\cite{deluca2026convergence} (Round~2, accepted; mean reviewer score 3.67/4). The formula's theoretical foundations and 89-seed empirical margin above Georgia's certified tail are documented in that paper.}
+\footnote{The $T=600$ ConvergenceSweep formula, its theoretical foundations,
+and its empirical margin are documented in the companion U.1 paper.}
 The same data supports ensemble diagnostic
 thresholds: if the seed sweep finds no improvement after 600 seeds, the
 plan is stable under seed perturbation.  This is analogous to---but distinct
@@ -70,3 +71,25 @@ and should not be conflated.  Together they provide complete coverage of the
 two-method framework: \ess{} certifies that the ensemble distribution estimate
 is stable under additional draws; $T = 600$ certifies that the deterministic
 search has found the best available plan under additional seeds.
+
+\subsection{Governed Block-Level Kernel Sensitivity}
+
+The separately frozen Rhode Island Stage~1 gate provides a concrete warning
+against treating ``the ReCom ensemble'' as a kernel-free object.  On the same
+25,649-block RCTX, starting assignment, $0.005$ population tolerance, chain
+schedule, and seed derivation, four Wilson-tree chains and four
+random-weight-Kruskal-tree chains each completed 2,000 steps.  After the frozen
+500-step burn-in, both cut metrics passed split-$\rhat<1.05$ and pooled
+$\ess\geq100$ for each kernel.  A fresh sequential execution regenerated all
+normalized metrics and canonical snapshots exactly.
+
+Those execution checks did not make the distributions interchangeable.  Mean
+unweighted cut fraction was $0.0103331$ for Wilson and $0.00778270$ for
+Kruskal, with descriptive two-sample KS statistic $0.405833$.  Mean
+RCTX-weighted boundary cut was $193{,}294{,}034$ and $152{,}599{,}928$,
+respectively, with KS statistic $0.31$.  Because the draws are autocorrelated,
+the KS $p$-values are descriptive only.  The result supports a Rhode Island
+kernel-sensitivity statement; it does not prove mixing, sampler equivalence,
+or national representativeness.  Multi-state expansion remains closed pending
+instrumented peak-memory evidence and a separately frozen compute and storage
+budget.

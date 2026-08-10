@@ -40,7 +40,7 @@ a chain of length $N$ with autocorrelation $\rho_t$ at lag $t$:
 \end{equation}
 
 An \ess{} of at least 400 per statistic is the minimum floor for reliable
-95\% interval estimates; G.4~\citep{g4paper} establishes 500 as the
+95\% interval estimates; the companion G.4 paper establishes 500 as the
 recommended target based on empirical diagnostics across six states.
 \recom{} ensembles typically achieve higher \ess{} than
 flip-chain ensembles of the same length, because the recombination move
@@ -102,7 +102,8 @@ used by the repository, these are \texttt{external-trace} and
 \texttt{diagnostic} artifacts.  Missing either artifact downgrades a percentile
 statement from empirical finding to protocol or design claim.
 
-The active synthetic G.1--G.3 package validates this artifact shape at small
-scale.  The missing-evidence package remains the live ledger for real diagnostic
-artifacts that must be added before G.1--G.3 percentiles can be cited as
-completed external-ensemble findings.
+The active real G.1--G.3 package validates this artifact shape for RI, IA, and
+NC. It also demonstrates why the diagnostics are claim gates: Iowa and North
+Carolina cannot support precise extreme-tail claims under the preregistered ESS
+rules, and the Rust and GerryChain cut distributions disagree materially in
+those states.

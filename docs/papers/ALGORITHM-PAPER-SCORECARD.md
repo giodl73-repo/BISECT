@@ -108,9 +108,9 @@ Score bands:
 | Paper | P1 | P2 | P3 | P4 | P5 | P6 | Total | Priority |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | G.0 Ensemble Methodology | 3.5 | 3.4 | 3.3 | 3.6 | 3.6 | 3.4 | 20.8 | Strong; package/diagnostic framing updated |
-| G.1 GerryChain Congressional Comparison | 3.5 | 3.4 | 3.4 | 3.6 | 3.6 | 3.4 | 20.9 | Stronger; active synthetic package plus real-evidence gap |
-| G.2 Partisan Outcome Distributions | 3.4 | 3.3 | 3.2 | 3.5 | 3.5 | 3.3 | 20.2 | Stronger; active synthetic package plus real-election gap |
-| G.3 Compactness Distribution Position | 3.5 | 3.4 | 3.3 | 3.6 | 3.6 | 3.4 | 20.8 | Stronger; active synthetic package plus real-metric gap |
+| G.1 GerryChain Congressional Comparison | 3.5 | 3.4 | 3.4 | 3.6 | 3.6 | 3.4 | 20.9 | Stronger; active real RI/IA/NC package, with ESS and cross-tool caveats |
+| G.2 Partisan Outcome Distributions | 3.4 | 3.3 | 3.2 | 3.5 | 3.5 | 3.3 | 20.2 | Stronger; active 2020 election package, with 2016 coverage gap retained |
+| G.3 Compactness Distribution Position | 3.5 | 3.4 | 3.3 | 3.6 | 3.6 | 3.4 | 20.8 | Stronger; real tract cut-fraction evidence, polygon claims withdrawn |
 | G.4 Ensemble Diagnostics | 3.8 | 3.7 | 3.7 | 3.9 | 4.0 | 3.6 | 22.7 | Golden |
 | G.5 Convergence Mixing Analysis | 3.4 | 3.4 | 3.2 | 3.6 | 3.4 | 3.3 | 20.3 | Strong; diagnostics scoped correctly |
 | G.6 Short-Burst | 3.5 | 3.5 | 3.3 | 3.5 | 3.5 | 3.5 | 20.8 | Stronger; endpoint/seed smoke package, production CLI pending |
@@ -163,9 +163,10 @@ Score bands:
 2. Package evidence follow-through: U.2/U.4/U.5/U.11 now have synthetic package evidence,
    but still need real archived sweep and production CLI packages before they can
    score as implementation papers.
-3. G-track package follow-through: G.1-G.3 now have active synthetic package
-   evidence, but still need archived real external traces and election/metric
-   packages before their percentile claims can score as empirical findings.
+3. G-track package follow-through: G.1-G.3 have an active real RI/IA/NC tract
+   package, and G.0 now integrates the completed governed Rhode Island block
+   sensitivity gate. National/multi-State, polygon-compactness, and
+   multi-election expansion remain separately gated.
 
 ## Track Summary
 
@@ -173,7 +174,7 @@ Score bands:
 |---|---:|---|---|
 | B/T construction foundations | 26 | Strong for reviewed/new slices, serviceable for older slices; T.5-T.7 golden and T.8/T.9 strong | legacy visuals and audit/package bridges |
 | U search/optimization/audit | 21 | Strong after synthetic U.2/U.4/U.5/U.11 packages and U.10/U.16-U.20 golden slices | real archived sweep/CLI/autocorrelation packages for U.2/U.4/U.5/U.11 |
-| G ensemble/sampling | 16 | Strong after active synthetic G.1-G.3 and G.6/G.12 short-burst packages; G.4/G.7/G.10/G.11 golden | archived real external traces for G.1-G.3 and production CLI for short-burst |
+| G ensemble/sampling | 16 | Strong after the real RI/IA/NC tract package, governed RI block-kernel slice, and G.6/G.12 short-burst packages; G.4/G.7/G.10/G.11 golden | resource-frozen multi-State block gate and production CLI for short-burst |
 | J apportionment | 7 | Serviceable-plus after implementation-boundary pass | Census/SHA fixtures and Hamilton public API remain future work |
 | K compactness metrics | 8 | Strong after exact-MBC smoke package and K.5 MBR/AABB boundary | real district exact-MBC and LW replay packages |
 | L partisan metrics | 7 | Strong | cross-link to G/A synthesis |

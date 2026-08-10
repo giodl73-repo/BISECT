@@ -88,7 +88,8 @@ For every State and Census year:
   - [x] Extend complete-tree DFS and fallback diagnostics to governed 2000/2010 nodes.
   - [x] Instrument candidate multiplicity inside the seven activated v0.2 nodes and one activated v0.3 stage.
   - [x] Stop governed fallback seed expansion after all eight activated stages yielded one tied physical partition.
-  - [ ] Run converged block-level ensembles only after their separate gate is frozen.
+  - [x] Run the frozen Rhode Island block-level Stage 1 gate; all eight chains completed and the two kernel traces regenerated exactly.
+  - [ ] Freeze any multi-State ensemble expansion only after instrumented peak memory and explicit compute/storage budgets are added.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
   - [x] Update the synthesis and policy papers after the neutral analysis is complete.
@@ -129,9 +130,10 @@ Current objective:
 
 Next unblocked work:
 
-> Obtain a non-author external v0.3 replication record while freezing a
-> separate national algorithm-family schedule; do not infer a ranking from the
-> repaired one-State proof slice.
+> Obtain a non-author external v0.3 replication record while keeping
+> multi-State block-level ensemble expansion behind its separate resource gate;
+> do not promote either the completed tract-level RI/IA/NC package or the
+> governed Rhode Island block slice to national evidence.
 > The final verifier bundle passed a fresh-clone Level 1 rehearsal
 > on the author machine at commit `d0053ff3`; this does not satisfy the
 > independence gate. The verified NRS v0.3 runs cover 2000, 2010, and 2020;
@@ -177,6 +179,20 @@ Next unblocked work:
 > After remediation, all four Wisconsin rows passed native audits and the
 > package regenerated exactly. This repairs the one-State implementation gate
 > but does not fill B.0's older cells or authorize national ranking.
+> The preregistered eight-State pilot then passed all 32 cells and regenerated
+> exactly. The frozen national extension subsequently passed all 44 eligible
+> multi-district States and all 176 cells without seed retries; an independent
+> execution regenerated the normalized evidence exactly. These results support
+> structural-family comparison under the frozen metrics, not a universal
+> ranking or legal-superiority claim.
+> The separately frozen Rhode Island block-level ensemble gate then completed
+> all four Wilson and four Kruskal chains, passed its registered scalar
+> convergence rules, and regenerated normalized metrics and canonical
+> snapshots exactly in a fresh sequential run. The materially different cut
+> distributions support kernel-sensitivity reporting, not sampler equivalence,
+> mixing proof, or national inference. Multi-State expansion remains closed
+> pending instrumented peak-memory evidence and an explicit compute/storage
+> budget.
 > Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain

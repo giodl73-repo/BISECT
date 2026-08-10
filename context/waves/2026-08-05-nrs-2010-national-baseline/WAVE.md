@@ -51,6 +51,8 @@ verified 2020 national baseline.
 | 19 - Structure validity remediation | COMPLETE | Hidden prime-factor tolerance and contiguity paths corrected; archived 2-pass/2-fail witness retained; post-remediation Wisconsin package passed 4/4 and regenerated exactly |
 | 20 - National algorithm-family pilot | COMPLETE | Frozen eight-State/32-cell matrix passed and regenerated exactly after retained failure/remediation history; 44-State phase remains compute-budget gated |
 | 21 - National algorithm-family full phase | COMPLETE | Frozen 44-State/176-cell matrix passed without seed retries and an independent 176-cell execution regenerated the normalized evidence exactly |
+| 22 - Ensemble evidence ledger reconciliation | COMPLETE | Public G.0/G.1-G.3 routing now points to the real RI/IA/NC package; stale synthetic/missing-evidence posture removed and G.0 rebuilt |
+| 23 - Block-level ensemble gate | COMPLETE | RI eight-chain Stage 1 converged under frozen scalar rules and both kernels regenerated normalized metrics/snapshots exactly; material kernel sensitivity retained; expansion remains separately gated |
 
 ## Versioned amendment
 

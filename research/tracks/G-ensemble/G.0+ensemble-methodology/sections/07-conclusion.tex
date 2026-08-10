@@ -4,17 +4,15 @@
 The G-track establishes a rigorous framework for situating the \ar{}
 algorithmic redistricting plan within the ensemble landscape.  The central
 methodological contribution is the distinction between two goals: ensemble
-methods characterise the space of reasonable plans (Goal A), while the
-\ar{} algorithm computes the canonical optimal plan within that space (Goal B).
+methods characterize a sampled distribution under a declared profile (Goal
+A), while BISECT produces a deterministic plan under a separate declared
+construction procedure (Goal B).
 
-These goals are not competitors.  The ensemble distribution is the natural
-reference frame for evaluating the \ar{} plan.  If \ar{} produces a plan that
-falls at the 54th percentile of partisan outcomes and the 68th percentile of
-compactness, the ensemble has confirmed that the plan is neither a partisan
-outlier nor a geometric curiosity.  The plan can then be presented to a court
-or legislature with two certificates: it is the unique minimum-edge-cut plan
-for this state's geography and seat count, and it lies in the interior of the
-space of geographically reasonable plans.
+These goals are complementary, but the ensemble distribution is conditional
+on graph, constraints, proposal kernel, starting plans, and stopping rule. A
+benchmark percentile therefore describes one declared comparison; it does not
+establish neutrality, legal validity, uniqueness, or exact objective
+optimality.
 
 The convergence diagnostics from G.4 ($\rhat$, \ess{}, Hamming autocorrelation)
 apply to both ensemble and algorithmic validation.  The \cs{} threshold
@@ -22,24 +20,31 @@ $T = 600$ from U.1 translates into an analogue of \ess{} for the seed
 sweep: stability across 600 consecutive non-improving seeds is evidence that
 the seed space has been adequately explored.
 
-The statutory implication is direct.  Courts seeking a remedial plan that
-does not require judicial discretion can adopt the \ar{} plan.  Ensemble
-evidence, as developed in G.1--G.3, confirms that the plan is geographically
-reasonable on the three dimensions courts have examined: compactness, partisan
-balance, and minority representation.  The plan is not perfect on any
-dimension---it is optimal on the minimum-edge-cut dimension---but it is
-defensible on all dimensions, which is what the law requires.
+The statutory implication is bounded. Ensemble evidence can locate a declared
+benchmark within a declared sampled distribution, but it cannot itself
+establish that the benchmark is lawful, neutral, or optimal. The current
+G.1--G.3 package measures tract cut fraction and one complete presidential
+election in three states; it does not measure polygon compactness, minority
+representation, or a national feasible-plan distribution.
 
-Future work in the G-track (G.4, G.5) will develop ensemble diagnostics for
-the \recom{} chain itself and examine mixing rates as a function of state
-complexity (number of tracts, $k$, geographic compactness).  These papers
-will also provide the computational foundation for running bespoke ensembles
-where published results are unavailable.
+G.4 and G.5 develop ensemble diagnostics and mixing analysis. The separately
+frozen Rhode Island block-level gate has now completed and regenerated exactly,
+but it exposed material Wilson-versus-Kruskal distribution sensitivity. A
+national or multi-state expansion remains separate future work and requires
+instrumented resource evidence plus a newly frozen graph, start, sampler,
+stopping, compute, storage, and claim-boundary protocol.
 
 The current implementation state is more precise than the original G-track
-framing.  The repository now contains an executable synthetic package showing
-the artifact contract for G.1--G.3, and a separate missing-evidence package
-identifying the real artifacts still needed for empirical percentile claims.
-Accordingly, G.0's methodological claim is package-shaped: ensemble comparisons
-are publication-ready only when trace, diagnostic, metric, election, RPLAN, and
-RCTX artifacts are hash-bound and replayable.
+framing. The repository contains a hash-bound real RI/IA/NC package, while the
+synthetic and missing-evidence packages preserve the development history.
+Accordingly, G.0's methodological claim is package-shaped: ensemble
+comparisons are publication-ready only when trace, diagnostic, metric,
+election, RPLAN, and RCTX artifacts are hash-bound and replayable, and only
+within the package's declared unit, state, election, sampler, and metric
+boundaries.
+
+The combined evidence therefore has two non-substitutable resolutions.  The
+RI/IA/NC tract package supports its declared tract cut-fraction and election
+diagnostics.  The Rhode Island block package supports block-graph feasibility,
+registered scalar convergence, deterministic replay, and kernel sensitivity.
+Neither package authorizes national block percentiles or legal conclusions.
