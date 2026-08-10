@@ -9,7 +9,7 @@
     }
   ],
   "analyzer_path": "scripts/research/analyze_ri_model_package.py",
-  "analyzer_sha256": "e66d66845abb7f312caa1b313e37c2b6b45ccf9d7f24c0f036719942c015b017",
+  "analyzer_sha256": "5677dda1df01041185e91fc7a605040deb92cd7576c31399a8c0bf195103f74c",
   "verification_commands": [
     "python scripts/research/analyze_ri_model_package.py verify docs/experiments/scalable-certified/model-manifest.json",
     "python scripts/research/analyze_ri_model_package.py verify docs/experiments/scalable-certified/model-manifest.json --check-local"

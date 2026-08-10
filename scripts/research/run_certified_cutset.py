@@ -116,6 +116,11 @@ def parse_assignment(output: str, unit_count: int) -> list[int]:
 
 
 def wsl_path(path: Path) -> str:
+    # On POSIX, Path("C:/...") has no drive and resolve() prefixes the current
+    # directory. Recognize Windows drive syntax before applying host semantics.
+    portable = str(path).replace("\\", "/")
+    if len(portable) >= 3 and portable[0].isalpha() and portable[1:3] == ":/":
+        return f"/mnt/{portable[0].lower()}/{portable[3:]}"
     resolved = path.resolve()
     drive = resolved.drive.rstrip(":").lower()
     if drive:

@@ -9,7 +9,7 @@
     }
   ],
   "analyzer_path": "scripts/research/analyze_ri_certified_discovery.py",
-  "analyzer_sha256": "7856f79efb4de4b23c0b6050a2b046443a7ba942cc147b0d105e6cfe79fd4e93",
+  "analyzer_sha256": "59f6008eb0cbcec98dbaace57f00a6f80a3bceeef12700eb687bb8951dc5ddbf",
   "verification_commands": [
     "python scripts/research/analyze_ri_certified_discovery.py verify docs/experiments/scalable-certified/manifest.json",
     "python scripts/research/analyze_ri_certified_discovery.py verify docs/experiments/scalable-certified/manifest.json --check-local"

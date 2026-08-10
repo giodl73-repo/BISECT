@@ -23,3 +23,11 @@ def test_committed_ri_discovery_frontier_verifies() -> None:
     assert report["candidate"]["max_population_deviation_scaled"] == 1
     assert report["candidate"]["weighted_boundary_cut"] == 43_047_238
     assert report["certification_status"]["proof"] == "not-generated"
+
+
+def test_analyzer_hash_is_line_ending_stable(tmp_path: Path) -> None:
+    lf = tmp_path / "lf.py"
+    crlf = tmp_path / "crlf.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+    assert DISCOVERY.text_sha256(lf) == DISCOVERY.text_sha256(crlf)
