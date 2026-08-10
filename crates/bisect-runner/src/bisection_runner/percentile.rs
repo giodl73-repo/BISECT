@@ -88,8 +88,13 @@ pub(crate) fn weighted_edge_cut(
     edge_weights: &HashMap<(usize, usize), f64>,
     left: &HashSet<usize>,
 ) -> f64 {
-    edge_weights
+    // HashMap iteration order is randomized between processes. Floating-point
+    // addition is order-dependent, and these totals select among close METIS
+    // candidates, so always accumulate crossing weights in canonical edge order.
+    let mut crossing: Vec<(&(usize, usize), &f64)> = edge_weights
         .iter()
-        .filter_map(|(&(u, v), &weight)| (left.contains(&u) != left.contains(&v)).then_some(weight))
-        .sum()
+        .filter(|((u, v), _)| left.contains(u) != left.contains(v))
+        .collect();
+    crossing.sort_unstable_by_key(|(edge, _)| **edge);
+    crossing.into_iter().map(|(_, weight)| *weight).sum()
 }

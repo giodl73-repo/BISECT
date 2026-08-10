@@ -584,9 +584,8 @@ fn validate_nrs_profile_cycle(
 fn validate_nrs_inventory_cycle(year: u16, inventory: &Value) -> Result<()> {
     match inventory.get("census_year").and_then(Value::as_u64) {
         Some(inventory_year) if inventory_year == u64::from(year) => Ok(()),
-        None
-            if year == 2020
-                && inventory["schema_version"] == "certified-national-2020-inventory-v1" =>
+        None if year == 2020
+            && inventory["schema_version"] == "certified-national-2020-inventory-v1" =>
         {
             Ok(())
         }
@@ -5521,11 +5520,10 @@ mod tests {
         .unwrap();
         validate_nrs_inventory_cycle(2010, &json!({"census_year":2010})).unwrap();
 
-        assert!(validate_nrs_inventory_cycle(
-            2020,
-            &json!({"schema_version":"some-other-schema"})
-        )
-        .is_err());
+        assert!(
+            validate_nrs_inventory_cycle(2020, &json!({"schema_version":"some-other-schema"}))
+                .is_err()
+        );
         assert!(validate_nrs_inventory_cycle(
             2010,
             &json!({"schema_version":"certified-national-2020-inventory-v1"})

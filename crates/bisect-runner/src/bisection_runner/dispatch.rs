@@ -58,14 +58,16 @@ pub fn run_all_splits_with_search(
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
 
-        // Extract data BEFORE parallel section — no shared references across threads
+        // Extract each node's data before invoking METIS.
         let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
             .into_iter()
             .filter_map(|node| node_tracts.remove(&node.path).map(|tracts| (node, tracts)))
             .collect();
 
         let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
-            .into_par_iter()
+            // The vendored C METIS backend shares RNG state and is not thread-safe.
+            // Keep calls in stable tree order so a fixed seed reproduces exactly.
+            .into_iter()
             .map(|(node, tracts)| {
                 // Per-node ufactor: 1.0 + balance_tolerance / k_node
                 // This is the mathematically correct formula: if each split at a node
@@ -116,13 +118,7 @@ pub fn run_all_splits_with_search(
             })
             .collect::<Result<Vec<_>, String>>()?;
 
-        // Sort results by path before inserting to ensure deterministic insertion order.
-        // Rayon's thread scheduling may vary, so the collection order of split_results
-        // is non-deterministic without this sort.
-        //
-        // Determinism requires: (a) same seed passed to gpmetis, (b) same graph structure,
-        // (c) same topology of adjacency. The sort here ensures consistent insertion order
-        // into node_tracts, which affects the final leaf sort and district numbering.
+        // Preserve deterministic insertion order even if execution changes in the future.
         let mut sorted_results = split_results;
         sorted_results.sort_by_key(|(path, _, _)| path.clone());
         for (path, left, right) in sorted_results {
@@ -229,7 +225,8 @@ pub fn run_all_splits_compact(
             .collect();
 
         let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
-            .into_par_iter()
+            // Each candidate sequence invokes the non-thread-safe C METIS backend.
+            .into_iter()
             .map(|(node, tracts)| {
                 let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
                 let tpwgts_node = if node.k_left == node.k_right {
@@ -368,7 +365,8 @@ pub fn run_all_splits_proportional(
             .collect();
 
         let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
-            .into_par_iter()
+            // Recursive METIS calls must remain sequential for exact regeneration.
+            .into_iter()
             .map(|(node, tracts)| {
                 let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
 

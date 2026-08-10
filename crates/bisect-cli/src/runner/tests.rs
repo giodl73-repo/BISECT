@@ -141,6 +141,7 @@ fn test_write_rplan_audit_sidecars_emits_manifest_artifacts() {
     assert_eq!(sidecars.rplan_path, "plan.rplan");
     assert_eq!(sidecars.rctx_path, "context.rctx");
     assert_eq!(sidecars.audit_certificate_path, "audit-certificate.json");
+    assert!(sidecars.population_balance_valid);
     assert!(sidecars.context_hash.starts_with("sha256:"));
     assert!(tmp.path().join("plan.rplan").exists());
     assert!(tmp.path().join("context.rctx").exists());
@@ -211,8 +212,7 @@ fn test_write_rplan_audit_sidecars_emits_manifest_artifacts() {
         "https://www.census.gov/example.zip"
     );
     let verification =
-        rplan_audit::verify_audit_certificate(&cert, Some(&rplan.plan), Some(&context))
-            .unwrap();
+        rplan_audit::verify_audit_certificate(&cert, Some(&rplan.plan), Some(&context)).unwrap();
     assert_eq!(
         verification.content_hash,
         sidecars.audit_certificate_content_hash
@@ -221,6 +221,35 @@ fn test_write_rplan_audit_sidecars_emits_manifest_artifacts() {
         bisect_report::sha256_file(&tmp.path().join("audit-certificate.json")).unwrap(),
         sidecars.audit_certificate_sha256
     );
+}
+
+#[test]
+fn test_runner_audit_sidecars_report_population_failure() {
+    let tmp = TempDir::new().unwrap();
+    let mut cfg = make_config("WA");
+    cfg.num_districts = 2;
+    let assignments: HashMap<usize, usize> = [(0, 1), (1, 1), (2, 1), (3, 1), (4, 2)]
+        .into_iter()
+        .collect();
+    let adjacency_path = tmp.path().join("wa_adjacency_2020.adj.bin");
+    std::fs::write(&adjacency_path, b"adjacency fixture").unwrap();
+
+    let sidecars = write_rplan_audit_sidecars(
+        tmp.path(),
+        &cfg,
+        "wa_imbalanced",
+        &path5_loaded_graph(),
+        &assignments,
+        "wa_adjacency_2020.adj.bin",
+        &adjacency_path,
+        "https://www.census.gov/example.zip",
+        0.25,
+        "2026-05-10T00:00:00Z",
+    )
+    .unwrap();
+
+    assert!(!sidecars.population_balance_valid);
+    assert_eq!(sidecars.audit_result, "fail");
 }
 
 #[test]
@@ -2937,8 +2966,7 @@ fn weights_override_none_preserves_preset() {
     use crate::args::StateArgs;
     use clap::Parser;
     // Without --weights-override, --partition-mode unweighted keeps geographic=false.
-    let args =
-        StateArgs::parse_from(["state", "--state", "VT", "--partition-mode", "unweighted"]);
+    let args = StateArgs::parse_from(["state", "--state", "VT", "--partition-mode", "unweighted"]);
     assert!(
         args.weights_override.is_none(),
         "no --weights-override flag must leave weights_override=None"
@@ -3161,323 +3189,320 @@ fn search_override_wins_over_preset_seed() {
 }
 
 // --- from original mod label_pipeline_tests (L7640) ---
-    use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf};
 
-    use crate::algo_config::AlgoYaml;
-    use crate::build_cmd::{BuildArgs, BuildIndex};
-    use crate::import_label::run_label_import;
-    use crate::label;
-    use crate::label_cmd::run_mv;
-    use crate::run_registry::Registry;
+use crate::algo_config::AlgoYaml;
+use crate::build_cmd::{BuildArgs, BuildIndex};
+use crate::import_label::run_label_import;
+use crate::label;
+use crate::label_cmd::run_mv;
+use crate::run_registry::Registry;
 
-    // ── Helper: switch CWD to a TempDir for registry isolation ───────────────
-    //
-    // Returns the TempDir so callers can keep it alive while inspecting files.
-    // The original directory is restored BEFORE the TempDir is dropped.
-    fn with_tempdir<F: FnOnce()>(f: F) -> TempDir {
-        let dir = TempDir::new().expect("tempdir");
-        let original = std::env::current_dir().expect("current_dir");
-        std::env::set_current_dir(dir.path()).expect("set_current_dir");
-        f();
-        std::env::set_current_dir(&original).expect("restore current_dir");
-        dir
-    }
+// ── Helper: switch CWD to a TempDir for registry isolation ───────────────
+//
+// Returns the TempDir so callers can keep it alive while inspecting files.
+// The original directory is restored BEFORE the TempDir is dropped.
+fn with_tempdir<F: FnOnce()>(f: F) -> TempDir {
+    let dir = TempDir::new().expect("tempdir");
+    let original = std::env::current_dir().expect("current_dir");
+    std::env::set_current_dir(dir.path()).expect("set_current_dir");
+    f();
+    std::env::set_current_dir(&original).expect("restore current_dir");
+    dir
+}
 
-    // ── Test 1: label path convention round-trip (no I/O) ────────────────────
-    //
-    // §9.2 Step 1: the three top-level directories follow a fixed pattern.
-    // This test verifies the pattern without touching the filesystem.
-    #[test]
-    fn test_label_path_convention_roundtrip() {
-        let label = "test_run";
+// ── Test 1: label path convention round-trip (no I/O) ────────────────────
+//
+// §9.2 Step 1: the three top-level directories follow a fixed pattern.
+// This test verifies the pattern without touching the filesystem.
+#[test]
+fn test_label_path_convention_roundtrip() {
+    let label = "test_run";
 
-        let runs = label::runs_dir(label);
-        let analysis = label::analysis_dir(label);
-        let reports = label::reports_dir(label);
+    let runs = label::runs_dir(label);
+    let analysis = label::analysis_dir(label);
+    let reports = label::reports_dir(label);
 
-        assert_eq!(
-            runs,
-            PathBuf::from("runs/test_run"),
-            "runs_dir must be runs/{{label}}"
+    assert_eq!(
+        runs,
+        PathBuf::from("runs/test_run"),
+        "runs_dir must be runs/{{label}}"
+    );
+    assert_eq!(
+        analysis,
+        PathBuf::from("analysis/test_run"),
+        "analysis_dir must be analysis/{{label}}"
+    );
+    assert_eq!(
+        reports,
+        PathBuf::from("reports/test_run"),
+        "reports_dir must be reports/{{label}}"
+    );
+}
+
+// ── Test 2: full registry pipeline in tempdir ─────────────────────────────
+//
+// Mirrors §9.2 Steps 2-6: mark_built → mark_analyzed → mark_reported
+// all complete successfully, registry entry reflects all three stages,
+// and `.bisect` is valid JSON.
+#[test]
+fn test_registry_full_pipeline_in_tempdir() {
+    let dir = with_tempdir(|| {
+        // Step 1: mark built
+        Registry::mark_built("pipeline_test", "2020").expect("mark_built must succeed");
+
+        // Step 2: mark analyzed (requires built)
+        Registry::mark_analyzed("pipeline_test", "2020")
+            .expect("mark_analyzed must succeed after mark_built");
+
+        // Step 3: mark reported (requires analyzed)
+        Registry::mark_reported("pipeline_test", "2020")
+            .expect("mark_reported must succeed after mark_analyzed");
+
+        // Verify list_labels returns the label with all three stages set.
+        let labels = Registry::list_labels().expect("list_labels");
+        let entry = labels
+            .iter()
+            .find(|(name, _)| name == "pipeline_test")
+            .map(|(_, e)| e)
+            .expect("pipeline_test must be in registry");
+
+        assert!(
+            entry.built.contains(&"2020".to_string()),
+            "built must contain 2020: {:?}",
+            entry.built
         );
-        assert_eq!(
-            analysis,
-            PathBuf::from("analysis/test_run"),
-            "analysis_dir must be analysis/{{label}}"
+        assert!(
+            entry.analyzed.contains(&"2020".to_string()),
+            "analyzed must contain 2020: {:?}",
+            entry.analyzed
         );
-        assert_eq!(
-            reports,
-            PathBuf::from("reports/test_run"),
-            "reports_dir must be reports/{{label}}"
+        assert!(
+            entry.reported.contains(&"2020".to_string()),
+            "reported must contain 2020: {:?}",
+            entry.reported
         );
-    }
 
-    // ── Test 2: full registry pipeline in tempdir ─────────────────────────────
-    //
-    // Mirrors §9.2 Steps 2-6: mark_built → mark_analyzed → mark_reported
-    // all complete successfully, registry entry reflects all three stages,
-    // and `.bisect` is valid JSON.
-    #[test]
-    fn test_registry_full_pipeline_in_tempdir() {
-        let dir = with_tempdir(|| {
-            // Step 1: mark built
-            Registry::mark_built("pipeline_test", "2020").expect("mark_built must succeed");
+        // Verify .bisect exists and is valid JSON.
+        let registry_path = PathBuf::from(".bisect");
+        assert!(registry_path.exists(), ".bisect must exist after pipeline");
+        let content = std::fs::read_to_string(&registry_path).expect("read .bisect");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&content).expect(".bisect must be valid JSON");
+        assert!(parsed.is_object(), ".bisect must be a JSON object");
+    });
+    drop(dir);
+}
 
-            // Step 2: mark analyzed (requires built)
-            Registry::mark_analyzed("pipeline_test", "2020")
-                .expect("mark_analyzed must succeed after mark_built");
+// ── Test 3: mark_analyzed fails without prior mark_built ─────────────────
+//
+// §9.3 error scenario: "Attempt to analyze before building".
+// The error must contain "[CONFIG]" per the project error convention.
+#[test]
+fn test_registry_mark_analyzed_fails_without_build() {
+    let dir = with_tempdir(|| {
+        let result = Registry::mark_analyzed("not_built", "2020");
+        assert!(
+            result.is_err(),
+            "mark_analyzed must fail when year not built"
+        );
 
-            // Step 3: mark reported (requires analyzed)
-            Registry::mark_reported("pipeline_test", "2020")
-                .expect("mark_reported must succeed after mark_analyzed");
+        let msg = result.unwrap_err();
+        assert!(
+            msg.contains("[CONFIG]"),
+            "error must contain [CONFIG] prefix: {msg}"
+        );
+    });
+    drop(dir);
+}
 
-            // Verify list_labels returns the label with all three stages set.
-            let labels = Registry::list_labels().expect("list_labels");
-            let entry = labels
-                .iter()
-                .find(|(name, _)| name == "pipeline_test")
-                .map(|(_, e)| e)
-                .expect("pipeline_test must be in registry");
+// ── Test 4: BuildIndex schema is valid ────────────────────────────────────
+//
+// Constructs a BuildIndex via build_build_index (the same path run_build uses)
+// and verifies all required keys are present with the correct types.
+#[test]
+fn test_build_index_schema_valid() {
+    use crate::build_cmd::build_build_index;
+    use std::io::Write;
 
-            assert!(
-                entry.built.contains(&"2020".to_string()),
-                "built must contain 2020: {:?}",
-                entry.built
-            );
-            assert!(
-                entry.analyzed.contains(&"2020".to_string()),
-                "analyzed must contain 2020: {:?}",
-                entry.analyzed
-            );
-            assert!(
-                entry.reported.contains(&"2020".to_string()),
-                "reported must contain 2020: {:?}",
-                entry.reported
-            );
-
-            // Verify .bisect exists and is valid JSON.
-            let registry_path = PathBuf::from(".bisect");
-            assert!(registry_path.exists(), ".bisect must exist after pipeline");
-            let content = std::fs::read_to_string(&registry_path).expect("read .bisect");
-            let parsed: serde_json::Value =
-                serde_json::from_str(&content).expect(".bisect must be valid JSON");
-            assert!(parsed.is_object(), ".bisect must be a JSON object");
-        });
-        drop(dir);
-    }
-
-    // ── Test 3: mark_analyzed fails without prior mark_built ─────────────────
-    //
-    // §9.3 error scenario: "Attempt to analyze before building".
-    // The error must contain "[CONFIG]" per the project error convention.
-    #[test]
-    fn test_registry_mark_analyzed_fails_without_build() {
-        let dir = with_tempdir(|| {
-            let result = Registry::mark_analyzed("not_built", "2020");
-            assert!(
-                result.is_err(),
-                "mark_analyzed must fail when year not built"
-            );
-
-            let msg = result.unwrap_err();
-            assert!(
-                msg.contains("[CONFIG]"),
-                "error must contain [CONFIG] prefix: {msg}"
-            );
-        });
-        drop(dir);
-    }
-
-    // ── Test 4: BuildIndex schema is valid ────────────────────────────────────
-    //
-    // Constructs a BuildIndex via build_build_index (the same path run_build uses)
-    // and verifies all required keys are present with the correct types.
-    #[test]
-    fn test_build_index_schema_valid() {
-        use crate::build_cmd::build_build_index;
-        use std::io::Write;
-
-        let mut f = tempfile::NamedTempFile::new().unwrap();
-        f.write_all(
-            b"name: test_plan\nalgorithm:\n  structure: apportion-regions\n  search: single\n",
-        )
+    let mut f = tempfile::NamedTempFile::new().unwrap();
+    f.write_all(b"name: test_plan\nalgorithm:\n  structure: apportion-regions\n  search: single\n")
         .unwrap();
 
-        let yaml = AlgoYaml::from_file(f.path()).expect("parse YAML");
-        let sha = AlgoYaml::file_sha256(f.path()).expect("sha256");
+    let yaml = AlgoYaml::from_file(f.path()).expect("parse YAML");
+    let sha = AlgoYaml::file_sha256(f.path()).expect("sha256");
 
-        let index = build_build_index(
-            "test_plan",
-            "2020",
-            f.path(),
-            &sha,
-            "bisect build test_plan --year 2020",
-            std::path::Path::new("runs/test_plan/2020"),
-            &yaml,
-            &[],
-            &[],
-        )
-        .expect("build_build_index");
+    let index = build_build_index(
+        "test_plan",
+        "2020",
+        f.path(),
+        &sha,
+        "bisect build test_plan --year 2020",
+        std::path::Path::new("runs/test_plan/2020"),
+        &yaml,
+        &[],
+        &[],
+    )
+    .expect("build_build_index");
 
-        // Verify the JSON representation has all required keys.
-        let json_val = serde_json::to_value(&index).expect("serialize");
-        let obj = json_val.as_object().expect("must be object");
+    // Verify the JSON representation has all required keys.
+    let json_val = serde_json::to_value(&index).expect("serialize");
+    let obj = json_val.as_object().expect("must be object");
 
-        for key in &[
-            "label",
-            "year",
-            "created",
-            "version",
-            "config_path",
-            "config_sha256",
-            "command",
-            "output_dir",
-            "metis_engine",
-            "algorithm",
-            "states",
-            "summary",
-        ] {
-            assert!(
-                obj.contains_key(*key),
-                "BuildIndex JSON must contain key '{}', got keys: {:?}",
-                key,
-                obj.keys().collect::<Vec<_>>()
-            );
-        }
-
-        // SHA is 64-char hex.
-        let sha_in_index = obj["config_sha256"]
-            .as_str()
-            .expect("config_sha256 must be string");
-        assert_eq!(sha_in_index.len(), 64, "config_sha256 must be 64 chars");
+    for key in &[
+        "label",
+        "year",
+        "created",
+        "version",
+        "config_path",
+        "config_sha256",
+        "command",
+        "output_dir",
+        "metis_engine",
+        "algorithm",
+        "states",
+        "summary",
+    ] {
         assert!(
-            sha_in_index.chars().all(|c| c.is_ascii_hexdigit()),
-            "config_sha256 must be hex: {sha_in_index}"
+            obj.contains_key(*key),
+            "BuildIndex JSON must contain key '{}', got keys: {:?}",
+            key,
+            obj.keys().collect::<Vec<_>>()
+        );
+    }
+
+    // SHA is 64-char hex.
+    let sha_in_index = obj["config_sha256"]
+        .as_str()
+        .expect("config_sha256 must be string");
+    assert_eq!(sha_in_index.len(), 64, "config_sha256 must be 64 chars");
+    assert!(
+        sha_in_index.chars().all(|c| c.is_ascii_hexdigit()),
+        "config_sha256 must be hex: {sha_in_index}"
+    );
+
+    // Summary has total/succeeded/failed.
+    let summary = obj["summary"].as_object().expect("summary must be object");
+    assert!(summary.contains_key("total"), "summary must have 'total'");
+    assert!(
+        summary.contains_key("succeeded"),
+        "summary must have 'succeeded'"
+    );
+    assert!(summary.contains_key("failed"), "summary must have 'failed'");
+}
+
+// ── Test 5: import CSV then verify registry and directory layout ──────────
+//
+// §9.2: external plan import creates the same directory layout as build.
+// Wisconsin FIPS prefix = "55".
+#[test]
+fn test_import_csv_then_list() {
+    let dir = with_tempdir(|| {
+        // Write a minimal Wisconsin CSV.
+        let csv = "GEOID,district\n55001010100,1\n55001010200,2\n";
+        let csv_path = PathBuf::from("plan.csv");
+        std::fs::write(&csv_path, csv).expect("write CSV");
+
+        // Import.
+        run_label_import("import_test", &csv_path, "2020", Some("csv"))
+            .expect("run_label_import must succeed");
+
+        // Registry must show the label as built for 2020.
+        let entry = Registry::get("import_test")
+            .expect("get must not error")
+            .expect("import_test must be in registry");
+        assert!(
+            entry.built.contains(&"2020".to_string()),
+            "registry must mark import_test/2020 as built: {:?}",
+            entry.built
         );
 
-        // Summary has total/succeeded/failed.
-        let summary = obj["summary"].as_object().expect("summary must be object");
-        assert!(summary.contains_key("total"), "summary must have 'total'");
+        // runs/import_test/2020/index.json must exist with algorithm.structure="external".
+        let index_path = PathBuf::from("runs/import_test/2020/index.json");
         assert!(
-            summary.contains_key("succeeded"),
-            "summary must have 'succeeded'"
+            index_path.exists(),
+            "index.json must exist: {}",
+            index_path.display()
         );
-        assert!(summary.contains_key("failed"), "summary must have 'failed'");
-    }
+        let content = std::fs::read_to_string(&index_path).expect("read index.json");
+        let val: serde_json::Value = serde_json::from_str(&content).expect("parse JSON");
+        assert_eq!(
+            val["algorithm"]["structure"].as_str(),
+            Some("external"),
+            "algorithm.structure must be 'external' for imported plans"
+        );
 
-    // ── Test 5: import CSV then verify registry and directory layout ──────────
-    //
-    // §9.2: external plan import creates the same directory layout as build.
-    // Wisconsin FIPS prefix = "55".
-    #[test]
-    fn test_import_csv_then_list() {
-        let dir = with_tempdir(|| {
-            // Write a minimal Wisconsin CSV.
-            let csv = "GEOID,district\n55001010100,1\n55001010200,2\n";
-            let csv_path = PathBuf::from("plan.csv");
-            std::fs::write(&csv_path, csv).expect("write CSV");
+        // runs/import_test/2020/wisconsin/assignments.json must exist (FIPS "55").
+        let assignments_path = PathBuf::from("runs/import_test/2020/wisconsin/assignments.json");
+        assert!(
+            assignments_path.exists(),
+            "wisconsin/assignments.json must exist: {}",
+            assignments_path.display()
+        );
+    });
+    drop(dir);
+}
 
-            // Import.
-            run_label_import("import_test", &csv_path, "2020", Some("csv"))
-                .expect("run_label_import must succeed");
+// ── Test 6: mv label updates registry and filesystem ─────────────────────
+//
+// §9.2-adjacent: label renaming (run_mv) must update both the `.bisect`
+// registry and the `runs/` directory on disk.
+#[test]
+fn test_mv_label_updates_registry() {
+    let dir = with_tempdir(|| {
+        // Set up: mark old_label as built.
+        Registry::mark_built("old_label", "2020").expect("mark_built");
 
-            // Registry must show the label as built for 2020.
-            let entry = Registry::get("import_test")
-                .expect("get must not error")
-                .expect("import_test must be in registry");
-            assert!(
-                entry.built.contains(&"2020".to_string()),
-                "registry must mark import_test/2020 as built: {:?}",
-                entry.built
-            );
+        // Create runs/old_label/2020/ on disk so mv has a directory to rename.
+        let old_runs = PathBuf::from("runs/old_label/2020");
+        std::fs::create_dir_all(&old_runs).expect("create runs dir");
 
-            // runs/import_test/2020/index.json must exist with algorithm.structure="external".
-            let index_path = PathBuf::from("runs/import_test/2020/index.json");
-            assert!(
-                index_path.exists(),
-                "index.json must exist: {}",
-                index_path.display()
-            );
-            let content = std::fs::read_to_string(&index_path).expect("read index.json");
-            let val: serde_json::Value = serde_json::from_str(&content).expect("parse JSON");
-            assert_eq!(
-                val["algorithm"]["structure"].as_str(),
-                Some("external"),
-                "algorithm.structure must be 'external' for imported plans"
-            );
+        // Execute mv.
+        run_mv("old_label", "new_label", false).expect("run_mv must succeed");
 
-            // runs/import_test/2020/wisconsin/assignments.json must exist (FIPS "55").
-            let assignments_path =
-                PathBuf::from("runs/import_test/2020/wisconsin/assignments.json");
-            assert!(
-                assignments_path.exists(),
-                "wisconsin/assignments.json must exist: {}",
-                assignments_path.display()
-            );
-        });
-        drop(dir);
-    }
+        // old_label must be gone from registry.
+        assert!(
+            Registry::get("old_label").expect("get old_label").is_none(),
+            "old_label must not be in registry after mv"
+        );
 
-    // ── Test 6: mv label updates registry and filesystem ─────────────────────
-    //
-    // §9.2-adjacent: label renaming (run_mv) must update both the `.bisect`
-    // registry and the `runs/` directory on disk.
-    #[test]
-    fn test_mv_label_updates_registry() {
-        let dir = with_tempdir(|| {
-            // Set up: mark old_label as built.
-            Registry::mark_built("old_label", "2020").expect("mark_built");
+        // new_label must be in registry with built = ["2020"].
+        let entry = Registry::get("new_label")
+            .expect("get new_label")
+            .expect("new_label must be in registry after mv");
+        assert!(
+            entry.built.contains(&"2020".to_string()),
+            "new_label must carry the built years: {:?}",
+            entry.built
+        );
 
-            // Create runs/old_label/2020/ on disk so mv has a directory to rename.
-            let old_runs = PathBuf::from("runs/old_label/2020");
-            std::fs::create_dir_all(&old_runs).expect("create runs dir");
+        // runs/new_label/ must exist; runs/old_label/ must not.
+        assert!(
+            PathBuf::from("runs/new_label").exists(),
+            "runs/new_label must exist after mv"
+        );
+        assert!(
+            !PathBuf::from("runs/old_label").exists(),
+            "runs/old_label must not exist after mv"
+        );
+    });
+    drop(dir);
+}
 
-            // Execute mv.
-            run_mv("old_label", "new_label", false).expect("run_mv must succeed");
+// ── Test 7: config YAML loads official_proposal algorithm section ─────────
+//
+// §9.1 config file: the official_proposal.yml specifies
+// structure=apportion-regions, weights=county, search=convergence.
+// We write it to a temp file and verify round-trip via AlgoYaml.
+//
+// Note: We write the YAML inline rather than reading the real
+// configs/official_proposal.yml because that file may not exist on
+// all developer machines (it is not in the repo, only in CWD of runs).
+#[test]
+fn test_config_yaml_loads_official_proposal() {
+    use std::io::Write;
 
-            // old_label must be gone from registry.
-            assert!(
-                Registry::get("old_label").expect("get old_label").is_none(),
-                "old_label must not be in registry after mv"
-            );
-
-            // new_label must be in registry with built = ["2020"].
-            let entry = Registry::get("new_label")
-                .expect("get new_label")
-                .expect("new_label must be in registry after mv");
-            assert!(
-                entry.built.contains(&"2020".to_string()),
-                "new_label must carry the built years: {:?}",
-                entry.built
-            );
-
-            // runs/new_label/ must exist; runs/old_label/ must not.
-            assert!(
-                PathBuf::from("runs/new_label").exists(),
-                "runs/new_label must exist after mv"
-            );
-            assert!(
-                !PathBuf::from("runs/old_label").exists(),
-                "runs/old_label must not exist after mv"
-            );
-        });
-        drop(dir);
-    }
-
-    // ── Test 7: config YAML loads official_proposal algorithm section ─────────
-    //
-    // §9.1 config file: the official_proposal.yml specifies
-    // structure=apportion-regions, weights=county, search=convergence.
-    // We write it to a temp file and verify round-trip via AlgoYaml.
-    //
-    // Note: We write the YAML inline rather than reading the real
-    // configs/official_proposal.yml because that file may not exist on
-    // all developer machines (it is not in the repo, only in CWD of runs).
-    #[test]
-    fn test_config_yaml_loads_official_proposal() {
-        use std::io::Write;
-
-        let yaml_content = r#"
+    let yaml_content = r#"
 name: official_proposal
 description: >
   Reference implementation for the proposed federal redistricting statute.
@@ -3493,767 +3518,763 @@ years: ["2020", "2010", "2000"]
 analysis_types: [demographic, political, compactness, contiguity, splits, summary]
 "#;
 
-        let mut f = tempfile::NamedTempFile::new().unwrap();
-        f.write_all(yaml_content.as_bytes()).unwrap();
+    let mut f = tempfile::NamedTempFile::new().unwrap();
+    f.write_all(yaml_content.as_bytes()).unwrap();
 
-        // Load and parse.
-        let yaml = AlgoYaml::from_file(f.path()).expect("official_proposal YAML must parse");
+    // Load and parse.
+    let yaml = AlgoYaml::from_file(f.path()).expect("official_proposal YAML must parse");
 
-        // Verify structure == "apportion-regions".
-        assert_eq!(
-            yaml.algorithm.structure, "apportion-regions",
-            "structure must be 'apportion-regions'"
-        );
+    // Verify structure == "apportion-regions".
+    assert_eq!(
+        yaml.algorithm.structure, "apportion-regions",
+        "structure must be 'apportion-regions'"
+    );
 
-        // Verify weights == "county".
-        assert_eq!(
-            yaml.algorithm.weights.as_deref(),
-            Some("county"),
-            "weights must be 'county'"
-        );
+    // Verify weights == "county".
+    assert_eq!(
+        yaml.algorithm.weights.as_deref(),
+        Some("county"),
+        "weights must be 'county'"
+    );
 
-        // Round-trip to AlgorithmConfig must succeed.
-        let algo = yaml
-            .to_algorithm_config()
-            .expect("to_algorithm_config must succeed for official_proposal YAML");
+    // Round-trip to AlgorithmConfig must succeed.
+    let algo = yaml
+        .to_algorithm_config()
+        .expect("to_algorithm_config must succeed for official_proposal YAML");
 
-        // Confirm the split strategy is ApportionRegions.
-        assert!(
-            matches!(algo.split, crate::runner::SplitStrategy::ApportionRegions),
-            "structure apportion-regions must map to SplitStrategy::ApportionRegions"
-        );
-    }
+    // Confirm the split strategy is ApportionRegions.
+    assert!(
+        matches!(algo.split, crate::runner::SplitStrategy::ApportionRegions),
+        "structure apportion-regions must map to SplitStrategy::ApportionRegions"
+    );
+}
 
-    // ── Test 8: full label workflow dry-run creates no files ──────────────────
-    //
-    // §9.2 Step 1: "smoke test with Vermont before committing to a full run".
-    // With --dry-run, run_build must return Ok(()) without creating any
-    // directory under runs/ or modifying the registry.
-    #[test]
-    fn test_full_label_workflow_dry_run() {
-        use std::io::Write;
+// ── Test 8: full label workflow dry-run creates no files ──────────────────
+//
+// §9.2 Step 1: "smoke test with Vermont before committing to a full run".
+// With --dry-run, run_build must return Ok(()) without creating any
+// directory under runs/ or modifying the registry.
+#[test]
+fn test_full_label_workflow_dry_run() {
+    use std::io::Write;
 
-        let dir = with_tempdir(|| {
-            // Write a minimal config YAML to configs/test_run.yml.
-            let configs_dir = PathBuf::from("configs");
-            std::fs::create_dir_all(&configs_dir).expect("create configs dir");
-            let config_path = configs_dir.join("test_run.yml");
+    let dir = with_tempdir(|| {
+        // Write a minimal config YAML to configs/test_run.yml.
+        let configs_dir = PathBuf::from("configs");
+        std::fs::create_dir_all(&configs_dir).expect("create configs dir");
+        let config_path = configs_dir.join("test_run.yml");
 
-            let yaml_content =
+        let yaml_content =
                 "name: test_run\nalgorithm:\n  structure: apportion-regions\n  search: single\nyears: [\"2020\"]\n";
-            std::fs::write(&config_path, yaml_content).expect("write config");
+        std::fs::write(&config_path, yaml_content).expect("write config");
 
-            let args = BuildArgs {
-                label: "test_run".to_string(),
-                config: config_path,
-                year: Some("2020".to_string()),
-                states: vec![],
-                workers: None,
-                dry_run: true,
-                force: false,
-                no_interactive: false,
-            };
+        let args = BuildArgs {
+            label: "test_run".to_string(),
+            config: config_path,
+            year: Some("2020".to_string()),
+            states: vec![],
+            workers: None,
+            dry_run: true,
+            force: false,
+            no_interactive: false,
+        };
 
-            // run_build with dry_run=true must succeed.
-            let result = crate::build_cmd::run_build(args);
-            assert!(
-                result.is_ok(),
-                "dry_run run_build must succeed: {:?}",
-                result
-            );
+        // run_build with dry_run=true must succeed.
+        let result = crate::build_cmd::run_build(args);
+        assert!(
+            result.is_ok(),
+            "dry_run run_build must succeed: {:?}",
+            result
+        );
 
-            // runs/test_run/ must NOT exist (dry run creates nothing).
-            assert!(
-                !PathBuf::from("runs/test_run").exists(),
-                "runs/test_run must not be created by dry_run build"
-            );
+        // runs/test_run/ must NOT exist (dry run creates nothing).
+        assert!(
+            !PathBuf::from("runs/test_run").exists(),
+            "runs/test_run must not be created by dry_run build"
+        );
 
-            // Registry must remain empty (dry run does not call mark_built).
-            let labels = Registry::list_labels().expect("list_labels");
-            assert!(
-                labels.is_empty(),
-                "registry must be empty after dry_run build: {:?}",
-                labels
-            );
+        // Registry must remain empty (dry run does not call mark_built).
+        let labels = Registry::list_labels().expect("list_labels");
+        assert!(
+            labels.is_empty(),
+            "registry must be empty after dry_run build: {:?}",
+            labels
+        );
+    });
+    drop(dir);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// L1 TESTS — real file I/O in a temp directory, no METIS / census data
+//
+// Run with `cargo +stable test -p BISECT-cli -- --test-threads=1`
+// (set_current_dir is process-wide; serial execution is mandatory).
+// ════════════════════════════════════════════════════════════════════════
+
+// ── L1-1: import CSV full pipeline in tempdir ────────────────────────────
+//
+// Steps:
+//   1. Write a 4-row Wisconsin CSV to a file in the tempdir.
+//   2. Call run_label_import → Ok.
+//   3. Verify runs/csv_import_test/2020/index.json exists and is valid JSON.
+//   4. Verify runs/csv_import_test/2020/wisconsin/assignments.json exists.
+//   5. Verify registry marks the label as built for "2020".
+//   6. Verify index.json algorithm.structure == "external".
+#[test]
+fn test_import_csv_full_pipeline_in_tempdir() {
+    let dir = with_tempdir(|| {
+        // Write CSV with 4 Wisconsin tracts (FIPS "55")
+        let csv = "GEOID,district\n55001010100,1\n55001010200,1\n55009010100,2\n55009010200,2\n";
+        let csv_path = PathBuf::from("test_plan.csv");
+        std::fs::write(&csv_path, csv).expect("write CSV");
+
+        // Call import
+        run_label_import("csv_import_test", &csv_path, "2020", Some("csv"))
+            .expect("run_label_import must succeed");
+
+        // Verify index.json exists and is valid JSON
+        let index_path = PathBuf::from("runs/csv_import_test/2020/index.json");
+        assert!(
+            index_path.exists(),
+            "runs/csv_import_test/2020/index.json must exist: {}",
+            index_path.display()
+        );
+        let content = std::fs::read_to_string(&index_path).expect("read index.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&content).expect("index.json must be valid JSON");
+        assert!(v.is_object(), "index.json must be a JSON object");
+
+        // Verify assignments.json exists
+        let asgn_path = PathBuf::from("runs/csv_import_test/2020/wisconsin/assignments.json");
+        assert!(
+            asgn_path.exists(),
+            "wisconsin/assignments.json must exist: {}",
+            asgn_path.display()
+        );
+
+        // Verify registry shows built=["2020"]
+        let entry = Registry::get("csv_import_test")
+            .expect("registry get must not error")
+            .expect("csv_import_test must be in registry");
+        assert!(
+            entry.built.contains(&"2020".to_string()),
+            "registry must mark csv_import_test/2020 as built: {:?}",
+            entry.built
+        );
+
+        // Verify algorithm.structure == "external"
+        assert_eq!(
+            v["algorithm"]["structure"].as_str(),
+            Some("external"),
+            "algorithm.structure must be 'external' for imported plans"
+        );
+    });
+    drop(dir);
+}
+
+// ── L1-2: mv with actual directories ────────────────────────────────────
+//
+// Steps:
+//   1. Mark source_label as built in registry.
+//   2. Create runs/source_label/2020/ with a file in it.
+//   3. Write runs/source_label/2020/index.json with label field.
+//   4. Call run_mv → Ok.
+//   5. Verify runs/dest_label/2020/ exists.
+//   6. Verify runs/source_label/ does NOT exist.
+//   7. Verify runs/dest_label/2020/index.json has label == "dest_label" (patched).
+//   8. Verify registry: source gone, dest present.
+#[test]
+fn test_mv_with_actual_directories() {
+    use crate::label_cmd::run_mv;
+
+    let dir = with_tempdir(|| {
+        // Mark source_label as built
+        Registry::mark_built("source_label", "2020").expect("mark_built");
+
+        // Create runs/source_label/2020/ with a sentinel file
+        let src_year_dir = PathBuf::from("runs/source_label/2020");
+        std::fs::create_dir_all(&src_year_dir).expect("create source dir");
+        std::fs::write(src_year_dir.join("sentinel.txt"), "data").expect("write sentinel");
+
+        // Write runs/source_label/index.json (top-level) with label field
+        let src_index_dir = PathBuf::from("runs/source_label");
+        let src_index = src_index_dir.join("index.json");
+        let index_content = serde_json::json!({
+            "label": "source_label",
+            "year": "2020"
         });
-        drop(dir);
-    }
+        std::fs::write(
+            &src_index,
+            serde_json::to_string_pretty(&index_content).unwrap(),
+        )
+        .expect("write source index.json");
 
-    // ════════════════════════════════════════════════════════════════════════
-    // L1 TESTS — real file I/O in a temp directory, no METIS / census data
-    //
-    // Run with `cargo +stable test -p BISECT-cli -- --test-threads=1`
-    // (set_current_dir is process-wide; serial execution is mandatory).
-    // ════════════════════════════════════════════════════════════════════════
+        // Execute mv
+        run_mv("source_label", "dest_label", false).expect("run_mv must succeed");
 
-    // ── L1-1: import CSV full pipeline in tempdir ────────────────────────────
-    //
-    // Steps:
-    //   1. Write a 4-row Wisconsin CSV to a file in the tempdir.
-    //   2. Call run_label_import → Ok.
-    //   3. Verify runs/csv_import_test/2020/index.json exists and is valid JSON.
-    //   4. Verify runs/csv_import_test/2020/wisconsin/assignments.json exists.
-    //   5. Verify registry marks the label as built for "2020".
-    //   6. Verify index.json algorithm.structure == "external".
-    #[test]
-    fn test_import_csv_full_pipeline_in_tempdir() {
-        let dir = with_tempdir(|| {
-            // Write CSV with 4 Wisconsin tracts (FIPS "55")
-            let csv =
-                "GEOID,district\n55001010100,1\n55001010200,1\n55009010100,2\n55009010200,2\n";
-            let csv_path = PathBuf::from("test_plan.csv");
-            std::fs::write(&csv_path, csv).expect("write CSV");
+        // runs/dest_label/2020/ must exist
+        assert!(
+            PathBuf::from("runs/dest_label/2020").exists(),
+            "runs/dest_label/2020 must exist after mv"
+        );
 
-            // Call import
-            run_label_import("csv_import_test", &csv_path, "2020", Some("csv"))
-                .expect("run_label_import must succeed");
+        // runs/source_label/ must NOT exist
+        assert!(
+            !PathBuf::from("runs/source_label").exists(),
+            "runs/source_label must not exist after mv"
+        );
 
-            // Verify index.json exists and is valid JSON
-            let index_path = PathBuf::from("runs/csv_import_test/2020/index.json");
-            assert!(
-                index_path.exists(),
-                "runs/csv_import_test/2020/index.json must exist: {}",
-                index_path.display()
-            );
-            let content = std::fs::read_to_string(&index_path).expect("read index.json");
-            let v: serde_json::Value =
-                serde_json::from_str(&content).expect("index.json must be valid JSON");
-            assert!(v.is_object(), "index.json must be a JSON object");
-
-            // Verify assignments.json exists
-            let asgn_path = PathBuf::from("runs/csv_import_test/2020/wisconsin/assignments.json");
-            assert!(
-                asgn_path.exists(),
-                "wisconsin/assignments.json must exist: {}",
-                asgn_path.display()
-            );
-
-            // Verify registry shows built=["2020"]
-            let entry = Registry::get("csv_import_test")
-                .expect("registry get must not error")
-                .expect("csv_import_test must be in registry");
-            assert!(
-                entry.built.contains(&"2020".to_string()),
-                "registry must mark csv_import_test/2020 as built: {:?}",
-                entry.built
-            );
-
-            // Verify algorithm.structure == "external"
+        // runs/dest_label/index.json must have label == "dest_label"
+        let dst_index_path = PathBuf::from("runs/dest_label/index.json");
+        if dst_index_path.exists() {
+            let raw = std::fs::read_to_string(&dst_index_path).expect("read dest index.json");
+            let v: serde_json::Value = serde_json::from_str(&raw).expect("parse dest index.json");
             assert_eq!(
-                v["algorithm"]["structure"].as_str(),
-                Some("external"),
-                "algorithm.structure must be 'external' for imported plans"
+                v["label"].as_str(),
+                Some("dest_label"),
+                "label field must be patched to 'dest_label': {v}"
             );
+        }
+
+        // Registry: source gone, dest present
+        assert!(
+            Registry::get("source_label").expect("get source").is_none(),
+            "source_label must be absent after mv"
+        );
+        let dest_entry = Registry::get("dest_label")
+            .expect("get dest")
+            .expect("dest_label must be in registry after mv");
+        assert!(
+            dest_entry.built.contains(&"2020".to_string()),
+            "dest_label must carry built years: {:?}",
+            dest_entry.built
+        );
+    });
+    drop(dir);
+}
+
+// ── L1-3: verify full SHA chain in tempdir ───────────────────────────────
+//
+// Steps:
+//   1. Write configs/test_verify.yml and compute its SHA-256.
+//   2. Write runs/test_verify/2020/index.json with config_sha256.
+//   3. Compute run index SHA → write analysis/test_verify/2020/index.json
+//      with run_index_sha256.
+//   4. Compute analysis index SHA → write reports/test_verify/2020/index.json
+//      with analysis_index_sha256.
+//   5. Mark all stages in registry.
+//   6. Call run_label_verify → Ok (VERIFIED).
+#[test]
+fn test_verify_full_sha_chain_tempdir() {
+    use crate::label_cmd::run_verify;
+    use sha2::{Digest, Sha256};
+
+    let dir = with_tempdir(|| {
+        // Step 1: Write config file and compute its SHA-256
+        std::fs::create_dir_all("configs").expect("create configs");
+        let config_path = PathBuf::from("configs/test_verify.yml");
+        let config_content =
+            "name: test_verify\nalgorithm:\n  structure: apportion-regions\n  search: single\n";
+        std::fs::write(&config_path, config_content).expect("write config");
+
+        let config_sha = {
+            let bytes = std::fs::read(&config_path).expect("read config");
+            let mut h = Sha256::new();
+            h.update(&bytes);
+            format!("{:x}", h.finalize())
+        };
+
+        // Step 2: Write runs/test_verify/2020/index.json with config_sha256
+        std::fs::create_dir_all("runs/test_verify/2020").expect("create runs dir");
+        let run_index_path = PathBuf::from("runs/test_verify/2020/index.json");
+        let run_index_content = serde_json::json!({
+            "label": "test_verify",
+            "year": "2020",
+            "config_sha256": config_sha,
         });
-        drop(dir);
-    }
+        std::fs::write(
+            &run_index_path,
+            serde_json::to_string_pretty(&run_index_content).unwrap(),
+        )
+        .expect("write run index");
 
-    // ── L1-2: mv with actual directories ────────────────────────────────────
-    //
-    // Steps:
-    //   1. Mark source_label as built in registry.
-    //   2. Create runs/source_label/2020/ with a file in it.
-    //   3. Write runs/source_label/2020/index.json with label field.
-    //   4. Call run_mv → Ok.
-    //   5. Verify runs/dest_label/2020/ exists.
-    //   6. Verify runs/source_label/ does NOT exist.
-    //   7. Verify runs/dest_label/2020/index.json has label == "dest_label" (patched).
-    //   8. Verify registry: source gone, dest present.
-    #[test]
-    fn test_mv_with_actual_directories() {
-        use crate::label_cmd::run_mv;
+        // Compute run index SHA
+        let run_index_sha = {
+            let bytes = std::fs::read(&run_index_path).expect("read run index");
+            let mut h = Sha256::new();
+            h.update(&bytes);
+            format!("{:x}", h.finalize())
+        };
 
-        let dir = with_tempdir(|| {
-            // Mark source_label as built
-            Registry::mark_built("source_label", "2020").expect("mark_built");
-
-            // Create runs/source_label/2020/ with a sentinel file
-            let src_year_dir = PathBuf::from("runs/source_label/2020");
-            std::fs::create_dir_all(&src_year_dir).expect("create source dir");
-            std::fs::write(src_year_dir.join("sentinel.txt"), "data").expect("write sentinel");
-
-            // Write runs/source_label/index.json (top-level) with label field
-            let src_index_dir = PathBuf::from("runs/source_label");
-            let src_index = src_index_dir.join("index.json");
-            let index_content = serde_json::json!({
-                "label": "source_label",
-                "year": "2020"
-            });
-            std::fs::write(
-                &src_index,
-                serde_json::to_string_pretty(&index_content).unwrap(),
-            )
-            .expect("write source index.json");
-
-            // Execute mv
-            run_mv("source_label", "dest_label", false).expect("run_mv must succeed");
-
-            // runs/dest_label/2020/ must exist
-            assert!(
-                PathBuf::from("runs/dest_label/2020").exists(),
-                "runs/dest_label/2020 must exist after mv"
-            );
-
-            // runs/source_label/ must NOT exist
-            assert!(
-                !PathBuf::from("runs/source_label").exists(),
-                "runs/source_label must not exist after mv"
-            );
-
-            // runs/dest_label/index.json must have label == "dest_label"
-            let dst_index_path = PathBuf::from("runs/dest_label/index.json");
-            if dst_index_path.exists() {
-                let raw = std::fs::read_to_string(&dst_index_path).expect("read dest index.json");
-                let v: serde_json::Value =
-                    serde_json::from_str(&raw).expect("parse dest index.json");
-                assert_eq!(
-                    v["label"].as_str(),
-                    Some("dest_label"),
-                    "label field must be patched to 'dest_label': {v}"
-                );
-            }
-
-            // Registry: source gone, dest present
-            assert!(
-                Registry::get("source_label").expect("get source").is_none(),
-                "source_label must be absent after mv"
-            );
-            let dest_entry = Registry::get("dest_label")
-                .expect("get dest")
-                .expect("dest_label must be in registry after mv");
-            assert!(
-                dest_entry.built.contains(&"2020".to_string()),
-                "dest_label must carry built years: {:?}",
-                dest_entry.built
-            );
+        // Step 3: Write analysis/test_verify/2020/index.json
+        std::fs::create_dir_all("analysis/test_verify/2020").expect("create analysis dir");
+        let analysis_index_path = PathBuf::from("analysis/test_verify/2020/index.json");
+        let analysis_index_content = serde_json::json!({
+            "label": "test_verify",
+            "year": "2020",
+            "run_index_sha256": run_index_sha,
         });
-        drop(dir);
-    }
+        std::fs::write(
+            &analysis_index_path,
+            serde_json::to_string_pretty(&analysis_index_content).unwrap(),
+        )
+        .expect("write analysis index");
 
-    // ── L1-3: verify full SHA chain in tempdir ───────────────────────────────
-    //
-    // Steps:
-    //   1. Write configs/test_verify.yml and compute its SHA-256.
-    //   2. Write runs/test_verify/2020/index.json with config_sha256.
-    //   3. Compute run index SHA → write analysis/test_verify/2020/index.json
-    //      with run_index_sha256.
-    //   4. Compute analysis index SHA → write reports/test_verify/2020/index.json
-    //      with analysis_index_sha256.
-    //   5. Mark all stages in registry.
-    //   6. Call run_label_verify → Ok (VERIFIED).
-    #[test]
-    fn test_verify_full_sha_chain_tempdir() {
-        use crate::label_cmd::run_verify;
-        use sha2::{Digest, Sha256};
+        // Compute analysis index SHA
+        let analysis_index_sha = {
+            let bytes = std::fs::read(&analysis_index_path).expect("read analysis index");
+            let mut h = Sha256::new();
+            h.update(&bytes);
+            format!("{:x}", h.finalize())
+        };
 
-        let dir = with_tempdir(|| {
-            // Step 1: Write config file and compute its SHA-256
-            std::fs::create_dir_all("configs").expect("create configs");
-            let config_path = PathBuf::from("configs/test_verify.yml");
-            let config_content =
-                "name: test_verify\nalgorithm:\n  structure: apportion-regions\n  search: single\n";
-            std::fs::write(&config_path, config_content).expect("write config");
-
-            let config_sha = {
-                let bytes = std::fs::read(&config_path).expect("read config");
-                let mut h = Sha256::new();
-                h.update(&bytes);
-                format!("{:x}", h.finalize())
-            };
-
-            // Step 2: Write runs/test_verify/2020/index.json with config_sha256
-            std::fs::create_dir_all("runs/test_verify/2020").expect("create runs dir");
-            let run_index_path = PathBuf::from("runs/test_verify/2020/index.json");
-            let run_index_content = serde_json::json!({
-                "label": "test_verify",
-                "year": "2020",
-                "config_sha256": config_sha,
-            });
-            std::fs::write(
-                &run_index_path,
-                serde_json::to_string_pretty(&run_index_content).unwrap(),
-            )
-            .expect("write run index");
-
-            // Compute run index SHA
-            let run_index_sha = {
-                let bytes = std::fs::read(&run_index_path).expect("read run index");
-                let mut h = Sha256::new();
-                h.update(&bytes);
-                format!("{:x}", h.finalize())
-            };
-
-            // Step 3: Write analysis/test_verify/2020/index.json
-            std::fs::create_dir_all("analysis/test_verify/2020").expect("create analysis dir");
-            let analysis_index_path = PathBuf::from("analysis/test_verify/2020/index.json");
-            let analysis_index_content = serde_json::json!({
-                "label": "test_verify",
-                "year": "2020",
-                "run_index_sha256": run_index_sha,
-            });
-            std::fs::write(
-                &analysis_index_path,
-                serde_json::to_string_pretty(&analysis_index_content).unwrap(),
-            )
-            .expect("write analysis index");
-
-            // Compute analysis index SHA
-            let analysis_index_sha = {
-                let bytes = std::fs::read(&analysis_index_path).expect("read analysis index");
-                let mut h = Sha256::new();
-                h.update(&bytes);
-                format!("{:x}", h.finalize())
-            };
-
-            // Step 4: Write reports/test_verify/2020/index.json
-            std::fs::create_dir_all("reports/test_verify/2020").expect("create reports dir");
-            let report_index_path = PathBuf::from("reports/test_verify/2020/index.json");
-            let report_index_content = serde_json::json!({
-                "label": "test_verify",
-                "year": "2020",
-                "analysis_index_sha256": analysis_index_sha,
-            });
-            std::fs::write(
-                &report_index_path,
-                serde_json::to_string_pretty(&report_index_content).unwrap(),
-            )
-            .expect("write report index");
-
-            // Step 5: Mark all stages in registry
-            Registry::mark_built("test_verify", "2020").expect("mark_built");
-            Registry::mark_analyzed("test_verify", "2020").expect("mark_analyzed");
-            Registry::mark_reported("test_verify", "2020").expect("mark_reported");
-
-            // Step 6: run_label_verify should return Ok (VERIFIED)
-            let result = run_verify("test_verify", Some("2020"));
-            assert!(
-                result.is_ok(),
-                "full matching SHA chain must return VERIFIED: {:?}",
-                result
-            );
+        // Step 4: Write reports/test_verify/2020/index.json
+        std::fs::create_dir_all("reports/test_verify/2020").expect("create reports dir");
+        let report_index_path = PathBuf::from("reports/test_verify/2020/index.json");
+        let report_index_content = serde_json::json!({
+            "label": "test_verify",
+            "year": "2020",
+            "analysis_index_sha256": analysis_index_sha,
         });
-        drop(dir);
-    }
+        std::fs::write(
+            &report_index_path,
+            serde_json::to_string_pretty(&report_index_content).unwrap(),
+        )
+        .expect("write report index");
 
-    // ── L1-4: build dry-run creates no files ────────────────────────────────
-    //
-    // Steps:
-    //   1. Write configs/dry_run_test.yml.
-    //   2. Call run_build with dry_run=true.
-    //   3. Verify runs/dry_run_test/ does NOT exist.
-    //   4. Verify registry has no entry for "dry_run_test".
-    #[test]
-    fn test_build_dry_run_creates_no_files() {
-        use crate::build_cmd::{run_build, BuildArgs};
+        // Step 5: Mark all stages in registry
+        Registry::mark_built("test_verify", "2020").expect("mark_built");
+        Registry::mark_analyzed("test_verify", "2020").expect("mark_analyzed");
+        Registry::mark_reported("test_verify", "2020").expect("mark_reported");
 
-        let dir = with_tempdir(|| {
-            // Write minimal config YAML
-            std::fs::create_dir_all("configs").expect("create configs dir");
-            let config_path = PathBuf::from("configs/dry_run_test.yml");
-            let yaml =
+        // Step 6: run_label_verify should return Ok (VERIFIED)
+        let result = run_verify("test_verify", Some("2020"));
+        assert!(
+            result.is_ok(),
+            "full matching SHA chain must return VERIFIED: {:?}",
+            result
+        );
+    });
+    drop(dir);
+}
+
+// ── L1-4: build dry-run creates no files ────────────────────────────────
+//
+// Steps:
+//   1. Write configs/dry_run_test.yml.
+//   2. Call run_build with dry_run=true.
+//   3. Verify runs/dry_run_test/ does NOT exist.
+//   4. Verify registry has no entry for "dry_run_test".
+#[test]
+fn test_build_dry_run_creates_no_files() {
+    use crate::build_cmd::{run_build, BuildArgs};
+
+    let dir = with_tempdir(|| {
+        // Write minimal config YAML
+        std::fs::create_dir_all("configs").expect("create configs dir");
+        let config_path = PathBuf::from("configs/dry_run_test.yml");
+        let yaml =
                 "name: dry_run_test\nalgorithm:\n  structure: apportion-regions\n  search: single\nyears: [\"2020\"]\n";
-            std::fs::write(&config_path, yaml).expect("write config");
+        std::fs::write(&config_path, yaml).expect("write config");
 
-            // Build with dry_run = true
-            let args = BuildArgs {
-                label: "dry_run_test".to_string(),
-                config: config_path,
-                year: Some("2020".to_string()),
-                states: vec![],
-                workers: None,
-                dry_run: true,
-                force: false,
-                no_interactive: false,
-            };
-            let result = run_build(args);
-            assert!(result.is_ok(), "dry_run build must return Ok: {:?}", result);
+        // Build with dry_run = true
+        let args = BuildArgs {
+            label: "dry_run_test".to_string(),
+            config: config_path,
+            year: Some("2020".to_string()),
+            states: vec![],
+            workers: None,
+            dry_run: true,
+            force: false,
+            no_interactive: false,
+        };
+        let result = run_build(args);
+        assert!(result.is_ok(), "dry_run build must return Ok: {:?}", result);
 
-            // runs/dry_run_test/ must NOT exist
-            assert!(
-                !PathBuf::from("runs/dry_run_test").exists(),
-                "runs/dry_run_test must not be created by dry_run build"
-            );
+        // runs/dry_run_test/ must NOT exist
+        assert!(
+            !PathBuf::from("runs/dry_run_test").exists(),
+            "runs/dry_run_test must not be created by dry_run build"
+        );
 
-            // Registry must have no entry for dry_run_test
-            let entry = Registry::get("dry_run_test").expect("registry get");
-            assert!(
-                entry.is_none(),
-                "registry must not contain dry_run_test after dry_run build: {:?}",
-                entry
-            );
+        // Registry must have no entry for dry_run_test
+        let entry = Registry::get("dry_run_test").expect("registry get");
+        assert!(
+            entry.is_none(),
+            "registry must not contain dry_run_test after dry_run build: {:?}",
+            entry
+        );
+    });
+    drop(dir);
+}
+
+// ── L1-5: analyze creates index from mock final_assignments.json ─────────
+//
+// Steps:
+//   1. Mark mock_analyze_test as built for "2020" in registry.
+//   2. Create runs/mock_analyze_test/2020/vermont/final_assignments.json.
+//   3. Write runs/mock_analyze_test/2020/index.json (valid build index JSON).
+//   4. Call run_label_analyze → if Ok, verify analysis index exists with
+//      run_index_sha256 field.
+#[test]
+fn test_analyze_label_creates_index_from_mock_assignments() {
+    use crate::analyze_label::run_label_analyze;
+
+    let dir = with_tempdir(|| {
+        // Step 1: Mark as built
+        Registry::mark_built("mock_analyze_test", "2020").expect("mark_built");
+
+        // Step 2: Create final_assignments.json (run_analyze_state looks for this)
+        let state_dir = PathBuf::from("runs/mock_analyze_test/2020/vermont");
+        std::fs::create_dir_all(&state_dir).expect("create state dir");
+        let assignments = serde_json::json!({"1": [1, 2, 3], "2": [4, 5, 6]});
+        std::fs::write(
+            state_dir.join("final_assignments.json"),
+            serde_json::to_string_pretty(&assignments).unwrap(),
+        )
+        .expect("write final_assignments.json");
+
+        // Step 3: Write a minimal build index
+        let build_index = serde_json::json!({
+            "label": "mock_analyze_test",
+            "year": "2020",
+            "config_sha256": "0".repeat(64),
+            "algorithm": {"structure": "apportion-regions"},
+            "states": {"vermont": {"status": "ok", "districts": 1}},
+            "summary": {"total": 1, "succeeded": 1, "failed": 0},
         });
-        drop(dir);
-    }
+        std::fs::write(
+            "runs/mock_analyze_test/2020/index.json",
+            serde_json::to_string_pretty(&build_index).unwrap(),
+        )
+        .expect("write build index");
 
-    // ── L1-5: analyze creates index from mock final_assignments.json ─────────
-    //
-    // Steps:
-    //   1. Mark mock_analyze_test as built for "2020" in registry.
-    //   2. Create runs/mock_analyze_test/2020/vermont/final_assignments.json.
-    //   3. Write runs/mock_analyze_test/2020/index.json (valid build index JSON).
-    //   4. Call run_label_analyze → if Ok, verify analysis index exists with
-    //      run_index_sha256 field.
-    #[test]
-    fn test_analyze_label_creates_index_from_mock_assignments() {
-        use crate::analyze_label::run_label_analyze;
+        // Step 4: Call run_label_analyze
+        let types: Vec<String> = vec!["summary".to_string()];
+        let states: Vec<String> = vec![];
+        let result = run_label_analyze("mock_analyze_test", &types, Some("2020"), &states, false);
 
-        let dir = with_tempdir(|| {
-            // Step 1: Mark as built
-            Registry::mark_built("mock_analyze_test", "2020").expect("mark_built");
-
-            // Step 2: Create final_assignments.json (run_analyze_state looks for this)
-            let state_dir = PathBuf::from("runs/mock_analyze_test/2020/vermont");
-            std::fs::create_dir_all(&state_dir).expect("create state dir");
-            let assignments = serde_json::json!({"1": [1, 2, 3], "2": [4, 5, 6]});
-            std::fs::write(
-                state_dir.join("final_assignments.json"),
-                serde_json::to_string_pretty(&assignments).unwrap(),
-            )
-            .expect("write final_assignments.json");
-
-            // Step 3: Write a minimal build index
-            let build_index = serde_json::json!({
-                "label": "mock_analyze_test",
-                "year": "2020",
-                "config_sha256": "0".repeat(64),
-                "algorithm": {"structure": "apportion-regions"},
-                "states": {"vermont": {"status": "ok", "districts": 1}},
-                "summary": {"total": 1, "succeeded": 1, "failed": 0},
-            });
-            std::fs::write(
-                "runs/mock_analyze_test/2020/index.json",
-                serde_json::to_string_pretty(&build_index).unwrap(),
-            )
-            .expect("write build index");
-
-            // Step 4: Call run_label_analyze
-            let types: Vec<String> = vec!["summary".to_string()];
-            let states: Vec<String> = vec![];
-            let result =
-                run_label_analyze("mock_analyze_test", &types, Some("2020"), &states, false);
-
-            // Regardless of Ok or Err, check what was written
-            match result {
-                Ok(()) => {
-                    // If analysis succeeded, verify the index exists with run_index_sha256
-                    let analysis_index =
-                        PathBuf::from("analysis/mock_analyze_test/2020/index.json");
-                    if analysis_index.exists() {
-                        let raw =
-                            std::fs::read_to_string(&analysis_index).expect("read analysis index");
-                        let v: serde_json::Value =
-                            serde_json::from_str(&raw).expect("parse analysis index");
-                        assert!(
-                            v.get("run_index_sha256").is_some(),
-                            "analysis index must have run_index_sha256 field: {v}"
-                        );
-                    }
-                    // Mark as analyzed verified by the call itself
-                    let entry = Registry::get("mock_analyze_test")
-                        .expect("registry get")
-                        .expect("label must exist");
+        // Regardless of Ok or Err, check what was written
+        match result {
+            Ok(()) => {
+                // If analysis succeeded, verify the index exists with run_index_sha256
+                let analysis_index = PathBuf::from("analysis/mock_analyze_test/2020/index.json");
+                if analysis_index.exists() {
+                    let raw =
+                        std::fs::read_to_string(&analysis_index).expect("read analysis index");
+                    let v: serde_json::Value =
+                        serde_json::from_str(&raw).expect("parse analysis index");
                     assert!(
-                        entry.analyzed.contains(&"2020".to_string()),
-                        "registry must mark mock_analyze_test/2020 as analyzed: {:?}",
-                        entry.analyzed
+                        v.get("run_index_sha256").is_some(),
+                        "analysis index must have run_index_sha256 field: {v}"
                     );
                 }
-                Err(e) => {
-                    // An error is acceptable only if final_assignments.json was
-                    // not found (possible if run_analyze_state has a different path).
-                    // We document the outcome but don't fail the test on a path mismatch.
-                    eprintln!(
-                        "[L1-5] run_label_analyze returned Err (path mismatch or \
+                // Mark as analyzed verified by the call itself
+                let entry = Registry::get("mock_analyze_test")
+                    .expect("registry get")
+                    .expect("label must exist");
+                assert!(
+                    entry.analyzed.contains(&"2020".to_string()),
+                    "registry must mark mock_analyze_test/2020 as analyzed: {:?}",
+                    entry.analyzed
+                );
+            }
+            Err(e) => {
+                // An error is acceptable only if final_assignments.json was
+                // not found (possible if run_analyze_state has a different path).
+                // We document the outcome but don't fail the test on a path mismatch.
+                eprintln!(
+                    "[L1-5] run_label_analyze returned Err (path mismatch or \
                          graceful skip): {e}"
-                    );
-                    // At minimum: verify the function doesn't panic and produces
-                    // a human-readable error message.
-                    assert!(!e.is_empty(), "error message must not be empty");
-                }
-            }
-        });
-        drop(dir);
-    }
-
-    // ── L1-6: registry concurrent write sequential simulation ────────────────
-    //
-    // Simulates sequential registry mutations from two "concurrent" writers:
-    //   1. mark_built("label_a", "2020")
-    //   2. mark_built("label_b", "2020")
-    //   3. list_labels() contains both
-    //   4. .bisect file is valid JSON with both entries
-    //
-    // Note: true concurrency testing requires threads but set_current_dir
-    // is process-wide; this test verifies sequential write correctness and
-    // that the atomic rename leaves no .bisect.tmp artifact.
-    #[test]
-    fn test_registry_concurrent_write_sequential_simulation() {
-        let dir = with_tempdir(|| {
-            // Sequential writes from "two processes"
-            Registry::mark_built("label_a", "2020").expect("mark_built label_a");
-            Registry::mark_built("label_b", "2020").expect("mark_built label_b");
-
-            // list_labels must contain both
-            let labels = Registry::list_labels().expect("list_labels");
-            let names: Vec<&str> = labels.iter().map(|(n, _)| n.as_str()).collect();
-            assert!(
-                names.contains(&"label_a"),
-                "registry must contain label_a: {names:?}"
-            );
-            assert!(
-                names.contains(&"label_b"),
-                "registry must contain label_b: {names:?}"
-            );
-
-            // .bisect must be valid JSON with both entries
-            let content = std::fs::read_to_string(".bisect").expect(".bisect must exist");
-            let v: serde_json::Value =
-                serde_json::from_str(&content).expect(".bisect must be valid JSON");
-            assert!(v.is_object(), ".bisect must be a JSON object");
-            assert!(
-                v.get("label_a").is_some(),
-                "label_a must appear in .bisect JSON: {v}"
-            );
-            assert!(
-                v.get("label_b").is_some(),
-                "label_b must appear in .bisect JSON: {v}"
-            );
-
-            // .bisect.tmp must not exist after successful save (atomic rename)
-            assert!(
-                !PathBuf::from(".bisect.tmp").exists(),
-                ".bisect.tmp must not exist after atomic rename"
-            );
-        });
-        drop(dir);
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // L2 TESTS — require real adjacency data + METIS; marked #[ignore]
-    //
-    // Prerequisites for L2 tests:
-    //   bisect fetch --type adjacency --states VT --year 2020
-    //   (or copy VT adjacency from outputs/V3/data/2020/adjacency/)
-    //
-    // Run with:
-    //   cargo +stable test -p BISECT-cli label_pipeline_tests::test_build_label_ \
-    //       -- --ignored --test-threads=1
-    // ════════════════════════════════════════════════════════════════════════
-
-    // ── L2-1: build label Vermont 2020 ──────────────────────────────────────
-    //
-    // VT has exactly 1 congressional district — METIS trivially partitions it.
-    // This is the fastest possible real build test.
-    #[test]
-    #[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
-    fn test_build_label_vermont_2020() {
-        use crate::build_cmd::{run_build, BuildArgs};
-
-        let dir = with_tempdir(|| {
-            // Write configs/vt_l2_test.yml
-            std::fs::create_dir_all("configs").expect("create configs");
-            let config_path = PathBuf::from("configs/vt_l2_test.yml");
-            let yaml = "name: vt_l2_test\n\
-                        algorithm:\n\
-                          structure: apportion-regions\n\
-                          search: single\n\
-                          balance_tolerance: 5.0\n\
-                        workers: 1\n\
-                        years: [\"2020\"]\n";
-            std::fs::write(&config_path, yaml).expect("write config");
-
-            // Point the adjacency data location to the real outputs directory.
-            // run_build internally calls load_all_states(year) which reads from
-            // outputs/data/{year}/adjacency/ relative to CWD — but since we're
-            // in a tempdir, we need to copy or symlink the VT adjacency.
-            // For the CI/ignore pattern, the test is skipped unless data exists;
-            // a developer who runs it manually ensures the data is present.
-
-            let args = BuildArgs {
-                label: "vt_l2_test".to_string(),
-                config: config_path,
-                year: Some("2020".to_string()),
-                states: vec!["VT".to_string()],
-                workers: Some(1),
-                dry_run: false,
-                force: false,
-                no_interactive: true,
-            };
-
-            // The build will fail if adjacency data is not in the expected location.
-            // We treat any I/O error as a signal that data is missing (acceptable for
-            // an #[ignore] test that documents the prerequisite).
-            let result = run_build(args);
-            if result.is_err() {
-                let msg = result.unwrap_err();
-                // Only panic if it's not a data-missing error
-                if msg.contains("[INTERNAL]") || msg.contains("[CONFIG]") {
-                    // Legitimate test failure
-                    panic!("run_build(VT 2020) failed with infrastructure error: {msg}");
-                }
-                // Data-missing or adjacency error: skip gracefully
-                eprintln!("[L2-1] skipping assertion — adjacency data not found: {msg}");
-                return;
-            }
-
-            // If build succeeded: verify outputs
-            let assignments = PathBuf::from("runs/vt_l2_test/2020/vermont/assignments.json");
-            assert!(
-                assignments.exists(),
-                "vermont/assignments.json must exist after VT build"
-            );
-
-            let index_path = PathBuf::from("runs/vt_l2_test/2020/index.json");
-            assert!(index_path.exists(), "index.json must exist after VT build");
-            let content = std::fs::read_to_string(&index_path).expect("read index.json");
-            let v: serde_json::Value = serde_json::from_str(&content).expect("parse index.json");
-            let succeeded = v["summary"]["succeeded"].as_u64().unwrap_or(0);
-            assert!(succeeded >= 1, "summary.succeeded must be >= 1 for VT: {v}");
-
-            let entry = Registry::get("vt_l2_test")
-                .expect("registry get")
-                .expect("vt_l2_test must be in registry");
-            assert!(
-                entry.built.contains(&"2020".to_string()),
-                "registry must mark vt_l2_test/2020 as built: {:?}",
-                entry.built
-            );
-        });
-        drop(dir);
-    }
-
-    // ── L2-2: build then verify SHA chain Vermont ────────────────────────────
-    //
-    // Extends L2-1: after a successful build, run_verify should confirm
-    // the config → build-index SHA link is MATCH (VERIFIED for that link).
-    // Analysis and report links will be MISSING (not run yet), causing overall
-    // FAILED — but the config SHA link correctness is tested.
-    #[test]
-    #[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
-    fn test_build_then_verify_sha_chain_vermont() {
-        use crate::build_cmd::{run_build, BuildArgs};
-        use crate::label_cmd::run_verify;
-
-        let dir = with_tempdir(|| {
-            // Write config
-            std::fs::create_dir_all("configs").expect("create configs");
-            let config_path = PathBuf::from("configs/vt_l2_test.yml");
-            let yaml = "name: vt_l2_test\n\
-                        algorithm:\n\
-                          structure: apportion-regions\n\
-                          search: single\n\
-                          balance_tolerance: 5.0\n\
-                        workers: 1\n\
-                        years: [\"2020\"]\n";
-            std::fs::write(&config_path, yaml).expect("write config");
-
-            let args = BuildArgs {
-                label: "vt_l2_test".to_string(),
-                config: config_path,
-                year: Some("2020".to_string()),
-                states: vec!["VT".to_string()],
-                workers: Some(1),
-                dry_run: false,
-                force: false,
-                no_interactive: true,
-            };
-            let build_result = run_build(args);
-            if build_result.is_err() {
-                eprintln!(
-                    "[L2-2] build failed — likely missing adjacency data: {:?}",
-                    build_result
                 );
-                return; // graceful skip
+                // At minimum: verify the function doesn't panic and produces
+                // a human-readable error message.
+                assert!(!e.is_empty(), "error message must not be empty");
             }
+        }
+    });
+    drop(dir);
+}
 
-            // run_verify: config→build link should be MATCH.
-            // Overall verdict may be FAILED (missing analysis/report), but the
-            // function output (which goes to stdout) contains "VERIFIED" for the
-            // config sha link.  We can't capture stdout here without extra machinery,
-            // so we just confirm the function doesn't panic.
-            // A full VERIFIED requires all three chain links, so we expect Err here
-            // (missing analysis/report links).
-            let verify_result = run_verify("vt_l2_test", Some("2020"));
-            // The result will be Err("verify: SHA chain has failures") because
-            // analysis/reports index files don't exist yet.  That is expected.
-            // We just confirm it's not a panic.
+// ── L1-6: registry concurrent write sequential simulation ────────────────
+//
+// Simulates sequential registry mutations from two "concurrent" writers:
+//   1. mark_built("label_a", "2020")
+//   2. mark_built("label_b", "2020")
+//   3. list_labels() contains both
+//   4. .bisect file is valid JSON with both entries
+//
+// Note: true concurrency testing requires threads but set_current_dir
+// is process-wide; this test verifies sequential write correctness and
+// that the atomic rename leaves no .bisect.tmp artifact.
+#[test]
+fn test_registry_concurrent_write_sequential_simulation() {
+    let dir = with_tempdir(|| {
+        // Sequential writes from "two processes"
+        Registry::mark_built("label_a", "2020").expect("mark_built label_a");
+        Registry::mark_built("label_b", "2020").expect("mark_built label_b");
+
+        // list_labels must contain both
+        let labels = Registry::list_labels().expect("list_labels");
+        let names: Vec<&str> = labels.iter().map(|(n, _)| n.as_str()).collect();
+        assert!(
+            names.contains(&"label_a"),
+            "registry must contain label_a: {names:?}"
+        );
+        assert!(
+            names.contains(&"label_b"),
+            "registry must contain label_b: {names:?}"
+        );
+
+        // .bisect must be valid JSON with both entries
+        let content = std::fs::read_to_string(".bisect").expect(".bisect must exist");
+        let v: serde_json::Value =
+            serde_json::from_str(&content).expect(".bisect must be valid JSON");
+        assert!(v.is_object(), ".bisect must be a JSON object");
+        assert!(
+            v.get("label_a").is_some(),
+            "label_a must appear in .bisect JSON: {v}"
+        );
+        assert!(
+            v.get("label_b").is_some(),
+            "label_b must appear in .bisect JSON: {v}"
+        );
+
+        // .bisect.tmp must not exist after successful save (atomic rename)
+        assert!(
+            !PathBuf::from(".bisect.tmp").exists(),
+            ".bisect.tmp must not exist after atomic rename"
+        );
+    });
+    drop(dir);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// L2 TESTS — require real adjacency data + METIS; marked #[ignore]
+//
+// Prerequisites for L2 tests:
+//   bisect fetch --type adjacency --states VT --year 2020
+//   (or copy VT adjacency from outputs/V3/data/2020/adjacency/)
+//
+// Run with:
+//   cargo +stable test -p BISECT-cli label_pipeline_tests::test_build_label_ \
+//       -- --ignored --test-threads=1
+// ════════════════════════════════════════════════════════════════════════
+
+// ── L2-1: build label Vermont 2020 ──────────────────────────────────────
+//
+// VT has exactly 1 congressional district — METIS trivially partitions it.
+// This is the fastest possible real build test.
+#[test]
+#[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
+fn test_build_label_vermont_2020() {
+    use crate::build_cmd::{run_build, BuildArgs};
+
+    let dir = with_tempdir(|| {
+        // Write configs/vt_l2_test.yml
+        std::fs::create_dir_all("configs").expect("create configs");
+        let config_path = PathBuf::from("configs/vt_l2_test.yml");
+        let yaml = "name: vt_l2_test\n\
+                        algorithm:\n\
+                          structure: apportion-regions\n\
+                          search: single\n\
+                          balance_tolerance: 5.0\n\
+                        workers: 1\n\
+                        years: [\"2020\"]\n";
+        std::fs::write(&config_path, yaml).expect("write config");
+
+        // Point the adjacency data location to the real outputs directory.
+        // run_build internally calls load_all_states(year) which reads from
+        // outputs/data/{year}/adjacency/ relative to CWD — but since we're
+        // in a tempdir, we need to copy or symlink the VT adjacency.
+        // For the CI/ignore pattern, the test is skipped unless data exists;
+        // a developer who runs it manually ensures the data is present.
+
+        let args = BuildArgs {
+            label: "vt_l2_test".to_string(),
+            config: config_path,
+            year: Some("2020".to_string()),
+            states: vec!["VT".to_string()],
+            workers: Some(1),
+            dry_run: false,
+            force: false,
+            no_interactive: true,
+        };
+
+        // The build will fail if adjacency data is not in the expected location.
+        // We treat any I/O error as a signal that data is missing (acceptable for
+        // an #[ignore] test that documents the prerequisite).
+        let result = run_build(args);
+        if result.is_err() {
+            let msg = result.unwrap_err();
+            // Only panic if it's not a data-missing error
+            if msg.contains("[INTERNAL]") || msg.contains("[CONFIG]") {
+                // Legitimate test failure
+                panic!("run_build(VT 2020) failed with infrastructure error: {msg}");
+            }
+            // Data-missing or adjacency error: skip gracefully
+            eprintln!("[L2-1] skipping assertion — adjacency data not found: {msg}");
+            return;
+        }
+
+        // If build succeeded: verify outputs
+        let assignments = PathBuf::from("runs/vt_l2_test/2020/vermont/assignments.json");
+        assert!(
+            assignments.exists(),
+            "vermont/assignments.json must exist after VT build"
+        );
+
+        let index_path = PathBuf::from("runs/vt_l2_test/2020/index.json");
+        assert!(index_path.exists(), "index.json must exist after VT build");
+        let content = std::fs::read_to_string(&index_path).expect("read index.json");
+        let v: serde_json::Value = serde_json::from_str(&content).expect("parse index.json");
+        let succeeded = v["summary"]["succeeded"].as_u64().unwrap_or(0);
+        assert!(succeeded >= 1, "summary.succeeded must be >= 1 for VT: {v}");
+
+        let entry = Registry::get("vt_l2_test")
+            .expect("registry get")
+            .expect("vt_l2_test must be in registry");
+        assert!(
+            entry.built.contains(&"2020".to_string()),
+            "registry must mark vt_l2_test/2020 as built: {:?}",
+            entry.built
+        );
+    });
+    drop(dir);
+}
+
+// ── L2-2: build then verify SHA chain Vermont ────────────────────────────
+//
+// Extends L2-1: after a successful build, run_verify should confirm
+// the config → build-index SHA link is MATCH (VERIFIED for that link).
+// Analysis and report links will be MISSING (not run yet), causing overall
+// FAILED — but the config SHA link correctness is tested.
+#[test]
+#[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
+fn test_build_then_verify_sha_chain_vermont() {
+    use crate::build_cmd::{run_build, BuildArgs};
+    use crate::label_cmd::run_verify;
+
+    let dir = with_tempdir(|| {
+        // Write config
+        std::fs::create_dir_all("configs").expect("create configs");
+        let config_path = PathBuf::from("configs/vt_l2_test.yml");
+        let yaml = "name: vt_l2_test\n\
+                        algorithm:\n\
+                          structure: apportion-regions\n\
+                          search: single\n\
+                          balance_tolerance: 5.0\n\
+                        workers: 1\n\
+                        years: [\"2020\"]\n";
+        std::fs::write(&config_path, yaml).expect("write config");
+
+        let args = BuildArgs {
+            label: "vt_l2_test".to_string(),
+            config: config_path,
+            year: Some("2020".to_string()),
+            states: vec!["VT".to_string()],
+            workers: Some(1),
+            dry_run: false,
+            force: false,
+            no_interactive: true,
+        };
+        let build_result = run_build(args);
+        if build_result.is_err() {
             eprintln!(
-                "[L2-2] verify result (expected Err for missing analysis/report): {:?}",
-                verify_result
+                "[L2-2] build failed — likely missing adjacency data: {:?}",
+                build_result
             );
-        });
-        drop(dir);
-    }
+            return; // graceful skip
+        }
 
-    // ── L2-3: build → mv → verify rename Vermont ────────────────────────────
-    //
-    // Extends L2-1: after a successful build, rename the label and verify
-    // the registry and filesystem reflect the new name.
-    #[test]
-    #[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
-    fn test_build_mv_then_analyze_vermont() {
-        use crate::build_cmd::{run_build, BuildArgs};
-        use crate::label_cmd::run_mv;
+        // run_verify: config→build link should be MATCH.
+        // Overall verdict may be FAILED (missing analysis/report), but the
+        // function output (which goes to stdout) contains "VERIFIED" for the
+        // config sha link.  We can't capture stdout here without extra machinery,
+        // so we just confirm the function doesn't panic.
+        // A full VERIFIED requires all three chain links, so we expect Err here
+        // (missing analysis/report links).
+        let verify_result = run_verify("vt_l2_test", Some("2020"));
+        // The result will be Err("verify: SHA chain has failures") because
+        // analysis/reports index files don't exist yet.  That is expected.
+        // We just confirm it's not a panic.
+        eprintln!(
+            "[L2-2] verify result (expected Err for missing analysis/report): {:?}",
+            verify_result
+        );
+    });
+    drop(dir);
+}
 
-        let dir = with_tempdir(|| {
-            // Write config
-            std::fs::create_dir_all("configs").expect("create configs");
-            let config_path = PathBuf::from("configs/vt_l2_test.yml");
-            let yaml = "name: vt_l2_test\n\
+// ── L2-3: build → mv → verify rename Vermont ────────────────────────────
+//
+// Extends L2-1: after a successful build, rename the label and verify
+// the registry and filesystem reflect the new name.
+#[test]
+#[ignore = "requires adjacency data: bisect fetch --type adjacency --states VT --year 2020"]
+fn test_build_mv_then_analyze_vermont() {
+    use crate::build_cmd::{run_build, BuildArgs};
+    use crate::label_cmd::run_mv;
+
+    let dir = with_tempdir(|| {
+        // Write config
+        std::fs::create_dir_all("configs").expect("create configs");
+        let config_path = PathBuf::from("configs/vt_l2_test.yml");
+        let yaml = "name: vt_l2_test\n\
                         algorithm:\n\
                           structure: apportion-regions\n\
                           search: single\n\
                           balance_tolerance: 5.0\n\
                         workers: 1\n\
                         years: [\"2020\"]\n";
-            std::fs::write(&config_path, yaml).expect("write config");
+        std::fs::write(&config_path, yaml).expect("write config");
 
-            let args = BuildArgs {
-                label: "vt_l2_test".to_string(),
-                config: config_path,
-                year: Some("2020".to_string()),
-                states: vec!["VT".to_string()],
-                workers: Some(1),
-                dry_run: false,
-                force: false,
-                no_interactive: true,
-            };
-            let build_result = run_build(args);
-            if build_result.is_err() {
-                eprintln!(
-                    "[L2-3] build failed — likely missing adjacency data: {:?}",
-                    build_result
-                );
-                return; // graceful skip
-            }
+        let args = BuildArgs {
+            label: "vt_l2_test".to_string(),
+            config: config_path,
+            year: Some("2020".to_string()),
+            states: vec!["VT".to_string()],
+            workers: Some(1),
+            dry_run: false,
+            force: false,
+            no_interactive: true,
+        };
+        let build_result = run_build(args);
+        if build_result.is_err() {
+            eprintln!(
+                "[L2-3] build failed — likely missing adjacency data: {:?}",
+                build_result
+            );
+            return; // graceful skip
+        }
 
-            // Execute mv: rename vt_l2_test → vt_l2_renamed
-            let mv_result = run_mv("vt_l2_test", "vt_l2_renamed", false);
-            assert!(mv_result.is_ok(), "run_mv must succeed: {:?}", mv_result);
+        // Execute mv: rename vt_l2_test → vt_l2_renamed
+        let mv_result = run_mv("vt_l2_test", "vt_l2_renamed", false);
+        assert!(mv_result.is_ok(), "run_mv must succeed: {:?}", mv_result);
 
-            // Registry must show new name
-            assert!(
-                Registry::get("vt_l2_test").expect("get old").is_none(),
-                "vt_l2_test must be gone from registry after mv"
-            );
-            let renamed_entry = Registry::get("vt_l2_renamed")
-                .expect("get renamed")
-                .expect("vt_l2_renamed must be in registry");
-            assert!(
-                renamed_entry.built.contains(&"2020".to_string()),
-                "vt_l2_renamed must carry built years: {:?}",
-                renamed_entry.built
-            );
+        // Registry must show new name
+        assert!(
+            Registry::get("vt_l2_test").expect("get old").is_none(),
+            "vt_l2_test must be gone from registry after mv"
+        );
+        let renamed_entry = Registry::get("vt_l2_renamed")
+            .expect("get renamed")
+            .expect("vt_l2_renamed must be in registry");
+        assert!(
+            renamed_entry.built.contains(&"2020".to_string()),
+            "vt_l2_renamed must carry built years: {:?}",
+            renamed_entry.built
+        );
 
-            // Old directories gone, new directories present
-            assert!(
-                !PathBuf::from("runs/vt_l2_test").exists(),
-                "runs/vt_l2_test must not exist after mv"
-            );
-            assert!(
-                PathBuf::from("runs/vt_l2_renamed").exists(),
-                "runs/vt_l2_renamed must exist after mv"
-            );
-        });
-        drop(dir);
-    }
+        // Old directories gone, new directories present
+        assert!(
+            !PathBuf::from("runs/vt_l2_test").exists(),
+            "runs/vt_l2_test must not exist after mv"
+        );
+        assert!(
+            PathBuf::from("runs/vt_l2_renamed").exists(),
+            "runs/vt_l2_renamed must exist after mv"
+        );
+    });
+    drop(dir);
+}

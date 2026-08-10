@@ -62,6 +62,39 @@ fn test_split_four_node_graph() {
 }
 
 #[test]
+fn test_equal_non_nrs_split_keeps_both_sides_connected() {
+    // Two dense lobes joined by a narrow corridor exercise the equal-weight
+    // path that historically used recursive METIS without Contig.
+    let adj = vec![
+        vec![1, 2],
+        vec![0, 2],
+        vec![0, 1, 3],
+        vec![2, 4],
+        vec![3, 5, 6],
+        vec![4, 6],
+        vec![4, 5],
+    ];
+    let vw = vec![1000i64; 7];
+    let indices: HashSet<usize> = (0..adj.len()).collect();
+    let (left, right) = split_subgraph(
+        &adj,
+        &vw,
+        1,
+        &HashMap::new(),
+        &indices,
+        1.20,
+        100,
+        Some(7),
+        None,
+        None,
+    )
+    .expect("contiguous k-way equal split should succeed");
+
+    assert!(is_connected_subset(&adj, &left));
+    assert!(is_connected_subset(&adj, &right));
+}
+
+#[test]
 fn test_run_all_splits_single_district() {
     let n = 193usize;
     let adj = vec![vec![]; n];

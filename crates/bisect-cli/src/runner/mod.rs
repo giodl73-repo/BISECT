@@ -2939,11 +2939,10 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         }
 
         // 4. Assert population balance — retry loop closes here.
-        let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::ApportionRegions) {
-            0.03
-        } else {
-            balance_tolerance
-        };
+        // Every structure is held to the configured final-plan population
+        // contract. Structure-specific research tolerances may guide candidate
+        // construction, but must not silently relax final validation.
+        let effective_tolerance = balance_tolerance;
         let partition = Partition::from_assignments(assignments_attempt.clone());
         let balance_ok =
             partition.assert_balanced(&graph.vertex_weights, num_districts, effective_tolerance);
@@ -3109,7 +3108,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             tiger_sha256,
             created_at,
             balance_tolerance_pct: balance_tolerance * 100.0,
-            population_balance_valid: true,
+            population_balance_valid: audit_sidecars.population_balance_valid,
             seats_per_district: cfg.effective_seats_per_district(),
             total_seats: cfg.total_seats,
             electoral_system: if cfg.seats_per_district <= 1 {
