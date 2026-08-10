@@ -1,0 +1,3 @@
+NOTE: Running congressional (6D). KY also has house (100D) and senate (38D). Use --chamber house or --chamber senate.
+[partition-time] KY: k=6 n=1306 -> 2.7ms
+[OK] KY in 169ms

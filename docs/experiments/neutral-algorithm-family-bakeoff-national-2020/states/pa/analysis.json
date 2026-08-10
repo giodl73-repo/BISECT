@@ -1,0 +1,216 @@
+{
+  "state": "PA",
+  "state_slug": "pennsylvania",
+  "expected_districts": 17,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "PA",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3446,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 2740781.58057,
+      "canonical_assignment_sha256": "9aec74208edd5682e0dda8de36bc9f5db4306ad74d248fb18076806ee96e5174",
+      "adjacency_sha256": "7cc67ae512d3744408529c7fd3331b17ea64e11d58fcc0c9764f5b7f0d2682c1",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "PA",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3446,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 2687785.61608,
+      "canonical_assignment_sha256": "7f1fd6503a29463ea5596b289dd5fbef4df594cc49029591ae57f4da9d7a5c38",
+      "adjacency_sha256": "7cc67ae512d3744408529c7fd3331b17ea64e11d58fcc0c9764f5b7f0d2682c1",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.980663922705
+    },
+    {
+      "state": "PA",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3446,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 3102795.35372,
+      "canonical_assignment_sha256": "b0410f4d1c98853b72845f8c0fa48bf4bfd8885391ad2565824618759af0454a",
+      "adjacency_sha256": "7cc67ae512d3744408529c7fd3331b17ea64e11d58fcc0c9764f5b7f0d2682c1",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.132084138231
+    },
+    {
+      "state": "PA",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3446,
+      "districts": 17,
+      "expected_districts": 17,
+      "edge_cut": 2995757.44263,
+      "canonical_assignment_sha256": "d26d69c2a24e3b67bf7a6385c1222823f02e193511fd6f87f6cac9db4daf61bf",
+      "adjacency_sha256": "7cc67ae512d3744408529c7fd3331b17ea64e11d58fcc0c9764f5b7f0d2682c1",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.093030347207
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "7cc67ae512d3744408529c7fd3331b17ea64e11d58fcc0c9764f5b7f0d2682c1"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "3446"
+      ],
+      "districts": [
+        "17"
+      ],
+      "expected_districts": [
+        "17"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "PA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 2405,
+      "different_units": 1041,
+      "matched_unit_rate": 0.6979106210098666
+    },
+    {
+      "state": "PA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 2321,
+      "different_units": 1125,
+      "matched_unit_rate": 0.6735345327916424
+    },
+    {
+      "state": "PA",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1818,
+      "different_units": 1628,
+      "matched_unit_rate": 0.5275681950087058
+    },
+    {
+      "state": "PA",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 2139,
+      "different_units": 1307,
+      "matched_unit_rate": 0.6207196749854904
+    },
+    {
+      "state": "PA",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 1838,
+      "different_units": 1608,
+      "matched_unit_rate": 0.5333720255368544
+    },
+    {
+      "state": "PA",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 1927,
+      "different_units": 1519,
+      "matched_unit_rate": 0.5591990713871154
+    }
+  ]
+}

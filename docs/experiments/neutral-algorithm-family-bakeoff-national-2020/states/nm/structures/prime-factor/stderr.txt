@@ -1,0 +1,3 @@
+NOTE: Running congressional (3D). NM also has house (70D) and senate (42D). Use --chamber house or --chamber senate.
+[partition-time] NM: k=3 n=612 -> 1.4ms
+[OK] NM in 128ms

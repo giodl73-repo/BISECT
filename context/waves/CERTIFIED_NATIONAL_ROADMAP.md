@@ -72,6 +72,11 @@ For every State and Census year:
   - [x] Execute and exactly regenerate the Rhode Island common-block Tier 2 geometry slice.
   - [x] Freeze and execute the national Tier 2 geometry protocol.
   - [x] Resolve or publish the input/protocol blockers for the remaining metric families.
+  - [x] Freeze, execute, and exactly regenerate a Wisconsin neutral algorithm-family proof slice.
+  - [x] Remediate the AreaSection/ApportionRegions validity failures before any national structure expansion.
+  - [x] Freeze a national algorithm-family schedule before any expansion or ranking.
+  - [x] Exactly regenerate the eight-State national algorithm-family pilot.
+  - [x] Execute and independently regenerate the frozen 44-State/176-cell phase after the pilot and compute-budget gates.
 - [ ] Sensitivity and ensemble analysis.
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
   - [x] Execute and exactly regenerate the precommitted NH/NM/GA 300-pair root slice.
@@ -124,8 +129,10 @@ Current objective:
 
 Next unblocked work:
 
-> Obtain a non-author external v0.3 replication record and then close the
-> active wave. The final verifier bundle passed a fresh-clone Level 1 rehearsal
+> Obtain a non-author external v0.3 replication record while freezing a
+> separate national algorithm-family schedule; do not infer a ranking from the
+> repaired one-State proof slice.
+> The final verifier bundle passed a fresh-clone Level 1 rehearsal
 > on the author machine at commit `d0053ff3`; this does not satisfy the
 > independence gate. The verified NRS v0.3 runs cover 2000, 2010, and 2020;
 > the governed structural/cut matrix, precommitted multi-instance
@@ -157,6 +164,19 @@ Next unblocked work:
 > four frozen metrics, but remain descriptive block-projected geometry rather
 > than original-linework or superiority evidence. The complete national
 > geometry package regenerated exactly with one State active at a time.
+> A paper-facing evidence matrix now routes the completed Tier 1 and Tier 2
+> results into U.21, A.0, and A.5 while preserving the separate gates for
+> elections, demographics, ensembles, alternative structures, and non-enacted
+> comparators. The older B.0 mixed-evidence bakeoff and K.0 metric fixtures are
+> explicitly separated from the governed national common-block package, and
+> all five affected paper PDFs have been rebuilt.
+> A separately preregistered Wisconsin tract-level algorithm-family slice then
+> regenerated exactly with an initial 2-pass/2-fail result. The failures exposed
+> a hidden 3 percent ApportionRegions final tolerance, a hard-coded population
+> flag, and contiguity-path defects. The original package remains archived.
+> After remediation, all four Wisconsin rows passed native audits and the
+> package regenerated exactly. This repairs the one-State implementation gate
+> but does not fill B.0's older cells or authorize national ranking.
 > Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain

@@ -1,0 +1,4 @@
+STATUS:1:OK: loading adjacency
+STATUS:1:OK: recursive bisection into 5 districts
+STATUS:1:OK: balance OK, writing outputs
+STATUS:1:OK: complete (5D, 0ms)

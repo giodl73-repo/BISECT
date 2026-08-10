@@ -1,0 +1,215 @@
+{
+  "schema_version": "neutral-algorithm-family-bakeoff-manifest-v1",
+  "protocol_id": "neutral-algorithm-family-bakeoff-v1",
+  "status": "pass",
+  "binary": {
+    "path": "target/release/bisect.exe",
+    "sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085"
+  },
+  "code": [
+    {
+      "path": "docs/specs/2026-08-09-neutral-algorithm-family-bakeoff-protocol.md",
+      "sha256": "c567e3bd945a6654cc93945a535678492d1ee0aa4fe80b2e2076bc05f20555eb"
+    },
+    {
+      "path": "scripts/research/run_neutral_algorithm_family_bakeoff.py",
+      "sha256": "e02ab08241a69260818c09db5e5a9ea11d1416f470d8e1e7c8381d6764d612ab"
+    },
+    {
+      "path": "scripts/research/analyze_neutral_algorithm_family_bakeoff.py",
+      "sha256": "74535f45a7ad14970cc2b36296d9d8dad5303c4e79da928fa6ddbdc07a7739cd"
+    },
+    {
+      "path": "scripts/research/verify_neutral_algorithm_family_bakeoff.py",
+      "sha256": "56e1692821381dc277a0a8c07006f7f0650b60278ff549a392cee0ae0f4fea3b"
+    }
+  ],
+  "native_artifacts": [
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "aae4e38fd111ce09d71f35f9d6494dc0dca9623b9b3baac3068f57d84eac8a80"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "7cd5046382ae185ac7bab6361706345ffa8439bb6847c1f8036fac01941be7e5"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/intermediate/depth_01/assignments.json",
+      "sha256": "7eb6fb00f68a2937bcf86c21c8cca2be5c1b4d2c468f4aa71f0381488a5b189a"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/intermediate/depth_02/assignments.json",
+      "sha256": "00cc3fe384c5ec51099aa3f84afe364c5ec8717928c0942b761188697e26a800"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/intermediate/depth_03/assignments.json",
+      "sha256": "459e95fbfb6e3ed43124faebda2e9b0b6f8f54ff2f3e8f364e06285b6f21b272"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/manifest.json",
+      "sha256": "ff60a484c9cf507dfe671453d61aacb40529653e34d1cf62a91e774ade190f0f"
+    },
+    {
+      "path": "structures/standard-bisect/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "da5215de3562b93318e274775fe7d98e879f07bdbdaf8b2b1c2ef75fb54d115e"
+    },
+    {
+      "path": "structures/standard-bisect/run.json",
+      "sha256": "4e228b330ee55a485f8aa1a8368b44972f417c42c4bb49823f8077e8c064a0e4"
+    },
+    {
+      "path": "structures/standard-bisect/stderr.txt",
+      "sha256": "d771dff0a45837676193f02c9166855216b5f16f1dbc3edf8c8a9a1d1df09b8c"
+    },
+    {
+      "path": "structures/standard-bisect/stdout.txt",
+      "sha256": "692e260cc9b17781d07e82e433ead39555929674a906c93dc599a7211f696edb"
+    },
+    {
+      "path": "structures/ratio-optimal/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "88ef5a76a19d0946068c1009aa263662e6fbe54d6c5b233f537ad4a8c45a8e5b"
+    },
+    {
+      "path": "structures/ratio-optimal/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "structures/ratio-optimal/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "b564d8440dad728f9846e5daa37f6b6a4ecff776dc0284ce5d04c1fe1e3ff9e0"
+    },
+    {
+      "path": "structures/ratio-optimal/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "structures/ratio-optimal/native/2020/states/wisconsin/intermediate/depth_01/assignments.json",
+      "sha256": "cc67ea4c99ccc5b158acd80e1aee015a500fb081e82d2fc95706b9a22d9f17a8"
+    },
+    {
+      "path": "structures/ratio-optimal/native/2020/states/wisconsin/manifest.json",
+      "sha256": "cff25da58839c03be5fc2414de57639845a54e22d217caa123696d94800e3525"
+    },
+    {
+      "path": "structures/ratio-optimal/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "ff06fae9d14678b0029e5f797e4f76a368a256f91c1ee5a047aade0f2cf41af7"
+    },
+    {
+      "path": "structures/ratio-optimal/run.json",
+      "sha256": "9d5c80a329e56311745095587f76f2e79dae3340b83b3f543f314c5590c40a5f"
+    },
+    {
+      "path": "structures/ratio-optimal/stderr.txt",
+      "sha256": "7b7f9b6ad8968f864e96ac3a66394ed54971ca43958c3d6c2f002fc533d1189f"
+    },
+    {
+      "path": "structures/ratio-optimal/stdout.txt",
+      "sha256": "670a5a5a0eba7e3cba1ea30acc463aa0c0d51d8e78d197a9eba425acf8dec9da"
+    },
+    {
+      "path": "structures/ratio-optimal-area/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "d18840bca5dbab36cdc0cd72e7bcbbd42c28397615cac2f084c47859b619b126"
+    },
+    {
+      "path": "structures/ratio-optimal-area/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "structures/ratio-optimal-area/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "3bba8f6a5572ed1dc5a0a8082734e2523eb5d96fdff20bce4b3c7c9c1421d4d3"
+    },
+    {
+      "path": "structures/ratio-optimal-area/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "structures/ratio-optimal-area/native/2020/states/wisconsin/intermediate/depth_01/assignments.json",
+      "sha256": "e91070926152a2e11d6ece3054505722580a617112dce35e6a8cb2498c5808d1"
+    },
+    {
+      "path": "structures/ratio-optimal-area/native/2020/states/wisconsin/manifest.json",
+      "sha256": "acaf885670981b2a0e8f16fec8a9d1326b3b2c5d32bb9aa70d4800c559e32a4b"
+    },
+    {
+      "path": "structures/ratio-optimal-area/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "64672d8295de75fb29f49c096c443be30cc04cc1749d35c606f6275af4dd8434"
+    },
+    {
+      "path": "structures/ratio-optimal-area/run.json",
+      "sha256": "dd31d258b39f10958b37ad829bfb0438dfcc7ab2270c284faadc9f138c00b3ae"
+    },
+    {
+      "path": "structures/ratio-optimal-area/stderr.txt",
+      "sha256": "de4fa3457d5e77cb362e33ec326c6d3c7eaf0ff0a528b7b9d4bb88e8b24ad134"
+    },
+    {
+      "path": "structures/ratio-optimal-area/stdout.txt",
+      "sha256": "e7b7b66b89b5df1892d2506677f768c8ae44368a1bae178fce4870d90b3f9885"
+    },
+    {
+      "path": "structures/prime-factor/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "032e1edfcebd3f28d2e103dad96878165bae80a14be9bcaa8ca7aac50797fd10"
+    },
+    {
+      "path": "structures/prime-factor/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "structures/prime-factor/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "96bf1d1e90fe2e83ec5cc2ea0f6fcd65217852a16c4321bc329a04dbed2dd278"
+    },
+    {
+      "path": "structures/prime-factor/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "structures/prime-factor/native/2020/states/wisconsin/manifest.json",
+      "sha256": "0063274e416860876886866b8d741d36815496e4abc0d9f3f688867caa92a10f"
+    },
+    {
+      "path": "structures/prime-factor/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "c9928a4286691b77bcb1e638d43f258fce9080feb21292490053145ae118f3ae"
+    },
+    {
+      "path": "structures/prime-factor/run.json",
+      "sha256": "2eb476fbbcfc49e2fda8dfabf76f7fb134e7c971e888a3832a25aa10914315c7"
+    },
+    {
+      "path": "structures/prime-factor/stderr.txt",
+      "sha256": "267798443425df05d0aa7ad5d2108e229a03235d033622dc2662da56dd1014f2"
+    },
+    {
+      "path": "structures/prime-factor/stdout.txt",
+      "sha256": "b6ce842eb6b8bcd2221a3b0ec4072455264d466a423d18443ce2cdee2dcb5615"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "17d5e1b9fa9a9f2723c877716182a981961d8a41499f63343d1552384ff6cbe5",
+    "structure-summary.csv": "d33677f33c4d6118fd3a67cbaa469fe87e07b3e7a1fe5dde33d75872cbd43d98",
+    "pairwise-overlap.csv": "15f456197e0bdb31f28de3c42e92e01bddb4562db6eb1006b8b1afbd4f241774",
+    "README.md": "7c19e6df0c8b29fa68948b43cef21992ccd07c6813338bf7e2e59271d169c185",
+    "structures/standard-bisect/canonical_assignments.json": "f852708398a36ae3139ab4a40c67aa2eb4707647573d81d6a3d1bfcf33f485ee",
+    "structures/ratio-optimal/canonical_assignments.json": "f6f654b47a4958261505fa66ff5a516d6cf2ff381396b6fe70da60ce6e0127f4",
+    "structures/ratio-optimal-area/canonical_assignments.json": "183cf5e5ded042b77d99ffb4db146b60c656ff69c587d42419fc6c539fc803af",
+    "structures/prime-factor/canonical_assignments.json": "649f4cc679b3928e5f58a3740e2c380028f0649d002802414838c32ddfce0e7c"
+  },
+  "reproduction": {
+    "command": [
+      "C:\\Python314\\python.exe",
+      "scripts/research/run_neutral_algorithm_family_bakeoff.py",
+      "--output-dir",
+      "<TEMP_OUTPUT_DIR>",
+      "--binary",
+      "target/release/bisect.exe",
+      "--force"
+    ],
+    "semantic_native_comparison": "Timestamp-bearing native packages are verified by bound hashes; regeneration compares canonical assignments and deterministic derived outputs."
+  }
+}

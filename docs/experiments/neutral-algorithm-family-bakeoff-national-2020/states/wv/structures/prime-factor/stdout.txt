@@ -1,0 +1,5 @@
+STATUS:1:WV: loading adjacency
+STATUS:1:WV: apportion-regions partition into 2 districts (F=[2], depth=1)
+STATUS:1:WV: balance 0.07% (cache hits=0)
+STATUS:1:WV: balance OK, writing outputs
+STATUS:1:WV: complete (2D, 0ms)

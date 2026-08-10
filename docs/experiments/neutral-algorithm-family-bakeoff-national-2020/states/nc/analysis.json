@@ -1,0 +1,216 @@
+{
+  "state": "NC",
+  "state_slug": "north_carolina",
+  "expected_districts": 14,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "NC",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2672,
+      "districts": 14,
+      "expected_districts": 14,
+      "edge_cut": 2629750.19921,
+      "canonical_assignment_sha256": "41e05dd2aaaf7fb4568ce7e0debb4d085851ee1865208043881f1cfd0a85052f",
+      "adjacency_sha256": "0e8761a4c15ca456a8be79ad2cee5ac55b3d3c2f11b407ebf7447502ba546d92",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NC",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2672,
+      "districts": 14,
+      "expected_districts": 14,
+      "edge_cut": 2916038.31147,
+      "canonical_assignment_sha256": "7a23912a6943c2f8894cd04cc916f905b5271d03c151178331bcad2de3263555",
+      "adjacency_sha256": "0e8761a4c15ca456a8be79ad2cee5ac55b3d3c2f11b407ebf7447502ba546d92",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.108865135687
+    },
+    {
+      "state": "NC",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2672,
+      "districts": 14,
+      "expected_districts": 14,
+      "edge_cut": 2566319.84886,
+      "canonical_assignment_sha256": "2143e2f544abd704564fc08a837c5147cc4f19f14c92038de45c51a71a20206a",
+      "adjacency_sha256": "0e8761a4c15ca456a8be79ad2cee5ac55b3d3c2f11b407ebf7447502ba546d92",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.975879705088
+    },
+    {
+      "state": "NC",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2672,
+      "districts": 14,
+      "expected_districts": 14,
+      "edge_cut": 2804269.78612,
+      "canonical_assignment_sha256": "b64fe3debe6ce69e30a00a9f86a920797b2249248ecef1a9f4943d98192326d9",
+      "adjacency_sha256": "0e8761a4c15ca456a8be79ad2cee5ac55b3d3c2f11b407ebf7447502ba546d92",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.066363560677
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "0e8761a4c15ca456a8be79ad2cee5ac55b3d3c2f11b407ebf7447502ba546d92"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "2672"
+      ],
+      "districts": [
+        "14"
+      ],
+      "expected_districts": [
+        "14"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "NC",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1731,
+      "different_units": 941,
+      "matched_unit_rate": 0.6478293413173652
+    },
+    {
+      "state": "NC",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 1890,
+      "different_units": 782,
+      "matched_unit_rate": 0.7073353293413174
+    },
+    {
+      "state": "NC",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1728,
+      "different_units": 944,
+      "matched_unit_rate": 0.6467065868263473
+    },
+    {
+      "state": "NC",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 1622,
+      "different_units": 1050,
+      "matched_unit_rate": 0.6070359281437125
+    },
+    {
+      "state": "NC",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 1615,
+      "different_units": 1057,
+      "matched_unit_rate": 0.6044161676646707
+    },
+    {
+      "state": "NC",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 1744,
+      "different_units": 928,
+      "matched_unit_rate": 0.6526946107784432
+    }
+  ]
+}

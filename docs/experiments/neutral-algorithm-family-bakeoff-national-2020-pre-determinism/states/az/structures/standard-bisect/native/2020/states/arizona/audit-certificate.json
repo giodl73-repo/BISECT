@@ -1,0 +1,132 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:df145b350f828b5a6e8fc92dc5cc235bd165978963ce05a30d936af6c2e80827",
+  "generated_at_utc": "2026-08-09T19:45:57Z",
+  "content_hash": "sha256:df145b350f828b5a6e8fc92dc5cc235bd165978963ce05a30d936af6c2e80827",
+  "plan_hash": "sha256:ffebfab0fbc3bbe014f0cf28f3207383daffe1027fb107f70bd641030aef8e9d",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:9d7e0cc6c482bba1a0ea0d955ab0ec19aa524ad3d0890205528f3497bae11432",
+  "legal_profile_hash": "sha256:3ef9464b9f98461b1475727c36d992276af9e9cf10a0c6329cec0d16648d12ca",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "AZ",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:a0667dc38fabb093f044675fe31168e62eccd07a4f301c0015cf48bca0760a9f",
+    "geometry": "sha256:c6f69dab096b2ddd016c989f1ac8d2cf77ecb329a00279e7f294a7c0f79c5fe0"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "4 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "04005",
+          "district_ids": [
+            7,
+            8
+          ],
+          "unit_count": 39
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "04013",
+          "district_ids": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            8
+          ],
+          "unit_count": 1009
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "04019",
+          "district_ids": [
+            6,
+            7
+          ],
+          "unit_count": 270
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "04021",
+          "district_ids": [
+            4,
+            5,
+            7
+          ],
+          "unit_count": 95
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1765 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-AZ-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1765
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

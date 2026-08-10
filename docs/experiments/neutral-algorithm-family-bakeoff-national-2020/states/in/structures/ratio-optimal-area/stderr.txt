@@ -1,0 +1,30 @@
+NOTE: Running congressional (9D). IN also has house (100D) and senate (50D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 91.1% of population -> natural split ~8:1
+[areasection]   ratio 1:8 (11.1% pop): Lorenz area range [0.4%-57.3%] -> feasible
+[areasection]   ratio 2:7 (22.2% pop): Lorenz area range [1.0%-82.2%] -> feasible
+[areasection]   ratio 3:6 (33.3% pop): Lorenz area range [1.8%-92.1%] -> feasible
+[areasection]   ratio 4:5 (44.4% pop): Lorenz area range [2.9%-95.4%] -> feasible
+[areasection] 4 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:8 best=1586km  normalised=1585.8  area_left=21.2%
+[areasection]   ratio 2:7 best=1072km  normalised=758.1  area_left=40.0%
+[areasection]   ratio 3:6 best=396km  normalised=228.4  area_left=44.8%
+[areasection]   ratio 4:5 best=367km  normalised=183.3  area_left=53.9%
+[areasection] natural ratio 4:5 at 367km (normalised=183.3)
+[areasection] winner: area=53.9% (target 50% ±10%, OK) pop=44.4% (target 44.4%)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=138km  normalised=137.6
+[geosection]   ratio 2:2 best=258km  normalised=182.4
+[geosection] natural ratio 1:3 at 138km (normalised=137.6)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=267km  normalised=266.7
+[geosection] natural ratio 1:2 at 267km (normalised=266.7)
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=181km  normalised=181.2
+[geosection]   ratio 2:3 best=330km  normalised=233.1
+[geosection] natural ratio 1:4 at 181km (normalised=181.2)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=159km  normalised=158.6
+[geosection]   ratio 2:2 best=213km  normalised=150.9
+[geosection] natural ratio 2:2 at 213km (normalised=150.9)
+[partition-time] IN: k=9 n=1696 -> 11600.4ms
+[OK] IN in 11805ms

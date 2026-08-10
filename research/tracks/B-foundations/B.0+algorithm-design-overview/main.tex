@@ -81,10 +81,16 @@ We present a bakeoff of eight algorithm combinations across four legally
 contested states (Wisconsin 8D, North Carolina 14D, Georgia 14D,
 Alabama 7D), measuring edge cut, population balance, D-seat count,
 majority-minority district count, natural bisection ratio, and county split count.
-The results confirm that geographic voter sorting---not the bisection algorithm---
-drives partisan outcomes in all four states, and that VRASection produces the
-minority-opportunity district patterns required by \allenmilligan{} (2023)
-without any racial targeting.
+The tables intentionally retain a mixture of confirmed, estimated, and pending
+cells and therefore identify hypotheses rather than a completed comparative
+experiment. They illustrate that geography and algorithm choice can both affect
+partisan and minority-opportunity diagnostics; they do not establish causation,
+VRA compliance, or a legally required algorithm.
+A separately preregistered Wisconsin tract-level proof slice retained an initial
+two-pass/two-fail result that exposed tolerance, reporting, and contiguity-path
+defects. After remediation, all four neutral structure runs passed native audits
+and regenerated exactly. This is a one-input implementation result, not an
+algorithm ranking.
 
 A court can audit exactly which signals were used in any plan by reading the
 \texttt{whatif-manifest v1} JSON sidecar produced by the \texttt{bisect} CLI.

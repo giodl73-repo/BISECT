@@ -41,6 +41,7 @@ pub(crate) struct RunnerAuditSidecars {
     pub(crate) audit_certificate_sha256: String,
     pub(crate) audit_certificate_content_hash: String,
     pub(crate) audit_result: String,
+    pub(crate) population_balance_valid: bool,
     pub(crate) legal_profile_id: String,
     pub(crate) context_hash: String,
 }
@@ -194,6 +195,11 @@ pub(crate) fn write_rplan_audit_sidecars(
         .map_err(|e| format!("cannot write {}: {e}", audit_path.display()))?;
     let audit_sha256 = bisect_report::sha256_file(&audit_path)
         .map_err(|e| format!("cannot hash {}: {e}", audit_path.display()))?;
+    let population_balance_valid = certificate
+        .checks
+        .iter()
+        .find(|check| check.name == "population")
+        .is_some_and(|check| check.status == rplan_audit::CheckStatus::Pass);
 
     Ok(RunnerAuditSidecars {
         rplan_path: rplan_rel,
@@ -202,6 +208,7 @@ pub(crate) fn write_rplan_audit_sidecars(
         audit_certificate_sha256: audit_sha256,
         audit_certificate_content_hash: certificate.content_hash,
         audit_result: audit_result_label(&certificate.result).to_string(),
+        population_balance_valid,
         legal_profile_id: profile.profile_id,
         context_hash: certificate.context_hash.unwrap_or_default(),
     })
@@ -268,7 +275,9 @@ pub(crate) fn build_rplan_assignment(
     Ok(out)
 }
 
-pub(crate) fn build_rplan_graph(graph: &crate::adjacency_loader::LoadedGraph) -> rplan_core::UnitGraph {
+pub(crate) fn build_rplan_graph(
+    graph: &crate::adjacency_loader::LoadedGraph,
+) -> rplan_core::UnitGraph {
     let adjacency = graph
         .adjacency
         .iter()
@@ -666,7 +675,9 @@ pub(crate) fn runner_algorithm_lineage(
     }
 }
 
-pub(crate) fn read_ilp_lineage_summary(path: &std::path::Path) -> Result<Option<serde_json::Value>, String> {
+pub(crate) fn read_ilp_lineage_summary(
+    path: &std::path::Path,
+) -> Result<Option<serde_json::Value>, String> {
     if !path.exists() {
         return Ok(None);
     }

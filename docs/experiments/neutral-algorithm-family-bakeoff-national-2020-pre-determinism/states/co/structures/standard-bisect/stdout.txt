@@ -1,0 +1,4 @@
+STATUS:1:CO: loading adjacency
+STATUS:1:CO: recursive bisection into 8 districts
+STATUS:1:CO: balance OK, writing outputs
+STATUS:1:CO: complete (8D, 0ms)

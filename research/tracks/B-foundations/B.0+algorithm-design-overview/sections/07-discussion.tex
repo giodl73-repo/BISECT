@@ -3,9 +3,10 @@
 
 \subsection{Which Configuration for Which Use Case}
 
-The bakeoff results and the requirements matrix together answer the practitioner's
-primary question: which configuration should I use?
-We organise the recommendations by use case.
+The requirements matrix identifies configurations for further evaluation; the
+mixed confirmed, estimated, and pending bakeoff does not determine which
+configuration a practitioner should use. We organise research candidates by
+use case, subject to completed execution and independent legal review.
 
 \paragraph{Default (no specific legal claim).}
 Use \textbf{Geo+GeoSection} (config.~2).
@@ -15,17 +16,16 @@ the best-documented configuration in the B-series.
 The plan manifest is clean: only geographic signals are present.
 
 \paragraph{Allen v.\ Milligan exposure (VRA Section 2, Gingles Prong 1).}
-Use \textbf{Geo+VRASection} (config.~5), $w_\text{vra} = 0.40$.
-This is the only configuration that achieves 2 minority-opportunity districts in
-Alabama; the only configuration that achieves 2--3 in Georgia.
-The 4.3\,\% compactness cost (EC premium) over GeoSection is legally defensible:
-it falls within the range that courts have accepted for VRA compliance adjustments,
-and the \miller{} racial-predominance test is satisfied by the $w_\text{vra} = 0.40$
-parameterisation.
+Evaluate \textbf{Geo+VRASection} (config.~5), $w_\text{vra} = 0.40$, as one
+illustrative-plan candidate. The Alabama fixture reports two threshold-based
+minority-opportunity districts; the Georgia cells are partly estimated. Neither
+the reported compactness cost nor the parameter value establishes VRA
+compliance or satisfies the \miller{} racial-predominance inquiry.
 
 \paragraph{State-court partisan neutrality claim (LWV v.\ PA; Harper v.\ Hall).}
-Use \textbf{Geo+AreaSection} (config.~3) to run the \emph{Rodden-null proof}:
-demonstrate that the map is not a product of algorithmic partisan bias.
+Evaluate \textbf{Geo+AreaSection} (config.~3) as a geographic-balance
+sensitivity diagnostic. It cannot prove that a map is not a product of
+algorithmic partisan bias.
 AreaSection reduces the proportionality gap in NC and GA by 7--8\,pp in our
 estimates, not because the algorithm adds partisan signals but because it
 prevents the urban-peeling geometry that creates artificially efficient Republican
@@ -40,12 +40,12 @@ the state's statutory standard.
 For states like Wisconsin (strong county preservation tradition) or California
 (explicit statutory criterion), a higher $\alpha$ reduces county splits at a
 modest EC cost.
-The Pareto frontier shows that a $50\,\%$ reduction in county splits typically
-costs $5$--$10\,\%$ in normalised edge-cut.
+The estimated rows suggest a possible county-split/edge-cut tradeoff; a
+completed common-input sweep is required to quantify it.
 
 \paragraph{Auditability and expert witness.}
-Use \textbf{Geo+ApportionRegions} (config.~6) when the primary concern is
-reproducibility and parameter-freedom.
+Treat \textbf{Geo+ApportionRegions} (config.~6) as pending empirical evaluation
+when the primary concern is reproducibility and parameter-freedom.
 The bisection tree is derived entirely from the prime factorisation of $k$;
 there are no ``hidden'' parameter choices about which ratio to select.
 Combined with the plan manifest, this provides the cleanest audit record.
@@ -60,9 +60,9 @@ candidates; the remaining states require best-effort Mode~3 nesting.
 
 \subsubsection*{L1: Geographic Sorting Cannot Be Eliminated}
 
-The most fundamental limitation is that geographic voter sorting produces
-systematic Republican over-representation in competitive states regardless of
-the algorithm.
+Geographic voter sorting is a plausible source of systematic partisan
+asymmetry, but this paper does not estimate its effect independently of
+algorithm and profile choices.
 All configurations show a mean proportionality gap of $-7$\,pp in the eight
 competitive states studied across T.1--T.2.
 AreaSection reduces this to approximately $-4$\,pp in the best case by preventing
@@ -71,8 +71,9 @@ effect.
 A state where Democrats are concentrated in three or four major cities and
 Republicans are dispersed across the rural remainder will produce more Republican
 seats than the vote-share would suggest under any geographically-neutral algorithm.
-This is the central empirical finding of \citet{rodden2019}, and the B-series
-programme confirms it across 44 states.
+This is a central mechanism studied by \citet{rodden2019}; the B-series results
+motivate a preregistered causal or ensemble study rather than independently
+confirming it across 44 States.
 
 \subsubsection*{L2: VRASection Does Not Guarantee MM Districts}
 

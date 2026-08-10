@@ -1,0 +1,23 @@
+NOTE: Running congressional (8D). MD also has house (141D) and senate (47D). Use --chamber house or --chamber senate.
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=76km  normalised=76.0
+[geosection]   ratio 2:6 best=156km  normalised=110.5
+[geosection]   ratio 3:5 best=150km  normalised=86.3
+[geosection]   ratio 4:4 best=149km  normalised=74.7
+[geosection] natural ratio 4:4 at 149km (normalised=74.7)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=81km  normalised=80.7
+[geosection]   ratio 2:2 best=115km  normalised=81.1
+[geosection] natural ratio 1:3 at 81km (normalised=80.7)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=88km  normalised=87.5
+[geosection] natural ratio 1:2 at 88km (normalised=87.5)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=101km  normalised=100.6
+[geosection]   ratio 2:2 best=165km  normalised=116.9
+[geosection] natural ratio 1:3 at 101km (normalised=100.6)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=118km  normalised=118.3
+[geosection] natural ratio 1:2 at 118km (normalised=118.3)
+[partition-time] MD: k=8 n=1475 -> 6555.7ms
+[OK] MD in 6690ms

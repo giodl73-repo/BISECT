@@ -1,0 +1,14 @@
+NOTE: Running congressional (5D). OK also has house (101D) and senate (48D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 95.4% of population -> natural split ~4:1
+[areasection]   ratio 1:4 (20.0% pop): Lorenz area range [0.2%-88.0%] -> feasible
+[areasection]   ratio 2:3 (40.0% pop): Lorenz area range [0.7%-97.7%] -> feasible
+[areasection] 2 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:4 best=630km  normalised=629.5  area_left=46.1%
+[areasection]   ratio 2:3 best=694km  normalised=490.6  area_left=47.7%
+[areasection] natural ratio 2:3 at 694km (normalised=490.6)
+[areasection] winner: area=47.7% (target 50% ±10%, OK) pop=40.0% (target 40.0%)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=349km  normalised=349.3
+[geosection] natural ratio 1:2 at 349km (normalised=349.3)
+[partition-time] OK: k=5 n=1205 -> 67.5ms
+[OK] OK in 277ms

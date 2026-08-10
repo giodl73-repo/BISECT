@@ -1,0 +1,8 @@
+STATUS:1:WI: loading adjacency
+STATUS:1:WI: recursive bisection into 8 districts
+STATUS:1:WI: balance retry 1/50 (seed Some(1))
+STATUS:1:WI: recursive bisection into 8 districts
+STATUS:1:WI: balance retry 2/50 (seed Some(2))
+STATUS:1:WI: recursive bisection into 8 districts
+STATUS:1:WI: balance OK, writing outputs
+STATUS:1:WI: complete (8D, 0ms)

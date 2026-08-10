@@ -169,3 +169,19 @@ fn weighted_edge_cut_treats_missing_nodes_as_right_side() {
 
     assert_eq!(weighted_edge_cut(&edge_weights, &left), 4.0);
 }
+
+#[test]
+fn weighted_edge_cut_uses_canonical_edge_order() {
+    // Adding the two unit weights before 1e16 preserves one f64 ULP; adding
+    // either unit after 1e16 would round it away. Keys define the canonical order.
+    let mut edge_weights = HashMap::new();
+    edge_weights.insert((2usize, 3usize), 1.0e16);
+    edge_weights.insert((0usize, 3usize), 1.0);
+    edge_weights.insert((1usize, 3usize), 1.0);
+    let left = HashSet::from([0usize, 1, 2]);
+
+    assert_eq!(
+        weighted_edge_cut(&edge_weights, &left),
+        10_000_000_000_000_002.0
+    );
+}

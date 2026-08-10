@@ -1,0 +1,3 @@
+NOTE: Running congressional (6D). OR also has house (60D) and senate (30D). Use --chamber house or --chamber senate.
+[partition-time] OR: k=6 n=1001 -> 78.6ms
+[OK] OR in 402ms

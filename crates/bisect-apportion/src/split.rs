@@ -220,15 +220,12 @@ impl MetisPartitioner {
             graph
         };
 
-        if k == 2 {
-            graph
-                .part_recursive(&mut part)
-                .map_err(|e| SplitError::Metis(format!("c-ffi bisection: {e}")))?;
-        } else {
-            graph
-                .part_kway(&mut part)
-                .map_err(|e| SplitError::Metis(format!("c-ffi kway k={k}: {e}")))?;
-        }
+        // Use k-way even for k=2: METIS's Contig option is supported by the
+        // k-way routine but not recursive bisection. PFR requires every
+        // intermediate region to remain connected.
+        graph
+            .part_kway(&mut part)
+            .map_err(|e| SplitError::Metis(format!("c-ffi kway k={k}: {e}")))?;
 
         Ok(part.iter().map(|&p| p as u32).collect())
     }

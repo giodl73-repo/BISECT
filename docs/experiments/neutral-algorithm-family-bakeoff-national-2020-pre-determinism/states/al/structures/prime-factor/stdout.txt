@@ -1,0 +1,5 @@
+STATUS:1:AL: loading adjacency
+STATUS:1:AL: apportion-regions partition into 7 districts (F=[7], depth=3)
+STATUS:1:AL: balance 0.15% (cache hits=0)
+STATUS:1:AL: balance OK, writing outputs
+STATUS:1:AL: complete (7D, 0ms)

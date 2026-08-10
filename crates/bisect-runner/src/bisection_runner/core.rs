@@ -366,6 +366,18 @@ fn split_subgraph_profile(
             let graph = graph
                 .set_option(metis::option::UFactor(uf_int.max(1)))
                 .set_option(metis::option::NIter(niter as i32));
+            // Every non-NRS split uses k-way METIS, where Contig/MinConn are
+            // supported. Equal splits must follow the same path: otherwise an
+            // early recursive-METIS split can fragment a child region, causing
+            // disconnected final districts or a later Contig invocation to
+            // reject its already-disconnected input graph.
+            let graph = if !nrs_v0_1_profile {
+                graph
+                    .set_option(metis::option::Contig(true))
+                    .set_option(metis::option::MinConn(true))
+            } else {
+                graph
+            };
             let graph = if let Some(s) = seed {
                 let converted = (s & 0x7FFF_FFFF) as i32;
                 let converted = if nrs_v0_1_profile {
@@ -377,7 +389,7 @@ fn split_subgraph_profile(
             } else {
                 graph
             };
-            if tpwgts.is_some() && !nrs_v0_1_profile {
+            if !nrs_v0_1_profile {
                 graph
                     .part_kway(&mut part)
                     .map_err(|e| format!("METIS kway bisection failed: {e}"))?;
@@ -496,7 +508,11 @@ fn split_subgraph_profile(
                 }
                 let pop = local_vwgt[lg * ncon] as i64;
                 let score = (pop - excess.abs()).abs();
-                if best.map_or(true, |(_, s)| score < s) {
+                // HashSet iteration order is randomized. Break equal-score ties by
+                // global vertex id so boundary rebalancing is process-reproducible.
+                if best.map_or(true, |(best_g, best_score)| {
+                    (score, g) < (best_score, best_g)
+                }) {
                     best = Some((g, score));
                 }
             }

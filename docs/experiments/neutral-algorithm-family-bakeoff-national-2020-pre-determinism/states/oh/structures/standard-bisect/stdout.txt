@@ -1,0 +1,4 @@
+STATUS:1:OH: loading adjacency
+STATUS:1:OH: recursive bisection into 15 districts
+STATUS:1:OH: balance OK, writing outputs
+STATUS:1:OH: complete (15D, 0ms)

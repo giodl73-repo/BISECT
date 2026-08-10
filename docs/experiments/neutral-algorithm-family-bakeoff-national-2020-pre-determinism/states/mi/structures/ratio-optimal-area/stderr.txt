@@ -1,0 +1,63 @@
+NOTE: Running congressional (13D). MI also has house (110D) and senate (38D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 96.1% of population -> natural split ~12:1
+[areasection]   ratio 1:12 (7.7% pop): Lorenz area range [0.2%-63.6%] -> feasible
+[areasection]   ratio 2:11 (15.4% pop): Lorenz area range [0.4%-80.4%] -> feasible
+[areasection]   ratio 3:10 (23.1% pop): Lorenz area range [0.7%-89.4%] -> feasible
+[areasection]   ratio 4:9 (30.8% pop): Lorenz area range [1.0%-93.9%] -> feasible
+[areasection]   ratio 5:8 (38.5% pop): Lorenz area range [1.5%-96.0%] -> feasible
+[areasection]   ratio 6:7 (46.2% pop): Lorenz area range [2.1%-97.2%] -> feasible
+[areasection] 6 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:12 best=804km  normalised=803.7  area_left=46.9%
+[areasection]   ratio 2:11 best=1760km  normalised=1244.3  area_left=58.8%
+[areasection]   ratio 3:10 best=3005km  normalised=1735.0  area_left=65.0%
+[areasection]   ratio 4:9 best=3168km  normalised=1584.2  area_left=67.4%
+[areasection]   ratio 5:8 best=3374km  normalised=1509.0  area_left=70.3%
+[areasection]   ratio 6:7 best=3376km  normalised=1378.1  area_left=70.5%
+[areasection] natural ratio 1:12 at 804km (normalised=803.7)
+[areasection] winner: area=46.9% (target 50% ±10%, OK) pop=7.7% (target 7.7%)
+[geosection] trying 6 ratios x 1 seeds for k=12
+[geosection]   ratio 1:11 best=86km  normalised=85.5
+[geosection]   ratio 2:10 best=122km  normalised=86.4
+[geosection]   ratio 3:9 best=174km  normalised=100.2
+[geosection]   ratio 4:8 best=201km  normalised=100.5
+[geosection]   ratio 5:7 best=268km  normalised=119.8
+[geosection]   ratio 6:6 best=283km  normalised=115.5
+[geosection] natural ratio 1:11 at 86km (normalised=85.5)
+[geosection] trying 5 ratios x 1 seeds for k=11
+[geosection]   ratio 1:10 best=84km  normalised=84.3
+[geosection]   ratio 2:9 best=151km  normalised=106.5
+[geosection]   ratio 3:8 best=219km  normalised=126.6
+[geosection]   ratio 4:7 best=240km  normalised=120.0
+[geosection]   ratio 5:6 best=291km  normalised=129.9
+[geosection] natural ratio 1:10 at 84km (normalised=84.3)
+[geosection] trying 5 ratios x 1 seeds for k=10
+[geosection]   ratio 1:9 best=102km  normalised=101.9
+[geosection]   ratio 2:8 best=141km  normalised=99.5
+[geosection]   ratio 3:7 best=204km  normalised=117.9
+[geosection]   ratio 4:6 best=287km  normalised=143.4
+[geosection]   ratio 5:5 best=288km  normalised=128.7
+[geosection] natural ratio 2:8 at 141km (normalised=99.5)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=100km  normalised=100.4
+[geosection]   ratio 2:6 best=144km  normalised=101.5
+[geosection]   ratio 3:5 best=256km  normalised=147.9
+[geosection]   ratio 4:4 best=331km  normalised=165.5
+[geosection] natural ratio 1:7 at 100km (normalised=100.4)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=128km  normalised=128.4
+[geosection]   ratio 2:5 best=258km  normalised=182.5
+[geosection]   ratio 3:4 best=337km  normalised=194.4
+[geosection] natural ratio 1:6 at 128km (normalised=128.4)
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=232km  normalised=232.0
+[geosection]   ratio 2:4 best=370km  normalised=261.6
+[geosection]   ratio 3:3 best=376km  normalised=217.4
+[geosection] natural ratio 3:3 at 376km (normalised=217.4)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=150km  normalised=149.9
+[geosection] natural ratio 1:2 at 150km (normalised=149.9)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=165km  normalised=164.8
+[geosection] natural ratio 1:2 at 165km (normalised=164.8)
+[partition-time] MI: k=13 n=3017 -> 236779.9ms
+[OK] MI in 237001ms

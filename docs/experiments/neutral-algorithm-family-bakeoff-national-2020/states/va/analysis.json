@@ -1,0 +1,216 @@
+{
+  "state": "VA",
+  "state_slug": "virginia",
+  "expected_districts": 11,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "VA",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2198,
+      "districts": 11,
+      "expected_districts": 11,
+      "edge_cut": 1886265.31234,
+      "canonical_assignment_sha256": "a9df92cde45f4987b6e9c55e0935c71fa3bdf9327a825321a73e66b6cb7ac665",
+      "adjacency_sha256": "e2771e765d44d8842ea07805c5abd6d1c05a490258c5cd6062b8ec67699356e2",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "VA",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2198,
+      "districts": 11,
+      "expected_districts": 11,
+      "edge_cut": 1879157.62186,
+      "canonical_assignment_sha256": "5eebddb566208da64c11f389843f34fcd41042541fe639c203f2a25163bc1127",
+      "adjacency_sha256": "e2771e765d44d8842ea07805c5abd6d1c05a490258c5cd6062b8ec67699356e2",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.996231871289
+    },
+    {
+      "state": "VA",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2198,
+      "districts": 11,
+      "expected_districts": 11,
+      "edge_cut": 2082195.35648,
+      "canonical_assignment_sha256": "a0093743b390597e9f85547f678371dc6945bad65d478b4d6c136d02841504aa",
+      "adjacency_sha256": "e2771e765d44d8842ea07805c5abd6d1c05a490258c5cd6062b8ec67699356e2",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.103871943601
+    },
+    {
+      "state": "VA",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2198,
+      "districts": 11,
+      "expected_districts": 11,
+      "edge_cut": 2018693.78489,
+      "canonical_assignment_sha256": "394cff3b19d8d8a0a203e385872d093aeafb1f3c86be8b1aa83087e5fb1d845b",
+      "adjacency_sha256": "e2771e765d44d8842ea07805c5abd6d1c05a490258c5cd6062b8ec67699356e2",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.070206705114
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "e2771e765d44d8842ea07805c5abd6d1c05a490258c5cd6062b8ec67699356e2"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "2198"
+      ],
+      "districts": [
+        "11"
+      ],
+      "expected_districts": [
+        "11"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "VA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1389,
+      "different_units": 809,
+      "matched_unit_rate": 0.6319381255686988
+    },
+    {
+      "state": "VA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 1543,
+      "different_units": 655,
+      "matched_unit_rate": 0.7020018198362148
+    },
+    {
+      "state": "VA",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1575,
+      "different_units": 623,
+      "matched_unit_rate": 0.7165605095541401
+    },
+    {
+      "state": "VA",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 1703,
+      "different_units": 495,
+      "matched_unit_rate": 0.7747952684258417
+    },
+    {
+      "state": "VA",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 1352,
+      "different_units": 846,
+      "matched_unit_rate": 0.6151046405823476
+    },
+    {
+      "state": "VA",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 1378,
+      "different_units": 820,
+      "matched_unit_rate": 0.626933575978162
+    }
+  ]
+}

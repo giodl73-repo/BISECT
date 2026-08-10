@@ -1,0 +1,58 @@
+NOTE: Running congressional (14D). GA also has house (180D) and senate (56D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 94.6% of population -> natural split ~13:1
+[areasection]   ratio 1:13 (7.1% pop): Lorenz area range [0.2%-57.3%] -> feasible
+[areasection]   ratio 2:12 (14.3% pop): Lorenz area range [0.5%-76.5%] -> feasible
+[areasection]   ratio 3:11 (21.4% pop): Lorenz area range [0.9%-85.8%] -> feasible
+[areasection]   ratio 4:10 (28.6% pop): Lorenz area range [1.4%-90.6%] -> feasible
+[areasection]   ratio 5:9 (35.7% pop): Lorenz area range [2.0%-93.3%] -> feasible
+[areasection]   ratio 6:8 (42.9% pop): Lorenz area range [2.8%-95.1%] -> feasible
+[areasection]   ratio 7:7 (50.0% pop): Lorenz area range [3.7%-96.3%] -> feasible
+[areasection] 7 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:13 best=2384km  normalised=2383.6  area_left=28.7%
+[areasection]   ratio 2:12 best=956km  normalised=675.9  area_left=39.2%
+[areasection]   ratio 3:11 best=634km  normalised=366.0  area_left=54.7%
+[areasection]   ratio 4:10 best=2009km  normalised=1004.3  area_left=60.2%
+[areasection]   ratio 5:9 best=754km  normalised=337.4  area_left=54.6%
+[areasection]   ratio 6:8 best=779km  normalised=317.9  area_left=44.6%
+[areasection]   ratio 7:7 best=771km  normalised=291.6  area_left=55.0%
+[areasection] natural ratio 7:7 at 771km (normalised=291.6)
+[areasection] winner: area=55.0% (target 50% ±10%, VIOLATED) pop=50.0% (target 50.0%)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=66km  normalised=66.5
+[geosection]   ratio 2:5 best=195km  normalised=138.2
+[geosection]   ratio 3:4 best=175km  normalised=100.9
+[geosection] natural ratio 1:6 at 66km (normalised=66.5)
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=168km  normalised=168.1
+[geosection]   ratio 2:4 best=168km  normalised=119.1
+[geosection]   ratio 3:3 best=193km  normalised=111.5
+[geosection] natural ratio 3:3 at 193km (normalised=111.5)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=220km  normalised=219.9
+[geosection] natural ratio 1:2 at 220km (normalised=219.9)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=111km  normalised=111.2
+[geosection] natural ratio 1:2 at 111km (normalised=111.2)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=75km  normalised=74.7
+[geosection]   ratio 2:5 best=142km  normalised=100.2
+[geosection]   ratio 3:4 best=211km  normalised=121.8
+[geosection] natural ratio 1:6 at 75km (normalised=74.7)
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=88km  normalised=88.0
+[geosection]   ratio 2:4 best=184km  normalised=130.3
+[geosection]   ratio 3:3 best=222km  normalised=128.4
+[geosection] natural ratio 1:5 at 88km (normalised=88.0)
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=144km  normalised=143.9
+[geosection]   ratio 2:3 best=206km  normalised=145.4
+[geosection] natural ratio 1:4 at 144km (normalised=143.9)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=200km  normalised=200.1
+[geosection]   ratio 2:2 best=331km  normalised=233.8
+[geosection] natural ratio 1:3 at 200km (normalised=200.1)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=153km  normalised=153.4
+[geosection] natural ratio 1:2 at 153km (normalised=153.4)
+[partition-time] GA: k=14 n=2796 -> 36425.2ms
+[OK] GA in 36692ms

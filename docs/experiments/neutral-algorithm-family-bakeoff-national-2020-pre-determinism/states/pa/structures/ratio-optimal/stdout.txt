@@ -1,0 +1,5 @@
+STATUS:1:PA: loading adjacency
+STATUS:1:PA: GeoSection 8 ratios ? 1 seeds
+STATUS:1:PA: natural ratio 3:14 at 91km
+STATUS:1:PA: balance OK, writing outputs
+STATUS:1:PA: complete (17D, 0ms)

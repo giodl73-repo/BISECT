@@ -1,0 +1,5 @@
+STATUS:1:NY: loading adjacency
+STATUS:1:NY: GeoSection 13 ratios ? 1 seeds
+STATUS:1:NY: natural ratio 13:13 at 47km
+STATUS:1:NY: balance OK, writing outputs
+STATUS:1:NY: complete (26D, 0ms)

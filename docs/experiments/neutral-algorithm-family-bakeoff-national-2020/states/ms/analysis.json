@@ -1,0 +1,216 @@
+{
+  "state": "MS",
+  "state_slug": "mississippi",
+  "expected_districts": 4,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "MS",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 878,
+      "districts": 4,
+      "expected_districts": 4,
+      "edge_cut": 982061.43672,
+      "canonical_assignment_sha256": "57d326bed3aeef7d68da68257d48d4e9441943218a536aa63c4dcfd48fd31feb",
+      "adjacency_sha256": "bcc82c8a15be70f87de64ee0dd062f077a89625934bd2377f3cbc7787705f94a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "MS",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 878,
+      "districts": 4,
+      "expected_districts": 4,
+      "edge_cut": 982061.43672,
+      "canonical_assignment_sha256": "57d326bed3aeef7d68da68257d48d4e9441943218a536aa63c4dcfd48fd31feb",
+      "adjacency_sha256": "bcc82c8a15be70f87de64ee0dd062f077a89625934bd2377f3cbc7787705f94a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "MS",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 878,
+      "districts": 4,
+      "expected_districts": 4,
+      "edge_cut": 1144675.63604,
+      "canonical_assignment_sha256": "3aee06e3baf76413a5ab0803a00a1eabf90218a665989940a9b37f28b23357ca",
+      "adjacency_sha256": "bcc82c8a15be70f87de64ee0dd062f077a89625934bd2377f3cbc7787705f94a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.165584548216
+    },
+    {
+      "state": "MS",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 878,
+      "districts": 4,
+      "expected_districts": 4,
+      "edge_cut": 1015277.03845,
+      "canonical_assignment_sha256": "b69d636400923e2aa683b7b2938fc05e120df4e05fd51db929b36b1405699a3a",
+      "adjacency_sha256": "bcc82c8a15be70f87de64ee0dd062f077a89625934bd2377f3cbc7787705f94a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.033822325659
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "bcc82c8a15be70f87de64ee0dd062f077a89625934bd2377f3cbc7787705f94a"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "878"
+      ],
+      "districts": [
+        "4"
+      ],
+      "expected_districts": [
+        "4"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "MS",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 878,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "MS",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 787,
+      "different_units": 91,
+      "matched_unit_rate": 0.8963553530751709
+    },
+    {
+      "state": "MS",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 837,
+      "different_units": 41,
+      "matched_unit_rate": 0.9533029612756264
+    },
+    {
+      "state": "MS",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 787,
+      "different_units": 91,
+      "matched_unit_rate": 0.8963553530751709
+    },
+    {
+      "state": "MS",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 837,
+      "different_units": 41,
+      "matched_unit_rate": 0.9533029612756264
+    },
+    {
+      "state": "MS",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 784,
+      "different_units": 94,
+      "matched_unit_rate": 0.8929384965831435
+    }
+  ]
+}

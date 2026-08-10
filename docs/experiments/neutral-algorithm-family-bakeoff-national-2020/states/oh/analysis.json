@@ -1,0 +1,216 @@
+{
+  "state": "OH",
+  "state_slug": "ohio",
+  "expected_districts": 15,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "OH",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3168,
+      "districts": 15,
+      "expected_districts": 15,
+      "edge_cut": 2719047.10641,
+      "canonical_assignment_sha256": "bc00a8b10949143ce52b58c58303b31f67ab22d514bec5cdabda9c8b61575d4e",
+      "adjacency_sha256": "f2e7b34cc7733097020459c077160bdee254607b4573c5671f6646f3ff1bb16a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "OH",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3168,
+      "districts": 15,
+      "expected_districts": 15,
+      "edge_cut": 2588664.25527,
+      "canonical_assignment_sha256": "92a5e7e4d5d92c598c8efd06468084c4a6f5e96bfcdac5a9598b235eb9d56d25",
+      "adjacency_sha256": "f2e7b34cc7733097020459c077160bdee254607b4573c5671f6646f3ff1bb16a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.952048329419
+    },
+    {
+      "state": "OH",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3168,
+      "districts": 15,
+      "expected_districts": 15,
+      "edge_cut": 2774524.05909,
+      "canonical_assignment_sha256": "0b0669e0c98971c503dbf9e370c7f9de9b0ebd1e16b5886a189af8a9c595656f",
+      "adjacency_sha256": "f2e7b34cc7733097020459c077160bdee254607b4573c5671f6646f3ff1bb16a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.020403086268
+    },
+    {
+      "state": "OH",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 3168,
+      "districts": 15,
+      "expected_districts": 15,
+      "edge_cut": 2557787.74617,
+      "canonical_assignment_sha256": "e9328c0b7064c3def9e252c6f5625168aa0e6a20231ff6f1b38d0275d34ef75b",
+      "adjacency_sha256": "f2e7b34cc7733097020459c077160bdee254607b4573c5671f6646f3ff1bb16a",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.940692693459
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "f2e7b34cc7733097020459c077160bdee254607b4573c5671f6646f3ff1bb16a"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "3168"
+      ],
+      "districts": [
+        "15"
+      ],
+      "expected_districts": [
+        "15"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "OH",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1811,
+      "different_units": 1357,
+      "matched_unit_rate": 0.5716540404040404
+    },
+    {
+      "state": "OH",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 1566,
+      "different_units": 1602,
+      "matched_unit_rate": 0.4943181818181818
+    },
+    {
+      "state": "OH",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1804,
+      "different_units": 1364,
+      "matched_unit_rate": 0.5694444444444444
+    },
+    {
+      "state": "OH",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 1806,
+      "different_units": 1362,
+      "matched_unit_rate": 0.5700757575757576
+    },
+    {
+      "state": "OH",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 1946,
+      "different_units": 1222,
+      "matched_unit_rate": 0.6142676767676768
+    },
+    {
+      "state": "OH",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 1945,
+      "different_units": 1223,
+      "matched_unit_rate": 0.6139520202020202
+    }
+  ]
+}

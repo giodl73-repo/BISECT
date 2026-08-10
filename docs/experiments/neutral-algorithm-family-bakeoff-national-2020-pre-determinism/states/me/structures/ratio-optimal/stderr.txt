@@ -1,0 +1,3 @@
+NOTE: Running congressional (2D). ME also has house (151D) and senate (35D). Use --chamber house or --chamber senate.
+[partition-time] ME: k=2 n=407 -> 3.5ms
+[OK] ME in 63ms

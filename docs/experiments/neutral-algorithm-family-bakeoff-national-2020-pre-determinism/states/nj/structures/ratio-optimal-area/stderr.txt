@@ -1,0 +1,42 @@
+NOTE: Running congressional (12D). NJ also has house (80D) and senate (40D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 94.4% of population -> natural split ~11:1
+[areasection]   ratio 1:11 (8.3% pop): Lorenz area range [0.3%-59.4%] -> feasible
+[areasection]   ratio 2:10 (16.7% pop): Lorenz area range [0.8%-73.9%] -> feasible
+[areasection]   ratio 3:9 (25.0% pop): Lorenz area range [1.6%-81.2%] -> feasible
+[areasection]   ratio 4:8 (33.3% pop): Lorenz area range [2.8%-86.2%] -> feasible
+[areasection]   ratio 5:7 (41.7% pop): Lorenz area range [4.6%-90.0%] -> feasible
+[areasection]   ratio 6:6 (50.0% pop): Lorenz area range [7.0%-93.0%] -> feasible
+[areasection] 6 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:11 best=686km  normalised=686.4  area_left=20.4%
+[areasection]   ratio 2:10 best=711km  normalised=502.9  area_left=24.0%
+[areasection]   ratio 3:9 best=112km  normalised=64.7  area_left=46.2%
+[areasection]   ratio 4:8 best=105km  normalised=52.7  area_left=55.0%
+[areasection]   ratio 5:7 best=390km  normalised=174.6  area_left=58.7%
+[areasection]   ratio 6:6 best=625km  normalised=255.0  area_left=63.4%
+[areasection] natural ratio 4:8 at 105km (normalised=52.7)
+[areasection] winner: area=55.0% (target 50% ±10%, OK) pop=33.3% (target 33.3%)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=111km  normalised=111.3
+[geosection]   ratio 2:2 best=144km  normalised=101.9
+[geosection] natural ratio 2:2 at 144km (normalised=101.9)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=44km  normalised=43.9
+[geosection]   ratio 2:6 best=73km  normalised=51.7
+[geosection]   ratio 3:5 best=86km  normalised=49.8
+[geosection]   ratio 4:4 best=135km  normalised=67.4
+[geosection] natural ratio 1:7 at 44km (normalised=43.9)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=55km  normalised=55.2
+[geosection]   ratio 2:5 best=60km  normalised=42.5
+[geosection]   ratio 3:4 best=102km  normalised=59.1
+[geosection] natural ratio 2:5 at 60km (normalised=42.5)
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=71km  normalised=70.7
+[geosection]   ratio 2:3 best=107km  normalised=75.8
+[geosection] natural ratio 1:4 at 71km (normalised=70.7)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=74km  normalised=73.5
+[geosection]   ratio 2:2 best=103km  normalised=72.9
+[geosection] natural ratio 2:2 at 103km (normalised=72.9)
+[partition-time] NJ: k=12 n=2181 -> 24916.5ms
+[OK] NJ in 25103ms

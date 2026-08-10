@@ -1,0 +1,135 @@
+{
+  "state": "CA",
+  "state_slug": "california",
+  "expected_districts": 52,
+  "status": "fail",
+  "structures": [
+    {
+      "state": "CA",
+      "structure": "standard-bisect",
+      "status": "fail",
+      "error": "missing required native artifacts: ['states\\\\ca\\\\structures\\\\standard-bisect\\\\native\\\\2020\\\\states\\\\california\\\\manifest.json', 'states\\\\ca\\\\structures\\\\standard-bisect\\\\native\\\\2020\\\\states\\\\california\\\\data\\\\final_assignments.json', 'states\\\\ca\\\\structures\\\\standard-bisect\\\\native\\\\2020\\\\states\\\\california\\\\audit-certificate.json', 'states\\\\ca\\\\structures\\\\standard-bisect\\\\native\\\\2020\\\\states\\\\california\\\\plan.rplan', 'states\\\\ca\\\\structures\\\\standard-bisect\\\\native\\\\2020\\\\states\\\\california\\\\context.rctx']",
+      "edge_cut_ratio_to_standard": null
+    },
+    {
+      "state": "CA",
+      "structure": "ratio-optimal",
+      "status": "fail",
+      "error": "missing required native artifacts: ['states\\\\ca\\\\structures\\\\ratio-optimal\\\\native\\\\2020\\\\states\\\\california\\\\manifest.json', 'states\\\\ca\\\\structures\\\\ratio-optimal\\\\native\\\\2020\\\\states\\\\california\\\\data\\\\final_assignments.json', 'states\\\\ca\\\\structures\\\\ratio-optimal\\\\native\\\\2020\\\\states\\\\california\\\\audit-certificate.json', 'states\\\\ca\\\\structures\\\\ratio-optimal\\\\native\\\\2020\\\\states\\\\california\\\\plan.rplan', 'states\\\\ca\\\\structures\\\\ratio-optimal\\\\native\\\\2020\\\\states\\\\california\\\\context.rctx']",
+      "edge_cut_ratio_to_standard": null
+    },
+    {
+      "state": "CA",
+      "structure": "ratio-optimal-area",
+      "status": "fail",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "fail",
+      "audit_certificate_result": "fail",
+      "failed_audit_checks": [
+        {
+          "name": "contiguity",
+          "summary": "one or more districts are disconnected"
+        }
+      ],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 9129,
+      "districts": 52,
+      "expected_districts": 52,
+      "edge_cut": 7717445.173132,
+      "canonical_assignment_sha256": "afb64f6c6b954cf328dffc68341c57e246f275ceb3bc9ef048635c4811ce0368",
+      "adjacency_sha256": "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": null
+    },
+    {
+      "state": "CA",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 9129,
+      "districts": 52,
+      "expected_districts": 52,
+      "edge_cut": 8431517.316719,
+      "canonical_assignment_sha256": "0b1469b2432c899e6f7550ff82d30b3687b032045a735517b8cda30744f5988e",
+      "adjacency_sha256": "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": null
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "afea74ed77550b27c912a72fa8aafac12c50eaa14c4ee074cd527698da5cd463"
+      ],
+      "binary_sha256": [
+        "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "9129"
+      ],
+      "districts": [
+        "52"
+      ],
+      "expected_districts": [
+        "52"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "CA",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 4789,
+      "different_units": 4340,
+      "matched_unit_rate": 0.5245919596889035
+    }
+  ]
+}

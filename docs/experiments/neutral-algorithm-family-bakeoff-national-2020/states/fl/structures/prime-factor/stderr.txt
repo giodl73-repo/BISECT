@@ -1,0 +1,3 @@
+NOTE: Running congressional (28D). FL also has house (120D) and senate (40D). Use --chamber house or --chamber senate.
+[partition-time] FL: k=28 n=5160 -> 16.4ms
+[OK] FL in 273ms

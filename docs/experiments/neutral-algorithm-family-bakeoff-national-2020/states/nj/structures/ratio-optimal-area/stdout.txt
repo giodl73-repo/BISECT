@@ -1,0 +1,5 @@
+STATUS:1:NJ: loading adjacency
+STATUS:1:NJ: AreaSection 6 ratios x 1 seeds (pop+area dual, ncon=2, init=RatioOptimal)
+STATUS:1:NJ: natural ratio 4:8 at 105km
+STATUS:1:NJ: balance OK, writing outputs
+STATUS:1:NJ: complete (12D, 0ms)

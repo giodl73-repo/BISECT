@@ -21,6 +21,16 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def text_sha256(path: Path) -> str:
+    """Hash UTF-8 text canonically across LF and CRLF checkouts."""
+    normalized = (
+        path.read_text(encoding="utf-8")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+    )
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 def canonical_hash(value: object) -> str:
     encoded = json.dumps(
         value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
@@ -148,9 +158,9 @@ def analyze(report_path: Path, manifest_path: Path) -> None:
         "schema_version": "ri-certified-discovery-frontier-package-v1",
         "package_id": "ri-2020-root-discovery-frontier",
         "status": "unproved-incumbent",
-        "files": [{"path": report_path.name, "sha256": sha256(report_path)}],
+        "files": [{"path": report_path.name, "sha256": text_sha256(report_path)}],
         "analyzer_path": SCRIPT.as_posix(),
-        "analyzer_sha256": sha256(ROOT / SCRIPT),
+        "analyzer_sha256": text_sha256(ROOT / SCRIPT),
         "verification_commands": [
             (
                 "python scripts/research/analyze_ri_certified_discovery.py verify "
@@ -169,10 +179,10 @@ def analyze(report_path: Path, manifest_path: Path) -> None:
 
 def verify(manifest_path: Path, check_local: bool) -> None:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if manifest["analyzer_sha256"] != sha256(ROOT / manifest["analyzer_path"]):
+    if manifest["analyzer_sha256"] != text_sha256(ROOT / manifest["analyzer_path"]):
         raise SystemExit("RI discovery analyzer hash mismatch")
     report_path = manifest_path.parent / manifest["files"][0]["path"]
-    if manifest["files"][0]["sha256"] != sha256(report_path):
+    if manifest["files"][0]["sha256"] != text_sha256(report_path):
         raise SystemExit("RI discovery report hash mismatch")
     report = json.loads(report_path.read_text(encoding="utf-8"))
     if report["schema_version"] != SCHEMA or report["status"] != "unproved-incumbent":

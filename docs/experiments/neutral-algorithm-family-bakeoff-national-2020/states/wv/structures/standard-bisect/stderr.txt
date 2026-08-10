@@ -1,0 +1,3 @@
+NOTE: Running congressional (2D). WV also has house (100D) and senate (34D). Use --chamber house or --chamber senate.
+[partition-time] WV: k=2 n=546 -> 6.9ms
+[OK] WV in 285ms

@@ -1,0 +1,1367 @@
+{
+  "schema_version": "neutral-algorithm-family-national-bakeoff-manifest-v1",
+  "protocol_id": "neutral-algorithm-family-national-bakeoff-v1",
+  "phase": "pilot",
+  "status": "fail",
+  "schedule": [
+    "RI",
+    "NE",
+    "CT",
+    "KY",
+    "SC",
+    "WI",
+    "AZ",
+    "CA"
+  ],
+  "binary": {
+    "path": "target/release/bisect.exe",
+    "sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085"
+  },
+  "code": [
+    {
+      "path": "docs/specs/2026-08-09-neutral-algorithm-family-national-bakeoff-protocol.md",
+      "sha256": "89751f4c96a680d5d4ed725c55a93d87cfc3ff6a4511b3eeb394d610a7ac800e"
+    },
+    {
+      "path": "scripts/research/run_neutral_algorithm_family_bakeoff_national.py",
+      "sha256": "f5cd8735c41121ef7ef5458a84f300be2eaf85648851b45e752548c0855e5622"
+    },
+    {
+      "path": "scripts/research/analyze_neutral_algorithm_family_bakeoff_national.py",
+      "sha256": "2ce7022b50c02a71a5c87771ff49b1c7e1cd76d03ca7ebd9206b8ab4958bf4ee"
+    },
+    {
+      "path": "scripts/research/verify_neutral_algorithm_family_bakeoff_national.py",
+      "sha256": "73702d5c10f17386fe874b78af9d9d8d0829d7a51829cc60645ba421fc9ea998"
+    }
+  ],
+  "native_artifacts": [
+    {
+      "path": "states/az/structures/prime-factor/native/2020/states/arizona/audit-certificate.json",
+      "sha256": "1968d39824e7e1053a09bc7d3efa804504c8e8d450d20e7f8fc8186f1b26e1a2"
+    },
+    {
+      "path": "states/az/structures/prime-factor/native/2020/states/arizona/context.rctx",
+      "sha256": "31bfbc8405141c23a8d7ef5d4f1f02d8b3b88c30b2247649564dbeaa02f8ff0c"
+    },
+    {
+      "path": "states/az/structures/prime-factor/native/2020/states/arizona/data/final_assignments.json",
+      "sha256": "11a52afc76adb762ba0fee82766d742be29ef99d1e1caffef969cb21c5a81de5"
+    },
+    {
+      "path": "states/az/structures/prime-factor/native/2020/states/arizona/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/az/structures/prime-factor/native/2020/states/arizona/manifest.json",
+      "sha256": "c84769ca28bf98eb84c7f0d3fceeb377197231c0cd8c5cf78dabd1f14974b265"
+    },
+    {
+      "path": "states/az/structures/prime-factor/native/2020/states/arizona/plan.rplan",
+      "sha256": "1ddb40369078734bc2d60d00ab0173c402aaf6f0b0d1198e5e16aa02d172245c"
+    },
+    {
+      "path": "states/az/structures/prime-factor/run.json",
+      "sha256": "9d9e94e8ab5299bebcdb2084028c2a396cfdac2a75979f7bb5b58fd5e5dd56b8"
+    },
+    {
+      "path": "states/az/structures/prime-factor/stderr.txt",
+      "sha256": "6319f0872a2437a50030736126495f5f98d04eb0e796e1df6c46eac6e03bea71"
+    },
+    {
+      "path": "states/az/structures/prime-factor/stdout.txt",
+      "sha256": "e70e736cfbe881586d546ed611ad86be4b8b19ca336f1cc00e2a7f358bcb9b40"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/native/2020/states/arizona/audit-certificate.json",
+      "sha256": "2bdf9642a311d7fd25aa879e84d59360f1fc132e801e5ac6068efc762a07effb"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/native/2020/states/arizona/context.rctx",
+      "sha256": "31bfbc8405141c23a8d7ef5d4f1f02d8b3b88c30b2247649564dbeaa02f8ff0c"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/native/2020/states/arizona/data/final_assignments.json",
+      "sha256": "3cebb1a0a888313288cd750f2c0657a47f04911c7e3d9d9387ae89e79b9cf196"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/native/2020/states/arizona/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/native/2020/states/arizona/intermediate/depth_01/assignments.json",
+      "sha256": "2209c0d85a4cbf9bcbe6583e9cadefb71b73e1fac1f9385e425986bb68694b84"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/native/2020/states/arizona/manifest.json",
+      "sha256": "08cd21e76c5095fe9ac4f6acde872be53f3e3e3444ba3883f53ad5fd3b3ece24"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/native/2020/states/arizona/plan.rplan",
+      "sha256": "2ac6c2e2bf54bd5d5f8f984503b825057bfe9677468c65bf8f4e9cbfd931e6e1"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/run.json",
+      "sha256": "c9fe5bf89a53ace788a4622e5a53aba0b1162743fce6082895a96cfee4d9eef4"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/stderr.txt",
+      "sha256": "459190f386358044aebb475fc43acd3109c6710f25388555587444b66e65c22c"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal/stdout.txt",
+      "sha256": "2eaaabef74503095ae3e5c8b6577579d0a50895175210a87ac2739913f78b6ab"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/native/2020/states/arizona/audit-certificate.json",
+      "sha256": "a0c2ae591a9f446bae102fb0150c15865b25427ae552b302ab654e742d196af7"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/native/2020/states/arizona/context.rctx",
+      "sha256": "31bfbc8405141c23a8d7ef5d4f1f02d8b3b88c30b2247649564dbeaa02f8ff0c"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/native/2020/states/arizona/data/final_assignments.json",
+      "sha256": "db4cc5ea9a66a7a048b523f0131f6ae936e89e99c4bd895e4de1ab19a859e95d"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/native/2020/states/arizona/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/native/2020/states/arizona/intermediate/depth_01/assignments.json",
+      "sha256": "9517ca176b0a21b197e4f09700de070fbc68e15e212096d5735f3530e3d8e979"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/native/2020/states/arizona/manifest.json",
+      "sha256": "07ce0352ed49afc3af5cb318ff778447c90e987322d50e2cc7d616877d8083bd"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/native/2020/states/arizona/plan.rplan",
+      "sha256": "43d98a9dabfceaa91da5b8a7d3fbac602c475bcee6ac72e00b5f48210766bb77"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/run.json",
+      "sha256": "6e41453fb0a01a58e027d3af93bc526866b57505e6935073bab280254b4514f5"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "84974aa38b8245958b329ba3d4e4605b353bf13f649fbebd20fa017d8eca68de"
+    },
+    {
+      "path": "states/az/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "75b4db4e8eb27066c0b9ca9ed957f50481c1f6a16c7a110bec1d0a082f183b1f"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/audit-certificate.json",
+      "sha256": "17dc2810cbd10ec50cd700687ebb95f77c4e2b4b0f40c5dab1703bee93f33255"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/context.rctx",
+      "sha256": "31bfbc8405141c23a8d7ef5d4f1f02d8b3b88c30b2247649564dbeaa02f8ff0c"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/data/final_assignments.json",
+      "sha256": "6f5389ab65e8602c1fc93284c629ed341cffc02a1a5131ef52c0d82490a65494"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/intermediate/depth_01/assignments.json",
+      "sha256": "5e148fadc99daae050ee29a26c8341afbba510310882a57f94639ad96a8f3b7a"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/intermediate/depth_02/assignments.json",
+      "sha256": "61a44a35178fda5916df92a1ca7fb5451b116a3dd9e0af0eda26c69c9ee90142"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/intermediate/depth_03/assignments.json",
+      "sha256": "3d1733099319e42c418180528ac600674b006dc34a0bb589549462123a1c7789"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/intermediate/depth_04/assignments.json",
+      "sha256": "84f773bff2d2685146a264b1aea89404e801167ab3a86676581ba0aacdf7a8de"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/manifest.json",
+      "sha256": "ae99a0cf6226c9e2d6408496d235d691617d37cf6145561a9b7bc775135a5f61"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/native/2020/states/arizona/plan.rplan",
+      "sha256": "0c447a53bd3f59ae3589b631a1782f99c6faba83f4b6dacc07e372bbd1e04970"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/run.json",
+      "sha256": "4a76eeb5ed7f313338c6adabd4d1034964cfb65a8e7bfb4d3ea09e75b7b5a492"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/stderr.txt",
+      "sha256": "de4db08a4c0d6ef42a453f5d088a5746ddc93afca1658981c1983b295cb75352"
+    },
+    {
+      "path": "states/az/structures/standard-bisect/stdout.txt",
+      "sha256": "7233ef3fad79a8a3cbf9618676487394d28c47c558ecdecd763ab0fb379ce634"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/native/2020/states/california/audit-certificate.json",
+      "sha256": "29b7d2301ff0800c9df6b57b14aaf6ee2a3cf02b213c785dbed9a55cf4d38a4a"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/native/2020/states/california/context.rctx",
+      "sha256": "7fe20a4a6cb991d2c0e69d6d022840ed85837e4123930e751806f22b5ad6405d"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/native/2020/states/california/data/final_assignments.json",
+      "sha256": "7060100aca6fd9bfefadfd05f79be44b2ffe77b25946645f6969ad5ed71352bd"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/native/2020/states/california/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/native/2020/states/california/manifest.json",
+      "sha256": "2cdbf8d86a75ed48f4c777162f1f28792be0dd5b9e2665c002f1021afbb28a54"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/native/2020/states/california/plan.rplan",
+      "sha256": "fc9e7f0931a0df9164b2ced8fe330a6cdc79ae375b86a71d8dc15e76e9af7061"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/run.json",
+      "sha256": "727387407497d9e2b4eabdcbd09ccfc775bb57cb03e1091165e6d0e36e30fcfe"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/stderr.txt",
+      "sha256": "63a27288f847a37bed05e0602197c235cc788347f8725b656b16c0d124ab538a"
+    },
+    {
+      "path": "states/ca/structures/prime-factor/stdout.txt",
+      "sha256": "fad83b37ef5e949f102d489b30177ac5f50bb59b93b4d1920cbf668e95902bd2"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal/native/2020/states/california/intermediate/depth_01/assignments.json",
+      "sha256": "c1f00788111b36f66aa8c52a401cf15cbfaa231f105d5ceb8ba2b8a40df17c9e"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal/run.json",
+      "sha256": "4b67ead389d768fe5f63617d6a5a7538bbfaf12af471a89b4573b8049931792b"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal/stderr.txt",
+      "sha256": "df0d40ccb92e595a317bdb9d210689392db65ddc6ab90007328a6340bafd3b80"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal/stdout.txt",
+      "sha256": "ddc5b30188889eb1c9cc27976296844d1b9eb8e3802693ebec95b05656c91d1d"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/native/2020/states/california/audit-certificate.json",
+      "sha256": "9574f3a2e496e8926d19cd0fb0349573bb508ded9d9563c0bb781aef3265612d"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/native/2020/states/california/context.rctx",
+      "sha256": "7fe20a4a6cb991d2c0e69d6d022840ed85837e4123930e751806f22b5ad6405d"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/native/2020/states/california/data/final_assignments.json",
+      "sha256": "4a7235c8935a03a9f4a750f5053d42ffcfaec899fdf9f0da45aca02850dcb303"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/native/2020/states/california/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/native/2020/states/california/intermediate/depth_01/assignments.json",
+      "sha256": "f21a45a5b24c15d99eb00f7f77d66477712f35bc196c0a9a25605635557a2443"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/native/2020/states/california/manifest.json",
+      "sha256": "bcf2b2287388b41fcbfc93afdbea6327de44c129da7f01736f0c272bc08df7c9"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/native/2020/states/california/plan.rplan",
+      "sha256": "2a79753f45e97657a2489e8e1e5d0dbed1cd6fb411b08edb112f811b95de26d2"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/run.json",
+      "sha256": "69498dd8b5270006efc2eaf4b4cc13ec0afcc8efe1e1a130a3ee28c983c3d4a1"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "7d67eb451a9ea1da132d6b708907d4318d5f3aef2e5c77b7971e1a61f2a0c65e"
+    },
+    {
+      "path": "states/ca/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "a0e8cac9ec8c3659f4be1cf512e674245e0c9ea37f8b21150fbfbb2990187593"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/native/2020/states/california/intermediate/depth_01/assignments.json",
+      "sha256": "b801693455dfa1129d135e66e0e2b98765dac5b1a672ee0ef55e04917f81f20d"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/native/2020/states/california/intermediate/depth_02/assignments.json",
+      "sha256": "a1cba6e87500b488c3d325e65a278c5ba8bdbc4854790c62f1d5638b7309018d"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/native/2020/states/california/intermediate/depth_03/assignments.json",
+      "sha256": "5e967def989ee583091d2ea025fe47496f587e8b42d2f811aee66916c97498c5"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/native/2020/states/california/intermediate/depth_04/assignments.json",
+      "sha256": "7c589a3ca1547dbf386aba5f06677643088358e820dbdae51efcf79168735ff6"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/native/2020/states/california/intermediate/depth_05/assignments.json",
+      "sha256": "eb29c1b79581149d4b6ad6ba818cad2827e5cce00dff2fc65c198aa3e2007a22"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/native/2020/states/california/intermediate/depth_06/assignments.json",
+      "sha256": "a39ef38cb07bdeda66020c228520f1a986cfad5d5dd1a7fc5cc70af8c04d515d"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/run.json",
+      "sha256": "ac52dcf7c2c671a508212832c541549ed725f7f1bc9350a0c1f278065ae27ab3"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/stderr.txt",
+      "sha256": "0253e2e41306c94d1c91f3eee7c1802195cb245add0498bf6d0bc6114f844a60"
+    },
+    {
+      "path": "states/ca/structures/standard-bisect/stdout.txt",
+      "sha256": "a45118002c891d5cd42f5942ec6e3f5640e4f56097e3fde7810abcdaf1715983"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/native/2020/states/connecticut/audit-certificate.json",
+      "sha256": "a530a2bc295d2191093d5062b58fd78d54bb05b335fffbd328f19809108da84c"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/native/2020/states/connecticut/context.rctx",
+      "sha256": "8e70f863af9970189cd0d5b5f36ef63b5f357dc506ef13628e7c9a21bff1b5e4"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/native/2020/states/connecticut/data/final_assignments.json",
+      "sha256": "e7e94466c201d50b46bb83a826930d551f582d9146194e8cede3f39dbb5f1e7c"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/native/2020/states/connecticut/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/native/2020/states/connecticut/manifest.json",
+      "sha256": "77c5106a93112697126377aec99eec1362d460d9848af06104cd1f1e193e8f7e"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/native/2020/states/connecticut/plan.rplan",
+      "sha256": "f19f971826f8adb604741878ef0f81509c2ed09a2383391a23e55b6ef92a7af9"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/run.json",
+      "sha256": "8cc3d210f34bd360cf28c49c94fdb4a0566b10817d34a5828f03ed1bf8292e57"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/stderr.txt",
+      "sha256": "8282d89f6f7c3f46d2c88d2f6df92f8d47a7e84adccef410e579a366d1aea8da"
+    },
+    {
+      "path": "states/ct/structures/prime-factor/stdout.txt",
+      "sha256": "0ae1388d8f6eaab69d5c50006c00fa816d47c3b70b240d1b5f4d31cb36cf7889"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/native/2020/states/connecticut/audit-certificate.json",
+      "sha256": "1b8c191aa2da172037c8d17e72df3186686154b8a8c93eee4c0d88d9d843eeb0"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/native/2020/states/connecticut/context.rctx",
+      "sha256": "8e70f863af9970189cd0d5b5f36ef63b5f357dc506ef13628e7c9a21bff1b5e4"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/native/2020/states/connecticut/data/final_assignments.json",
+      "sha256": "d8872e0823bb28e2c16a97531dc50d98a6539d7ccb61eced9613b8d5f5b0cf0a"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/native/2020/states/connecticut/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/native/2020/states/connecticut/intermediate/depth_01/assignments.json",
+      "sha256": "e3622553c496e5cde483af3ab806d16226a4829fa48d34a395d2723f5b486324"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/native/2020/states/connecticut/manifest.json",
+      "sha256": "4153816940e61a89b22d6045475b79521e84da3025fe0d09bbef5dcb63c0c4df"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/native/2020/states/connecticut/plan.rplan",
+      "sha256": "9463b6b41047884e9b9ddb045bfc44c943ced5d3288428ff159a60f9150b7b84"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/run.json",
+      "sha256": "1b4e9efc86a246d5673f9093120b462dc7e2ff6ec15221ca8cec29a6c7f6569b"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/stderr.txt",
+      "sha256": "bd658cb047465024b9633abe568951909a1c002b944622a099d7da17e2d9327a"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal/stdout.txt",
+      "sha256": "430aa9664179fe857ab8607a91aa31c48309edf17490c25c301dcf72e9261b79"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/native/2020/states/connecticut/audit-certificate.json",
+      "sha256": "f0e55203baae613bfeaa74d6dec40bca353a9040a0ad3ef737648aca1e4f0b21"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/native/2020/states/connecticut/context.rctx",
+      "sha256": "8e70f863af9970189cd0d5b5f36ef63b5f357dc506ef13628e7c9a21bff1b5e4"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/native/2020/states/connecticut/data/final_assignments.json",
+      "sha256": "767331ee20ff0c3cd20b9e7432c8d43d79df8640d585c3f2e5bb23155895043e"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/native/2020/states/connecticut/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/native/2020/states/connecticut/intermediate/depth_01/assignments.json",
+      "sha256": "36b54265e485b5a4e4beaea2ddc79ff3351725a33cc4b939a03dd735574f7d9a"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/native/2020/states/connecticut/manifest.json",
+      "sha256": "62b54d2c3e81b5df6fdc648d8dc956873c184b22922338f650b78416a46a94ab"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/native/2020/states/connecticut/plan.rplan",
+      "sha256": "95dd84dc645329fb2faa7d94c036ad7c348b65059fca0b4e14f6c540c2384e39"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/run.json",
+      "sha256": "12525537ab0dfe69cf630d4a90859b568a868261acb5be3880b701929e374ae9"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "4b8613bf82061a0fd04c9b40961efdac5d7dd8d47e4be0e19e05b20157c2ff63"
+    },
+    {
+      "path": "states/ct/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "4c95a6b2178f72bf785c8e020523a40cc6a83bc3fef34bd4885017d7be43608b"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/audit-certificate.json",
+      "sha256": "44781bb2fa9ab9b55152b400bd677c7076becdc488faa999325adfe23399600a"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/context.rctx",
+      "sha256": "8e70f863af9970189cd0d5b5f36ef63b5f357dc506ef13628e7c9a21bff1b5e4"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/data/final_assignments.json",
+      "sha256": "f77db9514b9e73baacb585bbcc5e86b9530ba322fe506956fbf2682c845543a4"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/intermediate/depth_01/assignments.json",
+      "sha256": "61d73af9510ceb46f0919877a8e2bc28d0a031e7f6d288125d9e65545daad969"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/intermediate/depth_02/assignments.json",
+      "sha256": "e31bc40b1e019a1857ae9dece6a0ccd66e4978f2cb86eef53457b8c0939de3cf"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/intermediate/depth_03/assignments.json",
+      "sha256": "cc726b74977ff91e55a2a0628cdb998376394615b2cb0031d727c178add26b91"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/manifest.json",
+      "sha256": "40097a95e87768904d92d82c99e90cfbc4779a5a13ccf6001ff048eb3668d1a9"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/native/2020/states/connecticut/plan.rplan",
+      "sha256": "5c9af4ee93ebf7b6d108aee6daa8a0c89d2e552a72bd8b51881ef4e4046c5ffb"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/run.json",
+      "sha256": "7524c8a944b3fc556445526a9fe49fb42b546712f4f4a46879764ea1492185d9"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/stderr.txt",
+      "sha256": "e345aa257d01d81eefcc6644d88248a7c46cb756fb9cf6f8c1b29fe551034564"
+    },
+    {
+      "path": "states/ct/structures/standard-bisect/stdout.txt",
+      "sha256": "e205210723daffc419c8d268c03a38417ac3564afa38e1519022947079fd466d"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/native/2020/states/kentucky/audit-certificate.json",
+      "sha256": "dc6adf7479e24f7cfe60ed816d33a733ad4cd7c210e263095ffbf45e0d37976d"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/native/2020/states/kentucky/context.rctx",
+      "sha256": "97311ebf1b667fa5794e2519c07103dda2a45e6562ed7787e807cd7e19c14f9f"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/native/2020/states/kentucky/data/final_assignments.json",
+      "sha256": "0c913444f13e6e7918e2484fec4572a11f062c7dfad1ccbdc4a39f4ce2bb610f"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/native/2020/states/kentucky/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/native/2020/states/kentucky/manifest.json",
+      "sha256": "4986d6aea98b0918fb6f3a45f28b0fba152d02c53783566a76971b413e4cd77d"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/native/2020/states/kentucky/plan.rplan",
+      "sha256": "10c9781142d378a040a11612ef92b41faf3b1dfda526b5dbf5e37bd13c7acee9"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/run.json",
+      "sha256": "c87bbe449b996c70ac0f23c23fd333c74c860c44d93e328674a3e2cacac2df27"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/stderr.txt",
+      "sha256": "7dd1830bf958dc5c4bf5f9786f31caf7674fa256bab260eafc25a25aa0c4873b"
+    },
+    {
+      "path": "states/ky/structures/prime-factor/stdout.txt",
+      "sha256": "52c93dfdd836c6356f89bc9fc4637073bb0b102102cb000c3860cc409da09299"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/native/2020/states/kentucky/audit-certificate.json",
+      "sha256": "367a1a098235e67a8b2b419748b9f7390e328a6aa20a77c6e320df4ed1d089ce"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/native/2020/states/kentucky/context.rctx",
+      "sha256": "97311ebf1b667fa5794e2519c07103dda2a45e6562ed7787e807cd7e19c14f9f"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/native/2020/states/kentucky/data/final_assignments.json",
+      "sha256": "bbc71c3d64c4c12dd9cf7014130512b76832e4e023d5f3934a272e4db613fc40"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/native/2020/states/kentucky/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/native/2020/states/kentucky/intermediate/depth_01/assignments.json",
+      "sha256": "c214574b085fc43d8ddd00a3eb2733d38b40077753af411e7f1366be01bfbcc4"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/native/2020/states/kentucky/manifest.json",
+      "sha256": "aea013da707b6ca4e6652b3ffc653b4af2d66132cf7de6dd8fcd7831c2281cd7"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/native/2020/states/kentucky/plan.rplan",
+      "sha256": "bb55611698082c8a5cf8694a4bf4c029c8b45f1f007dd16d627f0959c3d3db66"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/run.json",
+      "sha256": "78836abed30772e8b8c2943307edf27117242a50b526567055c076cc5527b309"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/stderr.txt",
+      "sha256": "39b2ff0d65a00c510126595b9caf25279134db5d83c5f2f33efe9edc69c8e303"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal/stdout.txt",
+      "sha256": "43f84c6c08b02e4f3bd4a5a058079eec9f45118fefc31220cdc4cf7ac7765c9b"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/native/2020/states/kentucky/audit-certificate.json",
+      "sha256": "3f8ca08d3699c1b7e8d0db4b670f2ab814f24c20934c6871452e62844bc762f0"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/native/2020/states/kentucky/context.rctx",
+      "sha256": "97311ebf1b667fa5794e2519c07103dda2a45e6562ed7787e807cd7e19c14f9f"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/native/2020/states/kentucky/data/final_assignments.json",
+      "sha256": "64fbacd711bf0cdd8c1cedad80eca4f756ed2878ba73ab52940ba65ad7bea40b"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/native/2020/states/kentucky/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/native/2020/states/kentucky/intermediate/depth_01/assignments.json",
+      "sha256": "60e1c688a71ed89b43e2fe9c733bd0a9e7de0fbf2eadf88d6a0b920c2ae5ab59"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/native/2020/states/kentucky/manifest.json",
+      "sha256": "0ec70c125f02fdad99bba33c8add01a7a1ca77dd2f694b9d2eb3c3b9991cd91f"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/native/2020/states/kentucky/plan.rplan",
+      "sha256": "5ae2a3c000a596188feead0857620a312a0b3f6feda48d85350c56874e607f1d"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/run.json",
+      "sha256": "49928e2154efe43f2f2f2d6c072a35e5578c32786986efc922bd5ba217fb7790"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "606ff661207896ec7a878ec1bcf2b2f4adf26503d2f141e2cad2cef40b8d0537"
+    },
+    {
+      "path": "states/ky/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "2a91bca8956873791baafa6da149d50e8838829dc7b65457b59f9bf6916b4ea9"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/audit-certificate.json",
+      "sha256": "4b9ad9ca764b9ba2d7f7e69365344878bdc830ce169ce02215d8a4202610b4d8"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/context.rctx",
+      "sha256": "97311ebf1b667fa5794e2519c07103dda2a45e6562ed7787e807cd7e19c14f9f"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/data/final_assignments.json",
+      "sha256": "f70c143374c093d10bcfd410265d3ba7bd255ce56dc6e682e29ce641386b7d27"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/intermediate/depth_01/assignments.json",
+      "sha256": "a6e8983be828ddb7520afedb8067c2fe38e03e064cf65df63b50f9abcada1a3a"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/intermediate/depth_02/assignments.json",
+      "sha256": "9c8fa52870a3e7bc405746325aba720258a76ee58655c27a4966f35014940a88"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/intermediate/depth_03/assignments.json",
+      "sha256": "9af49fd66fe9e6e5bfc46e8e27bb5e0c60cb9c8c3fa05ee1bdc930801a4c0f9e"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/manifest.json",
+      "sha256": "10a0cae57908836726e4f15c7abbe238a288ed3bebb455437c4f4f47766ab78f"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/native/2020/states/kentucky/plan.rplan",
+      "sha256": "aa5a598674d926c1191e96964329e47baf6fd76243b8d59a379fdf66f05c93dc"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/run.json",
+      "sha256": "b30aa9fa1cdb0136d00779f1200a2e24d36c9ea215734a9f466361b0d29ef898"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/stderr.txt",
+      "sha256": "0235339016aa0be0b604b421de7abcab269b70361448b035b0edad85d98fd811"
+    },
+    {
+      "path": "states/ky/structures/standard-bisect/stdout.txt",
+      "sha256": "d02a6a64ef613d7ddd472bfcec51df062b3b949b87424f1a3001bcc11b3d47d9"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/native/2020/states/nebraska/audit-certificate.json",
+      "sha256": "47b0c59347aecae541f715e760bd5ba1bbaffede11be38bf1036d8f1cffaea49"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/native/2020/states/nebraska/context.rctx",
+      "sha256": "6c8f97961e083da07e229639e1a848b878fc9062c1a762a35edfd4b8bb79f74a"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/native/2020/states/nebraska/data/final_assignments.json",
+      "sha256": "e053fc96c305820f15659fb2144293a1113e41b61b7c66ec0b5aa13e5e76c308"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/native/2020/states/nebraska/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/native/2020/states/nebraska/manifest.json",
+      "sha256": "26eb40355f229bff3a844f7dfc4c608642fd8c0362e5c30686da709e3c35428a"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/native/2020/states/nebraska/plan.rplan",
+      "sha256": "03b9519dfa23e16696e52fcf8b815b8bd18c74f0d243989574221be3a80d76b9"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/run.json",
+      "sha256": "f6ecd7820f1de2e35b74d0d17e48d1213f9183ec8255105d7b8ee0c8ec88f94b"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/stderr.txt",
+      "sha256": "907fd398c7429ad7a707ce0d3e335bf5adf504274e837bd5c88d87348aaa4f90"
+    },
+    {
+      "path": "states/ne/structures/prime-factor/stdout.txt",
+      "sha256": "29de9e32ef6fff74b21f5f1c5213d344d6b4e3cfc0934f357f6867d3805899c6"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/native/2020/states/nebraska/audit-certificate.json",
+      "sha256": "8b2d8188423624e2d9fbd39ab9967bf9e435b27c21f42f6f424e2c45116a93cc"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/native/2020/states/nebraska/context.rctx",
+      "sha256": "6c8f97961e083da07e229639e1a848b878fc9062c1a762a35edfd4b8bb79f74a"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/native/2020/states/nebraska/data/final_assignments.json",
+      "sha256": "ee927f0147a8e0b1486f1741b7fd5ae2acb31806a8eb770257e5c640720e4fe4"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/native/2020/states/nebraska/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/native/2020/states/nebraska/intermediate/depth_01/assignments.json",
+      "sha256": "7ceee040e75162d42cdf960f78b8918ba5e683237bbe546815f1392f872bf61d"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/native/2020/states/nebraska/manifest.json",
+      "sha256": "50cef3f4be5af205a3bcd11c540fd119a26a877204158e086a22a0176610633c"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/native/2020/states/nebraska/plan.rplan",
+      "sha256": "73d0faf49f477548cb1818319d21d3a4850a98610a48b97b3d00c02c6b890cbd"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/run.json",
+      "sha256": "4ac322ee3eb4b716a9ff822df313fe39f3abd7e427fa8a19cd8ebe0308e983fd"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/stderr.txt",
+      "sha256": "f6504bb6d666ac60cd5afa23054423bfcf4107cfb32d85cb97f0d13105e127a4"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal/stdout.txt",
+      "sha256": "4b5d52c1401c1f86500c16500bbe704eed42d50b5cb69a9a1b3083c8300131a3"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/native/2020/states/nebraska/audit-certificate.json",
+      "sha256": "61eebfb3ac27c0e9252ef82c37b52be4df7b3b5b7fff8308bfb74456df441d47"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/native/2020/states/nebraska/context.rctx",
+      "sha256": "6c8f97961e083da07e229639e1a848b878fc9062c1a762a35edfd4b8bb79f74a"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/native/2020/states/nebraska/data/final_assignments.json",
+      "sha256": "9c0e009f35505410d6fdb316f7ea743854ac9b09e4bc6dfbf34b677b33c1d8be"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/native/2020/states/nebraska/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/native/2020/states/nebraska/intermediate/depth_01/assignments.json",
+      "sha256": "97e057863c2983d9ce3bf1b77c118f1051faa4fabf421beffb23809112f27bc3"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/native/2020/states/nebraska/manifest.json",
+      "sha256": "b42b952abb909e9fdede9a2f756c9579bf3b0c26e4da2b905b3c5f1d308229bf"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/native/2020/states/nebraska/plan.rplan",
+      "sha256": "131ed20a611777b6bf3d6c23f85bad93ac1c4ed12e725001923f19eb537ba328"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/run.json",
+      "sha256": "2a0b8d05319442bc108c23c71562ab23928e87e572ea82ffe7e9492075ab63c0"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "ddd8ddc63c389963fd852279103d11383c36333a6cfc9df998c2059330071d26"
+    },
+    {
+      "path": "states/ne/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "f175fa83464ef4c58c6b3ea0250aca32455a2d6a1a2f8fb121279cbc89289dd6"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/audit-certificate.json",
+      "sha256": "7277b5c8892ede121116e97c9408e9c457262168f0a6f39e26b7708582494c19"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/context.rctx",
+      "sha256": "6c8f97961e083da07e229639e1a848b878fc9062c1a762a35edfd4b8bb79f74a"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/data/final_assignments.json",
+      "sha256": "ee927f0147a8e0b1486f1741b7fd5ae2acb31806a8eb770257e5c640720e4fe4"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/intermediate/depth_01/assignments.json",
+      "sha256": "752e4db4daea505f58918c1adb6ded4a451bbc69f260d6ab68125caa8010509a"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/intermediate/depth_02/assignments.json",
+      "sha256": "6f6099b19e38fbe5cce051734ed6c0eef3fd7825ee52d12fd09994494857892a"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/manifest.json",
+      "sha256": "fd62e2a5d19e20b7d3234e5beeeceaf5db89f4193d03b3278ddd555fbb2ece53"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/native/2020/states/nebraska/plan.rplan",
+      "sha256": "558105b8243a46a0fc0cc071945ad80916170598ac6485163454a2aab81d2b96"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/run.json",
+      "sha256": "268439b7a4d174d9c2d687c2d5cb750aaf98498a5f0261034496b9dbe9fc9cbb"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/stderr.txt",
+      "sha256": "40c5f1dcd7e40d8f3a88eefabfd42dca09f7b4279004e8001318c8f5ca1007de"
+    },
+    {
+      "path": "states/ne/structures/standard-bisect/stdout.txt",
+      "sha256": "9e142ed340584219e4bc450b181400ce34c4381c3c66862790073257701891e0"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/native/2020/states/rhode_island/audit-certificate.json",
+      "sha256": "554ba0333438a07c63181acdc361c6969da62bd94354ccbfffdb326250c9e46f"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/native/2020/states/rhode_island/context.rctx",
+      "sha256": "7a50b7df1a103d5d458fb44be814aa6416ae0e4c50a1f6fb8317e76404862dd2"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/native/2020/states/rhode_island/data/final_assignments.json",
+      "sha256": "e260ff3404c8e96d4c2a6f9c8a81a323063bd0b9088f8f1ce94a2e7b4e9e290a"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/native/2020/states/rhode_island/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/native/2020/states/rhode_island/manifest.json",
+      "sha256": "a6c49776c7dc010dc90d5edb0d1ec814262e4bdd5c2a2dc6c2d6c53005a7fd49"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/native/2020/states/rhode_island/plan.rplan",
+      "sha256": "316e4521c2770eb20c4bd50e56881dc8d75f82e1e1a4fd631bb3006b80e6f611"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/run.json",
+      "sha256": "758366090f319efad587d9ba96c16c0e61faa5383ebd133700eb55077feafc08"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/stderr.txt",
+      "sha256": "48b65b54f9fefb9e11bd422351d6bc749532f461588494bdd31cc066baa82f23"
+    },
+    {
+      "path": "states/ri/structures/prime-factor/stdout.txt",
+      "sha256": "b9dc853a8bf9ebd0178257c46da829b6b31536a85b0cb67fb02a2c55a2bf1b3e"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/native/2020/states/rhode_island/audit-certificate.json",
+      "sha256": "73210ad9a6aa768a81e53648b0b90378f7434c9db351c55ebadf701ce5ff27b2"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/native/2020/states/rhode_island/context.rctx",
+      "sha256": "7a50b7df1a103d5d458fb44be814aa6416ae0e4c50a1f6fb8317e76404862dd2"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/native/2020/states/rhode_island/data/final_assignments.json",
+      "sha256": "0e3ab650b551523c5d169f7dd40615ab35511a2004d429f14295b1de5a80eb87"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/native/2020/states/rhode_island/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/native/2020/states/rhode_island/intermediate/depth_01/assignments.json",
+      "sha256": "30ed8584145a5b3c94d1c288d01c0637fc7888362e7cddac6fbabf9060f59457"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/native/2020/states/rhode_island/manifest.json",
+      "sha256": "1b6b2ba1b11e5b5c53e296474898e703e84ed995ae29af3be79818d9eea63118"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/native/2020/states/rhode_island/plan.rplan",
+      "sha256": "b9e2825b3d4f6c97f485357ab52725af088ae9df00004da90f8d0ef36a653361"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/run.json",
+      "sha256": "f5c31d7b9f84bdb990571e284104220dc733f324d478fb109c81404ae174a8fb"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/stderr.txt",
+      "sha256": "3f9d3ce7d3bf38e363bb881f5735fdcb11810aa29158faa01d8dc34b78a5a227"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal/stdout.txt",
+      "sha256": "fe19e77d2f1dbc86ec6402b4bd2475e0a15e54995c8eb4c344e5e304f2ee378d"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/native/2020/states/rhode_island/audit-certificate.json",
+      "sha256": "73210ad9a6aa768a81e53648b0b90378f7434c9db351c55ebadf701ce5ff27b2"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/native/2020/states/rhode_island/context.rctx",
+      "sha256": "7a50b7df1a103d5d458fb44be814aa6416ae0e4c50a1f6fb8317e76404862dd2"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/native/2020/states/rhode_island/data/final_assignments.json",
+      "sha256": "0e3ab650b551523c5d169f7dd40615ab35511a2004d429f14295b1de5a80eb87"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/native/2020/states/rhode_island/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/native/2020/states/rhode_island/intermediate/depth_01/assignments.json",
+      "sha256": "be39cc3e56d52cfb94bcbd4ccf9622020aef3a45e57b18594024f53fd52a6238"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/native/2020/states/rhode_island/manifest.json",
+      "sha256": "e445192d656fc0f7f5f69f20e99e14fb3f3a302d0ce42ee2a571bc291ff64b58"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/native/2020/states/rhode_island/plan.rplan",
+      "sha256": "b9e2825b3d4f6c97f485357ab52725af088ae9df00004da90f8d0ef36a653361"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/run.json",
+      "sha256": "4b438a388797aa85a6fd88a605e8e73199d394197ed2bed6902f2796398fcafc"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "dc06dd91235fb5cfc1503d00e61886739ceaa1825758fe82620e398ecc5333f8"
+    },
+    {
+      "path": "states/ri/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "6dfa7708d66edc28800f4ee4f921a6139e6247b060f874487aeb60d3f183e974"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/native/2020/states/rhode_island/audit-certificate.json",
+      "sha256": "73210ad9a6aa768a81e53648b0b90378f7434c9db351c55ebadf701ce5ff27b2"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/native/2020/states/rhode_island/context.rctx",
+      "sha256": "7a50b7df1a103d5d458fb44be814aa6416ae0e4c50a1f6fb8317e76404862dd2"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/native/2020/states/rhode_island/data/final_assignments.json",
+      "sha256": "0e3ab650b551523c5d169f7dd40615ab35511a2004d429f14295b1de5a80eb87"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/native/2020/states/rhode_island/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/native/2020/states/rhode_island/intermediate/depth_01/assignments.json",
+      "sha256": "b936b9c1a0eeab4457f1e60fa155c05215508509450ecc7fa123c0b57338d163"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/native/2020/states/rhode_island/manifest.json",
+      "sha256": "dd98ce4f4393e430ec5cad41a5500247842f59efc0c7906c44ecfcb1ac6f3da5"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/native/2020/states/rhode_island/plan.rplan",
+      "sha256": "b9e2825b3d4f6c97f485357ab52725af088ae9df00004da90f8d0ef36a653361"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/run.json",
+      "sha256": "8c45599fff6aaaa40fc24a74f43b6e5e90ec7e1252582ee639c8392e84ae1709"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/stderr.txt",
+      "sha256": "259592760671be1d78659bc5150c796fe1287a587e75eb0e8833e8e290fc18d4"
+    },
+    {
+      "path": "states/ri/structures/standard-bisect/stdout.txt",
+      "sha256": "7031bd7e380470a1db87e539c3be0e9c5b27ff76f24ec6d9bc47a7d0df147891"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/native/2020/states/south_carolina/audit-certificate.json",
+      "sha256": "36304cdea49a98908f189f8f8c2c6c3e4a0811577a4d839dccbe4aca21fe454f"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/native/2020/states/south_carolina/context.rctx",
+      "sha256": "601df0f041cc95d22d94fc867fea830ffe71fd14ecbc4a6a1ec9dd08a9a7f00d"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/native/2020/states/south_carolina/data/final_assignments.json",
+      "sha256": "9606293f1a95f377b07c7d07e2df755a3e7c99ccaa9a65a5af9e7d7391da3e85"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/native/2020/states/south_carolina/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/native/2020/states/south_carolina/manifest.json",
+      "sha256": "0251a5430c808d05b9592dbdc517161bffb8d7f48a8b6ff01f2a3628bf7af8ff"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/native/2020/states/south_carolina/plan.rplan",
+      "sha256": "c55041648cf69f6b8c89566bfa788b4fa59ae0aa72639b185c9eb948ce545909"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/run.json",
+      "sha256": "650aacd34eb70f51a6c6849e2d95625ae0bb25b9b20acc14aedef334a5f3caaf"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/stderr.txt",
+      "sha256": "5297a1a168579cac9bacfea092722cfa297236cde30f796f3e14b794f141961f"
+    },
+    {
+      "path": "states/sc/structures/prime-factor/stdout.txt",
+      "sha256": "8899061e7f554ede509f316fb65f07f2bb4026a672572fb03d30cd48b76d10f6"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/native/2020/states/south_carolina/audit-certificate.json",
+      "sha256": "85a4181192beeca633387eb4e7526d0fdd9f35773f9738517d29cb146374386d"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/native/2020/states/south_carolina/context.rctx",
+      "sha256": "601df0f041cc95d22d94fc867fea830ffe71fd14ecbc4a6a1ec9dd08a9a7f00d"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/native/2020/states/south_carolina/data/final_assignments.json",
+      "sha256": "e66347073f55b8d5ac74520dd5af92d502c2635b1a8f98fe2ee86d0c79807bb5"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/native/2020/states/south_carolina/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/native/2020/states/south_carolina/intermediate/depth_01/assignments.json",
+      "sha256": "e3bff3f2ba7d80058e44f6115ba83dc6f420c09e37d0787d4fe8a5b62a37abf1"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/native/2020/states/south_carolina/manifest.json",
+      "sha256": "854d7f3d360cd8d8076f861e15a9976038ffca057dd58a9dc6b5d86abe66bc9c"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/native/2020/states/south_carolina/plan.rplan",
+      "sha256": "3689411b8e6f96b370b7163fc7bf536988a29b3e5e50068e0f28559c2b518f5b"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/run.json",
+      "sha256": "60b22786835950dbd7850abeb4962803ab53bfc323bce0d61ad0c670baabed6f"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/stderr.txt",
+      "sha256": "9ffa44deff19840c7e2001faea6f691d9cc849113a8036e9311fba41c57e46bd"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal/stdout.txt",
+      "sha256": "61460c8e6ef2362b7a7809b9561fb1856c15c07deb4f271583bdf68a197d40c6"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/native/2020/states/south_carolina/audit-certificate.json",
+      "sha256": "ac8553f7186fe294861099eaca4e4192facc8f67e3e85c73236b6db6046e48de"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/native/2020/states/south_carolina/context.rctx",
+      "sha256": "601df0f041cc95d22d94fc867fea830ffe71fd14ecbc4a6a1ec9dd08a9a7f00d"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/native/2020/states/south_carolina/data/final_assignments.json",
+      "sha256": "2855f1bfbeb8d3ad3a7425f6d2f51ca55444a9e7ead9dd916fc97236685a3dac"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/native/2020/states/south_carolina/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/native/2020/states/south_carolina/intermediate/depth_01/assignments.json",
+      "sha256": "7dcce04330cc6c822c1f59ab3007d00509edc1ba30c916bb9b79ad17184901d8"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/native/2020/states/south_carolina/manifest.json",
+      "sha256": "d11fb90ff09b478f8555c39e3a84c79e71def741a1a0731c70cbee2e13ba61ba"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/native/2020/states/south_carolina/plan.rplan",
+      "sha256": "e1e00deb8fdbfe3129e0b24b76b3e2064c170827d3c38b14be2493c68dc01482"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/run.json",
+      "sha256": "0419d377e25286782eba29a874be5069ab0753b7deeaef080548fdb6ed5ac36f"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "78b594556fe802765c75c4f755367d00537a6aa094860b8399e76d9c27341a1c"
+    },
+    {
+      "path": "states/sc/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "b3f2f4810caec74ea276f74a5ff9cee556d3c74104b55d06a7373ce09d84d632"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/audit-certificate.json",
+      "sha256": "85a4181192beeca633387eb4e7526d0fdd9f35773f9738517d29cb146374386d"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/context.rctx",
+      "sha256": "601df0f041cc95d22d94fc867fea830ffe71fd14ecbc4a6a1ec9dd08a9a7f00d"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/data/final_assignments.json",
+      "sha256": "e66347073f55b8d5ac74520dd5af92d502c2635b1a8f98fe2ee86d0c79807bb5"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/intermediate/depth_01/assignments.json",
+      "sha256": "f2c5d20c0fed2803872420c6571fb007158ee0878c316c72dd25cf8b0d4abd3b"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/intermediate/depth_02/assignments.json",
+      "sha256": "2589ff651726c0352afa3949418f62733adc8e17fc9900a3ec7e2a54b7bca662"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/intermediate/depth_03/assignments.json",
+      "sha256": "05d840635bd71d104e7e0236e535604031099a913b1d26fb3de4c20b413efba8"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/manifest.json",
+      "sha256": "fd0472665c4f25c1cc33ec8c9ff160074178a7a5c309c0366d1bec27f6a9186f"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/native/2020/states/south_carolina/plan.rplan",
+      "sha256": "3689411b8e6f96b370b7163fc7bf536988a29b3e5e50068e0f28559c2b518f5b"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/run.json",
+      "sha256": "a0e715c141599986ed572e1cd4bca7d886d70033140924787ec607bfec91bfab"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/stderr.txt",
+      "sha256": "121168f9bcf27c56913cdee1ab4730c12e4428c4337c0f3fa7ba55b32f7f2729"
+    },
+    {
+      "path": "states/sc/structures/standard-bisect/stdout.txt",
+      "sha256": "539b0df678cc55a200fa47699bb14a0af0459ff9304318e8e6790b73ced3868a"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "aa47c3cb1e6c5033cfc026e9999005ccd4c098eb75548213b9761e829b362442"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "96bf1d1e90fe2e83ec5cc2ea0f6fcd65217852a16c4321bc329a04dbed2dd278"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/native/2020/states/wisconsin/manifest.json",
+      "sha256": "615b69e0f7e900e51e46fad9d58e167bff157ac424c2af435ef0ea67bac7bc0f"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "acef4b4377f4e622fd5a6d7cdc6e77f3eb34b1626a955441ceb9191954c18fa9"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/run.json",
+      "sha256": "e6e45864a5645b6555b7754a0b21734d909d725ac01d942db7fb91a5222faadc"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/stderr.txt",
+      "sha256": "99aa3d0d9ee2a8f4c603c3dd103d24e2f7af146a248051d564294489f0e5a7d7"
+    },
+    {
+      "path": "states/wi/structures/prime-factor/stdout.txt",
+      "sha256": "b6ce842eb6b8bcd2221a3b0ec4072455264d466a423d18443ce2cdee2dcb5615"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "b6133fad138f5105dc4ccb149bf3ce9376146eb34bfe19d23193ccb47a12a3a7"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "b564d8440dad728f9846e5daa37f6b6a4ecff776dc0284ce5d04c1fe1e3ff9e0"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/native/2020/states/wisconsin/intermediate/depth_01/assignments.json",
+      "sha256": "b394c50ada360134400311091462111f2d3b0a7f43c72dd734d0b783bc5a7092"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/native/2020/states/wisconsin/manifest.json",
+      "sha256": "5e23d657e44d3f6077dab9e1f7820e152e67621908f02378da36e487b8b1c1cc"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "9ed6ca4aec8b5ae9040790151f265547b314c62fb597651e2040c52f7f6d3ae3"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/run.json",
+      "sha256": "705c0eb100afa87e561c11bf5eed7cdf4be2dc2e2a6f61084acb940c9990484a"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/stderr.txt",
+      "sha256": "cb3610923dcc7f9765cc4d82c06c704a9752f013609fd4d190138bcf546ed85b"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal/stdout.txt",
+      "sha256": "670a5a5a0eba7e3cba1ea30acc463aa0c0d51d8e78d197a9eba425acf8dec9da"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "0a7924ea53b8644dc3f7e407894ef6b67a684e6ff7b7e00ffb0d13e6d153c556"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "3bba8f6a5572ed1dc5a0a8082734e2523eb5d96fdff20bce4b3c7c9c1421d4d3"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/native/2020/states/wisconsin/intermediate/depth_01/assignments.json",
+      "sha256": "dbc81eeb2e7c229bc5a3ba4f6de893ebfdf6d7cd5a926791889914a7f100ab1c"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/native/2020/states/wisconsin/manifest.json",
+      "sha256": "a66e438c8d107e63d0b63987a1b8d2957cf2968ea4df24c438de2428e4805275"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "4e7dbee0bb427b5bc6a3674c47f01b81d430d3da724bc986139b378b1ac9fa94"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/run.json",
+      "sha256": "a1ddf3ca6d6c531059c7b1c07002424ba65e12167570efab69c78d4ee3b9d211"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/stderr.txt",
+      "sha256": "3303c703075585d0db9614752e108e42d8d9cd92da2ba0e06c12b11ae30e3762"
+    },
+    {
+      "path": "states/wi/structures/ratio-optimal-area/stdout.txt",
+      "sha256": "e7b7b66b89b5df1892d2506677f768c8ae44368a1bae178fce4870d90b3f9885"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/audit-certificate.json",
+      "sha256": "e0bbbb179eb8cb42fd8d44632a3326ee02aef2d0e5f8518cc033d8a86b5815f1"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/context.rctx",
+      "sha256": "1a04f41b9c14ab76bc198f6d7e7924df31921b3780d598ddd8aa92a307a6bb04"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/data/final_assignments.json",
+      "sha256": "7cd5046382ae185ac7bab6361706345ffa8439bb6847c1f8036fac01941be7e5"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/data/provenance.json",
+      "sha256": "8d54003dcd00a8a040e33e12a9b8807d9518986adbf2e12707709bcc4b779575"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/intermediate/depth_01/assignments.json",
+      "sha256": "21b10fbc62d44947f92cb6e2a6104d84318399dee4a380b783593d18b753f03c"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/intermediate/depth_02/assignments.json",
+      "sha256": "8764db1d30b011100a1d82ae5c9993860c72e3fd04cc09ee0d09fc63fd83c52d"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/intermediate/depth_03/assignments.json",
+      "sha256": "21c37cab67f7dcc8453bdfd7cd0b1a7681ddab163f5cf2860c28f88d612781f7"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/manifest.json",
+      "sha256": "d97663ec74bf2902ca01a0779a35aaf6523626b6154901c5e367f88692b0780e"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/native/2020/states/wisconsin/plan.rplan",
+      "sha256": "6f3de0cdf81f5a7c02b98c5fdd6db6a8f5f6845a81ed4cfd3c1c083b8c73be8d"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/run.json",
+      "sha256": "54989265da137add4cdd7b61efe80771bb32f95391908fbe90129f4647680eef"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/stderr.txt",
+      "sha256": "e7a0ab5145bfc4b37aabe5ee682a953e405e13b1b33ded112ba63356089294b2"
+    },
+    {
+      "path": "states/wi/structures/standard-bisect/stdout.txt",
+      "sha256": "692e260cc9b17781d07e82e433ead39555929674a906c93dc599a7211f696edb"
+    }
+  ],
+  "outputs": {
+    "analysis.json": "38aa2805b4bac4eb0f988c7db9c4cf2924691d9515b2fa0a68ef9264b7e40305",
+    "state-summary.csv": "8e287ed0ca69a131e7e360d867976c57a11676e1b3c83b7f0d2bd13b420f1328",
+    "cell-summary.csv": "57b05e32ec1b9b46ec21745032d348280223ddde37fcbc075aaf458da7db7716",
+    "pairwise-overlap.csv": "a09d1f28cf91e9164979ec9617e6b26e631f0687bbd73c1e2b91a3bb100d5190",
+    "README.md": "5fe0607fec1d7fb0fd5b7bec62a3f0d0b6956e01c33bf097010ce92b53d6f67f",
+    "states/ri/analysis.json": "d883ba8d638c629138063ee5d33fa2eb22119fd1cbaef7c4910922b4eb82e1cd",
+    "states/ri/structures/standard-bisect/canonical_assignments.json": "fa87db3370a789b0ebc5fe5ef892f1f0f99b7560efde54c54532d037be853132",
+    "states/ri/structures/ratio-optimal/canonical_assignments.json": "fa87db3370a789b0ebc5fe5ef892f1f0f99b7560efde54c54532d037be853132",
+    "states/ri/structures/ratio-optimal-area/canonical_assignments.json": "fa87db3370a789b0ebc5fe5ef892f1f0f99b7560efde54c54532d037be853132",
+    "states/ri/structures/prime-factor/canonical_assignments.json": "7a8fd400731ce0777893274cadc016e5e0a75243e53e22ee29b96bd7f40d4620",
+    "states/ne/analysis.json": "da908ff226ee9903d210c37f3f7bff0572ce1cc336571e45121f911f2bb16fa4",
+    "states/ne/structures/standard-bisect/canonical_assignments.json": "0d7ce0e6591bc4d83aec7374f268583f6c81a9f2e056de71b346e17c79e9e54b",
+    "states/ne/structures/ratio-optimal/canonical_assignments.json": "0d7ce0e6591bc4d83aec7374f268583f6c81a9f2e056de71b346e17c79e9e54b",
+    "states/ne/structures/ratio-optimal-area/canonical_assignments.json": "20b758a5ca6f277a4570a18979eabc6b6d713fd3804318d27dba17c33376c4f6",
+    "states/ne/structures/prime-factor/canonical_assignments.json": "d829e3b29185a88bb829ece618ab9913573ca6b10139f37155ee2b32fe9b27fa",
+    "states/ct/analysis.json": "6e1287036cc51da99aeb872da66384578846e614af3e04519db5463c20f63277",
+    "states/ct/structures/standard-bisect/canonical_assignments.json": "7387a23998c760177c419d9fb32c294dcc4c5045eb113bdb12236bc118793f0e",
+    "states/ct/structures/ratio-optimal/canonical_assignments.json": "59eca329905cb4199655865eaf7f1e4daa9656172312f8d9b4721fcbaf77f16d",
+    "states/ct/structures/ratio-optimal-area/canonical_assignments.json": "672a397fc2ef9e5b9e757be9943a365fab08cbcb9e1175b567a2863fe03101fe",
+    "states/ct/structures/prime-factor/canonical_assignments.json": "fe265a1c3a28418b5d2d9432e7ee2cd431cc95dea981f1f311de0846b9cdf299",
+    "states/ky/analysis.json": "dd5c466998e5d63d9bf7179b8fa8e4756befa96621e90c2b59287aeefb283b7c",
+    "states/ky/structures/standard-bisect/canonical_assignments.json": "22601e81c2a3c1d32d65bd118555e3b401f6be5d7710e89011a978258d925349",
+    "states/ky/structures/ratio-optimal/canonical_assignments.json": "96d6ae689ec5b0f25b11c770ba49e07a6f6290568baf3dbeb3d1e3914714791c",
+    "states/ky/structures/ratio-optimal-area/canonical_assignments.json": "9ff3568cd41d31c0b139c2266e276873c697063081f95d8a579deea166d92546",
+    "states/ky/structures/prime-factor/canonical_assignments.json": "7b10881f47e96271bbea77c4a4eef93f416a2651318d2537b59e9c1fa455c88a",
+    "states/sc/analysis.json": "1c0fc6f008119c9c0744ae5a20800ed18661f80210bdd2c5af93e8ee4531d1f5",
+    "states/sc/structures/standard-bisect/canonical_assignments.json": "4f0524844fb78654c90abd986e347cedaba80da129fc9658df6e071c9b297eff",
+    "states/sc/structures/ratio-optimal/canonical_assignments.json": "4f0524844fb78654c90abd986e347cedaba80da129fc9658df6e071c9b297eff",
+    "states/sc/structures/ratio-optimal-area/canonical_assignments.json": "00597869dc3409e7f7eb7558de79af1199a202fbe78dffb60767c8006b83e795",
+    "states/sc/structures/prime-factor/canonical_assignments.json": "d6350ba970aee7a420ac219a326ccd17d0c0196524a393286b68fcc3e84ca7f1",
+    "states/wi/analysis.json": "7be1bc06c6349eee7b1cc6763d54d75707b458889fa09248eb86e3d7fd113e6e",
+    "states/wi/structures/standard-bisect/canonical_assignments.json": "f65b89540de3c4821e81482dfab5d9172331f37d3c229a5102152a7c9afc89bb",
+    "states/wi/structures/ratio-optimal/canonical_assignments.json": "5cb7408215b1fd718e1a1bce77caa06fcfd570582a1ae53477a323a48fe73219",
+    "states/wi/structures/ratio-optimal-area/canonical_assignments.json": "7f7b8c256944391bd70d15ae5f570453163ed7fa426e2eeb87599b42395b8119",
+    "states/wi/structures/prime-factor/canonical_assignments.json": "f90c1681a0c2d5853df5457a3ed2bf2ec80fece833eac169e126bdfec4024206",
+    "states/az/analysis.json": "5d06046cc47c7298bf99c2dc5712cc19904557776fe9297fe85796d06c5f1c2e",
+    "states/az/structures/standard-bisect/canonical_assignments.json": "f9d3aef2985d21e5a583a93f010863efdc99a4cef861580645c09a52c929a505",
+    "states/az/structures/ratio-optimal/canonical_assignments.json": "6f0d99dc8355a2be364e3f6a9e29b8be4b069949587fc8bf61eb1379fc3cf214",
+    "states/az/structures/ratio-optimal-area/canonical_assignments.json": "ee13fe98255cc6ed987784ab9da397eb98ba28c39ed4af301d3b96bf2fccde18",
+    "states/az/structures/prime-factor/canonical_assignments.json": "d4186e3fe06cd30928abea352b4c1495c7224d537988f85cdfc80c0c31f6ef6a",
+    "states/ca/analysis.json": "78cea2ff090a836d3fe9d1f7fe7c0feed3da08255a132e8075b272bd8874707a",
+    "states/ca/structures/ratio-optimal-area/canonical_assignments.json": "afb64f6c6b954cf328dffc68341c57e246f275ceb3bc9ef048635c4811ce0368",
+    "states/ca/structures/prime-factor/canonical_assignments.json": "0b1469b2432c899e6f7550ff82d30b3687b032045a735517b8cda30744f5988e"
+  },
+  "reproduction": {
+    "command": [
+      "C:\\Python314\\python.exe",
+      "scripts/research/run_neutral_algorithm_family_bakeoff_national.py",
+      "--phase",
+      "pilot",
+      "--output-dir",
+      "<TEMP_OUTPUT_DIR>",
+      "--binary",
+      "target/release/bisect.exe",
+      "--force"
+    ],
+    "semantic_native_comparison": "Timestamp-bearing native artifacts are hash-bound in the published package; regeneration compares deterministic derived outputs."
+  }
+}

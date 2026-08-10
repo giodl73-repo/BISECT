@@ -1,0 +1,205 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:5f27eed71fac1ff84787d5dcfeaf47ab99aeeb5cf953ac099537d09b53922117",
+  "generated_at_utc": "2026-08-09T20:43:49Z",
+  "content_hash": "sha256:5f27eed71fac1ff84787d5dcfeaf47ab99aeeb5cf953ac099537d09b53922117",
+  "plan_hash": "sha256:7584c8f5b63d7059c9a31bcf584b500238ec4dac89f7a6e0d7425b880ea26f8f",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:5887139b51f048237cbfa0d628c9d97f20075b259ed05b5c6492a5d0aabc305a",
+  "legal_profile_hash": "sha256:1d4f05e8116e5b522c7deaf1efa4e44c115d01bf563483fe167164630664f398",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "WA",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:60df6e6a3d572bf39483af2417ae9165c5fc1115bdba54a5717dc8cc4e6b5dd7",
+    "geometry": "sha256:d1c7ca90d523d17efa7c49678eb2eef5742f3795ece8917a8d153f17e9c6c5de"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "11 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53003",
+          "district_ids": [
+            7,
+            8
+          ],
+          "unit_count": 6
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53007",
+          "district_ids": [
+            8,
+            9
+          ],
+          "unit_count": 23
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53021",
+          "district_ids": [
+            7,
+            8
+          ],
+          "unit_count": 22
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53025",
+          "district_ids": [
+            7,
+            8
+          ],
+          "unit_count": 23
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53033",
+          "district_ids": [
+            0,
+            1,
+            2,
+            3,
+            6,
+            9
+          ],
+          "unit_count": 495
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53035",
+          "district_ids": [
+            3,
+            5,
+            6
+          ],
+          "unit_count": 60
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53045",
+          "district_ids": [
+            3,
+            5,
+            6
+          ],
+          "unit_count": 19
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53047",
+          "district_ids": [
+            7,
+            9
+          ],
+          "unit_count": 13
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53053",
+          "district_ids": [
+            2,
+            3,
+            4,
+            6
+          ],
+          "unit_count": 193
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53061",
+          "district_ids": [
+            1,
+            5,
+            9
+          ],
+          "unit_count": 175
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "53067",
+          "district_ids": [
+            4,
+            6
+          ],
+          "unit_count": 62
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1784 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-WA-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1784
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

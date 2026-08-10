@@ -1,0 +1,20 @@
+STATUS:1:CA: loading adjacency
+STATUS:1:CA: GeoSection 26 ratios ? 1 seeds
+STATUS:1:CA: natural ratio 1:51 at 48km
+STATUS:1:CA: balance retry 1/50 (seed Some(1))
+STATUS:1:CA: GeoSection 26 ratios ? 1 seeds
+STATUS:1:CA: natural ratio 1:51 at 48km
+STATUS:1:CA: balance retry 2/50 (seed Some(2))
+STATUS:1:CA: GeoSection 26 ratios ? 1 seeds
+STATUS:1:CA: natural ratio 1:51 at 48km
+STATUS:1:CA: balance retry 3/50 (seed Some(3))
+STATUS:1:CA: GeoSection 26 ratios ? 1 seeds
+STATUS:1:CA: natural ratio 1:51 at 48km
+STATUS:1:CA: balance retry 4/50 (seed Some(4))
+STATUS:1:CA: GeoSection 26 ratios ? 1 seeds
+STATUS:1:CA: natural ratio 1:51 at 48km
+STATUS:1:CA: balance retry 5/50 (seed Some(5))
+STATUS:1:CA: GeoSection 26 ratios ? 1 seeds
+STATUS:1:CA: natural ratio 1:51 at 48km
+STATUS:1:CA: balance retry 6/50 (seed Some(6))
+STATUS:1:CA: GeoSection 26 ratios ? 1 seeds

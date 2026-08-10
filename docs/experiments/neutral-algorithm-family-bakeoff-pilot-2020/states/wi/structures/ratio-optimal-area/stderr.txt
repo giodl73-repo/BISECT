@@ -1,0 +1,32 @@
+NOTE: Running congressional (8D). WI also has house (99D) and senate (33D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 93.2% of population -> natural split ~7:1
+[areasection]   ratio 1:7 (12.5% pop): Lorenz area range [0.1%-67.9%] -> feasible
+[areasection]   ratio 2:6 (25.0% pop): Lorenz area range [0.5%-89.1%] -> feasible
+[areasection]   ratio 3:5 (37.5% pop): Lorenz area range [1.0%-95.9%] -> feasible
+[areasection]   ratio 4:4 (50.0% pop): Lorenz area range [2.0%-98.0%] -> feasible
+[areasection] 4 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:7 best=920km  normalised=920.4  area_left=42.9%
+[areasection]   ratio 2:6 best=1570km  normalised=1109.8  area_left=59.8%
+[areasection]   ratio 3:5 best=1992km  normalised=1149.9  area_left=69.5%
+[areasection]   ratio 4:4 best=2388km  normalised=1193.8  area_left=73.3%
+[areasection] natural ratio 1:7 at 920km (normalised=920.4)
+[areasection] winner: area=42.9% (target 50% ±10%, VIOLATED) pop=12.5% (target 12.5%)
+[geosection] trying 3 ratios x 1 seeds for k=7
+[geosection]   ratio 1:6 best=98km  normalised=98.1
+[geosection]   ratio 2:5 best=211km  normalised=149.3
+[geosection]   ratio 3:4 best=310km  normalised=178.7
+[geosection] natural ratio 1:6 at 98km (normalised=98.1)
+[geosection] trying 3 ratios x 1 seeds for k=6
+[geosection]   ratio 1:5 best=207km  normalised=206.7
+[geosection]   ratio 2:4 best=320km  normalised=226.1
+[geosection]   ratio 3:3 best=365km  normalised=210.5
+[geosection] natural ratio 1:5 at 207km (normalised=206.7)
+[geosection] trying 2 ratios x 1 seeds for k=5
+[geosection]   ratio 1:4 best=232km  normalised=231.7
+[geosection]   ratio 2:3 best=287km  normalised=202.7
+[geosection] natural ratio 2:3 at 287km (normalised=202.7)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=194km  normalised=194.5
+[geosection] natural ratio 1:2 at 194km (normalised=194.5)
+[partition-time] WI: k=8 n=1542 -> 22192.1ms
+[OK] WI in 22359ms

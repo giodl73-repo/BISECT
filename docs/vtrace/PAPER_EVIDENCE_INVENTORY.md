@@ -81,7 +81,10 @@ or missing-real-evidence language:
 | G.3 | active three-state cut-fraction package | Tract-graph cut-fraction positions are supported; Polsby--Popper, Reock, and polygon compactness percentiles remain unsupported. |
 | G.6 | endpoint/seed smoke package added; production CLI pending | Production CLI evidence before production short-burst claims. |
 | G.12 | seed-stream and diagnostic smoke package added; production CLI pending | Production CLI evidence before calibrated-chain production claims. |
-| A.0 | bounded synthesis; inherits source-track gaps | Recompute or remove any headline claim whose underlying track remains synthetic, preliminary, or package-incomplete. |
+| A.0 | governed NRS v0.3 Tier 1--2 bakeoff integrated; inherits remaining source-track gaps | Current assignment/subdivision/common-block geometry claims may cite the governed 2020 package; elections, demographics, ensembles, alternative comparators, and any synthetic or preliminary inherited claims remain gated. |
+| B.0 | exploratory four-State matrix; retained remediation histories; exactly regenerated Wisconsin, pilot, and 44-State common-input packages | The full matrix passed 44/44 States and 176/176 cells without seed retries and an independent execution regenerated the normalized evidence exactly. It supports bounded frozen-cohort implementation validity; it does not establish cross-configuration causality, counterfactual effects, ranking, or legal requirements. |
+| K.0 | three-State, four-algorithm, single-seed metric fixtures; separate national geometry contract | Do not pool K-series tract/algorithm values with the governed NRS/CD118 common-block package without a frozen transport study. |
+| U.21 | governed operational baselines and Tier 1--2 national comparison; exact proof frontier remains | Tier 1--2 descriptive claims may cite the governed package; State-scale weighted-boundary/canonical optimality and political comparison claims remain open. |
 | B.02 | candidate advocacy proposal | Canonical-spec alignment, full seed/structure evidence, and external constitutional review before legislative reliance. |
 | C.6 | preregistered protocol with synthetic illustrative outputs | Real registration, recruitment, de-identified data, analysis code, and ethics documentation before empirical public-opinion claims. |
 

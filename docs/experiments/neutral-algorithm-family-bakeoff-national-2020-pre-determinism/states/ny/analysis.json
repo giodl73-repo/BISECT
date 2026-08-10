@@ -1,0 +1,216 @@
+{
+  "state": "NY",
+  "state_slug": "new_york",
+  "expected_districts": 26,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "NY",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 5411,
+      "districts": 26,
+      "expected_districts": 26,
+      "edge_cut": 2512596.121691,
+      "canonical_assignment_sha256": "43fda77e1a5fe76f7dd1cb9ed9cf57b2d37c8daa5c4b4ff136f343880085e004",
+      "adjacency_sha256": "fc1ba468d04edd7d83865ff22fbe24ac4feb6c3cc281d5a89aa52eb5c2c3e8b2",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NY",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 5411,
+      "districts": 26,
+      "expected_districts": 26,
+      "edge_cut": 2622937.758699,
+      "canonical_assignment_sha256": "88c28a67adb7bf22f4418b3ab37e04d342b4c71735d71b6ff16d8d1813897e59",
+      "adjacency_sha256": "fc1ba468d04edd7d83865ff22fbe24ac4feb6c3cc281d5a89aa52eb5c2c3e8b2",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.043915389368
+    },
+    {
+      "state": "NY",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 5411,
+      "districts": 26,
+      "expected_districts": 26,
+      "edge_cut": 2578064.590249,
+      "canonical_assignment_sha256": "d832b49c1c778d5a8c7cbf3beec4b6a846c860bd44fcc90a2c95b54a6400ed7a",
+      "adjacency_sha256": "fc1ba468d04edd7d83865ff22fbe24ac4feb6c3cc281d5a89aa52eb5c2c3e8b2",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.026056105075
+    },
+    {
+      "state": "NY",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 5411,
+      "districts": 26,
+      "expected_districts": 26,
+      "edge_cut": 2866543.922812,
+      "canonical_assignment_sha256": "7be46c573f87ad2ab3a387c20764bfb6cce061bb4a3d2979a8ad02b60fb88b49",
+      "adjacency_sha256": "fc1ba468d04edd7d83865ff22fbe24ac4feb6c3cc281d5a89aa52eb5c2c3e8b2",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.140869357421
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "fc1ba468d04edd7d83865ff22fbe24ac4feb6c3cc281d5a89aa52eb5c2c3e8b2"
+      ],
+      "binary_sha256": [
+        "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "5411"
+      ],
+      "districts": [
+        "26"
+      ],
+      "expected_districts": [
+        "26"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "NY",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 3828,
+      "different_units": 1583,
+      "matched_unit_rate": 0.7074477915357605
+    },
+    {
+      "state": "NY",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 3684,
+      "different_units": 1727,
+      "matched_unit_rate": 0.6808353354278321
+    },
+    {
+      "state": "NY",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 3059,
+      "different_units": 2352,
+      "matched_unit_rate": 0.5653298835705045
+    },
+    {
+      "state": "NY",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 3539,
+      "different_units": 1872,
+      "matched_unit_rate": 0.6540380705969322
+    },
+    {
+      "state": "NY",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 3056,
+      "different_units": 2355,
+      "matched_unit_rate": 0.5647754574015894
+    },
+    {
+      "state": "NY",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 2992,
+      "different_units": 2419,
+      "matched_unit_rate": 0.552947699131399
+    }
+  ]
+}

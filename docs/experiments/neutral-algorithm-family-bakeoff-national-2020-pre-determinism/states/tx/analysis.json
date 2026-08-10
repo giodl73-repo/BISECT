@@ -1,0 +1,216 @@
+{
+  "state": "TX",
+  "state_slug": "texas",
+  "expected_districts": 38,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "TX",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 6896,
+      "districts": 38,
+      "expected_districts": 38,
+      "edge_cut": 10564135.283873,
+      "canonical_assignment_sha256": "df722c7cb9c682b03864a6f8bc300e809fc427aff7da851035c69aa1fdc1765c",
+      "adjacency_sha256": "0693c2622f8b4a2474008363bcc2d60a809f811c88e81a20f6387b4438970543",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "TX",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 6896,
+      "districts": 38,
+      "expected_districts": 38,
+      "edge_cut": 9148411.426997,
+      "canonical_assignment_sha256": "d80dbbdbed868c6726a01c9354111c0fe3ab2373d55864dbbb9dee0d3e8ec0ad",
+      "adjacency_sha256": "0693c2622f8b4a2474008363bcc2d60a809f811c88e81a20f6387b4438970543",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.865987719881
+    },
+    {
+      "state": "TX",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 6896,
+      "districts": 38,
+      "expected_districts": 38,
+      "edge_cut": 8876555.290575,
+      "canonical_assignment_sha256": "28562ad0d4354aeebff4b74c5a353953730827e4840074a12e8812dcfe804201",
+      "adjacency_sha256": "0693c2622f8b4a2474008363bcc2d60a809f811c88e81a20f6387b4438970543",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.840253844924
+    },
+    {
+      "state": "TX",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 6896,
+      "districts": 38,
+      "expected_districts": 38,
+      "edge_cut": 9519811.902476,
+      "canonical_assignment_sha256": "8dbe212f73b6c74691a68735b2ebb29fe8f27f05d51186eeb5ff12a2f391f168",
+      "adjacency_sha256": "0693c2622f8b4a2474008363bcc2d60a809f811c88e81a20f6387b4438970543",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.901144452117
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "0693c2622f8b4a2474008363bcc2d60a809f811c88e81a20f6387b4438970543"
+      ],
+      "binary_sha256": [
+        "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "6896"
+      ],
+      "districts": [
+        "38"
+      ],
+      "expected_districts": [
+        "38"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "TX",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 3842,
+      "different_units": 3054,
+      "matched_unit_rate": 0.5571345707656613
+    },
+    {
+      "state": "TX",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 3729,
+      "different_units": 3167,
+      "matched_unit_rate": 0.5407482598607889
+    },
+    {
+      "state": "TX",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 3727,
+      "different_units": 3169,
+      "matched_unit_rate": 0.5404582366589327
+    },
+    {
+      "state": "TX",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 3802,
+      "different_units": 3094,
+      "matched_unit_rate": 0.5513341067285383
+    },
+    {
+      "state": "TX",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 3504,
+      "different_units": 3392,
+      "matched_unit_rate": 0.5081206496519721
+    },
+    {
+      "state": "TX",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 3775,
+      "different_units": 3121,
+      "matched_unit_rate": 0.5474187935034803
+    }
+  ]
+}

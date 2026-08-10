@@ -1,0 +1,44 @@
+NOTE: Running congressional (14D). NC also has house (120D) and senate (50D). Use --chamber house or --chamber senate.
+[geosection] trying 7 ratios x 1 seeds for k=14
+[geosection]   ratio 1:13 best=114km  normalised=114.4
+[geosection]   ratio 2:12 best=252km  normalised=178.3
+[geosection]   ratio 3:11 best=273km  normalised=157.3
+[geosection]   ratio 4:10 best=235km  normalised=117.3
+[geosection]   ratio 5:9 best=324km  normalised=145.0
+[geosection]   ratio 6:8 best=363km  normalised=148.1
+[geosection]   ratio 7:7 best=442km  normalised=167.2
+[geosection] natural ratio 1:13 at 114km (normalised=114.4)
+[geosection] trying 6 ratios x 1 seeds for k=13
+[geosection]   ratio 1:12 best=211km  normalised=211.0
+[geosection]   ratio 2:11 best=347km  normalised=245.4
+[geosection]   ratio 3:10 best=205km  normalised=118.2
+[geosection]   ratio 4:9 best=215km  normalised=107.3
+[geosection]   ratio 5:8 best=364km  normalised=162.7
+[geosection]   ratio 6:7 best=358km  normalised=146.0
+[geosection] natural ratio 4:9 at 215km (normalised=107.3)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=180km  normalised=180.3
+[geosection]   ratio 2:2 best=206km  normalised=145.9
+[geosection] natural ratio 2:2 at 206km (normalised=145.9)
+[geosection] trying 4 ratios x 1 seeds for k=9
+[geosection]   ratio 1:8 best=195km  normalised=195.0
+[geosection]   ratio 2:7 best=331km  normalised=234.4
+[geosection]   ratio 3:6 best=380km  normalised=219.4
+[geosection]   ratio 4:5 best=466km  normalised=232.9
+[geosection] natural ratio 1:8 at 195km (normalised=195.0)
+[geosection] trying 4 ratios x 1 seeds for k=8
+[geosection]   ratio 1:7 best=210km  normalised=210.0
+[geosection]   ratio 2:6 best=293km  normalised=207.0
+[geosection]   ratio 3:5 best=346km  normalised=199.7
+[geosection]   ratio 4:4 best=360km  normalised=179.9
+[geosection] natural ratio 4:4 at 360km (normalised=179.9)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=192km  normalised=192.2
+[geosection]   ratio 2:2 best=231km  normalised=163.7
+[geosection] natural ratio 2:2 at 231km (normalised=163.7)
+[geosection] trying 2 ratios x 1 seeds for k=4
+[geosection]   ratio 1:3 best=223km  normalised=223.4
+[geosection]   ratio 2:2 best=287km  normalised=202.7
+[geosection] natural ratio 2:2 at 287km (normalised=202.7)
+[partition-time] NC: k=14 n=2672 -> 11061.9ms
+[OK] NC in 11304ms

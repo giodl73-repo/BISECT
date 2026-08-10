@@ -1,0 +1,216 @@
+{
+  "state": "NJ",
+  "state_slug": "new_jersey",
+  "expected_districts": 12,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "NJ",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2181,
+      "districts": 12,
+      "expected_districts": 12,
+      "edge_cut": 861616.34719,
+      "canonical_assignment_sha256": "d0622fabcf9e48cf2187a3acf03b48ea14641685dd9cd580e438d1fa29286b95",
+      "adjacency_sha256": "0da95c08035c0c8e93953c71cd7a667d191386df0b608bb39e26097122b96516",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NJ",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2181,
+      "districts": 12,
+      "expected_districts": 12,
+      "edge_cut": 869708.44177,
+      "canonical_assignment_sha256": "2e1449ab87efaddf57249aba2de4b906ba546216cf8ef0174b82676f5f1f53fd",
+      "adjacency_sha256": "0da95c08035c0c8e93953c71cd7a667d191386df0b608bb39e26097122b96516",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.009391760737
+    },
+    {
+      "state": "NJ",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2181,
+      "districts": 12,
+      "expected_districts": 12,
+      "edge_cut": 859935.63933,
+      "canonical_assignment_sha256": "908adbc4c915c9f3b2b005648ddf7c93cd4d083475262672ede8d27a6bc21158",
+      "adjacency_sha256": "0da95c08035c0c8e93953c71cd7a667d191386df0b608bb39e26097122b96516",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.998049354721
+    },
+    {
+      "state": "NJ",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 2181,
+      "districts": 12,
+      "expected_districts": 12,
+      "edge_cut": 913155.7832,
+      "canonical_assignment_sha256": "e3e1a81a57971a0943dda45ec3ba8fe87550a7d54f322e55e896b3dc4e5b706e",
+      "adjacency_sha256": "0da95c08035c0c8e93953c71cd7a667d191386df0b608bb39e26097122b96516",
+      "binary_sha256": "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.059817152005
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "0da95c08035c0c8e93953c71cd7a667d191386df0b608bb39e26097122b96516"
+      ],
+      "binary_sha256": [
+        "694636f0c0240c7d9d7d53b6eb30aaa29b8ff760cfc8a9d84d13e3c65c3e36d6"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "2181"
+      ],
+      "districts": [
+        "12"
+      ],
+      "expected_districts": [
+        "12"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "NJ",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1441,
+      "different_units": 740,
+      "matched_unit_rate": 0.6607060981201284
+    },
+    {
+      "state": "NJ",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 1648,
+      "different_units": 533,
+      "matched_unit_rate": 0.7556166895919303
+    },
+    {
+      "state": "NJ",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 1283,
+      "different_units": 898,
+      "matched_unit_rate": 0.5882622650160477
+    },
+    {
+      "state": "NJ",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 1706,
+      "different_units": 475,
+      "matched_unit_rate": 0.7822099954149473
+    },
+    {
+      "state": "NJ",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 1467,
+      "different_units": 714,
+      "matched_unit_rate": 0.672627235213205
+    },
+    {
+      "state": "NJ",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 1536,
+      "different_units": 645,
+      "matched_unit_rate": 0.7042640990371389
+    }
+  ]
+}

@@ -46,6 +46,11 @@ verified 2020 national baseline.
 | 14 - Fallback candidate census | COMPLETE | All eight activated stages preserved assignments/objectives; candidate ties at 2000 HI/root collapse to one physical partition, closing fallback seed expansion |
 | 15 - Tier 2 geometry bakeoff | COMPLETE | Rhode Island common-block geometry passed; compactness metric direction is mixed, and national expansion requires a separate sequential protocol |
 | 16 - National Tier 2 geometry | COMPLETE | Sequential execution and exact regeneration passed 50 States, 435 districts per plan, and 7,889,194 retained blocks |
+| 17 - National bakeoff paper integration | COMPLETE | Paper-facing matrix published; U.21/A.0/A.5 integrated; B.0/K.0 evidence boundaries corrected; five PDFs rebuilt |
+| 18 - Neutral algorithm-family proof slice | COMPLETE | Wisconsin four-structure package exactly regenerated; 2/4 plans passed native audits, so national expansion is blocked pending AreaSection and ApportionRegions remediation |
+| 19 - Structure validity remediation | COMPLETE | Hidden prime-factor tolerance and contiguity paths corrected; archived 2-pass/2-fail witness retained; post-remediation Wisconsin package passed 4/4 and regenerated exactly |
+| 20 - National algorithm-family pilot | COMPLETE | Frozen eight-State/32-cell matrix passed and regenerated exactly after retained failure/remediation history; 44-State phase remains compute-budget gated |
+| 21 - National algorithm-family full phase | COMPLETE | Frozen 44-State/176-cell matrix passed without seed retries and an independent 176-cell execution regenerated the normalized evidence exactly |
 
 ## Versioned amendment
 

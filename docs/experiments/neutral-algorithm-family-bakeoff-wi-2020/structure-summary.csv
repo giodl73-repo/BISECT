@@ -1,0 +1,5 @@
+structure,status,requested_seed,final_seed,seed_retried,partition_mode,audit_result,audit_population_pass,manifest_population_balance_valid,native_manifest_consistent,units,districts,edge_cut
+standard-bisect,pass,0,2,True,edge-weighted,pass,True,True,True,1542,8,1788455.67959
+ratio-optimal,pass,0,0,False,geosection,pass,True,True,True,1542,8,1891450.774877
+ratio-optimal-area,pass,0,0,False,areasection,pass,True,True,True,1542,8,2151309.53729
+prime-factor,pass,0,0,False,apportion-regions,pass,True,True,True,1542,8,2002747.787057

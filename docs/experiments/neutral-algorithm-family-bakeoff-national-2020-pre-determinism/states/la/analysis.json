@@ -1,0 +1,216 @@
+{
+  "state": "LA",
+  "state_slug": "louisiana",
+  "expected_districts": 6,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "LA",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1388,
+      "districts": 6,
+      "expected_districts": 6,
+      "edge_cut": 1510512.007266,
+      "canonical_assignment_sha256": "5f422d14b7734ef8cfb43d0facd991fb938f651df81e1107f026413ef81b3e52",
+      "adjacency_sha256": "31fe727ac41e6687fc1539e970303251ba24e90ce079d804638dc95d965df8dc",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "LA",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1388,
+      "districts": 6,
+      "expected_districts": 6,
+      "edge_cut": 1510512.007266,
+      "canonical_assignment_sha256": "5f422d14b7734ef8cfb43d0facd991fb938f651df81e1107f026413ef81b3e52",
+      "adjacency_sha256": "31fe727ac41e6687fc1539e970303251ba24e90ce079d804638dc95d965df8dc",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "LA",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1388,
+      "districts": 6,
+      "expected_districts": 6,
+      "edge_cut": 1975264.200626,
+      "canonical_assignment_sha256": "1c02d519da36595e009effadae6dcf3ffc5689986d61c7bf93f3fc6d5152366a",
+      "adjacency_sha256": "31fe727ac41e6687fc1539e970303251ba24e90ce079d804638dc95d965df8dc",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.307678582576
+    },
+    {
+      "state": "LA",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 1388,
+      "districts": 6,
+      "expected_districts": 6,
+      "edge_cut": 1932208.77532,
+      "canonical_assignment_sha256": "8db457ea960f10c1ee7fbedc78724909fc97fcfe392129a6be64f7ac6337d881",
+      "adjacency_sha256": "31fe727ac41e6687fc1539e970303251ba24e90ce079d804638dc95d965df8dc",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.279174720906
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "31fe727ac41e6687fc1539e970303251ba24e90ce079d804638dc95d965df8dc"
+      ],
+      "binary_sha256": [
+        "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "1388"
+      ],
+      "districts": [
+        "6"
+      ],
+      "expected_districts": [
+        "6"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "LA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 1388,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "LA",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 896,
+      "different_units": 492,
+      "matched_unit_rate": 0.6455331412103746
+    },
+    {
+      "state": "LA",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 912,
+      "different_units": 476,
+      "matched_unit_rate": 0.6570605187319885
+    },
+    {
+      "state": "LA",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 896,
+      "different_units": 492,
+      "matched_unit_rate": 0.6455331412103746
+    },
+    {
+      "state": "LA",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 912,
+      "different_units": 476,
+      "matched_unit_rate": 0.6570605187319885
+    },
+    {
+      "state": "LA",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 949,
+      "different_units": 439,
+      "matched_unit_rate": 0.6837175792507204
+    }
+  ]
+}

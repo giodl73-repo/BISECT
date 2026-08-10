@@ -1,0 +1,3 @@
+NOTE: Running congressional (14D). GA also has house (180D) and senate (56D). Use --chamber house or --chamber senate.
+[partition-time] GA: k=14 n=2796 -> 1023.1ms
+[OK] GA in 1689ms

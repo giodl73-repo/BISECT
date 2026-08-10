@@ -1,0 +1,541 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:3d78ca1005550c1b38087194e596a8c18fb0956b15ace49cde970eaba3fe719e",
+  "generated_at_utc": "2026-08-09T14:59:38Z",
+  "content_hash": "sha256:3d78ca1005550c1b38087194e596a8c18fb0956b15ace49cde970eaba3fe719e",
+  "plan_hash": "sha256:3a44971da5506572425008d1512f35e2f8c90ca9c91133a99a9ed23083c341b8",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:040bc5ae3c2aa72abc17aea4c2700c6aaac810beb03cb6aa5e074b2e7f23c0cf",
+  "legal_profile_hash": "sha256:68a88280b0baa933c89964b7da68e4d78c39bd13d8e1bc2d9f5bc29cfb950926",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "WI",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:e8a3106802e601bc0859e2f4effc856126e39ee3a47ae8239b036951e09bdf7f",
+    "geometry": "sha256:8eb4b772d94e4d2c3940946ebe27cea0b60d6e6fff10fb9ac766cdfa7503e633"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "fail",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "fail",
+      "severity": "error",
+      "summary": "one or more districts are disconnected",
+      "witnesses": [
+        {
+          "type": "contiguity",
+          "district_id": 1,
+          "component_count": 2,
+          "component_unit_ids": [
+            [
+              "55073002200",
+              "55073001900",
+              "55073002000",
+              "55019950500",
+              "55019950100",
+              "55073002301",
+              "55073002101",
+              "55119960600",
+              "55073001800",
+              "55073001202",
+              "55073001300",
+              "55073002302",
+              "55073001402",
+              "55073002102",
+              "55019950400",
+              "55019950600",
+              "55019950200",
+              "55069960400",
+              "55119960100",
+              "55141010700",
+              "55119960500",
+              "55119960400",
+              "55119960300",
+              "55073001204",
+              "55073000601",
+              "55073000602",
+              "55073000800",
+              "55073000900",
+              "55073001000",
+              "55073001106",
+              "55073001500",
+              "55069960600",
+              "55073000500",
+              "55073001401",
+              "55141010600",
+              "55141010200",
+              "55019950800",
+              "55019950300",
+              "55019950700",
+              "55099970600",
+              "55069960700",
+              "55069960800",
+              "55069960500",
+              "55069960300",
+              "55119960200",
+              "55141010400",
+              "55141010500",
+              "55073001203",
+              "55073000100",
+              "55073000700",
+              "55073001105",
+              "55073001103",
+              "55073001104",
+              "55073000400",
+              "55073000300",
+              "55069961000",
+              "55141010300",
+              "55099970100",
+              "55099970700",
+              "55099970500",
+              "55099970400",
+              "55085971001",
+              "55069960900",
+              "55069960100",
+              "55069960200",
+              "55085971100",
+              "55073000200",
+              "55051180300",
+              "55099970200",
+              "55125940000",
+              "55085971002",
+              "55085970900",
+              "55085970500",
+              "55085970601",
+              "55085970400",
+              "55085970103",
+              "55125950601",
+              "55125950700",
+              "55085970800",
+              "55085971300",
+              "55085970604",
+              "55085971400",
+              "55085971500",
+              "55085970603",
+              "55085970104",
+              "55125950602",
+              "55125950501",
+              "55125950502",
+              "55041950100",
+              "55085970101",
+              "55125950201",
+              "55125950202",
+              "55037190101",
+              "55037190200",
+              "55037190102"
+            ],
+            [
+              "55079186100",
+              "55079185800",
+              "55079186200",
+              "55079012200",
+              "55079013700",
+              "55079014800",
+              "55079185900",
+              "55079185400",
+              "55079009700",
+              "55079009900",
+              "55079014100",
+              "55079014600",
+              "55079014700",
+              "55079012300",
+              "55079009600",
+              "55079013600",
+              "55079013500",
+              "55079014900",
+              "55079186400",
+              "55079186000",
+              "55079185500",
+              "55079008600",
+              "55079008700",
+              "55079009800",
+              "55079008800",
+              "55079008900",
+              "55079186300",
+              "55079011400",
+              "55079012400",
+              "55079012500",
+              "55079013300",
+              "55079009500",
+              "55079009000",
+              "55079009100",
+              "55079013400",
+              "55079186800",
+              "55079185600",
+              "55079008400",
+              "55079008500",
+              "55079006600",
+              "55079006400",
+              "55079006300",
+              "55079006200",
+              "55079187400",
+              "55079014400",
+              "55079010700",
+              "55079011300",
+              "55079010600",
+              "55079091200",
+              "55079009400",
+              "55079091400",
+              "55079012600",
+              "55079013000",
+              "55079009200",
+              "55079006100",
+              "55079100100",
+              "55079110100",
+              "55079015700",
+              "55079016000",
+              "55079186500",
+              "55079015900",
+              "55079015800",
+              "55079185700",
+              "55079006700",
+              "55079006800",
+              "55079006500",
+              "55079004800",
+              "55079980000",
+              "55079018000",
+              "55079014300",
+              "55079011200",
+              "55079007900",
+              "55079008000",
+              "55079011100",
+              "55079008100",
+              "55079091100",
+              "55079091300",
+              "55079009300",
+              "55079012700",
+              "55079012900",
+              "55079100200",
+              "55079006000",
+              "55079004900",
+              "55079017100",
+              "55079017200",
+              "55079019000",
+              "55079016100",
+              "55079016400",
+              "55079016500",
+              "55079016200",
+              "55079016300",
+              "55079007000",
+              "55079006900",
+              "55079186900",
+              "55079007400",
+              "55079007500",
+              "55079007600",
+              "55079018100",
+              "55079018300",
+              "55079186600",
+              "55079017900",
+              "55079016600",
+              "55079011000",
+              "55079010800",
+              "55079007700",
+              "55079007100",
+              "55079007200",
+              "55079007800",
+              "55079090900",
+              "55079005900",
+              "55079091000",
+              "55079100300",
+              "55079100400",
+              "55079101500",
+              "55079101600",
+              "55079005000",
+              "55079017000",
+              "55079017300",
+              "55079018900",
+              "55079019200",
+              "55079019100",
+              "55079020000",
+              "55079016700",
+              "55079016800",
+              "55079016900",
+              "55079187000",
+              "55079007300",
+              "55079018400",
+              "55079018500",
+              "55079018600",
+              "55079017600",
+              "55079101700",
+              "55079019300",
+              "55079017400",
+              "55079018800",
+              "55079020100",
+              "55079019600",
+              "55079019800",
+              "55079101800",
+              "55079120300",
+              "55079120400",
+              "55079020200",
+              "55079021300",
+              "55079017500",
+              "55079020600",
+              "55079020300",
+              "55079020500",
+              "55079021100",
+              "55079018700",
+              "55079020400",
+              "55079019700",
+              "55079120202",
+              "55079019900",
+              "55079021400",
+              "55079021200"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "19 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55021",
+          "district_ids": [
+            6,
+            7
+          ],
+          "unit_count": 13
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55025",
+          "district_ids": [
+            6,
+            7
+          ],
+          "unit_count": 125
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55041",
+          "district_ids": [
+            1,
+            5
+          ],
+          "unit_count": 4
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55051",
+          "district_ids": [
+            0,
+            1
+          ],
+          "unit_count": 4
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55059",
+          "district_ids": [
+            2,
+            3
+          ],
+          "unit_count": 43
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55063",
+          "district_ids": [
+            0,
+            7
+          ],
+          "unit_count": 28
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55071",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 20
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55073",
+          "district_ids": [
+            1,
+            5
+          ],
+          "unit_count": 32
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55079",
+          "district_ids": [
+            1,
+            2,
+            3
+          ],
+          "unit_count": 302
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55081",
+          "district_ids": [
+            0,
+            7
+          ],
+          "unit_count": 9
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55087",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 47
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55089",
+          "district_ids": [
+            3,
+            4
+          ],
+          "unit_count": 22
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55097",
+          "district_ids": [
+            5,
+            7
+          ],
+          "unit_count": 15
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55101",
+          "district_ids": [
+            2,
+            3
+          ],
+          "unit_count": 47
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55105",
+          "district_ids": [
+            2,
+            6,
+            7
+          ],
+          "unit_count": 41
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55117",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 29
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55127",
+          "district_ids": [
+            2,
+            6
+          ],
+          "unit_count": 29
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55133",
+          "district_ids": [
+            2,
+            3,
+            6
+          ],
+          "unit_count": 98
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "55141",
+          "district_ids": [
+            1,
+            7
+          ],
+          "unit_count": 17
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1542 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-WI-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1542
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

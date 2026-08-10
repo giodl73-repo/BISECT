@@ -1,0 +1,12 @@
+STATUS:1:CA: loading adjacency
+STATUS:1:CA: recursive bisection into 52 districts
+STATUS:1:CA: balance retry 1/50 (seed Some(1))
+STATUS:1:CA: recursive bisection into 52 districts
+STATUS:1:CA: balance retry 2/50 (seed Some(2))
+STATUS:1:CA: recursive bisection into 52 districts
+STATUS:1:CA: balance retry 3/50 (seed Some(3))
+STATUS:1:CA: recursive bisection into 52 districts
+STATUS:1:CA: balance retry 4/50 (seed Some(4))
+STATUS:1:CA: recursive bisection into 52 districts
+STATUS:1:CA: balance retry 5/50 (seed Some(5))
+STATUS:1:CA: recursive bisection into 52 districts

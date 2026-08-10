@@ -1,0 +1,198 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:64583236383fa96b4891691f9e6d5463e8b0e14f44c9480a8952b74d3b403610",
+  "generated_at_utc": "2026-08-09T15:24:58Z",
+  "content_hash": "sha256:64583236383fa96b4891691f9e6d5463e8b0e14f44c9480a8952b74d3b403610",
+  "plan_hash": "sha256:544956a048b837e42ad1405d312b3d2fbadc4818e0b0aca8b134bd8cd657b42c",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:a96520a96c25cd8f25600cbe8eedf269cff7180d810ef6185fe172eefd7cb68e",
+  "legal_profile_hash": "sha256:2cbbb1e6b363f007322c0f5dc69adb0149cd323207a4bcee277705e432778162",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "KY",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:82ed1a895879a1989d5c2686c549908e715da33a7efce71403221024d1984c12",
+    "geometry": "sha256:4dc5cbb3c87554bd8f3eb978fd2b593cd05f84c281cad1288134e6440fe344db"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "11 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21021",
+          "district_ids": [
+            2,
+            5
+          ],
+          "unit_count": 7
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21029",
+          "district_ids": [
+            3,
+            5
+          ],
+          "unit_count": 22
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21067",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 82
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21085",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 9
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21111",
+          "district_ids": [
+            0,
+            3,
+            5
+          ],
+          "unit_count": 216
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21151",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 31
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21185",
+          "district_ids": [
+            0,
+            3
+          ],
+          "unit_count": 15
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21199",
+          "district_ids": [
+            2,
+            5
+          ],
+          "unit_count": 21
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21209",
+          "district_ids": [
+            0,
+            1,
+            2
+          ],
+          "unit_count": 19
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21227",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 27
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21239",
+          "district_ids": [
+            0,
+            2
+          ],
+          "unit_count": 8
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1306 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-KY-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1306
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

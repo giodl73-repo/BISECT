@@ -1,0 +1,5 @@
+STATUS:1:MO: loading adjacency
+STATUS:1:MO: apportion-regions partition into 8 districts (F=[2, 2, 2], depth=3)
+STATUS:1:MO: balance 0.14% (cache hits=0)
+STATUS:1:MO: balance OK, writing outputs
+STATUS:1:MO: complete (8D, 0ms)

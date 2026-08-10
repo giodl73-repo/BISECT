@@ -1,0 +1,216 @@
+{
+  "state": "RI",
+  "state_slug": "rhode_island",
+  "expected_districts": 2,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "RI",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 250,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 65349.256503,
+      "canonical_assignment_sha256": "e5ebf6ff6fddf1ef063771acc329529a78eab910a35d5065fb3feb0fab29f629",
+      "adjacency_sha256": "cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "RI",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 250,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 65349.256503,
+      "canonical_assignment_sha256": "e5ebf6ff6fddf1ef063771acc329529a78eab910a35d5065fb3feb0fab29f629",
+      "adjacency_sha256": "cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "RI",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 250,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 65349.256503,
+      "canonical_assignment_sha256": "e5ebf6ff6fddf1ef063771acc329529a78eab910a35d5065fb3feb0fab29f629",
+      "adjacency_sha256": "cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "RI",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 250,
+      "districts": 2,
+      "expected_districts": 2,
+      "edge_cut": 63417.389565,
+      "canonical_assignment_sha256": "7a8fd400731ce0777893274cadc016e5e0a75243e53e22ee29b96bd7f40d4620",
+      "adjacency_sha256": "cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d",
+      "binary_sha256": "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 0.970437813047
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "cf8372ccf27a237d6ca0b85810216fe16fc01d6d5404b4bfe86c6d7be28d067d"
+      ],
+      "binary_sha256": [
+        "b5d77e465f55b0501c583838f8fc4856cb22722fe285afac3e19fdb1b3c928dd"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "250"
+      ],
+      "districts": [
+        "2"
+      ],
+      "expected_districts": [
+        "2"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "RI",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 250,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "RI",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 250,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "RI",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 247,
+      "different_units": 3,
+      "matched_unit_rate": 0.988
+    },
+    {
+      "state": "RI",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 250,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "RI",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 247,
+      "different_units": 3,
+      "matched_unit_rate": 0.988
+    },
+    {
+      "state": "RI",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 247,
+      "different_units": 3,
+      "matched_unit_rate": 0.988
+    }
+  ]
+}

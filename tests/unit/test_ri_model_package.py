@@ -28,3 +28,11 @@ def test_committed_ri_model_frontier_verifies() -> None:
         branch["connectivity_encoding"]
         for branch in report["strengthened_boundary_branches"]
     } == {"parent-depth-v3"}
+
+
+def test_analyzer_hash_is_line_ending_stable(tmp_path: Path) -> None:
+    lf = tmp_path / "lf.py"
+    crlf = tmp_path / "crlf.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+    assert MODEL.text_sha256(lf) == MODEL.text_sha256(crlf)

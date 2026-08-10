@@ -1,4 +1,4 @@
-//! Level-parallel METIS recursive-bisection engine.
+//! Deterministic recursive-bisection engine.
 //!
 //! Split from a single 10k-line file into per-algorithm submodules. Shared
 //! imports and cross-section helpers are re-exported here so each submodule

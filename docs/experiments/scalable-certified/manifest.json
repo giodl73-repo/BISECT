@@ -5,11 +5,11 @@
   "files": [
     {
       "path": "ri-discovery-frontier.json",
-      "sha256": "6435ea264bbc949461dc6ebc8dd80d43fded8af570ad2f67fc83f70fd451143e"
+      "sha256": "e58143e1ab8c5d76d3c30579dd254a30bfd8dd1f35d76cfff185076fadc3611f"
     }
   ],
   "analyzer_path": "scripts/research/analyze_ri_certified_discovery.py",
-  "analyzer_sha256": "7856f79efb4de4b23c0b6050a2b046443a7ba942cc147b0d105e6cfe79fd4e93",
+  "analyzer_sha256": "8ccdaddc0771517e7fbdb345892bbd191c4b645067fcea8f96ff13d61872337c",
   "verification_commands": [
     "python scripts/research/analyze_ri_certified_discovery.py verify docs/experiments/scalable-certified/manifest.json",
     "python scripts/research/analyze_ri_certified_discovery.py verify docs/experiments/scalable-certified/manifest.json --check-local"

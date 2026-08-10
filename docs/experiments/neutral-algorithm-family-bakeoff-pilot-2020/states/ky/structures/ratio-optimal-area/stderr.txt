@@ -1,0 +1,19 @@
+NOTE: Running congressional (6D). KY also has house (100D) and senate (38D). Use --chamber house or --chamber senate.
+[areasection] Lorenz: dense-half contains 88.0% of population -> natural split ~5:1
+[areasection]   ratio 1:5 (16.7% pop): Lorenz area range [0.4%-61.2%] -> feasible
+[areasection]   ratio 2:4 (33.3% pop): Lorenz area range [1.1%-87.1%] -> feasible
+[areasection]   ratio 3:3 (50.0% pop): Lorenz area range [3.4%-96.6%] -> feasible
+[areasection] 3 ratios x 1 seeds (pop+area dual constraint)
+[areasection]   ratio 1:5 best=1232km  normalised=1231.7  area_left=29.0%
+[areasection]   ratio 2:4 best=395km  normalised=279.3  area_left=48.1%
+[areasection]   ratio 3:3 best=402km  normalised=232.3  area_left=50.1%
+[areasection] natural ratio 3:3 at 402km (normalised=232.3)
+[areasection] winner: area=50.1% (target 50% ±10%, OK) pop=50.0% (target 50.0%)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=301km  normalised=300.9
+[geosection] natural ratio 1:2 at 301km (normalised=300.9)
+[geosection] trying 1 ratios x 1 seeds for k=3
+[geosection]   ratio 1:2 best=74km  normalised=74.1
+[geosection] natural ratio 1:2 at 74km (normalised=74.1)
+[partition-time] KY: k=6 n=1306 -> 1578.3ms
+[OK] KY in 1795ms

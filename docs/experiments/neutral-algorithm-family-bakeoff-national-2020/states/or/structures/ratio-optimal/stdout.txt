@@ -1,0 +1,5 @@
+STATUS:1:OR: loading adjacency
+STATUS:1:OR: GeoSection 3 ratios ? 1 seeds
+STATUS:1:OR: natural ratio 2:4 at 137km
+STATUS:1:OR: balance OK, writing outputs
+STATUS:1:OR: complete (6D, 0ms)

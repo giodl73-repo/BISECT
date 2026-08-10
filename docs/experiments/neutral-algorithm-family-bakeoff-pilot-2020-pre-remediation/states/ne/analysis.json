@@ -1,0 +1,216 @@
+{
+  "state": "NE",
+  "state_slug": "nebraska",
+  "expected_districts": 3,
+  "status": "pass",
+  "structures": [
+    {
+      "state": "NE",
+      "structure": "standard-bisect",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "edge-weighted",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 553,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 468979.819684,
+      "canonical_assignment_sha256": "0d7ce0e6591bc4d83aec7374f268583f6c81a9f2e056de71b346e17c79e9e54b",
+      "adjacency_sha256": "609dc48008983735fb15318250a126ec9747ef62391910ac8e60563cfe16f598",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NE",
+      "structure": "ratio-optimal",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "geosection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 553,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 468979.819684,
+      "canonical_assignment_sha256": "0d7ce0e6591bc4d83aec7374f268583f6c81a9f2e056de71b346e17c79e9e54b",
+      "adjacency_sha256": "609dc48008983735fb15318250a126ec9747ef62391910ac8e60563cfe16f598",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.0
+    },
+    {
+      "state": "NE",
+      "structure": "ratio-optimal-area",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "areasection",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 553,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 2142995.27903,
+      "canonical_assignment_sha256": "20b758a5ca6f277a4570a18979eabc6b6d713fd3804318d27dba17c33376c4f6",
+      "adjacency_sha256": "609dc48008983735fb15318250a126ec9747ef62391910ac8e60563cfe16f598",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 4.569482926736
+    },
+    {
+      "state": "NE",
+      "structure": "prime-factor",
+      "status": "pass",
+      "execution_status": "pass",
+      "requested_seed": 0,
+      "final_seed": 0,
+      "seed_retried": false,
+      "partition_mode": "apportion-regions",
+      "audit_result": "pass",
+      "audit_certificate_result": "pass",
+      "failed_audit_checks": [],
+      "manifest_population_balance_valid": true,
+      "audit_population_pass": true,
+      "native_manifest_consistent": true,
+      "units": 553,
+      "districts": 3,
+      "expected_districts": 3,
+      "edge_cut": 514677.479526,
+      "canonical_assignment_sha256": "d829e3b29185a88bb829ece618ab9913573ca6b10139f37155ee2b32fe9b27fa",
+      "adjacency_sha256": "609dc48008983735fb15318250a126ec9747ef62391910ac8e60563cfe16f598",
+      "binary_sha256": "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085",
+      "population_source": "total",
+      "balance_tolerance_pct": 0.5,
+      "ufactor": 5,
+      "niter": 100,
+      "alpha_county": 0.0,
+      "directional_lambda": 0.0,
+      "edge_cut_ratio_to_standard": 1.097440567641
+    }
+  ],
+  "common_input_invariants": {
+    "pass": true,
+    "values": {
+      "adjacency_sha256": [
+        "609dc48008983735fb15318250a126ec9747ef62391910ac8e60563cfe16f598"
+      ],
+      "binary_sha256": [
+        "e6a96cfda558a5932f24f1b3ddb63fe140865a1cd11c56338753c9d088b9f085"
+      ],
+      "population_source": [
+        "total"
+      ],
+      "balance_tolerance_pct": [
+        "0.5"
+      ],
+      "units": [
+        "553"
+      ],
+      "districts": [
+        "3"
+      ],
+      "expected_districts": [
+        "3"
+      ],
+      "ufactor": [
+        "5"
+      ],
+      "niter": [
+        "100"
+      ],
+      "alpha_county": [
+        "0.0"
+      ],
+      "directional_lambda": [
+        "0.0"
+      ]
+    }
+  },
+  "pairwise_assignment_overlap": [
+    {
+      "state": "NE",
+      "left": "standard-bisect",
+      "right": "ratio-optimal",
+      "matched_units": 553,
+      "different_units": 0,
+      "matched_unit_rate": 1.0
+    },
+    {
+      "state": "NE",
+      "left": "standard-bisect",
+      "right": "ratio-optimal-area",
+      "matched_units": 357,
+      "different_units": 196,
+      "matched_unit_rate": 0.6455696202531646
+    },
+    {
+      "state": "NE",
+      "left": "standard-bisect",
+      "right": "prime-factor",
+      "matched_units": 530,
+      "different_units": 23,
+      "matched_unit_rate": 0.9584086799276673
+    },
+    {
+      "state": "NE",
+      "left": "ratio-optimal",
+      "right": "ratio-optimal-area",
+      "matched_units": 357,
+      "different_units": 196,
+      "matched_unit_rate": 0.6455696202531646
+    },
+    {
+      "state": "NE",
+      "left": "ratio-optimal",
+      "right": "prime-factor",
+      "matched_units": 530,
+      "different_units": 23,
+      "matched_unit_rate": 0.9584086799276673
+    },
+    {
+      "state": "NE",
+      "left": "ratio-optimal-area",
+      "right": "prime-factor",
+      "matched_units": 356,
+      "different_units": 197,
+      "matched_unit_rate": 0.64376130198915
+    }
+  ]
+}

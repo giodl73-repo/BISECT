@@ -216,19 +216,27 @@ fn test_path_arg_does_not_need_manual_quoting() {
     );
 }
 
-/// Scenario 23: Rayon seed determinism — sort split_results by path before insert.
-/// Verify that for a two-district run with a fixed seed, calling run_all_splits
-/// twice returns identical assignments (deterministic output).
+/// Scenario 23: fixed-seed recursive determinism across multiple active nodes.
+/// Four districts force two METIS calls at depth one; these must execute
+/// sequentially because the C backend shares RNG state.
 #[test]
-fn test_rayon_results_sorted_before_insert() {
-    // A simple 4-node chain graph: 0-1-2-3
-    let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
-    let vw = vec![1000i64, 1000, 1000, 1000];
+fn test_recursive_metis_fixed_seed_is_deterministic() {
+    // An 8-node chain graph: 0-1-2-3-4-5-6-7
+    let adj = vec![
+        vec![1usize],
+        vec![0, 2],
+        vec![1, 3],
+        vec![2, 4],
+        vec![3, 5],
+        vec![4, 6],
+        vec![5, 7],
+        vec![6],
+    ];
+    let vw = vec![1000i64; 8];
     let ew = HashMap::new();
 
-    // Run twice with the same seed
-    let result1 = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None);
-    let result2 = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None);
+    let result1 = run_all_splits(&adj, &vw, &ew, 4, 0.01, 100, Some(42), None);
+    let result2 = run_all_splits(&adj, &vw, &ew, 4, 0.01, 100, Some(42), None);
 
     assert!(
         result1.is_ok(),

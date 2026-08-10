@@ -1,0 +1,238 @@
+{
+  "schema_version": "audit-certificate-v1",
+  "certificate_id": "sha256:23661ce6ef6a07a585c3caefa75ffa6679ebdf200130629893c7272fac4aa752",
+  "generated_at_utc": "2026-08-09T19:45:26Z",
+  "content_hash": "sha256:23661ce6ef6a07a585c3caefa75ffa6679ebdf200130629893c7272fac4aa752",
+  "plan_hash": "sha256:93a7cacd3789c80707c68560966f04fb04afd0a3762aeca1ae7558537cea87f7",
+  "plan_schema_version": "district-plan-v1",
+  "context_hash": "sha256:a96520a96c25cd8f25600cbe8eedf269cff7180d810ef6185fe172eefd7cb68e",
+  "legal_profile_hash": "sha256:2cbbb1e6b363f007322c0f5dc69adb0149cd323207a4bcee277705e432778162",
+  "legal_profile": {
+    "schema_version": "legal-profile-v1",
+    "profile_id": "BISECT_RUNNER_PROFILE_V1",
+    "jurisdiction": "KY",
+    "chamber": "congressional",
+    "year": 2020,
+    "population_tolerance": {
+      "type": "percent",
+      "max_deviation_percent": 0.5
+    },
+    "county_split_rule": {
+      "type": "count-only"
+    },
+    "municipal_split_rule": {
+      "type": "not-evaluated"
+    },
+    "vra_policy": {
+      "type": "not-evaluated"
+    },
+    "legal_disclaimer": "Pass means the plan passes the supplied profile, not every possible legal requirement."
+  },
+  "source_hashes": {
+    "adjacency": "sha256:82ed1a895879a1989d5c2686c549908e715da33a7efce71403221024d1984c12",
+    "geometry": "sha256:4dc5cbb3c87554bd8f3eb978fd2b593cd05f84c281cad1288134e6440fe344db"
+  },
+  "runtime": {
+    "binary_name": "bisect",
+    "binary_version": "0.1.0"
+  },
+  "result": "pass",
+  "checks": [
+    {
+      "name": "plan-shape",
+      "status": "pass",
+      "severity": "info",
+      "summary": "plan shape is valid",
+      "witnesses": []
+    },
+    {
+      "name": "population",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts pass population tolerance",
+      "witnesses": []
+    },
+    {
+      "name": "contiguity",
+      "status": "pass",
+      "severity": "info",
+      "summary": "all districts are contiguous",
+      "witnesses": []
+    },
+    {
+      "name": "splits",
+      "status": "pass",
+      "severity": "info",
+      "summary": "15 split subdivisions reported",
+      "witnesses": [
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21013",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 9
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21059",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 24
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21067",
+          "district_ids": [
+            3,
+            4,
+            5
+          ],
+          "unit_count": 82
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21111",
+          "district_ids": [
+            0,
+            2
+          ],
+          "unit_count": 216
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21151",
+          "district_ids": [
+            4,
+            5
+          ],
+          "unit_count": 31
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21155",
+          "district_ids": [
+            2,
+            5
+          ],
+          "unit_count": 6
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21167",
+          "district_ids": [
+            2,
+            5
+          ],
+          "unit_count": 5
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21183",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 8
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21185",
+          "district_ids": [
+            0,
+            3
+          ],
+          "unit_count": 15
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21209",
+          "district_ids": [
+            3,
+            4
+          ],
+          "unit_count": 19
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21211",
+          "district_ids": [
+            0,
+            2,
+            3
+          ],
+          "unit_count": 12
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21213",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 5
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21217",
+          "district_ids": [
+            2,
+            5
+          ],
+          "unit_count": 7
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21227",
+          "district_ids": [
+            1,
+            2
+          ],
+          "unit_count": 27
+        },
+        {
+          "type": "split",
+          "subdivision_kind": "county",
+          "subdivision_id": "21239",
+          "district_ids": [
+            3,
+            5
+          ],
+          "unit_count": 8
+        }
+      ]
+    },
+    {
+      "name": "geometry",
+      "status": "pass",
+      "severity": "info",
+      "summary": "1306 unit geometry hashes are aligned to the plan unit universe",
+      "witnesses": [
+        {
+          "type": "geometry",
+          "source_id": "tiger-tract-geometry-KY-2020",
+          "crs": "EPSG:4269",
+          "unit_geometry_hash_count": 1306
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

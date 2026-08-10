@@ -1,0 +1,4 @@
+STATUS:1:FL: loading adjacency
+STATUS:1:FL: recursive bisection into 28 districts
+STATUS:1:FL: balance OK, writing outputs
+STATUS:1:FL: complete (28D, 0ms)

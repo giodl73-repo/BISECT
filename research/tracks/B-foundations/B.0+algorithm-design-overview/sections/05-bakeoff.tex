@@ -1,6 +1,113 @@
 \section{The Bakeoff: Eight Combinations Across Four States}
 \label{sec:bakeoff}
 
+\paragraph{Evidence status and relationship to the governed national bakeoff.}
+This May 2026 research table is not the later NRS v0.3 national bakeoff. It
+mixes confirmed single-profile results with explicitly estimated and pending
+cells, uses tract-level political and demographic inputs, and does not provide
+a common-block national comparison. Accordingly, cross-configuration patterns
+below are exploratory hypotheses wherever they depend on a marked cell. The
+governed NRS v0.3 package compares only NRS with official CD118 assignments on
+a frozen 2020 block universe and does not validate this eight-configuration
+matrix.
+
+\subsection{Preregistered Wisconsin Structure Proof Slice}
+
+On 2026-08-09, before inspecting comparative results, we froze a separate
+common-input proof slice on Wisconsin's 2020 congressional tract graph. The
+slice holds 1,542 tracts, eight districts, total population, geographic edge
+weights, single outer search, and requested seed 0 fixed while varying four
+implemented structure families. Its package regenerated exactly after
+canonical district relabelling. Table~\ref{tab:wi-structure-proof} reports the
+validity gate, not a ranking.
+
+\begin{table}[h]
+\centering
+\caption{Post-remediation Wisconsin structure validation. The archived initial
+  run retained two audit failures; all four repaired executions pass.}
+\label{tab:wi-structure-proof}
+\small
+\begin{tabular}{llll}
+\toprule
+\textbf{Structure} & \textbf{Final seed} & \textbf{Audit} & \textbf{Failure witness} \\
+\midrule
+Standard bisection & 2 & pass & none \\
+Ratio-optimal & 0 & pass & none \\
+Ratio-optimal-area & 0 & pass & none \\
+Prime-factor & 0 & pass & none \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The standard run documents an automatic balance retry from requested seed 0
+to accepted seed 2. The standard and ratio-optimal assignments agree on 837 of
+1,542 tracts (54.2802\,\%) after maximum-overlap district-label matching.
+Across all six post-remediation pairs, agreement ranges from 54.0208\,\% to
+66.2776\,\%. This establishes reproducible assignment difference on this
+input, not a causal effect or a preferred plan.
+
+The first governed run is preserved separately. In that run,
+ratio-optimal-area disconnected a district, while prime-factor disconnected a
+district and produced 0.704852\,\% population deviation against the advertised
+0.5\,\% tolerance. The prime-factor manifest nevertheless marked population
+balance valid. Inspection found that ApportionRegions used a hidden 3\,\%
+final validation tolerance, the population flag was hard-coded, and the two
+affected METIS paths did not consistently use the contiguity-capable k-way
+routine. Final validation now uses the configured tolerance, the flag is
+derived from the audit certificate, and k-way contiguity options are enabled.
+The repaired four-pass package and its exact regeneration close the one-State
+implementation gate; they do not authorize national expansion without a newly
+frozen schedule.
+
+The governed evidence is in
+\nolinkurl{docs/experiments/neutral-algorithm-family-bakeoff-wi-2020/} under
+protocol \texttt{neutral-algorithm-family-bakeoff-v1}. Because this slice uses
+a different metric and input contract, it does not replace any estimated or
+pending cell in the older tables below.
+
+\subsection{Frozen National Structure Pilot}
+
+A second protocol, \texttt{neutral-algorithm-family-national-bakeoff-v1},
+freezes the national multi-district cohort, a staged schedule, failure policy,
+and claim boundary before expansion. Its pilot orders RI, NE, CT, KY, SC, WI,
+AZ, and CA, spanning two through 52 congressional districts. Each State holds
+its 2020 tract graph, seat count, total population, geographic edge weights,
+single outer search, and requested seed 0 fixed across the same four structure
+families. The complete target is the 44 States with at least two House seats;
+the six at-large States are design exclusions rather than passes.
+
+The pilot is an engineering gate selected to exercise increasing scale, prime
+and composite seat counts, the Wisconsin anchor, and the maximum-size State.
+It is not a probability sample. A passing pilot can establish bounded
+multi-State implementation validity and authorize the already frozen full
+phase; it cannot estimate national prevalence, rank the structures, or support
+geometric, electoral, demographic, VRA, causal, or legal conclusions. Only the
+complete 44-State phase could establish coverage of that frozen cohort, and it
+still could not identify a generally best algorithm.
+
+The retained initial pilot attempt passed 27 of 32 cells and six of eight
+States. It exposed a recursive contiguity defect in equal non-NRS splits: an
+early recursive-METIS split could fragment a child region before a later
+contiguity-constrained call. After routing all non-NRS splits through k-way
+METIS with contiguity and minimum-connectivity options, focused Arizona and
+California probes passed and the clean governed matrix passed all eight States
+and all 32 cells. Across its 48 within-State structure pairs, maximum-overlap
+assignment agreement ranges from 49.0634\,\% to 100\,\%; alternative edge-cut
+ratios to standard-bisect range from 0.856479 to 5.441826. These are descriptive
+mechanics, not pooled estimates. An independent verifier reran all 32 cells and
+passed byte-identical normalized comparison.
+
+The authorized full phase subsequently executed all 44 multi-district States
+and passed all 176 cells without a seed retry. Across 264 within-State pairs,
+maximum-overlap assignment agreement ranges from 47.6257\,\% to 100\,\%; the
+132 alternative edge-cut ratios to standard-bisect range from 0.623301 to
+5.441826. An independent execution reran all 176 native cells and regenerated
+the normalized evidence exactly. Edge cuts are reported to five decimal places,
+while canonical assignments are byte-compared. Thus the package establishes
+complete coverage of the frozen cohort. These
+descriptive mechanics cannot support a generally best algorithm or political,
+geometric, demographic, VRA, causal, or legal conclusions.
+
 \subsection{Experimental Design}
 
 We evaluate eight algorithm combinations on four states that concentrate the
@@ -64,7 +171,7 @@ Values marked \est{} ($\dagger$) are \emph{estimates} derived from:
 in T.1--T.2, (b) interpolation from confirmed values in adjacent configurations,
 or (c) model-derived predictions; each estimate carries an implicit uncertainty of
 approximately $\pm 1$ seat and $\pm 3$\,pp for the proportionality gap.
-Values marked \pendinging{} ($\ddagger$) are \emph{pending}: they require the T.4
+Values marked \pending{} ($\ddagger$) are \emph{pending}: they require the T.4
 (ApportionRegions) or T.5 (ProportionalSection) implementations to run; they should
 not be cited as empirical results in litigation or policy contexts until the relevant
 paper's experimental runs are complete.
@@ -174,7 +281,7 @@ paper's experimental runs are complete.
 7. County+AreaSection & 1870\est & 0.48\,\% & 0\est & $-37.1$\est & 1\est & $3:4$\est & 4\est \\
 8. Geo+NestSection & 1740\pending & 0.47\,\% & 0\pending & $-37.1$\pending & 1\pending & $3:4$\pending & 6\pending \\
 \midrule
-\multicolumn{8}{l}{\textit{Note}: VRASection (config.~5) is the only configuration achieving 2 MM districts as required by Allen v.\ Milligan.} \\
+\multicolumn{8}{l}{\textit{Note}: In this fixture, VRASection is the only reported row with 2 MM districts; this is not an Allen v.\ Milligan compliance finding.} \\
 \multicolumn{8}{l}{\textit{Note}: VRASection $2:5$ result confirmed empirically (T.7); 2 MM at 55.2\,\% and 52.8\,\% Black VAP.} \\
 \multicolumn{8}{l}{\textit{Note}: EC premium of $+4.3\,\%$ over GeoSection is modest and legally defensible.} \\
 \bottomrule
@@ -185,7 +292,7 @@ paper's experimental runs are complete.
 
 \subsubsection*{Pattern 0: The Compactness-Proportionality Paradox}
 
-\textbf{The most striking empirical finding}: the most compact algorithm (GeoSection,
+\textbf{The most striking exploratory pattern}: the most compact algorithm (GeoSection,
 minimising boundary length) is \emph{not} the most proportional.
 In Wisconsin, unweighted bisection produces \textbf{4D/4R ($-0.3$\,pp)} — nearly
 perfectly proportional — while GeoSection produces 3D/5R ($-12.8$\,pp).
@@ -205,8 +312,9 @@ simultaneously claim ``therefore the map is fair.''
 
 \subsubsection*{Pattern 1: Geographic Sorting Dominates}
 
-Across all four states and all eight configurations, the proportionality gap
-is primarily determined by geographic voter sorting, not by the algorithm.
+Within this mixed confirmed/estimated table, geographic voter sorting is a
+plausible contributor to the proportionality gaps, while algorithm choice also
+changes several reported outcomes.
 In Wisconsin, GeoSection configurations (2--8) all produce 3D/5R; only the
 unweighted baseline (1) achieves 4D/4R by \emph{avoiding} compactness optimization.
 In North Carolina, GeoSection produces \textbf{7D/7R ($+0.7$\,pp)} — the Charlotte
@@ -214,52 +322,52 @@ peel happens to create 7 roughly-balanced districts — while unweighted gives 5
 In Alabama, 0D/7R is stable across all configurations except VRASection (which
 produces 1D/6R by achieving 2 MM districts).
 
-This confirms the central finding of the B-series programme: the redistricting
-algorithm does not drive partisan outcomes.
-Geographic voter sorting---Democratic voters concentrated in cities,
-Republican voters dispersed in suburbs and rural areas---explains the systematic
-Republican over-representation in competitive states.
+These rows motivate, but do not identify, the relative contributions of
+geographic sorting and algorithm choice. Doing so requires completed cells,
+multiple seeds or converged ensembles, frozen election aggregation, and a
+design capable of separating those mechanisms.
 
 \paragraph{Algorithmic neutrality and outcome neutrality.}
 Algorithm neutrality means no partisan data enters the algorithm --- it does not
 mean partisan outcomes are identical across algorithms.
-The bakeoff demonstrates that even partisan-data-free algorithms produce
-systematically different partisan outcomes depending on their bisection tree
-structure.
-This is the core finding for judicial review: once the algorithm is fixed by
-statute, the partisan outcome is determined by geography alone, not by human
-choice.
+The table illustrates the testable possibility that partisan-data-free
+algorithms produce different partisan outcomes as bisection structure changes.
+It does not show that a partisan outcome is determined by geography alone once
+an algorithm is fixed: profile selection, resolution, weights, seeds, repairs,
+and legally required modifications remain consequential choices.
 Courts evaluating algorithmic maps under state partisan-neutrality standards
 (Pennsylvania's ``free and equal'' elections clause; North Carolina's
 \textit{Harper v.\ Hall} proportionality doctrine; New York's
 \textit{Harkenrider v.\ Hochul} efficiency-gap standard) should therefore
 evaluate the \emph{choice of algorithm} as the locus of potential bias, not
 the individual map produced by a given algorithm run.
-A process-based standard (PA, NC) is satisfied if no partisan data entered
-the algorithm selection; an outcome-based standard (NY) further requires
-demonstrating that no feasible algorithm produces a substantially more
-proportional result.
-The bakeoff provides the counterfactual evidence for both inquiries.
+Whether a process or outcome satisfies a State standard is a legal question
+outside this table. A completed preregistered bakeoff could contribute
+counterfactual evidence, but the present estimated and pending cells cannot
+resolve either inquiry.
 
-\subsubsection*{Pattern 2: VRASection is the Only Tool for Allen v.\ Milligan Compliance}
+\subsubsection*{Pattern 2: Alabama VRASection Fixture}
 
-In Alabama, only config.~5 (Geo+VRASection) achieves the 2 majority-minority
-districts required by \allenmilligan{}.
+In the reported Alabama configurations, config.~5 (Geo+VRASection) is the only
+row with two majority-minority districts. That diagnostic does not establish
+the full \textit{Gingles} conditions or what \allenmilligan{} requires for a
+particular plan.
 GeoSection's $3:4$ first-level split isolates Birmingham (Jefferson County)
 as one Black-majority district but leaves the Black Belt fragmented across the
 remaining subregion.
 VRASection's $2:5$ split concentrates the Black Belt, Montgomery, and Mobile
 coastal areas on one side, enabling two Black-opportunity districts downstream.
 
-This has a straightforward legal implication: in states with \allenmilligan{}
-exposure, the practitioner must use VRASection.
-GeoSection, AreaSection, and the other configurations simply do not create the
-geographic subregion structure necessary for Gingles Prong~1.
+The fixture motivates testing whether its geographic subregion structure can
+support illustrative plans. It does not show that practitioners must use
+VRASection, that other methods cannot satisfy the first \textit{Gingles}
+precondition, or that the resulting districts are legally compliant.
 
 \subsubsection*{Pattern 3: County Preservation Trades Off Against Compactness}
 
-County-sticky configurations (4 and 7) consistently show higher edge cuts
-($+3$--$7\,\%$) than their geographic-only counterparts.
+The marked county-sticky rows suggest higher edge cuts ($+3$--$7\,\%$) than
+their geographic-only counterparts, but several inputs to this comparison are
+estimated.
 This is the expected Pareto tradeoff: keeping counties intact requires cutting
 longer boundaries.
 The trade-off is most pronounced in Alabama (config.~7 vs.~2: $+8.4\,\%$ EC
@@ -282,9 +390,10 @@ but is neutral in WI and AL.
 
 \subsubsection*{Pattern 5: NestSection and ApportionRegions Are Structurally Neutral}
 
-Configs.~6 and 8 (ApportionRegions and NestSection) produce results very close
-to config.~2 (GeoSection) on all metrics.
-They are not partisan tools; they are audit and consistency tools.
+The pending values for configs.~6 and 8 (ApportionRegions and NestSection) were
+projected to be close to config.~2 (GeoSection). They cannot support an
+empirical similarity or neutrality finding until executed.
+They are designed as audit and consistency tools rather than partisan tools.
 Their value is not in changing partisan outcomes but in providing
 structure-from-first-principles: the bisection tree is derived from mathematical
 properties of $k$ (prime factorisation) or from multi-chamber consistency
