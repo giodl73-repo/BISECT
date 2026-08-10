@@ -5,11 +5,11 @@
   "files": [
     {
       "path": "ri-model-frontier.json",
-      "sha256": "737f949e4ec31787f98a628c806ead9a833fe6470d57ffa31555fadc13565f47"
+      "sha256": "63eb359e6e34ae9324e503fa186d259e7c92b95278b7314c1737bc1523557c1e"
     }
   ],
   "analyzer_path": "scripts/research/analyze_ri_model_package.py",
-  "analyzer_sha256": "5677dda1df01041185e91fc7a605040deb92cd7576c31399a8c0bf195103f74c",
+  "analyzer_sha256": "3c103593a04a50f65c3ed13528922adee6f97696d4a54866418185234acea654",
   "verification_commands": [
     "python scripts/research/analyze_ri_model_package.py verify docs/experiments/scalable-certified/model-manifest.json",
     "python scripts/research/analyze_ri_model_package.py verify docs/experiments/scalable-certified/model-manifest.json --check-local"

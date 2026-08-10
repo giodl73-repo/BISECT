@@ -158,7 +158,7 @@ def analyze(report_path: Path, manifest_path: Path) -> None:
         "schema_version": "ri-certified-discovery-frontier-package-v1",
         "package_id": "ri-2020-root-discovery-frontier",
         "status": "unproved-incumbent",
-        "files": [{"path": report_path.name, "sha256": sha256(report_path)}],
+        "files": [{"path": report_path.name, "sha256": text_sha256(report_path)}],
         "analyzer_path": SCRIPT.as_posix(),
         "analyzer_sha256": text_sha256(ROOT / SCRIPT),
         "verification_commands": [
@@ -182,7 +182,7 @@ def verify(manifest_path: Path, check_local: bool) -> None:
     if manifest["analyzer_sha256"] != text_sha256(ROOT / manifest["analyzer_path"]):
         raise SystemExit("RI discovery analyzer hash mismatch")
     report_path = manifest_path.parent / manifest["files"][0]["path"]
-    if manifest["files"][0]["sha256"] != sha256(report_path):
+    if manifest["files"][0]["sha256"] != text_sha256(report_path):
         raise SystemExit("RI discovery report hash mismatch")
     report = json.loads(report_path.read_text(encoding="utf-8"))
     if report["schema_version"] != SCHEMA or report["status"] != "unproved-incumbent":
