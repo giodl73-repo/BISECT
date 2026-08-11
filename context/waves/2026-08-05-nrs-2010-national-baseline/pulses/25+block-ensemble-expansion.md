@@ -26,6 +26,11 @@ fresh-process determinism failure. The canonical six-State/sampler preflight
 sweep and all six replays now match exactly; no governed expansion chain ran
 before this gate passed.
 
+Governed primary checkpoint: NH Wilson, NH Kruskal, NM Wilson, and NM Kruskal
+passed in frozen order with deterministic gzip custody. NM Wilson measured
+12,960.48 seconds and 655,495,168 peak RSS bytes; NM Kruskal measured 2,023.14
+seconds and 710,582,272 peak RSS bytes. Both remain below the frozen ceilings.
+
 ## Claim Boundary
 
 The expansion can support only State-specific block-graph feasibility,

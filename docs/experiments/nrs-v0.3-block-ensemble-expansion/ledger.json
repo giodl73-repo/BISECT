@@ -21,11 +21,13 @@
     ],
     "primary": [
       "NH:wilson",
-      "NH:kruskal"
+      "NH:kruskal",
+      "NM:wilson",
+      "NM:kruskal"
     ],
     "replay": []
   },
-  "runner_wall_seconds": 3170.273387799971,
-  "retained_bytes": 4783955,
+  "runner_wall_seconds": 18153.89417310001,
+  "retained_bytes": 8060564,
   "failures": []
 }

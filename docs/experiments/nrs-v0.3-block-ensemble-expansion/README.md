@@ -2,7 +2,7 @@
 
 Status: protocol, candidate inputs, and resource ceilings frozen; Stage 0
 excluded preflight and exact replay gate passed. Governed Stage 2 execution is
-active in the frozen order; NH Wilson and NH Kruskal primaries passed.
+active in the frozen order; all NH and NM primaries passed (four of six).
 
 Frozen order: NH Wilson, NH Kruskal, NM Wilson, NM Kruskal, GA Wilson, GA
 Kruskal. All six excluded 25-step preflights and their fresh-process exact
