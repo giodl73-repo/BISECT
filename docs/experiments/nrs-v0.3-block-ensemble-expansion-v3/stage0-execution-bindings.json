@@ -1,0 +1,21 @@
+{
+  "schema_version": "nrs-block-ensemble-execution-text-bindings-v1",
+  "status": "pass",
+  "protocol_id": "nrs-v0.3-block-ensemble-expansion-v3",
+  "platform": "Windows-11-10.0.26310-SP0",
+  "execution_paths": {
+    "package_path": "C:\\src\\apportionment\\docs\\experiments\\nrs-v0.3-block-ensemble-expansion-v3",
+    "ledger_path": "C:\\src\\apportionment\\docs\\experiments\\nrs-v0.3-block-ensemble-expansion-v3\\ledger.json"
+  },
+  "canonical_sha256_bindings": {
+    "block_trace.rs": "01cf0f5fc53f0f988f40413366cef4c1ebd0365acfe33522b47ebb4afe8f2c50",
+    "run_block_ensemble_expansion_v3.py": "4b87ef5ae8d515a5ddcf3968c9c8611e4e379590eefab38d47cbf76878b2173f",
+    "expansion-v3-protocol.md": "37d460764c038b310b1f1fb88794871e9cf621a86ff581fe6cc71ddd9e512a50"
+  },
+  "platform_exact_sha256_bindings": {
+    "block_trace.rs": "01cf0f5fc53f0f988f40413366cef4c1ebd0365acfe33522b47ebb4afe8f2c50",
+    "run_block_ensemble_expansion_v3.py": "598d7b231621b945759f66c7d462c312f18a82b1c501896c2a2bf213a864a1f0",
+    "expansion-v3-protocol.md": "4ef563bfd2b81a58f02b52eb4e231decffba7185cdb634b673367b12706df83b"
+  },
+  "claim_boundary": "Canonical hashes identify reviewable text; platform-exact hashes identify the source bytes recorded by Stage 0 resource evidence. No runtime record was rewritten."
+}

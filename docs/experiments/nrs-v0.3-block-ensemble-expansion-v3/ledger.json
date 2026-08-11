@@ -3,12 +3,26 @@
   "protocol_id": "nrs-v0.3-block-ensemble-expansion-v3",
   "status": "active",
   "completed": {
-    "preflight": [],
-    "preflight-replay": [],
+    "preflight": [
+      "NH:wilson",
+      "NH:kruskal",
+      "NM:wilson",
+      "NM:kruskal",
+      "GA:wilson",
+      "GA:kruskal"
+    ],
+    "preflight-replay": [
+      "NH:wilson",
+      "NH:kruskal",
+      "NM:wilson",
+      "NM:kruskal",
+      "GA:wilson",
+      "GA:kruskal"
+    ],
     "primary": [],
     "replay": []
   },
   "runner_wall_seconds": 0.0,
-  "retained_bytes": 0,
+  "retained_bytes": 3386273,
   "failures": []
 }
