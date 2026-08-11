@@ -53,6 +53,8 @@ verified 2020 national baseline.
 | 21 - National algorithm-family full phase | COMPLETE | Frozen 44-State/176-cell matrix passed without seed retries and an independent 176-cell execution regenerated the normalized evidence exactly |
 | 22 - Ensemble evidence ledger reconciliation | COMPLETE | Public G.0/G.1-G.3 routing now points to the real RI/IA/NC package; stale synthetic/missing-evidence posture removed and G.0 rebuilt |
 | 23 - Block-level ensemble gate | COMPLETE | RI eight-chain Stage 1 converged under frozen scalar rules and both kernels regenerated normalized metrics/snapshots exactly; material kernel sensitivity retained; expansion remains separately gated |
+| 24 - Block-ensemble resource audit | COMPLETE | Both exact resource replays passed; author-machine peak 175,448,064 bytes; frozen formulas authorize 21 hours, 2.25 GiB/process, and 3 GiB retained/scratch |
+| 25 - NH/NM/GA block-ensemble expansion | COMPLETE | Gate failed and closed without retry: five primaries passed, then GA Kruskal hit host disk-full; no governed replay ran |
 
 ## Versioned amendment
 

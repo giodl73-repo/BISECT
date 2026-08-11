@@ -1,0 +1,35 @@
+{
+  "schema_version": "nrs-block-ensemble-resource-package-v1",
+  "protocol_id": "nrs-v0.3-block-ensemble-resource-audit-v1",
+  "status": "complete",
+  "artifacts": {
+    "README.md": "13113cde9187de6ad3a0fc2e3c69c1ba02496161fc9612d1c839a9189f7e36fa",
+    "commands.md": "59c89e75f9aadf559c7a180649ba4dfcbb8cd99882f36f951f59cf421e871de2",
+    "deviations.md": "a58c34546e2cba0a262e0157cda144d1b168b2853b7090ce43ed72aec8cc41c0",
+    "input-audit-nh.json": "0d8b53bf584fcb91274a50f32d5429f5154b466017f3b60e69ea6be1e81ec177",
+    "input-audit-nm.json": "b27497e2d20e5623d0f0914f77d3ff5e2bdd8ba78f47d0d8d465ee849201f7f9",
+    "input-audit-ga.json": "a82254b90079c074869c8e931d393841e9c7d06f39422d86ee847ce944757b87",
+    "resource-wilson.json": "77a39f1edc804178bcc1cf30fb6e87ad558f298cce0b723fccc8589036d3f2be",
+    "resource-kruskal.json": "8d3f74f526bdc164d943fc90b958cc14975db3757b457c2624b220aeea592b44",
+    "summary.json": "d5fdb20e105e74a7d65a2647bca1d0a5ba4336c17c678c1b0b65034d251e05a0"
+  },
+  "sources": {
+    "docs/specs/2026-08-10-nrs-v0.3-block-ensemble-resource-audit.md": "751a1c78bbeec33ad43c6f62a5b95423201368c3790ef060ec0c3761c0596926",
+    "scripts/research/measure_block_ensemble_resources.py": "d85c9c366eda510613d8dada66cf29fbefe1e0bff7d7f9b42e86ecd4cf7e0481",
+    "scripts/research/verify_block_ensemble_resources.py": "924c1ac87e7214bf036efd7d10126f087bd306caaf89a0bee07f26d0c9f6b782",
+    "tests/unit/test_block_ensemble_resources.py": "496d78272d23d7ea130884557ab6e0ba531257f41927fa702486e6eb2a27cf39",
+    "docs/experiments/nrs-v0.3-block-ensemble-resource-audit/block_trace-stage1.rs": "a81f40baf5d6a58f916b4cba3e3c99d47d272687e7faf6b5cc1c9bb6b95df94f",
+    "docs/specs/2026-08-10-nrs-v0.3-block-ensemble-gate.md": "0eb2f17501febab3fdc94d6b660dbf370939bfac358a2b6ac161032d44e60903",
+    "docs/experiments/nrs-v0.3-block-ensemble-gate/manifest.json": "47f5c505f79d046cea28f4c8908b9460246b529633025e80c2d15ce057ceabce",
+    "requirements.txt": "e528c317548573890e36bd002aa107c975dad309cf1728a53696789a47c0917b",
+    "data/2020/certified/ri_blocks_2020.rctx": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371",
+    "runs/nrs-v0.3/neutral-analysis/national-2020/states/ri/package/baseline_assignments.json": "e9bdc209225b8667221218eb6aa76523bf7d48dfbb54f468fe8d9bee335d3785",
+    "data/2020/certified/nh_blocks_2020.rctx": "fed430c5d4e7c2e53d1dc5d164f0f2b22afa7898ba97821365b18a8bc3aca77c",
+    "runs/nrs-v0.3/neutral-analysis/national-2020/states/nh/package/baseline_assignments.json": "44adf1fdab632c1b3b6b3281a19725a1757b4832e75b6f16779e196a2aac0cdd",
+    "data/2020/certified/nm_blocks_2020.rctx": "6ec8526daac0349be74bcf01119a14b4d37ba3c6d65577d07503cf2ec5d868bc",
+    "runs/nrs-v0.3/neutral-analysis/national-2020/states/nm/package/baseline_assignments.json": "017fe06f325a8da15a736e8b3a20da7983fa19d873a9549ea284a314fe3d866f",
+    "data/2020/certified/ga_blocks_2020.rctx": "80029d0119f8d67017a79c8a550c9ff55722207ab79536cc87247188323c1939",
+    "runs/nrs-v0.3/neutral-analysis/national-2020/states/ga/package/baseline_assignments.json": "8a771cf190e6c346793b1e3ebc5c8cfff9c81ce57855d2c82e704414dfc35fff"
+  },
+  "claim_boundary": "Author-machine planning evidence only; no multi-State execution or statistical claim is authorized."
+}

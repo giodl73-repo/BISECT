@@ -32,3 +32,17 @@ crates/bisect-ensemble/examples/validate_block_input.rs text eol=lf
 scripts/research/analyze_block_ensemble.py text eol=lf
 scripts/research/verify_block_ensemble_gate.py text eol=lf
 docs/experiments/nrs-v0.3-block-ensemble-gate/** text eol=lf
+docs/specs/2026-08-10-nrs-v0.3-block-ensemble-resource-audit.md text eol=lf
+scripts/research/measure_block_ensemble_resources.py text eol=lf
+scripts/research/verify_block_ensemble_resources.py text eol=lf
+tests/unit/test_block_ensemble_resources.py text eol=lf
+docs/experiments/nrs-v0.3-block-ensemble-resource-audit/** text eol=lf
+requirements.txt text eol=lf
+docs/specs/2026-08-10-nrs-v0.3-block-ensemble-expansion.md text eol=lf
+scripts/research/run_block_ensemble_expansion.py text eol=lf
+scripts/research/verify_block_ensemble_expansion.py text eol=lf
+docs/experiments/nrs-v0.3-block-ensemble-expansion/preflight-summary.json text eol=lf
+tests/unit/test_block_ensemble_expansion.py text eol=lf
+docs/experiments/nrs-v0.3-block-ensemble-expansion/** text eol=lf
+docs/experiments/nrs-v0.3-block-ensemble-expansion/*.json.gz binary
+docs/experiments/nrs-v0.3-block-ensemble-expansion/terminal-failure.md text eol=lf

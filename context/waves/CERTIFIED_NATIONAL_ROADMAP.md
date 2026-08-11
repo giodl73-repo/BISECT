@@ -89,7 +89,8 @@ For every State and Census year:
   - [x] Instrument candidate multiplicity inside the seven activated v0.2 nodes and one activated v0.3 stage.
   - [x] Stop governed fallback seed expansion after all eight activated stages yielded one tied physical partition.
   - [x] Run the frozen Rhode Island block-level Stage 1 gate; all eight chains completed and the two kernel traces regenerated exactly.
-  - [ ] Freeze any multi-State ensemble expansion only after instrumented peak memory and explicit compute/storage budgets are added.
+  - [x] Measure instrumented peak memory and freeze explicit compute/storage budgets before any multi-State ensemble expansion.
+  - [x] Attempt the separately frozen NH/NM/GA block expansion; retain its terminal failed gate after five primaries and GA Kruskal disk exhaustion, with no retry or governed replay.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
   - [x] Update the synthesis and policy papers after the neutral analysis is complete.

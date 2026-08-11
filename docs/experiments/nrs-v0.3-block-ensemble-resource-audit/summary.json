@@ -1,0 +1,33 @@
+{
+  "schema_version": "nrs-block-ensemble-resource-summary-v1",
+  "status": "pass",
+  "protocol_id": "nrs-v0.3-block-ensemble-resource-audit-v1",
+  "unit_counts": {
+    "RI": 25649,
+    "NH": 31948,
+    "NM": 107215,
+    "GA": 232717
+  },
+  "unit_ratios_to_ri": {
+    "NH": 1.2455846231821903,
+    "NM": 4.180084993567001,
+    "GA": 9.073141253070295
+  },
+  "ri_measured_wall_seconds": 2535.3724226000486,
+  "ri_measured_peak_rss_bytes": 175448064,
+  "ri_measured_trace_bytes": 85162964,
+  "projected_compute_seconds": 36759.88523983415,
+  "authorized_compute_budget_hours": 21,
+  "projected_peak_rss_bytes": 1591865067.2497172,
+  "authorized_memory_budget_bytes": 2415919104,
+  "projected_retained_storage_bytes": 1234761708.1492455,
+  "authorized_retained_storage_gib": 3,
+  "authorized_scratch_storage_gib": 3,
+  "hard_ceilings": {
+    "compute_hours": 48,
+    "memory_bytes": 4294967296,
+    "retained_storage_gib": 8
+  },
+  "expansion_protocol_draft_eligible": true,
+  "claim_boundary": "Author-machine planning only; drafting eligibility is not execution authorization."
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": "nrs-block-ensemble-expansion-ledger-v1",
+  "protocol_id": "nrs-v0.3-block-ensemble-expansion-v1",
+  "status": "failed",
+  "completed": {
+    "preflight": [
+      "NH:wilson",
+      "NH:kruskal",
+      "NM:wilson",
+      "NM:kruskal",
+      "GA:wilson",
+      "GA:kruskal"
+    ],
+    "preflight-replay": [
+      "NH:wilson",
+      "NH:kruskal",
+      "NM:wilson",
+      "NM:kruskal",
+      "GA:wilson",
+      "GA:kruskal"
+    ],
+    "primary": [
+      "NH:wilson",
+      "NH:kruskal",
+      "NM:wilson",
+      "NM:kruskal",
+      "GA:wilson"
+    ],
+    "replay": []
+  },
+  "runner_wall_seconds": 21505.882077699993,
+  "retained_bytes": 14768090,
+  "failures": [
+    {
+      "key": "GA:kruskal",
+      "phase": "primary",
+      "reason": "runner returned 1"
+    }
+  ]
+}
