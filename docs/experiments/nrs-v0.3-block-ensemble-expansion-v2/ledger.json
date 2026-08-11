@@ -1,7 +1,7 @@
 {
   "schema_version": "nrs-block-ensemble-expansion-ledger-v2",
   "protocol_id": "nrs-v0.3-block-ensemble-expansion-v2",
-  "status": "active",
+  "status": "failed",
   "completed": {
     "preflight": [],
     "preflight-replay": [],
@@ -10,5 +10,11 @@
   },
   "runner_wall_seconds": 0.0,
   "retained_bytes": 0,
-  "failures": []
+  "failures": [
+    {
+      "key": "NH:wilson",
+      "phase": "preflight",
+      "reason": "runner returned 1"
+    }
+  ]
 }
