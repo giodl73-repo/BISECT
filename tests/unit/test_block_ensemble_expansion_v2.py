@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -7,9 +8,9 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "research"))
 
+import run_block_ensemble_expansion_v2 as v2_runner
 from run_block_ensemble_expansion_v2 import (
     BASE_SEED,
-    EXECUTABLE,
     ORDER,
     PACKAGE,
     PROTOCOL_ID,
@@ -174,8 +175,22 @@ def test_v2_cli_boundary_rejects_unbound_executable(tmp_path: Path) -> None:
         require_bound_executable(tmp_path / "other.exe")
 
 
-def test_v2_cli_boundary_accepts_readiness_bound_executable() -> None:
-    assert require_bound_executable(EXECUTABLE) == EXECUTABLE.resolve()
+def test_v2_cli_boundary_accepts_readiness_bound_executable(
+    tmp_path: Path, monkeypatch
+) -> None:
+    executable = tmp_path / "block_trace.exe"
+    executable.write_bytes(b"release fixture")
+    digest = hashlib.sha256(executable.read_bytes()).hexdigest()
+    readiness_path = tmp_path / "readiness.json"
+    readiness_path.write_text(
+        json.dumps({"sha256_bindings": {"block_trace.exe": digest}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(v2_runner, "EXECUTABLE", executable)
+
+    assert (
+        require_bound_executable(executable, readiness_path) == executable.resolve()
+    )
 
 
 def test_terminal_failure_closes_ledger_without_completion() -> None:
