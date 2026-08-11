@@ -1,0 +1,14 @@
+{
+  "schema_version": "nrs-block-ensemble-input-audit-v1",
+  "status": "pass",
+  "state": "GA",
+  "year": 2020,
+  "units": 232717,
+  "districts": 14,
+  "population_total": 10711908,
+  "max_population_deviation": 0.0029925574416808346,
+  "undirected_edges": 575304,
+  "rctx_sha256": "80029d0119f8d67017a79c8a550c9ff55722207ab79536cc87247188323c1939",
+  "assignments_sha256": "8a771cf190e6c346793b1e3ebc5c8cfff9c81ce57855d2c82e704414dfc35fff",
+  "claim_boundary": "Stage 0 candidate input audit only; no ensemble was executed."
+}

@@ -78,57 +78,6 @@ fn required(values: &HashMap<String, String>, key: &str) -> Result<String> {
         .with_context(|| format!("missing required argument {key}"))
 }
 
-#[allow(clippy::too_many_arguments)]
-fn validate_execution(
-    execution_class: &str,
-    state: &str,
-    year: u16,
-    districts: u32,
-    tolerance: f64,
-    steps: u64,
-    chains: usize,
-    base_seed: u64,
-    snapshot_stride: u64,
-) -> Result<()> {
-    if !matches!(
-        execution_class,
-        "excluded-engineering-preflight"
-            | "governed-stage1"
-            | "excluded-expansion-preflight"
-            | "governed-stage2"
-    ) {
-        bail!("unsupported execution class");
-    }
-    let state = state.to_uppercase();
-    let common_frozen =
-        year == 2020 && tolerance == 0.005 && base_seed == 20260810 && snapshot_stride == 10;
-    if execution_class == "governed-stage1"
-        && (!common_frozen || state != "RI" || districts != 2 || steps != 2000 || chains != 4)
-    {
-        bail!("governed-stage1 arguments differ from the frozen RI protocol");
-    }
-    if matches!(
-        execution_class,
-        "excluded-expansion-preflight" | "governed-stage2"
-    ) {
-        let expected_districts = match state.as_str() {
-            "NH" => 2,
-            "NM" => 3,
-            "GA" => 14,
-            _ => bail!("expansion execution is restricted to NH, NM, and GA"),
-        };
-        let expected_shape = if execution_class == "governed-stage2" {
-            steps == 2000 && chains == 4
-        } else {
-            steps == 25 && chains == 1
-        };
-        if !common_frozen || districts != expected_districts || !expected_shape {
-            bail!("expansion arguments differ from the frozen Stage 2 protocol");
-        }
-    }
-    Ok(())
-}
-
 fn weighted_cut(input: &BlockEnsembleInput, assignment: &[u32]) -> f64 {
     let mut total = 0.0;
     for node in 0..input.adjacency.len() {
@@ -177,17 +126,24 @@ fn main() -> Result<()> {
         .get("--execution-class")
         .cloned()
         .unwrap_or_else(|| "excluded-engineering-preflight".to_string());
-    validate_execution(
-        &execution_class,
-        &state,
-        year,
-        districts,
-        tolerance,
-        steps,
-        chains,
-        base_seed,
-        snapshot_stride,
-    )?;
+    if !matches!(
+        execution_class.as_str(),
+        "excluded-engineering-preflight" | "governed-stage1"
+    ) {
+        bail!("execution class must be excluded-engineering-preflight or governed-stage1");
+    }
+    if execution_class == "governed-stage1"
+        && (state.to_uppercase() != "RI"
+            || year != 2020
+            || districts != 2
+            || tolerance != 0.005
+            || steps != 2000
+            || chains != 4
+            || base_seed != 20260810
+            || snapshot_stride != 10)
+    {
+        bail!("governed-stage1 arguments differ from the frozen RI protocol");
+    }
     let sampler_name = required(&values, "--sampler")?;
     let sampler = match sampler_name.as_str() {
         "wilson" => TreeSampler::Wilson,
@@ -273,13 +229,6 @@ fn main() -> Result<()> {
             snapshots,
         });
     }
-    let claim_boundary = if execution_class == "governed-stage2" {
-        "Governed NH/NM/GA Stage 2 trace; State-specific diagnostics only, with no national or sampler-equivalence claim."
-    } else if execution_class == "excluded-expansion-preflight" {
-        "Excluded Stage 2 engineering preflight; samples are barred from percentiles and convergence claims."
-    } else {
-        "Excluded Stage 0 engineering preflight; samples are barred from percentiles and convergence claims."
-    };
     let trace = TraceOutput {
         schema_version: "nrs-block-ensemble-trace-v1",
         status: "complete",
@@ -296,66 +245,11 @@ fn main() -> Result<()> {
         snapshot_stride,
         baseline,
         chain_traces,
-        claim_boundary,
+        claim_boundary: "Excluded Stage 0 engineering preflight; samples are barred from percentiles and convergence claims.",
     };
     if let Some(parent) = output.parent() {
         fs::create_dir_all(parent)?;
     }
     fs::write(output, serde_json::to_vec(&trace)?)?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::validate_execution;
-
-    #[test]
-    fn frozen_stage2_shapes_pass() {
-        for (state, districts) in [("NH", 2), ("NM", 3), ("GA", 14)] {
-            validate_execution(
-                "governed-stage2",
-                state,
-                2020,
-                districts,
-                0.005,
-                2000,
-                4,
-                20260810,
-                10,
-            )
-            .unwrap();
-            validate_execution(
-                "excluded-expansion-preflight",
-                state,
-                2020,
-                districts,
-                0.005,
-                25,
-                1,
-                20260810,
-                10,
-            )
-            .unwrap();
-        }
-    }
-
-    #[test]
-    fn stage2_rejects_state_and_shape_drift() {
-        assert!(validate_execution(
-            "governed-stage2",
-            "RI",
-            2020,
-            2,
-            0.005,
-            2000,
-            4,
-            20260810,
-            10,
-        )
-        .is_err());
-        assert!(
-            validate_execution("governed-stage2", "NH", 2020, 2, 0.005, 25, 1, 20260810, 10,)
-                .is_err()
-        );
-    }
 }

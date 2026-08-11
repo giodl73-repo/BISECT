@@ -25,7 +25,7 @@ const MAX_TREE_RESAMPLES: usize = 10;
 const MAX_PAIR_ATTEMPTS: usize = 50;
 
 /// Per-step outcome for diagnostics.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StepRecord {
     pub step: u64,
     pub cut_edges: usize,
@@ -326,7 +326,9 @@ impl RecomChain {
                 }
             }
         }
-        seen.into_iter().collect()
+        let mut pairs: Vec<_> = seen.into_iter().collect();
+        pairs.sort_unstable();
+        pairs
     }
 }
 
@@ -547,8 +549,45 @@ mod tests {
     #[test]
     fn adjacent_pairs_are_ordered_min_max() {
         let chain = grid_chain();
-        for (a, b) in chain.adjacent_pairs() {
+        let pairs = chain.adjacent_pairs();
+        for &(a, b) in &pairs {
             assert!(a < b, "pairs must be (min, max): got ({a},{b})");
+        }
+        assert!(pairs.windows(2).all(|window| window[0] < window[1]));
+    }
+
+    #[test]
+    fn k3_same_seed_is_deterministic_across_chain_instances() {
+        let adj: Vec<Vec<u32>> = (0..6usize)
+            .map(|i| {
+                let mut neighbors = Vec::new();
+                if i > 0 {
+                    neighbors.push((i - 1) as u32);
+                }
+                if i < 5 {
+                    neighbors.push((i + 1) as u32);
+                }
+                neighbors
+            })
+            .collect();
+        let make_chain = || {
+            RecomChain::new(
+                adj.clone(),
+                vec![1000i64; 6],
+                vec![1u32, 1, 2, 2, 3, 3],
+                3,
+                0.05,
+            )
+        };
+        let mut left = make_chain();
+        let mut right = make_chain();
+        let mut left_rng = SmallRng::seed_from_u64(20260810);
+        let mut right_rng = SmallRng::seed_from_u64(20260810);
+        for _ in 0..20 {
+            let left_record = left.step(&mut left_rng);
+            let right_record = right.step(&mut right_rng);
+            assert_eq!(left_record, right_record);
+            assert_eq!(left.assignment, right.assignment);
         }
     }
 

@@ -1,0 +1,25 @@
+{
+  "schema_version": "nrs-block-ensemble-expansion-preflight-summary-v1",
+  "protocol_id": "nrs-v0.3-block-ensemble-expansion-v1",
+  "status": "pass",
+  "stage": "excluded-preflight-and-exact-replay",
+  "governed_execution_authorized": true,
+  "governed_execution_started_at_summary": false,
+  "canonical_runs": [
+    {"state": "NH", "sampler": "wilson", "primary_wall_seconds": 5.057724100013729, "replay_wall_seconds": 4.662387999997009, "peak_rss_bytes": 29532160, "retained_trace_bytes": 133234, "exact_normalized_replay": true},
+    {"state": "NH", "sampler": "kruskal", "primary_wall_seconds": 1.3666756000020541, "replay_wall_seconds": 1.3895980000379495, "peak_rss_bytes": 29474816, "retained_trace_bytes": 133220, "exact_normalized_replay": true},
+    {"state": "NM", "sampler": "wilson", "primary_wall_seconds": 21.773115500051063, "replay_wall_seconds": 22.141779300000053, "peak_rss_bytes": 87347200, "retained_trace_bytes": 434385, "exact_normalized_replay": true},
+    {"state": "NM", "sampler": "kruskal", "primary_wall_seconds": 5.924235000042245, "replay_wall_seconds": 5.8333743999828584, "peak_rss_bytes": 87232512, "retained_trace_bytes": 434350, "exact_normalized_replay": true},
+    {"state": "GA", "sampler": "wilson", "primary_wall_seconds": 19.254061200015713, "replay_wall_seconds": 19.50951529998565, "peak_rss_bytes": 181395456, "retained_trace_bytes": 1115827, "exact_normalized_replay": true},
+    {"state": "GA", "sampler": "kruskal", "primary_wall_seconds": 2.272381199989468, "replay_wall_seconds": 2.263306399981957, "peak_rss_bytes": 181534720, "retained_trace_bytes": 1169353, "exact_normalized_replay": true}
+  ],
+  "retained_history": {
+    "pre_compression_engineering_sweep": "preflight-pre-compression",
+    "determinism_failure": "preflight-determinism-failure",
+    "failure_key": "NM:wilson",
+    "failure_phase": "preflight-replay",
+    "root_cause": "unordered adjacent district pairs changed the seeded shuffle input across processes",
+    "remediation": "sort adjacent district pairs before seeded shuffle and regress same-seed three-district chains"
+  },
+  "claim_boundary": "State-specific feasibility and diagnostics only; not national, fairness, legal, or sampler-equivalence evidence."
+}
