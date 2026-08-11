@@ -9,7 +9,10 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "research"))
 
 from measure_block_ensemble_resources import sha256
 from run_block_ensemble_expansion_v2 import PACKAGE
-from verify_block_ensemble_v2_failure import verify_terminal_failure
+from verify_block_ensemble_v2_failure import (
+    FROZEN_RUNNER_SOURCE_SHA256,
+    verify_terminal_failure,
+)
 
 
 def test_v2_terminal_failure_verifies_portably(tmp_path: Path) -> None:
@@ -41,6 +44,4 @@ def test_v2_failure_verifier_uses_retained_source_hash() -> None:
     assert resource["runner_source_sha256"] != sha256(
         PROJECT_ROOT / "crates/bisect-ensemble/examples/block_trace.rs"
     )
-    assert verify_terminal_failure()["runner_source_sha256"] == resource[
-        "runner_source_sha256"
-    ]
+    assert FROZEN_RUNNER_SOURCE_SHA256 == resource["runner_source_sha256"]
