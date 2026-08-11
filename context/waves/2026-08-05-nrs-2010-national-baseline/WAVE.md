@@ -59,6 +59,7 @@ verified 2020 national baseline.
 | 27 - Capacity-admitted launch boundary | COMPLETE | Reusable fail-closed adapter records fresh actual-volume admission before process creation; no governed experiment was launched |
 | 28 - G.0 expansion consistency | COMPLETE | Stale pre-resource-audit language replaced by the terminal Pulse 25 result and Pulse 26/27 successor-protocol boundary; G.0 rebuilt |
 | 29 - Block-ensemble successor protocol | COMPLETE | Expansion v2 frozen with fresh seeds, fresh custody, per-process capacity admission, and no reuse of v1 completions; implementation gate remains |
+| 30 - Block-ensemble v2 implementation | COMPLETE | Dedicated admitted runner, strict ledger, verifier, and adversarial contract audit passed on an empty package; no process launched |
 
 ## Versioned amendment
 

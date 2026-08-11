@@ -56,3 +56,9 @@ context/waves/2026-08-05-nrs-2010-national-baseline/pulses/28+g0-expansion-consi
 research/tracks/G-ensemble/G.0+ensemble-methodology/sections/05-convergence-sweep-bridge.tex text eol=lf
 docs/specs/2026-08-11-nrs-v0.3-block-ensemble-expansion-v2.md text eol=lf
 context/waves/2026-08-05-nrs-2010-national-baseline/pulses/29+block-ensemble-successor-protocol.md text eol=lf
+scripts/research/run_block_ensemble_expansion_v2.py text eol=lf
+scripts/research/verify_block_ensemble_expansion_v2.py text eol=lf
+tests/unit/test_block_ensemble_expansion_v2.py text eol=lf
+docs/experiments/nrs-v0.3-block-ensemble-expansion-v2/** text eol=lf
+signals/simulate/contract/block-ensemble-expansion-v2-contract-2026-08-11.md text eol=lf
+context/waves/2026-08-05-nrs-2010-national-baseline/pulses/30+block-ensemble-v2-implementation.md text eol=lf
