@@ -18,7 +18,12 @@ from run_block_ensemble_expansion_v3 import (
     validate_trace,
 )
 from verify_block_ensemble_expansion_v3 import verify_package
-from verify_block_ensemble_v3_readiness import expected_probes, probe_command
+from verify_block_ensemble_v3_readiness import (
+    binding_sha256,
+    expected_probes,
+    probe_command,
+    sha256,
+)
 
 
 def test_v3_identity_seed_and_schedule_are_fresh() -> None:
@@ -125,3 +130,22 @@ def test_probe_command_keeps_wrong_seed_visible(tmp_path: Path) -> None:
     )
 
     assert argv[argv.index("--base-seed") + 1] == "20260811"
+
+
+def test_text_bindings_are_line_ending_portable(tmp_path: Path) -> None:
+    lf = tmp_path / "contract.py"
+    crlf = tmp_path / "contract-copy.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+
+    assert sha256(lf) != sha256(crlf)
+    assert binding_sha256(lf) == binding_sha256(crlf)
+
+
+def test_binary_bindings_remain_byte_exact(tmp_path: Path) -> None:
+    first = tmp_path / "runner.exe"
+    second = tmp_path / "runner-copy.exe"
+    first.write_bytes(b"first\nsecond\n")
+    second.write_bytes(b"first\r\nsecond\r\n")
+
+    assert binding_sha256(first) != binding_sha256(second)

@@ -26,3 +26,7 @@ The readiness capacity snapshot is observational and cannot authorize a chain.
 Every future process still requires a new actual-volume admission record. The
 frozen protocol is
 `docs/specs/2026-08-11-nrs-v0.3-block-ensemble-expansion-v3.md`.
+
+Pulse 34 refreshed readiness before any launch after an ordinary Windows branch
+switch exposed mixed LF/CRLF hash custody. Reviewable text is now LF-canonical;
+executables and scientific inputs remain byte-exact.
