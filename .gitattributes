@@ -62,3 +62,16 @@ tests/unit/test_block_ensemble_expansion_v2.py text eol=lf
 docs/experiments/nrs-v0.3-block-ensemble-expansion-v2/** text eol=lf
 signals/simulate/contract/block-ensemble-expansion-v2-contract-2026-08-11.md text eol=lf
 context/waves/2026-08-05-nrs-2010-national-baseline/pulses/30+block-ensemble-v2-implementation.md text eol=lf
+docs/specs/2026-08-11-nrs-v0.3-block-ensemble-expansion-v3.md text eol=lf
+crates/bisect-ensemble/examples/block_trace.rs text eol=lf
+scripts/research/run_block_ensemble_expansion_v3.py text eol=lf
+scripts/research/verify_block_ensemble_expansion_v3.py text eol=lf
+scripts/research/verify_block_ensemble_v3_readiness.py text eol=lf
+scripts/research/verify_block_ensemble_v3_stage0.py text eol=lf
+tests/unit/test_block_ensemble_v3_stage0.py text eol=lf
+docs/experiments/nrs-v0.3-block-ensemble-expansion-v3/** text eol=lf
+docs/experiments/nrs-v0.3-block-ensemble-expansion-v3/*.json.gz binary
+signals/simulate/contract/block-ensemble-expansion-v3-contract-2026-08-11.md text eol=lf
+context/waves/2026-08-05-nrs-2010-national-baseline/pulses/33+block-ensemble-v3-compiled-readiness.md text eol=lf
+context/waves/2026-08-05-nrs-2010-national-baseline/pulses/34+block-ensemble-v3-portable-readiness.md text eol=lf
+context/waves/2026-08-05-nrs-2010-national-baseline/pulses/35+block-ensemble-v3-stage0.md text eol=lf

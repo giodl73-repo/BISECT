@@ -32,6 +32,7 @@ from run_block_ensemble_expansion_v3 import (
     validate_ledger,
     validate_trace,
 )
+from verify_block_ensemble_v3_readiness import binding_sha256
 
 ADMISSION_SCHEMA = "nrs-block-ensemble-host-capacity-v1"
 CLOSED_PROTOCOL_IDS = {
@@ -49,15 +50,24 @@ def load(path: Path) -> dict:
 
 
 def verify_admission(
-    record: dict, package: Path, ledger_path: Path, require_pass: bool
+    record: dict,
+    package: Path,
+    ledger_path: Path,
+    require_pass: bool,
+    execution_paths: dict[str, str] | None = None,
 ) -> None:
+    expected_package_path = str(package.resolve())
+    expected_ledger_path = str(ledger_path.resolve())
+    if execution_paths is not None:
+        expected_package_path = execution_paths["package_path"]
+        expected_ledger_path = execution_paths["ledger_path"]
     expected = {
         "schema_version": ADMISSION_SCHEMA,
         "scratch_limit_bytes": SCRATCH_LIMIT_BYTES,
         "retained_limit_bytes": RETAINED_LIMIT_BYTES,
         "safety_reserve_bytes": 2 * 1024**3,
-        "package_path": str(package.resolve()),
-        "ledger_path": str(ledger_path.resolve()),
+        "package_path": expected_package_path,
+        "ledger_path": expected_ledger_path,
     }
     for key, value in expected.items():
         if record.get(key) != value:
@@ -88,6 +98,7 @@ def verify_resource_record(
     phase: str,
     admission_path: Path,
     executable_sha256: str,
+    execution_text_sha256: dict[str, str],
 ) -> None:
     expected = {
         "schema_version": RESOURCE_SCHEMA,
@@ -98,9 +109,11 @@ def verify_resource_record(
         "sampler": sampler,
         "returncode": 0,
         "failure": None,
-        "runner_source_sha256": sha256(RUNNER),
-        "wrapper_source_sha256": sha256(WRAPPER),
-        "protocol_sha256": sha256(PROTOCOL),
+        "runner_source_sha256": execution_text_sha256["block_trace.rs"],
+        "wrapper_source_sha256": execution_text_sha256[
+            "run_block_ensemble_expansion_v3.py"
+        ],
+        "protocol_sha256": execution_text_sha256["expansion-v3-protocol.md"],
         "runner_executable_sha256": executable_sha256,
         "admission_record": admission_path.name,
         "admission_record_sha256": sha256(admission_path),
@@ -134,12 +147,54 @@ def verify_package(package: Path) -> dict:
     reject_closed_protocol_claims(package)
     readiness_path = package / "readiness.json"
     executable_sha256 = None
+    execution_text_sha256 = None
+    execution_paths = None
     if readiness_path.is_file():
-        executable_sha256 = load(readiness_path).get("sha256_bindings", {}).get(
-            "block_trace.exe"
-        )
+        readiness = load(readiness_path)
+        canonical = readiness.get("sha256_bindings", {})
+        executable_sha256 = canonical.get("block_trace.exe")
+        canonical_paths = {
+            "block_trace.rs": RUNNER,
+            "run_block_ensemble_expansion_v3.py": WRAPPER,
+            "expansion-v3-protocol.md": PROTOCOL,
+        }
+        for name, path in canonical_paths.items():
+            if canonical.get(name) != binding_sha256(path):
+                fail(f"canonical source binding mismatch for {name}")
+        execution_binding_path = package / "stage0-execution-bindings.json"
+        if execution_binding_path.is_file():
+            execution_binding = load(execution_binding_path)
+            if execution_binding.get("schema_version") != (
+                "nrs-block-ensemble-execution-text-bindings-v1"
+            ):
+                fail("execution text binding schema drift")
+            if execution_binding.get("protocol_id") != PROTOCOL_ID:
+                fail("execution text binding protocol drift")
+            if execution_binding.get("canonical_sha256_bindings") != {
+                name: canonical[name] for name in canonical_paths
+            }:
+                fail("execution canonical binding drift")
+            execution_text_sha256 = execution_binding.get(
+                "platform_exact_sha256_bindings"
+            )
+            if not isinstance(execution_text_sha256, dict) or set(
+                execution_text_sha256
+            ) != set(canonical_paths):
+                fail("execution text binding set drift")
+            execution_paths = execution_binding.get("execution_paths")
+            if execution_paths != {
+                "package_path": "C:\\src\\apportionment\\docs\\experiments\\nrs-v0.3-block-ensemble-expansion-v3",
+                "ledger_path": "C:\\src\\apportionment\\docs\\experiments\\nrs-v0.3-block-ensemble-expansion-v3\\ledger.json",
+            }:
+                fail("execution path binding drift")
     for admission_path in package.glob("admission-*.json"):
-        verify_admission(load(admission_path), package, ledger_path, require_pass=False)
+        verify_admission(
+            load(admission_path),
+            package,
+            ledger_path,
+            require_pass=False,
+            execution_paths=execution_paths,
+        )
 
     retained_total = 0
     governed_wall_total = 0.0
@@ -153,9 +208,17 @@ def verify_package(package: Path) -> dict:
                 fail(f"{phase} {key} admission filename is invalid")
             admission_path = package / admission_name
             admission = load(admission_path)
-            verify_admission(admission, package, ledger_path, require_pass=True)
+            verify_admission(
+                admission,
+                package,
+                ledger_path,
+                require_pass=True,
+                execution_paths=execution_paths,
+            )
             if not isinstance(executable_sha256, str):
                 fail("completed process has no executable readiness binding")
+            if not isinstance(execution_text_sha256, dict):
+                fail("completed process has no execution text bindings")
             verify_resource_record(
                 record,
                 state,
@@ -163,6 +226,7 @@ def verify_package(package: Path) -> dict:
                 phase,
                 admission_path,
                 executable_sha256,
+                execution_text_sha256,
             )
             if phase == "preflight":
                 trace = load_trace(paths["runner_trace"])
