@@ -31,6 +31,8 @@ PROTOCOL = ROOT / "docs/specs/2026-08-11-nrs-v0.3-block-ensemble-expansion-v2.md
 RUNNER = ROOT / "crates/bisect-ensemble/examples/block_trace.rs"
 WRAPPER = Path(__file__).resolve()
 PACKAGE = ROOT / "docs/experiments/nrs-v0.3-block-ensemble-expansion-v2"
+EXECUTABLE = ROOT / "target/release/examples/block_trace.exe"
+READINESS = PACKAGE / "readiness.json"
 STATE_CONFIG = {
     "NH": {"districts": 2, "slug": "nh"},
     "NM": {"districts": 3, "slug": "nm"},
@@ -75,6 +77,19 @@ def require_official_package(package: Path) -> Path:
     resolved = package.resolve()
     if resolved != PACKAGE.resolve():
         raise ValueError(f"v2 package path must be {PACKAGE.resolve()}")
+    return resolved
+
+
+def require_bound_executable(
+    executable: Path, readiness_path: Path = READINESS
+) -> Path:
+    resolved = executable.resolve()
+    if resolved != EXECUTABLE.resolve():
+        raise ValueError(f"v2 executable path must be {EXECUTABLE.resolve()}")
+    readiness = json.loads(readiness_path.read_text(encoding="utf-8"))
+    expected = readiness.get("sha256_bindings", {}).get("block_trace.exe")
+    if not isinstance(expected, str) or sha256(resolved) != expected:
+        raise ValueError("v2 executable does not match the readiness binding")
     return resolved
 
 
@@ -308,7 +323,7 @@ def main() -> None:
     parser.add_argument(
         "--executable",
         type=Path,
-        default=ROOT / "target/release/examples/block_trace.exe",
+        default=EXECUTABLE,
     )
     args = parser.parse_args()
     try:
@@ -335,7 +350,10 @@ def main() -> None:
     if paths["committed_trace"] is not None and not paths["committed_trace"].is_file():
         raise SystemExit("v2 replay source trace does not exist")
 
-    executable = args.executable.resolve()
+    try:
+        executable = require_bound_executable(args.executable)
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        raise SystemExit(str(error)) from error
     admission_path = next_admission_path(
         package, args.state, args.sampler, args.phase
     )

@@ -9,9 +9,9 @@
     "input-audit-nh.json": "0d8b53bf584fcb91274a50f32d5429f5154b466017f3b60e69ea6be1e81ec177",
     "input-audit-nm.json": "b27497e2d20e5623d0f0914f77d3ff5e2bdd8ba78f47d0d8d465ee849201f7f9",
     "input-audit-ga.json": "a82254b90079c074869c8e931d393841e9c7d06f39422d86ee847ce944757b87",
-    "resource-wilson.json": "77a39f1edc804178bcc1cf30fb6e87ad558f298cce0b723fccc8589036d3f2be",
-    "resource-kruskal.json": "8d3f74f526bdc164d943fc90b958cc14975db3757b457c2624b220aeea592b44",
-    "summary.json": "d5fdb20e105e74a7d65a2647bca1d0a5ba4336c17c678c1b0b65034d251e05a0"
+    "resource-wilson.json": "9247828daf735c692a358682684304ac825e86ba8bda07160cfc71a82e988fe7",
+    "resource-kruskal.json": "78b3aa363953d38b87461615cb1be130b406ede99158a1de4157fb937bb7299b",
+    "summary.json": "9fcf8ca280945aaefe2ebe590a2bfb689920019cadc060ca192291870d63bb8b"
   },
   "sources": {
     "docs/specs/2026-08-10-nrs-v0.3-block-ensemble-resource-audit.md": "751a1c78bbeec33ad43c6f62a5b95423201368c3790ef060ec0c3761c0596926",
