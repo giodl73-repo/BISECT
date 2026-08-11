@@ -55,6 +55,7 @@ verified 2020 national baseline.
 | 23 - Block-level ensemble gate | COMPLETE | RI eight-chain Stage 1 converged under frozen scalar rules and both kernels regenerated normalized metrics/snapshots exactly; material kernel sensitivity retained; expansion remains separately gated |
 | 24 - Block-ensemble resource audit | COMPLETE | Both exact resource replays passed; author-machine peak 175,448,064 bytes; frozen formulas authorize 21 hours, 2.25 GiB/process, and 3 GiB retained/scratch |
 | 25 - NH/NM/GA block-ensemble expansion | COMPLETE | Gate failed and closed without retry: five primaries passed, then GA Kruskal hit host disk-full; no governed replay ran |
+| 26 - Ensemble host-capacity admission | COMPLETE | Future protocols must reserve scratch, remaining retained custody, and 2 GiB host headroom on the actual evidence volume before every runner launch |
 
 ## Versioned amendment
 
