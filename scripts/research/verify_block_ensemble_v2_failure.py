@@ -15,13 +15,21 @@ from measure_block_ensemble_resources import sha256
 from run_block_ensemble_expansion_v2 import (
     MEMORY_LIMIT_BYTES,
     PACKAGE,
-    PROTOCOL,
     PROTOCOL_ID,
     RESOURCE_SCHEMA,
-    RUNNER,
-    WRAPPER,
 )
 from verify_block_ensemble_expansion_v2 import verify_admission, verify_package
+
+
+FROZEN_RUNNER_SOURCE_SHA256 = (
+    "4837c63091f6e2b91ca89e6dc29e3798dc8e427f20ad771a7e6b9c9e023a6853"
+)
+FROZEN_WRAPPER_SOURCE_SHA256 = (
+    "9c42ade271a3d97da51f5ef6310f2d8729edafc6e4a72c0441fd111abb5e2e99"
+)
+FROZEN_PROTOCOL_SHA256 = (
+    "3af99b81dda14d12fe14562e0ec70c5564e273123638b103040ae293f1af3316"
+)
 
 
 def fail(message: str) -> None:
@@ -70,9 +78,9 @@ def verify_terminal_failure(package: Path = PACKAGE) -> dict:
         "returncode": 1,
         "failure": None,
         "runner_executable_sha256": executable_sha256,
-        "runner_source_sha256": sha256(RUNNER),
-        "wrapper_source_sha256": sha256(WRAPPER),
-        "protocol_sha256": sha256(PROTOCOL),
+        "runner_source_sha256": FROZEN_RUNNER_SOURCE_SHA256,
+        "wrapper_source_sha256": FROZEN_WRAPPER_SOURCE_SHA256,
+        "protocol_sha256": FROZEN_PROTOCOL_SHA256,
         "admission_record": admission_path.name,
         "admission_record_sha256": sha256(admission_path),
     }

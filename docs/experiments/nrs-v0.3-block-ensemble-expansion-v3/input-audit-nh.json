@@ -1,0 +1,14 @@
+{
+  "schema_version": "nrs-block-ensemble-input-audit-v1",
+  "status": "pass",
+  "state": "NH",
+  "year": 2020,
+  "units": 31948,
+  "districts": 2,
+  "population_total": 1377529,
+  "max_population_deviation": 7.985312831889564e-06,
+  "undirected_edges": 78880,
+  "rctx_sha256": "fed430c5d4e7c2e53d1dc5d164f0f2b22afa7898ba97821365b18a8bc3aca77c",
+  "assignments_sha256": "44adf1fdab632c1b3b6b3281a19725a1757b4832e75b6f16779e196a2aac0cdd",
+  "claim_boundary": "Stage 0 candidate input audit only; no ensemble was executed."
+}

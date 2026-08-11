@@ -62,6 +62,7 @@ verified 2020 national baseline.
 | 30 - Block-ensemble v2 implementation | COMPLETE | Dedicated admitted runner, strict ledger, verifier, and adversarial contract audit passed on an empty package; no process launched |
 | 31 - Block-ensemble v2 Stage 0 readiness | COMPLETE | NH/NM/GA inputs, local release executables, retained resource custody, pristine package, and 8 GiB capacity requirement verified; no process launched |
 | 32 - Block-ensemble v2 Stage 0 | COMPLETE | First NH Wilson preflight exposed compiled-runner identity drift and closed v2 without retry; zero preflights and zero governed chains completed |
+| 33 - Block-ensemble v3 compiled readiness | COMPLETE | Fresh v3 identity/seed/package frozen; 12 positive and 2 negative side-effect-free release-runner probes, pristine custody, and 8 GiB readiness gate passed; no chain launched |
 
 ## Versioned amendment
 
