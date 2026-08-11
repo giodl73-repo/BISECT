@@ -84,6 +84,7 @@ def verify_resource_record(
     sampler: str,
     phase: str,
     admission_path: Path,
+    executable_sha256: str,
 ) -> None:
     expected = {
         "schema_version": RESOURCE_SCHEMA,
@@ -97,6 +98,7 @@ def verify_resource_record(
         "runner_source_sha256": sha256(RUNNER),
         "wrapper_source_sha256": sha256(WRAPPER),
         "protocol_sha256": sha256(PROTOCOL),
+        "runner_executable_sha256": executable_sha256,
         "admission_record": admission_path.name,
         "admission_record_sha256": sha256(admission_path),
     }
@@ -127,6 +129,12 @@ def verify_package(package: Path) -> dict:
     except ValueError as error:
         fail(str(error))
     reject_v1_protocol_claims(package)
+    readiness_path = package / "readiness.json"
+    executable_sha256 = None
+    if readiness_path.is_file():
+        executable_sha256 = load(readiness_path).get("sha256_bindings", {}).get(
+            "block_trace.exe"
+        )
     for admission_path in package.glob("admission-*.json"):
         verify_admission(load(admission_path), package, ledger_path, require_pass=False)
 
@@ -143,7 +151,16 @@ def verify_package(package: Path) -> dict:
             admission_path = package / admission_name
             admission = load(admission_path)
             verify_admission(admission, package, ledger_path, require_pass=True)
-            verify_resource_record(record, state, sampler, phase, admission_path)
+            if not isinstance(executable_sha256, str):
+                fail("completed process has no executable readiness binding")
+            verify_resource_record(
+                record,
+                state,
+                sampler,
+                phase,
+                admission_path,
+                executable_sha256,
+            )
             if phase == "preflight":
                 trace = load_trace(paths["runner_trace"])
                 validate_trace(trace, state, sampler, phase)

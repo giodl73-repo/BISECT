@@ -1,0 +1,43 @@
+{
+  "schema_version": "nrs-block-ensemble-expansion-v2-readiness-v1",
+  "status": "pass",
+  "protocol_id": "nrs-v0.3-block-ensemble-expansion-v2",
+  "observed_at_utc": "2026-08-11T18:03:03.5122463Z",
+  "implementation_base_commit": "0ac2b84da7785562ad0be389aa71395a8d9172f5",
+  "build": {
+    "profile": "release",
+    "target": "x86_64-pc-windows-msvc",
+    "rustc": "1.95.0 (59807616e 2026-04-14)",
+    "cargo": "1.95.0 (f2d3ce0bd 2026-03-21)"
+  },
+  "sha256_bindings": {
+    "input-audit-nh.json": "0d8b53bf584fcb91274a50f32d5429f5154b466017f3b60e69ea6be1e81ec177",
+    "input-audit-nm.json": "b27497e2d20e5623d0f0914f77d3ff5e2bdd8ba78f47d0d8d465ee849201f7f9",
+    "input-audit-ga.json": "a82254b90079c074869c8e931d393841e9c7d06f39422d86ee847ce944757b87",
+    "block_trace.exe": "f921b9f5d13713d29f933b5620da66c04eaca722f7a22afe53b2e87a19bf2690",
+    "validate_block_input.exe": "9488e08c418ca0f9831c93ade38a05ae5dec0c53f424fc66a1d07262c105d91a",
+    "block_trace.rs": "4837c63091f6e2b91ca89e6dc29e3798dc8e427f20ad771a7e6b9c9e023a6853",
+    "validate_block_input.rs": "88ccbcbe78489cb2e8da9f8e5d06e7f71db18bafe3f274a53c38c984411d51d1",
+    "run_block_ensemble_expansion_v2.py": "9c42ade271a3d97da51f5ef6310f2d8729edafc6e4a72c0441fd111abb5e2e99",
+    "verify_block_ensemble_expansion_v2.py": "257fd377a9f97d2403728d812634950c7559a7abe442390f1dd72d8b98e8aed7",
+    "check_block_ensemble_host_capacity.py": "762652e6da5d4a51c6a4067d994e6c2b34635e2c2fd88e48cd14fa18b202d5bc",
+    "expansion-v2-protocol.md": "3af99b81dda14d12fe14562e0ec70c5564e273123638b103040ae293f1af3316",
+    "resource-audit-manifest.json": "83dcb17b9d801e4f5e3a0a8a5509bc1bcca7dedd4370dfc7be51df068d003a6f"
+  },
+  "capacity_snapshot": {
+    "schema_version": "nrs-block-ensemble-host-capacity-v1",
+    "status": "pass",
+    "observed_at_utc": "2026-08-11T18:03:03.5122463Z",
+    "free_bytes": 106446356480,
+    "retained_used_bytes": 0,
+    "scratch_limit_bytes": 3221225472,
+    "retained_limit_bytes": 3221225472,
+    "safety_reserve_bytes": 2147483648,
+    "retained_remaining_bytes": 3221225472,
+    "required_free_bytes": 8589934592,
+    "shortfall_bytes": 0,
+    "process_launch_authorized": true,
+    "claim_boundary": "Point-in-time readiness observation only; every process still requires a fresh host-capacity admission record."
+  },
+  "claim_boundary": "Local Stage 0 readiness and custody only; this does not authorize a process, establish reproducible binaries on another host, or report an ensemble result."
+}
