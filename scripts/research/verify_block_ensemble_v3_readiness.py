@@ -60,6 +60,18 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+CANONICAL_TEXT_SUFFIXES = {".json", ".md", ".py", ".rs"}
+
+
+def binding_sha256(path: Path) -> str:
+    """Hash reviewable text with LF custody; keep binary/scientific inputs exact."""
+    if path.suffix.lower() not in CANONICAL_TEXT_SUFFIXES:
+        return sha256(path)
+    digest = hashlib.sha256()
+    digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
+    return digest.hexdigest()
+
+
 def load(path: Path) -> dict:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
@@ -352,7 +364,7 @@ def verify_readiness(package: Path = PACKAGE) -> dict:
     if set(bindings) != set(expected_paths):
         fail("SHA-256 binding set drift")
     for name, path in expected_paths.items():
-        if not path.is_file() or bindings[name] != sha256(path):
+        if not path.is_file() or bindings[name] != binding_sha256(path):
             fail(f"SHA-256 binding mismatch for {name}")
 
     verify_capacity(readiness.get("capacity_snapshot", {}))

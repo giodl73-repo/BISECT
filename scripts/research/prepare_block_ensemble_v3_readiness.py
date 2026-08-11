@@ -22,6 +22,7 @@ from verify_block_ensemble_v3_readiness import (
     PROBE_SCHEMA,
     PROTOCOL_ID,
     READINESS_SCHEMA,
+    binding_sha256,
     execute_probe,
     expected_probes,
     sha256,
@@ -148,7 +149,9 @@ def prepare(package: Path = PACKAGE) -> dict:
             "cargo": command_version(["cargo", "--version"]),
             "platform": platform.platform(),
         },
-        "sha256_bindings": {name: sha256(path) for name, path in paths.items()},
+        "sha256_bindings": {
+            name: binding_sha256(path) for name, path in paths.items()
+        },
         "capacity_snapshot": capacity,
         "claim_boundary": (
             "Local Stage 0 readiness and custody only; this does not authorize a "
