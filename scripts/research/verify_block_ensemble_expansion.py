@@ -84,8 +84,19 @@ def main() -> None:
         fail("pre-compression engineering record is missing")
 
     ledger = load(package / "ledger.json")
-    if ledger.get("status") not in {"active", "complete"} or ledger.get("failures") != []:
-        fail("canonical ledger is not clean")
+    if ledger.get("status") not in {"active", "complete", "failed"}:
+        fail("canonical ledger status is invalid")
+    failures = ledger.get("failures")
+    if ledger.get("status") == "failed":
+        expected_terminal_failure = [{
+            "key": "GA:kruskal",
+            "phase": "primary",
+            "reason": "runner returned 1",
+        }]
+        if failures != expected_terminal_failure:
+            fail("terminal failure ledger drift")
+    elif failures != []:
+        fail("non-failed ledger contains failures")
     if ledger["completed"].get("preflight") != ORDER:
         fail("canonical preflight schedule incomplete")
     if ledger["completed"].get("preflight-replay") != ORDER:
@@ -100,6 +111,38 @@ def main() -> None:
         fail("ledger completed before the replay schedule")
     if ledger.get("status") == "active" and replays == ORDER:
         fail("ledger remained active after the replay schedule")
+    if ledger.get("status") == "failed":
+        if primaries != ORDER[:5] or replays:
+            fail("terminal failure occurred outside frozen GA Kruskal primary position")
+        failure_path = package / "resource-primary-ga-kruskal.json"
+        failure_record = load(failure_path)
+        expected_failure_record = {
+            "schema_version": "nrs-block-ensemble-expansion-resource-v1",
+            "status": "fail",
+            "protocol_id": "nrs-v0.3-block-ensemble-expansion-v1",
+            "phase": "primary",
+            "state": "GA",
+            "sampler": "kruskal",
+            "returncode": 1,
+            "failure": None,
+            "trace_disposition": "retained",
+            "raw_trace_size_bytes": 0,
+            "raw_trace_sha256": hashlib.sha256(b"").hexdigest(),
+        }
+        for key, value in expected_failure_record.items():
+            if failure_record.get(key) != value:
+                fail(f"terminal failure record {key} drift")
+        if not 1 <= failure_record.get("poll_interval_ms", 0) <= 50:
+            fail("terminal failure polling drift")
+        if failure_record.get("peak_rss_bytes", 0) > 2415919104:
+            fail("terminal failure peak RSS invalid")
+        if failure_record.get("runner_source_sha256") != sha256(RUNNER):
+            fail("terminal failure runner source mismatch")
+        if failure_record.get("protocol_sha256") != sha256(PROTOCOL):
+            fail("terminal failure protocol mismatch")
+        failed_trace = package / "governed-ga-kruskal.json"
+        if not failed_trace.is_file() or failed_trace.stat().st_size != 0:
+            fail("terminal zero-byte scratch trace drift")
     retained_total = 0
     governed_wall_total = 0.0
     for state in ("NH", "NM", "GA"):
@@ -159,7 +202,8 @@ def main() -> None:
         fail("canonical runner-wall ledger mismatch")
     print(
         "block ensemble expansion verification: PASS "
-        f"(primaries={len(primaries)}/6, replays={len(replays)}/6)"
+        f"(status={ledger['status']}, primaries={len(primaries)}/6, "
+        f"replays={len(replays)}/6)"
     )
 
 

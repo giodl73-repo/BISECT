@@ -45,3 +45,4 @@ docs/experiments/nrs-v0.3-block-ensemble-expansion/preflight-summary.json text e
 tests/unit/test_block_ensemble_expansion.py text eol=lf
 docs/experiments/nrs-v0.3-block-ensemble-expansion/** text eol=lf
 docs/experiments/nrs-v0.3-block-ensemble-expansion/*.json.gz binary
+docs/experiments/nrs-v0.3-block-ensemble-expansion/terminal-failure.md text eol=lf

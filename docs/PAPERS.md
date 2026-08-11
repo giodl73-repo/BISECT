@@ -167,7 +167,7 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
-| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | tract package plus governed RI block-kernel sensitivity integrated |
+| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | tract package and governed RI block gate integrated; NH/NM/GA expansion terminal failure retained |
 | G.1 | Real ReCom Comparison — RI/IA/NC, Rust vs GerryChain | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | active real package; WI eligibility failure retained |
 | G.2 | 2020 Presidential Seat Distributions — RI/IA/NC | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | active real package; 2016 excluded for tract mismatch |
 | G.3 | Tract Cut-Fraction Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | active real package; polygon compactness claims withdrawn |
@@ -197,6 +197,14 @@ block package. Its four Wilson and four Kruskal chains passed the registered
 scalar rules and regenerated normalized traces exactly. The differing cut
 distributions support kernel-sensitivity reporting only; multi-State and
 national expansion remain closed behind a separate resource/protocol gate.
+
+**Block-level expansion result:**
+`docs/experiments/nrs-v0.3-block-ensemble-expansion/` is the separately frozen
+NH/NM/GA package. Stage 0 passed and five primaries completed, but GA Kruskal
+terminated on host disk exhaustion. The registered stop rule closed the gate
+without retry, so no governed replay ran. The package supports bounded
+feasibility, resource, and failure-envelope reporting only; it is not a
+completed multi-State matrix bakeoff and does not extend the RI claim.
 
 ---
 
