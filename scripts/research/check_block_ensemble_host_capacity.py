@@ -6,7 +6,9 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 
 GIB = 1024**3
@@ -51,6 +53,44 @@ def capacity_report(
     }
 
 
+def capacity_report_for_paths(
+    package: Path,
+    ledger_path: Path,
+    scratch_limit_bytes: int = DEFAULT_SCRATCH_LIMIT_BYTES,
+    retained_limit_bytes: int = DEFAULT_RETAINED_LIMIT_BYTES,
+    safety_reserve_bytes: int = DEFAULT_SAFETY_RESERVE_BYTES,
+    disk_usage: Callable[[Path], Any] = shutil.disk_usage,
+) -> dict:
+    """Measure and report capacity on the package's actual filesystem."""
+    package = package.resolve()
+    ledger_path = ledger_path.resolve()
+    if not package.is_dir():
+        raise ValueError(f"package directory does not exist: {package}")
+    if not ledger_path.is_file():
+        raise ValueError(f"ledger does not exist: {ledger_path}")
+    ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    retained_used = ledger.get("retained_bytes")
+    if not isinstance(retained_used, int) or isinstance(retained_used, bool):
+        raise ValueError("ledger retained_bytes must be an integer")
+    usage = disk_usage(package)
+    report = capacity_report(
+        free_bytes=usage.free,
+        retained_used_bytes=retained_used,
+        scratch_limit_bytes=scratch_limit_bytes,
+        retained_limit_bytes=retained_limit_bytes,
+        safety_reserve_bytes=safety_reserve_bytes,
+    )
+    report.update(
+        {
+            "package_path": str(package),
+            "ledger_path": str(ledger_path),
+            "volume_total_bytes": usage.total,
+            "volume_used_bytes": usage.used,
+        }
+    )
+    return report
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--package", type=Path, required=True)
@@ -61,25 +101,16 @@ def main() -> None:
     parser.add_argument("--safety-reserve-gib", type=int, default=2)
     args = parser.parse_args()
 
-    package = args.package.resolve()
-    if not package.is_dir():
-        raise SystemExit(f"package directory does not exist: {package}")
-    ledger = json.loads(args.ledger.read_text(encoding="utf-8"))
-    retained_used = ledger.get("retained_bytes")
-    if not isinstance(retained_used, int):
-        raise SystemExit("ledger retained_bytes must be an integer")
-    usage = shutil.disk_usage(package)
-    report = capacity_report(
-        free_bytes=usage.free,
-        retained_used_bytes=retained_used,
-        scratch_limit_bytes=args.scratch_limit_gib * GIB,
-        retained_limit_bytes=args.retained_limit_gib * GIB,
-        safety_reserve_bytes=args.safety_reserve_gib * GIB,
-    )
-    report["package_path"] = str(package)
-    report["ledger_path"] = str(args.ledger.resolve())
-    report["volume_total_bytes"] = usage.total
-    report["volume_used_bytes"] = usage.used
+    try:
+        report = capacity_report_for_paths(
+            package=args.package,
+            ledger_path=args.ledger,
+            scratch_limit_bytes=args.scratch_limit_gib * GIB,
+            retained_limit_bytes=args.retained_limit_gib * GIB,
+            safety_reserve_bytes=args.safety_reserve_gib * GIB,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        raise SystemExit(str(error)) from error
     payload = json.dumps(report, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -49,3 +49,6 @@ docs/experiments/nrs-v0.3-block-ensemble-expansion/terminal-failure.md text eol=
 scripts/research/check_block_ensemble_host_capacity.py text eol=lf
 tests/unit/test_block_ensemble_host_capacity.py text eol=lf
 docs/specs/2026-08-11-block-ensemble-host-capacity-admission.md text eol=lf
+scripts/research/launch_block_ensemble_admitted.py text eol=lf
+tests/unit/test_block_ensemble_admitted_launch.py text eol=lf
+docs/specs/2026-08-11-block-ensemble-admitted-launch.md text eol=lf
