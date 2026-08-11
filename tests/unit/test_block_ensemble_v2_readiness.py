@@ -11,6 +11,28 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "research"))
 import verify_block_ensemble_v2_readiness as readiness
 
 
+PRISTINE_LEDGER = {
+    "schema_version": "nrs-block-ensemble-expansion-ledger-v2",
+    "protocol_id": "nrs-v0.3-block-ensemble-expansion-v2",
+    "status": "active",
+    "completed": {
+        "preflight": [],
+        "preflight-replay": [],
+        "primary": [],
+        "replay": [],
+    },
+    "runner_wall_seconds": 0.0,
+    "retained_bytes": 0,
+    "failures": [],
+}
+
+
+def write_pristine_ledger(package: Path) -> None:
+    (package / "ledger.json").write_text(
+        json.dumps(PRISTINE_LEDGER), encoding="utf-8"
+    )
+
+
 @pytest.fixture
 def synthetic_readiness(tmp_path: Path, monkeypatch) -> Path:
     root = tmp_path / "root"
@@ -18,12 +40,12 @@ def synthetic_readiness(tmp_path: Path, monkeypatch) -> Path:
     package.mkdir(parents=True)
     for name in (
         "readiness.json",
-        "ledger.json",
         "input-audit-nh.json",
         "input-audit-nm.json",
         "input-audit-ga.json",
     ):
         shutil.copyfile(readiness.PACKAGE / name, package / name)
+    write_pristine_ledger(package)
 
     record = json.loads((package / "readiness.json").read_text())
     hashes: dict[Path, str] = {}
@@ -106,12 +128,12 @@ def test_readiness_rejects_tampered_input_audit(tmp_path: Path) -> None:
     package.mkdir()
     for name in (
         "readiness.json",
-        "ledger.json",
         "input-audit-nh.json",
         "input-audit-nm.json",
         "input-audit-ga.json",
     ):
         (package / name).write_bytes((readiness.PACKAGE / name).read_bytes())
+    write_pristine_ledger(package)
     audit = json.loads((package / "input-audit-nh.json").read_text())
     audit["units"] += 1
     (package / "input-audit-nh.json").write_text(
@@ -140,9 +162,7 @@ def test_readiness_rejects_binary_binding_drift(
 def test_readiness_rejects_process_artifact(tmp_path: Path) -> None:
     package = tmp_path / "package"
     package.mkdir()
-    (package / "ledger.json").write_bytes(
-        (readiness.PACKAGE / "ledger.json").read_bytes()
-    )
+    write_pristine_ledger(package)
     (package / "admission-preflight-nh-wilson-attempt-01.json").write_text("{}")
 
     with pytest.raises(ValueError, match="process artifacts exist"):

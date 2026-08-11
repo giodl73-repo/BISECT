@@ -206,6 +206,12 @@ without retry, so no governed replay ran. The package supports bounded
 feasibility, resource, and failure-envelope reporting only; it is not a
 completed multi-State matrix bakeoff and does not extend the RI claim.
 
+The fresh v2 successor at
+`docs/experiments/nrs-v0.3-block-ensemble-expansion-v2/` closed before its first
+preflight completed because the bound compiled runner rejected the v2 execution
+identity and seed. It contributes negative implementation-integration evidence
+only and does not change the scientific matrix result above.
+
 ---
 
 ## Does it hold up under scrutiny?

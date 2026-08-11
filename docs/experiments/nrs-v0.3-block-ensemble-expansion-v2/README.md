@@ -1,7 +1,8 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v2
 
-Status: local Stage 0 readiness passed. No preflight or governed v2 process has
-run.
+Status: terminal Stage 0 failure; v2 is closed without retry. The first
+preflight process started and the release runner rejected the v2 execution
+class. No preflight completed and no governed v2 process ran.
 
 This package is wholly separate from the failed and closed v1 package. Its
 initial ledger has zero completions, zero retained bytes, zero runner wall
@@ -28,3 +29,11 @@ a process: the admitted runner must measure the actual evidence volume and
 write a fresh immutable admission attempt immediately before every launch.
 Likewise, local executable hashes establish author-machine custody, not a
 reproducible build on another host.
+
+`terminal-failure.md` records the retained Pulse 32 failure. The wrapper emitted
+the frozen v2 identity `excluded-expansion-v2-preflight` with base seed
+`20260811`, but the bound Rust runner accepted only the v1 expansion identity
+`excluded-expansion-preflight` and base seed `20260810`. Because capacity
+admission passed and the runner process started, the protocol's terminal stop
+rule applies. The remaining five preflights and all replays and primaries are
+barred from execution under v2.
