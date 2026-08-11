@@ -90,6 +90,13 @@ RCTX-weighted boundary cut was $193{,}294{,}034$ and $152{,}599{,}928$,
 respectively, with KS statistic $0.31$.  Because the draws are autocorrelated,
 the KS $p$-values are descriptive only.  The result supports a Rhode Island
 kernel-sensitivity statement; it does not prove mixing, sampler equivalence,
-or national representativeness.  Multi-state expansion remains closed pending
-instrumented peak-memory evidence and a separately frozen compute and storage
-budget.
+or national representativeness.  A subsequent exact resource audit passed and
+mechanically authorized a 21-hour runner budget, a 2.25~GiB per-process memory
+ceiling, and 3~GiB retained and scratch ceilings.  Under the separately frozen
+NH/NM/GA expansion, five of six primary State--kernel runs completed before the
+GA Kruskal process encountered host disk exhaustion.  The registered stop rule
+closed that protocol without retry, and no governed replay ran.  The retained
+partial package is therefore failure-envelope evidence, not a completed
+multi-state comparison.  Any future expansion requires a new protocol with
+actual-volume capacity admission at the process-creation boundary; it cannot
+continue the failed schedule.

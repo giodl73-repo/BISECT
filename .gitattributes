@@ -52,3 +52,5 @@ docs/specs/2026-08-11-block-ensemble-host-capacity-admission.md text eol=lf
 scripts/research/launch_block_ensemble_admitted.py text eol=lf
 tests/unit/test_block_ensemble_admitted_launch.py text eol=lf
 docs/specs/2026-08-11-block-ensemble-admitted-launch.md text eol=lf
+context/waves/2026-08-05-nrs-2010-national-baseline/pulses/28+g0-expansion-consistency.md text eol=lf
+research/tracks/G-ensemble/G.0+ensemble-methodology/sections/05-convergence-sweep-bridge.tex text eol=lf

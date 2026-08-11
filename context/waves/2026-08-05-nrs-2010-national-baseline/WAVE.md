@@ -57,6 +57,7 @@ verified 2020 national baseline.
 | 25 - NH/NM/GA block-ensemble expansion | COMPLETE | Gate failed and closed without retry: five primaries passed, then GA Kruskal hit host disk-full; no governed replay ran |
 | 26 - Ensemble host-capacity admission | COMPLETE | Future protocols must reserve scratch, remaining retained custody, and 2 GiB host headroom on the actual evidence volume before every runner launch |
 | 27 - Capacity-admitted launch boundary | COMPLETE | Reusable fail-closed adapter records fresh actual-volume admission before process creation; no governed experiment was launched |
+| 28 - G.0 expansion consistency | COMPLETE | Stale pre-resource-audit language replaced by the terminal Pulse 25 result and Pulse 26/27 successor-protocol boundary; G.0 rebuilt |
 
 ## Versioned amendment
 
