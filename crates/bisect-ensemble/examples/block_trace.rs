@@ -96,12 +96,22 @@ fn validate_execution(
             | "governed-stage1"
             | "excluded-expansion-preflight"
             | "governed-stage2"
+            | "excluded-expansion-v3-preflight"
+            | "governed-stage2-v3"
     ) {
         bail!("unsupported execution class");
     }
     let state = state.to_uppercase();
+    let expected_seed = if matches!(
+        execution_class,
+        "excluded-expansion-v3-preflight" | "governed-stage2-v3"
+    ) {
+        20260812
+    } else {
+        20260810
+    };
     let common_frozen =
-        year == 2020 && tolerance == 0.005 && base_seed == 20260810 && snapshot_stride == 10;
+        year == 2020 && tolerance == 0.005 && base_seed == expected_seed && snapshot_stride == 10;
     if execution_class == "governed-stage1"
         && (!common_frozen || state != "RI" || districts != 2 || steps != 2000 || chains != 4)
     {
@@ -109,7 +119,10 @@ fn validate_execution(
     }
     if matches!(
         execution_class,
-        "excluded-expansion-preflight" | "governed-stage2"
+        "excluded-expansion-preflight"
+            | "governed-stage2"
+            | "excluded-expansion-v3-preflight"
+            | "governed-stage2-v3"
     ) {
         let expected_districts = match state.as_str() {
             "NH" => 2,
@@ -117,13 +130,14 @@ fn validate_execution(
             "GA" => 14,
             _ => bail!("expansion execution is restricted to NH, NM, and GA"),
         };
-        let expected_shape = if execution_class == "governed-stage2" {
+        let expected_shape = if matches!(execution_class, "governed-stage2" | "governed-stage2-v3")
+        {
             steps == 2000 && chains == 4
         } else {
             steps == 25 && chains == 1
         };
         if !common_frozen || districts != expected_districts || !expected_shape {
-            bail!("expansion arguments differ from the frozen Stage 2 protocol");
+            bail!("expansion arguments differ from the frozen execution protocol");
         }
     }
     Ok(())
@@ -194,6 +208,16 @@ fn main() -> Result<()> {
         "kruskal" => TreeSampler::GerryChainKruskal,
         _ => bail!("sampler must be wilson or kruskal"),
     };
+    if let Some(contract_only) = values.get("--contract-only") {
+        if contract_only != "true" {
+            bail!("--contract-only must be true when supplied");
+        }
+        println!(
+            "contract-valid execution_class={execution_class} state={} sampler={sampler_name} base_seed={base_seed}",
+            state.to_uppercase()
+        );
+        return Ok(());
+    }
     if steps == 0 || chains == 0 || snapshot_stride == 0 {
         bail!("steps, chains, and snapshot stride must be positive");
     }
@@ -273,9 +297,15 @@ fn main() -> Result<()> {
             snapshots,
         });
     }
-    let claim_boundary = if execution_class == "governed-stage2" {
+    let claim_boundary = if matches!(
+        execution_class.as_str(),
+        "governed-stage2" | "governed-stage2-v3"
+    ) {
         "Governed NH/NM/GA Stage 2 trace; State-specific diagnostics only, with no national or sampler-equivalence claim."
-    } else if execution_class == "excluded-expansion-preflight" {
+    } else if matches!(
+        execution_class.as_str(),
+        "excluded-expansion-preflight" | "excluded-expansion-v3-preflight"
+    ) {
         "Excluded Stage 2 engineering preflight; samples are barred from percentiles and convergence claims."
     } else {
         "Excluded Stage 0 engineering preflight; samples are barred from percentiles and convergence claims."
@@ -357,5 +387,47 @@ mod tests {
             validate_execution("governed-stage2", "NH", 2020, 2, 0.005, 25, 1, 20260810, 10,)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn frozen_v3_shapes_require_fresh_seed() {
+        for (state, districts) in [("NH", 2), ("NM", 3), ("GA", 14)] {
+            validate_execution(
+                "excluded-expansion-v3-preflight",
+                state,
+                2020,
+                districts,
+                0.005,
+                25,
+                1,
+                20260812,
+                10,
+            )
+            .unwrap();
+            validate_execution(
+                "governed-stage2-v3",
+                state,
+                2020,
+                districts,
+                0.005,
+                2000,
+                4,
+                20260812,
+                10,
+            )
+            .unwrap();
+        }
+        assert!(validate_execution(
+            "excluded-expansion-v3-preflight",
+            "NH",
+            2020,
+            2,
+            0.005,
+            25,
+            1,
+            20260811,
+            10,
+        )
+        .is_err());
     }
 }

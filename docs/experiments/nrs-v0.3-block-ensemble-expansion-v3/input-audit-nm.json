@@ -1,0 +1,14 @@
+{
+  "schema_version": "nrs-block-ensemble-input-audit-v1",
+  "status": "pass",
+  "state": "NM",
+  "year": 2020,
+  "units": 107215,
+  "districts": 3,
+  "population_total": 2117522,
+  "max_population_deviation": 1.0861752557887751e-05,
+  "undirected_edges": 268806,
+  "rctx_sha256": "6ec8526daac0349be74bcf01119a14b4d37ba3c6d65577d07503cf2ec5d868bc",
+  "assignments_sha256": "017fe06f325a8da15a736e8b3a20da7983fa19d873a9549ea284a314fe3d866f",
+  "claim_boundary": "Stage 0 candidate input audit only; no ensemble was executed."
+}

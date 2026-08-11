@@ -1,0 +1,47 @@
+{
+  "schema_version": "nrs-block-ensemble-expansion-v3-readiness-v1",
+  "status": "pass",
+  "protocol_id": "nrs-v0.3-block-ensemble-expansion-v3",
+  "observed_at_utc": "2026-08-11T21:21:44.480985+00:00",
+  "implementation_base_commit": "52dfb90df5c66b7e5969dec50924416bbb772ceb",
+  "build": {
+    "profile": "release",
+    "target": "x86_64-pc-windows-msvc",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "platform": "Windows-11-10.0.26310-SP0"
+  },
+  "sha256_bindings": {
+    "input-audit-nh.json": "da5ee848bd24a75ebefc9b411105d8af7523bc8af8c387add1635bab201455cf",
+    "input-audit-nm.json": "f4bb7821469cc9aca37b8b40624c10ffc1beca7585b89e1174c74a97a31813a4",
+    "input-audit-ga.json": "559a803dab9bc33eb2c320ef3811216a54ae4a728347ad83a2be1da96840b22f",
+    "block_trace.exe": "a0cd426ab9942c7a3e68ebab445c76890ab364c186618fd9fb9ec53910e5f18b",
+    "validate_block_input.exe": "62460d3291a8660a0eb2537c3a6b99b8c352d056564db492f7b4c0b68dbe343d",
+    "block_trace.rs": "01cf0f5fc53f0f988f40413366cef4c1ebd0365acfe33522b47ebb4afe8f2c50",
+    "validate_block_input.rs": "88ccbcbe78489cb2e8da9f8e5d06e7f71db18bafe3f274a53c38c984411d51d1",
+    "run_block_ensemble_expansion_v3.py": "4b87ef5ae8d515a5ddcf3968c9c8611e4e379590eefab38d47cbf76878b2173f",
+    "verify_block_ensemble_expansion_v3.py": "c80df15b3189a8c4a088a381d92cbbf69f93fd6e8a51979702ce278466fce05e",
+    "verify_block_ensemble_v3_readiness.py": "57afc81fd4d56b386df19a0d2673743f704aa37d8d83295464e3b7cb82f56b3e",
+    "prepare_block_ensemble_v3_readiness.py": "91640744498e3b1bf11d92463d3ed97ad5465cc5bd26bf894b1826e3c853b803",
+    "check_block_ensemble_host_capacity.py": "762652e6da5d4a51c6a4067d994e6c2b34635e2c2fd88e48cd14fa18b202d5bc",
+    "expansion-v3-protocol.md": "c15b069978c530296bd85cbdb25557285016c1a68f3aa3f3f2feab26350a4a3f",
+    "resource-audit-manifest.json": "83dcb17b9d801e4f5e3a0a8a5509bc1bcca7dedd4370dfc7be51df068d003a6f",
+    "compiled-contract-probes.json": "a5cb81a7ce34cd47f53ac455dca51fdc0df3c210340e219c4484bd6e3b025c6d"
+  },
+  "capacity_snapshot": {
+    "schema_version": "nrs-block-ensemble-host-capacity-v1",
+    "status": "pass",
+    "free_bytes": 95035809792,
+    "retained_used_bytes": 0,
+    "scratch_limit_bytes": 3221225472,
+    "retained_limit_bytes": 3221225472,
+    "safety_reserve_bytes": 2147483648,
+    "retained_remaining_bytes": 3221225472,
+    "required_free_bytes": 8589934592,
+    "shortfall_bytes": 0,
+    "process_launch_authorized": true,
+    "claim_boundary": "Point-in-time readiness observation only; every process still requires a fresh host-capacity admission record.",
+    "observed_at_utc": "2026-08-11T21:21:44.480773+00:00"
+  },
+  "claim_boundary": "Local Stage 0 readiness and custody only; this does not authorize a process, establish reproducible binaries on another host, or report an ensemble result."
+}

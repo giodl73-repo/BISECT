@@ -31,3 +31,16 @@ def test_v2_terminal_failure_verifies_portably(tmp_path: Path) -> None:
     assert resource["returncode"] == 1
     assert resource["state"] == "NH"
     assert resource["sampler"] == "wilson"
+
+
+def test_v2_failure_verifier_uses_retained_source_hash() -> None:
+    resource = json.loads(
+        (PACKAGE / "resource-preflight-nh-wilson.json").read_text(encoding="utf-8")
+    )
+
+    assert resource["runner_source_sha256"] != sha256(
+        PROJECT_ROOT / "crates/bisect-ensemble/examples/block_trace.rs"
+    )
+    assert verify_terminal_failure()["runner_source_sha256"] == resource[
+        "runner_source_sha256"
+    ]
