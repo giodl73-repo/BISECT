@@ -1,6 +1,6 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v3
 
-Status: Stage 0 complete; governed primaries active at 5/6.
+Status: Stage 0 complete; governed primaries complete at 6/6; governed replays pending at 0/6.
 
 V3 is a fresh successor to the permanently closed v1 and v2 protocols. It
 uses base seed `20260812`, a fresh ledger and package, and compiled execution
@@ -82,3 +82,9 @@ bytes peak RSS. Its validated 454,914,408-byte raw trace was deterministically
 compressed to 6,708,674 bytes and deleted. The active ledger now has 5/6
 primaries, 0/6 governed replays, 23,845.8041 governed runner seconds,
 14,744,322 retained bytes, and no failures.
+
+Pulse 41 completed GA Kruskal in 566.8571 runner seconds with 1,397,723,136
+bytes peak RSS. Its validated 453,636,562-byte raw trace was deterministically
+compressed to 5,920,216 bytes and deleted. All six governed primaries are now
+complete. The active ledger has 0/6 governed replays, 24,412.6612 governed
+runner seconds, 20,664,538 retained bytes, and no failures.

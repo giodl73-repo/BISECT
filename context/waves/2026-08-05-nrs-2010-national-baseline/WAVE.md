@@ -70,6 +70,7 @@ verified 2020 national baseline.
 | 38 - Block-ensemble v3 NM Wilson primary | COMPLETE | Third governed four-chain primary passed in 15,151.09 s at 665,784,320-byte peak RSS; 173,107,481 raw bytes validated and compressed to 1,708,625 retained bytes; ledger active at 3/6 primaries with no failures |
 | 39 - Block-ensemble v3 NM Kruskal primary | COMPLETE | Fourth governed four-chain primary passed in 1,942.97 s at 703,852,544-byte peak RSS; 173,103,802 raw bytes validated and compressed to 1,580,983 retained bytes; ledger active at 4/6 primaries with no failures |
 | 40 - Block-ensemble v3 GA Wilson primary | COMPLETE | Fifth governed four-chain primary passed in 3,384.94 s at 1,391,804,416-byte peak RSS; 454,914,408 raw bytes validated and compressed to 6,708,674 retained bytes; ledger active at 5/6 primaries with no failures |
+| 41 - Block-ensemble v3 GA Kruskal primary | COMPLETE | Sixth governed four-chain primary passed in 566.86 s at 1,397,723,136-byte peak RSS; 453,636,562 raw bytes validated and compressed to 5,920,216 retained bytes; all 6/6 primaries complete with no failures |
 
 ## Versioned amendment
 
