@@ -1,6 +1,6 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v3
 
-Status: Stage 0 complete; governed primaries active at 3/6.
+Status: Stage 0 complete; governed primaries active at 4/6.
 
 V3 is a fresh successor to the permanently closed v1 and v2 protocols. It
 uses base seed `20260812`, a fresh ledger and package, and compiled execution
@@ -70,3 +70,9 @@ reached its one-hour attachment timeout, but the original Python resource
 monitor and child runner remained alive and completed without relaunch. The
 active ledger now has 3/6 primaries, 0/6 governed replays, 18,517.8955 governed
 runner seconds, 6,454,665 retained bytes, and no failures.
+
+Pulse 39 completed NM Kruskal in 1,942.9729 runner seconds with 703,852,544
+bytes peak RSS. Its validated 173,103,802-byte raw trace was deterministically
+compressed to 1,580,983 bytes and deleted. The active ledger now has 4/6
+primaries, 0/6 governed replays, 20,460.8683 governed runner seconds, 8,035,648
+retained bytes, and no failures.
