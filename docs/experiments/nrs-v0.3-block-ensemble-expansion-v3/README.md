@@ -1,6 +1,6 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v3
 
-Status: Stage 0 complete; governed primaries active at 4/6.
+Status: Stage 0 complete; governed primaries active at 5/6.
 
 V3 is a fresh successor to the permanently closed v1 and v2 protocols. It
 uses base seed `20260812`, a fresh ledger and package, and compiled execution
@@ -76,3 +76,9 @@ bytes peak RSS. Its validated 173,103,802-byte raw trace was deterministically
 compressed to 1,580,983 bytes and deleted. The active ledger now has 4/6
 primaries, 0/6 governed replays, 20,460.8683 governed runner seconds, 8,035,648
 retained bytes, and no failures.
+
+Pulse 40 completed GA Wilson in 3,384.9358 runner seconds with 1,391,804,416
+bytes peak RSS. Its validated 454,914,408-byte raw trace was deterministically
+compressed to 6,708,674 bytes and deleted. The active ledger now has 5/6
+primaries, 0/6 governed replays, 23,845.8041 governed runner seconds,
+14,744,322 retained bytes, and no failures.
