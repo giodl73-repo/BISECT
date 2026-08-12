@@ -1,6 +1,6 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v3
 
-Status: Stage 0 complete; no governed v3 process has run.
+Status: Stage 0 complete; governed primaries active at 1/6.
 
 V3 is a fresh successor to the permanently closed v1 and v2 protocols. It
 uses base seed `20260812`, a fresh ledger and package, and compiled execution
@@ -42,4 +42,17 @@ no primary or governed replay. Verify this gate with:
 
 ```text
 python scripts/research/verify_block_ensemble_v3_stage0.py docs/experiments/nrs-v0.3-block-ensemble-expansion-v3
+```
+
+Pulse 36 completed the first governed primary, NH Wilson: all four frozen
+2,000-step chains returned zero in 2,927.3477 runner seconds with 181,809,152
+bytes peak RSS. The 52,663,157-byte raw trace was validated, deterministically
+compressed to 713,443 bytes, and deleted. The active ledger now has 1/6
+primaries, 0/6 governed replays, 4,099,716 retained bytes, and no failures.
+
+The Stage 0 verifier intentionally applies only at the pre-governed boundary.
+After a primary begins, verify the current package with:
+
+```text
+python scripts/research/verify_block_ensemble_expansion_v3.py docs/experiments/nrs-v0.3-block-ensemble-expansion-v3
 ```

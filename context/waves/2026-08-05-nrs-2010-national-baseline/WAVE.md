@@ -65,6 +65,7 @@ verified 2020 national baseline.
 | 33 - Block-ensemble v3 compiled readiness | COMPLETE | Fresh v3 identity/seed/package frozen; 12 positive and 2 negative side-effect-free release-runner probes, pristine custody, and 8 GiB readiness gate passed; no chain launched |
 | 34 - Block-ensemble v3 portable readiness | COMPLETE | Prelaunch recheck caught mixed line-ending hash custody before admission; LF-canonical text bindings and byte-exact binary/input bindings now pass from the ordinary Windows checkout; no chain launched |
 | 35 - Block-ensemble v3 Stage 0 | COMPLETE | All six excluded preflights and six fresh-process normalized replays passed exactly; 130.88 s total, 180,961,280-byte peak RSS, 3,386,273 retained bytes; no governed chain launched |
+| 36 - Block-ensemble v3 NH Wilson primary | COMPLETE | First governed four-chain primary passed in 2,927.35 s at 181,809,152-byte peak RSS; 52,663,157 raw bytes validated and compressed to 713,443 retained bytes; ledger active at 1/6 primaries with no failures |
 
 ## Versioned amendment
 

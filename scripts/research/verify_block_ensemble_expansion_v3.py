@@ -148,6 +148,7 @@ def verify_package(package: Path) -> dict:
     readiness_path = package / "readiness.json"
     executable_sha256 = None
     execution_text_sha256 = None
+    governed_execution_text_sha256 = None
     execution_paths = None
     if readiness_path.is_file():
         readiness = load(readiness_path)
@@ -181,6 +182,19 @@ def verify_package(package: Path) -> dict:
                 execution_text_sha256
             ) != set(canonical_paths):
                 fail("execution text binding set drift")
+            governed_execution_text_sha256 = execution_binding.get(
+                "governed_platform_exact_sha256_bindings", {}
+            )
+            if not isinstance(governed_execution_text_sha256, dict):
+                fail("governed execution text bindings are invalid")
+            for resource_name, bindings in governed_execution_text_sha256.items():
+                if (
+                    not isinstance(resource_name, str)
+                    or Path(resource_name).name != resource_name
+                    or not isinstance(bindings, dict)
+                    or set(bindings) != set(canonical_paths)
+                ):
+                    fail("governed execution text binding set drift")
             execution_paths = execution_binding.get("execution_paths")
             if execution_paths != {
                 "package_path": "C:\\src\\apportionment\\docs\\experiments\\nrs-v0.3-block-ensemble-expansion-v3",
@@ -219,6 +233,15 @@ def verify_package(package: Path) -> dict:
                 fail("completed process has no executable readiness binding")
             if not isinstance(execution_text_sha256, dict):
                 fail("completed process has no execution text bindings")
+            resource_execution_text_sha256 = execution_text_sha256
+            if phase in {"primary", "replay"}:
+                if not isinstance(governed_execution_text_sha256, dict):
+                    fail("completed governed process has no execution text bindings")
+                resource_execution_text_sha256 = governed_execution_text_sha256.get(
+                    paths["resource"].name
+                )
+                if not isinstance(resource_execution_text_sha256, dict):
+                    fail(f"{phase} {key} has no governed execution text binding")
             verify_resource_record(
                 record,
                 state,
@@ -226,7 +249,7 @@ def verify_package(package: Path) -> dict:
                 phase,
                 admission_path,
                 executable_sha256,
-                execution_text_sha256,
+                resource_execution_text_sha256,
             )
             if phase == "preflight":
                 trace = load_trace(paths["runner_trace"])
