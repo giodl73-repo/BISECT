@@ -1,0 +1,18 @@
+{
+  "schema_version": "nrs-block-ensemble-host-capacity-v1",
+  "status": "pass",
+  "free_bytes": 84042665984,
+  "retained_used_bytes": 20664538,
+  "scratch_limit_bytes": 3221225472,
+  "retained_limit_bytes": 3221225472,
+  "safety_reserve_bytes": 2147483648,
+  "retained_remaining_bytes": 3200560934,
+  "required_free_bytes": 8569270054,
+  "shortfall_bytes": 0,
+  "process_launch_authorized": true,
+  "claim_boundary": "Host-capacity admission only; this is not a governed chain, resource measurement, or statistical result.",
+  "package_path": "C:\\src\\apportionment\\docs\\experiments\\nrs-v0.3-block-ensemble-expansion-v3",
+  "ledger_path": "C:\\src\\apportionment\\docs\\experiments\\nrs-v0.3-block-ensemble-expansion-v3\\ledger.json",
+  "volume_total_bytes": 1021821579264,
+  "volume_used_bytes": 937778913280
+}
