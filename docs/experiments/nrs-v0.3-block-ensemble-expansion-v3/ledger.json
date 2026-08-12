@@ -19,10 +19,12 @@
       "GA:wilson",
       "GA:kruskal"
     ],
-    "primary": [],
+    "primary": [
+      "NH:wilson"
+    ],
     "replay": []
   },
-  "runner_wall_seconds": 0.0,
-  "retained_bytes": 3386273,
+  "runner_wall_seconds": 2927.3477436999674,
+  "retained_bytes": 4099716,
   "failures": []
 }

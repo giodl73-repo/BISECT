@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import shutil
 import sys
 
@@ -9,19 +10,20 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "research"))
 
 from run_block_ensemble_expansion_v3 import ORDER, PACKAGE, new_ledger
+from verify_block_ensemble_expansion_v3 import verify_package
 from verify_block_ensemble_v3_stage0 import verify_stage0
 
 
-def test_retained_v3_stage0_verifies_portably(tmp_path: Path) -> None:
+def test_retained_v3_package_verifies_portably(tmp_path: Path) -> None:
     package = tmp_path / "stage0"
     shutil.copytree(PACKAGE, package)
 
-    summary = verify_stage0(package)
+    ledger = verify_package(package)
 
-    assert summary["preflights"] == 6
-    assert summary["preflight_replays"] == 6
-    assert summary["retained_bytes"] == 3_386_273
-    assert summary["peak_rss_bytes"] <= 2_415_919_104
+    assert ledger["completed"]["preflight"] == ORDER
+    assert ledger["completed"]["preflight-replay"] == ORDER
+    assert ledger["completed"]["primary"] == ["NH:wilson"]
+    assert ledger["retained_bytes"] == 4_099_716
 
 
 def test_stage0_requires_all_preflight_replays(monkeypatch, tmp_path: Path) -> None:
@@ -33,3 +35,15 @@ def test_stage0_requires_all_preflight_replays(monkeypatch, tmp_path: Path) -> N
 
     with pytest.raises(ValueError, match="preflight replay schedule is incomplete"):
         verify_stage0(tmp_path)
+
+
+def test_governed_resource_requires_exact_execution_binding(tmp_path: Path) -> None:
+    package = tmp_path / "stage0"
+    shutil.copytree(PACKAGE, package)
+    binding_path = package / "stage0-execution-bindings.json"
+    bindings = json.loads(binding_path.read_text(encoding="utf-8"))
+    bindings["governed_platform_exact_sha256_bindings"].clear()
+    binding_path.write_text(json.dumps(bindings), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="has no governed execution text binding"):
+        verify_package(package)
