@@ -22,8 +22,12 @@ def test_retained_v3_package_verifies_portably(tmp_path: Path) -> None:
 
     assert ledger["completed"]["preflight"] == ORDER
     assert ledger["completed"]["preflight-replay"] == ORDER
-    assert ledger["completed"]["primary"] == ["NH:wilson", "NH:kruskal"]
-    assert ledger["retained_bytes"] == 4_746_040
+    assert ledger["completed"]["primary"] == [
+        "NH:wilson",
+        "NH:kruskal",
+        "NM:wilson",
+    ]
+    assert ledger["retained_bytes"] == 6_454_665
 
 
 def test_stage0_requires_all_preflight_replays(monkeypatch, tmp_path: Path) -> None:
