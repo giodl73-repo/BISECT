@@ -1,6 +1,6 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v3
 
-Status: Stage 0 complete; governed primaries active at 2/6.
+Status: Stage 0 complete; governed primaries active at 3/6.
 
 V3 is a fresh successor to the permanently closed v1 and v2 protocols. It
 uses base seed `20260812`, a fresh ledger and package, and compiled execution
@@ -62,3 +62,11 @@ bytes peak RSS. Its validated 52,659,037-byte raw trace was deterministically
 compressed to 646,324 bytes and deleted. The active ledger now has 2/6
 primaries, 0/6 governed replays, 3,366.8033 governed runner seconds, 4,746,040
 retained bytes, and no failures.
+
+Pulse 38 completed NM Wilson in 15,151.0922 runner seconds with 665,784,320
+bytes peak RSS. Its validated 173,107,481-byte raw trace was deterministically
+compressed to 1,708,625 bytes and deleted. The outer orchestration shell
+reached its one-hour attachment timeout, but the original Python resource
+monitor and child runner remained alive and completed without relaunch. The
+active ledger now has 3/6 primaries, 0/6 governed replays, 18,517.8955 governed
+runner seconds, 6,454,665 retained bytes, and no failures.
