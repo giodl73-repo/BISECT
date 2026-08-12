@@ -28,8 +28,9 @@ def test_retained_v3_package_verifies_portably(tmp_path: Path) -> None:
         "NM:wilson",
         "NM:kruskal",
         "GA:wilson",
+        "GA:kruskal",
     ]
-    assert ledger["retained_bytes"] == 14_744_322
+    assert ledger["retained_bytes"] == 20_664_538
 
 
 def test_stage0_requires_all_preflight_replays(monkeypatch, tmp_path: Path) -> None:
