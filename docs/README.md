@@ -1,6 +1,6 @@
 # Documentation Directory
 
-**Last Updated**: January 17, 2026
+**Last Updated**: August 13, 2026
 
 This directory contains **human-friendly** documentation for users, researchers, and developers. If you're new to the project, start here!
 
@@ -23,6 +23,8 @@ This directory contains **human-friendly** documentation for users, researchers,
 - [RECURSIVE_BISECTION.md](RECURSIVE_BISECTION.md) - How redistricting works
 - [DATA_DICTIONARY.md](DATA_DICTIONARY.md) - Field definitions for statistical analysis
 - [VISUALIZATION_GUIDE.md](VISUALIZATION_GUIDE.md) - Interpreting compactness and political metrics
+- [PAPERS.md](PAPERS.md) - Research-paper index with evidence posture
+- [experiments/nrs-v0.3-block-ensemble-expansion-v3/README.md](experiments/nrs-v0.3-block-ensemble-expansion-v3/README.md) - Latest governed block-ensemble closeout
 
 **Data sources**:
 - [CENSUS_DATA_ANALYSIS.md](CENSUS_DATA_ANALYSIS.md) - Census data details
@@ -75,6 +77,19 @@ The `context/` directory contains AI-optimized documentation (compact, token-eff
 | [concepts/algorithmic-baseline.md](concepts/algorithmic-baseline.md) | Public terminology for Bisect as a redistricting baseline | 8 min |
 | [../research/journals/README.md](../research/journals/README.md) | Journal program overview | 10 min |
 | [../research/journals/FACTORY-QUEUE.md](../research/journals/FACTORY-QUEUE.md) | Live journal production queue | 5 min |
+
+### Current Governed Evidence
+
+| File | Purpose |
+|------|---------|
+| [../context/waves/2026-08-05-nrs-2010-national-baseline/WAVE.md](../context/waves/2026-08-05-nrs-2010-national-baseline/WAVE.md) | Active national-baseline execution ledger |
+| [experiments/nrs-v0.3-block-ensemble-expansion-v3/README.md](experiments/nrs-v0.3-block-ensemble-expansion-v3/README.md) | NH/NM/GA v3 execution, replay, diagnostics, and claim boundary |
+| [vtrace/PAPER_EVIDENCE_INVENTORY.md](vtrace/PAPER_EVIDENCE_INVENTORY.md) | Paper-to-evidence routing and remaining gaps |
+
+The latest block-level expansion completed and exactly replayed all six
+State-kernel runs. NH and NM passed the registered scalar rules; GA did not,
+so the all-or-nothing v3 package is closed non-converged and cannot support a
+mixing, sampler-equivalence, or national-representativeness claim.
 
 ### Project Information
 

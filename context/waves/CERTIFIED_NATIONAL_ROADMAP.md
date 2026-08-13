@@ -77,7 +77,7 @@ For every State and Census year:
   - [x] Freeze a national algorithm-family schedule before any expansion or ranking.
   - [x] Exactly regenerate the eight-State national algorithm-family pilot.
   - [x] Execute and independently regenerate the frozen 44-State/176-cell phase after the pilot and compute-budget gates.
-- [ ] Sensitivity and ensemble analysis.
+- [x] Governed sensitivity and ensemble analysis through registered closeout.
   - [x] Execute and exactly regenerate the Rhode Island 100-seed NRS v0.3 root slice.
   - [x] Execute and exactly regenerate the precommitted NH/NM/GA 300-pair root slice.
   - [x] Instrument deterministic DFS candidate-tie multiplicity before broader seed expansion.
@@ -91,6 +91,9 @@ For every State and Census year:
   - [x] Run the frozen Rhode Island block-level Stage 1 gate; all eight chains completed and the two kernel traces regenerated exactly.
   - [x] Measure instrumented peak memory and freeze explicit compute/storage budgets before any multi-State ensemble expansion.
   - [x] Attempt the separately frozen NH/NM/GA block expansion; retain its terminal failed gate after five primaries and GA Kruskal disk exhaustion, with no retry or governed replay.
+  - [x] Retain the v2 compiled-runner identity failure before its first preflight; do not reuse v1 completion evidence.
+  - [x] Execute v3 Stage 0, all six governed primaries, and all six exact governed replays under fresh identity, seed, and custody.
+  - [x] Close v3 non-converged without retry after NH/NM passed and GA failed the frozen all-or-nothing scalar gate.
 - [x] Updated U.21 and synthesis/policy papers.
   - [x] Update and rebuild U.21 with the three-cycle operational evidence and proof gaps.
   - [x] Update the synthesis and policy papers after the neutral analysis is complete.
@@ -131,10 +134,12 @@ Current objective:
 
 Next unblocked work:
 
-> Obtain a non-author external v0.3 replication record while keeping
-> multi-State block-level ensemble expansion behind its separate resource gate;
-> do not promote either the completed tract-level RI/IA/NC package or the
-> governed Rhode Island block slice to national evidence.
+> Obtain a non-author external v0.3 replication record. Keep the completed
+> block-level evidence within its registered boundaries: the Rhode Island gate
+> passed, while the fresh NH/NM/GA v3 expansion completed and exactly replayed
+> all six State-kernel runs but closed non-converged after GA failed the frozen
+> all-or-nothing diagnostics. Do not promote either package to mixing, sampler
+> equivalence, neutrality, or national-representativeness evidence.
 > The final verifier bundle passed a fresh-clone Level 1 rehearsal
 > on the author machine at commit `d0053ff3`; this does not satisfy the
 > independence gate. The verified NRS v0.3 runs cover 2000, 2010, and 2020;
@@ -191,9 +196,15 @@ Next unblocked work:
 > convergence rules, and regenerated normalized metrics and canonical
 > snapshots exactly in a fresh sequential run. The materially different cut
 > distributions support kernel-sensitivity reporting, not sampler equivalence,
-> mixing proof, or national inference. Multi-State expansion remains closed
-> pending instrumented peak-memory evidence and an explicit compute/storage
-> budget.
+> mixing proof, or national inference. The first NH/NM/GA expansion subsequently
+> closed after five primaries when GA Kruskal exhausted host disk, and v2 closed
+> before its first preflight on compiled-runner identity drift. Under a fresh v3
+> identity and seed, Stage 0, all six primaries, and all six exact governed
+> replays passed. The frozen analysis passed NH and NM for both kernels but not
+> GA: Wilson cut fraction missed the ESS floor, while Kruskal weighted boundary
+> cut missed both split-R-hat and ESS thresholds. V3 is therefore closed
+> non-converged without retry or extension; exact replay does not override that
+> registered negative gate.
 > Cross-census assignment overlap remains uncomputed
 > pending a valid relationship crosswalk
 > or geometry overlay; weighted-boundary and canonical exact-proof gaps remain

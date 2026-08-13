@@ -246,6 +246,8 @@ bisect label-report official_2020 --year 2020 --format html json pdf
 | County splits | 1,812 / 1,819 / 1,823 for 2000 / 2010 / 2020 |
 | Tract splits | 17,268 / 18,800 / 20,288 for 2000 / 2010 / 2020 |
 | Exact proof coverage | Arithmetic floor 13/1,155; weighted boundary 0/1,155; canonical 0/1,155 |
+| Block-level ensemble replay | Rhode Island Stage 1 and all six NH/NM/GA v3 State-kernel runs regenerated exactly |
+| Block-level ensemble convergence | Rhode Island passed; NH and NM passed v3; GA failed the frozen all-or-nothing gate, so v3 closed non-converged |
 
 These results cover operational assignment conformance and descriptive
 structure/subdivision metrics. They do **not** establish partisan fairness,
@@ -254,6 +256,12 @@ weighted-boundary/canonical optimality. Start with the
 [three-cycle comparison](docs/experiments/nrs-cross-decade-2000-2020/comparison/README.md),
 [geographic audit](docs/experiments/nrs-v0.3-national-geographic-splits/README.md),
 and [fresh-clone verifier bundle](docs/external/nrs-v0.3-national-verification/README.md).
+The governed block-level ensemble evidence is separately bounded: see the
+[Rhode Island gate](docs/experiments/nrs-v0.3-block-ensemble-gate/README.md) and
+[NH/NM/GA v3 closeout](docs/experiments/nrs-v0.3-block-ensemble-expansion-v3/README.md).
+Exact replay establishes deterministic execution, not mixing or sampler
+equivalence, and the failed Georgia diagnostics prevent a multi-State or
+national convergence claim.
 
 **Legacy tract-level 2020 research snapshot (not the NRS v0.3 block baseline):**
 

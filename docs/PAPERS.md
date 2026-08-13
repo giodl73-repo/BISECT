@@ -167,7 +167,7 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 
 | Code | Title | PDF | Note |
 |------|-------|-----|------|
-| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | tract package and governed RI block gate integrated; NH/NM/GA expansion terminal failure retained |
+| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | tract package and governed RI block gate integrated; v3 completed and replayed, then closed non-converged on GA diagnostics |
 | G.1 | Real ReCom Comparison — RI/IA/NC, Rust vs GerryChain | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | active real package; WI eligibility failure retained |
 | G.2 | 2020 Presidential Seat Distributions — RI/IA/NC | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | active real package; 2016 excluded for tract mismatch |
 | G.3 | Tract Cut-Fraction Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | active real package; polygon compactness claims withdrawn |
@@ -199,18 +199,25 @@ distributions support kernel-sensitivity reporting only; multi-State and
 national expansion remain closed behind a separate resource/protocol gate.
 
 **Block-level expansion result:**
-`docs/experiments/nrs-v0.3-block-ensemble-expansion/` is the separately frozen
-NH/NM/GA package. Stage 0 passed and five primaries completed, but GA Kruskal
-terminated on host disk exhaustion. The registered stop rule closed the gate
-without retry, so no governed replay ran. The package supports bounded
-feasibility, resource, and failure-envelope reporting only; it is not a
-completed multi-State matrix bakeoff and does not extend the RI claim.
+The retained v1 package at
+`docs/experiments/nrs-v0.3-block-ensemble-expansion/` closed after five
+primaries when GA Kruskal exhausted host disk; no governed replay ran. The v2
+successor at `docs/experiments/nrs-v0.3-block-ensemble-expansion-v2/` then
+closed before its first preflight completed because the compiled runner
+rejected the v2 execution identity and seed. These remain distinct resource
+and implementation-integration failure evidence.
 
-The fresh v2 successor at
-`docs/experiments/nrs-v0.3-block-ensemble-expansion-v2/` closed before its first
-preflight completed because the bound compiled runner rejected the v2 execution
-identity and seed. It contributes negative implementation-integration evidence
-only and does not change the scientific matrix result above.
+The fresh v3 package at
+`docs/experiments/nrs-v0.3-block-ensemble-expansion-v3/` passed Stage 0,
+completed all six governed primaries, and exactly regenerated all six in fresh
+governed replays. Under the frozen 500-step burn-in and scalar rules, NH and NM
+passed for both kernels, while GA did not: Wilson cut fraction had pooled ESS
+`66.47`, and Kruskal weighted boundary cut had split R-hat `1.07507` with
+pooled ESS `53.88`. The registered all-or-nothing decision is therefore
+`gate_passed: false`, and v3 is closed without retry or extension. It supports
+bounded feasibility, deterministic replay, registered diagnostics, and
+State-specific kernel sensitivity—not mixing, sampler equivalence, neutrality,
+or national representativeness.
 
 ---
 

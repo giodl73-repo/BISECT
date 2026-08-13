@@ -2,7 +2,7 @@
 
 All notable changes to the Congressional Redistricting project.
 
-**Last Updated**: February 8, 2026
+**Last Updated**: August 13, 2026
 
 ## Related Documentation
 
@@ -13,6 +13,21 @@ All notable changes to the Congressional Redistricting project.
 **Note**: This changelog tracks historical changes chronologically. For detailed enhancement specifications and future roadmap, see `enhancements/INDEX.md`.
 
 ## [Unreleased]
+
+### Added (2026-08-13) — Governed NH/NM/GA block-ensemble v3 closeout
+
+- Completed v3 Stage 0, all six governed State-kernel primaries, and all six
+  fresh-process governed replays; every replay exactly matched its retained
+  primary after normalization.
+- Added deterministic registered analysis artifacts and byte-for-byte
+  verification after the frozen 500-step burn-in. NH and NM passed both scalar
+  rules for Wilson and Kruskal; GA failed the all-or-nothing gate.
+- Closed v3 non-converged without retry or extension. The package supports
+  bounded feasibility, deterministic replay, registered diagnostics, and
+  State-specific kernel sensitivity, but not mixing, sampler equivalence,
+  neutrality, or national representativeness.
+- Preserved v1 disk-exhaustion and v2 compiled-runner-identity failures as
+  separate negative resource and implementation-integration evidence.
 
 ### Added (2026-05-15) — FLETCH source orchestration for `bisect fetch`
 - **`bisect fletch-sources`**: new non-mutating source handoff command that expands the same state/year/type surface as `bisect fetch`, emits `data/fletch-source-handoff.csv`, and supports `--gate` for registry/readiness validation. Adapter-required rows (for example GitHub release adjacency) are explicit handoffs, not hidden failures.
