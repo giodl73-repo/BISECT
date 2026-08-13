@@ -26,6 +26,17 @@ BURN_IN = 500
 MAX_HAMMING_LAG = 20
 
 
+def canonicalize_numbers(value):
+    """Remove non-scientific platform noise while preserving decisions."""
+    if isinstance(value, float):
+        return float(format(value, ".12g"))
+    if isinstance(value, list):
+        return [canonicalize_numbers(item) for item in value]
+    if isinstance(value, dict):
+        return {key: canonicalize_numbers(item) for key, item in value.items()}
+    return value
+
+
 def load_trace(path: Path) -> dict:
     with gzip.open(path, "rt", encoding="utf-8") as handle:
         return json.load(handle)
@@ -79,12 +90,12 @@ def hamming_diagnostics(
         if correlation <= 0:
             break
         tau += 2.0 * correlation
-    return {
+    return canonicalize_numbers({
         "snapshot_count": len(retained),
         "mean_distance_by_lag": distances,
         "tau_int": tau,
         "label_alignment": "minimum Hamming over right-label permutations",
-    }
+    })
 
 
 def analyze_kernel(trace: dict, burn_in: int) -> tuple[dict, dict[str, list[float]]]:
@@ -176,7 +187,7 @@ def analyze_package(package: Path, burn_in: int = BURN_IN) -> dict:
             "cross_kernel": cross_kernel,
             "state_converged": all(record["converged"] for record in kernels.values()),
         }
-    return {
+    return canonicalize_numbers({
         "schema_version": "nrs-block-ensemble-expansion-analysis-v3",
         "protocol_id": PROTOCOL_ID,
         "base_seed": BASE_SEED,
@@ -191,7 +202,7 @@ def analyze_package(package: Path, burn_in: int = BURN_IN) -> dict:
             "sampler-equivalence, neutrality, fairness, VRA, legal, polygon, or "
             "all-valid-plans claim."
         ),
-    }
+    })
 
 
 def summary_rows(analysis: dict) -> list[dict]:

@@ -9,10 +9,17 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "research"))
 
 from analyze_block_ensemble_expansion_v3 import (
     analyze_kernel,
+    canonicalize_numbers,
     hamming_diagnostics,
     label_aligned_hamming,
     split_rhat,
 )
+
+
+def test_numeric_canonicalization_removes_last_bit_platform_noise() -> None:
+    left = canonicalize_numbers({"value": 1.23456789012341})
+    right = canonicalize_numbers({"value": 1.23456789012349})
+    assert left == right == {"value": 1.23456789012}
 
 
 def test_label_aligned_hamming_ignores_a_pure_label_swap() -> None:
