@@ -62,6 +62,11 @@
       "block_trace.rs": "01cf0f5fc53f0f988f40413366cef4c1ebd0365acfe33522b47ebb4afe8f2c50",
       "run_block_ensemble_expansion_v3.py": "598d7b231621b945759f66c7d462c312f18a82b1c501896c2a2bf213a864a1f0",
       "expansion-v3-protocol.md": "c3d11228f69aeda0dcbc07a7aa7f3389f21203c0beae4fca6e4661139676fada"
+    },
+    "resource-replay-nm-kruskal.json": {
+      "block_trace.rs": "01cf0f5fc53f0f988f40413366cef4c1ebd0365acfe33522b47ebb4afe8f2c50",
+      "run_block_ensemble_expansion_v3.py": "598d7b231621b945759f66c7d462c312f18a82b1c501896c2a2bf213a864a1f0",
+      "expansion-v3-protocol.md": "c3d11228f69aeda0dcbc07a7aa7f3389f21203c0beae4fca6e4661139676fada"
     }
   },
   "claim_boundary": "Canonical hashes identify reviewable text; platform-exact hashes identify the source bytes recorded by Stage 0 and governed resource evidence. No runtime record was rewritten."
