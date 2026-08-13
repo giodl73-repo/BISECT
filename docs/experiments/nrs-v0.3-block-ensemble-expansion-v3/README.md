@@ -1,6 +1,6 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v3
 
-Status: Stage 0 and governed primaries complete; governed replays active at 4/6.
+Status: Stage 0 and governed primaries complete; governed replays active at 5/6.
 
 V3 is a fresh successor to the permanently closed v1 and v2 protocols. It
 uses base seed `20260812`, a fresh ledger and package, and compiled execution
@@ -111,4 +111,10 @@ Pulse 45 completed the fourth governed replay, NM Kruskal, in 1,874.9194
 runner seconds with 710,737,920 bytes peak RSS. Its 173,103,232-byte raw trace
 exactly matched the retained primary after normalization and was deleted. The
 active ledger now has 4/6 governed replays, 42,278.3744 governed runner
+seconds, 20,664,538 retained bytes, and no failures.
+
+Pulse 46 completed the fifth governed replay, GA Wilson, in 3,203.1085 runner
+seconds with 1,399,513,088 bytes peak RSS. Its 454,914,612-byte raw trace
+exactly matched the retained primary after normalization and was deleted. The
+active ledger now has 5/6 governed replays, 45,481.4829 governed runner
 seconds, 20,664,538 retained bytes, and no failures.

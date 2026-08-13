@@ -35,6 +35,7 @@ def test_retained_v3_package_verifies_portably(tmp_path: Path) -> None:
         "NH:kruskal",
         "NM:wilson",
         "NM:kruskal",
+        "GA:wilson",
     ]
     assert ledger["retained_bytes"] == 20_664_538
 
