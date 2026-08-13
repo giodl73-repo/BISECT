@@ -30,10 +30,11 @@
     "replay": [
       "NH:wilson",
       "NH:kruskal",
-      "NM:wilson"
+      "NM:wilson",
+      "NM:kruskal"
     ]
   },
-  "runner_wall_seconds": 40403.45502449997,
+  "runner_wall_seconds": 42278.374433599995,
   "retained_bytes": 20664538,
   "failures": []
 }
