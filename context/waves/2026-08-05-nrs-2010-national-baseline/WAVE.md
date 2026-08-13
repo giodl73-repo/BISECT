@@ -77,6 +77,7 @@ verified 2020 national baseline.
 | 45 - Block-ensemble v3 NM Kruskal replay | COMPLETE | Fourth governed replay passed in 1,874.92 s at 710,737,920-byte peak RSS; 173,103,232 raw bytes exactly matched the retained primary after normalization and were deleted; ledger active at 4/6 replays with no failures |
 | 46 - Block-ensemble v3 GA Wilson replay | COMPLETE | Fifth governed replay passed in 3,203.11 s at 1,399,513,088-byte peak RSS; 454,914,612 raw bytes exactly matched the retained primary after normalization and were deleted; ledger active at 5/6 replays with no failures |
 | 47 - Block-ensemble v3 GA Kruskal replay | COMPLETE | Sixth governed replay passed in 562.38 s at 1,399,767,040-byte peak RSS; 453,636,076 raw bytes exactly matched the retained primary after normalization and were deleted; ledger complete at 6/6 primaries and 6/6 replays with no failures |
+| 48 - Block-ensemble v3 registered analysis closeout | COMPLETE | Frozen 500-step-burn-in analysis passed NH and NM but failed the all-or-nothing convergence gate for GA; v3 closed non-converged without retry or extension, retaining the GA result as negative evidence |
 
 ## Versioned amendment
 
