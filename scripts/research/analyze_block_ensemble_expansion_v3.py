@@ -231,7 +231,7 @@ def write_analysis(analysis: dict, output: Path, summary_csv: Path) -> None:
     output.write_text(json.dumps(analysis, indent=2) + "\n", encoding="utf-8", newline="\n")
     rows = summary_rows(analysis)
     with summary_csv.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
