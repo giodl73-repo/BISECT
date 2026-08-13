@@ -46,6 +46,10 @@ MANIFEST_BUILDER = ROOT / "scripts/research/build_block_ensemble_expansion_v3_ma
 MANIFEST_SCHEMA = "nrs-block-ensemble-expansion-package-v3"
 
 
+def artifact_sha256(path: Path) -> str:
+    return sha256(path) if path.suffix == ".gz" else binding_sha256(path)
+
+
 def fail(message: str) -> None:
     raise ValueError(f"block ensemble expansion v3 verification failed: {message}")
 
@@ -195,7 +199,7 @@ def verify_manifest(package: Path) -> None:
     if not isinstance(artifacts, dict) or set(artifacts) != actual_names:
         fail("manifest artifact set drift")
     for name, expected_hash in artifacts.items():
-        if sha256(package / name) != expected_hash:
+        if artifact_sha256(package / name) != expected_hash:
             fail(f"manifest artifact hash mismatch for {name}")
     source_paths = {
         PROTOCOL.relative_to(ROOT).as_posix(): PROTOCOL,

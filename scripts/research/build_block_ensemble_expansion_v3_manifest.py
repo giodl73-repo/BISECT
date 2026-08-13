@@ -10,9 +10,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts/research"))
-from measure_block_ensemble_resources import sha256
 from run_block_ensemble_expansion_v3 import PROTOCOL, PROTOCOL_ID, RUNNER, WRAPPER
-from verify_block_ensemble_expansion_v3 import ANALYZER, MANIFEST_SCHEMA
+from verify_block_ensemble_expansion_v3 import ANALYZER, MANIFEST_SCHEMA, artifact_sha256
 from verify_block_ensemble_v3_readiness import binding_sha256
 
 
@@ -26,7 +25,7 @@ def main() -> None:
         raise SystemExit("refusing to close manifest without the frozen negative decision")
     verifier = ROOT / "scripts/research/verify_block_ensemble_expansion_v3.py"
     artifacts = {
-        path.name: sha256(path)
+        path.name: artifact_sha256(path)
         for path in sorted(package.iterdir(), key=lambda item: item.name)
         if path.is_file() and path.name != "manifest.json"
     }
