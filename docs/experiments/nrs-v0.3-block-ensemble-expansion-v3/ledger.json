@@ -31,10 +31,11 @@
       "NH:wilson",
       "NH:kruskal",
       "NM:wilson",
-      "NM:kruskal"
+      "NM:kruskal",
+      "GA:wilson"
     ]
   },
-  "runner_wall_seconds": 42278.374433599995,
+  "runner_wall_seconds": 45481.482899200055,
   "retained_bytes": 20664538,
   "failures": []
 }
