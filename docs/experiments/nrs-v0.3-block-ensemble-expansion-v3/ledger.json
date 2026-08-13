@@ -1,7 +1,7 @@
 {
   "schema_version": "nrs-block-ensemble-expansion-ledger-v3",
   "protocol_id": "nrs-v0.3-block-ensemble-expansion-v3",
-  "status": "active",
+  "status": "complete",
   "completed": {
     "preflight": [
       "NH:wilson",
@@ -32,10 +32,11 @@
       "NH:kruskal",
       "NM:wilson",
       "NM:kruskal",
-      "GA:wilson"
+      "GA:wilson",
+      "GA:kruskal"
     ]
   },
-  "runner_wall_seconds": 45481.482899200055,
+  "runner_wall_seconds": 46043.866161199985,
   "retained_bytes": 20664538,
   "failures": []
 }
