@@ -7,7 +7,9 @@ import argparse
 import gzip
 import hashlib
 import json
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -39,6 +41,13 @@ CLOSED_PROTOCOL_IDS = {
     "nrs-v0.3-block-ensemble-expansion-v1",
     "nrs-v0.3-block-ensemble-expansion-v2",
 }
+ANALYZER = ROOT / "scripts/research/analyze_block_ensemble_expansion_v3.py"
+MANIFEST_BUILDER = ROOT / "scripts/research/build_block_ensemble_expansion_v3_manifest.py"
+MANIFEST_SCHEMA = "nrs-block-ensemble-expansion-package-v3"
+
+
+def artifact_sha256(path: Path) -> str:
+    return sha256(path) if path.suffix == ".gz" else binding_sha256(path)
 
 
 def fail(message: str) -> None:
@@ -132,6 +141,79 @@ def reject_closed_protocol_claims(package: Path) -> None:
         value = load(path)
         if value.get("protocol_id") in CLOSED_PROTOCOL_IDS:
             fail(f"closed predecessor artifact present: {path.name}")
+
+
+def verify_analysis(package: Path) -> dict:
+    analysis_path = package / "analysis.json"
+    summary_path = package / "summary.csv"
+    if not analysis_path.is_file() or not summary_path.is_file():
+        fail("completed package is missing registered analysis")
+    with tempfile.TemporaryDirectory(prefix="block-ensemble-v3-analysis-") as temp_dir:
+        temp = Path(temp_dir)
+        recomputed_analysis = temp / "analysis.json"
+        recomputed_summary = temp / "summary.csv"
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ANALYZER),
+                str(package),
+                "--output",
+                str(recomputed_analysis),
+                "--summary-csv",
+                str(recomputed_summary),
+            ],
+            cwd=ROOT,
+            check=False,
+        )
+        if completed.returncode != 0:
+            fail(f"analysis recomputation returned {completed.returncode}")
+        if recomputed_analysis.read_bytes() != analysis_path.read_bytes():
+            fail("recomputed analysis mismatch")
+        if recomputed_summary.read_bytes() != summary_path.read_bytes():
+            fail("recomputed summary mismatch")
+    analysis = load(analysis_path)
+    if analysis.get("protocol_id") != PROTOCOL_ID:
+        fail("analysis protocol drift")
+    if analysis.get("gate_passed") is not False:
+        fail("analysis no longer records the frozen negative decision")
+    return analysis
+
+
+def verify_manifest(package: Path) -> None:
+    manifest_path = package / "manifest.json"
+    if not manifest_path.is_file():
+        fail("completed package is missing its manifest")
+    manifest = load(manifest_path)
+    expected = {
+        "schema_version": MANIFEST_SCHEMA,
+        "protocol_id": PROTOCOL_ID,
+        "status": "closed-nonconverged",
+    }
+    for key, value in expected.items():
+        if manifest.get(key) != value:
+            fail(f"manifest {key} drift")
+    artifacts = manifest.get("artifacts")
+    actual_names = {
+        path.name for path in package.iterdir() if path.is_file() and path.name != "manifest.json"
+    }
+    if not isinstance(artifacts, dict) or set(artifacts) != actual_names:
+        fail("manifest artifact set drift")
+    for name, expected_hash in artifacts.items():
+        if artifact_sha256(package / name) != expected_hash:
+            fail(f"manifest artifact hash mismatch for {name}")
+    source_paths = {
+        PROTOCOL.relative_to(ROOT).as_posix(): PROTOCOL,
+        RUNNER.relative_to(ROOT).as_posix(): RUNNER,
+        WRAPPER.relative_to(ROOT).as_posix(): WRAPPER,
+        ANALYZER.relative_to(ROOT).as_posix(): ANALYZER,
+        MANIFEST_BUILDER.relative_to(ROOT).as_posix(): MANIFEST_BUILDER,
+        Path(__file__).resolve().relative_to(ROOT).as_posix(): Path(__file__).resolve(),
+    }
+    if set(manifest.get("sources", {})) != set(source_paths):
+        fail("manifest source set drift")
+    for name, path in source_paths.items():
+        if binding_sha256(path) != manifest["sources"][name]:
+            fail(f"manifest source hash mismatch for {name}")
 
 
 def verify_package(package: Path) -> dict:
@@ -293,6 +375,10 @@ def verify_package(package: Path) -> dict:
         fail("v3 retained-byte ceiling exceeded")
     if ledger["runner_wall_seconds"] > WALL_LIMIT_SECONDS:
         fail("v3 runner-wall ceiling exceeded")
+    analysis = verify_analysis(package)
+    verify_manifest(package)
+    if analysis["gate_passed"] is not False:
+        fail("frozen analysis decision drift")
     return ledger
 
 
@@ -305,8 +391,8 @@ def main() -> None:
     except (OSError, ValueError, json.JSONDecodeError) as error:
         raise SystemExit(str(error)) from error
     print(
-        "block ensemble expansion v3 verification: PASS "
-        f"(status={ledger['status']}, "
+        "block ensemble expansion v3 verification: PASS (closed non-converged; "
+        f"execution_status={ledger['status']}, "
         f"preflights={len(ledger['completed']['preflight'])}/6, "
         f"primaries={len(ledger['completed']['primary'])}/6, "
         f"replays={len(ledger['completed']['replay'])}/6, seed={BASE_SEED})"

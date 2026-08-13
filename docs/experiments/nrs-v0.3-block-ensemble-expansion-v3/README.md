@@ -1,6 +1,8 @@
 # NRS v0.3 NH/NM/GA Block-Ensemble Expansion v3
 
-Status: Complete; Stage 0, all six governed primaries, and all six exact governed replays passed.
+Status: Closed non-converged. Stage 0, all six governed primaries, and all six
+exact governed replays passed, but the frozen all-or-nothing diagnostic gate
+did not.
 
 V3 is a fresh successor to the permanently closed v1 and v2 protocols. It
 uses base seed `20260812`, a fresh ledger and package, and compiled execution
@@ -125,3 +127,30 @@ raw trace exactly matched the retained primary after normalization and was
 deleted. The ledger is complete at 6/6 primaries and 6/6 governed replays,
 46,043.8662 governed runner seconds, 20,664,538 retained bytes, and no
 failures.
+
+Pulse 48 computed the preregistered 500-step-burn-in analysis from the six
+retained primary traces. NH and NM passed both scalar convergence rules for
+both kernels. GA did not: Wilson cut fraction had split R-hat `1.04656` but
+pooled ESS only `66.47`; Kruskal weighted boundary cut had split R-hat
+`1.07507` and pooled ESS `53.88`. The other two GA scalar/kernel combinations
+did not repair this registered failure. Consequently `analysis.json` records
+`gate_passed: false`, v3 is closed without retry or extension, and the GA
+results remain negative evidence.
+
+The analysis also records per-chain and pooled ESS, split R-hat, acceptance,
+maximum population deviation, descriptive quantiles, label-aligned snapshot
+Hamming diagnostics, and State-specific descriptive Wilson-versus-Kruskal KS
+statistics. The alignment minimizes Hamming distance over district-label
+permutations, so arbitrary label swaps do not masquerade as plan changes.
+`summary.csv` is the flat scalar table. The verifier recomputes both artifacts
+byte-for-byte and checks the final manifest:
+
+```text
+python scripts/research/verify_block_ensemble_expansion_v3.py docs/experiments/nrs-v0.3-block-ensemble-expansion-v3
+```
+
+This result supports bounded feasibility, deterministic replay, registered
+scalar diagnostics, and State-specific kernel sensitivity only. In particular,
+completion and exact replay do not override the failed convergence gate and do
+not establish mixing, sampler equivalence, neutrality, or national
+representativeness.
