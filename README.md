@@ -41,6 +41,11 @@ RLINE — kernels ────┤                                               
 Reusable contracts move outward into RLINE, RPLAN, or RCOUNT; BISECT retains
 application policy, algorithms, maps, reports, and research.
 
+BISECT currently carries an embedded RCOUNT crate snapshot. RCOUNT's
+[family contract](https://github.com/giodl73-repo/RCOUNT/blob/master/docs/family-contract.md)
+is the upstream compatibility and migration authority for that snapshot;
+BISECT's application and legal-policy boundaries remain local.
+
 `bisect` draws congressional and state-legislative districts that are compact, population-balanced, and reviewable from first principles for supported chambers, states, and census years. Evidence-producing label-pipeline runs record hashes and provenance for byte-level verification; historical outputs may need regeneration or supplemental manifests before release-level replay claims.
 
 ## How it works
