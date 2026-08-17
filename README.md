@@ -46,6 +46,15 @@ BISECT currently carries an embedded RCOUNT crate snapshot. RCOUNT's
 is the upstream compatibility and migration authority for that snapshot;
 BISECT's application and legal-policy boundaries remain local.
 
+## Maintenance ownership
+
+The active steward is Gio (`giodl73-repo`). Runtime `.bisect.lock` files are
+created on demand; `.redist.lock` is obsolete pre-rename coordination state.
+Neither is evidence or source material, and both must remain untracked.
+Removing the three historical zero-byte sentinels reduces the canonical tracked
+footprint from 13,081 to 13,078 files without weakening fixtures, manifests, or
+retained failure witnesses.
+
 `bisect` draws congressional and state-legislative districts that are compact, population-balanced, and reviewable from first principles for supported chambers, states, and census years. Evidence-producing label-pipeline runs record hashes and provenance for byte-level verification; historical outputs may need regeneration or supplemental manifests before release-level replay claims.
 
 ## How it works

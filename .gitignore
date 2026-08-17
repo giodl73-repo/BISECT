@@ -162,6 +162,8 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 *.log
+.bisect.lock
+.redist.lock
 tmpclaude-*-cwd
 
 # LaTeX compilation artifacts
