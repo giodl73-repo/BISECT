@@ -1,6 +1,11 @@
 {
   "default": "track-B",
-  "pluginRoot": "C:/Users/giodl/.claude/plugins/cache/panel-standalone/panel/2.2.0",
+  "pluginSource": {
+    "repository": "https://github.com/giodl73-repo/PANEL",
+    "version": "2.3.0",
+    "revision": "6e262504de6248f52b7fc8f60d8c030e3eb8809e",
+    "contract": "AI-simulated research quality workflow; outputs are advisory and do not establish peer review, factual correctness, or venue readiness"
+  },
   "gitStrategy": "auto-commit",
   "projects": {
     "track-A": {

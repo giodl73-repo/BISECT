@@ -15,6 +15,15 @@ Installation guide for all project dependencies.
 
 Most users only need the Rust CLI path.
 
+### Research authoring only: PANEL
+
+PANEL is a non-runtime dependency used to maintain the research review
+lifecycle. The portable provenance and pinned plugin version are recorded in
+`.claude/panel.json`; the runtime plugin root is intentionally not committed and
+is resolved from `CLAUDE_PLUGIN_ROOT` by each author's Claude Code installation.
+Committed `research/**/_panel.yaml` files are advisory workflow evidence, not
+peer review or proof that a paper's claims are correct.
+
 ---
 
 ## Path 1: Rust CLI (Recommended)
