@@ -1,6 +1,12 @@
-MIT License
+BISECT uses separate licenses for software, original content, and data.
+
+Software license
+----------------
 
 Copyright (c) 2026 Gio Della-Libera
+
+Source code, executable scripts, tests, schemas, configuration, and ordinary
+software documentation in this repository are licensed under the MIT License:
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +25,42 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Original content license
+------------------------
+
+Copyright (c) 2026 Gio Della-Libera
+
+Unless a file states otherwise, original non-software publications, research,
+design narratives, diagrams, and explanatory website content are licensed
+under the Creative Commons Attribution-NonCommercial 4.0 International
+License (CC BY-NC 4.0):
+
+https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+You may share and adapt this original content with attribution for
+noncommercial purposes. Commercial use requires separate written permission
+from Gio Della-Libera.
+
+For attribution, use:
+
+BISECT, by Gio Della-Libera, https://github.com/giodl73-repo/BISECT
+
+Versions previously distributed under the MIT License remain available under
+that license. This split governs original content distributed from this
+version forward.
+
+Data and generated artifacts
+----------------------------
+
+This repository does not apply a blanket license to source data, imported
+plans, maps, shapefiles, election records, Census material, or other
+third-party inputs. Those materials retain their source-specific public-domain,
+license, attribution, privacy, and use terms.
+
+Generated and derived artifacts may combine BISECT-authored material with
+source data. Their reuse requires compliance with every identified source term
+and provenance record. Synthetic software test fixtures are covered by the MIT
+License unless their file says otherwise.
+
+Third-party dependencies and material remain subject to their own licenses.

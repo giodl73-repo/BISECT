@@ -552,4 +552,14 @@ docs/quickstart/    # Persona-specific quickstart guides
 
 ## License
 
-[MIT](LICENSE) © 2026 Gio Della-Libera
+BISECT uses [separate licenses](LICENSE):
+
+- software, scripts, tests, schemas, and ordinary software documentation are
+  MIT licensed;
+- original research, design narratives, diagrams, and publication content are
+  CC BY-NC 4.0, with commercial use requiring separate written permission from
+  Gio Della-Libera; and
+- source data, imported plans, maps, and derived artifacts retain
+  source-specific rights and attribution requirements.
+
+Versions previously distributed under MIT remain available under that license.
