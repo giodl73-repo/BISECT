@@ -115,7 +115,6 @@ Use the local wave skills:
   and validation.
 - `/r-review pulse NN` to write role-based findings.
 
-There is no active wave at present: every wave in `context/waves/PHASES.md` is
-archived (most recently the R Package Completion and shared-kernel cleanup
-waves). Treat `PHASES.md` as the source of truth for wave status, not this
-guide, and open a new wave per its operating model before starting large work.
+Treat `context/waves/PHASES.md` as the source of truth for wave status, not this
+guide. Resume the first `active` row when one exists; otherwise open a new wave
+per its operating model before starting large work.

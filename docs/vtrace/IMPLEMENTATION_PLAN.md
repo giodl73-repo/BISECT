@@ -109,7 +109,8 @@ Merge/readiness condition: required verification evidence and role-gate disposit
 
 ## Wave / Pulse Policy
 
-Active wave: no active wave is currently listed in `context/waves/PHASES.md`; R Package Completion is archived historical context, not an active VTRACE-governed pulse.
+Active wave: resolve the first `active` row in `context/waves/PHASES.md`.
+Historical wave names in this plan do not override that live index.
 
 Pulse mapping rule: every S4 pulse governed by this baseline must name parent `REQ-*`, `SPEC-*`, `IF-*`, `PKG-*`, `DES-*`, applicable `CR-*`, validation level, role lanes, and close evidence.
 
