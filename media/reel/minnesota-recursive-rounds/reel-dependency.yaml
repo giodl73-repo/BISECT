@@ -1,0 +1,23 @@
+dependency_version: bisect.reel-dependency.v0.1
+provider:
+  repository: https://github.com/giodl73-repo/REEL
+  revision: 67b849c8fc9c51488727289e4b661719287ec4fb
+  cli_version: 0.2.46
+contract:
+  manifest_version: reel.manifest.v0.2
+  role: conformed-private-preview
+  acceptance:
+    - animatic-check passes exact artifact and input hashes
+    - motion-check permits only authored animation-frame holds
+    - retained frames preserve every owner title and complete map extent
+consumer_package:
+  manifest: manifest.yaml
+  captions: captions.srt
+  owner_plates:
+    - docs/figures/minnesota_round_1.png
+    - docs/figures/minnesota_round_2.png
+    - docs/figures/minnesota_round_3.png
+boundary:
+  - BISECT owns graph semantics, recursive cuts, map geometry, labels, claims, and release authority.
+  - REEL owns ordered timing, visual fit, caption composition, motion review, and artifact evidence.
+  - This package does not prove fairness, VRA compliance, certification, court readiness, or official status.
