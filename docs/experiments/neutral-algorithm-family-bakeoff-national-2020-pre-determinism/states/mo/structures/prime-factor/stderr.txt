@@ -1,3 +1,0 @@
-NOTE: Running congressional (8D). MO also has house (163D) and senate (34D). Use --chamber house or --chamber senate.
-[partition-time] MO: k=8 n=1654 -> 4.4ms
-[OK] MO in 173ms

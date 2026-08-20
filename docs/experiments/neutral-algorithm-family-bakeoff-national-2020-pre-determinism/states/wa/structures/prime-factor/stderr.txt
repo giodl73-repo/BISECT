@@ -1,3 +1,0 @@
-NOTE: Running congressional (10D). WA also has house (98D) and senate (49D). Use --chamber house or --chamber senate.
-[partition-time] WA: k=10 n=1784 -> 5.3ms
-[OK] WA in 172ms

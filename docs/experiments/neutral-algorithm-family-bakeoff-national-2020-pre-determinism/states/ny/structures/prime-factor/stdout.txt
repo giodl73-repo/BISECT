@@ -1,5 +1,0 @@
-STATUS:1:NY: loading adjacency
-STATUS:1:NY: apportion-regions partition into 26 districts (F=[2, 13], depth=2)
-STATUS:1:NY: balance 0.36% (cache hits=0)
-STATUS:1:NY: balance OK, writing outputs
-STATUS:1:NY: complete (26D, 0ms)

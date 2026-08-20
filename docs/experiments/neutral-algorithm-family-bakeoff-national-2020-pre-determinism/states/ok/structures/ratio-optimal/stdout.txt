@@ -1,5 +1,0 @@
-STATUS:1:OK: loading adjacency
-STATUS:1:OK: GeoSection 2 ratios ? 1 seeds
-STATUS:1:OK: natural ratio 1:4 at 173km
-STATUS:1:OK: balance OK, writing outputs
-STATUS:1:OK: complete (5D, 0ms)

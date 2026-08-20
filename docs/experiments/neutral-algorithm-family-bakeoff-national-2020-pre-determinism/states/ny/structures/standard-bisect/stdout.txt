@@ -1,4 +1,0 @@
-STATUS:1:NY: loading adjacency
-STATUS:1:NY: recursive bisection into 26 districts
-STATUS:1:NY: balance OK, writing outputs
-STATUS:1:NY: complete (26D, 0ms)

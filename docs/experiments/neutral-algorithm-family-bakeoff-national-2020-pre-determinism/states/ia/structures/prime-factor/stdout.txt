@@ -1,5 +1,0 @@
-STATUS:1:IA: loading adjacency
-STATUS:1:IA: apportion-regions partition into 4 districts (F=[2, 2], depth=2)
-STATUS:1:IA: balance 0.31% (cache hits=0)
-STATUS:1:IA: balance OK, writing outputs
-STATUS:1:IA: complete (4D, 0ms)

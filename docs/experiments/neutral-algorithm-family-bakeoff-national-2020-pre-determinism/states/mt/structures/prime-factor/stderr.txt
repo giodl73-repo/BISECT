@@ -1,3 +1,0 @@
-NOTE: Running congressional (2D). MT also has house (100D) and senate (50D). Use --chamber house or --chamber senate.
-[partition-time] MT: k=2 n=319 -> 0.8ms
-[OK] MT in 79ms

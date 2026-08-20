@@ -1,3 +1,0 @@
-NOTE: Running congressional (15D). OH also has house (99D) and senate (33D). Use --chamber house or --chamber senate.
-[partition-time] OH: k=15 n=3168 -> 8.1ms
-[OK] OH in 243ms

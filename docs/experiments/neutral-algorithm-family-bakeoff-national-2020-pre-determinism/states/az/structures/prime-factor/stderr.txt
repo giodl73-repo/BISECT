@@ -1,3 +1,0 @@
-NOTE: Running congressional (9D). AZ also has house (30D) and senate (30D). Use --chamber house or --chamber senate.
-[partition-time] AZ: k=9 n=1765 -> 4.5ms
-[OK] AZ in 167ms

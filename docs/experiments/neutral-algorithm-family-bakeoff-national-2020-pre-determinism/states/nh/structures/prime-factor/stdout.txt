@@ -1,5 +1,0 @@
-STATUS:1:NH: loading adjacency
-STATUS:1:NH: apportion-regions partition into 2 districts (F=[2], depth=1)
-STATUS:1:NH: balance 0.29% (cache hits=0)
-STATUS:1:NH: balance OK, writing outputs
-STATUS:1:NH: complete (2D, 0ms)

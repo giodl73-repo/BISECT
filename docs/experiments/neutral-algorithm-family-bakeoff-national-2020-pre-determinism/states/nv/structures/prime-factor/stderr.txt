@@ -1,3 +1,0 @@
-NOTE: Running congressional (4D). NV also has house (42D) and senate (21D). Use --chamber house or --chamber senate.
-[partition-time] NV: k=4 n=779 -> 2.6ms
-[OK] NV in 122ms

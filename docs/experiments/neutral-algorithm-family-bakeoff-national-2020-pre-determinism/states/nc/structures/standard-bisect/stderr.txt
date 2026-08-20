@@ -1,3 +1,0 @@
-NOTE: Running congressional (14D). NC also has house (120D) and senate (50D). Use --chamber house or --chamber senate.
-[partition-time] NC: k=14 n=2672 -> 465.0ms
-[OK] NC in 892ms

@@ -1,3 +1,0 @@
-NOTE: Running congressional (17D). IL also has house (118D) and senate (59D). Use --chamber house or --chamber senate.
-[partition-time] IL: k=17 n=3265 -> 10.8ms
-[OK] IL in 232ms

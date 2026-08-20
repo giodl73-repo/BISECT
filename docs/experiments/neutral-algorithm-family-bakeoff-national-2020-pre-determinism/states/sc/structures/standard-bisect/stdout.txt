@@ -1,4 +1,0 @@
-STATUS:1:SC: loading adjacency
-STATUS:1:SC: recursive bisection into 7 districts
-STATUS:1:SC: balance OK, writing outputs
-STATUS:1:SC: complete (7D, 0ms)
