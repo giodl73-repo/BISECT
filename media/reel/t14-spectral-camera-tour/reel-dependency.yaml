@@ -1,0 +1,22 @@
+dependency_version: bisect.reel-dependency.v0.1
+provider:
+  repository: https://github.com/giodl73-repo/REEL
+  revision: cceaa9c636f0c044c240dcea44a21016bff229f9
+  cli_version: 0.2.47
+contract:
+  manifest_version: reel.manifest.v0.2
+  role: conformed-private-preview
+  acceptance:
+    - animatic-check passes exact artifact and input hashes
+    - motion-check reports no unexpected near-stationary transitions
+    - zoom 1 preserves the complete owner figure before and after focused moves
+consumer_package:
+  manifest: manifest.yaml
+  captions: captions.srt
+  owner_plates:
+    - docs/algorithm-atlas/assets/t14-laplacian-fiedler.svg
+boundary:
+  - BISECT owns graph construction, balance tolerance, cut selection, recursion, labels, claims, and release authority.
+  - REEL owns fit-before-camera execution, timing, crop clamping, caption composition, motion review, and artifact evidence.
+  - This package does not prove optimality, fairness, legal sufficiency, certification, or official status.
+  - Caption-safe picture regions remain separate follow-up work.

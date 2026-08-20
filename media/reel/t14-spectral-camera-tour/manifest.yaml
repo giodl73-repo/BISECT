@@ -1,0 +1,137 @@
+manifest_version: reel.manifest.v0.2
+profile: animatic
+timing_status: conformed
+work: bisect-t14-spectral-camera-tour
+title: T.14 spectral partitioning - contained camera tour
+source_scenario:
+  repo: BISECT
+  path: docs/algorithm-atlas/t14-spectral-partitioning.md
+  id: t14-spectral-partitioning
+  source_commit: e53c8c1285ec49cd156a68be8716cd1c3b48bf33
+format: explainer
+style: animated-diagram
+audience:
+  primary: algorithm researchers
+  context: private REEL capability proof
+  desired_effect: follow graph ordering, sweep selection, and recursive consequence
+platforms:
+  - name: desktop-review
+    aspect_ratio: "16:9"
+    target_duration_seconds: 15.0
+    sound_optional: true
+    device: desktop
+    hook_deadline_seconds: 3
+continuity:
+  entities: []
+  canon_constraints:
+    - T.14 demonstrates a deterministic construction path, not legal sufficiency or optimality.
+    - BISECT retains authority over graph, balance, cut, recursion, and package semantics.
+scenes:
+  - id: scene-t14-spectral-camera-tour
+    duration_seconds: 15.0
+    purpose: Tour the three authored panels in the T.14 Laplacian-to-ordering figure.
+    story_beat: Graph adjacency, Laplacian/Fiedler coordinates, then stable sweep ordering.
+    location: BISECT algorithm atlas T.14 figure
+    characters: []
+    continuity_notes:
+      - Preserve the complete owner figure for overview and every panel during focus moves.
+shots:
+  - id: shot-t14-laplacian-fiedler
+    scene_id: scene-t14-spectral-camera-tour
+    start_seconds: 0.0
+    duration_seconds: 15.0
+    camera: complete overview followed by left, center, and right panel focus
+    action: Travel across the owner-rendered graph explanation.
+    visual_prompt: Owner-rendered BISECT algorithm-atlas SVG; no generative rendering.
+    visual_asset: docs/algorithm-atlas/assets/t14-laplacian-fiedler.svg
+    media_kind: still
+    visual_fit: contain
+    camera_track:
+      timing_fps: 24
+      keyframes:
+        - { frame: 0, center_x: 0.50, center_y: 0.50, zoom: 1.00, curve_to_next: ease-in-out }
+        - { frame: 72, center_x: 0.24, center_y: 0.50, zoom: 2.20, curve_to_next: ease-in-out }
+        - { frame: 168, center_x: 0.50, center_y: 0.50, zoom: 2.20, curve_to_next: ease-in-out }
+        - { frame: 264, center_x: 0.76, center_y: 0.50, zoom: 2.20, curve_to_next: ease-in-out }
+        - { frame: 359, center_x: 0.50, center_y: 0.50, zoom: 1.00, curve_to_next: linear }
+    style_constraints:
+      - owner-rendered atlas figure only
+      - preserve deterministic-construction claim boundary
+    transition_out: cut
+    narration_cue_ids: [cue-graph, cue-fiedler, cue-sweep]
+    source_refs: [t14-mechanics, t14-boundary]
+speakers:
+  - id: research-caption
+    display_name: Research caption
+    language: en
+    pronunciation_profile: not-applicable-silent-output
+    performance_direction: procedural and claim-bounded
+    approval_reference: internal-private-preview
+    asset_kind: guide
+narration_cues:
+  - id: cue-graph
+    speaker_id: research-caption
+    text: "The current unit adjacency graph defines the Laplacian for this split."
+    source_refs: [t14-mechanics]
+    shot_ids: [shot-t14-laplacian-fiedler]
+    start_seconds: 0.0
+    duration_seconds: 5.0
+  - id: cue-fiedler
+    speaker_id: research-caption
+    text: "The Fiedler vector gives each unit a coordinate derived from graph structure."
+    source_refs: [t14-mechanics]
+    shot_ids: [shot-t14-laplacian-fiedler]
+    start_seconds: 5.0
+    duration_seconds: 5.0
+  - id: cue-sweep
+    speaker_id: research-caption
+    text: "Stable ordering creates sweep candidates; selection is not a proof of optimality or legal sufficiency."
+    source_refs: [t14-boundary]
+    shot_ids: [shot-t14-laplacian-fiedler]
+    start_seconds: 10.0
+    duration_seconds: 5.0
+protected_pauses: []
+source_ranges:
+  - { id: t14-mechanics, start: 5, end: 83, label: graph-to-sweep teaching path }
+  - { id: t14-boundary, start: 135, end: 146, label: deterministic construction claim boundary }
+omissions: []
+audio:
+  narration_voice: none
+  music_direction: none
+  effects_direction: none
+  silence_notes: intentionally silent private-preview proof
+captions:
+  required: true
+  style: centered-safe-lower-third
+  language: en
+  sound_off_complete: true
+renderer_assumptions:
+  candidates: [ffmpeg]
+  blockers: []
+exports:
+  - id: desktop-review
+    filename: bisect-t14-spectral-camera-tour.mp4
+    aspect_ratio: "16:9"
+    duration_seconds: 15.0
+lineage:
+  parent_manifest: null
+  root_work: bisect-t14-spectral-partitioning
+  scene_key: scene-t14-spectral-camera-tour
+  transformation_reason: preserve the complete wide owner diagram before touring its authored panels
+  changed_dimensions: [camera, captions]
+  review_candidate: true
+  principal_approved: false
+  created_unix: 1787198400
+review:
+  required_roles: [meridian, datum, trench, editor]
+  status: private-preview
+  principal_findings: []
+quality_controls:
+  max_uninterrupted_hold_seconds: 6
+  require_focal_points: false
+  require_protected_regions: false
+  no_lip_sync: true
+  ab_outputs: []
+provider_handoff:
+  asset_ids: []
+  text_fields: [shots.action, narration_cues.text]

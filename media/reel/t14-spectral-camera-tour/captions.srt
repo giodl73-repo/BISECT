@@ -1,0 +1,14 @@
+1
+00:00:00,000 --> 00:00:05,000
+The unit adjacency graph defines the
+Laplacian for this split.
+
+2
+00:00:05,000 --> 00:00:10,000
+The Fiedler vector gives each unit a
+coordinate from graph structure.
+
+3
+00:00:10,000 --> 00:00:15,000
+Sweep candidates are deterministic -
+not optimality or legal sufficiency.
