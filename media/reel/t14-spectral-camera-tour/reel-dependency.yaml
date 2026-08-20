@@ -1,8 +1,8 @@
 dependency_version: bisect.reel-dependency.v0.1
 provider:
   repository: https://github.com/giodl73-repo/REEL
-  revision: 339c1ed95a98b88032104b44fd0888b946dd3d1a
-  cli_version: 0.2.48
+  revision: b40a8415c7b27d511c6863a39075f83f8b909db2
+  cli_version: 0.3.0
 contract:
   manifest_version: reel.manifest.v0.2
   role: conformed-private-preview
@@ -12,9 +12,10 @@ contract:
     - animatic-check passes exact artifact and input hashes
     - motion-check reports no unexpected near-stationary transitions
     - caption-layout reports no caption-picture intersection
+    - source-to-canvas lineage matches the owner SVG and camera canvas
     - zoom 1 preserves the complete owner figure before and after focused moves
 accepted_artifact:
-  sha256: db1ff062a9fc3d4ad508b6f4bc5e6c168a9fad46d0dcb9d1345bf3dd5797028a
+  sha256: f53392301e8bb5ab9c7e4066dc7ca011f05a71a0d516babafaf86d51cc6cb436
   width: 1280
   height: 720
   fps: 24
@@ -24,6 +25,15 @@ accepted_artifact:
     y: 0
     width: 1280
     height: 520
+  source_to_canvas:
+    source_width: 960
+    source_height: 420
+    canvas_width: 1280
+    canvas_height: 520
+    fitted_x: 46
+    fitted_y: 0
+    fitted_width: 1188
+    fitted_height: 520
   caption_picture_intersection: false
 consumer_package:
   manifest: manifest.yaml
