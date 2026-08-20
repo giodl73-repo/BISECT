@@ -1,15 +1,30 @@
 dependency_version: bisect.reel-dependency.v0.1
 provider:
   repository: https://github.com/giodl73-repo/REEL
-  revision: cceaa9c636f0c044c240dcea44a21016bff229f9
-  cli_version: 0.2.47
+  revision: 339c1ed95a98b88032104b44fd0888b946dd3d1a
+  cli_version: 0.2.48
 contract:
   manifest_version: reel.manifest.v0.2
   role: conformed-private-preview
+  render_options:
+    caption_picture_layout: reserve-caption-band
   acceptance:
     - animatic-check passes exact artifact and input hashes
     - motion-check reports no unexpected near-stationary transitions
+    - caption-layout reports no caption-picture intersection
     - zoom 1 preserves the complete owner figure before and after focused moves
+accepted_artifact:
+  sha256: db1ff062a9fc3d4ad508b6f4bc5e6c168a9fad46d0dcb9d1345bf3dd5797028a
+  width: 1280
+  height: 720
+  fps: 24
+  duration_seconds: 15
+  picture_region:
+    x: 0
+    y: 0
+    width: 1280
+    height: 520
+  caption_picture_intersection: false
 consumer_package:
   manifest: manifest.yaml
   captions: captions.srt
@@ -19,4 +34,4 @@ boundary:
   - BISECT owns graph construction, balance tolerance, cut selection, recursion, labels, claims, and release authority.
   - REEL owns fit-before-camera execution, timing, crop clamping, caption composition, motion review, and artifact evidence.
   - This package does not prove optimality, fairness, legal sufficiency, certification, or official status.
-  - Caption-safe picture regions remain separate follow-up work.
+  - Caption-safe composition does not make private-review captions publication evidence.
