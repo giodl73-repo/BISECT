@@ -1,6 +1,6 @@
 @echo off
 REM Test execution script for pipeline tests
-REM Usage: run_tests.bat [test_type]
+REM Usage: run_tests.bat [test_type] [version] [year]
 
 REM Change to project root (one level up from batch/)
 cd /d "%~dp0\.."
@@ -21,6 +21,7 @@ if "%TEST_TYPE%"=="quick" goto run_quick
 if "%TEST_TYPE%"=="all" goto run_all
 if "%TEST_TYPE%"=="coverage" goto run_coverage
 if "%TEST_TYPE%"=="markers" goto run_markers
+if "%TEST_TYPE%"=="acceptance" goto run_acceptance
 goto unknown_type
 
 :run_unit
@@ -62,6 +63,18 @@ echo [INFO] Available test markers:
 py -3.13 -m pytest --markers
 goto end
 
+:run_acceptance
+if "%~2"=="" (
+    echo [ERROR] Acceptance tests require a pipeline version.
+    echo Usage: run_tests.bat acceptance ^<version^> [year]
+    exit /b 1
+)
+set PIPELINE_VERSION=%~2
+if not "%~3"=="" set PIPELINE_YEAR=%~3
+echo [INFO] Running acceptance tests for %PIPELINE_VERSION% %PIPELINE_YEAR%...
+py -3.13 -m pytest tests/integration -v --tb=short
+goto end
+
 :unknown_type
 echo [ERROR] Unknown test type: %TEST_TYPE%
 echo.
@@ -75,11 +88,13 @@ echo   quick         - Run quick test suite
 echo   all           - Run all pipeline tests (default)
 echo   coverage      - Run tests with detailed coverage report
 echo   markers       - Show available pytest markers
+echo   acceptance    - Run integration acceptance tests for a version and optional year
 echo.
 echo Examples:
 echo   run_tests.bat unit
 echo   run_tests.bat all
 echo   run_tests.bat coverage
+echo   run_tests.bat acceptance V3 2020
 exit /b 1
 
 :end

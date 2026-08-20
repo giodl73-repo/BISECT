@@ -139,7 +139,7 @@ Memory: "MemoryError" → Close apps or process states individually
 4. **Archive** (if production): `cp -r outputs/us_2020_v1 archived_runs/`
 
 ## Troubleshooting
-• **Pipeline hangs**: Check zombie Python processes, use CANCEL.bat
+• **Pipeline hangs**: Identify the exact stale process and terminate it by PID
 • **Maps wrong**: Check DPI, verify data loaded
 • **Missing analysis**: Check data availability (election for political)
 • **Validation fails**: Review errors, check missing files

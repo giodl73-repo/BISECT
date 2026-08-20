@@ -74,9 +74,8 @@ doskey ghiv=gh issue view $*
 doskey ghr=gh repo view
 
 REM Project shortcuts - Pipeline
-doskey run=run_redistricting.bat $*
-doskey runtest=run_test.bat $*
-doskey cancel=CANCEL.bat
+doskey run=BISECT run $*
+doskey runtest=BISECT run --run-type test $*
 doskey validate=py -3.13 scripts/validation/validate_pipeline_outputs.py $*
 
 REM Project shortcuts - Testing
@@ -130,7 +129,6 @@ echo     runtest --year 2020 --version t - Test run (outputs to dev/)
 echo     test                            - Run test suite
 echo     pm                              - Pipeline Manager web UI (port 5200)
 echo     dash --year 2020 --version v1   - Deploy dashboard
-echo     cancel                          - Cancel running pipeline
 echo     compile                         - Compile LaTeX artifacts
 echo.
 echo   Data Downloads (Orchestrator - Parallel):
