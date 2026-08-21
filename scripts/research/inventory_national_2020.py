@@ -13,7 +13,7 @@ import pyogrio
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from config_2020 import STATE_CONFIG_2020  # noqa: E402
+from state_config import STATE_CONFIG_2020  # noqa: E402
 
 
 FIPS = {

@@ -16,7 +16,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from src.apportionment.partition.metis_wrapper import partition_graph
 from src.apportionment.partition.recursive_bisection import recursive_bisection
 from src.apportionment.data.adjacency import load_adjacency_matrix
-from scripts.config_2010 import STATE_DISTRICTS
+from scripts.state_config import STATE_CONFIG_2010
+
+STATE_DISTRICTS = {
+    item["name"].lower().replace(" ", "_"): item["districts"]
+    for item in STATE_CONFIG_2010.values()
+}
 
 # States for temporal stability analysis
 STATES = ['alabama', 'georgia', 'louisiana', 'mississippi', 'south_carolina']

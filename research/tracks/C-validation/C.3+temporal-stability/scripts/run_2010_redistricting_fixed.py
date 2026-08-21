@@ -34,7 +34,7 @@ STATE_TO_FIPS = {
     'south_carolina': '45'
 }
 
-# District counts for 2010 (from config_2010.py)
+# District counts for 2010.
 STATE_DISTRICTS = {
     'alabama': 7,
     'georgia': 14,

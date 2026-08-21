@@ -23,7 +23,7 @@ from typing import Dict
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config_2010 import STATE_CONFIG_2010
+from state_config import STATE_CONFIG_2010
 
 
 # State FIPS codes

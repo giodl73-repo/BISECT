@@ -23,7 +23,7 @@ project_root = Path(__file__).parents[3]
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src"))
 
-from scripts.config_2020 import STATE_CONFIG_2020
+from scripts.state_config import STATE_CONFIG_2020
 from scripts.config.download_sources import STATE_FIPS, STATE_NAMES
 
 # Create helper dicts

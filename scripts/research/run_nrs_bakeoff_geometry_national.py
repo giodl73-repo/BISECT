@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts" / "research"))
 
 from config.download_sources import STATE_FIPS
-from config_2020 import STATE_CONFIG_2020
+from state_config import STATE_CONFIG_2020
 from analyze_nrs_bakeoff_geometry_slice import BakeoffError, write_package
 
 

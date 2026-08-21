@@ -5,9 +5,9 @@ and the total across all states equals 435 for each year.
 
 import csv
 import pytest
-from pathlib import Path
 
 from .conftest import get_outputs_root, get_years
+from scripts.state_config import get_state_config
 
 OUTPUTS_ROOT = get_outputs_root()
 YEARS = get_years(OUTPUTS_ROOT)
@@ -15,18 +15,11 @@ YEARS = get_years(OUTPUTS_ROOT)
 
 
 def load_config(year: str) -> dict:
-    """Load state district counts from scripts/config_{year}.py."""
-    import importlib.util, sys
-    spec = importlib.util.spec_from_file_location(
-        f'config_{year}',
-        Path(f'scripts/config_{year}.py')
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    # Config var is STATE_CONFIG_{YEAR} (e.g. STATE_CONFIG_2020)
-    config_var = getattr(mod, f'STATE_CONFIG_{year}', None) or getattr(mod, 'STATE_CONFIG', None)
-    return {v['name'].lower().replace(' ', '_'): v['districts']
-            for v in config_var.values()}
+    """Load state district counts from the canonical configuration."""
+    return {
+        value['name'].lower().replace(' ', '_'): value['districts']
+        for value in get_state_config(year).values()
+    }
 
 
 @pytest.mark.parametrize('year', [y for y in YEARS if (OUTPUTS_ROOT / y / 'states').exists()])

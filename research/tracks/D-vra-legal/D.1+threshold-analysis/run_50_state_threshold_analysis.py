@@ -24,7 +24,7 @@ from scipy.sparse import lil_matrix
 from apportionment.data.adjacency import build_adjacency_graph
 from apportionment.partition.metis_executable import partition_graph_with_executable
 from apportionment.partition.vra_utils import load_tract_demographics, create_vra_vertex_weights
-from scripts.config_2020 import STATE_CONFIG_2020
+from scripts.state_config import STATE_CONFIG_2020
 
 # Configuration
 YEAR = 2020

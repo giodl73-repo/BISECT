@@ -30,7 +30,7 @@ from shapely.geometry import Point
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config_2000 import STATE_CONFIG_2000
+from state_config import STATE_CONFIG_2000
 
 
 # State FIPS codes
