@@ -13,8 +13,6 @@ import json
 import pytest
 import sys
 from pathlib import Path
-import tempfile
-import shutil
 
 # Add project root and src directory to Python path
 project_root = Path(__file__).parent.parent

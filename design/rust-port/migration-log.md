@@ -103,7 +103,8 @@ exit code 2 on imbalance, pop_basis metadata, WGS84 display-projection note.
 - Choropleth maps with real geometry + analysis data (#62)
 - `bisect analyze --types compactness` (#63)
 - `BISECT map --types rounds` real bisection rendering (#64)
-- `bisect-web` crate (dashboard generation) remains stub
+- The empty `bisect-web` placeholder was removed; dashboard generation remains
+  Python until a Rust implementation has a concrete first slice.
 
 ## Phase 6 (native METIS, optional)
 Not needed — METIS subprocess is already ms-scale. Skip.

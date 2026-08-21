@@ -25,7 +25,8 @@
 | `visualize_district_demographics.py --scope national` | `BISECT map --scope national --types demographic` | Task 4 |
 | `visualize_compactness.py --scope national` | `BISECT map --scope national --types compactness` | Task 4 |
 
-Dashboard generation (`process_nation.py` task 7) stays Python — `bisect-web` is future work.
+Dashboard generation (`process_nation.py` task 7) stays Python; a Rust web
+crate should be added only with a concrete replacement.
 
 ---
 

@@ -59,17 +59,6 @@ def pytest_configure(config):
 # Module-level helpers (importable by test files for parametrize)
 # ---------------------------------------------------------------------------
 
-def _get_version() -> str:
-    """Get configured version (CLI > env > default V3)."""
-    # Try pytest config first (available after pytest_configure)
-    try:
-        import _pytest.config
-        cfg = _pytest.config._pytest_current_test  # noqa — private API
-    except Exception:
-        pass
-    return os.environ.get('PIPELINE_VERSION', 'V3')
-
-
 def get_outputs_root() -> Path:
     """Return the pipeline outputs root for the configured version."""
     version = os.environ.get('PIPELINE_VERSION', 'V3')

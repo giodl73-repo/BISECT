@@ -33,7 +33,7 @@ BISECT/                          # Cargo workspace root
 │   ├── bisect-data/             # Census data loading and adjacency
 │   ├── bisect-cli/              # Binary: `BISECT` command
 │   ├── bisect-analysis/         # Compactness, demographics, partisan metrics
-│   └── bisect-web/              # Static dashboard generation
+│   └── (future web crate)       # Add only when Rust dashboard work begins
 └── python/
     └── bisect_py/               # PyO3 bindings (wraps bisect-core)
 ```
@@ -46,7 +46,7 @@ BISECT/                          # Cargo workspace root
 | `bisect-data` | `src/apportionment/data/` + TIGER shapefiles | Read-only | `TractGraph`, `Demographics`, `Adjacency` |
 | `bisect-cli` | `scripts/pipeline/run_*.py` | Full | `RedistArgs`, `PipelineConfig` |
 | `bisect-analysis` | `scripts/pipeline/analyze_*.py` + compactness/ | Read/Write | `CompactnessReport`, `VraAnalysis` |
-| `bisect-web` | `scripts/web/` | Write | `DashboardBuilder` |
+| Future web crate | `scripts/web/` | Deferred | Add with its first `DashboardBuilder` implementation. |
 
 ### PyO3 Binding Rules
 
@@ -206,7 +206,8 @@ fn write_state_outputs(state_dir: &Path, partition: &Partition, vra: &VraAnalysi
 This eliminates the `vra_mode` premature-clear class of bugs: analysis and partition are computed together and written atomically. Partial-write state (one file but not the other) is detected on restart by the presence of `.tmp.*` files.
 
 #### 4c. Static dashboard
-Port `scripts/web/deploy_docs.py` to `bisect-web`.
+Keep `scripts/web/deploy_docs.py` as the canonical implementation. Add a Rust
+web crate only if a concrete implementation can replace it.
 
 **Exit criterion**: `bisect analyze --state AL --version V4` produces `vra_analysis.json` with `mm_count==2`. `BISECT dashboard --version V4 --year 2020` matches current `docs/dashboard_vra.html` visually.
 
