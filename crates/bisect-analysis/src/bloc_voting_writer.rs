@@ -17,9 +17,7 @@ use std::path::Path;
 
 use serde::Serialize;
 
-use crate::bloc_voting::{
-    BlocVotingFamilyResult, BlocVotingTestResult, ClusterCi, Coef, RegressionFit, RobustnessCheck,
-};
+use crate::bloc_voting::{BlocVotingFamilyResult, BlocVotingTestResult, Coef, RobustnessCheck};
 use crate::race_of_candidate::RaceOfCandidateProvenance;
 
 /// Top-level JSON wrapper. One object per analyze run; covers every analyzed

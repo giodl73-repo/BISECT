@@ -28,7 +28,7 @@ mod package;
 
 pub use docs_dirs::*;
 pub use error::*;
-pub use helpers::*;
+pub(crate) use helpers::*;
 pub use import::*;
 pub use manifest::*;
 pub use package::*;

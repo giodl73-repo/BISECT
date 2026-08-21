@@ -61,13 +61,11 @@ pub struct AdjacencyGraph {
     // ── CompactBisect geometry (B.7) ─────────────────────────────────────────
     /// Land area of each tract in m². Empty if not loaded (old .adj.bin files);
     /// CompactBisect falls back to edge-cut selection when empty.
-    #[cfg_attr(feature = "serde", serde(default))]
     pub vertex_areas: Vec<f64>,
     /// External perimeter of each tract in metres: the portion of the tract's
     /// total boundary that is NOT shared with any adjacent tract (state borders,
     /// coastlines, rivers). Computed as total_perimeter - Σ(shared edge weights).
     /// Empty when vertex_areas is empty.
-    #[cfg_attr(feature = "serde", serde(default))]
     pub vertex_ext_perimeters: Vec<f64>,
 }
 

@@ -29,7 +29,7 @@ use crate::adjacency::AdjacencyGraph;
 ///     vertex_areas section:
 ///       for each vertex i (0..n_vertices): area: f64
 ///   v2 files are read correctly (has_geometry defaults to 0).
-use std::io::{self, Read, Write};
+use std::io;
 use thiserror::Error;
 
 const MAGIC: &[u8; 4] = b"RADJ";
@@ -110,7 +110,7 @@ pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
 
 /// Deserialize an adjacency graph from binary bytes.
 pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeError> {
-    let mut pos = 0usize;
+    let mut pos = 4usize;
 
     macro_rules! read_u32 {
         ($ctx:expr) => {{
@@ -138,8 +138,6 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
     if data.len() < 4 || &data[0..4] != MAGIC {
         return Err(SerializeError::InvalidMagic);
     }
-    pos = 4;
-
     // Version — accept v2 (legacy, no geometry) and v3 (with geometry)
     let version = read_u32!("version");
     if version != FORMAT_VERSION && version != FORMAT_VERSION_V2 {

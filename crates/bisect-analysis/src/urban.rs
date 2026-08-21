@@ -38,7 +38,8 @@ pub enum UrbanError {
     },
 }
 
-pub fn aggregate_urban(
+#[cfg(test)]
+fn aggregate_urban(
     rows: &[PlaceRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,

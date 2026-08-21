@@ -360,7 +360,7 @@ mod tests {
     #[test]
     fn test_district_summary_columns_deterministic() {
         // Same data written 3 times should produce identical column order
-        let mut make_row = || {
+        let make_row = || {
             let mut m = std::collections::HashMap::new();
             m.insert("polsby_popper".to_string(), "0.34".to_string());
             m.insert("district".to_string(), "1".to_string());

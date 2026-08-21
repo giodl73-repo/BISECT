@@ -36,7 +36,7 @@ pub fn load_demographics(csv_path: &Path) -> Result<HashMap<String, f64>, String
     let i_white = col("white_non_hispanic")?;
 
     let mut result = HashMap::new();
-    for (line_num, line) in lines.enumerate() {
+    for line in lines {
         if line.trim().is_empty() {
             continue;
         }

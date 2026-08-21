@@ -831,7 +831,6 @@ mod tests {
     #[test]
     fn single_step_composer_matches_direct_apply() {
         let geo_map = edge_map(&[((0, 1), 42.0), ((2, 3), 99.0)]);
-        let geo = GeographicWeighter::from_map(geo_map.clone());
         let composed = ComposedWeighter::new().push(GeographicWeighter::from_map(geo_map));
         let out = composed.apply();
         assert_eq!(out[&(0, 1)], 42.0);

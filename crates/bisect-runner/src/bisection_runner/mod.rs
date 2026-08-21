@@ -4,7 +4,7 @@
 //! imports and cross-section helpers are re-exported here so each submodule
 //! can `use super::*;` and reach its siblings.
 
-pub(crate) use bisect_core::{ufactor_for_depth, BisectionTree};
+pub(crate) use bisect_core::BisectionTree;
 pub(crate) use rand::rngs::SmallRng;
 pub(crate) use rand::SeedableRng;
 pub(crate) use rayon::prelude::*;

@@ -106,7 +106,8 @@ pub enum ProportionalityError {
 }
 
 /// Compute proportionality metrics from raw political rows + an assignment.
-pub fn aggregate_proportionality(
+#[cfg(test)]
+fn aggregate_proportionality(
     rows: &[PoliticalRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,

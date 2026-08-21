@@ -28,7 +28,7 @@
 //! ASCII-only output per PP-34 — the narrative may go to stdout on Windows.
 
 use crate::comparison::{ComparisonReport, PlanSide};
-use crate::moe::{suppress_or_emit, CiBand, MetricMonotonicity, MOE_SUPPRESSED_TEXT};
+use crate::moe::{suppress_or_emit, CiBand, MetricMonotonicity};
 
 /// Configuration for the narrative renderer.
 #[derive(Debug, Clone)]
@@ -357,6 +357,7 @@ fn audit_footer(report: &ComparisonReport, cfg: &NarrativeConfig) -> String {
 mod tests {
     use super::*;
     use crate::comparison::{ComparisonReport, DiffSummary, PlanSide};
+    use crate::moe::MOE_SUPPRESSED_TEXT;
     use std::collections::BTreeMap;
 
     fn plan_a_5dem() -> PlanSide {

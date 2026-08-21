@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use bisect_analysis::{build_chamber_adjacency, try_validate_nesting, NestingValidation};
+use bisect_analysis::{try_validate_nesting, NestingValidation};
 
 // ---------------------------------------------------------------------------
 // Nest mode

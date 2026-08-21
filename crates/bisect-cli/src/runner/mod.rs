@@ -3,15 +3,14 @@ use crate::bisection_runner::{
     run_all_splits, run_all_splits_compact, run_all_splits_percentile, run_all_splits_with_search,
     run_flip_chain, run_forest_recom, run_geosection, run_merge_split, run_multiscale,
     run_multiscale_adaptive, run_nway_partition, run_parallel_tempering, run_short_burst,
-    run_short_burst_forest, run_short_burst_merge_split, run_vra_recom, AdaptiveConfig,
-    CompactBisectOpts,
+    run_short_burst_forest, run_short_burst_merge_split, AdaptiveConfig, CompactBisectOpts,
 };
 use crate::demographics::{
     align_demographics_to_adjacency, align_vap_demographics_to_adjacency, load_demographics,
     load_vap_demographics,
 };
 use crate::fetch::load_manifest;
-use crate::output::{clean_corrupt_state, write_state_outputs, VraAnalysis, VraDistrict};
+use crate::output::{write_state_outputs, VraAnalysis, VraDistrict};
 use crate::partisan_shares::load_partisan_shares;
 use crate::status::{ascii_safe, status};
 use crate::vertex_weights::{build_vertex_weights, VertexConstraintKind};

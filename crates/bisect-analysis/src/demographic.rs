@@ -81,7 +81,8 @@ fn validate_columns(headers: &csv::StringRecord) -> anyhow::Result<()> {
 
 /// Aggregate demographic rows into per-district results.
 /// Unknown GEOIDs (not in assignments) are silently skipped but counted.
-pub fn aggregate_demographic(
+#[cfg(test)]
+fn aggregate_demographic(
     rows: &[DemographicRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,

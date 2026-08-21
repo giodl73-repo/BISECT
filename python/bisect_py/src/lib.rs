@@ -198,7 +198,7 @@ fn compute_all_compactness(py: Python<'_>, district: usize, wkb: Vec<u8>) -> PyR
     use bisect_data::adjacency::parse_wkb_polygon_pub;
     let poly = parse_wkb_polygon_pub(&wkb, 0).map_err(|e| PyValueError::new_err(e.to_string()))?;
     let m = rust_all_metrics(district, &poly).map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let d = pyo3::types::PyDict::new_bound(py);
+    let d = pyo3::types::PyDict::new(py);
     d.set_item("district", m.district)?;
     d.set_item("polsby_popper", m.polsby_popper)?;
     d.set_item("reock", m.reock)?;
@@ -249,14 +249,14 @@ fn compute_vra_analysis(
         &hispanic_pops,
         mm_threshold,
     );
-    let d = pyo3::types::PyDict::new_bound(py);
+    let d = pyo3::types::PyDict::new(py);
     d.set_item("mm_count", vra.mm_count)?;
     d.set_item("mm_districts", &vra.mm_districts)?;
     let districts: Vec<_> = vra
         .districts
         .iter()
         .map(|dist| {
-            let dd = pyo3::types::PyDict::new_bound(py);
+            let dd = pyo3::types::PyDict::new(py);
             dd.set_item("district", dist.district).unwrap();
             dd.set_item("pct_minority", dist.pct_minority).unwrap();
             dd.set_item("pct_black", dist.pct_black).unwrap();
@@ -287,7 +287,7 @@ fn read_tiger_shp(
     records
         .iter()
         .map(|r| {
-            let wkb_bytes = pyo3::types::PyBytes::new_bound(py, &r.geometry_wkb).unbind();
+            let wkb_bytes = pyo3::types::PyBytes::new(py, &r.geometry_wkb).unbind();
             Ok((r.geoid.clone(), wkb_bytes, r.aland, r.awater))
         })
         .collect()
@@ -317,14 +317,14 @@ fn adjacency_to_bin(
         vertex_ext_perimeters: vec![],
     };
     let bytes = serialize_adjacency(&graph);
-    Ok(pyo3::types::PyBytes::new_bound(py, &bytes).unbind())
+    Ok(pyo3::types::PyBytes::new(py, &bytes).unbind())
 }
 
 /// Deserialize .adj.bin bytes to an adjacency graph dict.
 #[pyfunction]
 fn adjacency_from_bin(py: Python<'_>, data: Vec<u8>) -> PyResult<PyObject> {
     let graph = deserialize_adjacency(&data).map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let d = pyo3::types::PyDict::new_bound(py);
+    let d = pyo3::types::PyDict::new(py);
     d.set_item("adjacency", &graph.adjacency)?;
     d.set_item("vertex_weights", &graph.vertex_weights)?;
     d.set_item(
@@ -386,7 +386,7 @@ fn build_adjacency(
     let graph = build_adjacency_graph(&polygons_wkb, min_boundary_length)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
-    let d = pyo3::types::PyDict::new_bound(py);
+    let d = pyo3::types::PyDict::new(py);
     d.set_item("adjacency", &graph.adjacency)?;
     d.set_item(
         "edge_weights",

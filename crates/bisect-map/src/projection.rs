@@ -16,7 +16,6 @@ pub struct Projection {
     x_offset: f64,
     y_offset: f64,
     scale: f64,
-    canvas_h: f64,
 }
 
 impl Projection {
@@ -59,7 +58,6 @@ impl Projection {
             x_offset,
             y_offset,
             scale,
-            canvas_h: h,
         }
     }
 
@@ -301,8 +299,8 @@ mod tests {
     #[test]
     fn test_inset_honolulu_is_in_hawaii_inset() {
         let proj = InsetProjection::us_national(1200, 800);
-        let (x, y) = proj.project(-157.8, 21.3); // Honolulu
-                                                 // Hawaii inset is bottom strip, right of AK
+        let (_x, y) = proj.project(-157.8, 21.3);
+        // Hawaii inset is bottom strip, right of AK
         assert!(y > 580.0, "Honolulu must be in bottom strip, y={y}");
     }
 

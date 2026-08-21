@@ -54,16 +54,6 @@ pub fn check_required_analysis_files(ctx: &ReportContext) -> Vec<&'static str> {
         .collect()
 }
 
-/// Check which optional analysis files are present.
-fn present_optional_files(ctx: &ReportContext) -> std::collections::HashSet<&'static str> {
-    let analysis_dir = ctx.plan_dir.join("analysis");
-    OPTIONAL_ANALYSIS_FILES
-        .iter()
-        .filter(|&&name| analysis_dir.join(name).exists())
-        .copied()
-        .collect()
-}
-
 /// Read an analysis JSON file if present.
 /// Injects `"status": "ok"` into the result so templates can always
 /// check `.status == "unavailable"` regardless of file structure.

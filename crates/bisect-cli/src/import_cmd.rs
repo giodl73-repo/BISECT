@@ -1,8 +1,7 @@
 use crate::args::ImportArgs;
 use bisect_core::state_code_to_fips;
 use bisect_report::{
-    import_geojson_plan, import_gerrychain_to_assignments, validate_geoid_format_batch,
-    write_rplan, RplanFile, RplanMetadata,
+    import_gerrychain_to_assignments, validate_geoid_format_batch, write_rplan, RplanMetadata,
 };
 /// import_cmd.rs — `BISECT import` command dispatch.
 ///

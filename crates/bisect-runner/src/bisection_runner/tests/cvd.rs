@@ -68,7 +68,7 @@ fn cvd_seeds_are_distinct() {
     let tracts: HashSet<usize> = (0..16).collect();
     // We test by verifying the partition is non-trivial (not all one side)
     // which implies seeds[0] != seeds[1] since equal seeds → identical Voronoi → all assigned to 0.
-    let (left, right) =
+    let (_, right) =
         split_subgraph_cvd(&adj, &pop, &tracts, 2, 0.10, 20, 42).expect("CVD must succeed");
     assert!(
         !right.is_empty(),

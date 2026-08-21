@@ -327,10 +327,8 @@ fn test_ufactor_wasnt_silently_truncated_regression() {
 fn test_invariant_vertex_weights_positive() {
     // DF-04: all vertex weights must be >= 1 after loading
     // sub-zero weights cause METIS to produce degenerate partitions
-    let adj = vec![vec![1], vec![0, 2], vec![1]];
-    let vw = vec![1000i64, 500, 2000]; // all positive
-    let ew: HashMap<(usize, usize), f64> = HashMap::new();
     // The subgraph builder clamps to max(weight, 1) — verify it would catch 0
+    let vw = vec![1000i64, 500, 2000]; // all positive
     let tract_indices: HashSet<usize> = (0..3).collect();
     let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
     sorted.sort_unstable();

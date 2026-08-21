@@ -803,7 +803,7 @@ mod tests {
     // ── Log writer + verifier (Tasks 5 + 6) ──────────────────────────────────
 
     fn pinned_clock() -> impl Fn() -> String {
-        let mut counter = std::cell::Cell::new(0u64);
+        let counter = std::cell::Cell::new(0u64);
         move || {
             let n = counter.get();
             counter.set(n + 1);

@@ -437,7 +437,7 @@ fn run_app(
                                 }
                             }
                             KeyCode::Enter => {
-                                if let Screen::Compare(ref mut s) = app.screen {
+                                let error = if let Screen::Compare(ref mut s) = app.screen {
                                     if !s.plan_b_input.is_empty() {
                                         let base = std::path::PathBuf::from("outputs")
                                             .join("v1")
@@ -452,16 +452,21 @@ fn run_app(
                                                     &plan_a_dir, &plan_b_dir, &label_a, &label_b,
                                                 );
                                             s.result = Some(result);
+                                            None
                                         } else {
-                                            let plan_a = s.plan_a.clone();
-                                            let plan_b = s.plan_b_input.clone();
-                                            drop(s);
-                                            app.set_error(format!(
+                                            Some(format!(
                                                     "Plan not found: '{}' or '{}'. Check label spelling.",
-                                                    plan_a, plan_b
-                                                ));
+                                                    s.plan_a, s.plan_b_input
+                                                ))
                                         }
+                                    } else {
+                                        None
                                     }
+                                } else {
+                                    None
+                                };
+                                if let Some(message) = error {
+                                    app.set_error(message);
                                 }
                             }
                             _ => {}
