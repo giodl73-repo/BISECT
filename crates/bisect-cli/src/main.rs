@@ -35,7 +35,33 @@ use bisect_cli::validate::run_validate;
 use bisect_cli::verify::run_verify;
 use clap::Parser;
 
+// Clap's derived command graph exceeds the default Windows main-thread stack.
+#[cfg(windows)]
 fn main() {
+    const WINDOWS_CLI_STACK_BYTES: usize = 8 * 1024 * 1024;
+
+    let worker = match std::thread::Builder::new()
+        .name("bisect-cli".to_string())
+        .stack_size(WINDOWS_CLI_STACK_BYTES)
+        .spawn(run)
+    {
+        Ok(worker) => worker,
+        Err(error) => {
+            eprintln!("ERROR: failed to start BISECT CLI: {error}");
+            std::process::exit(1);
+        }
+    };
+    if let Err(panic) = worker.join() {
+        std::panic::resume_unwind(panic);
+    }
+}
+
+#[cfg(not(windows))]
+fn main() {
+    run();
+}
+
+fn run() {
     let cli = Cli::parse();
     match cli.command {
         // ── bisect state: single state ────────────────────────────────────────
