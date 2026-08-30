@@ -1,4 +1,4 @@
-# Pipeline Pitfalls (PP-01..PP-07)
+# Pipeline Pitfalls
 
 Structural vulnerabilities in multi-script pipeline chains. The root pattern: a flag or intent expressed at one level of the chain silently fails to reach the level where it matters.
 
@@ -291,3 +291,29 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Status:** MITIGATED
 **Proved by:** WP-007 updated `context/waves/PHASES.md` and VTRACE closure records.
 **Test:** First future VTRACE-governed pulse should receive L1 checklist review before being treated as the process pattern.
+
+---
+
+## PP-19: Output-gated owner validation can pass without executing
+
+**Pattern:** A CI owner-validation step is conditioned on a planner output. If
+the output is missing or incorrectly false, the owner step is skipped and the
+job can appear successful without validating the changed owner domain.
+
+**Domain:** Any CI workflow where one planning step emits a boolean used to
+gate an owner-native build or test.
+
+**Structural solution:** Derive expected ownership independently from the
+base/head changed-path set and fail the planning step unless the planner's
+selection exactly matches that independent oracle. Emit the gate output only
+after all positive, negative, and mutation controls pass.
+
+**Status:** SOLVED for the Ferris web-docs shadow lane
+
+**Proved by:** `scripts/ci/ferris-validation-domains.mjs` compares actual
+`web/docs` path membership with the selected `web-docs-build` entrypoint before
+writing `web_docs_selected`.
+
+**Test:** `scenario-web-only`, `scenario-unknown-fallback`, and
+`scenario-prefix-boundary` fail if the owner gate is omitted, inverted, or
+matched across a path-segment boundary.
