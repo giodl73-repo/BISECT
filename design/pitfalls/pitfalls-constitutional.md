@@ -10,6 +10,11 @@ Structural vulnerabilities that produce legally invalid redistricting outputs. B
 
 **Domain:** Any redistricting algorithm where constitutional requirements (±0.5% population balance) and policy goals (VRA compliance, compactness) are expressed as competing objectives in the same optimization. Multi-objective optimizers explore tradeoffs by design — that is the point of multi-objective formulation. Constitutional constraints must not participate in any tradeoff.
 
+**Why it's hard to catch:** The optimizer can still produce coherent-looking
+maps and policy improvements, so the violation is easy to rationalize as an
+acceptable frontier point unless population balance is enforced as a separate
+non-negotiable gate.
+
 **Structural solution:** Constitutional constraints live in the optimizer's enforcement layer (ufactor), not in its objective function. Policy goals live in the graph structure (edge weights), which shapes but does not override enforcement. The optimizer has one objective and one enforcement constraint; they cannot trade.
 
 **Status:** SOLVED
@@ -23,6 +28,11 @@ Structural vulnerabilities that produce legally invalid redistricting outputs. B
 **Pattern:** An algorithm designed for inputs in domain D receives an input at the boundary of D (or outside it) and produces output that is technically valid in form but constitutionally invalid in substance — or crashes, leaving no output. The caller doesn't know because no error was raised.
 
 **Domain:** Any redistricting algorithm applied to a state with unusual characteristics (1 district, island geography, extreme tract topology). The algorithm was designed and tested for typical cases; edge cases reveal assumptions baked into the design.
+
+**Why it's hard to catch:** Edge cases often produce formally shaped output or
+early crashes that look local to one state. The deeper issue is the missing
+domain contract, which stays hidden until atypical geography or district counts
+exercise it.
 
 **Structural solution:** Explicit domain validation before algorithm entry. For inputs outside the algorithm's valid domain, fail early with a clear message and fall back to a known-valid behavior. Never let an out-of-domain input reach the algorithm's internals.
 
