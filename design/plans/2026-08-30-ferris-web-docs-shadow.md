@@ -83,3 +83,19 @@ justified only after this lane demonstrates that the owner mapping is stable and
 that retained plan/receipt identities are useful in review. Trigger narrowing
 or removal of overlapping Rust/Python jobs requires a separate replay and
 required-check migration.
+
+## Hosted evidence
+
+Run `33318111484` passed the owner build and retained:
+
+- Ferris plan
+  `validation-plan:f2aa57418a85a96f332d9a0f69e08e304b9a439b28d3f4551fbc4afdafd25d66`;
+- input disposition `full_workspace_fallback`;
+- `fallback.required_by_inputs: true`; and
+- owner status `passed` for `npm run build`.
+
+The first receipt correctly bound the tested pull-request merge revision but
+called it `source_revision`, which could be mistaken for the pull-request head.
+The follow-up makes `tested_revision`, `head_revision`, and the pinned
+`ferris_revision` separate evidence fields. Final acceptance requires a green
+hosted run of that corrected receipt.
