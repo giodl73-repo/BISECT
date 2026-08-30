@@ -66,9 +66,10 @@ jobs:
 
       - name: Write owner receipt
         env:
-          SOURCE_REVISION: ${{ github.sha }}
+          TESTED_REVISION: ${{ github.sha }}
+          HEAD_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          node -e "const fs=require('fs'); const p=require('./ferris-web-docs-plan.json'); fs.writeFileSync('web-docs-owner-receipt.json', JSON.stringify({schema:'bisect.owner-validation-receipt/v0', owner:'web/docs', entrypoint:'npm run build', source_revision:process.env.SOURCE_REVISION, status:'passed', ferris_validation_plan_id:p.record.validation_plan_id, ferris_input_disposition:p.record.inputs[0].disposition}, null, 2)+'\n')"
+          node -e "const fs=require('fs'); const p=require('./ferris-web-docs-plan.json'); fs.writeFileSync('web-docs-owner-receipt.json', JSON.stringify({schema:'bisect.owner-validation-receipt/v0', owner:'web/docs', entrypoint:'npm run build', tested_revision:process.env.TESTED_REVISION, head_revision:process.env.HEAD_REVISION, ferris_revision:'1aef069f00ace2567c9610c79820eb437cb4b3a3', status:'passed', ferris_validation_plan_id:p.record.validation_plan_id, ferris_input_disposition:p.record.inputs[0].disposition}, null, 2)+'\n')"
 
       - name: Retain shadow evidence
         uses: actions/upload-artifact@v4
@@ -77,4 +78,3 @@ jobs:
           path: |
             ferris-web-docs-plan.json
             web-docs-owner-receipt.json
-
