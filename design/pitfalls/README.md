@@ -68,7 +68,7 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-20 | Successful exit with an unsatisfied setup or selection contract | **SOLVED** | test_data_vault_failures.py CLI and real relocation tests |
 | PP-21 | Output identity mistaken for complete execution custody | **SOLVED** | receipt completeness test and isolated RI rebuild |
 | PP-22 | Output-gated owner validation can pass without executing | **SOLVED** | ferris-validation-domains.mjs independent web/docs oracle |
-| PP-23 | Repository-local change parser drifts from planner semantics | **MITIGATED** | Ferris native revision binding plus hosted shadow proof |
+| PP-23 | Repository-local change parser drifts from planner semantics | **SOLVED** | Ferris shadow run 33349539121 plus exact Windows replay |
 
 ## Adding a Pitfall
 
