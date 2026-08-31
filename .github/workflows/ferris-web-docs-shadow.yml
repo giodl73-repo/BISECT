@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: giodl73-repo/FERRIS
-          ref: b61d690eb6b3b8ceb6277d4fc94f6be7266d740a
+          ref: 1f2a9d1d7047d676f5fe36832e646535d7d43c60
           path: ferris
           sparse-checkout: |
             Cargo.toml
@@ -67,6 +67,7 @@ jobs:
             ./ferris/target/debug/ferris \
             "$BASE_REVISION" \
             "$HEAD_REVISION" \
+            "$GITHUB_SHA" \
             ferris-validation-evidence
 
       - name: Install web docs dependencies
@@ -84,14 +85,12 @@ jobs:
       - name: Write owner receipt
         if: always() && steps.ferris-plan.outcome == 'success'
         env:
-          TESTED_REVISION: ${{ github.sha }}
-          HEAD_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
-          FERRIS_REVISION: b61d690eb6b3b8ceb6277d4fc94f6be7266d740a
+          FERRIS_REVISION: 1f2a9d1d7047d676f5fe36832e646535d7d43c60
           WEB_DOCS_SELECTED: ${{ steps.ferris-plan.outputs.web_docs_selected }}
           OWNER_INSTALL_STATUS: ${{ steps.owner-install.outcome }}
           OWNER_BUILD_STATUS: ${{ steps.owner-build.outcome }}
         run: |
-          node -e "const fs=require('fs'); const p=require('./ferris-validation-evidence/actual-plan.json'); const c=require('./ferris-validation-evidence/actual-changes.json'); fs.writeFileSync('ferris-validation-evidence/web-docs-owner-receipt.json', JSON.stringify({schema:'bisect.owner-validation-receipt/v1', owner_domain:'web-docs', owner_entrypoint:'web-docs-build', owner_command:'npm run build', owner_selected:process.env.WEB_DOCS_SELECTED==='true', owner_install_status:process.env.OWNER_INSTALL_STATUS, owner_build_status:process.env.OWNER_BUILD_STATUS, base_revision:c.base_revision, merge_base:c.merge_base, tested_revision:process.env.TESTED_REVISION, head_revision:process.env.HEAD_REVISION, ferris_revision:process.env.FERRIS_REVISION, ferris_owner_contract_id:p.record.owner_domain_contract.contract_id, ferris_validation_plan_id:p.record.validation_plan_id, selected_owner_entrypoints:p.record.selected_owner_entrypoints||[], fallback_required_by_inputs:p.record.fallback.required_by_inputs}, null, 2)+'\n')"
+          node -e "const fs=require('fs'); const p=require('./ferris-validation-evidence/actual-plan.json'); fs.writeFileSync('ferris-validation-evidence/web-docs-owner-receipt.json', JSON.stringify({schema:'bisect.owner-validation-receipt/v1', owner_domain:'web-docs', owner_entrypoint:'web-docs-build', owner_command:'npm run build', owner_selected:process.env.WEB_DOCS_SELECTED==='true', owner_install_status:process.env.OWNER_INSTALL_STATUS, owner_build_status:process.env.OWNER_BUILD_STATUS, ferris_revision:process.env.FERRIS_REVISION, ferris_owner_contract_id:p.record.owner_domain_contract.contract_id, ferris_validation_plan_id:p.record.validation_plan_id, ferris_revision_binding:p.record.revision_binding, selected_owner_entrypoints:p.record.selected_owner_entrypoints||[], fallback_required_by_inputs:p.record.fallback.required_by_inputs}, null, 2)+'\n')"
 
       - name: Retain shadow evidence
         if: always()

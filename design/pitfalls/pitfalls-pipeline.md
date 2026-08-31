@@ -317,3 +317,31 @@ writing `web_docs_selected`.
 **Test:** `scenario-web-only`, `scenario-unknown-fallback`, and
 `scenario-prefix-boundary` fail if the owner gate is omitted, inverted, or
 matched across a path-segment boundary.
+
+---
+
+## PP-20: Repository-local change parser drifts from planner semantics
+
+**Pattern:** A repository reconstructs merge bases, rename handling, deleted
+paths, and revision identity before calling an external planner. The adapter can
+silently disagree with the planner or bind a plan to a different tested
+revision even when both components are individually deterministic.
+
+**Domain:** CI adapters that translate Git history into path arguments for a
+separate selection or validation tool.
+
+**Structural solution:** Pass the exact base, head, and tested revisions to the
+planner and retain its revision binding as the sole change-set evidence. Keep a
+narrow repository-owned oracle only for the owner-domain decision that gates
+execution, not as a second general-purpose change parser.
+
+**Status:** MITIGATED pending hosted Linux proof
+
+**Proved by:** `scripts/ci/ferris-validation-domains.mjs` no longer parses
+name-status output or constructs changed/deleted path arguments. The actual plan
+uses Ferris revision options, while `git diff --quiet -- web/docs` remains an
+independent owner-selection oracle.
+
+**Test:** The Ferris web-docs shadow workflow must retain a native
+`revision_binding`, agree with the independent `web/docs` oracle, and complete
+the repository-owned owner build.

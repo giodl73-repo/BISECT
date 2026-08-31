@@ -2,17 +2,19 @@ import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
-const [ferris, baseRevision, headRevision, outputDirectory] = process.argv.slice(2);
+const [ferris, baseRevision, headRevision, testedRevision, outputDirectory] =
+  process.argv.slice(2);
 
-if (!ferris || !baseRevision || !headRevision || !outputDirectory) {
+if (!ferris || !baseRevision || !headRevision || !testedRevision || !outputDirectory) {
   throw new Error(
-    "usage: ferris-validation-domains.mjs <ferris> <base-revision> <head-revision> <output-directory>",
+    "usage: ferris-validation-domains.mjs <ferris> <base-revision> <head-revision> <tested-revision> <output-directory>",
   );
 }
 
 const workspaceId = "giodl73-repo/BISECT";
 const manifestPath = "Cargo.toml";
 const ownerDomainsPath = ".ferris/owner-validation-domains.json";
+const maxCommandOutputBytes = 32 * 1024 * 1024;
 
 mkdirSync(outputDirectory, { recursive: true });
 
@@ -20,6 +22,7 @@ function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: process.cwd(),
     encoding: "utf8",
+    maxBuffer: maxCommandOutputBytes,
     ...options,
   });
   if (result.error) {
@@ -55,89 +58,44 @@ function assert(condition, message) {
   }
 }
 
-function parseChanges() {
-  const mergeBaseResult = run("git", [
-    "merge-base",
-    baseRevision,
-    headRevision,
-  ]);
-  if (mergeBaseResult.status !== 0) {
-    throw new Error(`git merge-base failed:\n${mergeBaseResult.stderr}`);
-  }
-  const mergeBase = mergeBaseResult.stdout.trim();
+function hasWebDocsChanges() {
   const result = run("git", [
     "diff",
-    "--name-status",
-    "-z",
-    mergeBase,
-    headRevision,
-  ], { encoding: null });
-  if (result.status !== 0) {
-    throw new Error(`git diff failed:\n${result.stderr.toString("utf8")}`);
+    "--quiet",
+    `${baseRevision}...${headRevision}`,
+    "--",
+    "web/docs",
+  ]);
+  if (result.status === 0) {
+    return false;
   }
-
-  const fields = result.stdout
-    .toString("utf8")
-    .split("\0")
-    .filter((field) => field.length > 0);
-  const changedPaths = [];
-  const deletedPaths = [];
-
-  for (let index = 0; index < fields.length;) {
-    const status = fields[index++];
-    if (status.startsWith("R") || status.startsWith("C")) {
-      const oldPath = fields[index++];
-      const newPath = fields[index++];
-      if (status.startsWith("R")) {
-        deletedPaths.push(oldPath);
-      }
-      changedPaths.push(newPath);
-    } else {
-      const path = fields[index++];
-      if (status === "D") {
-        deletedPaths.push(path);
-      } else {
-        changedPaths.push(path);
-      }
-    }
+  if (result.status === 1) {
+    return true;
   }
-
-  return {
-    base_revision: baseRevision,
-    merge_base: mergeBase,
-    head_revision: headRevision,
-    changed_paths: [...new Set(changedPaths)].sort(),
-    deleted_paths: [...new Set(deletedPaths)].sort(),
-  };
+  throw new Error(`web/docs change oracle failed:\n${result.stderr}`);
 }
 
-function inputArguments(changes) {
-  return [
-    ...changes.changed_paths.flatMap((path) => ["--changed-path", path]),
-    ...changes.deleted_paths.flatMap((path) => ["--deleted-path", path]),
-  ];
-}
-
-const changes = parseChanges();
+const actualPlan = runFerris("actual-plan", [
+  "--base-revision",
+  baseRevision,
+  "--head-revision",
+  headRevision,
+  "--tested-revision",
+  testedRevision,
+]);
+const revisionBinding = actualPlan.record.revision_binding;
+assert(revisionBinding, "actual plan did not include a revision binding");
 assert(
-  changes.changed_paths.length + changes.deleted_paths.length > 0,
+  revisionBinding.changed_path_count + revisionBinding.deleted_path_count > 0,
   "the selected revision range contains no changed paths",
 );
-writeFileSync(
-  join(outputDirectory, "actual-changes.json"),
-  `${JSON.stringify(changes, null, 2)}\n`,
-);
-
-const actualPlan = runFerris("actual-plan", inputArguments(changes));
-const expectedWebSelection = [...changes.changed_paths, ...changes.deleted_paths].some(
-  (path) => path === "web/docs" || path.startsWith("web/docs/"),
-);
+const expectedWebSelection = hasWebDocsChanges();
 const actualWebSelection = (actualPlan.record.selected_owner_entrypoints ?? []).includes(
   "web-docs-build",
 );
 assert(
   actualWebSelection === expectedWebSelection,
-  "actual owner-domain selection does not match the changed path set",
+  "actual owner-domain selection does not match the independent web/docs oracle",
 );
 
 const webOnly = runFerris("scenario-web-only", [

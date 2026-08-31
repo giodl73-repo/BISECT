@@ -17,11 +17,11 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | Domain | Prefix | File | Count |
 |--------|--------|------|-------|
 | Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 11 |
-| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 17 |
+| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 20 |
 | Constitutional | CP | [pitfalls-constitutional.md](pitfalls-constitutional.md) | 2 |
 | Data | DP | [pitfalls-data.md](pitfalls-data.md) | 4 |
 | Research | RP | [pitfalls-research.md](pitfalls-research.md) | 2 |
-| **Total** | | | **36** |
+| **Total** | | | **39** |
 
 ## Status
 
@@ -63,6 +63,9 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-15 | Entry-point switching without PATH pre-flight check | **SOLVED** | setup_env.bat preflight (Plan 01 Task 3.2) |
 | PP-16 | Incremental deletion commits create brittle rollback dependencies | **SOLVED** | Plan 02 Rollback section (procedural artifact) |
 | PP-17 | Sensitive-asset commit prevention via manual reminder, not structural | **SOLVED** | pre-commit hook rejecting *.pdf staging (Plan 03 Task 1.4) |
+| PP-18 | Pulse completion without trace or risk closure | **MITIGATED** | First future VTRACE-governed pulse L1 checklist review |
+| PP-19 | Output-gated owner validation can pass without executing | **SOLVED** | ferris-validation-domains.mjs independent web/docs oracle |
+| PP-20 | Repository-local change parser drifts from planner semantics | **MITIGATED** | Ferris native revision binding plus hosted shadow proof |
 
 ## Adding a Pitfall
 
