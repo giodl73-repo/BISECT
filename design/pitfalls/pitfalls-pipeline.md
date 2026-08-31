@@ -335,7 +335,7 @@ planner and retain its revision binding as the sole change-set evidence. Keep a
 narrow repository-owned oracle only for the owner-domain decision that gates
 execution, not as a second general-purpose change parser.
 
-**Status:** MITIGATED pending hosted Linux proof
+**Status:** SOLVED
 
 **Proved by:** `scripts/ci/ferris-validation-domains.mjs` no longer parses
 name-status output or constructs changed/deleted path arguments. The actual plan
@@ -345,3 +345,7 @@ independent owner-selection oracle.
 **Test:** The Ferris web-docs shadow workflow must retain a native
 `revision_binding`, agree with the independent `web/docs` oracle, and complete
 the repository-owned owner build.
+
+Hosted run `33349539121` exercised 2,143 derived paths and retained a 2.04 MB
+plan, proving the adapter's explicit output bound. Its plan, change-set, and
+dirty-state binding identities matched an exact Windows replay.

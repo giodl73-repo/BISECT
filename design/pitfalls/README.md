@@ -65,7 +65,7 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-17 | Sensitive-asset commit prevention via manual reminder, not structural | **SOLVED** | pre-commit hook rejecting *.pdf staging (Plan 03 Task 1.4) |
 | PP-18 | Pulse completion without trace or risk closure | **MITIGATED** | First future VTRACE-governed pulse L1 checklist review |
 | PP-19 | Output-gated owner validation can pass without executing | **SOLVED** | ferris-validation-domains.mjs independent web/docs oracle |
-| PP-20 | Repository-local change parser drifts from planner semantics | **MITIGATED** | Ferris native revision binding plus hosted shadow proof |
+| PP-20 | Repository-local change parser drifts from planner semantics | **SOLVED** | Ferris shadow run 33349539121 plus exact Windows replay |
 
 ## Adding a Pitfall
 

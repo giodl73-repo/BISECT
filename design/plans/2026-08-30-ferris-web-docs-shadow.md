@@ -80,8 +80,9 @@ execution API.
 - **BENCHMARK:** accepted. The actual plan requires a native revision binding,
   non-empty change set, independent owner-gate agreement, and the retained
   positive, negative, and mutation controls.
-- **TRENCH:** accepted for hosted proof. PP-20 remains mitigated until the
-  hosted Linux lane retains the native binding and completes the owner build.
+- **TRENCH:** accepted. Hosted run `33349539121` closed PP-20 with a 2,143-path,
+  2.04 MB native plan, retained binding, independent owner-oracle agreement, and
+  successful owner build. Exact Windows replay matched the hosted identities.
 - **DATUM:** accepted with the same bounded claim. No savings, CI-equivalence,
   required-check replacement, or workflow-removal claim is made.
 
