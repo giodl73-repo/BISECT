@@ -1,0 +1,100 @@
+name: Ferris Web Docs Shadow
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "web/docs/**"
+      - ".ferris/**"
+      - "scripts/ci/ferris-validation-domains.mjs"
+      - ".github/workflows/ferris-web-docs-shadow.yml"
+  workflow_dispatch:
+    inputs:
+      base_revision:
+        description: Base revision for actual changed-path classification
+        required: false
+        default: origin/main
+
+permissions:
+  contents: read
+
+jobs:
+  web-docs:
+    name: Web docs owner validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out BISECT
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out pinned Ferris
+        uses: actions/checkout@v4
+        with:
+          repository: giodl73-repo/FERRIS
+          ref: 1f2a9d1d7047d676f5fe36832e646535d7d43c60
+          path: ferris
+          sparse-checkout: |
+            Cargo.toml
+            Cargo.lock
+            crates
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/docs/package-lock.json
+
+      - name: Build Ferris
+        run: cargo build --locked --manifest-path ferris/Cargo.toml -p ferris-cli --bin ferris
+
+      - name: Classify actual changes and run controls
+        id: ferris-plan
+        env:
+          BASE_REVISION: ${{ github.event.pull_request.base.sha || inputs.base_revision }}
+          HEAD_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [[ -z "$BASE_REVISION" || "$BASE_REVISION" =~ ^0+$ ]]; then
+            BASE_REVISION="origin/$DEFAULT_BRANCH"
+          fi
+          node scripts/ci/ferris-validation-domains.mjs \
+            ./ferris/target/debug/ferris \
+            "$BASE_REVISION" \
+            "$HEAD_REVISION" \
+            "$GITHUB_SHA" \
+            ferris-validation-evidence
+
+      - name: Install web docs dependencies
+        id: owner-install
+        if: steps.ferris-plan.outputs.web_docs_selected == 'true'
+        working-directory: web/docs
+        run: npm ci
+
+      - name: Build web docs
+        id: owner-build
+        if: steps.ferris-plan.outputs.web_docs_selected == 'true'
+        working-directory: web/docs
+        run: npm run build
+
+      - name: Write owner receipt
+        if: always() && steps.ferris-plan.outcome == 'success'
+        env:
+          FERRIS_REVISION: 1f2a9d1d7047d676f5fe36832e646535d7d43c60
+          WEB_DOCS_SELECTED: ${{ steps.ferris-plan.outputs.web_docs_selected }}
+          OWNER_INSTALL_STATUS: ${{ steps.owner-install.outcome }}
+          OWNER_BUILD_STATUS: ${{ steps.owner-build.outcome }}
+        run: |
+          node -e "const fs=require('fs'); const p=require('./ferris-validation-evidence/actual-plan.json'); fs.writeFileSync('ferris-validation-evidence/web-docs-owner-receipt.json', JSON.stringify({schema:'bisect.owner-validation-receipt/v1', owner_domain:'web-docs', owner_entrypoint:'web-docs-build', owner_command:'npm run build', owner_selected:process.env.WEB_DOCS_SELECTED==='true', owner_install_status:process.env.OWNER_INSTALL_STATUS, owner_build_status:process.env.OWNER_BUILD_STATUS, ferris_revision:process.env.FERRIS_REVISION, ferris_owner_contract_id:p.record.owner_domain_contract.contract_id, ferris_validation_plan_id:p.record.validation_plan_id, ferris_revision_binding:p.record.revision_binding, selected_owner_entrypoints:p.record.selected_owner_entrypoints||[], fallback_required_by_inputs:p.record.fallback.required_by_inputs}, null, 2)+'\n')"
+
+      - name: Retain shadow evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ferris-web-docs-shadow
+          path: ferris-validation-evidence/

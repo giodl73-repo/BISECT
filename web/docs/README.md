@@ -61,6 +61,14 @@ npm run preview
 
 Production files will be in `dist/` directory.
 
+### Validation ownership
+
+BISECT declares `web/docs/**` as the `web-docs` validation domain in
+`.ferris/owner-validation-domains.json`. Ferris may select the opaque
+`web-docs-build` entrypoint from changed paths, while this package continues to
+own the command (`npm run build`), environment, dependencies, and success
+criteria.
+
 ## Project Structure
 
 ```
