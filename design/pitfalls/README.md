@@ -17,11 +17,11 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | Domain | Prefix | File | Count |
 |--------|--------|------|-------|
 | Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 11 |
-| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 21 |
+| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 23 |
 | Constitutional | CP | [pitfalls-constitutional.md](pitfalls-constitutional.md) | 2 |
 | Data | DP | [pitfalls-data.md](pitfalls-data.md) | 4 |
 | Research | RP | [pitfalls-research.md](pitfalls-research.md) | 2 |
-| **Total** | | | **40** |
+| **Total** | | | **42** |
 
 ## Status
 
@@ -67,6 +67,8 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-19 | Interrupted admission leaves a canonical-path partial file | **SOLVED** | test_data_vault_failures.py interruption/race tests |
 | PP-20 | Successful exit with an unsatisfied setup or selection contract | **SOLVED** | test_data_vault_failures.py CLI and real relocation tests |
 | PP-21 | Output identity mistaken for complete execution custody | **SOLVED** | receipt completeness test and isolated RI rebuild |
+| PP-22 | Output-gated owner validation can pass without executing | **SOLVED** | ferris-validation-domains.mjs independent web/docs oracle |
+| PP-23 | Repository-local change parser drifts from planner semantics | **MITIGATED** | Ferris native revision binding plus hosted shadow proof |
 
 ## Adding a Pitfall
 
