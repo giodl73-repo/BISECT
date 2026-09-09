@@ -49,8 +49,14 @@ try {
             if ($contexts.Count -ne 50) {
                 throw "Expected 50 certified $year RCTX files; found $($contexts.Count)"
             }
+            # Keep regenerated verification provenance under this replay rather
+            # than modifying the committed evidence package before generation.
+            $rctxVerification = Join-Path $outputRootResolved "rctx-verification-$year"
+            New-Item -ItemType Directory -Path $rctxVerification | Out-Null
+            Copy-Item -LiteralPath $cycle.inventory `
+                -Destination (Join-Path $rctxVerification "inventory.json")
             & $ops verify-national-rctx --year $year `
-                --out-dir "docs/experiments/nationwide-$year" `
+                --out-dir $rctxVerification `
                 --context-root $contextRoot --require-complete
             if ($LASTEXITCODE -ne 0) { throw "$year RCTX verification failed" }
 
