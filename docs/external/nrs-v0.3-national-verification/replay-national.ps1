@@ -49,8 +49,16 @@ try {
             if ($contexts.Count -ne 50) {
                 throw "Expected 50 certified $year RCTX files; found $($contexts.Count)"
             }
+            # Verification regenerates its report, manifest, and verifier-source
+            # snapshot. Keep those run-specific files under the replay output so
+            # the clean-worktree requirement for the following NRS build remains
+            # true and the committed evidence package is never rewritten.
+            $rctxVerification = Join-Path $outputRootResolved "rctx-verification-$year"
+            New-Item -ItemType Directory -Path $rctxVerification | Out-Null
+            Copy-Item -LiteralPath $cycle.inventory `
+                -Destination (Join-Path $rctxVerification "inventory.json")
             & $ops verify-national-rctx --year $year `
-                --out-dir "docs/experiments/nationwide-$year" `
+                --out-dir $rctxVerification `
                 --context-root $contextRoot --require-complete
             if ($LASTEXITCODE -ne 0) { throw "$year RCTX verification failed" }
 

@@ -2,7 +2,7 @@
 % Introduction to geographic sorting concept and why it matters for redistricting
 
 \subsection{Geographic Sorting and the Democratic Disadvantage}
-\label{sec:geographic_sorting}
+\label{sec:geographic-sorting-mechanism}
 
 A fundamental challenge facing algorithmic redistricting---and indeed any neutral redistricting process---is the phenomenon of \textit{geographic sorting}: the systematic spatial clustering of voters by party affiliation. In contemporary American politics, Democratic voters are heavily concentrated in dense urban cores, while Republican voters are more evenly distributed across suburban and rural areas. This residential pattern, which has intensified over recent decades, has profound implications for redistricting outcomes regardless of who draws the maps or what process is used.
 
@@ -21,19 +21,19 @@ Any compact redistricting will tend to create:
 
 The result: Despite Democrats winning 52\% of votes, they win only 10-20\% of seats. This outcome emerges not from intentional gerrymandering but from the geometric interaction of compact districting and clustered residential patterns.
 
-\citet{chen2013} formalize this intuition with the \textit{geographic sorting index}:
+Chen and Rodden \citep{chen2013unintentional} formalize this intuition with a geographic-sorting measure:
 \begin{equation}
 \text{Geographic Sorting} = \text{Corr}(\text{Democratic Vote Share}_i, \text{Population Density}_i)
 \end{equation}
 where $i$ indexes geographic units (census tracts or precincts). A high positive correlation indicates Democratic voters are concentrated in high-density areas; a correlation near zero indicates even spatial distribution.
 
-Critically, geographic sorting has increased dramatically over recent decades. \citet{rodden2019} documents that the correlation between county-level Democratic vote share and population density has risen from approximately 0.35 in the 1990s to over 0.65 by the 2010s. This trend is driven by:
+Geographic sorting has increased over recent decades. Rodden \citep{rodden2019why} describes the growing alignment between partisan voting and population density. Candidate mechanisms include:
 
 \begin{enumerate}
-\item \textbf{Economic geography}: Knowledge economy jobs concentrate in urban centers, attracting college-educated professionals who lean Democratic \citep{moretti2012}.
-\item \textbf{Cultural geography}: Urban areas offer diversity, cultural amenities, and liberal social environments that attract Democratic-leaning voters \citep{florida2008}.
-\item \textbf{Political geography}: Voters increasingly sort into communities of like-minded partisans, reinforcing geographic clustering \citep{bishop2009}.
-\item \textbf{Migration patterns}: Young, educated Democrats migrate to cities; older, rural residents age in place \citep{scala2015}.
+\item \textbf{Economic geography}: Knowledge-economy jobs concentrate in urban centers alongside college-educated workers.
+\item \textbf{Cultural geography}: Urban and rural locations offer different amenities and social environments.
+\item \textbf{Political geography}: Residential clustering can reinforce geographic partisan concentration.
+\item \textbf{Migration patterns}: Age-selective migration can change the urban--rural electorate over time.
 \end{enumerate}
 
 The result is that in states like Wisconsin, Massachusetts, and Pennsylvania, Democratic voters are so heavily clustered that even perfectly neutral redistricting processes produce Republican-leaning outcomes.
@@ -41,7 +41,7 @@ The result is that in states like Wisconsin, Massachusetts, and Pennsylvania, De
 \subsubsection{Empirical Evidence: Geographic Sorting Across States}
 \label{sec:sorting_correlation}
 
-To quantify geographic sorting across all 50 states, we computed the correlation between tract-level Democratic vote share (2020 presidential election) and population density for each state. Results are shown in Table~\ref{tab:geographic_sorting}.
+To quantify geographic sorting across all 50 states, we computed the correlation between tract-level Democratic vote share (2020 presidential election) and population density for each state. The numerical summary follows; its supporting table remains to be regenerated for the public artifact package.
 
 % TABLE WILL BE INSERTED HERE AFTER PHASE 1 ANALYSIS COMPLETES
 % Placeholder structure:
@@ -75,7 +75,7 @@ The systematic Democratic disadvantage observed in many states is not a product 
 
 \textbf{First, urban concentration creates ``wasted votes.''} When Democratic voters cluster in cities at 75-85\% concentrations, any compact district containing those voters will win by overwhelming margins. The surplus votes beyond 50\%+1 are effectively ``wasted''---they contribute nothing to winning additional seats. Meanwhile, Republican voters spread across suburban and rural areas win districts with narrower margins (52-58\%), ``wasting'' fewer votes.
 
-This is the classic efficiency gap logic \citep{stephanopoulos2015}, but arising from geography rather than gerrymandering. In Wisconsin, for example, Democrats win Milwaukee and Madison districts with 70-75\% margins, while Republicans win exurban districts with 54-58\% margins. The result is a 5-3 Republican advantage despite the state being nearly 50-50 in statewide elections.
+This is the classic efficiency-gap logic \citep{stephanopoulos2015partisan}, but it may arise from geography as well as intentional line drawing. The Wisconsin case below examines that distinction; causal attribution cannot be read from the efficiency gap alone.
 
 \textbf{Second, compactness reinforces clustering.} Traditional redistricting principles like compactness---meant to protect communities of interest---inadvertently exacerbate Democratic disadvantage. Compact districts around urban cores naturally group Democratic voters together, creating supermajority Democratic districts. To achieve proportional representation would require deliberately non-compact districts that ``crack'' urban concentrations across multiple suburban districts.
 
@@ -83,15 +83,15 @@ Consider Pennsylvania: Philadelphia has approximately 1.6 million residents in a
 
 \textbf{Third, state boundaries constrain optimization.} Unlike at-large proportional representation, single-member district systems require partitioning fixed geographic areas into contiguous districts. This geometric constraint means there is no ``rearrangement'' of voters that can overcome extreme clustering without violating compactness.
 
-\citet{chen2017impact} demonstrate this through simulated redistricting: even after generating thousands of neutral redistricting plans for states like Maryland and Massachusetts, virtually \textit{all} plans produce Democratic disadvantage. Geography creates an upper bound on Democratic seat share that neutral processes cannot exceed without intentional pro-Democratic gerrymandering.
+Simulation studies show that political geography can constrain the partisan range of neutral plans \citep{chen2017impact}. The magnitude and direction remain State- and model-specific; such simulations do not prove a universal upper bound.
 
 \subsubsection{Is Algorithmic Redistricting at Fault?}
 
 A natural question: Does our recursive bisection algorithm exacerbate geographic sorting effects compared to other neutral processes? The answer is demonstrably no.
 
-\textbf{Comparison to ensemble methods.} \citet{deford2019} generate thousands of redistricting plans using Markov chain Monte Carlo (MCMC) simulation, exploring the full space of compact, population-balanced plans. In states with high geographic sorting, \textit{all} plans in the ensemble produce similar partisan outcomes. Our deterministic algorithm produces outcomes that fall squarely within the typical range of MCMC ensembles---it is neither an outlier nor unusually biased.
+\textbf{Comparison to ensemble methods.} ReCom samples can characterize a reference distribution of population-balanced plans under specified constraints \citep{deford2019}. Whether this deterministic output is typical of such a distribution is an empirical bakeoff question; the relevant ensemble comparison has not yet been regenerated here.
 
-\textbf{Comparison to commission-drawn maps.} Independent redistricting commissions in states like California, Michigan, and Colorado explicitly optimize for compactness and produce maps with higher Polsby-Popper scores than our algorithm (Section~\ref{sec:compactness_gap}). Yet these commission maps often exhibit similar or even larger partisan biases, because compactness inherently groups urban Democratic voters together.
+\textbf{Comparison to commission-drawn maps.} Independent redistricting commissions in states like California, Michigan, and Colorado explicitly optimize for compactness and can produce maps with higher Polsby-Popper scores than the historical baseline reported in Section~\ref{sec:results}. Outcome comparisons require a common regenerated benchmark; compactness alone does not establish partisan neutrality.
 
 Michigan's independent commission (2021) produced a congressional map with a Polsby-Popper score of 0.412 (exceptional compactness) but a systematic Republican advantage despite the state being nearly 50-50 in statewide elections. The commission did not intend to favor Republicans; rather, geographic reality constrained their options.
 

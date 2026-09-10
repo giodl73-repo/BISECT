@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -41,10 +42,17 @@ def sha256(path: Path) -> str:
 
 
 def relative_path(path: Path, root: Path) -> str:
+    # Preserve the path supplied at the repository boundary.  Resolving first
+    # follows symlinks and Windows junctions, leaking a machine-specific data-
+    # vault path into otherwise byte-reproducible manifests and READMEs.
+    root_absolute = Path(os.path.abspath(root))
+    path_absolute = Path(
+        os.path.abspath(path if path.is_absolute() else root_absolute / path)
+    )
     try:
-        return path.resolve().relative_to(root.resolve()).as_posix()
+        return path_absolute.relative_to(root_absolute).as_posix()
     except ValueError:
-        return str(path.resolve()).replace("\\", "/")
+        return str(path_absolute).replace("\\", "/")
 
 
 def require(condition: bool, code: str, message: str) -> None:

@@ -1,0 +1,25 @@
+paper: U.21+certified-recursive-bisection
+title: "Certified Recursive Bisection: Proof-Carrying Cuts for Algorithmic Redistricting"
+venue: technical report
+stage: recheck
+round: 1
+score_basis: post-write-validation
+updated: "2026-09-09"
+
+open_items:
+  - id: P2-national-source-custody
+    title: "Restore and hash-bind NRS source assignments for clean-checkout Tier 1--2 regeneration"
+    status: resolved
+    severity: P2
+    blocking: false
+    resolution: "2026-09-09 vault-backed clean-worktree replay matched all 150 governed assignment hashes; national Tier 1 and Tier 2 regeneration passed."
+  - id: P2-state-exact-proof
+    title: "Complete one unrestricted State boundary and canonical proof"
+    status: open
+    severity: P2
+    blocking: false
+  - id: P2-external-witness
+    title: "Implement and test an external publication-witness adapter"
+    status: open
+    severity: P2
+    blocking: false

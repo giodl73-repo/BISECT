@@ -1,8 +1,24 @@
 # NRS v0.3 Second-Laptop Verification
 
-**Status:** ready for independent execution
+**Status:** clean-worktree vault-backed replay passed locally; ready for an
+independent second-machine execution
 **Purpose:** let a non-author verify the published three-cycle evidence or
 reproduce all national baselines without private project knowledge
+
+## Local custody-recovery replay
+
+On 2026-09-09, the complete certified context corpus was recovered from
+`M:\DATA_VAULT` and replayed from a clean detached worktree. All 150 governed
+State-cycle assignment hashes matched, all three 50-State batches and national
+summaries verified, both cross-census checks passed, and the independent
+geographic verifier checked 231,765 rows. The compact machine-readable result
+is `replication-record-2026-09-09.json`; the large generated packages and full
+transcript remain in the data vault.
+
+This closes the repository's local source-custody and clean-worktree replay
+gap. It is not an independent second-laptop witness: the record identifies the
+same project laptop, and a separate reviewer must still execute the protocol
+below to support an external-replication claim.
 
 ## Independence protocol
 

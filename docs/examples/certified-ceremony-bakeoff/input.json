@@ -1,0 +1,24 @@
+{
+  "schema_version": "certified-ceremony-bakeoff-input-v1",
+  "protocol_id": "certified-ceremony-bakeoff-extension-v1",
+  "parent_protocol_id": "certified-vs-metis-multi-instance-v1",
+  "cells": [
+    {
+      "state": "SYNTHETIC-PATH8",
+      "arm": "certified-bisection",
+      "districts": 4,
+      "procedure_class": "certified-ceremony",
+      "transcript": "02-completed.json",
+      "tree": "../certified-recursive/path8-k4/output/certified-bisection-tree.json",
+      "external_witnesses_validated": false,
+      "tamper_suite": "not-run"
+    },
+    {
+      "state": "SYNTHETIC-PATH8",
+      "arm": "metis-replay",
+      "districts": 4,
+      "procedure_class": "replay-only",
+      "tamper_suite": "not-applicable"
+    }
+  ]
+}

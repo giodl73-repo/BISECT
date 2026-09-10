@@ -1,0 +1,8 @@
+{
+  "analysis_sha256": "a69e475eb5a883cd5936a7484f638e9dc171ac710c6b73e498866e2e336be3c8",
+  "manifest_sha256": "02b0969259535385c4583bb676f65d58dd15d2dc49f41106d795fb52609e0ee3",
+  "moves_replayed": 1655,
+  "scope": "Trace replay, not search optimality; shares metric/connectivity helpers, not independent implementation.",
+  "status": "passed",
+  "verifier_sha256": "5a562a27d60406568f1ca6707145ea3d8227ef5303c27b8fceb8803741d8aca0"
+}

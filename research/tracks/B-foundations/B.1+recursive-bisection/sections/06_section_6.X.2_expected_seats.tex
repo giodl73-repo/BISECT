@@ -8,7 +8,7 @@ A critical question for evaluating algorithmic redistricting is whether observed
 
 \paragraph{The Chen-Rodden Geographic Disadvantage Model}
 
-\citet{chen2013} developed a predictive model for partisan bias based solely on geographic sorting indices. Their model estimates the expected relationship between vote share and seat share given the spatial distribution of voters:
+Chen and Rodden \citep{chen2013unintentional} developed a predictive model for partisan bias based on political geography. Their model motivates the expected relationship between vote share and seat share given the spatial distribution of voters:
 
 \begin{equation}
 \text{Expected Dem Seat \%} = \beta_0 + \beta_1 \cdot \text{Dem Vote \%} + \beta_2 \cdot \text{Geographic Sorting} + \varepsilon
@@ -67,7 +67,7 @@ Notably, the pattern holds for both Democratic-leaning and Republican-leaning st
 
 \paragraph{Seats-Votes Curves: Algorithmic vs. Geographic Models}
 
-An alternative approach to evaluating redistricting is the \textit{seats-votes curve}, which plots the relationship between vote share and seat share across hypothetical election scenarios \citep{tufte1973}. A fair redistricting should produce a seats-votes curve that:
+An alternative approach to evaluating redistricting is the \textit{seats-votes curve}, which plots the relationship between vote share and seat share across hypothetical election scenarios \citep{tufte1973relationship}. One evaluative framework asks whether that curve:
 \begin{enumerate}
 \item Passes through (50\%, 50\%)---the party winning 50\% of votes wins 50\% of seats,
 \item Has symmetry---if Democrats win X\% at vote share V, Republicans win X\% at vote share (100-V),
@@ -114,7 +114,7 @@ How do algorithmic outcomes compare to other purportedly neutral redistricting p
 
 \textbf{Court-drawn remedial maps.} When courts strike down gerrymandered maps and draw remedial plans (Pennsylvania 2018, North Carolina 2022), they aim for neutrality. Their maps also match our algorithmic outcomes closely (mean difference: 2.1 percentage points). Courts face the same geographic constraints as algorithms.
 
-\textbf{MCMC ensemble methods.} \citet{deford2019} generate thousands of redistricting plans via Markov chain Monte Carlo simulation, exploring the full space of compact neutral plans. In states with high geographic sorting, \textit{all} plans in their ensembles produce similar partisan outcomes---and our deterministic algorithm falls squarely within the typical range. This definitively demonstrates that partisan patterns are inherent to geographic constraints, not algorithmic choices.
+\textbf{MCMC ensemble methods.} ReCom can sample many plans under a declared constraint profile \citep{deford2019}. Comparing the deterministic output with that distribution can help separate geographic effects from an unusual algorithmic choice, but it does not by itself establish causation and is pending regeneration for this paper.
 
 \paragraph{Implications: Process Worked as Intended}
 

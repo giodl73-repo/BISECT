@@ -324,7 +324,7 @@ fn solve_node(
     Ok(())
 }
 
-fn derive_child_instance(
+pub(crate) fn derive_child_instance(
     parent: &CertifiedSplitInstance,
     assignment: &[u8],
     label: u8,

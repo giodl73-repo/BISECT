@@ -2,7 +2,7 @@
 
 ## Result
 
-**Ready for panel after corrections.**
+**Major revision gate: reproducibility blocker resolved; research frontier remains.**
 
 ## Consistency
 
@@ -59,3 +59,51 @@ model, despite a larger boundary cut.
 
 U.21 is ready as a methods and evidence-contract paper. It is not yet an
 empirical national superiority paper.
+
+## September 2026 ceremony and recheck update
+
+The paper now includes the certified sequential-cut ceremony and the bounded
+path-8 procedural bakeoff. The certified arm publishes three certified cuts in
+two depth rounds and binds the final tree; the replay-only comparator receives
+no invented ceremony credit. Its independent verifier regenerates the
+deterministic scoreboard and rejects a timestamp mutation. External witnesses
+and the full production tamper corpus remain open.
+
+The post-write consistency audit reproduced the eight-instance comparison and
+the three-cycle Level-1 artifact verification. On 2026-09-09, the recovered M:
+data-vault corpus then passed a clean-detached-worktree full national replay:
+all 150 State-cycle assignment hashes matched, the three 50-State packages and
+national summaries verified, both cross-census checks passed, and the
+231,765-row geographic audit passed. After restoring the unpacked 2020 TIGER
+inputs and correcting junction-path recording, the national Tier 1 and Tier 2
+bakeoff regeneration verifiers also passed. The large source corpus remains a
+documented external dependency rather than Git content.
+
+The revised abstract is 242 words by `texcount`. Consistency and dimensional checks pass;
+the narrowed specification contract passes. A hostile three-referee simulation
+returns Major Revision, now led by the lack of a complete unrestricted State
+boundary/canonical proof and absence of a real external witness adapter.
+
+## Pre-submission checklist
+
+- [x] All P1 consistency mismatches resolved.
+- [x] All dimensional errors resolved; none found.
+- [x] Contract quantification promises are delivered or explicitly scoped out.
+- [x] Abstract is within 250 words and contains background, gap, claim, method,
+  result, and implication.
+- [x] Restore NRS source assignments and pass clean-worktree Tier 1--2
+  regeneration.
+- [ ] Address referee P2 items I-01--I-04, I-06--I-11, and I-13--I-14;
+  source-custody item I-12 and venue/stage item I-15 are resolved.
+- [x] The paper contains no `R` versus `tau` construct; that generic checklist
+  item is not applicable.
+- [x] Falsification conditions are operational: a better permitted cut, invalid
+  prefix, hash mismatch, or failed proof rejects the corresponding claim.
+- [x] Heuristic agreement is distinguished from the exact-model prediction.
+- [x] Primary result delivered: 30/40 objective agreements and 20/40 canonical
+  agreements.
+- [x] No placeholder citation remains in U.21.
+
+**Verdict: FIXES REQUIRED.** The reproducibility blocker is closed. The listed
+non-custody P2 research-frontier items remain before a full empirical or
+official-process submission.

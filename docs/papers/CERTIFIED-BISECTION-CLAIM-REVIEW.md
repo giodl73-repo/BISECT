@@ -12,10 +12,11 @@ Available evidence:
 - hostile certificate and tree rejection corpora;
 - tree-to-RPLAN package verification;
 - deterministic OPB decision requests;
-- connected Rhode Island 25,649-block RCTX; and
-- one same-instance path-8 comparison against vendored METIS seed 42.
+- connected Rhode Island 25,649-block RCTX;
+- hash-chained ceremony transitions and future-free prefix verification; and
+- eight precommitted bounded instances with five fixed METIS seeds each.
 
-Path-8 result:
+The path-8 anchor result is:
 
 | Method | Max scaled population deviation | Total scaled deviation | Weighted cut | Assignment |
 |---|---:|---:|---:|---|
@@ -23,17 +24,20 @@ Path-8 result:
 | METIS seed 42 | 0 | 0 | 1 | `00001111` |
 | Deliberate suboptimal control | 400 | 800 | 1 | `00011111` |
 
-The package is
-`docs/examples/certified-comparison/path8-root/comparison.json`.
+The expanded package is
+`docs/experiments/certified-vs-metis-multi-instance/comparison-suite.json`.
+All 40 heuristic rows are feasible and connected; 30 match the complete exact
+primary objective and 20 match the canonical assignment. This remains a
+bounded synthetic comparison.
 
 ## SCALE — Scope Check
 
 Sample size:
 
-- one synthetic graph;
-- eight units;
-- one METIS seed;
-- one root split; and
+- eight bounded synthetic graphs;
+- five fixed METIS seeds per graph;
+- root and small recursive-tree cases;
+- no externally witnessed ceremony bakeoff; and
 - no final-plan political, compactness, community, or runtime comparison.
 
 This evidence cannot support national empirical superiority.
@@ -45,8 +49,10 @@ This evidence cannot support national empirical superiority.
 Publishable:
 
 > Certified BISECT currently has the project's strongest verifiability and
-> execution-finality architecture. On the path-8 fixture, METIS finds the same
-> optimum, while certification proves that the permitted cut is unique.
+> execution-finality architecture. Its ceremony implementation makes the
+> frozen rule and depth-ordered cut prefix independently checkable. The bounded
+> comparison shows both exact/heuristic agreement and disagreement without
+> supporting national map superiority.
 
 Not publishable:
 
@@ -63,3 +69,6 @@ Not publishable:
 6. Compare compactness, population, subdivisions, representation, and
    communities without selecting favorable results.
 7. Report timeouts and proof failures.
+8. Under the prospective ceremony extension, report proof coverage, prefix
+   verification, completion/halt status, transcript size, verifier time, and
+   externally validated witness evidence on a separate scoreboard.

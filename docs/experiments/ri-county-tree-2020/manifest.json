@@ -1,0 +1,38 @@
+{
+  "input": {
+    "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ri_blocks_2020.rctx",
+    "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+  },
+  "schema": "ri-county-tree-v1",
+  "settings": {
+    "alphas": [
+      "0",
+      "0.5",
+      "1",
+      "2",
+      "4",
+      "8"
+    ],
+    "arms": [
+      "geographic-maximum-spanning-tree",
+      "county-first-maximum-spanning-tree"
+    ],
+    "bands_ppm": [
+      10,
+      100,
+      1000
+    ],
+    "execution": "serial, deterministic, no enforced resource cap",
+    "ordering": "cross-county-last in county arm only, descending weight, ascending endpoint indices",
+    "scope": "one unrooted tree per arm, all tree edges; original graph scoring",
+    "state": "RI",
+    "success_test": "county-first yields fewer split counties among winners at a common feasible band/alpha; report all ties",
+    "year": 2020
+  },
+  "sources": {
+    "C:\\src\\apportionment\\scripts\\research\\analyze_dfs_county_response.py": "fe135a02f752dc32419235a8f787159e22e1fb2d3685e10c39b629892c39448c",
+    "C:\\src\\apportionment\\scripts\\research\\run_multiroot_county_diagnostic.py": "5c808241fdc0b629cc554a6a9c9c45d4ca891a5063d6efb04de3453f2091c807",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_county_tree.py": "df24bce2511b7d82825579eed27d069930866d857e55348929f490d407f6415d",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_population_band.py": "c67e6cfa90bb0d006dee74a8de71b2ff90140762880cc4e41321a351a60bedfc"
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "bands": [
+    {
+      "alpha_response": [
+        {
+          "alpha": "0",
+          "minimum_weighted_cut": "None",
+          "winners": []
+        },
+        {
+          "alpha": "0.5",
+          "minimum_weighted_cut": "None",
+          "winners": []
+        },
+        {
+          "alpha": "1",
+          "minimum_weighted_cut": "None",
+          "winners": []
+        },
+        {
+          "alpha": "2",
+          "minimum_weighted_cut": "None",
+          "winners": []
+        },
+        {
+          "alpha": "4",
+          "minimum_weighted_cut": "None",
+          "winners": []
+        },
+        {
+          "alpha": "8",
+          "minimum_weighted_cut": "None",
+          "winners": []
+        }
+      ],
+      "band_ppm": 10,
+      "eligible_physical_cuts": 0,
+      "status": "empty-in-family",
+      "winning_set_changed": false
+    },
+    {
+      "alpha_response": [
+        {
+          "alpha": "0",
+          "minimum_weighted_cut": "304157226",
+          "winners": [
+            "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+          ]
+        },
+        {
+          "alpha": "0.5",
+          "minimum_weighted_cut": "907112629/2",
+          "winners": [
+            "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+          ]
+        },
+        {
+          "alpha": "1",
+          "minimum_weighted_cut": "602955403",
+          "winners": [
+            "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+          ]
+        },
+        {
+          "alpha": "2",
+          "minimum_weighted_cut": "901753580",
+          "winners": [
+            "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+          ]
+        },
+        {
+          "alpha": "4",
+          "minimum_weighted_cut": "1499349934",
+          "winners": [
+            "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+          ]
+        },
+        {
+          "alpha": "8",
+          "minimum_weighted_cut": "2694542642",
+          "winners": [
+            "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+          ]
+        }
+      ],
+      "band_ppm": 100,
+      "eligible_physical_cuts": 1,
+      "status": "feasible-in-family",
+      "winning_set_changed": false
+    },
+    {
+      "alpha_response": [
+        {
+          "alpha": "0",
+          "minimum_weighted_cut": "303313349",
+          "winners": [
+            "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065"
+          ]
+        },
+        {
+          "alpha": "0.5",
+          "minimum_weighted_cut": "452290499",
+          "winners": [
+            "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065"
+          ]
+        },
+        {
+          "alpha": "1",
+          "minimum_weighted_cut": "601267649",
+          "winners": [
+            "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065"
+          ]
+        },
+        {
+          "alpha": "2",
+          "minimum_weighted_cut": "899221949",
+          "winners": [
+            "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065"
+          ]
+        },
+        {
+          "alpha": "4",
+          "minimum_weighted_cut": "1495130549",
+          "winners": [
+            "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065"
+          ]
+        },
+        {
+          "alpha": "8",
+          "minimum_weighted_cut": "2686947749",
+          "winners": [
+            "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065"
+          ]
+        }
+      ],
+      "band_ppm": 1000,
+      "eligible_physical_cuts": 4,
+      "status": "feasible-in-family",
+      "winning_set_changed": false
+    }
+  ],
+  "candidates": {
+    "44a6dc92e642ddc5c2c27e9c9a982577b900039584ae1a3f2741cc447c09edf3": {
+      "deviation_numerator": 189,
+      "raw_cut": 303837653,
+      "split_counties": 4,
+      "within_county_cut": 298478604
+    },
+    "736f103a77d6fc78df34c99c9ef475ba0fb9d152578fbbaa384fcae1db6dcf0d": {
+      "deviation_numerator": 571,
+      "raw_cut": 303570695,
+      "split_counties": 4,
+      "within_county_cut": 298211646
+    },
+    "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7": {
+      "deviation_numerator": 27,
+      "raw_cut": 304157226,
+      "split_counties": 4,
+      "within_county_cut": 298798177
+    },
+    "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065": {
+      "deviation_numerator": 853,
+      "raw_cut": 303313349,
+      "split_counties": 4,
+      "within_county_cut": 297954300
+    }
+  },
+  "hypothesis_survives": false,
+  "manifest_sha256": "da2da54c6f4968fe90ec9fee6e05de5ca5b7579ae1390a6232a6509d01d34859",
+  "roots": [
+    {
+      "eligible_at_largest_band": 0,
+      "root_index": 0
+    },
+    {
+      "eligible_at_largest_band": 0,
+      "root_index": 6412
+    },
+    {
+      "eligible_at_largest_band": 4,
+      "root_index": 12824
+    },
+    {
+      "eligible_at_largest_band": 0,
+      "root_index": 19236
+    },
+    {
+      "eligible_at_largest_band": 0,
+      "root_index": 25648
+    }
+  ],
+  "total_population": 1097379,
+  "unit_count": 25649
+}

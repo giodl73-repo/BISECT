@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "research"))
 from config.download_sources import STATE_FIPS
 from state_config import STATE_CONFIG_2020
 from analyze_nrs_bakeoff_geometry_slice import BakeoffError, write_package
+from analyze_nrs_bakeoff_slice import relative_path
 
 
 SCHEMA_VERSION = "nrs-v0.3-national-bakeoff-geometry-analysis-v1"
@@ -312,7 +313,7 @@ python scripts/research/verify_nrs_bakeoff_geometry_national.py `
             )
         },
         "reproduction": {
-            "nrs_root": nrs_root.resolve().relative_to(ROOT.resolve()).as_posix(),
+            "nrs_root": relative_path(nrs_root, ROOT),
             "output_dir": canonical_dir,
             "workers": 1,
         },

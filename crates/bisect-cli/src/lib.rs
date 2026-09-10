@@ -9,6 +9,7 @@ pub mod analyze;
 pub mod analyze_label;
 pub mod args;
 pub mod build_cmd;
+pub mod ceremony_cmd;
 pub mod civic;
 pub mod compare;
 pub mod demographics;

@@ -1,0 +1,46 @@
+{
+  "schema_version": "certified-ceremony-bakeoff-analysis-v1",
+  "protocol_id": "certified-ceremony-bakeoff-extension-v1",
+  "parent_protocol_id": "certified-vs-metis-multi-instance-v1",
+  "claim_boundary": "Procedural evidence is reported separately from map outcomes. This fixture does not establish fairness, legal validity, public legitimacy, external timestamp validity, or a generally best map.",
+  "cells": [
+    {
+      "state": "SYNTHETIC-PATH8",
+      "arm": "certified-bisection",
+      "procedure_class": "certified-ceremony",
+      "internal_cut_count": 3,
+      "certified_cut_count": 3,
+      "proof_coverage": 1.0,
+      "released_round_count": 2,
+      "prefix_verification": true,
+      "final_tree_binding": true,
+      "external_witnesses_validated": false,
+      "review_seconds": 100,
+      "status": "completed",
+      "halt_reason": null,
+      "transcript_bytes": 14913,
+      "verification_seconds": 6.349183,
+      "verification_exit_code": 0,
+      "tamper_suite": "not-run"
+    },
+    {
+      "state": "SYNTHETIC-PATH8",
+      "arm": "metis-replay",
+      "procedure_class": "replay-only",
+      "internal_cut_count": 3,
+      "certified_cut_count": 0,
+      "proof_coverage": 0.0,
+      "released_round_count": 0,
+      "prefix_verification": false,
+      "final_tree_binding": false,
+      "external_witnesses_validated": false,
+      "review_seconds": null,
+      "status": "unsupported",
+      "halt_reason": null,
+      "transcript_bytes": null,
+      "verification_seconds": null,
+      "verification_exit_code": null,
+      "tamper_suite": "not-applicable"
+    }
+  ]
+}

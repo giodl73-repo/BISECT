@@ -49,7 +49,7 @@
     },
     {
       "path": "scripts/research/analyze_nrs_bakeoff_slice.py",
-      "sha256": "c1d1fed9392840f16f1518a4baf0ed1faea70be1d9a75e48617efe0d9231add6"
+      "sha256": "2a9950d174e400e152587ee074edbbfe5e84c95c0a56fa582fc2d8b47cf2acc6"
     }
   ],
   "outputs": {
