@@ -1,0 +1,77 @@
+{
+  "read": {
+    "verification": {
+      "schema": "bisect-publication-package-v1",
+      "status": "verified",
+      "kind": "read",
+      "zip_sha256": "b3cc359d41a11e6bf3ee7af7979e255186708387b7f940c956cbb0218b65d1d8",
+      "bytes": 4522765,
+      "files": 16,
+      "relocated_pages_byte_identical": [
+        "overview",
+        "district-1",
+        "district-2"
+      ],
+      "relocated_reexport_tested": false,
+      "rebuild_from_inputs_tested": false
+    },
+    "archive": {
+      "status": "archived-verified",
+      "release_id": "ri-2020-read-pilot-01",
+      "package": "bisect-ri-2020-read-pilot-01.zip",
+      "zip_sha256": "b3cc359d41a11e6bf3ee7af7979e255186708387b7f940c956cbb0218b65d1d8"
+    }
+  },
+  "map": {
+    "verification": {
+      "schema": "bisect-publication-package-v1",
+      "status": "verified",
+      "kind": "map",
+      "zip_sha256": "42e6e183e076ff778580ae5444eefa7894afdfedc1bc0ffb224cb69c2a20d92a",
+      "bytes": 22357844,
+      "files": 22,
+      "relocated_pages_byte_identical": [
+        "overview",
+        "district-1",
+        "district-2"
+      ],
+      "relocated_reexport_tested": true,
+      "rebuild_from_inputs_tested": false
+    },
+    "archive": {
+      "status": "archived-verified",
+      "release_id": "ri-2020-map-pilot-01",
+      "package": "bisect-ri-2020-map-pilot-01.zip",
+      "zip_sha256": "42e6e183e076ff778580ae5444eefa7894afdfedc1bc0ffb224cb69c2a20d92a"
+    }
+  },
+  "rebuild": {
+    "verification": {
+      "schema": "bisect-publication-package-v1",
+      "status": "verified",
+      "kind": "rebuild",
+      "zip_sha256": "d95e16c1d66ccd40c004990e871c8bdb2a76ac625133ce32e9c52c2973442d42",
+      "bytes": 39297885,
+      "files": 37,
+      "relocated_pages_byte_identical": [
+        "overview",
+        "district-1",
+        "district-2"
+      ],
+      "relocated_reexport_tested": true,
+      "rebuild_from_inputs_tested": true
+    },
+    "archive": {
+      "status": "archived-verified",
+      "release_id": "ri-2020-rebuild-pilot-01",
+      "package": "bisect-ri-2020-rebuild-pilot-01.zip",
+      "zip_sha256": "d95e16c1d66ccd40c004990e871c8bdb2a76ac625133ce32e9c52c2973442d42"
+    }
+  },
+  "source_files_unchanged_after_publication": 12,
+  "offline_cache_stage": "passed with explicit nonexistent vault path",
+  "custody_failure_tests": {
+    "passed": 10,
+    "skipped": 0
+  }
+}
