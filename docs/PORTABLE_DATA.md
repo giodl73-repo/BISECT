@@ -7,6 +7,8 @@ in the vault. No source data or Git bundle is added to the repository by this se
 
 The [validation record](experiments/portable-vault-2026-09-10/README.md) documents
 the tested scope, exact hashes and remaining work.
+The subsequent [hardening release record](experiments/portable-vault-2026-09-10/release.md)
+documents the isolated environment, tested lean clone and new offline source bundle.
 
 ## Existing vault: connect another computer
 
@@ -144,6 +146,12 @@ That archival bundle predates this portable setup code; use current Git for
 the setup tool. A bundle is a source snapshot, not an automatic backup of future
 commits. It does not include the bulk data. The vault is still a single physical
 copy unless you maintain another backup separately.
+
+The newer `VAULT/artifacts/source-custody/portable-vault-5e3c668d.bundle`
+**does** include the hardened setup code. Clone it with
+`--branch fix/portable-vault-role-review-2026-09-10`; its
+[separate receipt](../configs/data-vault/source-custody-portable-2026-09-10.json)
+identifies the verified snapshot. That offline clone passed the lean RI replay.
 
 ## Repository size and boundaries
 

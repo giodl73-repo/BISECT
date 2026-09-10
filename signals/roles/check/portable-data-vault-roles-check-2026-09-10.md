@@ -155,7 +155,7 @@ retroactively treating the original code as approved.
 | Findings | Disposition and evidence |
 | --- | --- |
 | C1, C2 | Implemented v2 admission receipt binding raw catalog rows, catalog/profile/helper/driver hashes, resolved command and State, actual Python/package/native inventory, thread controls, deadline and subordinate manifest/report/log hashes. A fresh venv produced the canonical RI context and a complete receipt. |
-| C3 | Release is the final gate: the reviewed implementation must be committed/published and separately archived on M. See the release record for the actual revision; do not infer completion from the old bundle. |
+| C3 | Implementation `5e3c668d` published in PR #49 and archived in a new verified full-history bundle on M. An independent lean clone from that bundle replayed all six RI arms. See the release record; this does not assert PR merge. |
 | B1, B2 | Added real admission/validation tests around tiny download/ZIP/build/replay fixtures. Includes interruption, duplicate/corrupt/missing members, redirects, builder failure/hash mismatch/deadline, missing evidence and replay metric/status/hash mismatches. |
 | B3 | Real link creation and relocation test passes on Windows, preserving both source trees and user directories. Added dedicated Windows/Ubuntu, Python 3.11/3.14 CI; cross-platform results depend on that run, not this local assertion. |
 | T1 | Same-directory staging and verified no-clobber publication; injected interruption leaves no partial canonical target and retry passes. Racing publication preserves the other writer's file. |

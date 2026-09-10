@@ -1,0 +1,12 @@
+{
+  "schema": "bisect-source-custody-v1",
+  "revision": "5e3c668d306d93976da3b005bf14737d7f9ac5c7",
+  "vault_path": "artifacts/source-custody/portable-vault-5e3c668d.bundle",
+  "bytes": 178283038,
+  "sha256": "ce673f6004a24f108543dcd0d416a4a391462afebe514ef6871475043e8a57ad",
+  "bundle_verification": "passed; complete history, no prerequisites",
+  "refs": {
+    "refs/heads/fix/portable-vault-role-review-2026-09-10": "5e3c668d306d93976da3b005bf14737d7f9ac5c7"
+  },
+  "scope": "Includes hardened portability implementation and tests. Later release-record-only commits are not automatically part of this immutable snapshot."
+}

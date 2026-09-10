@@ -38,3 +38,7 @@ local file is refused, never overwritten. Restored files are ignored by Git;
 the frozen package manifest and its verifiers remain unchanged. Hydrating adds
 about 85 MB locally but does not add those bytes back to the current Git tree.
 Sparse checkout intentionally does not support every full-workspace test.
+
+Validated from the offline implementation bundle at `5e3c668d`: this profile
+materialized about 19.9 MB of tracked files and passed the six-arm RI replay.
+See the [release record](experiments/portable-vault-2026-09-10/release.md).
