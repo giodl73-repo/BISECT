@@ -291,3 +291,75 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Status:** MITIGATED
 **Proved by:** WP-007 updated `context/waves/PHASES.md` and VTRACE closure records.
 **Test:** First future VTRACE-governed pulse should receive L1 checklist review before being treated as the process pattern.
+
+---
+
+## PP-19: Interrupted admission leaves a canonical-path partial file
+
+**Pattern:** A verified source is copied directly to its canonical destination.
+Interruption leaves incomplete bytes there, and a no-overwrite policy then
+prevents an ordinary retry. Integrity detection exists; recovery does not.
+
+**Domain:** Data download, archive extraction and derived artifact admission.
+
+**Proposed structural solution:** Stage and verify a unique same-directory file,
+then publish with cross-platform no-clobber semantics. Existing valid or unknown
+user files must never be replaced. Retrying after interruption must be safe.
+
+**Status:** SOLVED
+**Structural remedy:** `copy_checked` now stages, verifies and publishes with
+no-clobber semantics. Injected interruption leaves no canonical partial file;
+racing publication cannot overwrite another writer's destination.
+**Test:** `test_data_vault_failures.py::FailureTests::test_interrupted_admission_retries_without_partial_destination`
+and `test_racing_publication_never_clobbers` pass.
+**Original evidence:** Portable-vault review T1: fault injection left two of eight bytes
+at the destination; the next copy was refused. No production data was changed.
+
+## PP-20: Successful exit with an unsatisfied setup or selection contract
+
+**Pattern:** A command prints missing/conflicting resources or silently ignores
+requested selectors, but returns success. Callers interpret success as readiness
+even though the intended dataset or storage location was not selected.
+
+**Domain:** Portable setup and batch-selection CLI boundaries.
+
+**Proposed structural solution:** Action-specific argument validation, complete
+selector validation and a strict readiness result with nonzero exit on missing
+or stale links. Any repair must distinguish owned links from real user folders.
+
+**Status:** SOLVED
+**Structural remedy:** Action-specific parsers reject unused options; full State
+validation rejects unknown selections; incomplete links return nonzero and
+explicit repair is restricted to tool-owned links.
+**Tests:** `test_cli_rejects_inapplicable_options_before_io`,
+`test_mixed_unknown_state_rejected`, `test_incomplete_links_exit_nonzero`,
+`test_real_link_relocation_and_local_directory_preserved` in
+`tests/unit/test_data_vault_failures.py` pass locally.
+**Original evidence:** Portable-vault review T2/L1/L3: missing links return 0, a 2010 option
+dispatches the 2020 builder, and RI plus an invalid State silently selects RI.
+
+## PP-21: Output identity mistaken for complete execution custody
+
+**Pattern:** A successful admission receipt binds an output and part of its
+builder, but omits the wrapper, configuration, invocation or runtime that
+actually selected and transformed the inputs. Matching bytes do not identify
+all execution dependencies needed for independent reproduction and diagnosis.
+
+**Domain:** Scientific build/admission receipts and portable recovery workflows.
+
+**Proposed structural solution:** A versioned receipt binds the selected input
+and catalog hashes, executed source identities, resolved command, environment
+and subordinate manifest/log hashes. Validate receipt completeness in tests.
+
+**Status:** SOLVED
+**Structural remedy:** Versioned v2 admission receipt binds wrapper/helper,
+catalog/input/profile identities, command/State, runtime/native dependencies,
+thread controls and manifest/report/log hashes. Missing builder evidence prevents
+admission; output identity remains checked independently.
+**Test:** `test_builder_admission_failures_and_complete_receipt` passes; isolated
+Windows venv RI build/replay also passed with the new receipt.
+**Original evidence:** Portable-vault review C1/C2: the wrapper's admission receipt has
+only status, context hash and historical profile hash; its current State helper
+is outside that profile. Canonical output verification still protects identity.
+
+Review: [portable-data-vault roles check](../../signals/roles/check/portable-data-vault-roles-check-2026-09-10.md).

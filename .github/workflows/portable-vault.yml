@@ -1,0 +1,20 @@
+name: Portable vault
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  portable-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install pytest
+      - run: python -m pytest tests/unit/test_data_vault.py tests/unit/test_data_vault_failures.py tests/unit/test_evidence_vault.py -q
+      - run: python scripts/evidence_vault.py --check-size
