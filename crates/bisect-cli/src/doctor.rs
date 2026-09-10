@@ -11,7 +11,7 @@
 use crate::args::DoctorArgs;
 use crate::policy::LocationRegistry;
 use crate::provenance::Provenance;
-use crate::runner::{chamber_balance_tolerance, chamber_district_count};
+use crate::runner::chamber_balance_tolerance;
 
 pub fn run_doctor(args: &DoctorArgs) {
     // --verify-manifest mode: cross-check a plan manifest against the running binary

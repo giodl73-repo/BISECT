@@ -28,7 +28,6 @@ members = [
     "crates/bisect-analysis",
     "crates/bisect-map",
     "crates/bisect-report",
-    "crates/bisect-web",
     "crates/bisect-tui",
     "crates/bisect-ensemble",
     "crates/bisect-smc",

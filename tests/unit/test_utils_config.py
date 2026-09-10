@@ -67,13 +67,15 @@ class TestGetStateConfig:
         # Should return same configuration
         assert config1['CA']['districts'] == config2['CA']['districts']
 
-    def test_all_states_have_required_fields(self):
-        """Test that all states have required fields."""
-        config = get_state_config('2020')
+    @pytest.mark.parametrize('year', ['2000', '2010', '2020'])
+    def test_all_years_have_complete_apportionment(self, year):
+        """Every supported census year has 50 states and 435 districts."""
+        config = get_state_config(year)
 
+        assert len(config) == 50
+        assert sum(state['districts'] for state in config.values()) == 435
         for state_code, state_data in config.items():
             assert 'name' in state_data, f"{state_code} missing 'name'"
-            assert 'districts' in state_data, f"{state_code} missing 'districts'"
             assert isinstance(state_data['name'], str)
             assert isinstance(state_data['districts'], int)
             assert state_data['districts'] >= 1

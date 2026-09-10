@@ -34,7 +34,6 @@ from shapely.ops import unary_union
 from apportionment.data.adjacency import build_adjacency_graph
 from apportionment.partition.recursive_bisection import recursive_bisection
 from apportionment.visualization.compactness import compute_compactness_metrics
-from scripts.config_2020 import STATE_DISTRICTS
 from scripts.utils import get_tract_file
 
 # Test states (10 representative)

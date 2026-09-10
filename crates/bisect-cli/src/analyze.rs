@@ -1059,7 +1059,6 @@ mod tests {
     /// Task 119: missing plan error lists available labels from plans directory.
     #[test]
     fn test_missing_plan_error_lists_available_labels() {
-        use std::path::Path;
         use tempfile::TempDir;
 
         let tmp = TempDir::new().unwrap();

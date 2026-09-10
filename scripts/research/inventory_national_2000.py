@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from config_2000 import STATE_CONFIG_2000  # noqa: E402
+from state_config import STATE_CONFIG_2000  # noqa: E402
 
 
 FIPS = {

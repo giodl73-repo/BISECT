@@ -376,7 +376,7 @@ pub fn run_verify(label: &str, year_filter: Option<&str>) -> Result<(), String> 
 
         // ── Link 1: config SHA ──────────────────────────────────────────────
         // The build index records which config file was used and its SHA.
-        let config_link = check_config_sha(label, year, &run_index);
+        let config_link = check_config_sha(label, &run_index);
         print_link(&config_link);
         if !config_link.is_ok() {
             overall_ok = false;
@@ -426,7 +426,7 @@ pub fn run_verify(label: &str, year_filter: Option<&str>) -> Result<(), String> 
 
 /// Check that `runs/{label}/{year}/index.json` has a `config_sha256` field that
 /// matches the SHA-256 of the referenced config file.
-fn check_config_sha(label: &str, year: &str, run_index_path: &PathBuf) -> ChainLink {
+fn check_config_sha(label: &str, run_index_path: &PathBuf) -> ChainLink {
     let description = "Config SHA".to_string();
 
     // Build index must exist

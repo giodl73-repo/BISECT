@@ -1,3 +1,0 @@
-NOTE: Running congressional (38D). TX also has house (150D) and senate (31D). Use --chamber house or --chamber senate.
-[partition-time] TX: k=38 n=6896 -> 22.1ms
-[OK] TX in 476ms

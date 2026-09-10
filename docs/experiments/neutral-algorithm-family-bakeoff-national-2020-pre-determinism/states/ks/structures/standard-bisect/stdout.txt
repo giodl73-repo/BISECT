@@ -1,4 +1,0 @@
-STATUS:1:KS: loading adjacency
-STATUS:1:KS: recursive bisection into 4 districts
-STATUS:1:KS: balance OK, writing outputs
-STATUS:1:KS: complete (4D, 0ms)

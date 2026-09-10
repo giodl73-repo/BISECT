@@ -52,7 +52,6 @@ pub fn split_subgraph_bisection_ensemble(
         .collect();
     #[allow(unused_imports)]
     use bisect_ensemble::recom::RecomChain;
-    let n = sorted.len();
 
     let local_adj: Vec<Vec<u32>> = sorted
         .iter()

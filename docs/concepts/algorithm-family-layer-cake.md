@@ -150,7 +150,7 @@ bisect-report
 bisect-map
   rendering/projection/dissolve/labels/colors
 
-bisect-tui / bisect-web
+bisect-tui / future web surface
   user interfaces over the algorithm/report layers
 
 

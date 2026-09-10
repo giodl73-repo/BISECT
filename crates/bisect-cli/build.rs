@@ -43,10 +43,19 @@ fn main() {
     // build timestamp — ISO-8601 UTC
     // We don't take a deterministic-build dependency (chrono / time crate) here;
     // formatting unix epoch by hand keeps build.rs dependency-free.
-    let now_secs = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
+    let now_secs = match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(value) => value
+            .parse::<u64>()
+            .expect("SOURCE_DATE_EPOCH must be an unsigned Unix timestamp"),
+        Err(std::env::VarError::NotPresent) => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0),
+        Err(std::env::VarError::NotUnicode(_)) => {
+            panic!("SOURCE_DATE_EPOCH must contain valid Unicode")
+        }
+    };
+    println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
     println!("cargo:rustc-env=BISECT_BUILD_UNIX={now_secs}");
 
     // rustc version

@@ -1,7 +1,0 @@
-NOTE: Running congressional (4D). IA also has house (100D) and senate (50D). Use --chamber house or --chamber senate.
-[geosection] trying 2 ratios x 1 seeds for k=4
-[geosection]   ratio 1:3 best=402km  normalised=402.3
-[geosection]   ratio 2:2 best=562km  normalised=397.4
-[geosection] natural ratio 2:2 at 562km (normalised=397.4)
-[partition-time] IA: k=4 n=896 -> 36.4ms
-[OK] IA in 122ms

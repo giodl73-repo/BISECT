@@ -1,6 +1,0 @@
-{
-  "version": "0.1.0",
-  "build_commit": "ddc6f41c858ce555b6a541a734ac712c19a12318-dirty",
-  "bisect_build_date": "2026-08-09T15:08:21Z",
-  "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)"
-}

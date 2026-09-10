@@ -1,3 +1,0 @@
-NOTE: Running congressional (4D). IA also has house (100D) and senate (50D). Use --chamber house or --chamber senate.
-[partition-time] IA: k=4 n=896 -> 2.1ms
-[OK] IA in 109ms

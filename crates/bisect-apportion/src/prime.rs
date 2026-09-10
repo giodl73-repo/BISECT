@@ -91,20 +91,6 @@ pub fn split_prescription(k: u32) -> SplitStep {
     }
 }
 
-fn smallest_prime_factor(mut n: u32) -> u32 {
-    if n % 2 == 0 {
-        return 2;
-    }
-    let mut d = 3u32;
-    while d * d <= n {
-        if n % d == 0 {
-            return d;
-        }
-        d += 2;
-    }
-    n
-}
-
 fn largest_prime_factor(n: u32) -> u32 {
     let mut n = n;
     let mut largest = 1u32;

@@ -99,27 +99,6 @@ pub fn find_gpmetis() -> Option<String> {
     None
 }
 
-/// BFS connectivity check: returns true if the subgraph (local indices 0..n) is connected.
-pub(crate) fn is_connected(adj: &[Vec<usize>]) -> bool {
-    let n = adj.len();
-    if n <= 1 {
-        return true;
-    }
-    let mut visited = vec![false; n];
-    let mut queue = std::collections::VecDeque::new();
-    visited[0] = true;
-    queue.push_back(0usize);
-    while let Some(v) = queue.pop_front() {
-        for &nb in &adj[v] {
-            if !visited[nb] {
-                visited[nb] = true;
-                queue.push_back(nb);
-            }
-        }
-    }
-    visited.iter().all(|&v| v)
-}
-
 pub(crate) fn is_connected_subset(adjacency: &[Vec<usize>], vertices: &HashSet<usize>) -> bool {
     if vertices.len() <= 1 {
         return true;

@@ -557,7 +557,8 @@ ls outputs/us_2020_v1/states/
 taskkill /F /IM python.exe
 ```
 
-**Note**: `CANCEL.bat` has been removed. Use `taskkill` directly.
+**Note**: `CANCEL.bat` has been removed. Inspect the stale process and use
+`Stop-Process -Id <PID>` so unrelated Python work is not terminated.
 
 **Warning**: Force killing may leave incomplete output files. Use `--reset` on next run to clean up.
 

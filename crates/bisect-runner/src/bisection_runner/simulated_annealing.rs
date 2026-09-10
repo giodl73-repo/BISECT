@@ -109,9 +109,8 @@ pub fn split_subgraph_sa(
     let half_pop = total_pop / 2;
     let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
 
-    // Get initial METIS partition — use a sub_vwgt of i64 for split_subgraph
-    let sub_vwgt: Vec<i64> = local_pop.clone();
-    let (metis_left, metis_right) = split_subgraph(
+    // Get initial METIS partition.
+    let (metis_left, _) = split_subgraph(
         adjacency,
         vertex_weights,
         1,
@@ -243,8 +242,8 @@ pub fn run_all_splits_sa(
     edge_weights: &HashMap<(usize, usize), f64>,
     num_districts: usize,
     balance_tolerance: f64,
-    niter: u32,
-    seed: Option<u64>,
+    _niter: u32,
+    _seed: Option<u64>,
     intermediate_dir: Option<&Path>,
     steps_per_tract: usize,
     t0_factor: f64,

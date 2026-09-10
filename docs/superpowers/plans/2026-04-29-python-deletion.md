@@ -176,23 +176,17 @@ This script converted legacy pkl adjacency files to .adj.bin format. All 50 stat
 
 ---
 
-## Task 7: Keep `bisect-web` as documented stub (REVERSED in v2)
+## Task 7: Remove the empty `bisect-web` placeholder (supersedes v2)
 
-Per SURVEY review v1: empty crate stubs signal "this namespace is reserved for future work" and prevent naive re-creation. Replace deletion with documentation.
+The documented placeholder added no implementation or ownership boundary.
+Dashboard generation remains Python-owned until a concrete Rust replacement
+justifies a crate.
 
-- [ ] **7.1** Edit `BISECT/crates/bisect-web/src/lib.rs`. Replace `// bisect-web — stub` with a short comment block:
-   ```rust
-   //! bisect-web — RESERVED for future Rust dashboard work.
-   //!
-   //! Currently empty. Dashboard generation is performed by Python
-   //! (scripts/web/generate_dashboard.py, Jinja2). If/when a Rust
-   //! dashboard becomes desirable, this is where it lives.
-   //!
-   //! See spec: docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md
-   ```
-- [ ] **7.2** Commit: "Document bisect-web as reserved stub (Plan 02 Task 7)".
+- [x] **7.1** Remove `BISECT/crates/bisect-web`.
+- [x] **7.2** Remove the workspace and lockfile entries.
+- [x] **7.3** Record Python dashboard ownership in the active architecture docs.
 
-**Exit:** Crate kept. Future readers know its status.
+**Exit:** No empty crate is maintained; future work starts with executable code.
 
 ---
 

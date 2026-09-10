@@ -72,13 +72,13 @@ def load_state_data(year: int) -> Dict[str, Dict]:
     sys.path.insert(0, str(scripts_path))
 
     if year == 2020:
-        from config_2020 import STATE_CONFIG_2020
+        from state_config import STATE_CONFIG_2020
         return STATE_CONFIG_2020
     elif year == 2010:
-        from config_2010 import STATE_CONFIG_2010
+        from state_config import STATE_CONFIG_2010
         return STATE_CONFIG_2010
     elif year == 2000:
-        from config_2000 import STATE_CONFIG_2000
+        from state_config import STATE_CONFIG_2000
         return STATE_CONFIG_2000
     else:
         raise ValueError(f"Year {year} not supported")

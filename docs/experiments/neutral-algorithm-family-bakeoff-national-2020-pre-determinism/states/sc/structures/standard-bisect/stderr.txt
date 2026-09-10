@@ -1,3 +1,0 @@
-NOTE: Running congressional (7D). SC also has house (124D) and senate (46D). Use --chamber house or --chamber senate.
-[partition-time] SC: k=7 n=1323 -> 94.3ms
-[OK] SC in 253ms

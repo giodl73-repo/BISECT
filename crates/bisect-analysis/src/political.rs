@@ -57,7 +57,8 @@ pub enum PoliticalError {
 }
 
 /// Aggregate political rows into per-district results.
-pub fn aggregate_political(
+#[cfg(test)]
+fn aggregate_political(
     rows: &[PoliticalRow],
     assignments: &HashMap<String, usize>,
     num_districts: usize,

@@ -301,7 +301,6 @@ pub fn run_proportional_section(
     }
 
     // Recurse with ncon=1 standard bisection
-    let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
     let left_asgn = recurse_geosection(
         &best_left,
         adjacency,
@@ -814,7 +813,7 @@ pub(crate) fn recurse_geosection(
     // applied to local_ew above; run_geosection sees the modified weights.
     // Always ncon=1 for recursive levels (area constraint only at first level).
     let empty_centroids = crate::geosection_orientation::CentroidMap::new();
-    let (local_asgn, nat_left, nat_right, nat_ec) = run_geosection(
+    let (local_asgn, _, _, _) = run_geosection(
         &local_adj,
         &local_vw,
         &local_ew,
@@ -887,7 +886,7 @@ pub(crate) fn build_subgraph_adjacency(
 pub(crate) fn recurse_standard(
     verts: &HashSet<usize>,
     sub_adj: &[Vec<usize>],
-    global_adj: &[Vec<usize>],
+    _global_adj: &[Vec<usize>],
     vertex_weights: &[i64],
     edge_weights: &HashMap<(usize, usize), f64>,
     k: usize,
@@ -924,7 +923,6 @@ pub(crate) fn recurse_standard(
             m
         });
 
-    let sub_n = sorted.len();
     let sub_asgn = run_all_splits(
         sub_adj,
         &sub_vw,

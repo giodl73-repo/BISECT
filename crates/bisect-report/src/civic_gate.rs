@@ -96,7 +96,7 @@ pub fn check_civic_inputs(
 
 /// Classify the gating outcome from a (already-loaded) list of manifests.
 /// Test entry point.
-pub fn classify(
+fn classify(
     manifests: Vec<(PathBuf, CivicManifestRead)>,
     allow_non_strict_civic: bool,
 ) -> anyhow::Result<CivicGateOutcome> {

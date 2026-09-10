@@ -118,7 +118,7 @@ def load_all_states_with_districts(us_dir, year='2020', version='v1'):
 
     # Load state config
     if STATE_CONFIG is None:
-        raise ValueError("Could not load STATE_CONFIG. Import from scripts.config_2020 failed.")
+        raise ValueError("Could not load state configuration for the requested year.")
 
     # Iterate through states
     for state_code, config in STATE_CONFIG.items():

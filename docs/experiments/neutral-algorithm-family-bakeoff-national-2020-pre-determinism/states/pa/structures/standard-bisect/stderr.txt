@@ -1,3 +1,0 @@
-NOTE: Running congressional (17D). PA also has house (203D) and senate (50D). Use --chamber house or --chamber senate.
-[partition-time] PA: k=17 n=3446 -> 892.1ms
-[OK] PA in 1326ms

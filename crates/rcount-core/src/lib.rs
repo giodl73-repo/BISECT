@@ -54,7 +54,7 @@ mod verify_audit;
 pub use error::*;
 pub use fixtures::*;
 pub use model::*;
-pub use validation::*;
+pub(crate) use validation::*;
 pub use verify::*;
 pub use verify_audit::*;
 

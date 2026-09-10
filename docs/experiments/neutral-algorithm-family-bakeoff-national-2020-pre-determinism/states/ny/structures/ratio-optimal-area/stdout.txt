@@ -1,5 +1,0 @@
-STATUS:1:NY: loading adjacency
-STATUS:1:NY: AreaSection 13 ratios x 1 seeds (pop+area dual, ncon=2, init=RatioOptimal)
-STATUS:1:NY: natural ratio 3:23 at 601km
-STATUS:1:NY: balance OK, writing outputs
-STATUS:1:NY: complete (26D, 0ms)

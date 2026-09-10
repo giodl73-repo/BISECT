@@ -31,7 +31,7 @@ sys.path.insert(0, str(project_root))
 
 from apportionment.partition.metis_wrapper import partition_graph
 from apportionment.data.adjacency import load_adjacency_graph
-from scripts.config_2020 import STATE_CONFIG_2020
+from scripts.state_config import STATE_CONFIG_2020
 
 # Extract state-to-districts mapping
 STATE_DISTRICTS = {abbr: config['districts'] for abbr, config in STATE_CONFIG_2020.items()}

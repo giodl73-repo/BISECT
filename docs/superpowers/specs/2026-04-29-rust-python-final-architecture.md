@@ -31,7 +31,7 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 | Partisan edge-weighting (Plan 03) | ✅ Module + CLI wiring + format spec; producer + e2e deferred |
 | File-format specs (`adj-bin`, `final-assignments`, `partisan-shares`) | ✅ Written under `docs/file-formats/` |
 | Reproducible-build pin (`BISECT/rust-toolchain.toml`) | ✅ Pinned to 1.95.0 |
-| `bisect-web` crate | ⚠️ Stub — kept as documented placeholder |
+| Rust web crate | Deferred — add only with its first concrete implementation |
 
 ## Steady-State Surface
 
@@ -46,7 +46,6 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 | `bisect-map` | SVG → PNG rendering with insets, projections, color schemes, embedded fonts |
 | `bisect-report` | HTML reports, plan manifests, audit, export, rplan roundtrip |
 | `bisect-tui` | Interactive ratatui frontend |
-| `bisect-web` | Documented stub crate; future Rust dashboard work would land here |
 | `bisect_py` | PyO3 bridge — retained for research scripts and validation harness |
 
 ### Python retained, scoped narrowly
@@ -211,11 +210,9 @@ scripts/pipeline/validate_rust_vs_python.py    # once parity record is committed
 scripts/data/generate_adj_bin.py               # one-time bridge, conversion complete
 ```
 
-### Keep
-
-```
-BISECT/crates/bisect-web/                      # documented stub; reserve namespace for future
-```
+An empty web placeholder is intentionally omitted. Future Rust dashboard work
+should create a crate with its first implementation rather than reserve an
+unowned package indefinitely.
 
 ## Verification Gates
 

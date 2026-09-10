@@ -1,3 +1,0 @@
-NOTE: Running congressional (11D). VA also has house (100D) and senate (40D). Use --chamber house or --chamber senate.
-[partition-time] VA: k=11 n=2198 -> 285.8ms
-[OK] VA in 720ms

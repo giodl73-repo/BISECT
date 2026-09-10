@@ -1,3 +1,0 @@
-NOTE: Running congressional (2D). RI also has house (75D) and senate (38D). Use --chamber house or --chamber senate.
-[partition-time] RI: k=2 n=250 -> 2.2ms
-[OK] RI in 39ms

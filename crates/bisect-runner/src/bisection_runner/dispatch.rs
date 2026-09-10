@@ -190,17 +190,14 @@ pub fn run_all_splits_compact(
     let n = adjacency.len();
     // Build a lightweight AdjacencyGraph wrapper so select_compact_split can call subgraph_pp.
     // We only populate the geometry fields — adjacency/weights are borrowed from the caller.
-    let geom_graph = {
-        let mut g = bisect_data::AdjacencyGraph {
-            adjacency: adjacency.to_vec(),
-            vertex_weights: vertex_weights.to_vec(),
-            edge_weights: edge_weights.clone(),
-            n_vertices: n,
-            n_edges: edge_weights.len(),
-            vertex_areas: vertex_areas.to_vec(),
-            vertex_ext_perimeters: vertex_ext_perimeters.to_vec(),
-        };
-        g
+    let geom_graph = bisect_data::AdjacencyGraph {
+        adjacency: adjacency.to_vec(),
+        vertex_weights: vertex_weights.to_vec(),
+        edge_weights: edge_weights.clone(),
+        n_vertices: n,
+        n_edges: edge_weights.len(),
+        vertex_areas: vertex_areas.to_vec(),
+        vertex_ext_perimeters: vertex_ext_perimeters.to_vec(),
     };
 
     if num_districts == 1 {

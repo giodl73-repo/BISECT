@@ -22,7 +22,7 @@
 //! - serde_json::to_string_pretty with default settings; LF line endings.
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 

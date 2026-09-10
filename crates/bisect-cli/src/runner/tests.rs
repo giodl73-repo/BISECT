@@ -1501,7 +1501,6 @@ fn test_reset_warning_format() {
     let year = "2020";
     let label = "wa_house_2020";
     let plan_root_labeled = output_dir.join(year).join("plans").join(label);
-    let expected = "/tmp/outputs/v1/2020/plans/wa_house_2020";
     assert!(
         plan_root_labeled
             .to_string_lossy()
@@ -2208,7 +2207,7 @@ fn test_algo_partisan_weighted_mode_detection() {
 
 #[test]
 fn test_algo_alpha_county_propagates_from_state_args() {
-    use crate::args::{PartitionMode, StateArgs};
+    use crate::args::StateArgs;
     use clap::Parser;
     let args = StateArgs::parse_from(["state", "--state", "VT", "--alpha-county", "2.5"]);
     assert!(
@@ -3031,7 +3030,7 @@ fn mode_name_from_algo_config() {
 
 #[test]
 fn mode_name_after_structure_override() {
-    use crate::args::{StateArgs, StructureMode};
+    use crate::args::StateArgs;
     use clap::Parser;
     // --structure prime-factor overrides split to ApportionRegions.
     // mode_name must reflect the overridden split.
@@ -3189,10 +3188,10 @@ fn search_override_wins_over_preset_seed() {
 }
 
 // --- from original mod label_pipeline_tests (L7640) ---
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::algo_config::AlgoYaml;
-use crate::build_cmd::{BuildArgs, BuildIndex};
+use crate::build_cmd::BuildArgs;
 use crate::import_label::run_label_import;
 use crate::label;
 use crate::label_cmd::run_mv;
@@ -3556,8 +3555,6 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
 // directory under runs/ or modifying the registry.
 #[test]
 fn test_full_label_workflow_dry_run() {
-    use std::io::Write;
-
     let dir = with_tempdir(|| {
         // Write a minimal config YAML to configs/test_run.yml.
         let configs_dir = PathBuf::from("configs");

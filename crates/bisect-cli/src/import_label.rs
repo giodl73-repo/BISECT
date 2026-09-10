@@ -19,7 +19,7 @@
 /// validates both labels are built+analyzed, then delegates to the existing
 /// compare machinery for analysis/{A}/{year}/ vs analysis/{B}/{year}/.
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use sha2::{Digest, Sha256};
 use shapefile::dbase::{FieldValue, Record};
@@ -770,6 +770,7 @@ fn emit_output(text: &str, out: Option<&Path>) -> Result<(), String> {
 mod tests {
     use super::*;
     use std::convert::TryInto;
+    use std::path::PathBuf;
     use tempfile::TempDir;
 
     // ── Helper ─────────────────────────────────────────────────────────────────

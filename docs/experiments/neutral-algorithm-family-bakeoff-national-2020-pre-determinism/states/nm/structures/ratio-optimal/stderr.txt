@@ -1,6 +1,0 @@
-NOTE: Running congressional (3D). NM also has house (70D) and senate (42D). Use --chamber house or --chamber senate.
-[geosection] trying 1 ratios x 1 seeds for k=3
-[geosection]   ratio 1:2 best=260km  normalised=259.6
-[geosection] natural ratio 1:2 at 260km (normalised=259.6)
-[partition-time] NM: k=3 n=612 -> 3.7ms
-[OK] NM in 77ms

@@ -9,6 +9,10 @@ with 13 additional commits, including overlapping runner changes. Integrating
 those changes and rechecking affected source-bound artifacts is a separate
 resume task; this checkpoint does not overwrite remote main.
 
+Subsequent user-authorized integration is recorded in
+[main integration](2026-09-10-main-integration.md). The checkpoint commit
+`81f396f5` remains the source snapshot for historical hash-bound reports.
+
 ## What is complete in this round
 
 - Certified sequential-ceremony implementation, bounded procedural bakeoff,

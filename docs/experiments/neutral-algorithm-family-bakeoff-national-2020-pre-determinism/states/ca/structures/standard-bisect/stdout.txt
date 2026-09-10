@@ -1,4 +1,0 @@
-STATUS:1:CA: loading adjacency
-STATUS:1:CA: recursive bisection into 52 districts
-STATUS:1:CA: balance OK, writing outputs
-STATUS:1:CA: complete (52D, 0ms)

@@ -79,7 +79,7 @@ tract_file = Path(f'data/tracts/{year}/{state}_tracts_{year}.parquet')
 2. **Small state** (30s-2m, VT/DE): `--state VT --year 2020 --version test`
 3. **Multi-year** (if year-dependent): Test 2000/2010/2020
 4. **Quantitative** (if applicable): Compare metrics before/after, document % improvements
-5. **Full spot-check** (optional): `run_redistricting.bat --year 2020 --version test --states "VT,DE,WY"`
+5. **Full spot-check** (optional): `BISECT run --year 2020 --version test --states "VT,DE,WY"`
 
 ### Step 6: Mark In Progress
 **Update** `context/enhancements/active/XX_name.md`:

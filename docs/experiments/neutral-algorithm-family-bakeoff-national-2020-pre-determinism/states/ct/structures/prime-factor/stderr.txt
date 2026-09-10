@@ -1,3 +1,0 @@
-NOTE: Running congressional (5D). CT also has house (151D) and senate (36D). Use --chamber house or --chamber senate.
-[partition-time] CT: k=5 n=883 -> 2.2ms
-[OK] CT in 95ms

@@ -1,3 +1,0 @@
-NOTE: Running congressional (4D). KS also has house (125D) and senate (40D). Use --chamber house or --chamber senate.
-[partition-time] KS: k=4 n=829 -> 10.2ms
-[OK] KS in 333ms

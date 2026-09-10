@@ -26,7 +26,7 @@ from shapely.ops import unary_union
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config_2020 import STATE_CONFIG_2020
+from state_config import STATE_CONFIG_2020
 
 
 def compute_polsby_popper(geometry):

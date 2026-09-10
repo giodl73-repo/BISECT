@@ -1,0 +1,14 @@
+1
+00:00:00,000 --> 00:00:05,000
+Round one divides Minnesota into two
+population-targeted regions.
+
+2
+00:00:05,000 --> 00:00:10,000
+Round two recursively divides
+those regions into four.
+
+3
+00:00:10,000 --> 00:00:15,000
+Eight regions - not a fairness
+or legal certification.

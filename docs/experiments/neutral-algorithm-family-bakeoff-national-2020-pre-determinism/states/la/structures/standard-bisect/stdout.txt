@@ -1,4 +1,0 @@
-STATUS:1:LA: loading adjacency
-STATUS:1:LA: recursive bisection into 6 districts
-STATUS:1:LA: balance OK, writing outputs
-STATUS:1:LA: complete (6D, 0ms)

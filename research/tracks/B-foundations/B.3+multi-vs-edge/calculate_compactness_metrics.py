@@ -154,8 +154,8 @@ def run_best_partitions_and_measure():
         tracts = tracts.merge(demo, left_on='GEOID', right_on='geoid', how='left')
 
         # Get district count
-        from scripts.config_2020 import STATE_SEATS
-        k = STATE_SEATS[state_name.upper()]
+        from scripts.state_config import STATE_SEATS_2020
+        k = STATE_SEATS_2020[state_name.upper()]
 
         # Multi-constraint best (from CSV)
         best_configs = load_best_results()

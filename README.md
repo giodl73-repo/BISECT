@@ -23,6 +23,7 @@ fairness certificate. Claim boundaries:
 
 Active research: [districting-rule development roadmap](docs/specs/2026-09-09-districting-rule-development-roadmap.md).
 Pause/resume: [2026-09-10 checkpoint](docs/specs/2026-09-10-research-resume-checkpoint.md).
+Merged-source replay caveats: [main integration record](docs/specs/2026-09-10-main-integration.md).
 Latest [RI adjacent-swap diagnostic](docs/experiments/ri-adjacent-swaps-2020/README.md):
 adjacent two-block exchanges do not escape the six single-block stopping states.
 Assignments remain connected, within the fixed population band, and split

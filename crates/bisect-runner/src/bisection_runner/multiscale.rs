@@ -70,7 +70,6 @@ pub fn run_multiscale(
         &std::collections::HashMap<usize, String>,
     )>,
 ) -> Result<HashMap<usize, usize>, String> {
-    use crate::adjacency_loader::{build_county_coarsening, derive_partition};
     use bisect_ensemble::recom::RecomChain;
     use bisect_multiscale::rebalance::rebalance;
     use rand::Rng;

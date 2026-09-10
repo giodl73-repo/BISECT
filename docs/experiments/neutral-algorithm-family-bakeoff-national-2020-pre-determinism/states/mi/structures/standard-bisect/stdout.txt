@@ -1,4 +1,0 @@
-STATUS:1:MI: loading adjacency
-STATUS:1:MI: recursive bisection into 13 districts
-STATUS:1:MI: balance OK, writing outputs
-STATUS:1:MI: complete (13D, 0ms)

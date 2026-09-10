@@ -37,15 +37,9 @@ def load_state_data(state_name, year):
 
 def get_district_count(state_name, year):
     """Get district count for state and year"""
-    # Import appropriate config
-    if year == 2000:
-        from scripts.config_2000 import STATE_SEATS
-    elif year == 2010:
-        from scripts.config_2010 import STATE_SEATS
-    else:  # 2020
-        from scripts.config_2020 import STATE_SEATS
+    from scripts.state_config import get_state_seats
 
-    return STATE_SEATS[state_name.upper()]
+    return get_state_seats(year)[state_name.upper()]
 
 def calculate_target_mm(total_minority_pct, k):
     """Calculate target MM districts based on proportional representation"""

@@ -1,4 +1,0 @@
-STATUS:1:NJ: loading adjacency
-STATUS:1:NJ: recursive bisection into 12 districts
-STATUS:1:NJ: balance OK, writing outputs
-STATUS:1:NJ: complete (12D, 0ms)

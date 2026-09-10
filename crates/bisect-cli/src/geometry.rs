@@ -296,8 +296,6 @@ mod tests {
 
     #[test]
     fn test_group_dissolve_two_districts() {
-        use geozero::{CoordDimensions, ToWkb};
-
         let p1: Geometry<f64> = Geometry::Polygon(
             polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)],
         );

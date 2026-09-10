@@ -54,7 +54,9 @@ effects, or an algorithm ranking.
 
 The canonical clean-run package is
 `docs/experiments/neutral-algorithm-family-bakeoff-national-2020/`.
-The pre-determinism witness is retained at
+The compact pre-determinism witness is retained at
 `docs/experiments/neutral-algorithm-family-bakeoff-national-2020-pre-determinism/`,
+with its aggregate outputs active and its superseded per-State payload
+recoverable from the source commit recorded there,
 and the independent regeneration is retained at
 `target/research-regeneration/national-bakeoff-nswla_op/package/`.

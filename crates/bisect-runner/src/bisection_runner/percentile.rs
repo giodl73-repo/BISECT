@@ -22,9 +22,9 @@ pub fn run_all_splits_percentile(
     base_seed: u64,
     n_seeds: usize,
     p: f64,
-    intermediate_dir: Option<&Path>,
+    _intermediate_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
-    use sha2::{Digest, Sha256};
+    use sha2::Digest;
 
     if num_districts == 1 {
         return Ok((0..adjacency.len()).map(|i| (i, 1)).collect());

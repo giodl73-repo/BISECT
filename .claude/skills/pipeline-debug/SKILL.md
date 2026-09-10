@@ -85,10 +85,10 @@ FileNotFoundError: outputs/v1/2020/states/new_york/data/districts.csv
 **Fix**: Verify correct `--run-type`, lowercase_underscores state names, `--version` matches, redistricting completed for state
 
 ### Step 3: Test Fix with Small State
-After applying fix, test with small state using `run_test.bat` (outputs to `dev/`):
+After applying fix, test with a small state using the canonical CLI (outputs to `dev/`):
 ```bash
 # Windows
-run_test.bat -y 2020 -v debug_test --states "VT"
+BISECT run --run-type test -y 2020 -v debug_test --states "VT"
 runtest -y 2020 -v debug_test --states "VT"           # Short: doskey alias
 
 # Direct Python call
@@ -112,7 +112,7 @@ If Vermont succeeds → test full pipeline
 - [ ] Unicode characters checked (Windows)
 - [ ] Memory usage checked
 - [ ] Path formats verified
-- [ ] Small state test attempted with `run_test.bat` (outputs to `dev/`)
+- [ ] Small state test attempted with `BISECT run --run-type test` (outputs to `dev/`)
 - [ ] Known issues reviewed in docs
 
 ## Error Categories

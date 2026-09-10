@@ -207,13 +207,13 @@ def load_state_config(year: str) -> Dict[str, Dict[str, Any]]:
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
     if year == '2020':
-        from scripts.config_2020 import STATE_CONFIG_2020
+        from scripts.state_config import STATE_CONFIG_2020
         return STATE_CONFIG_2020
     elif year == '2010':
-        from scripts.config_2010 import STATE_CONFIG_2010
+        from scripts.state_config import STATE_CONFIG_2010
         return STATE_CONFIG_2010
     elif year == '2000':
-        from scripts.config_2000 import STATE_CONFIG_2000
+        from scripts.state_config import STATE_CONFIG_2000
         return STATE_CONFIG_2000
     else:
         raise ValueError(f"Unsupported year: {year}")

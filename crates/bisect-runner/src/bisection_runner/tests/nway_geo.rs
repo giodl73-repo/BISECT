@@ -137,8 +137,6 @@ fn test_write_metis_graph_dual_format() {
 fn test_dual_tpwgts_format_ncon2() {
     let pop_left = 0.4286f64; // 6/14
     let area_left = 0.5f64;
-    let pop_right = 1.0 - pop_left;
-    let area_right = 1.0 - area_left;
     // Correct ncon=2 format: partition : constraint = weight
     // n-1 partition format: write only partition 0, METIS infers partition 1
     // (same as Python archive: write n-1 partitions, METIS infers the last)
