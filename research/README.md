@@ -5,6 +5,86 @@ This directory contains research papers on algorithmic redistricting, focusing o
 
 The current portfolio now includes Track N on population counting, which covers prison adjustment, student reassignment, noncitizen CVAP comparisons, military/overseas treatment, and the total-vs-citizen-VAP comparison paper that ties the track together.
 
+## Current Certified-Bisection Spine
+
+Resume from the [2026-09-10 research checkpoint](../docs/specs/2026-09-10-research-resume-checkpoint.md).
+
+Active next program: [districting rule development roadmap](../docs/specs/2026-09-09-districting-rule-development-roadmap.md),
+reviewed through the repository roles. The [first county-preservation diagnostic](../docs/experiments/county-preservation-readiness-2020/README.md)
+is complete. The [fixed-DFS root county-response diagnostic](../docs/experiments/dfs-root-county-response-2020/README.md)
+finds unchanged root-cut winners across the tested county weights in RI, IA,
+NC and TX. The [five-root search diagnostic](../docs/experiments/multiroot-county-response-2020/README.md)
+improves first-cut population balance in three States but leaves one physical
+cut after population filtering in all four. A separately declared
+[RI population-band diagnostic](../docs/experiments/ri-population-band-2020/README.md)
+admits up to four cuts but falsifies the pre-run weight-response hypothesis
+within that five-tree family. The subsequent [county-aware tree diagnostic](../docs/experiments/ri-county-tree-2020/README.md)
+finds no feasible cuts from either paired maximum-spanning-tree generator under
+the same bands. The [connected boundary-move diagnostic](../docs/experiments/ri-boundary-moves-2020/README.md)
+then reduces split counties from four to three at every tested alpha and
+produces two distinct final assignments within the same band. All six runs
+hit their 50-move budget. The [longer-budget follow-up](../docs/experiments/ri-boundary-budget-2020/README.md)
+reproduces those prefixes and stops naturally after 271–283 moves with three
+split counties in each arm. These are single-block local stopping states,
+not global optima. [Adjacent two-block swaps](../docs/experiments/ri-adjacent-swaps-2020/README.md)
+accept no moves from any of those six states; nonadjacent exchanges,
+connected-group transfers and full-plan experiments remain outstanding.
+
+The top-down paper path for the Huntington--Hill-style districting proposal is:
+
+1. **A.0** — portfolio-level operational evidence and claim boundary;
+2. **B.0** — algorithm design and comparative bakeoff rules;
+3. **B.1** — recursive construction and Huntington--Hill analogy;
+4. **U.21** — exact split/tree certificates and the staged public ceremony; and
+5. **B.02** — prospective benchmark, disclosure, and administration model.
+
+The ceremony commits the rule before the root and releases certified cuts by
+tree depth after fixed review intervals. Existing bakeoffs retain their frozen
+protocols. Future bakeoffs apply `certified-ceremony-bakeoff-extension-v1` and
+report map outcomes separately from procedural evidence such as proof coverage,
+prefix verification, completion/halt status, verifier cost, and tamper tests.
+No externally witnessed comparative ceremony has yet been completed.
+
+| Research layer | Current status |
+|---|---|
+| Frozen certified rule and deterministic tie-break | Implemented and documented |
+| Sequential announcement, review-window, halt, and prefix-verification protocol | Implemented and tested |
+| Bounded certified-versus-replay procedural bakeoff | Reproducible fixture passes |
+| Paper-stack integration (A.0, B.0, B.1, U.21, B.02) | Sources and public PDFs updated |
+| Clean-worktree national replay and Tier 1--2 regeneration | Passed from the separately held M: data-vault corpus |
+| Unrestricted State weighted-boundary/canonical proof | Open research frontier |
+| Externally witnessed State ceremony | Not yet run |
+
+### Read and reproduce this result
+
+- [U.21 methods paper](../docs/papers/U.21+certified-recursive-bisection.pdf)
+- [Ceremony specification](../docs/specs/2026-09-09-certified-sequential-bisection-ceremony.md)
+- [Prospective bakeoff extension](../docs/specs/2026-09-09-certified-ceremony-bakeoff-extension.md)
+- [Bounded executable fixture](../docs/examples/certified-ceremony-bakeoff/README.md)
+- [Post-write validation](tracks/U-search-optimization/U.21+certified-recursive-bisection/POST-WRITE-CHECK.md)
+
+From the repository root on Windows:
+
+```powershell
+cargo build -p bisect-cli
+py scripts/research/verify_certified_ceremony_bakeoff.py `
+  docs/examples/certified-ceremony-bakeoff `
+  --bisect target/debug/bisect.exe
+```
+
+Expected result: the procedural scoreboard regenerates and a timestamp-tampered
+transcript is rejected. The published Level-1 national artifact audit passes.
+On 2026-09-09, a clean detached worktree also regenerated all 150 State-cycle
+assignments from the separately held M: data-vault corpus, matched every
+governed assignment hash, and passed the national Tier 1--2 checks. The large
+source corpus remains outside Git, so another machine must obtain it through
+the documented transfer procedure. The paper therefore makes a methods and
+evidence-contract claim, not a national empirical-superiority claim.
+
+The numbered seven-paper narrative below is retained as an early portfolio
+roadmap. The current canonical paper inventory is [`PAPERS.md`](PAPERS.md), and
+the public PDF index is [`../docs/PAPERS.md`](../docs/PAPERS.md).
+
 ## Papers
 
 ### Paper 1: Edge-Weighted VRA Compliance ✅ COMPLETE
@@ -295,6 +375,12 @@ All code, data, and paper drafts in this directory are [LICENSE TBD - specify li
 
 ## Changelog
 
+- **2026-09-09**: Integrated certified recursive bisection and the staged public
+  ceremony through the top-down paper stack; added the prospective bakeoff
+  extension, bounded executable fixture, and post-write audit. Recovered the
+  national corpus from the M: data vault, matched all 150 governed assignment
+  hashes in a clean-worktree replay, and passed the Tier 1--2 regeneration
+  checks while retaining the external-data boundary.
 - **2026-02-07**: Created research portfolio index, PLAN.md files for Papers 3-7
 - **2026-02-07**: Completed Papers 1-2 (edge-weighted VRA, n-way vs recursive)
 - **2026-02-06**: Initial Paper 1 breakthrough (edge-weighting achieves 2 MM districts in Alabama)

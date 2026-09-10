@@ -1,0 +1,49 @@
+{
+  "analyzer_sha256": "c382bc44408455cc5f35b00583896c21d824141cb19ce02dd7824b9f4e333b23",
+  "claim_boundary": "Existing 2020 census diagnostic only. Candidate multiplicity does not prove county-weight response, physical diversity before boundary scoring, or county-split improvement. Profiles are distinct; source files are bound for inspection, not treated as equivalent runs.",
+  "diagnostics": {
+    "candidate_distributions": {
+      "minimum_deviation_candidates": {
+        "1": 98,
+        "2": 229,
+        "3": 3,
+        "4": 36,
+        "5": 1,
+        "6": 6,
+        "8": 6,
+        "10": 5,
+        "88": 1
+      },
+      "minimum_deviation_cut_candidates": {
+        "1": 119,
+        "2": 266
+      },
+      "minimum_deviation_cut_partitions": {
+        "1": 385
+      }
+    },
+    "fallback_activations": {
+      "nrs_v0_2_fallback_activated": 0,
+      "nrs_v0_3_fallback_activated": 0
+    },
+    "multi_district_states": 44,
+    "next_measurement": "Enumerate distinct physical minimum-deviation partitions before boundary scoring; then measure weight response and repair effects.",
+    "nodes": 385,
+    "nodes_where_boundary_scoring_reduced_candidate_count": 71,
+    "nodes_with_multiple_post_boundary_physical_partitions": 0,
+    "nodes_with_multiple_pre_boundary_candidates": 287,
+    "pre_boundary_physical_partition_count": null,
+    "states": 50
+  },
+  "schema_version": "county-preservation-readiness-v1",
+  "source_hashes": {
+    "configs/nrs_v0_3/standard_profile_2020.json": "4af2c344cf012a5e44c7590944ca0d6e6fa7767fd85b3d2c4e19b0481385cd60",
+    "configs/official_proposal.yml": "efc30a5bbd76692f0b12fea5b1a2395dfcef4ee17b840e350f2ce25cda162212",
+    "crates/bisect-cli/src/edge_weights.rs": "7dd433f0b9377a6a0803e5a7a7abd082a3820a24f45eb3fe8ad52c5988c48f99",
+    "crates/bisect-cli/src/exact_cmd.rs": "7b1fbe008fd4675204bc88daf8aebf3d45de2a89dda41bebb05fe9b3993628d4",
+    "docs/experiments/nrs-v0.3-complete-tree-dfs-census-2020/node-results.csv": "ecf05451c3989e5ecbf27eba49c2925654592a471169447b101be153fb0b0e6e",
+    "docs/experiments/nrs-v0.3-national-bakeoff-2020/state-summary.csv": "574e2ef3eadf24877d5b6d7c0482c1c8939969c68e0343a95897864055ea5dec",
+    "docs/specs/2026-09-09-districting-rule-development-roadmap.md": "8a2519b55d51d0e4523f935de57a87393ebfc0af7c9013b2e0028f79fac56e99"
+  },
+  "status": "diagnostic-complete-sweep-not-run"
+}

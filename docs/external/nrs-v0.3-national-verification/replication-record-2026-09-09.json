@@ -1,0 +1,53 @@
+{
+  "schema_version": "nrs-v0.3-external-full-replay-v1",
+  "status": "pass",
+  "verified_at_utc": "2026-09-09T23:48:24.1125287Z",
+  "git_commit": "c52b767db3522c0e4439cd3b9f01e9f556e80e8b",
+  "machine_name": "LAPTOP-2IACVKSU",
+  "operating_system": "Microsoft Windows 10.0.26310",
+  "process_architecture": "X64",
+  "powershell_version": "7.6.6",
+  "rustc_version": "rustc 1.95.0 (59807616e 2026-04-14)",
+  "cargo_version": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+  "python_command": "py",
+  "python_version": "Python 3.14.2",
+  "bisect_sha256": "9f49cd842f415d2a28ddf23b556c94458b3def9eead03fed7dc87515e70384c4",
+  "bisect_ops_sha256": "8a912d86147c04432f7f18ebc5fbc7362250912d5262dd879b75a7be1f4344be",
+  "data_root": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census",
+  "output_root": "C:\\src\\apportionment\\target\\research-regeneration\\nrs-replay-worktree-r3\\runs\\nrs-v0.3\\external-replay-2026-09-09-r6",
+  "cycles": [
+    {
+      "census_year": 2000,
+      "states": 50,
+      "districts": 435,
+      "nodes": 385,
+      "blocks": 8199908.0,
+      "population": 280849847,
+      "ledger_sha256": "6187157e38ad45450817b9786d83980c8cf0d087328a07d82b1e30c933245c56"
+    },
+    {
+      "census_year": 2010,
+      "states": 50,
+      "districts": 435,
+      "nodes": 385,
+      "blocks": 11071790.0,
+      "population": 308143815,
+      "ledger_sha256": "dfd00c7fd6fc1add0f05e54f5d190d82e43b88de8030a72c5899fe7c1e18cfee"
+    },
+    {
+      "census_year": 2020,
+      "states": 50,
+      "districts": 435,
+      "nodes": 385,
+      "blocks": 8126956.0,
+      "population": 330759736,
+      "ledger_sha256": "f42a1da755e6b2b88225080b5b8ae202c692e4f24a569a148df0e021055d585e"
+    }
+  ],
+  "all_cycle_common_node_signatures": 120,
+  "all_cycle_exact_topology_states": 18,
+  "governed_assignment_hashes_matched": 150,
+  "geographic_rows_verified": 231765,
+  "matrix_sha256": "d5f6eb6e5a120d63bc00dec8ae4f773fc2bcf296555c73445318c59421801339",
+  "claim_boundary": "Operational replay and assignment identity; no legal, fairness, VRA, adoption, cross-cycle improvement, or exact boundary/canonical claim."
+}

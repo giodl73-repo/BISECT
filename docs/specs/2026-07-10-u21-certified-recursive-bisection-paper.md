@@ -20,7 +20,9 @@ optimal cuts?
 3. Parent-derived child instances and one-seat leaves provide a verifiable
    whole-plan certificate tree.
 4. The bounded Rust implementation and hostile corpora validate the contract.
-5. Rhode Island block input custody is ready, but scalable discovery and
+5. A staged ceremony can commit the rule before the root, release depth rounds
+   after frozen review intervals, and verify disclosed prefixes independently.
+6. Rhode Island block input custody is ready, but scalable discovery and
    external PB proof checking remain open.
 
 ## Claims Not Yet Permitted
@@ -36,6 +38,8 @@ optimal cuts?
 
 - `crates/bisect-ilp/src/certified_split.rs`
 - `crates/bisect-ilp/src/certified_tree.rs`
+- `crates/bisect-ilp/src/ceremony.rs`
+- `crates/bisect-cli/src/ceremony_cmd.rs`
 - `crates/bisect-ilp/src/proof_backend.rs`
 - `docs/examples/certified-recursive/`
 - `docs/examples/certified-proof-backend/`
@@ -51,14 +55,16 @@ optimal cuts?
 | Runtime scaling | Bounded timings only; no State-scale proof timing |
 | National map-quality superiority | Not available |
 | Proof strength vs audit/solver metadata | Available |
+| Ceremony transition and prefix verification vs replay-only disclosure | Implemented on bounded fixtures; externally witnessed bakeoff pending |
 
 ## Recommended Structure
 
 1. Introduction and Huntington--Hill motivation.
 2. Fixed recursive bisection model.
 3. Per-cut and whole-tree certificate contracts.
-4. Discovery-to-proof architecture.
-5. Implemented evidence and hostile validation.
-6. What certification establishes—and does not.
-7. Scalability frontier and Rhode Island.
-8. Conclusion.
+4. Sequential public-cut ceremony and review windows.
+5. Discovery-to-proof architecture.
+6. Implemented evidence and hostile validation.
+7. What certification establishes—and does not.
+8. Scalability frontier and Rhode Island.
+9. Conclusion.

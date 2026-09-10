@@ -221,6 +221,8 @@ pub enum Commands {
     Improve(ImproveArgs),
     /// Run exact optimization family reports
     Exact(ExactArgs),
+    /// Stage, announce, halt, or verify a public certified-bisection ceremony
+    Ceremony(crate::ceremony_cmd::CeremonyArgs),
     /// Civic Bidirectional Input: ingest community-of-interest CSVs, detect
     /// cross-input conflicts, list/show ingested inputs, add candidate-race
     /// annotations. See `docs/superpowers/specs/2026-04-30-civic-bidirectional.md`.

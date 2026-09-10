@@ -1,0 +1,11 @@
+{
+  "model": "certified-recursive-bisection",
+  "objective_order": [
+    "maximum_scaled_population_deviation",
+    "total_scaled_population_deviation",
+    "weighted_boundary_cut",
+    "canonical_assignment"
+  ],
+  "release_mode": "canonical-depth-rounds",
+  "fixture_only": true
+}

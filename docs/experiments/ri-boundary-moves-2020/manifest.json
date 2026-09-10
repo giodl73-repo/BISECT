@@ -1,0 +1,32 @@
+{
+  "input": {
+    "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ri_blocks_2020.rctx",
+    "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+  },
+  "prior_sha256": "c723453ec8182e72a20e3d447c86298fab0a75f4afb7d439dcd8524666b373eb",
+  "schema": "ri-boundary-moves-v1",
+  "seed_sha256": "ff281e5f3ab7c7d3fa22083a951f389bc5cc7c985d11470efbbf5ee4fcc2c065",
+  "settings": {
+    "alphas": [
+      "0",
+      "0.5",
+      "1",
+      "2",
+      "4",
+      "8"
+    ],
+    "band_ppm": 1000,
+    "connectivity_candidate_check_budget": 5000,
+    "execution": "serial; no RNG; bounded moves/checks, no hard wall-time or memory cap",
+    "move_budget": 50,
+    "ordering": "best strictly negative scaled cost delta, then ascending unit index",
+    "scope": "RI two labels; original graph connectivity includes bridges"
+  },
+  "sources": {
+    "C:\\src\\apportionment\\scripts\\research\\analyze_dfs_county_response.py": "fe135a02f752dc32419235a8f787159e22e1fb2d3685e10c39b629892c39448c",
+    "C:\\src\\apportionment\\scripts\\research\\run_multiroot_county_diagnostic.py": "5c808241fdc0b629cc554a6a9c9c45d4ca891a5063d6efb04de3453f2091c807",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_boundary_moves.py": "426f06cd9e2592d65fd11b1da551a03e111f502ef0f8ec85cf11a9b904f15dbf",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_county_tree.py": "df24bce2511b7d82825579eed27d069930866d857e55348929f490d407f6415d",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_population_band.py": "c67e6cfa90bb0d006dee74a8de71b2ff90140762880cc4e41321a351a60bedfc"
+  }
+}

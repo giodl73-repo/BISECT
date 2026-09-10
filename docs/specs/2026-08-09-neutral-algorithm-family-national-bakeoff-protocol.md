@@ -7,6 +7,10 @@
 **Prerequisite:** the Wisconsin proof slice passed after the separately retained
 pre-remediation failure witness
 
+**Prospective extension:** Runs frozen on or after 2026-09-09 also use
+`certified-ceremony-bakeoff-extension-v1`. This note does not alter the frozen
+v1 matrix, its decision rule, or its published results.
+
 ## Question
 
 Holding each State's 2020 tract universe, adjacency graph, congressional seat

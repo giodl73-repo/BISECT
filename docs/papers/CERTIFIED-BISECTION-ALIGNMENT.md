@@ -4,7 +4,7 @@
 
 | Paper | Role | Status |
 |---|---|---|
-| U.21 | Certified recursive bisection methods, certificates, OPB proof architecture, and RI frontier | Draft source and PDF complete |
+| U.21 | Certified recursive bisection methods, certificates, staged public ceremony, OPB proof architecture, and RI frontier | Source and PDF updated |
 
 ## Required Portfolio Updates
 
@@ -19,6 +19,19 @@
 | U.16 | Place branch-and-cut in the discovery role, not the final proof role | Source and PDF updated |
 | U.17 | Explain branch-and-price as another discovery/lower-bound engine feeding U.21 certification | Source and PDF updated |
 | U.20 | Distinguish plan audit certificates from optimization proofs and link tree-to-RPLAN verification | Source and PDF updated |
+| Bakeoffs | Preserve frozen v1 results; add prospective two-scoreboard ceremony extension | Protocol extension implemented; externally witnessed comparison pending |
+
+## Public Ceremony Layer
+
+The implemented `certified-bisection-ceremony-v1` transcript commits the rule at
+genesis and releases certified cuts by canonical tree depth after a frozen
+review interval. Each released prefix is self-contained and independently
+verifiable without future descendants. Completed transcripts bind the full
+tree; halted transcripts preserve the accepted prefix and reason.
+
+Future bakeoffs use `certified-ceremony-bakeoff-extension-v1`. Map outcomes and
+procedural evidence remain separate scoreboards so proof strength cannot be
+converted into a post hoc claim of map superiority.
 
 ## Comparison Needed Before “Comes Out On Top”
 
@@ -44,8 +57,11 @@ A publication-grade comparison package must use identical instances and report:
 4. discovery runtime;
 5. proof generation time;
 6. proof size and independent verification time;
-7. SAT counterexamples, timeouts, and failures; and
-8. State-selection rules fixed before results are inspected.
+7. SAT counterexamples, timeouts, and failures;
+8. State-selection rules fixed before results are inspected;
+9. certified-cut coverage and disclosed-prefix verification;
+10. transcript size, verification time, completion/halt status, and witness policy; and
+11. frozen ceremony tamper-suite results.
 
 ## Recommended Publication Sequence
 

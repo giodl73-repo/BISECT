@@ -21,6 +21,30 @@ This portfolio comprises **35 papers** organized into **5 thematic tracks** (A-E
 
 **Total**: 35 papers (5 track heads + 30 sub-papers)
 
+### 2026 Certified-Ceremony Integration
+
+The current top-down research spine treats certified recursive bisection as a
+proof and public-process extension of B.1, with U.21 as the technical methods
+paper. A.0 carries the portfolio claim boundary, B.0 carries comparative
+method design, B.1 carries the Huntington--Hill construction analogy, and B.02
+carries the prospective administration model.
+
+The ceremony commits the rule before the root cut and releases certified cuts
+by canonical tree depth after fixed review intervals. Future bakeoffs use
+`certified-ceremony-bakeoff-extension-v1`: ordinary map/computation outcomes and
+procedural evidence are reported separately. Frozen historical bakeoffs are
+not retroactively relabeled, and no combined score may manufacture an overall
+winner after results are known.
+
+Start with the [U.21 PDF](../docs/papers/U.21+certified-recursive-bisection.pdf),
+then use the [ceremony specification](../docs/specs/2026-09-09-certified-sequential-bisection-ceremony.md)
+and [bounded bakeoff fixture](../docs/examples/certified-ceremony-bakeoff/README.md)
+to inspect or reproduce the implemented procedure. The current checkout lacks
+the large source corpus by design, but a 2026-09-09 clean-worktree replay from
+the M: data vault regenerated all 150 State-cycle assignments, matched every
+governed hash, and passed the national Tier 1--2 checks. U.21 records both that
+result and the continuing external-data dependency.
+
 ---
 
 ## Track A — Overview & Synthesis (6 papers)
@@ -56,7 +80,7 @@ This portfolio comprises **35 papers** organized into **5 thematic tracks** (A-E
 | Track ID | Slug | Title | Current Status | Target Venue | Panel Score |
 |----------|------|-------|----------------|--------------|-------------|
 | **B.0** | algorithm-design-overview | Algorithmic Design for Congressional Redistricting: Method Selection and Architectural Decisions | Plan complete | ACM TSAS / SIAM | TBD |
-| **B.1** | recursive-bisection | Recursive Bisection for Congressional Redistricting: Extending Huntington-Hill to Boundary Design | Ready (panel-reviewed) | APSR / Science | 8.4/10 (A) |
+| **B.1** | recursive-bisection | Recursive Bisection for Congressional Redistricting: Extending Huntington-Hill to Boundary Design | Ceremony-integrated source; renewed review required | APSR / Science | prior internal 8.4/10 |
 | **B.2** | edge-weighted-bisection | Edge-Weighted Graph Partitioning for Compact Congressional Districts | Ready (panel-reviewed) | KDD / SIGSPATIAL | 8.2/10 (A-) |
 | **B.3** | multi-vs-edge | Why Single-Objective Edge-Weighting Outperforms Multi-Constraint Optimization | Ready (panel-reviewed) | OR/MS journals | 7.3/10 (B) |
 | **B.4** | adaptive-bisection | Parameter Sensitivity in Recursive Bisection: Tree Structure Irrelevance with Edge-Weighting | Ready (panel-reviewed) | Algorithmic venues | 7.1/10 (B) |

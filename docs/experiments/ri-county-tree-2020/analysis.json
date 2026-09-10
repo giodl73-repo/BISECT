@@ -1,0 +1,251 @@
+{
+  "arms": {
+    "county-first-maximum-spanning-tree": {
+      "bands": [
+        {
+          "alpha_response": [
+            {
+              "alpha": "0",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "0.5",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "1",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "2",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "4",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "8",
+              "minimum_weighted_cut": null,
+              "winners": []
+            }
+          ],
+          "band_ppm": 10,
+          "eligible_physical_cuts": 0,
+          "status": "empty-in-family",
+          "winning_set_changed": false
+        },
+        {
+          "alpha_response": [
+            {
+              "alpha": "0",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "0.5",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "1",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "2",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "4",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "8",
+              "minimum_weighted_cut": null,
+              "winners": []
+            }
+          ],
+          "band_ppm": 100,
+          "eligible_physical_cuts": 0,
+          "status": "empty-in-family",
+          "winning_set_changed": false
+        },
+        {
+          "alpha_response": [
+            {
+              "alpha": "0",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "0.5",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "1",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "2",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "4",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "8",
+              "minimum_weighted_cut": null,
+              "winners": []
+            }
+          ],
+          "band_ppm": 1000,
+          "eligible_physical_cuts": 0,
+          "status": "empty-in-family",
+          "winning_set_changed": false
+        }
+      ],
+      "candidates": {},
+      "minimum_deviation_over_all_tree_cuts": 214727,
+      "tree_cross_county_edges": 4,
+      "tree_edge_count": 25648,
+      "tree_edges_sha256": "51bdbc0c1b56f610ec8d16deadbff6df50e2e6539d925f6ef45182e1cdb244aa"
+    },
+    "geographic-maximum-spanning-tree": {
+      "bands": [
+        {
+          "alpha_response": [
+            {
+              "alpha": "0",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "0.5",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "1",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "2",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "4",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "8",
+              "minimum_weighted_cut": null,
+              "winners": []
+            }
+          ],
+          "band_ppm": 10,
+          "eligible_physical_cuts": 0,
+          "status": "empty-in-family",
+          "winning_set_changed": false
+        },
+        {
+          "alpha_response": [
+            {
+              "alpha": "0",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "0.5",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "1",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "2",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "4",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "8",
+              "minimum_weighted_cut": null,
+              "winners": []
+            }
+          ],
+          "band_ppm": 100,
+          "eligible_physical_cuts": 0,
+          "status": "empty-in-family",
+          "winning_set_changed": false
+        },
+        {
+          "alpha_response": [
+            {
+              "alpha": "0",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "0.5",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "1",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "2",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "4",
+              "minimum_weighted_cut": null,
+              "winners": []
+            },
+            {
+              "alpha": "8",
+              "minimum_weighted_cut": null,
+              "winners": []
+            }
+          ],
+          "band_ppm": 1000,
+          "eligible_physical_cuts": 0,
+          "status": "empty-in-family",
+          "winning_set_changed": false
+        }
+      ],
+      "candidates": {},
+      "minimum_deviation_over_all_tree_cuts": 82307,
+      "tree_cross_county_edges": 100,
+      "tree_edge_count": 25648,
+      "tree_edges_sha256": "a19c0fd47038bd4d867faa3f1c38d13db9729fda32ff4fafd836969b761635ac"
+    }
+  },
+  "manifest_sha256": "9d3ca7f316d3c1b58bb7c7894540d28d0030d984f1b487f4ced2efa9f110251e"
+}

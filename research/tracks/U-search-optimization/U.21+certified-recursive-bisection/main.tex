@@ -9,42 +9,42 @@
 \title{Certified Recursive Bisection:\\
 Proof-Carrying Cuts for Algorithmic Redistricting}
 \author{Gio Della-Libera}
-\date{Draft --- August 2026}
+\date{Draft --- September 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Recursive graph bisection offers a transparent construction rule for
+Recursive graph bisection offers an intelligible construction rule for
 redistricting, but practical partitioners ordinarily return heuristic cuts
-without proving that a better permitted cut does not exist. We present
-\emph{certified recursive bisection}, a proof-carrying formulation that
-preserves the enacted binary district-count tree while selecting one unique
-connected cut at every node. The objective is lexicographic: population
-deviation, weighted boundary cut, and canonical assignment. Split
-certificates bind parent and child unit universes into a complete tree whose
-one-seat leaves define the final plan. A bounded Rust implementation produces
-optimality and infeasibility artifacts, hostile tamper fixtures, RPLAN/RCTX
-packages, and deterministic pseudo-Boolean proof requests. On eight
-precommitted bounded synthetic graphs and five fixed METIS seeds, the heuristic
-matches the exact primary objective in 30 of 40 rows and the exact canonical
-assignment in 20. A connected Rhode Island input with 25,649 Census blocks
-demonstrates the exact population-proof
-frontier. Separately, the operational NRS v0.3 procedure produces independently
-verified wall-to-wall block assignments for all 50 States, 435 districts, and
-385 recursive nodes in each of the 2000, 2010, and 2020 cycles. Those national
-runs prove tolerance conformance and package integrity, not global boundary or
-canonical optimality. A separately precommitted 2020 bakeoff compares NRS v0.3
-with official CD118 assignments on 7,889,194 common land-containing blocks and
-reports assignment overlap, subdivision splits, and four block-projected
-geometry metrics with exact package regeneration. The contribution is therefore a verified methods and
-national-operations architecture, not a claim of nationwide exact readiness or
-superior political outcomes.
+without proving that a better permitted cut does not exist. It therefore
+remains unresolved whether a fixed bisection schedule can support both model-
+scoped optimality evidence and staged public scrutiny without implying that
+its governing objective is uniquely fair. We present \emph{certified recursive
+bisection}, a proof-carrying architecture that separates institutional choice
+of a rule from verifiable execution. The procedure freezes the unit universe,
+population, adjacency, district-count tree, lexicographic objective, and
+canonical tie-break; reconstructs child instances from certified parent
+assignments; and binds all internal cuts to one-seat leaves. A public ceremony
+commits the rule before disclosure and releases certified cuts by tree depth
+after fixed review intervals. On eight precommitted synthetic graphs and five
+METIS seeds, heuristic cuts match the exact primary objective in 30 of 40 rows
+and the exact canonical assignment in 20. In a four-district ceremony fixture,
+all three internal cuts are released across two rounds, the final tree binds,
+and a timestamp mutation is rejected. Rhode Island demonstrates a 25,649-block
+population-proof frontier. A clean-worktree replay exactly regenerates all 150
+State-cycle assignments across three national operational baselines, whose
+1,155 recursive nodes are within tolerance but provide zero State-scale
+weighted-boundary or canonical proofs. These results supply a concrete
+evaluation contract: future bakeoffs can report map outcomes and procedural
+evidence separately, while legislatures and commissions retain responsibility
+for legal, representational, and normative choices.
 \end{abstract}
 
 \input{sections/01-introduction}
 \input{sections/02-model}
 \input{sections/03-certificates}
+\input{sections/03-ceremony}
 \input{sections/04-proof-backend}
 \input{sections/05-evidence}
 \input{sections/06-claims}

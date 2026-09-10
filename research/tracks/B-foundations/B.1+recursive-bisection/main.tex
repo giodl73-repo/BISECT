@@ -37,7 +37,21 @@ Giovanni Della-Libera
 \maketitle
 
 \begin{abstract}
-For over eighty years, the Huntington-Hill method has governed congressional apportionment—determining how many seats each state receives—through transparent mathematical formulas that command universal acceptance. Yet the parallel problem of redistricting—drawing district boundaries within states—remains mired in partisan conflict, with the Supreme Court declaring such disputes non-justiciable in \textit{Rucho v. Common Cause} (2019). We ask: if mathematical objectivity resolved the politically charged question of \textit{how many} seats each state receives, why not apply similar principles to \textit{where} district boundaries are drawn? This paper presents a recursive graph bisection algorithm for congressional redistricting that extends Huntington-Hill's commitment to mathematical rigor from apportionment to boundary design. Applied to all 50 states using 2020 Census data, the algorithm produces 435 congressional districts with mean population deviation of 2.79\%, guaranteed geographic contiguity, and input-level partisan blindness—the algorithm cannot access voter registration, election results, or any partisan data, though partisan outcomes emerge from geographic sorting (Section~5). We analyze population balance, compactness, political characteristics, and demographic representation, finding that algorithmic redistricting can satisfy traditional criteria while eliminating direct opportunities for gerrymandering. Our results suggest that mathematical governance offers a viable path toward resolving redistricting conflicts and restoring public confidence in electoral fairness.
+Huntington--Hill separates a publicly chosen apportionment rule from its
+mechanical execution. We study the corresponding architecture for district
+boundaries: a fixed floor/ceiling recursive tree reduces a $k$-district plan to
+$k-1$ two-way geographic decisions. Historical tract-level experiments show
+how recursive graph bisection behaves under one implementation profile; they do
+not prove a uniquely fair map or nationwide exact optimality. The certified
+extension freezes the unit universe, population, adjacency, objective order,
+and canonical tie-break, then attaches independently checkable evidence to
+each cut. A staged ceremony commits the rule at genesis and releases certified
+cuts by tree depth after fixed review intervals, allowing public verification
+of each disclosed prefix without access to future descendants. This turns the
+Huntington--Hill analogy into a testable governance claim: institutions choose
+the rule, while software proves and publicly records its execution. Partisan
+effects, Voting Rights Act obligations, legal validity, and public legitimacy
+remain separate questions.
 \end{abstract}
 
 \section*{Keywords}
@@ -47,6 +61,7 @@ Redistricting, Gerrymandering, Graph Partitioning, Congressional Apportionment, 
 \input{sections/01_introduction}
 \input{sections/02_huntington_precedent}
 \input{sections/03_methodology}
+\input{sections/03a_certified_ceremony}
 \input{sections/04_results}
 \input{sections/05_political_analysis}
 \input{sections/06_discussion}

@@ -1,0 +1,46 @@
+{
+  "alphas": [
+    "0",
+    "0.5",
+    "1",
+    "2",
+    "4",
+    "8"
+  ],
+  "baseline_path": "C:\\src\\apportionment\\docs\\experiments\\dfs-root-county-response-2020\\analysis.json",
+  "baseline_sha256": "a0b99603605a18c46f7e83f2c412138f378b40f83b4c3287a59fed0a9989c38a",
+  "execution": "serial; no RNG; no enforced memory cap; 1800-second cooperative deadline",
+  "inputs": {
+    "IA": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ia_blocks_2020.rctx",
+      "sha256": "a4e65f196156aafd5fba20040cab3d2331dd50ec4b4e23d497dab7073857f55e"
+    },
+    "NC": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\nc_blocks_2020.rctx",
+      "sha256": "9bddeecbdca04bd89cc7b86cb4402f1cf113a9c7b9b6915da990daccb1af3c2d"
+    },
+    "RI": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ri_blocks_2020.rctx",
+      "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+    },
+    "TX": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\tx_blocks_2020.rctx",
+      "sha256": "7965ce00ebdc781a5935b605bf81f0498f41c4e3444144cf8daa8467fecd0858"
+    }
+  },
+  "population_rule": "minimum exact deviation across union of per-root minima",
+  "python_version": "3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]",
+  "root_rule": "sorted GEOID indices floor(j*(n-1)/4), j=0..4",
+  "schema": "multiroot-county-diagnostic-manifest-v1",
+  "scope": "root-only diagnostic, not W1 full-plan experiment",
+  "sources": {
+    "C:\\src\\apportionment\\scripts\\research\\analyze_dfs_county_response.py": "fe135a02f752dc32419235a8f787159e22e1fb2d3685e10c39b629892c39448c",
+    "C:\\src\\apportionment\\scripts\\research\\run_multiroot_county_diagnostic.py": "5c808241fdc0b629cc554a6a9c9c45d4ca891a5063d6efb04de3453f2091c807"
+  },
+  "states": [
+    "RI",
+    "IA",
+    "NC",
+    "TX"
+  ]
+}

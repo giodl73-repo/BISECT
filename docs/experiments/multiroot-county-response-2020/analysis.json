@@ -1,0 +1,1537 @@
+{
+  "claim_boundary": "Root-only fixed population-first search. No final plans, final county fragments, legal compliance or optimality claim.",
+  "manifest_sha256": "055ce5e661c5195a3afdd91288a60bf0ac8cf40ef060da29a6405f83711397b2",
+  "states": {
+    "IA": {
+      "control_replayed": true,
+      "expanded": {
+        "alpha_response": [
+          {
+            "alpha": "0",
+            "minimum_weighted_cut": "1786892349",
+            "winners": [
+              "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+            ]
+          },
+          {
+            "alpha": "0.5",
+            "minimum_weighted_cut": "5302648787/2",
+            "winners": [
+              "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+            ]
+          },
+          {
+            "alpha": "1",
+            "minimum_weighted_cut": "3515756438",
+            "winners": [
+              "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+            ]
+          },
+          {
+            "alpha": "2",
+            "minimum_weighted_cut": "5244620527",
+            "winners": [
+              "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+            ]
+          },
+          {
+            "alpha": "4",
+            "minimum_weighted_cut": "8702348705",
+            "winners": [
+              "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+            ]
+          },
+          {
+            "alpha": "8",
+            "minimum_weighted_cut": "15617805061",
+            "winners": [
+              "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+            ]
+          }
+        ],
+        "eligible_candidates": [
+          {
+            "minimum_deviation": 390,
+            "partition_sha256": "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab",
+            "raw_cut": 1786892349,
+            "root_split_counties": 25,
+            "within_county_cut": 1728864089
+          }
+        ],
+        "minimum_deviation": 390,
+        "physical_candidates_after_population_filter": 1,
+        "physical_candidates_before_population_filter": 5,
+        "winning_set_changed": false
+      },
+      "per_root": [
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "1462896021",
+                "winners": [
+                  "38f7997ec8df178b7c621f7bc025327b241aad46330959b0e7f84a70fa9f6077"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "4343824721/2",
+                "winners": [
+                  "38f7997ec8df178b7c621f7bc025327b241aad46330959b0e7f84a70fa9f6077"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "2880928700",
+                "winners": [
+                  "38f7997ec8df178b7c621f7bc025327b241aad46330959b0e7f84a70fa9f6077"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "4298961379",
+                "winners": [
+                  "38f7997ec8df178b7c621f7bc025327b241aad46330959b0e7f84a70fa9f6077"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "7135026737",
+                "winners": [
+                  "38f7997ec8df178b7c621f7bc025327b241aad46330959b0e7f84a70fa9f6077"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "12807157453",
+                "winners": [
+                  "38f7997ec8df178b7c621f7bc025327b241aad46330959b0e7f84a70fa9f6077"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 1550,
+                "partition_sha256": "38f7997ec8df178b7c621f7bc025327b241aad46330959b0e7f84a70fa9f6077",
+                "raw_cut": 1462896021,
+                "root_split_counties": 21,
+                "within_county_cut": 1418032679
+              },
+              {
+                "minimum_deviation": 1550,
+                "partition_sha256": "576dbc004c9d23fe3bd03d63d752107191ee09dd2424066e15e73d655623744f",
+                "raw_cut": 1464731350,
+                "root_split_counties": 21,
+                "within_county_cut": 1419868008
+              }
+            ],
+            "minimum_deviation": 1550,
+            "physical_candidates_after_population_filter": 2,
+            "physical_candidates_before_population_filter": 2,
+            "winning_set_changed": false
+          },
+          "root_geoid": "190019601001000",
+          "root_index": 0
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "2234755628",
+                "winners": [
+                  "a357c517078a4691a85f414830f5a6ca087aba22597fda737b71f459f0be7578"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "3310976936",
+                "winners": [
+                  "a357c517078a4691a85f414830f5a6ca087aba22597fda737b71f459f0be7578"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "4387198244",
+                "winners": [
+                  "a357c517078a4691a85f414830f5a6ca087aba22597fda737b71f459f0be7578"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "6539640860",
+                "winners": [
+                  "a357c517078a4691a85f414830f5a6ca087aba22597fda737b71f459f0be7578"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "10844526092",
+                "winners": [
+                  "a357c517078a4691a85f414830f5a6ca087aba22597fda737b71f459f0be7578"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "19454296556",
+                "winners": [
+                  "a357c517078a4691a85f414830f5a6ca087aba22597fda737b71f459f0be7578"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 15354,
+                "partition_sha256": "a357c517078a4691a85f414830f5a6ca087aba22597fda737b71f459f0be7578",
+                "raw_cut": 2234755628,
+                "root_split_counties": 26,
+                "within_county_cut": 2152442616
+              }
+            ],
+            "minimum_deviation": 15354,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "190539602001238",
+          "root_index": 43799
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "2046768406",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "3034053621",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "4021338836",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "5995909266",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "9945050126",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "17843331846",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 113326,
+                "partition_sha256": "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e",
+                "raw_cut": 2046768406,
+                "root_split_counties": 22,
+                "within_county_cut": 1974570430
+              }
+            ],
+            "minimum_deviation": 113326,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "191099506002115",
+          "root_index": 87599
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "1786892349",
+                "winners": [
+                  "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "5302648787/2",
+                "winners": [
+                  "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "3515756438",
+                "winners": [
+                  "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "5244620527",
+                "winners": [
+                  "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "8702348705",
+                "winners": [
+                  "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "15617805061",
+                "winners": [
+                  "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 390,
+                "partition_sha256": "307f86aaceeff40732c1310a23648f64e91a00b08f736ebacde4d2893024e4ab",
+                "raw_cut": 1786892349,
+                "root_split_counties": 25,
+                "within_county_cut": 1728864089
+              }
+            ],
+            "minimum_deviation": 390,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "191550216031104",
+          "root_index": 131398
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "2046768406",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "3034053621",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "4021338836",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "5995909266",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "9945050126",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "17843331846",
+                "winners": [
+                  "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 113326,
+                "partition_sha256": "e08c44e422021d0aeab1efe09fde32353f4c84685e068e684ccef59fdf42b17e",
+                "raw_cut": 2046768406,
+                "root_split_counties": 22,
+                "within_county_cut": 1974570430
+              }
+            ],
+            "minimum_deviation": 113326,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "191976805004060",
+          "root_index": 175198
+        }
+      ]
+    },
+    "NC": {
+      "control_replayed": true,
+      "expanded": {
+        "alpha_response": [
+          {
+            "alpha": "0",
+            "minimum_weighted_cut": "2300365217",
+            "winners": [
+              "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+            ]
+          },
+          {
+            "alpha": "0.5",
+            "minimum_weighted_cut": "6790292567/2",
+            "winners": [
+              "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+            ]
+          },
+          {
+            "alpha": "1",
+            "minimum_weighted_cut": "4489927350",
+            "winners": [
+              "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+            ]
+          },
+          {
+            "alpha": "2",
+            "minimum_weighted_cut": "6679489483",
+            "winners": [
+              "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+            ]
+          },
+          {
+            "alpha": "4",
+            "minimum_weighted_cut": "11058613749",
+            "winners": [
+              "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+            ]
+          },
+          {
+            "alpha": "8",
+            "minimum_weighted_cut": "19816862281",
+            "winners": [
+              "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+            ]
+          }
+        ],
+        "eligible_candidates": [
+          {
+            "minimum_deviation": 98,
+            "partition_sha256": "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f",
+            "raw_cut": 2300365217,
+            "root_split_counties": 29,
+            "within_county_cut": 2189562133
+          }
+        ],
+        "minimum_deviation": 98,
+        "physical_candidates_after_population_filter": 1,
+        "physical_candidates_before_population_filter": 5,
+        "winning_set_changed": false
+      },
+      "per_root": [
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "2819128337",
+                "winners": [
+                  "367d60ae3479cd27f7afa6333b458b08e8f4be6e5a407fb9e5c01b6daee8bdce"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "8291243641/2",
+                "winners": [
+                  "367d60ae3479cd27f7afa6333b458b08e8f4be6e5a407fb9e5c01b6daee8bdce"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "5472115304",
+                "winners": [
+                  "367d60ae3479cd27f7afa6333b458b08e8f4be6e5a407fb9e5c01b6daee8bdce"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "8125102271",
+                "winners": [
+                  "367d60ae3479cd27f7afa6333b458b08e8f4be6e5a407fb9e5c01b6daee8bdce"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "13431076205",
+                "winners": [
+                  "367d60ae3479cd27f7afa6333b458b08e8f4be6e5a407fb9e5c01b6daee8bdce"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "24043024073",
+                "winners": [
+                  "367d60ae3479cd27f7afa6333b458b08e8f4be6e5a407fb9e5c01b6daee8bdce"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 243222,
+                "partition_sha256": "367d60ae3479cd27f7afa6333b458b08e8f4be6e5a407fb9e5c01b6daee8bdce",
+                "raw_cut": 2819128337,
+                "root_split_counties": 32,
+                "within_county_cut": 2652986967
+              }
+            ],
+            "minimum_deviation": 243222,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "370010201001000",
+          "root_index": 0
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "2300365217",
+                "winners": [
+                  "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "6790292567/2",
+                "winners": [
+                  "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "4489927350",
+                "winners": [
+                  "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "6679489483",
+                "winners": [
+                  "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "11058613749",
+                "winners": [
+                  "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "19816862281",
+                "winners": [
+                  "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 98,
+                "partition_sha256": "320eca951eca05223c902f045075bfe49e3b573d30a3769300f0e1ef7e81b53f",
+                "raw_cut": 2300365217,
+                "root_split_counties": 29,
+                "within_county_cut": 2189562133
+              }
+            ],
+            "minimum_deviation": 98,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "370519802001017",
+          "root_index": 59159
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "3030603459",
+                "winners": [
+                  "09c73f81e5d185dd62dd897d3ed4c232809f86fda92df797bcde14f4b7008dde"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "4432419889",
+                "winners": [
+                  "09c73f81e5d185dd62dd897d3ed4c232809f86fda92df797bcde14f4b7008dde"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "5834236319",
+                "winners": [
+                  "09c73f81e5d185dd62dd897d3ed4c232809f86fda92df797bcde14f4b7008dde"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "8637869179",
+                "winners": [
+                  "09c73f81e5d185dd62dd897d3ed4c232809f86fda92df797bcde14f4b7008dde"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "14245134899",
+                "winners": [
+                  "09c73f81e5d185dd62dd897d3ed4c232809f86fda92df797bcde14f4b7008dde"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "25459666339",
+                "winners": [
+                  "09c73f81e5d185dd62dd897d3ed4c232809f86fda92df797bcde14f4b7008dde"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 588,
+                "partition_sha256": "09c73f81e5d185dd62dd897d3ed4c232809f86fda92df797bcde14f4b7008dde",
+                "raw_cut": 3030603459,
+                "root_split_counties": 39,
+                "within_county_cut": 2803632860
+              }
+            ],
+            "minimum_deviation": 588,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "370999503004060",
+          "root_index": 118318
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "2254610423",
+                "winners": [
+                  "323b927fcf3cbda09e99edc702a48abb4dc530c16f52fe1516eba4bffc26f6ce"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "3316628837",
+                "winners": [
+                  "323b927fcf3cbda09e99edc702a48abb4dc530c16f52fe1516eba4bffc26f6ce"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "4378647251",
+                "winners": [
+                  "323b927fcf3cbda09e99edc702a48abb4dc530c16f52fe1516eba4bffc26f6ce"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "6502684079",
+                "winners": [
+                  "323b927fcf3cbda09e99edc702a48abb4dc530c16f52fe1516eba4bffc26f6ce"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "10750757735",
+                "winners": [
+                  "323b927fcf3cbda09e99edc702a48abb4dc530c16f52fe1516eba4bffc26f6ce"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "19246905047",
+                "winners": [
+                  "323b927fcf3cbda09e99edc702a48abb4dc530c16f52fe1516eba4bffc26f6ce"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 1615222,
+                "partition_sha256": "323b927fcf3cbda09e99edc702a48abb4dc530c16f52fe1516eba4bffc26f6ce",
+                "raw_cut": 2254610423,
+                "root_split_counties": 29,
+                "within_county_cut": 2124036828
+              }
+            ],
+            "minimum_deviation": 1615222,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "371510313071012",
+          "root_index": 177477
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "2724011219",
+                "winners": [
+                  "4c2d0c4ae84083d634bfb830b079b556e9057b9465ce655e3dc984fb6e23e4b4"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "3988124500",
+                "winners": [
+                  "4c2d0c4ae84083d634bfb830b079b556e9057b9465ce655e3dc984fb6e23e4b4"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "5252237781",
+                "winners": [
+                  "4c2d0c4ae84083d634bfb830b079b556e9057b9465ce655e3dc984fb6e23e4b4"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "7780464343",
+                "winners": [
+                  "4c2d0c4ae84083d634bfb830b079b556e9057b9465ce655e3dc984fb6e23e4b4"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "12836917467",
+                "winners": [
+                  "4c2d0c4ae84083d634bfb830b079b556e9057b9465ce655e3dc984fb6e23e4b4"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "22949823715",
+                "winners": [
+                  "4c2d0c4ae84083d634bfb830b079b556e9057b9465ce655e3dc984fb6e23e4b4"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 182,
+                "partition_sha256": "4c2d0c4ae84083d634bfb830b079b556e9057b9465ce655e3dc984fb6e23e4b4",
+                "raw_cut": 2724011219,
+                "root_split_counties": 37,
+                "within_county_cut": 2528226562
+              }
+            ],
+            "minimum_deviation": 182,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "371999604002134",
+          "root_index": 236637
+        }
+      ]
+    },
+    "RI": {
+      "control_replayed": true,
+      "expanded": {
+        "alpha_response": [
+          {
+            "alpha": "0",
+            "minimum_weighted_cut": "304157226",
+            "winners": [
+              "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+            ]
+          },
+          {
+            "alpha": "0.5",
+            "minimum_weighted_cut": "907112629/2",
+            "winners": [
+              "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+            ]
+          },
+          {
+            "alpha": "1",
+            "minimum_weighted_cut": "602955403",
+            "winners": [
+              "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+            ]
+          },
+          {
+            "alpha": "2",
+            "minimum_weighted_cut": "901753580",
+            "winners": [
+              "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+            ]
+          },
+          {
+            "alpha": "4",
+            "minimum_weighted_cut": "1499349934",
+            "winners": [
+              "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+            ]
+          },
+          {
+            "alpha": "8",
+            "minimum_weighted_cut": "2694542642",
+            "winners": [
+              "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+            ]
+          }
+        ],
+        "eligible_candidates": [
+          {
+            "minimum_deviation": 27,
+            "partition_sha256": "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7",
+            "raw_cut": 304157226,
+            "root_split_counties": 4,
+            "within_county_cut": 298798177
+          }
+        ],
+        "minimum_deviation": 27,
+        "physical_candidates_after_population_filter": 1,
+        "physical_candidates_before_population_filter": 6,
+        "winning_set_changed": false
+      },
+      "per_root": [
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "243087025",
+                "winners": [
+                  "c1da70925ab505ad88d58701d49d1004edc5efcd38d70f9e589d180492088640"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "728389427/2",
+                "winners": [
+                  "c1da70925ab505ad88d58701d49d1004edc5efcd38d70f9e589d180492088640"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "485302402",
+                "winners": [
+                  "c1da70925ab505ad88d58701d49d1004edc5efcd38d70f9e589d180492088640"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "727517779",
+                "winners": [
+                  "c1da70925ab505ad88d58701d49d1004edc5efcd38d70f9e589d180492088640"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "1211948533",
+                "winners": [
+                  "c1da70925ab505ad88d58701d49d1004edc5efcd38d70f9e589d180492088640"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "2180810041",
+                "winners": [
+                  "c1da70925ab505ad88d58701d49d1004edc5efcd38d70f9e589d180492088640"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 1303,
+                "partition_sha256": "e7062d4e0817f4b93e9be739ebefa4c0dc440d5adf25994437abfba15337cc99",
+                "raw_cut": 243105038,
+                "root_split_counties": 3,
+                "within_county_cut": 242233390
+              },
+              {
+                "minimum_deviation": 1303,
+                "partition_sha256": "c1da70925ab505ad88d58701d49d1004edc5efcd38d70f9e589d180492088640",
+                "raw_cut": 243087025,
+                "root_split_counties": 3,
+                "within_county_cut": 242215377
+              }
+            ],
+            "minimum_deviation": 1303,
+            "physical_candidates_after_population_filter": 2,
+            "physical_candidates_before_population_filter": 2,
+            "winning_set_changed": false
+          },
+          "root_geoid": "440010301001000",
+          "root_index": 0
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "311877193",
+                "winners": [
+                  "dace785edd7986f0a7703c2973d9b83c7a2c230881a4517153bc7caa937369e8"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "461465006",
+                "winners": [
+                  "dace785edd7986f0a7703c2973d9b83c7a2c230881a4517153bc7caa937369e8"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "611052819",
+                "winners": [
+                  "dace785edd7986f0a7703c2973d9b83c7a2c230881a4517153bc7caa937369e8"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "910228445",
+                "winners": [
+                  "dace785edd7986f0a7703c2973d9b83c7a2c230881a4517153bc7caa937369e8"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "1508579697",
+                "winners": [
+                  "dace785edd7986f0a7703c2973d9b83c7a2c230881a4517153bc7caa937369e8"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "2705282201",
+                "winners": [
+                  "dace785edd7986f0a7703c2973d9b83c7a2c230881a4517153bc7caa937369e8"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 66027,
+                "partition_sha256": "dace785edd7986f0a7703c2973d9b83c7a2c230881a4517153bc7caa937369e8",
+                "raw_cut": 311877193,
+                "root_split_counties": 4,
+                "within_county_cut": 299175626
+              }
+            ],
+            "minimum_deviation": 66027,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "440050406001006",
+          "root_index": 6412
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "304157226",
+                "winners": [
+                  "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "907112629/2",
+                "winners": [
+                  "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "602955403",
+                "winners": [
+                  "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "901753580",
+                "winners": [
+                  "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "1499349934",
+                "winners": [
+                  "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "2694542642",
+                "winners": [
+                  "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 27,
+                "partition_sha256": "c430df3fde016517f32ccead58dab104b8df0ad27ed8a19c556ab6d00a6f36f7",
+                "raw_cut": 304157226,
+                "root_split_counties": 4,
+                "within_county_cut": 298798177
+              }
+            ],
+            "minimum_deviation": 27,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "440070114022043",
+          "root_index": 12824
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "298373348",
+                "winners": [
+                  "46537edb4a60daa5cb9b602dec4a99a8eeaed87bbb2a4166e4c16963c7ec0e51"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "889760995/2",
+                "winners": [
+                  "46537edb4a60daa5cb9b602dec4a99a8eeaed87bbb2a4166e4c16963c7ec0e51"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "591387647",
+                "winners": [
+                  "46537edb4a60daa5cb9b602dec4a99a8eeaed87bbb2a4166e4c16963c7ec0e51"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "884401946",
+                "winners": [
+                  "46537edb4a60daa5cb9b602dec4a99a8eeaed87bbb2a4166e4c16963c7ec0e51"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "1470430544",
+                "winners": [
+                  "46537edb4a60daa5cb9b602dec4a99a8eeaed87bbb2a4166e4c16963c7ec0e51"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "2642487740",
+                "winners": [
+                  "46537edb4a60daa5cb9b602dec4a99a8eeaed87bbb2a4166e4c16963c7ec0e51"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 8631,
+                "partition_sha256": "46537edb4a60daa5cb9b602dec4a99a8eeaed87bbb2a4166e4c16963c7ec0e51",
+                "raw_cut": 298373348,
+                "root_split_counties": 4,
+                "within_county_cut": 293014299
+              }
+            ],
+            "minimum_deviation": 8631,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "440070148001049",
+          "root_index": 19236
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "301954845",
+                "winners": [
+                  "d07c177922a4df7c128752a30ebc3f44bc172471706b029715dbe1fbbc9bab79"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "446696972",
+                "winners": [
+                  "d07c177922a4df7c128752a30ebc3f44bc172471706b029715dbe1fbbc9bab79"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "591439099",
+                "winners": [
+                  "d07c177922a4df7c128752a30ebc3f44bc172471706b029715dbe1fbbc9bab79"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "880923353",
+                "winners": [
+                  "d07c177922a4df7c128752a30ebc3f44bc172471706b029715dbe1fbbc9bab79"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "1459891861",
+                "winners": [
+                  "d07c177922a4df7c128752a30ebc3f44bc172471706b029715dbe1fbbc9bab79"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "2617828877",
+                "winners": [
+                  "d07c177922a4df7c128752a30ebc3f44bc172471706b029715dbe1fbbc9bab79"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 26503,
+                "partition_sha256": "d07c177922a4df7c128752a30ebc3f44bc172471706b029715dbe1fbbc9bab79",
+                "raw_cut": 301954845,
+                "root_split_counties": 4,
+                "within_county_cut": 289484254
+              }
+            ],
+            "minimum_deviation": 26503,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "440099902000002",
+          "root_index": 25648
+        }
+      ]
+    },
+    "TX": {
+      "control_replayed": true,
+      "expanded": {
+        "alpha_response": [
+          {
+            "alpha": "0",
+            "minimum_weighted_cut": "3020771228",
+            "winners": [
+              "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+            ]
+          },
+          {
+            "alpha": "0.5",
+            "minimum_weighted_cut": "4451185931",
+            "winners": [
+              "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+            ]
+          },
+          {
+            "alpha": "1",
+            "minimum_weighted_cut": "5881600634",
+            "winners": [
+              "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+            ]
+          },
+          {
+            "alpha": "2",
+            "minimum_weighted_cut": "8742430040",
+            "winners": [
+              "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+            ]
+          },
+          {
+            "alpha": "4",
+            "minimum_weighted_cut": "14464088852",
+            "winners": [
+              "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+            ]
+          },
+          {
+            "alpha": "8",
+            "minimum_weighted_cut": "25907406476",
+            "winners": [
+              "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+            ]
+          }
+        ],
+        "eligible_candidates": [
+          {
+            "minimum_deviation": 1539,
+            "partition_sha256": "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294",
+            "raw_cut": 3020771228,
+            "root_split_counties": 33,
+            "within_county_cut": 2860829406
+          }
+        ],
+        "minimum_deviation": 1539,
+        "physical_candidates_after_population_filter": 1,
+        "physical_candidates_before_population_filter": 4,
+        "winning_set_changed": false
+      },
+      "per_root": [
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "3020771228",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "4451185931",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "5881600634",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "8742430040",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "14464088852",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "25907406476",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 1539,
+                "partition_sha256": "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294",
+                "raw_cut": 3020771228,
+                "root_split_counties": 33,
+                "within_county_cut": 2860829406
+              }
+            ],
+            "minimum_deviation": 1539,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "480019501001000",
+          "root_index": 0
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "3020771228",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "4451185931",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "5881600634",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "8742430040",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "14464088852",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "25907406476",
+                "winners": [
+                  "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 1539,
+                "partition_sha256": "963d31cd172fea77520a727473dfef833a0814d77ec60e35fafc98bf9a444294",
+                "raw_cut": 3020771228,
+                "root_split_counties": 33,
+                "within_county_cut": 2860829406
+              }
+            ],
+            "minimum_deviation": 1539,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "481130181051019",
+          "root_index": 167189
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "5657259370",
+                "winners": [
+                  "d604e4aa9a5cc2e17da1c76d2350a2fe6354791bc9b966b4f2727f321b5662ad"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "8342828287",
+                "winners": [
+                  "d604e4aa9a5cc2e17da1c76d2350a2fe6354791bc9b966b4f2727f321b5662ad"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "11028397204",
+                "winners": [
+                  "d604e4aa9a5cc2e17da1c76d2350a2fe6354791bc9b966b4f2727f321b5662ad"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "16399535038",
+                "winners": [
+                  "d604e4aa9a5cc2e17da1c76d2350a2fe6354791bc9b966b4f2727f321b5662ad"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "27141810706",
+                "winners": [
+                  "d604e4aa9a5cc2e17da1c76d2350a2fe6354791bc9b966b4f2727f321b5662ad"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "48626362042",
+                "winners": [
+                  "d604e4aa9a5cc2e17da1c76d2350a2fe6354791bc9b966b4f2727f321b5662ad"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 2783747,
+                "partition_sha256": "d604e4aa9a5cc2e17da1c76d2350a2fe6354791bc9b966b4f2727f321b5662ad",
+                "raw_cut": 5657259370,
+                "root_split_counties": 57,
+                "within_county_cut": 5371137834
+              }
+            ],
+            "minimum_deviation": 2783747,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "482015561001015",
+          "root_index": 334378
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "5008235160",
+                "winners": [
+                  "fa02bb29c8cb349e2f9f338bcfcb86b78cd81c2abd96364fb855ea8bb7cdb0ea"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "14567645169/2",
+                "winners": [
+                  "fa02bb29c8cb349e2f9f338bcfcb86b78cd81c2abd96364fb855ea8bb7cdb0ea"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "9559410009",
+                "winners": [
+                  "fa02bb29c8cb349e2f9f338bcfcb86b78cd81c2abd96364fb855ea8bb7cdb0ea"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "14110584858",
+                "winners": [
+                  "fa02bb29c8cb349e2f9f338bcfcb86b78cd81c2abd96364fb855ea8bb7cdb0ea"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "23212934556",
+                "winners": [
+                  "fa02bb29c8cb349e2f9f338bcfcb86b78cd81c2abd96364fb855ea8bb7cdb0ea"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "41417633952",
+                "winners": [
+                  "fa02bb29c8cb349e2f9f338bcfcb86b78cd81c2abd96364fb855ea8bb7cdb0ea"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 12027,
+                "partition_sha256": "fa02bb29c8cb349e2f9f338bcfcb86b78cd81c2abd96364fb855ea8bb7cdb0ea",
+                "raw_cut": 5008235160,
+                "root_split_counties": 46,
+                "within_county_cut": 4551174849
+              }
+            ],
+            "minimum_deviation": 12027,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "483719501001300",
+          "root_index": 501567
+        },
+        {
+          "result": {
+            "alpha_response": [
+              {
+                "alpha": "0",
+                "minimum_weighted_cut": "4701714194",
+                "winners": [
+                  "ca1fb400129a43cc8b3ee812d4e9711bcab7f12496a9e8a74f9f02159d346256"
+                ]
+              },
+              {
+                "alpha": "0.5",
+                "minimum_weighted_cut": "6983516710",
+                "winners": [
+                  "ca1fb400129a43cc8b3ee812d4e9711bcab7f12496a9e8a74f9f02159d346256"
+                ]
+              },
+              {
+                "alpha": "1",
+                "minimum_weighted_cut": "9265319226",
+                "winners": [
+                  "ca1fb400129a43cc8b3ee812d4e9711bcab7f12496a9e8a74f9f02159d346256"
+                ]
+              },
+              {
+                "alpha": "2",
+                "minimum_weighted_cut": "13828924258",
+                "winners": [
+                  "ca1fb400129a43cc8b3ee812d4e9711bcab7f12496a9e8a74f9f02159d346256"
+                ]
+              },
+              {
+                "alpha": "4",
+                "minimum_weighted_cut": "22956134322",
+                "winners": [
+                  "ca1fb400129a43cc8b3ee812d4e9711bcab7f12496a9e8a74f9f02159d346256"
+                ]
+              },
+              {
+                "alpha": "8",
+                "minimum_weighted_cut": "41210554450",
+                "winners": [
+                  "ca1fb400129a43cc8b3ee812d4e9711bcab7f12496a9e8a74f9f02159d346256"
+                ]
+              }
+            ],
+            "eligible_candidates": [
+              {
+                "minimum_deviation": 2717,
+                "partition_sha256": "ca1fb400129a43cc8b3ee812d4e9711bcab7f12496a9e8a74f9f02159d346256",
+                "raw_cut": 4701714194,
+                "root_split_counties": 29,
+                "within_county_cut": 4563605032
+              }
+            ],
+            "minimum_deviation": 2717,
+            "physical_candidates_after_population_filter": 1,
+            "physical_candidates_before_population_filter": 1,
+            "winning_set_changed": false
+          },
+          "root_geoid": "485079503025024",
+          "root_index": 668756
+        }
+      ]
+    }
+  },
+  "status": "complete"
+}

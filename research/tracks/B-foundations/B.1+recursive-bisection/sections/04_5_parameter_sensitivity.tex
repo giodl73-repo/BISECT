@@ -4,7 +4,7 @@
 \subsection{Parameter Sensitivity and Reproducibility}
 \label{sec:parameter-sensitivity}
 
-A key concern with any algorithmic redistricting approach is whether outcomes can be manipulated through careful selection of parameters \citep{chen2024automated, karypis2023metis}. If an ostensibly ``neutral'' algorithm produces systematically different results depending on parameter choices, critics could argue that the method merely shifts manipulation from human discretion to algorithmic tuning. This concern is particularly acute for our method, which relies on METIS's multilevel graph partitioning algorithm with several configurable parameters.
+A key concern with any algorithmic redistricting approach is whether outcomes can be manipulated through careful selection of parameters. If an ostensibly ``neutral'' algorithm produces systematically different results depending on parameter choices, critics could argue that the method merely shifts manipulation from human discretion to algorithmic tuning. This concern is particularly acute for our method, which relies on METIS's multilevel graph partitioning algorithm \citep{karypis1998fast} with several configurable parameters.
 
 In this section, we empirically demonstrate that our redistricting algorithm exhibits \textbf{perfect reproducibility}: outcomes are invariant to parameter choices and random initialization. Across 404 redistricting runs spanning four states and 100 random seeds per state, we observe \textbf{zero variation} in both compactness and population balance metrics. This finding provides strong empirical support for the ``impossibility defense''---the claim that algorithmic approaches cannot be instructed to gerrymander because they cannot see partisan data. That is a procedural constraint, not a guarantee of partisan neutrality. Our results go further: even if partisan actors controlled parameter choices, they could not manipulate outcomes.
 
@@ -23,7 +23,7 @@ The METIS graph partitioning algorithm accepts several parameters that control t
     \item \textbf{Random seed}: Controls initial partition generation. METIS uses randomized algorithms in its coarsening phase, but subsequent refinement is deterministic given the coarsened graph.
 \end{itemize}
 
-These choices follow standard practice in graph partitioning applications \citep{schloegel2002graph}. However, the critical question is whether alternative reasonable choices would produce meaningfully different redistricting outcomes. If so, parameter selection becomes a hidden degree of freedom that undermines the method's neutrality claims.
+These choices follow the multilevel graph-partitioning profile described by Karypis and Kumar \citep{karypis1998fast}. However, the critical question is whether alternative reasonable choices would produce meaningfully different redistricting outcomes. If so, parameter selection becomes a hidden degree of freedom that undermines the method's neutrality claims.
 
 \subsubsection{Systematic Parameter Sweeps}
 \label{sec:parameter-sweeps}
@@ -63,7 +63,7 @@ Ohio & 15 & 100 & 0.000\% & 0.000\% & 0.2591 (all runs) \\
 \end{minipage}
 \end{table}
 
-This finding is \textit{stronger than anticipated}. Prior work on ensemble redistricting methods \citep{chen2013unintentional, duchin2021recombination} demonstrates significant variation across algorithmically generated maps, with Polsby-Popper coefficients of variation typically in the range 5--15\%. Our method, in contrast, exhibits \textit{deterministic} behavior: METIS's multilevel refinement algorithm converges to a unique optimal (or near-optimal) solution regardless of parameter choices or initial conditions.
+This historical finding was stronger than anticipated. Prior work on ensemble redistricting methods \citep{chen2013unintentional, deford2019} demonstrates variation across algorithmically generated maps. In the reported parameter grid, this implementation returned the same assignment; that bounded observation is not a proof of global uniqueness or exact optimality.
 
 \subsubsection{Random Seed Ensemble Analysis}
 \label{sec:random-seed-ensemble}
@@ -90,18 +90,21 @@ Our parameter sensitivity results provide strong empirical support for the \text
 
 Our findings decisively refute this objection. Across 404 runs spanning four states, varying both structural parameters (\texttt{ufactor}, \texttt{niter}) and random initialization (\texttt{seed}), we observe \textbf{zero variation} in outcomes. Even if partisan actors had complete control over parameter choices, they could not manipulate district boundaries. The algorithm's behavior is determined entirely by geographic constraints---census tract boundaries, population distribution, and spatial adjacency---not by algorithmic degrees of freedom.
 
-This determinism stands in sharp contrast to human redistricting, where small changes to criteria (``preserve communities of interest,'' ``respect county boundaries'') or priorities (``maximize compactness'' vs. ``maximize contiguity'') can produce dramatically different maps \citep{stephanopoulos2015partisan}. It also contrasts with ensemble methods like MCMC-based approaches \citep{duchin2021recombination}, which \textit{by design} generate diverse maps to characterize the space of possible redistricting plans. Our method finds a \textit{unique} plan---a feature that enhances, rather than undermines, its legitimacy.
+This bounded stability contrasts with ensemble methods such as ReCom \citep{deford2019}, which \textit{by design} generate diverse maps to characterize the space of possible redistricting plans. It does not establish that the heuristic has a unique solution outside the tested profile; the certified extension instead makes the chosen canonical execution independently checkable.
 
 The philosophical implication is profound: our algorithm operationalizes a form of \textbf{process fairness} rather than \textbf{outcome fairness}. It does not attempt to achieve any particular partisan outcome (proportional representation, competitive districts, etc.). Instead, it applies a transparent, uniform procedure---minimize district perimeter subject to population equality---that treats all voters identically regardless of location or political affiliation. The fact that this procedure yields deterministic outcomes strengthens its claim to neutrality.
 
 \subsubsection{Comparison to Ensemble Methods}
 \label{sec:ensemble-comparison}
 
-Our deterministic approach differs fundamentally from ensemble redistricting methods \citep{chen2013unintentional, duchin2021recombination, deford2021recombination}, which generate large samples of redistricting plans (typically 1,000--50,000) to characterize the distribution of possible maps. Ensemble methods serve primarily as \textbf{diagnostic tools}: they identify whether enacted plans are statistical outliers with respect to metrics like partisan fairness, competitiveness, or compactness \citep{chen2013unintentional}.
+Our deterministic approach differs fundamentally from ensemble redistricting methods \citep{chen2013unintentional, deford2019}, which generate large samples of redistricting plans to characterize a distribution of possible maps. Ensemble methods serve primarily as \textbf{diagnostic tools}: they identify whether enacted plans are statistical outliers with respect to metrics like partisan fairness, competitiveness, or compactness \citep{chen2013unintentional}.
 
 Our method, in contrast, is \textbf{prescriptive}: it proposes a single plan for adoption. This raises the question: how does our single deterministic plan relate to the ensemble distribution?
 
-To address this, we compare our Minnesota plan (8 districts) to a 10,000-map ensemble generated using the ReCom algorithm \citep{deford2021recombination} with uniform geographic constraints. Figure~\ref{fig:ensemble-comparison} shows that our plan falls near the \textit{median} of the ensemble distribution for both compactness (51st percentile) and partisan metrics (Democratic seat share: 48th percentile). This suggests that our deterministic plan is representative of ``typical'' neutral maps, rather than an outlier.
+A preregistered comparison of the Minnesota plan with a ReCom ensemble would
+test whether the deterministic output is typical or an outlier. That comparison
+has not yet been regenerated into the present artifact package, so this paper
+does not report ensemble percentiles.
 
 However, we emphasize a key distinction: ensemble methods \textit{describe} the space of possible maps but do not \textit{prescribe} which map to choose. Selecting a single map from an ensemble requires additional criteria (median compactness? median partisan fairness? most competitive?), reintroducing discretion. Our method, by yielding a unique deterministic solution, avoids this meta-problem. The trade-off is less flexibility---our method cannot easily incorporate additional constraints like communities of interest or competitiveness---in exchange for greater simplicity and legitimacy.
 
@@ -135,4 +138,4 @@ These findings strengthen the impossibility defense by closing a potential objec
 
 However, we acknowledge an important limitation: determinism does not guarantee \textit{fairness} in any particular normative sense. Our algorithm produces compact districts with equal populations, but it does not optimize for proportional representation, competitive districts, or preservation of communities of interest. The philosophical justification for our approach rests on \textbf{process fairness}---applying a transparent, uniform procedure that treats all voters identically---rather than \textbf{outcome fairness}---achieving any particular partisan or demographic result.
 
-This distinction is crucial for understanding the role of algorithmic redistricting in democratic legitimacy. Our method does not claim to solve the normative problem of ``what makes a districting plan fair?'' Instead, it offers a procedural solution: delegate redistricting to a transparent, deterministic algorithm that cannot engage in partisan manipulation. Whether this procedure produces acceptable outcomes in all contexts remains an empirical and political question, which we address in the following sections on partisan effects (Section~\ref{sec:partisan-analysis}) and Voting Rights Act compliance (Section~\ref{sec:vra-compliance}).
+This distinction is crucial for understanding the role of algorithmic redistricting in democratic legitimacy. Our method does not claim to solve the normative problem of ``what makes a districting plan fair?'' Instead, it offers a procedural solution: delegate redistricting to a transparent, deterministic algorithm that cannot engage in partisan manipulation. Whether this procedure produces acceptable outcomes in all contexts remains an empirical and political question, which we address in the following sections on partisan effects (Section~\ref{sec:analysis}) and Voting Rights Act compliance (Section~\ref{sec:vra-compliance}).
