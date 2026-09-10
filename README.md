@@ -8,6 +8,8 @@ repository-local review panels.
 
 ## Show someone (start here)
 
+New computer or removable data drive: [portable data setup](docs/PORTABLE_DATA.md).
+
 Hand the repo to an election researcher or an algorithm implementer without a
 maintainer tour:
 

@@ -1,0 +1,8 @@
+# Versions used for the successful RI public-download -> canonical-context test.
+# Native-library differences are still checked by the resulting context hash.
+geopandas==1.1.3
+shapely==2.1.2
+pyproj==3.7.2
+pandas==3.0.0
+numpy==2.4.1
+tqdm==4.67.1

@@ -1,0 +1,89 @@
+{
+  "schema": "portable-vault-remediation-validation-v1",
+  "date": "2026-09-10",
+  "driver_sha256": "6a75145b74b73d01d0476af2eeaf1fc3bb53c14d86a3d649c302b86b75f12c67",
+  "catalog_sha256": "65b66562ea4bb8692276550b6830812511d869d503e7afb126f16c304a9a5110",
+  "helper_sha256": "10ec41e5667b29c0d185124e48efaeff2ed98dc7c0ae79cd8cc1df8bb3c26673",
+  "builder_profile_sha256": "84361916c0032b8f1490bbd4b18ce45d4327c6da93ce325a3b02554d5630d6d9",
+  "context_sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371",
+  "platform": "Windows-11-10.0.26310-SP0",
+  "python": "3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]",
+  "packages": [
+    {
+      "name": "certifi",
+      "version": "2026.7.22"
+    },
+    {
+      "name": "colorama",
+      "version": "0.4.6"
+    },
+    {
+      "name": "geopandas",
+      "version": "1.1.3"
+    },
+    {
+      "name": "numpy",
+      "version": "2.4.1"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3"
+    },
+    {
+      "name": "pandas",
+      "version": "3.0.0"
+    },
+    {
+      "name": "pip",
+      "version": "25.3"
+    },
+    {
+      "name": "pyogrio",
+      "version": "0.13.0"
+    },
+    {
+      "name": "pyproj",
+      "version": "3.7.2"
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.9.0.post0"
+    },
+    {
+      "name": "shapely",
+      "version": "2.1.2"
+    },
+    {
+      "name": "six",
+      "version": "1.17.0"
+    },
+    {
+      "name": "tqdm",
+      "version": "4.67.1"
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.3"
+    }
+  ],
+  "native": {
+    "pyproj": {
+      "proj_version_str": "9.5.1"
+    },
+    "shapely": {
+      "geos_version_string": "3.13.1"
+    }
+  },
+  "tests_passed": 63,
+  "isolated_environment": true,
+  "ri_replay_arms_matched": 6,
+  "indexed_tree_budget_bytes": 650000000,
+  "evidence_recovery": "Both 85-MB combined traces recovered independently from pinned Git and vault with matching hashes",
+  "vault_build_receipt": "portability-validation/isolated-ri-2026-09-10/runs/context-builds/isolated-environment/admission.json",
+  "vault_replay_receipt": "portability-validation/isolated-ri-2026-09-10/runs/portable-replay/isolated-replay/analysis.json",
+  "limits": [
+    "Windows RI end-to-end only; CI covers small link/validation fixtures on Ubuntu and Windows",
+    "2000/2010 and other-track fresh-recovery implementations remain outside the bounded 2020 CLI",
+    "Old full block-ensemble verifier has pre-existing block_trace.rs source drift"
+  ]
+}

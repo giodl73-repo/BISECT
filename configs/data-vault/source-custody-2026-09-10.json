@@ -1,0 +1,12 @@
+{
+  "schema": "bisect-source-custody-v1",
+  "vault_path": "artifacts/source-custody/replay-c52b767-and-main-d3dd4c6e.bundle",
+  "bytes": 178219394,
+  "sha256": "967cdc4ee763c103ffbf1143ecd2f40cbdb52196c518ffa7bb09217719fca71d",
+  "bundle_verification": "passed; complete history, no prerequisites",
+  "refs": {
+    "refs/heads/archive/replay-source-2026-09-09": "c52b767db3522c0e4439cd3b9f01e9f556e80e8b",
+    "refs/heads/main": "d3dd4c6ef6a66ffea490bca21a6ad2853ccaf257"
+  },
+  "scope": "Preserves previously detached historical replay source plus main at archive time; not a backup of future commits or uncommitted portability work."
+}

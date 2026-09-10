@@ -1,0 +1,3456 @@
+{
+  "schema": "bisect-data-catalog-v1",
+  "scope": "150 canonical contexts; 2020 TIGER archives, PL geography/population members, CD118 archives",
+  "items": [
+    {
+      "id": "context-2000-AK",
+      "group": "contexts",
+      "year": 2000,
+      "state": "AK",
+      "path": "derived-data/census/2000/certified/ak_blocks_2000.rctx",
+      "bytes": 5663263,
+      "sha256": "f596dea58700ffc4231c7dfc7e43e8aff0592f934f48f3e39569b552f036e40e"
+    },
+    {
+      "id": "context-2000-AL",
+      "group": "contexts",
+      "year": 2000,
+      "state": "AL",
+      "path": "derived-data/census/2000/certified/al_blocks_2000.rctx",
+      "bytes": 46676860,
+      "sha256": "0d59190fa8e50ca3e154394c70dbb7d2919bfac1a2a0ce0192e00e873e715460"
+    },
+    {
+      "id": "context-2000-AR",
+      "group": "contexts",
+      "year": 2000,
+      "state": "AR",
+      "path": "derived-data/census/2000/certified/ar_blocks_2000.rctx",
+      "bytes": 37112277,
+      "sha256": "6408adc1ff787c85511676bf3fd44d0be2fe5e4a3bfab11a04eb4d4270a245b3"
+    },
+    {
+      "id": "context-2000-AZ",
+      "group": "contexts",
+      "year": 2000,
+      "state": "AZ",
+      "path": "derived-data/census/2000/certified/az_blocks_2000.rctx",
+      "bytes": 42396517,
+      "sha256": "fe11f3db9914758c69a257be59ab2c5d8b2e15bb23ae69bf4dc4108950bc451f"
+    },
+    {
+      "id": "context-2000-CA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "CA",
+      "path": "derived-data/census/2000/certified/ca_blocks_2000.rctx",
+      "bytes": 143003191,
+      "sha256": "b33356af212cc73d88e7315c6d4f4cef7bdf07a27eacfcf891c1bebf6f6038f8"
+    },
+    {
+      "id": "context-2000-CO",
+      "group": "contexts",
+      "year": 2000,
+      "state": "CO",
+      "path": "derived-data/census/2000/certified/co_blocks_2000.rctx",
+      "bytes": 36973415,
+      "sha256": "15375fb29e59e1e0a0b039ed351761632c36c9944b6b474d1f22f1138a16ada8"
+    },
+    {
+      "id": "context-2000-CT",
+      "group": "contexts",
+      "year": 2000,
+      "state": "CT",
+      "path": "derived-data/census/2000/certified/ct_blocks_2000.rctx",
+      "bytes": 14370713,
+      "sha256": "09457bde7e8543b67c3587e519384b6909cf3e61765823246fd040043d8138dd"
+    },
+    {
+      "id": "context-2000-DE",
+      "group": "contexts",
+      "year": 2000,
+      "state": "DE",
+      "path": "derived-data/census/2000/certified/de_blocks_2000.rctx",
+      "bytes": 4447986,
+      "sha256": "08524f1d5918d065c46a1b425ac4a933035bdf3c14d29fcc0802bdb48f3facfc"
+    },
+    {
+      "id": "context-2000-FL",
+      "group": "contexts",
+      "year": 2000,
+      "state": "FL",
+      "path": "derived-data/census/2000/certified/fl_blocks_2000.rctx",
+      "bytes": 96020023,
+      "sha256": "bf90078d1b09ca62f177e5fe2ffe6009bc6949075ca97d89d71e179ffbe51dfb"
+    },
+    {
+      "id": "context-2000-GA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "GA",
+      "path": "derived-data/census/2000/certified/ga_blocks_2000.rctx",
+      "bytes": 57071324,
+      "sha256": "4dc77b86c522446b5deae598c84352226f2e92c6c5a1047b7e2d27cee7951910"
+    },
+    {
+      "id": "context-2000-HI",
+      "group": "contexts",
+      "year": 2000,
+      "state": "HI",
+      "path": "derived-data/census/2000/certified/hi_blocks_2000.rctx",
+      "bytes": 6136507,
+      "sha256": "9840c42f4a6c683e7059efa316cffd6c3d3707de6549e062cca62d30c697c7b2"
+    },
+    {
+      "id": "context-2000-IA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "IA",
+      "path": "derived-data/census/2000/certified/ia_blocks_2000.rctx",
+      "bytes": 43030840,
+      "sha256": "b7f00d28ca504452a2df40a92da59b693e0b52067de2910edeffcd19829abcf9"
+    },
+    {
+      "id": "context-2000-ID",
+      "group": "contexts",
+      "year": 2000,
+      "state": "ID",
+      "path": "derived-data/census/2000/certified/id_blocks_2000.rctx",
+      "bytes": 23310833,
+      "sha256": "577a71bb22a4c260b3eedd441e7f47e7e5c24c738c0061de3b412b4cdc859184"
+    },
+    {
+      "id": "context-2000-IL",
+      "group": "contexts",
+      "year": 2000,
+      "state": "IL",
+      "path": "derived-data/census/2000/certified/il_blocks_2000.rctx",
+      "bytes": 95302834,
+      "sha256": "28b5ef1f1e5023852960bb167275432bb77d8bf15ca21280374c3d0d9438913d"
+    },
+    {
+      "id": "context-2000-IN",
+      "group": "contexts",
+      "year": 2000,
+      "state": "IN",
+      "path": "derived-data/census/2000/certified/in_blocks_2000.rctx",
+      "bytes": 52330850,
+      "sha256": "e5ddf55a50e95ded530996a2475a3c348a44431d73cd833b8af0d3efd4b8a02f"
+    },
+    {
+      "id": "context-2000-KS",
+      "group": "contexts",
+      "year": 2000,
+      "state": "KS",
+      "path": "derived-data/census/2000/certified/ks_blocks_2000.rctx",
+      "bytes": 44285682,
+      "sha256": "dd84d9dee6b75295bb421ae15d1499465498adba677eee1d5945bfa2e8336fcb"
+    },
+    {
+      "id": "context-2000-KY",
+      "group": "contexts",
+      "year": 2000,
+      "state": "KY",
+      "path": "derived-data/census/2000/certified/ky_blocks_2000.rctx",
+      "bytes": 32532849,
+      "sha256": "e1a30656a84f58f15d3ac1db47e69d354a7130f296d4a6fdcddb092ed5eb454d"
+    },
+    {
+      "id": "context-2000-LA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "LA",
+      "path": "derived-data/census/2000/certified/la_blocks_2000.rctx",
+      "bytes": 36725835,
+      "sha256": "fde8ba97bae1e8a08d8a6671127daa014b12755ff32b1445b0a7551cc70547f0"
+    },
+    {
+      "id": "context-2000-MA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "MA",
+      "path": "derived-data/census/2000/certified/ma_blocks_2000.rctx",
+      "bytes": 29302004,
+      "sha256": "ed3fff28655ae99bbb625a3a2745bc3d350469edd8de26fee5153ff1a3f9d129"
+    },
+    {
+      "id": "context-2000-MD",
+      "group": "contexts",
+      "year": 2000,
+      "state": "MD",
+      "path": "derived-data/census/2000/certified/md_blocks_2000.rctx",
+      "bytes": 20705151,
+      "sha256": "862d33d1b7a98aba90d98edb3532715692ce0892e565297efc492f97c76ae26d"
+    },
+    {
+      "id": "context-2000-ME",
+      "group": "contexts",
+      "year": 2000,
+      "state": "ME",
+      "path": "derived-data/census/2000/certified/me_blocks_2000.rctx",
+      "bytes": 15061085,
+      "sha256": "1129e050ae7b4f244899edfa090b23f70ffcebefb72b401d649434383b6877db"
+    },
+    {
+      "id": "context-2000-MI",
+      "group": "contexts",
+      "year": 2000,
+      "state": "MI",
+      "path": "derived-data/census/2000/certified/mi_blocks_2000.rctx",
+      "bytes": 67769364,
+      "sha256": "29c8b0ec5f04987060ce88c07a8cd67826e47cfd98d1a1863e7e0fec21679e84"
+    },
+    {
+      "id": "context-2000-MN",
+      "group": "contexts",
+      "year": 2000,
+      "state": "MN",
+      "path": "derived-data/census/2000/certified/mn_blocks_2000.rctx",
+      "bytes": 51707628,
+      "sha256": "8077c8cb92a8e0ec1efe1d2913ed9a4ec1c3a5322f817d610305d18010303534"
+    },
+    {
+      "id": "context-2000-MO",
+      "group": "contexts",
+      "year": 2000,
+      "state": "MO",
+      "path": "derived-data/census/2000/certified/mo_blocks_2000.rctx",
+      "bytes": 63512882,
+      "sha256": "1af076e3c00aab3d9ec834b99e9eba608ab511b3393dfe0f82603f91c877f587"
+    },
+    {
+      "id": "context-2000-MS",
+      "group": "contexts",
+      "year": 2000,
+      "state": "MS",
+      "path": "derived-data/census/2000/certified/ms_blocks_2000.rctx",
+      "bytes": 36008823,
+      "sha256": "6909d90aedd853f3013e43df96b2c1ae6830c2aff56228fba2ddd28ee839d5c2"
+    },
+    {
+      "id": "context-2000-MT",
+      "group": "contexts",
+      "year": 2000,
+      "state": "MT",
+      "path": "derived-data/census/2000/certified/mt_blocks_2000.rctx",
+      "bytes": 25893230,
+      "sha256": "7f7a1dff30de9d6981d052703eaf06272254c09eb391d920aa18c56ab44df183"
+    },
+    {
+      "id": "context-2000-NC",
+      "group": "contexts",
+      "year": 2000,
+      "state": "NC",
+      "path": "derived-data/census/2000/certified/nc_blocks_2000.rctx",
+      "bytes": 61747626,
+      "sha256": "9315f38231ef4f15c6c9981e70ec7dcd64f13eb19905e3b0391a317f8e5468e9"
+    },
+    {
+      "id": "context-2000-ND",
+      "group": "contexts",
+      "year": 2000,
+      "state": "ND",
+      "path": "derived-data/census/2000/certified/nd_blocks_2000.rctx",
+      "bytes": 21149774,
+      "sha256": "8303eae664155bd802c015bb2838e82ddb2a3645720082a57cad4f595c5d2d3e"
+    },
+    {
+      "id": "context-2000-NE",
+      "group": "contexts",
+      "year": 2000,
+      "state": "NE",
+      "path": "derived-data/census/2000/certified/ne_blocks_2000.rctx",
+      "bytes": 34078193,
+      "sha256": "572409a14e6d261de73fa8e99260b56245f7d348c1663122464c53665d7e98b6"
+    },
+    {
+      "id": "context-2000-NH",
+      "group": "contexts",
+      "year": 2000,
+      "state": "NH",
+      "path": "derived-data/census/2000/certified/nh_blocks_2000.rctx",
+      "bytes": 8979197,
+      "sha256": "48688eb53263466f91387bae4c484518368493317b38e91c17ebfa7f93d2705d"
+    },
+    {
+      "id": "context-2000-NJ",
+      "group": "contexts",
+      "year": 2000,
+      "state": "NJ",
+      "path": "derived-data/census/2000/certified/nj_blocks_2000.rctx",
+      "bytes": 37288572,
+      "sha256": "95e58dd62b51dc4620a97bd099715bb180a56d8ba041688b3540f0637a659140"
+    },
+    {
+      "id": "context-2000-NM",
+      "group": "contexts",
+      "year": 2000,
+      "state": "NM",
+      "path": "derived-data/census/2000/certified/nm_blocks_2000.rctx",
+      "bytes": 36502575,
+      "sha256": "9e32283354cee98dd81ad38caa93f042900bff8d2fa7b16172b4b3bb7fa3b99f"
+    },
+    {
+      "id": "context-2000-NV",
+      "group": "contexts",
+      "year": 2000,
+      "state": "NV",
+      "path": "derived-data/census/2000/certified/nv_blocks_2000.rctx",
+      "bytes": 16193906,
+      "sha256": "a9d68bbe2ee9eac3e1d9df1f32a8492bf96f6bbb2e21c8b13fbe3cc190270601"
+    },
+    {
+      "id": "context-2000-NY",
+      "group": "contexts",
+      "year": 2000,
+      "state": "NY",
+      "path": "derived-data/census/2000/certified/ny_blocks_2000.rctx",
+      "bytes": 78792351,
+      "sha256": "9e854cc7ec04ba7909ff313f449b0a9c432f0e54a851ee8e380e35154fdb345d"
+    },
+    {
+      "id": "context-2000-OH",
+      "group": "contexts",
+      "year": 2000,
+      "state": "OH",
+      "path": "derived-data/census/2000/certified/oh_blocks_2000.rctx",
+      "bytes": 72843444,
+      "sha256": "d54dbd144a048309d9ce22fdb24082697b2d7843610d730d3a22892dc0682980"
+    },
+    {
+      "id": "context-2000-OK",
+      "group": "contexts",
+      "year": 2000,
+      "state": "OK",
+      "path": "derived-data/census/2000/certified/ok_blocks_2000.rctx",
+      "bytes": 45232152,
+      "sha256": "0b69dca99e88f2dad52076db33ec80256ffb158b0fbb86e584510d2c1d16cedd"
+    },
+    {
+      "id": "context-2000-OR",
+      "group": "contexts",
+      "year": 2000,
+      "state": "OR",
+      "path": "derived-data/census/2000/certified/or_blocks_2000.rctx",
+      "bytes": 41818039,
+      "sha256": "76afb443a10c9a36046212308c03ef2c8bb137a6d8682eb931203df23cec5625"
+    },
+    {
+      "id": "context-2000-PA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "PA",
+      "path": "derived-data/census/2000/certified/pa_blocks_2000.rctx",
+      "bytes": 85354760,
+      "sha256": "6b721325c730d389d7d8b826341752ab5f8044fcdc2a373b7a6161912aa64f7b"
+    },
+    {
+      "id": "context-2000-RI",
+      "group": "contexts",
+      "year": 2000,
+      "state": "RI",
+      "path": "derived-data/census/2000/certified/ri_blocks_2000.rctx",
+      "bytes": 5564942,
+      "sha256": "ec6800814c02606514be1bcb00b0ee5e241499c67c75da18b65b348a19720694"
+    },
+    {
+      "id": "context-2000-SC",
+      "group": "contexts",
+      "year": 2000,
+      "state": "SC",
+      "path": "derived-data/census/2000/certified/sc_blocks_2000.rctx",
+      "bytes": 38427557,
+      "sha256": "ef2620488cd1898ba9498c330429853405c0fda6f03c5ad51cd83ceec9b8e601"
+    },
+    {
+      "id": "context-2000-SD",
+      "group": "contexts",
+      "year": 2000,
+      "state": "SD",
+      "path": "derived-data/census/2000/certified/sd_blocks_2000.rctx",
+      "bytes": 19678181,
+      "sha256": "41bf34aefd564a9c80ada805cb0181b6a355738a44ed2ff89001580cab9f5022"
+    },
+    {
+      "id": "context-2000-TN",
+      "group": "contexts",
+      "year": 2000,
+      "state": "TN",
+      "path": "derived-data/census/2000/certified/tn_blocks_2000.rctx",
+      "bytes": 48954148,
+      "sha256": "f38025ef9fb5f559e1610ccac7d2b75debea65c98204c45c3eb8a074dfd261a8"
+    },
+    {
+      "id": "context-2000-TX",
+      "group": "contexts",
+      "year": 2000,
+      "state": "TX",
+      "path": "derived-data/census/2000/certified/tx_blocks_2000.rctx",
+      "bytes": 180418769,
+      "sha256": "fe92bad2c3e61b6f3a3ddbc91657ea9fa867ded2de93a9ccd3f8a017f89c1fa8"
+    },
+    {
+      "id": "context-2000-UT",
+      "group": "contexts",
+      "year": 2000,
+      "state": "UT",
+      "path": "derived-data/census/2000/certified/ut_blocks_2000.rctx",
+      "bytes": 19800378,
+      "sha256": "bc51525ef684f6267a9ffaeeb8d017ece7ee9f50620d2a20b6e2ffbf7c34870f"
+    },
+    {
+      "id": "context-2000-VA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "VA",
+      "path": "derived-data/census/2000/certified/va_blocks_2000.rctx",
+      "bytes": 38560299,
+      "sha256": "57de27298f552fb1263aaf2281e7c6ad90ca9f2aa128fc30bb3ccf3c364fa376"
+    },
+    {
+      "id": "context-2000-VT",
+      "group": "contexts",
+      "year": 2000,
+      "state": "VT",
+      "path": "derived-data/census/2000/certified/vt_blocks_2000.rctx",
+      "bytes": 6433473,
+      "sha256": "73cc24aedf0ee94a5d79a11d1adba41ee889ced2bb253344ce3fb4e1edf71f4d"
+    },
+    {
+      "id": "context-2000-WA",
+      "group": "contexts",
+      "year": 2000,
+      "state": "WA",
+      "path": "derived-data/census/2000/certified/wa_blocks_2000.rctx",
+      "bytes": 45057623,
+      "sha256": "4bc73dbcb3356d512e13e32ec9107a3d7f51d2ca496107f7bbd8724614b7041e"
+    },
+    {
+      "id": "context-2000-WI",
+      "group": "contexts",
+      "year": 2000,
+      "state": "WI",
+      "path": "derived-data/census/2000/certified/wi_blocks_2000.rctx",
+      "bytes": 52662695,
+      "sha256": "8d83b7a8157b4e6b772dcd43e8344506c6e618ea46ce0124db6f55c8034c4e1a"
+    },
+    {
+      "id": "context-2000-WV",
+      "group": "contexts",
+      "year": 2000,
+      "state": "WV",
+      "path": "derived-data/census/2000/certified/wv_blocks_2000.rctx",
+      "bytes": 21540067,
+      "sha256": "1bdb03903e48c7c726f56ae84737139ca1dd9977381caac46fcee4edd3e087a7"
+    },
+    {
+      "id": "context-2000-WY",
+      "group": "contexts",
+      "year": 2000,
+      "state": "WY",
+      "path": "derived-data/census/2000/certified/wy_blocks_2000.rctx",
+      "bytes": 18184461,
+      "sha256": "3a2fc05442c070803950d358242a870eb52b7b975d068548a025ab48f48f10ed"
+    },
+    {
+      "id": "context-2010-AK",
+      "group": "contexts",
+      "year": 2010,
+      "state": "AK",
+      "path": "derived-data/census/2010/certified/ak_blocks_2010.rctx",
+      "bytes": 11929905,
+      "sha256": "0648d6b1692e1aec2f28526972608b42b9e8a62d3c2d671713e82e8a0a4f5b5c"
+    },
+    {
+      "id": "context-2010-AL",
+      "group": "contexts",
+      "year": 2010,
+      "state": "AL",
+      "path": "derived-data/census/2010/certified/al_blocks_2010.rctx",
+      "bytes": 66432522,
+      "sha256": "5ef1c0a45ec6ceadc6bb40188e6bb5f8dea81c4aad43b005c8eab5308d29a6b8"
+    },
+    {
+      "id": "context-2010-AR",
+      "group": "contexts",
+      "year": 2010,
+      "state": "AR",
+      "path": "derived-data/census/2010/certified/ar_blocks_2010.rctx",
+      "bytes": 48776238,
+      "sha256": "91490401d458af12b234f9e918017b8af896585ba731e5f0dcddd3f201b50c4c"
+    },
+    {
+      "id": "context-2010-AZ",
+      "group": "contexts",
+      "year": 2010,
+      "state": "AZ",
+      "path": "derived-data/census/2010/certified/az_blocks_2010.rctx",
+      "bytes": 64477300,
+      "sha256": "db5efb17347ed190d1682b1c0bc071598e94f07990b7b46836af4826367bc3d1"
+    },
+    {
+      "id": "context-2010-CA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "CA",
+      "path": "derived-data/census/2010/certified/ca_blocks_2010.rctx",
+      "bytes": 189192422,
+      "sha256": "d6e3afd8950c8b2867d51cea6dac3b9ccff6fd5d9b5720baab81fc83ed3314b7"
+    },
+    {
+      "id": "context-2010-CO",
+      "group": "contexts",
+      "year": 2010,
+      "state": "CO",
+      "path": "derived-data/census/2010/certified/co_blocks_2010.rctx",
+      "bytes": 52550175,
+      "sha256": "7b3f447decc076ed170b86f3e25758970e6dd3cdc9e06084ddab5beb4190978e"
+    },
+    {
+      "id": "context-2010-CT",
+      "group": "contexts",
+      "year": 2010,
+      "state": "CT",
+      "path": "derived-data/census/2010/certified/ct_blocks_2010.rctx",
+      "bytes": 17885414,
+      "sha256": "e5c4c384bd61837180546491aefd266d2a0255fb05c3b9fd56ac97772735cb53"
+    },
+    {
+      "id": "context-2010-DE",
+      "group": "contexts",
+      "year": 2010,
+      "state": "DE",
+      "path": "derived-data/census/2010/certified/de_blocks_2010.rctx",
+      "bytes": 6148714,
+      "sha256": "254acb21691591564bcb30d1999b888c362f08b65d91c6eb05fab599c826e32e"
+    },
+    {
+      "id": "context-2010-FL",
+      "group": "contexts",
+      "year": 2010,
+      "state": "FL",
+      "path": "derived-data/census/2010/certified/fl_blocks_2010.rctx",
+      "bytes": 127062668,
+      "sha256": "ec272c5e80d6237fca3dde2900c801a4e536df7444fbc7751b131070b2586973"
+    },
+    {
+      "id": "context-2010-GA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "GA",
+      "path": "derived-data/census/2010/certified/ga_blocks_2010.rctx",
+      "bytes": 76776606,
+      "sha256": "f96ba3ae093b6ba636a13a65704090b246256eb99928c39ab1c4a3708db1165e"
+    },
+    {
+      "id": "context-2010-HI",
+      "group": "contexts",
+      "year": 2010,
+      "state": "HI",
+      "path": "derived-data/census/2010/certified/hi_blocks_2010.rctx",
+      "bytes": 8070594,
+      "sha256": "4aae32b70f7dd0cb97b4c17bc3af038d3c15dfd4fb8ef5b4c10de36914edda58"
+    },
+    {
+      "id": "context-2010-IA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "IA",
+      "path": "derived-data/census/2010/certified/ia_blocks_2010.rctx",
+      "bytes": 55294269,
+      "sha256": "7e5443d283e341515c48d9fc50945c545f84069b5d3881425dfbe13058c2d24a"
+    },
+    {
+      "id": "context-2010-ID",
+      "group": "contexts",
+      "year": 2010,
+      "state": "ID",
+      "path": "derived-data/census/2010/certified/id_blocks_2010.rctx",
+      "bytes": 39150646,
+      "sha256": "12ea0735064ee9561afaf9d576cf28995376f89d67937e9ceacd35ea7871ed6e"
+    },
+    {
+      "id": "context-2010-IL",
+      "group": "contexts",
+      "year": 2010,
+      "state": "IL",
+      "path": "derived-data/census/2010/certified/il_blocks_2010.rctx",
+      "bytes": 117291454,
+      "sha256": "7368c64e1e38b86c8e324112c237c9fc1a599e81ebf02afb2b1a00d288b488bb"
+    },
+    {
+      "id": "context-2010-IN",
+      "group": "contexts",
+      "year": 2010,
+      "state": "IN",
+      "path": "derived-data/census/2010/certified/in_blocks_2010.rctx",
+      "bytes": 69257888,
+      "sha256": "500f104d1939f0d42813a234eb19486424ffb5bea693956a0a71247c52f08ac7"
+    },
+    {
+      "id": "context-2010-KS",
+      "group": "contexts",
+      "year": 2010,
+      "state": "KS",
+      "path": "derived-data/census/2010/certified/ks_blocks_2010.rctx",
+      "bytes": 60816828,
+      "sha256": "56cc9a2f1aa21d87d1274aa1668547ab1aed89fc8314a667f4c8a78fee4730ad"
+    },
+    {
+      "id": "context-2010-KY",
+      "group": "contexts",
+      "year": 2010,
+      "state": "KY",
+      "path": "derived-data/census/2010/certified/ky_blocks_2010.rctx",
+      "bytes": 42383291,
+      "sha256": "7914698823769abb5f3b83cbf89e24ba63e1924bdc0bdc1776b7191685c5c59e"
+    },
+    {
+      "id": "context-2010-LA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "LA",
+      "path": "derived-data/census/2010/certified/la_blocks_2010.rctx",
+      "bytes": 52926599,
+      "sha256": "b5beb2b13fe38117c3116829bb0277ebeccfd9cdefea5cac58bfd6a76ed988c5"
+    },
+    {
+      "id": "context-2010-MA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "MA",
+      "path": "derived-data/census/2010/certified/ma_blocks_2010.rctx",
+      "bytes": 41562202,
+      "sha256": "54ad9f0693b20187fe881b90a45371acacd3c6f56a5c60813c26ada977acf5e8"
+    },
+    {
+      "id": "context-2010-MD",
+      "group": "contexts",
+      "year": 2010,
+      "state": "MD",
+      "path": "derived-data/census/2010/certified/md_blocks_2010.rctx",
+      "bytes": 37519782,
+      "sha256": "5b8cc6bebbc2c20d637ffa6dfa2cf8685f01ab3fb98f9dab0078f9c3151a83db"
+    },
+    {
+      "id": "context-2010-ME",
+      "group": "contexts",
+      "year": 2010,
+      "state": "ME",
+      "path": "derived-data/census/2010/certified/me_blocks_2010.rctx",
+      "bytes": 17943036,
+      "sha256": "d07a29ff7029a1e5a24f22d686f6a9d22f38dc44ae32d9dcb75d6326a3de0ad2"
+    },
+    {
+      "id": "context-2010-MI",
+      "group": "contexts",
+      "year": 2010,
+      "state": "MI",
+      "path": "derived-data/census/2010/certified/mi_blocks_2010.rctx",
+      "bytes": 85616413,
+      "sha256": "ba19ba2427fb90ad60b4b42928125c6d9ad5cc5efc1be56337c847bf77c4c20e"
+    },
+    {
+      "id": "context-2010-MN",
+      "group": "contexts",
+      "year": 2010,
+      "state": "MN",
+      "path": "derived-data/census/2010/certified/mn_blocks_2010.rctx",
+      "bytes": 66613468,
+      "sha256": "cf7096a80d71f50c7cfd3b7b1a4e7a026831822a8190df51d918be2c6362fc76"
+    },
+    {
+      "id": "context-2010-MO",
+      "group": "contexts",
+      "year": 2010,
+      "state": "MO",
+      "path": "derived-data/census/2010/certified/mo_blocks_2010.rctx",
+      "bytes": 89674338,
+      "sha256": "41b30059d3c7d693751fae80a4ecf899d7e79e31d58048c79b52d25ec9006b3a"
+    },
+    {
+      "id": "context-2010-MS",
+      "group": "contexts",
+      "year": 2010,
+      "state": "MS",
+      "path": "derived-data/census/2010/certified/ms_blocks_2010.rctx",
+      "bytes": 45222593,
+      "sha256": "98514153abf2d9dd69898ab1d58850ead563fa04424f0214b2a19e3bcae01356"
+    },
+    {
+      "id": "context-2010-MT",
+      "group": "contexts",
+      "year": 2010,
+      "state": "MT",
+      "path": "derived-data/census/2010/certified/mt_blocks_2010.rctx",
+      "bytes": 34396470,
+      "sha256": "6fb083e3fd38d27bd917096f57a1d0e3c285a4245760f9f8ef816b5d0f06ce0e"
+    },
+    {
+      "id": "context-2010-NC",
+      "group": "contexts",
+      "year": 2010,
+      "state": "NC",
+      "path": "derived-data/census/2010/certified/nc_blocks_2010.rctx",
+      "bytes": 76642020,
+      "sha256": "5186a43056c6c3f9c933590943ac1d4b97eb73718fec38d54e54d873e3100bff"
+    },
+    {
+      "id": "context-2010-ND",
+      "group": "contexts",
+      "year": 2010,
+      "state": "ND",
+      "path": "derived-data/census/2010/certified/nd_blocks_2010.rctx",
+      "bytes": 33793314,
+      "sha256": "6a0dc68373b0c6bb4db3220038161342d76ceabfefd5cf7d33a0f65480a08d7e"
+    },
+    {
+      "id": "context-2010-NE",
+      "group": "contexts",
+      "year": 2010,
+      "state": "NE",
+      "path": "derived-data/census/2010/certified/ne_blocks_2010.rctx",
+      "bytes": 49376523,
+      "sha256": "50a7d3fd2165e43aa8285ae0b9e3f1b463290ba46f679eb7816993d8d3acb3cc"
+    },
+    {
+      "id": "context-2010-NH",
+      "group": "contexts",
+      "year": 2010,
+      "state": "NH",
+      "path": "derived-data/census/2010/certified/nh_blocks_2010.rctx",
+      "bytes": 12502652,
+      "sha256": "71021ba4cbcb3467520ba7d63cb6247a2d8c59dd5421341e246d808852bbde3b"
+    },
+    {
+      "id": "context-2010-NJ",
+      "group": "contexts",
+      "year": 2010,
+      "state": "NJ",
+      "path": "derived-data/census/2010/certified/nj_blocks_2010.rctx",
+      "bytes": 44524405,
+      "sha256": "f81b41f15988391ab963d73275ae9d28d41ccc6926b1a8a19f413c9b35c66a25"
+    },
+    {
+      "id": "context-2010-NM",
+      "group": "contexts",
+      "year": 2010,
+      "state": "NM",
+      "path": "derived-data/census/2010/certified/nm_blocks_2010.rctx",
+      "bytes": 44719746,
+      "sha256": "c4f096127663fc93e09560d3ae0569ee3afaaff33223709f8880a430cd0fb469"
+    },
+    {
+      "id": "context-2010-NV",
+      "group": "contexts",
+      "year": 2010,
+      "state": "NV",
+      "path": "derived-data/census/2010/certified/nv_blocks_2010.rctx",
+      "bytes": 22253317,
+      "sha256": "8c549e6a8ad18cd4738f1cdd204d8e4e6cf579b22a46cdbb37e762c7609dab15"
+    },
+    {
+      "id": "context-2010-NY",
+      "group": "contexts",
+      "year": 2010,
+      "state": "NY",
+      "path": "derived-data/census/2010/certified/ny_blocks_2010.rctx",
+      "bytes": 92510294,
+      "sha256": "a1d1bd75c3922f890f15336d3b43f0e987d5191e89e0f8021788dc3e08585408"
+    },
+    {
+      "id": "context-2010-OH",
+      "group": "contexts",
+      "year": 2010,
+      "state": "OH",
+      "path": "derived-data/census/2010/certified/oh_blocks_2010.rctx",
+      "bytes": 95648147,
+      "sha256": "dcbc927e5b3daa50c309ac2b9a0d0ce09a8fe8ee03e8db1913ecabc8e94c95a4"
+    },
+    {
+      "id": "context-2010-OK",
+      "group": "contexts",
+      "year": 2010,
+      "state": "OK",
+      "path": "derived-data/census/2010/certified/ok_blocks_2010.rctx",
+      "bytes": 69025895,
+      "sha256": "e223ba7a3baaaf09be054e60bf397bbd710458d2388b306d8f431af83e67a827"
+    },
+    {
+      "id": "context-2010-OR",
+      "group": "contexts",
+      "year": 2010,
+      "state": "OR",
+      "path": "derived-data/census/2010/certified/or_blocks_2010.rctx",
+      "bytes": 52734210,
+      "sha256": "ae630eb2c617fa4be20a8eba5815b4d48df1a8db5fc0d9ad0cead72ea3961789"
+    },
+    {
+      "id": "context-2010-PA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "PA",
+      "path": "derived-data/census/2010/certified/pa_blocks_2010.rctx",
+      "bytes": 111262557,
+      "sha256": "3ee58667c72527f3ada0bcd99104fd580f2805fe6b5cb26e293173e69acb0fea"
+    },
+    {
+      "id": "context-2010-RI",
+      "group": "contexts",
+      "year": 2010,
+      "state": "RI",
+      "path": "derived-data/census/2010/certified/ri_blocks_2010.rctx",
+      "bytes": 6637195,
+      "sha256": "b46fb8e3ddf16c87061b1715a76ceaa72237b9752cab06a19ecdac3bb18f5019"
+    },
+    {
+      "id": "context-2010-SC",
+      "group": "contexts",
+      "year": 2010,
+      "state": "SC",
+      "path": "derived-data/census/2010/certified/sc_blocks_2010.rctx",
+      "bytes": 48081659,
+      "sha256": "81e4863f4041c74d28aff41b0cb2082d39bb16d07c890b358a7e951a6c047d0b"
+    },
+    {
+      "id": "context-2010-SD",
+      "group": "contexts",
+      "year": 2010,
+      "state": "SD",
+      "path": "derived-data/census/2010/certified/sd_blocks_2010.rctx",
+      "bytes": 22123551,
+      "sha256": "61947c08ecd126271d54bcf462ed119367897e2c8ff5885263ab19ebd52f98bb"
+    },
+    {
+      "id": "context-2010-TN",
+      "group": "contexts",
+      "year": 2010,
+      "state": "TN",
+      "path": "derived-data/census/2010/certified/tn_blocks_2010.rctx",
+      "bytes": 64371044,
+      "sha256": "9de7f9eb9b902f28344997da42b3880fc755dc12c932184eebdb9b04e0e03655"
+    },
+    {
+      "id": "context-2010-TX",
+      "group": "contexts",
+      "year": 2010,
+      "state": "TX",
+      "path": "derived-data/census/2010/certified/tx_blocks_2010.rctx",
+      "bytes": 242187518,
+      "sha256": "0d02f5f64628041bb1d77be87630bc8c6ed0df10312e5e24fd32aa033ccdaca3"
+    },
+    {
+      "id": "context-2010-UT",
+      "group": "contexts",
+      "year": 2010,
+      "state": "UT",
+      "path": "derived-data/census/2010/certified/ut_blocks_2010.rctx",
+      "bytes": 30595662,
+      "sha256": "ea89f3938dfa6347c52366c3c53b1eef25b5604f5e7d94a3abc262f2fd6a61d3"
+    },
+    {
+      "id": "context-2010-VA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "VA",
+      "path": "derived-data/census/2010/certified/va_blocks_2010.rctx",
+      "bytes": 75707535,
+      "sha256": "acf6a71625212ec991e2eaa455f635c1fb2604f289d5c917c3c901867878ffbc"
+    },
+    {
+      "id": "context-2010-VT",
+      "group": "contexts",
+      "year": 2010,
+      "state": "VT",
+      "path": "derived-data/census/2010/certified/vt_blocks_2010.rctx",
+      "bytes": 8290991,
+      "sha256": "badcc8933323307f2bc4ac2465b698d428a86b97b0a92563fcb8e96e4a80748b"
+    },
+    {
+      "id": "context-2010-WA",
+      "group": "contexts",
+      "year": 2010,
+      "state": "WA",
+      "path": "derived-data/census/2010/certified/wa_blocks_2010.rctx",
+      "bytes": 51095329,
+      "sha256": "fd8807498560261fdf67de1fbd525343321b561524ed898517634fce9139fc63"
+    },
+    {
+      "id": "context-2010-WI",
+      "group": "contexts",
+      "year": 2010,
+      "state": "WI",
+      "path": "derived-data/census/2010/certified/wi_blocks_2010.rctx",
+      "bytes": 65513092,
+      "sha256": "bdbfb3e2a2b9d3e7fc324c5d811eabca28a319c9e706ed49dc774bd6f2466720"
+    },
+    {
+      "id": "context-2010-WV",
+      "group": "contexts",
+      "year": 2010,
+      "state": "WV",
+      "path": "derived-data/census/2010/certified/wv_blocks_2010.rctx",
+      "bytes": 35445073,
+      "sha256": "f2d5e14297e1d42c8f5bbefb12fc374f51aea7412e34095ee1ea7b449b5367e8"
+    },
+    {
+      "id": "context-2010-WY",
+      "group": "contexts",
+      "year": 2010,
+      "state": "WY",
+      "path": "derived-data/census/2010/certified/wy_blocks_2010.rctx",
+      "bytes": 22841799,
+      "sha256": "a27519480b265866c294f2c45c88e27633db5a935709154519179d71b55a8d81"
+    },
+    {
+      "id": "context-2020-AK",
+      "group": "contexts",
+      "year": 2020,
+      "state": "AK",
+      "path": "derived-data/census/2020/certified/ak_blocks_2020.rctx",
+      "bytes": 7454182,
+      "sha256": "30f630d3a6a63fd9bb87c6e0d197c9921dfd804f04221e7c57a9f9ef257cd874"
+    },
+    {
+      "id": "context-2020-AL",
+      "group": "contexts",
+      "year": 2020,
+      "state": "AL",
+      "path": "derived-data/census/2020/certified/al_blocks_2020.rctx",
+      "bytes": 49791051,
+      "sha256": "5d9acbcfddbac6fd3995f5ed4982535b458777c5cbe43d020bea317e3a376c90"
+    },
+    {
+      "id": "context-2020-AR",
+      "group": "contexts",
+      "year": 2020,
+      "state": "AR",
+      "path": "derived-data/census/2020/certified/ar_blocks_2020.rctx",
+      "bytes": 36109463,
+      "sha256": "ee37bd496c00a4f01bfff6f0bebafaf3e845080d16e1ec86f0866fd5165b03cc"
+    },
+    {
+      "id": "context-2020-AZ",
+      "group": "contexts",
+      "year": 2020,
+      "state": "AZ",
+      "path": "derived-data/census/2020/certified/az_blocks_2020.rctx",
+      "bytes": 42124013,
+      "sha256": "266f05a0820c2bacb9bd9e4d9546a82bc17dde995d6eff4c27785bb7fb059067"
+    },
+    {
+      "id": "context-2020-CA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "CA",
+      "path": "derived-data/census/2020/certified/ca_blocks_2020.rctx",
+      "bytes": 140071197,
+      "sha256": "8c8509a8d1f685c4a0756e8b45bac1340840514041562c8b33c00394b68303ce"
+    },
+    {
+      "id": "context-2020-CO",
+      "group": "contexts",
+      "year": 2020,
+      "state": "CO",
+      "path": "derived-data/census/2020/certified/co_blocks_2020.rctx",
+      "bytes": 37196659,
+      "sha256": "9897646633a4071560afead6ff5c243f55aecd45a0d1d22e778f9fa2d9460242"
+    },
+    {
+      "id": "context-2020-CT",
+      "group": "contexts",
+      "year": 2020,
+      "state": "CT",
+      "path": "derived-data/census/2020/certified/ct_blocks_2020.rctx",
+      "bytes": 13400992,
+      "sha256": "7c39aef1dfd49fc955af9de40e824f46b0119fc1650240a6081c0b3b72470675"
+    },
+    {
+      "id": "context-2020-DE",
+      "group": "contexts",
+      "year": 2020,
+      "state": "DE",
+      "path": "derived-data/census/2020/certified/de_blocks_2020.rctx",
+      "bytes": 5134246,
+      "sha256": "de7a70c82e6a89ebb00f31e1638a99f4562e4d7204b44cc12c21542320c48549"
+    },
+    {
+      "id": "context-2020-FL",
+      "group": "contexts",
+      "year": 2020,
+      "state": "FL",
+      "path": "derived-data/census/2020/certified/fl_blocks_2020.rctx",
+      "bytes": 103111385,
+      "sha256": "fc6445ae9c73e8f26e5b734a999fb36b881f8fbda9a3a21b7e8af5ade0f8b05a"
+    },
+    {
+      "id": "context-2020-GA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "GA",
+      "path": "derived-data/census/2020/certified/ga_blocks_2020.rctx",
+      "bytes": 62228969,
+      "sha256": "80029d0119f8d67017a79c8a550c9ff55722207ab79536cc87247188323c1939"
+    },
+    {
+      "id": "context-2020-HI",
+      "group": "contexts",
+      "year": 2020,
+      "state": "HI",
+      "path": "derived-data/census/2020/certified/hi_blocks_2020.rctx",
+      "bytes": 4564804,
+      "sha256": "6caf64b658d1a172b371a38b491313eae194bb4d3b28758413b2d19e3a49b600"
+    },
+    {
+      "id": "context-2020-IA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "IA",
+      "path": "derived-data/census/2020/certified/ia_blocks_2020.rctx",
+      "bytes": 45099639,
+      "sha256": "a4e65f196156aafd5fba20040cab3d2331dd50ec4b4e23d497dab7073857f55e"
+    },
+    {
+      "id": "context-2020-ID",
+      "group": "contexts",
+      "year": 2020,
+      "state": "ID",
+      "path": "derived-data/census/2020/certified/id_blocks_2020.rctx",
+      "bytes": 21856491,
+      "sha256": "54eadb1e406ddfdb03dc4acf5c647b86f9b257600180380e789966e41ab6b342"
+    },
+    {
+      "id": "context-2020-IL",
+      "group": "contexts",
+      "year": 2020,
+      "state": "IL",
+      "path": "derived-data/census/2020/certified/il_blocks_2020.rctx",
+      "bytes": 97145750,
+      "sha256": "d2b4b3988e3871c2315655dab6d48d963b0f0c8edc8570ab4c6584b9459f5ee5"
+    },
+    {
+      "id": "context-2020-IN",
+      "group": "contexts",
+      "year": 2020,
+      "state": "IN",
+      "path": "derived-data/census/2020/certified/in_blocks_2020.rctx",
+      "bytes": 53644939,
+      "sha256": "65d280efb8714808adc970b0d457ea3fad7a160f389a910371936b3d31937180"
+    },
+    {
+      "id": "context-2020-KS",
+      "group": "contexts",
+      "year": 2020,
+      "state": "KS",
+      "path": "derived-data/census/2020/certified/ks_blocks_2020.rctx",
+      "bytes": 44270256,
+      "sha256": "b97d42329955aa1b7e328b86a355c670d9681e4ef483d3584bd77ae0af3fe9b1"
+    },
+    {
+      "id": "context-2020-KY",
+      "group": "contexts",
+      "year": 2020,
+      "state": "KY",
+      "path": "derived-data/census/2020/certified/ky_blocks_2020.rctx",
+      "bytes": 35459009,
+      "sha256": "81b65a65568e674c02116c9eb1bc81d4992d9e761a9c751e94912e434bf6d338"
+    },
+    {
+      "id": "context-2020-LA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "LA",
+      "path": "derived-data/census/2020/certified/la_blocks_2020.rctx",
+      "bytes": 37464775,
+      "sha256": "de493a10b5d933d55d9237d14590c0df7a6db5662a1e6ec0dd6f32f4a9a23d2b"
+    },
+    {
+      "id": "context-2020-MA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "MA",
+      "path": "derived-data/census/2020/certified/ma_blocks_2020.rctx",
+      "bytes": 28667192,
+      "sha256": "fce93622c990566eef8e6c19aec9c66a41fdc2a93157319ccbbdef943fdcd784"
+    },
+    {
+      "id": "context-2020-MD",
+      "group": "contexts",
+      "year": 2020,
+      "state": "MD",
+      "path": "derived-data/census/2020/certified/md_blocks_2020.rctx",
+      "bytes": 22039284,
+      "sha256": "1de800093a0c946e95c98fcc0a1dfcb04cc1c457f8c1d5fd23fd3c15c4c5fabd"
+    },
+    {
+      "id": "context-2020-ME",
+      "group": "contexts",
+      "year": 2020,
+      "state": "ME",
+      "path": "derived-data/census/2020/certified/me_blocks_2020.rctx",
+      "bytes": 12450113,
+      "sha256": "cbcae291c238bb09807fb1447372ea4da499f5527d8f6b9ce9a1653e564b344a"
+    },
+    {
+      "id": "context-2020-MI",
+      "group": "contexts",
+      "year": 2020,
+      "state": "MI",
+      "path": "derived-data/census/2020/certified/mi_blocks_2020.rctx",
+      "bytes": 66891300,
+      "sha256": "3fce90c420d818a265aec3a18bfec628f52210fabe302a73ab107a8310674dfd"
+    },
+    {
+      "id": "context-2020-MN",
+      "group": "contexts",
+      "year": 2020,
+      "state": "MN",
+      "path": "derived-data/census/2020/certified/mn_blocks_2020.rctx",
+      "bytes": 51571865,
+      "sha256": "24b02b7467a93dd6138e07796ba9f3df3f083bcbe0da2626c9c4528f121338cb"
+    },
+    {
+      "id": "context-2020-MO",
+      "group": "contexts",
+      "year": 2020,
+      "state": "MO",
+      "path": "derived-data/census/2020/certified/mo_blocks_2020.rctx",
+      "bytes": 67657260,
+      "sha256": "41d79caab52f5c5fd35b5cd45357cf80416d84f154feeb465266200cea3943d8"
+    },
+    {
+      "id": "context-2020-MS",
+      "group": "contexts",
+      "year": 2020,
+      "state": "MS",
+      "path": "derived-data/census/2020/certified/ms_blocks_2020.rctx",
+      "bytes": 29664834,
+      "sha256": "49e494baea46907c210b56bff544e07b99c9782d34a8b57fbd78271485e1cb3a"
+    },
+    {
+      "id": "context-2020-MT",
+      "group": "contexts",
+      "year": 2020,
+      "state": "MT",
+      "path": "derived-data/census/2020/certified/mt_blocks_2020.rctx",
+      "bytes": 23327729,
+      "sha256": "79fe32dfe26c5ec8fa32e8b90fb2a220822eb5dd94c08289804539b1020b3a8b"
+    },
+    {
+      "id": "context-2020-NC",
+      "group": "contexts",
+      "year": 2020,
+      "state": "NC",
+      "path": "derived-data/census/2020/certified/nc_blocks_2020.rctx",
+      "bytes": 63201808,
+      "sha256": "9bddeecbdca04bd89cc7b86cb4402f1cf113a9c7b9b6915da990daccb1af3c2d"
+    },
+    {
+      "id": "context-2020-ND",
+      "group": "contexts",
+      "year": 2020,
+      "state": "ND",
+      "path": "derived-data/census/2020/certified/nd_blocks_2020.rctx",
+      "bytes": 21514565,
+      "sha256": "357f604d7dc94fe2b31939e58511a908844ee1f5d8b9f3aa35f70337f24511c3"
+    },
+    {
+      "id": "context-2020-NE",
+      "group": "contexts",
+      "year": 2020,
+      "state": "NE",
+      "path": "derived-data/census/2020/certified/ne_blocks_2020.rctx",
+      "bytes": 30710946,
+      "sha256": "7ea301e08666fbc56fe3d6f5478cf092b706cf536476403dc318c51b5fd151ee"
+    },
+    {
+      "id": "context-2020-NH",
+      "group": "contexts",
+      "year": 2020,
+      "state": "NH",
+      "path": "derived-data/census/2020/certified/nh_blocks_2020.rctx",
+      "bytes": 8401067,
+      "sha256": "fed430c5d4e7c2e53d1dc5d164f0f2b22afa7898ba97821365b18a8bc3aca77c"
+    },
+    {
+      "id": "context-2020-NJ",
+      "group": "contexts",
+      "year": 2020,
+      "state": "NJ",
+      "path": "derived-data/census/2020/certified/nj_blocks_2020.rctx",
+      "bytes": 36730204,
+      "sha256": "8efff4b2389194a901e6860284ff2d4b169f9462bc1c99c903e283a45792e2a6"
+    },
+    {
+      "id": "context-2020-NM",
+      "group": "contexts",
+      "year": 2020,
+      "state": "NM",
+      "path": "derived-data/census/2020/certified/nm_blocks_2020.rctx",
+      "bytes": 28787096,
+      "sha256": "6ec8526daac0349be74bcf01119a14b4d37ba3c6d65577d07503cf2ec5d868bc"
+    },
+    {
+      "id": "context-2020-NV",
+      "group": "contexts",
+      "year": 2020,
+      "state": "NV",
+      "path": "derived-data/census/2020/certified/nv_blocks_2020.rctx",
+      "bytes": 15312080,
+      "sha256": "e6324a63cd65ca9ea94f07019da74b1dbbc076c026341f802940693fe3ded3dc"
+    },
+    {
+      "id": "context-2020-NY",
+      "group": "contexts",
+      "year": 2020,
+      "state": "NY",
+      "path": "derived-data/census/2020/certified/ny_blocks_2020.rctx",
+      "bytes": 77069645,
+      "sha256": "d553991acc1e9124a38572fec3ba0c080dad62a239b1ba89bcbaaad9c4f41019"
+    },
+    {
+      "id": "context-2020-OH",
+      "group": "contexts",
+      "year": 2020,
+      "state": "OH",
+      "path": "derived-data/census/2020/certified/oh_blocks_2020.rctx",
+      "bytes": 73391420,
+      "sha256": "b06f219d27aa6e40ad1b2bdf6051817305238953f8d2d341baf12b37e33e797a"
+    },
+    {
+      "id": "context-2020-OK",
+      "group": "contexts",
+      "year": 2020,
+      "state": "OK",
+      "path": "derived-data/census/2020/certified/ok_blocks_2020.rctx",
+      "bytes": 46724727,
+      "sha256": "f999c0d19e5ee14c42bf23d014a5aeb3e7491f0a0676a74af588d93c0572b55d"
+    },
+    {
+      "id": "context-2020-OR",
+      "group": "contexts",
+      "year": 2020,
+      "state": "OR",
+      "path": "derived-data/census/2020/certified/or_blocks_2020.rctx",
+      "bytes": 35292882,
+      "sha256": "8af7e26e3b37eaacb30a6ca3b5dbc773d5cfbe8e8112734b7acda2f88c8be0e2"
+    },
+    {
+      "id": "context-2020-PA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "PA",
+      "path": "derived-data/census/2020/certified/pa_blocks_2020.rctx",
+      "bytes": 90019651,
+      "sha256": "39afac1e32df7eed4e88f8af739c6808cc128353998f914a9ff81f712e8f404b"
+    },
+    {
+      "id": "context-2020-RI",
+      "group": "contexts",
+      "year": 2020,
+      "state": "RI",
+      "path": "derived-data/census/2020/certified/ri_blocks_2020.rctx",
+      "bytes": 6963593,
+      "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+    },
+    {
+      "id": "context-2020-SC",
+      "group": "contexts",
+      "year": 2020,
+      "state": "SC",
+      "path": "derived-data/census/2020/certified/sc_blocks_2020.rctx",
+      "bytes": 39207229,
+      "sha256": "4e098e9c43c3d31fbf48362d3a82ee55c2632df2700228d8861b7b122c8e2a60"
+    },
+    {
+      "id": "context-2020-SD",
+      "group": "contexts",
+      "year": 2020,
+      "state": "SD",
+      "path": "derived-data/census/2020/certified/sd_blocks_2020.rctx",
+      "bytes": 18062270,
+      "sha256": "440cada496ff60e84dd36a926a4d52d84a6aae8d693a1f8f6c06228e3f0e32e6"
+    },
+    {
+      "id": "context-2020-TN",
+      "group": "contexts",
+      "year": 2020,
+      "state": "TN",
+      "path": "derived-data/census/2020/certified/tn_blocks_2020.rctx",
+      "bytes": 48759294,
+      "sha256": "466a9fdd514c9e30e8567c63bac486864b1ebab0f3a6b35ba8d9301bf0d01b31"
+    },
+    {
+      "id": "context-2020-TX",
+      "group": "contexts",
+      "year": 2020,
+      "state": "TX",
+      "path": "derived-data/census/2020/certified/tx_blocks_2020.rctx",
+      "bytes": 178795097,
+      "sha256": "7965ce00ebdc781a5935b605bf81f0498f41c4e3444144cf8daa8467fecd0858"
+    },
+    {
+      "id": "context-2020-UT",
+      "group": "contexts",
+      "year": 2020,
+      "state": "UT",
+      "path": "derived-data/census/2020/certified/ut_blocks_2020.rctx",
+      "bytes": 19483015,
+      "sha256": "c81f22ee6a26ff5e39db5994084c59417317be58a2b00699f5e04ca3535dba05"
+    },
+    {
+      "id": "context-2020-VA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "VA",
+      "path": "derived-data/census/2020/certified/va_blocks_2020.rctx",
+      "bytes": 43724915,
+      "sha256": "49cb2352ea4a71ff064d50b52bd5efa62585dbe5ef09c28d9a507a897b02444c"
+    },
+    {
+      "id": "context-2020-VT",
+      "group": "contexts",
+      "year": 2020,
+      "state": "VT",
+      "path": "derived-data/census/2020/certified/vt_blocks_2020.rctx",
+      "bytes": 6506033,
+      "sha256": "cf96b7711330d3810e748d0fa7df233a6b0a07e3d705b4dc88009d32abd477c0"
+    },
+    {
+      "id": "context-2020-WA",
+      "group": "contexts",
+      "year": 2020,
+      "state": "WA",
+      "path": "derived-data/census/2020/certified/wa_blocks_2020.rctx",
+      "bytes": 41745571,
+      "sha256": "c58477933b5f0eb07551a3a00b4e00e3e836d34a7413ea1abfeccbafc8ad77a2"
+    },
+    {
+      "id": "context-2020-WI",
+      "group": "contexts",
+      "year": 2020,
+      "state": "WI",
+      "path": "derived-data/census/2020/certified/wi_blocks_2020.rctx",
+      "bytes": 53486728,
+      "sha256": "34e1485b05ac8d6489fab2f49da194069587de6a48bbaf363d5bd71d8f2a88d5"
+    },
+    {
+      "id": "context-2020-WV",
+      "group": "contexts",
+      "year": 2020,
+      "state": "WV",
+      "path": "derived-data/census/2020/certified/wv_blocks_2020.rctx",
+      "bytes": 19353640,
+      "sha256": "048f043b72dd2b7fb4f29d625a601d8f535fb5f7399b8c6f24d2ddf7e96c7073"
+    },
+    {
+      "id": "context-2020-WY",
+      "group": "contexts",
+      "year": 2020,
+      "state": "WY",
+      "path": "derived-data/census/2020/certified/wy_blocks_2020.rctx",
+      "bytes": 14652219,
+      "sha256": "c2ebbffa8e6f2265beb1ca35fb3cfd212d617b7d7cfacd625156f0e2088a28f5"
+    },
+    {
+      "id": "enacted-2020-AK",
+      "group": "enacted",
+      "year": 2020,
+      "state": "AK",
+      "path": "source-data/external/enacted_districts/tl_2020_02_cd118.zip",
+      "bytes": 317028,
+      "sha256": "36ba4a7bdde8c6dd3b02c10f33f35d12aa41f416a28b1c904b9024a35229414d",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_02_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-AL",
+      "group": "enacted",
+      "year": 2020,
+      "state": "AL",
+      "path": "source-data/external/enacted_districts/tl_2020_01_cd118.zip",
+      "bytes": 1510058,
+      "sha256": "17e856840bdb07206af2a2712225e440c1aeaf7ccd29039fbe08ca0980ba2e17",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_01_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-AR",
+      "group": "enacted",
+      "year": 2020,
+      "state": "AR",
+      "path": "source-data/external/enacted_districts/tl_2020_05_cd118.zip",
+      "bytes": 1293237,
+      "sha256": "95bac693c3f56933d2610ac4b6ae541fbf7fa47a72d0a43d8133a14583bc881e",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_05_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-AZ",
+      "group": "enacted",
+      "year": 2020,
+      "state": "AZ",
+      "path": "source-data/external/enacted_districts/tl_2020_04_cd118.zip",
+      "bytes": 1274146,
+      "sha256": "a8816a3dfcb0cf9f4f782d67ba458fee608c60a441eb331ee8545c35a89eabba",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_04_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-CA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "CA",
+      "path": "source-data/external/enacted_districts/tl_2020_06_cd118.zip",
+      "bytes": 5994669,
+      "sha256": "0b2e5235d92bec3cea962ad722b0a951d78e1b8623f92a70ebf6c8542eebc3fc",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_06_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-CO",
+      "group": "enacted",
+      "year": 2020,
+      "state": "CO",
+      "path": "source-data/external/enacted_districts/tl_2020_08_cd118.zip",
+      "bytes": 1096375,
+      "sha256": "231de5d59d210095e8f74c388a458704c52b2072b6d3ab7651579863a3a292d4",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_08_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-CT",
+      "group": "enacted",
+      "year": 2020,
+      "state": "CT",
+      "path": "source-data/external/enacted_districts/tl_2020_09_cd118.zip",
+      "bytes": 466502,
+      "sha256": "53edaf2465349687944e68d890fb37be9fabfd9cd31f44f64e008c2dfc41402d",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_09_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-DE",
+      "group": "enacted",
+      "year": 2020,
+      "state": "DE",
+      "path": "source-data/external/enacted_districts/tl_2020_10_cd118.zip",
+      "bytes": 164581,
+      "sha256": "987a7c3da94780181ca11710ca5f219b0c8c0c51f7cf9c174e3bed28fc4a44e6",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_10_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-FL",
+      "group": "enacted",
+      "year": 2020,
+      "state": "FL",
+      "path": "source-data/external/enacted_districts/tl_2020_12_cd118.zip",
+      "bytes": 1758343,
+      "sha256": "839bf106a43f12d61c7911fc48220e24140bd334e20702f030282256c5384bff",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_12_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-GA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "GA",
+      "path": "source-data/external/enacted_districts/tl_2020_13_cd118.zip",
+      "bytes": 2549970,
+      "sha256": "4eb30662755029442b5a1bbb61377e234612bca2bf397cf141f19dc6a7d68de8",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_13_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-HI",
+      "group": "enacted",
+      "year": 2020,
+      "state": "HI",
+      "path": "source-data/external/enacted_districts/tl_2020_15_cd118.zip",
+      "bytes": 199104,
+      "sha256": "0d833d49007b83828c442109b1adb5860573384491ef6d9b8db49ce42d758b86",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_15_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-IA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "IA",
+      "path": "source-data/external/enacted_districts/tl_2020_19_cd118.zip",
+      "bytes": 789544,
+      "sha256": "ccde28c57f746ad97f178cf89ad5a0125113b912e5df41a4d1cf3842436e956e",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_19_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-ID",
+      "group": "enacted",
+      "year": 2020,
+      "state": "ID",
+      "path": "source-data/external/enacted_districts/tl_2020_16_cd118.zip",
+      "bytes": 984158,
+      "sha256": "a889d4cf61e63c4fc6ff264827768118ae254ede0653060487b8cacfce6a3dae",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_16_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-IL",
+      "group": "enacted",
+      "year": 2020,
+      "state": "IL",
+      "path": "source-data/external/enacted_districts/tl_2020_17_cd118.zip",
+      "bytes": 2592470,
+      "sha256": "52c06735a58c73124bb163896d5ec01b2e97f264c38d289360288c8a4e3a56b0",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_17_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-IN",
+      "group": "enacted",
+      "year": 2020,
+      "state": "IN",
+      "path": "source-data/external/enacted_districts/tl_2020_18_cd118.zip",
+      "bytes": 848370,
+      "sha256": "c7cbf2bb1ce168a80058c277519c5909e6cd9738edc3cdbc3be83bbc3b0623b8",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_18_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-KS",
+      "group": "enacted",
+      "year": 2020,
+      "state": "KS",
+      "path": "source-data/external/enacted_districts/tl_2020_20_cd118.zip",
+      "bytes": 723456,
+      "sha256": "5e6f5ad93516481eef11aa5d5c5c98a8bae921c7d9970036c55a3958a352cc58",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_20_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-KY",
+      "group": "enacted",
+      "year": 2020,
+      "state": "KY",
+      "path": "source-data/external/enacted_districts/tl_2020_21_cd118.zip",
+      "bytes": 1636585,
+      "sha256": "85a61050e208c6b9d631398b4ba815cc5a021fcdcc74a706b5286743cb7f1ae7",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_21_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-LA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "LA",
+      "path": "source-data/external/enacted_districts/tl_2020_22_cd118.zip",
+      "bytes": 1863159,
+      "sha256": "bfded99394149901981aea26bc65cfb969e67348a73bab9000e1474585b57432",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_22_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-MA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "MA",
+      "path": "source-data/external/enacted_districts/tl_2020_25_cd118.zip",
+      "bytes": 762627,
+      "sha256": "a9e7671f86f005aa72c16a4bba19e4c571fc33018b254ec8d80a3b78e068a089",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_25_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-MD",
+      "group": "enacted",
+      "year": 2020,
+      "state": "MD",
+      "path": "source-data/external/enacted_districts/tl_2020_24_cd118.zip",
+      "bytes": 1187541,
+      "sha256": "231928b15abd34dc05d7c269ceab26a317a096a9acb125dd67e32e5ac4dc06b6",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_24_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-ME",
+      "group": "enacted",
+      "year": 2020,
+      "state": "ME",
+      "path": "source-data/external/enacted_districts/tl_2020_23_cd118.zip",
+      "bytes": 669212,
+      "sha256": "2052a683b9e3b3dd2974125e4dbafb70790251ae5cd72ed9d49d8bfebe720ccb",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_23_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-MI",
+      "group": "enacted",
+      "year": 2020,
+      "state": "MI",
+      "path": "source-data/external/enacted_districts/tl_2020_26_cd118.zip",
+      "bytes": 705334,
+      "sha256": "7f5f602ebb1af4499fe13686b7f17bf52f058b70d39735a87841d0d13d2446ed",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_26_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-MN",
+      "group": "enacted",
+      "year": 2020,
+      "state": "MN",
+      "path": "source-data/external/enacted_districts/tl_2020_27_cd118.zip",
+      "bytes": 1398840,
+      "sha256": "a73d5b500815db6c6e4f9d1fac31c328cba0fb45d9f3fa000117be3ff181cc53",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_27_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-MO",
+      "group": "enacted",
+      "year": 2020,
+      "state": "MO",
+      "path": "source-data/external/enacted_districts/tl_2020_29_cd118.zip",
+      "bytes": 1158404,
+      "sha256": "9e345b2c4e1a5f1d6266b99f65241afedd7a61e1f9683cb9f7380315a7dff631",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_29_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-MS",
+      "group": "enacted",
+      "year": 2020,
+      "state": "MS",
+      "path": "source-data/external/enacted_districts/tl_2020_28_cd118.zip",
+      "bytes": 1072862,
+      "sha256": "364270eb668cd18db1f82053574b501128bf913ca7a1037631150ed360f99f93",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_28_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-MT",
+      "group": "enacted",
+      "year": 2020,
+      "state": "MT",
+      "path": "source-data/external/enacted_districts/tl_2020_30_cd118.zip",
+      "bytes": 975988,
+      "sha256": "3ce4a0052a21b7073c8e37657113ed08c9265fc216464e2d3e309b23bb9695e9",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_30_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-NC",
+      "group": "enacted",
+      "year": 2020,
+      "state": "NC",
+      "path": "source-data/external/enacted_districts/tl_2020_37_cd118.zip",
+      "bytes": 2931080,
+      "sha256": "4421030dc6b4bb6783f48309f2157212f6aaab15ce69d3d4fdd638455f19f27b",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_37_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-ND",
+      "group": "enacted",
+      "year": 2020,
+      "state": "ND",
+      "path": "source-data/external/enacted_districts/tl_2020_38_cd118.zip",
+      "bytes": 598018,
+      "sha256": "94303ef4f80233c000cbd6574d480c636eae7160830776875ad0e1000a301492",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_38_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-NE",
+      "group": "enacted",
+      "year": 2020,
+      "state": "NE",
+      "path": "source-data/external/enacted_districts/tl_2020_31_cd118.zip",
+      "bytes": 584645,
+      "sha256": "5bb1db06d5a345a4d9a0db1d6dffe0138507aa673a97458d5696c1790f26629c",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_31_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-NH",
+      "group": "enacted",
+      "year": 2020,
+      "state": "NH",
+      "path": "source-data/external/enacted_districts/tl_2020_33_cd118.zip",
+      "bytes": 517892,
+      "sha256": "9e69a37db76c661645e5692bb7ccd7a0bb25f21f0b7eaf346b2714643bf0d594",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_33_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-NJ",
+      "group": "enacted",
+      "year": 2020,
+      "state": "NJ",
+      "path": "source-data/external/enacted_districts/tl_2020_34_cd118.zip",
+      "bytes": 1544435,
+      "sha256": "c7515daf0068e7b4a26d41a128601e813939c18e761f0a4c82e5397856976b4b",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_34_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-NM",
+      "group": "enacted",
+      "year": 2020,
+      "state": "NM",
+      "path": "source-data/external/enacted_districts/tl_2020_35_cd118.zip",
+      "bytes": 629964,
+      "sha256": "fe4e9432c64995567f98738d46dfc6a536ffb73128251882b29287bb96efd40e",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_35_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-NV",
+      "group": "enacted",
+      "year": 2020,
+      "state": "NV",
+      "path": "source-data/external/enacted_districts/tl_2020_32_cd118.zip",
+      "bytes": 544017,
+      "sha256": "ec8b10c7ba307e6c5ec5b0440dff003d8ca21202e1ea5101f043a6ebfabaf836",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_32_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-NY",
+      "group": "enacted",
+      "year": 2020,
+      "state": "NY",
+      "path": "source-data/external/enacted_districts/tl_2020_36_cd118.zip",
+      "bytes": 1266701,
+      "sha256": "c703b2bcd76240d7709a69c48016269e59ada09f1627dd751c03f30a86f4a6ff",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_36_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-OH",
+      "group": "enacted",
+      "year": 2020,
+      "state": "OH",
+      "path": "source-data/external/enacted_districts/tl_2020_39_cd118.zip",
+      "bytes": 1407098,
+      "sha256": "7c2c7bc5e98bb680f4ded3da212e4a9db77d07cc4ce499150e6f0f63ef611317",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_39_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-OK",
+      "group": "enacted",
+      "year": 2020,
+      "state": "OK",
+      "path": "source-data/external/enacted_districts/tl_2020_40_cd118.zip",
+      "bytes": 1067622,
+      "sha256": "17eb97a389589d1ae0ceb3e5e49e32956e6b2b50ee99a35f276820d782740e2d",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_40_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-OR",
+      "group": "enacted",
+      "year": 2020,
+      "state": "OR",
+      "path": "source-data/external/enacted_districts/tl_2020_41_cd118.zip",
+      "bytes": 1377473,
+      "sha256": "46de0dceec33ee47395ebc6c8d0b40844a5db336f5ebf038d4f7b336cd81bd88",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_41_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-PA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "PA",
+      "path": "source-data/external/enacted_districts/tl_2020_42_cd118.zip",
+      "bytes": 1941378,
+      "sha256": "d8134a327d0960704fbb077f0655a9578e5544447a5e554ff15a9b18e1e4610c",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_42_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-RI",
+      "group": "enacted",
+      "year": 2020,
+      "state": "RI",
+      "path": "source-data/external/enacted_districts/tl_2020_44_cd118.zip",
+      "bytes": 166293,
+      "sha256": "bf30582f8ce0227ccafbb65ba69cbb9c54c0c028ae6ddd8d6f70f67cda325fa7",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_44_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-SC",
+      "group": "enacted",
+      "year": 2020,
+      "state": "SC",
+      "path": "source-data/external/enacted_districts/tl_2020_45_cd118.zip",
+      "bytes": 2190583,
+      "sha256": "1f00e5fd8be1ccf96200ae6d647dde9fd69fb39991030128deab33a436890b2a",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_45_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-SD",
+      "group": "enacted",
+      "year": 2020,
+      "state": "SD",
+      "path": "source-data/external/enacted_districts/tl_2020_46_cd118.zip",
+      "bytes": 394706,
+      "sha256": "bba8a049a8df28f05b381808563157edc4d81500650a92ad25108fb958523f7b",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_46_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-TN",
+      "group": "enacted",
+      "year": 2020,
+      "state": "TN",
+      "path": "source-data/external/enacted_districts/tl_2020_47_cd118.zip",
+      "bytes": 2085422,
+      "sha256": "d2b18af16eb63741ce340a4ed22b283fa33eec39338fbef8a2800c6ef388e839",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_47_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-TX",
+      "group": "enacted",
+      "year": 2020,
+      "state": "TX",
+      "path": "source-data/external/enacted_districts/tl_2020_48_cd118.zip",
+      "bytes": 6492574,
+      "sha256": "36dcc3b87d6ce72011f40b7751c053e6b877c9e221cb11523c98e09ad5297b64",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_48_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-UT",
+      "group": "enacted",
+      "year": 2020,
+      "state": "UT",
+      "path": "source-data/external/enacted_districts/tl_2020_49_cd118.zip",
+      "bytes": 908411,
+      "sha256": "61934483098eea2f3874f2010ab9fab68e08726ca64611277d2f93d4fe7dcae1",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_49_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-VA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "VA",
+      "path": "source-data/external/enacted_districts/tl_2020_51_cd118.zip",
+      "bytes": 2920934,
+      "sha256": "af58d93151e8c8145f1b8927946da60ccdfb6d8ae6161ec742bf8c171dfe29b6",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_51_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-VT",
+      "group": "enacted",
+      "year": 2020,
+      "state": "VT",
+      "path": "source-data/external/enacted_districts/tl_2020_50_cd118.zip",
+      "bytes": 271970,
+      "sha256": "bdc1a6697701ccae3ff3f6470aa19bb32f44e2c5de3bbe2ca8aeb1ac3e099d2f",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_50_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-WA",
+      "group": "enacted",
+      "year": 2020,
+      "state": "WA",
+      "path": "source-data/external/enacted_districts/tl_2020_53_cd118.zip",
+      "bytes": 1136318,
+      "sha256": "4c7b5752e2599859fd650aaf42aeccedb94e844b53b769cd9530e76b4517baed",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_53_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-WI",
+      "group": "enacted",
+      "year": 2020,
+      "state": "WI",
+      "path": "source-data/external/enacted_districts/tl_2020_55_cd118.zip",
+      "bytes": 975911,
+      "sha256": "e9b0cf4daaed12363bccf11ff96a068927c6a634f57fd98790f03051776619c2",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_55_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-WV",
+      "group": "enacted",
+      "year": 2020,
+      "state": "WV",
+      "path": "source-data/external/enacted_districts/tl_2020_54_cd118.zip",
+      "bytes": 909139,
+      "sha256": "677dee9263b3d1195a370c755a6406244e7f5426bfb79f72f290490c73a74587",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_54_cd118.zip"
+    },
+    {
+      "id": "enacted-2020-WY",
+      "group": "enacted",
+      "year": 2020,
+      "state": "WY",
+      "path": "source-data/external/enacted_districts/tl_2020_56_cd118.zip",
+      "bytes": 216420,
+      "sha256": "6ca700dc7a1ecd3997e443ceaf8585e5953195cc9b5febd2e718bd447acf8715",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/CD/CD118/tl_2020_56_cd118.zip"
+    },
+    {
+      "id": "pl_geography-2020-AK",
+      "group": "population",
+      "year": 2020,
+      "state": "AK",
+      "path": "source-data/census/2020/redistricting/ak2020.pl/akgeo2020.pl",
+      "bytes": 16847719,
+      "sha256": "3bcad8d2259f19eef47a514d6ed3b986b3e4d2d4fa56e16caf154cfed563bc8c",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Alaska/ak2020.pl.zip",
+      "member": "akgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-AL",
+      "group": "population",
+      "year": 2020,
+      "state": "AL",
+      "path": "source-data/census/2020/redistricting/al2020.pl/algeo2020.pl",
+      "bytes": 98836952,
+      "sha256": "d20bbadbffeb4fc6eb658f25d1136c355a4702f09ac929793ad4a0440858eb7a",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Alabama/al2020.pl.zip",
+      "member": "algeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-AR",
+      "group": "population",
+      "year": 2020,
+      "state": "AR",
+      "path": "source-data/census/2020/redistricting/ar2020.pl/argeo2020.pl",
+      "bytes": 79354702,
+      "sha256": "cc0a03eb5c8b5452a8e2cc8b47df87332d9dc75b818662dc95cf499000d096a8",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Arkansas/ar2020.pl.zip",
+      "member": "argeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-AZ",
+      "group": "population",
+      "year": 2020,
+      "state": "AZ",
+      "path": "source-data/census/2020/redistricting/az2020.pl/azgeo2020.pl",
+      "bytes": 82187620,
+      "sha256": "b5d029bbccc3999ade4be6eb647f74a56569546d04146fcd1094e7d4c626056e",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Arizona/az2020.pl.zip",
+      "member": "azgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-CA",
+      "group": "population",
+      "year": 2020,
+      "state": "CA",
+      "path": "source-data/census/2020/redistricting/ca2020.pl/cageo2020.pl",
+      "bytes": 256684567,
+      "sha256": "ca49b3a5323e9eaa430b82afe36c01d72cddd1cae3462f3bdbd4be9463dea976",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/California/ca2020.pl.zip",
+      "member": "cageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-CO",
+      "group": "population",
+      "year": 2020,
+      "state": "CO",
+      "path": "source-data/census/2020/redistricting/co2020.pl/cogeo2020.pl",
+      "bytes": 81847615,
+      "sha256": "420ef2960202099e83370d2adc790dc9723ccff6ddabbd33b89625d1ba929a02",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Colorado/co2020.pl.zip",
+      "member": "cogeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-CT",
+      "group": "population",
+      "year": 2020,
+      "state": "CT",
+      "path": "source-data/census/2020/redistricting/ct2020.pl/ctgeo2020.pl",
+      "bytes": 29460791,
+      "sha256": "773e2acb8d347451ab1b71dc30e52af2d8ca3be2b987c978d76df2ec39ac8cda",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Connecticut/ct2020.pl.zip",
+      "member": "ctgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-DE",
+      "group": "population",
+      "year": 2020,
+      "state": "DE",
+      "path": "source-data/census/2020/redistricting/de2020.pl/degeo2020.pl",
+      "bytes": 11937471,
+      "sha256": "58d6e530f84ee2d8ada6b3b605b9dc2a8f140da54ef943d1e8e6a03d92d8226a",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Delaware/de2020.pl.zip",
+      "member": "degeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-FL",
+      "group": "population",
+      "year": 2020,
+      "state": "FL",
+      "path": "source-data/census/2020/redistricting/fl2020.pl/flgeo2020.pl",
+      "bytes": 219980284,
+      "sha256": "c26f1a34d8532ba03886f50924759b1a65fa551d5b8414007ce8acc0a7ec683d",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Florida/fl2020.pl.zip",
+      "member": "flgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-GA",
+      "group": "population",
+      "year": 2020,
+      "state": "GA",
+      "path": "source-data/census/2020/redistricting/ga2020.pl/gageo2020.pl",
+      "bytes": 126739688,
+      "sha256": "c7f21198bbe1965bd449788a8b912d8fbbcbec927069967383f72c231445390e",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Georgia/ga2020.pl.zip",
+      "member": "gageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-HI",
+      "group": "population",
+      "year": 2020,
+      "state": "HI",
+      "path": "source-data/census/2020/redistricting/hi2020.pl/higeo2020.pl",
+      "bytes": 8701211,
+      "sha256": "3038fb2fea23c17c5d27ece554d46919a5c5a522446d7813b220baea4c55b1f4",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Hawaii/hi2020.pl.zip",
+      "member": "higeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-IA",
+      "group": "population",
+      "year": 2020,
+      "state": "IA",
+      "path": "source-data/census/2020/redistricting/ia2020.pl/iageo2020.pl",
+      "bytes": 94959938,
+      "sha256": "513ce58ed035d9855d69372174d3c45a964e69a34d32ab31ecf771525ead2f0b",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Iowa/ia2020.pl.zip",
+      "member": "iageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-ID",
+      "group": "population",
+      "year": 2020,
+      "state": "ID",
+      "path": "source-data/census/2020/redistricting/id2020.pl/idgeo2020.pl",
+      "bytes": 42448854,
+      "sha256": "4a705bdb2fe900c154f698b7e527652dcff8822d15d1cb25cd6bdc78ed9995f1",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Idaho/id2020.pl.zip",
+      "member": "idgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-IL",
+      "group": "population",
+      "year": 2020,
+      "state": "IL",
+      "path": "source-data/census/2020/redistricting/il2020.pl/ilgeo2020.pl",
+      "bytes": 229047517,
+      "sha256": "0629a31079acb6ea9fe477278e49277a0332597b88475489fddf9ef3b0032cce",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Illinois/il2020.pl.zip",
+      "member": "ilgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-IN",
+      "group": "population",
+      "year": 2020,
+      "state": "IN",
+      "path": "source-data/census/2020/redistricting/in2020.pl/ingeo2020.pl",
+      "bytes": 119611847,
+      "sha256": "b8a9c9447eaa318d09a50dea068e83a45aa853ab622055abbc48a3b7ecdcf209",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Indiana/in2020.pl.zip",
+      "member": "ingeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-KS",
+      "group": "population",
+      "year": 2020,
+      "state": "KS",
+      "path": "source-data/census/2020/redistricting/ks2020.pl/ksgeo2020.pl",
+      "bytes": 98840679,
+      "sha256": "c342d1e87c7440cc43702a8fed07b7492285c747d156ad61460ecf6f9336017c",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Kansas/ks2020.pl.zip",
+      "member": "ksgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-KY",
+      "group": "population",
+      "year": 2020,
+      "state": "KY",
+      "path": "source-data/census/2020/redistricting/ky2020.pl/kygeo2020.pl",
+      "bytes": 82589174,
+      "sha256": "32844971cf6d88add250e8f57c43254217ed317ed8b76f4b50f33695f1732984",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Kentucky/ky2020.pl.zip",
+      "member": "kygeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-LA",
+      "group": "population",
+      "year": 2020,
+      "state": "LA",
+      "path": "source-data/census/2020/redistricting/la2020.pl/lageo2020.pl",
+      "bytes": 85633684,
+      "sha256": "fef3f87d680964cb1a37ea2ea3f8414fe60618261777a5744394827f045e1a34",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Louisiana/la2020.pl.zip",
+      "member": "lageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-MA",
+      "group": "population",
+      "year": 2020,
+      "state": "MA",
+      "path": "source-data/census/2020/redistricting/ma2020.pl/mageo2020.pl",
+      "bytes": 62828113,
+      "sha256": "babed9e0a1b9ce8bb3d825a43ecd6dfd362b042965193a4107b7b151e2bdefc5",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Massachusetts/ma2020.pl.zip",
+      "member": "mageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-MD",
+      "group": "population",
+      "year": 2020,
+      "state": "MD",
+      "path": "source-data/census/2020/redistricting/md2020.pl/mdgeo2020.pl",
+      "bytes": 53611004,
+      "sha256": "957489df5b286dc6286d93f27a6bcc3e8416329609deef119c554d01096281ac",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Maryland/md2020.pl.zip",
+      "member": "mdgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-ME",
+      "group": "population",
+      "year": 2020,
+      "state": "ME",
+      "path": "source-data/census/2020/redistricting/me2020.pl/megeo2020.pl",
+      "bytes": 24144661,
+      "sha256": "b7df31ae84962786300d65722a079b437eac895886bb2598cfc1ab875cd8a5d6",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Maine/me2020.pl.zip",
+      "member": "megeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-MI",
+      "group": "population",
+      "year": 2020,
+      "state": "MI",
+      "path": "source-data/census/2020/redistricting/mi2020.pl/migeo2020.pl",
+      "bytes": 143560054,
+      "sha256": "9d19835294d8d7b445bd19d98cde9bf730896eea901e26620415f20dbd7f2347",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Michigan/mi2020.pl.zip",
+      "member": "migeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-MN",
+      "group": "population",
+      "year": 2020,
+      "state": "MN",
+      "path": "source-data/census/2020/redistricting/mn2020.pl/mngeo2020.pl",
+      "bytes": 113633419,
+      "sha256": "563d7a36468f30a4d63f95916de333238441dbebc8374e637d574d57db46d5da",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Minnesota/mn2020.pl.zip",
+      "member": "mngeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-MO",
+      "group": "population",
+      "year": 2020,
+      "state": "MO",
+      "path": "source-data/census/2020/redistricting/mo2020.pl/mogeo2020.pl",
+      "bytes": 144301843,
+      "sha256": "e48172d42cc5ee7aebaa0efb651d67dc9e09e11df82c90deb36c5e957a70e2b1",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Missouri/mo2020.pl.zip",
+      "member": "mogeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-MS",
+      "group": "population",
+      "year": 2020,
+      "state": "MS",
+      "path": "source-data/census/2020/redistricting/ms2020.pl/msgeo2020.pl",
+      "bytes": 64363722,
+      "sha256": "76e5b6a62394abfde9cedf6340e0d26a3253ea8c9cd0c892e24a2ab678772e84",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Mississippi/ms2020.pl.zip",
+      "member": "msgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-MT",
+      "group": "population",
+      "year": 2020,
+      "state": "MT",
+      "path": "source-data/census/2020/redistricting/mt2020.pl/mtgeo2020.pl",
+      "bytes": 45748877,
+      "sha256": "81b3d04e7e3ad953c6967b0de3997327320d81e00ff9d563b6e5e2e660f1e6e6",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Montana/mt2020.pl.zip",
+      "member": "mtgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-NC",
+      "group": "population",
+      "year": 2020,
+      "state": "NC",
+      "path": "source-data/census/2020/redistricting/nc2020.pl/ncgeo2020.pl",
+      "bytes": 131874085,
+      "sha256": "a15c373e68e67bb7dd77cbd070c38a4915b532dd9ebdca48fccff45ae9cda61b",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/North_Carolina/nc2020.pl.zip",
+      "member": "ncgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-ND",
+      "group": "population",
+      "year": 2020,
+      "state": "ND",
+      "path": "source-data/census/2020/redistricting/nd2020.pl/ndgeo2020.pl",
+      "bytes": 44240531,
+      "sha256": "e5bbb5588e3f1d5a695d9925a533f30028ee187321b24b9d83a6d5e3a7c4b01c",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/North_Dakota/nd2020.pl.zip",
+      "member": "ndgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-NE",
+      "group": "population",
+      "year": 2020,
+      "state": "NE",
+      "path": "source-data/census/2020/redistricting/ne2020.pl/negeo2020.pl",
+      "bytes": 62273850,
+      "sha256": "d06533ec4f25aa9883fd4393f6ca55aa0a8402949b4c9bacd69539f56fdba8a7",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Nebraska/ne2020.pl.zip",
+      "member": "negeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-NH",
+      "group": "population",
+      "year": 2020,
+      "state": "NH",
+      "path": "source-data/census/2020/redistricting/nh2020.pl/nhgeo2020.pl",
+      "bytes": 17062876,
+      "sha256": "3997e6c8b3716693d3762a0ce51164479604da440b1f79c70f7e8ba86fc82cbe",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_Hampshire/nh2020.pl.zip",
+      "member": "nhgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-NJ",
+      "group": "population",
+      "year": 2020,
+      "state": "NJ",
+      "path": "source-data/census/2020/redistricting/nj2020.pl/njgeo2020.pl",
+      "bytes": 96042161,
+      "sha256": "8d4d5b35fe72f1c571667ca70b66ed8433e8201a5e9e0472de7c46388d8fab85",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_Jersey/nj2020.pl.zip",
+      "member": "njgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-NM",
+      "group": "population",
+      "year": 2020,
+      "state": "NM",
+      "path": "source-data/census/2020/redistricting/nm2020.pl/nmgeo2020.pl",
+      "bytes": 59991676,
+      "sha256": "f204a262aaaa766f1b49bc728d3ea3d231dc0d9bf72b3f1f4667dac6829f92b4",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_Mexico/nm2020.pl.zip",
+      "member": "nmgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-NV",
+      "group": "population",
+      "year": 2020,
+      "state": "NV",
+      "path": "source-data/census/2020/redistricting/nv2020.pl/nvgeo2020.pl",
+      "bytes": 35769329,
+      "sha256": "16d3b245593037d82c1f82ed6a8b9d08900f4c158d91eb54495bff6b95e04c39",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Nevada/nv2020.pl.zip",
+      "member": "nvgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-NY",
+      "group": "population",
+      "year": 2020,
+      "state": "NY",
+      "path": "source-data/census/2020/redistricting/ny2020.pl/nygeo2020.pl",
+      "bytes": 205217873,
+      "sha256": "1154f6061f4ed4d734ae7ec08c34409977da292411927e9524512a0ee9c1dcbf",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_York/ny2020.pl.zip",
+      "member": "nygeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-OH",
+      "group": "population",
+      "year": 2020,
+      "state": "OH",
+      "path": "source-data/census/2020/redistricting/oh2020.pl/ohgeo2020.pl",
+      "bytes": 174893316,
+      "sha256": "6a243bc1e9dbec219c1ea1eb087ee21430db9a0cb69378c8e48c508a6b1188de",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Ohio/oh2020.pl.zip",
+      "member": "ohgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-OK",
+      "group": "population",
+      "year": 2020,
+      "state": "OK",
+      "path": "source-data/census/2020/redistricting/ok2020.pl/okgeo2020.pl",
+      "bytes": 96351786,
+      "sha256": "7a4fc3b305c645df9c7992062e86c46a6685baf9690062677901624234ad1c41",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Oklahoma/ok2020.pl.zip",
+      "member": "okgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-OR",
+      "group": "population",
+      "year": 2020,
+      "state": "OR",
+      "path": "source-data/census/2020/redistricting/or2020.pl/orgeo2020.pl",
+      "bytes": 60835450,
+      "sha256": "dd6edb73064c53b6a2381ba61ea546ecae0ff1752615169888873201bee237fd",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Oregon/or2020.pl.zip",
+      "member": "orgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-PA",
+      "group": "population",
+      "year": 2020,
+      "state": "PA",
+      "path": "source-data/census/2020/redistricting/pa2020.pl/pageo2020.pl",
+      "bytes": 199010982,
+      "sha256": "f35aeff584746a27db4e8e928f987506c69a20b6f464865b9f43c741536f832f",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Pennsylvania/pa2020.pl.zip",
+      "member": "pageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-RI",
+      "group": "population",
+      "year": 2020,
+      "state": "RI",
+      "path": "source-data/census/2020/redistricting/ri2020.pl/rigeo2020.pl",
+      "bytes": 14024819,
+      "sha256": "d7236ca05940f50fa1bdb6b35c08435327011af40843f19a3f269503063300fd",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Rhode_Island/ri2020.pl.zip",
+      "member": "rigeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-SC",
+      "group": "population",
+      "year": 2020,
+      "state": "SC",
+      "path": "source-data/census/2020/redistricting/sc2020.pl/scgeo2020.pl",
+      "bytes": 81830850,
+      "sha256": "2dcf4f242a3f1e049715f5ae3fb2a46abc960c7a17de0290cfb873040e9328ed",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/South_Carolina/sc2020.pl.zip",
+      "member": "scgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-SD",
+      "group": "population",
+      "year": 2020,
+      "state": "SD",
+      "path": "source-data/census/2020/redistricting/sd2020.pl/sdgeo2020.pl",
+      "bytes": 39806996,
+      "sha256": "0806bda6f2bdb1d27d1e4bc21cbafbda7cce191a103d30fab45c1adc1232ad9b",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/South_Dakota/sd2020.pl.zip",
+      "member": "sdgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-TN",
+      "group": "population",
+      "year": 2020,
+      "state": "TN",
+      "path": "source-data/census/2020/redistricting/tn2020.pl/tngeo2020.pl",
+      "bytes": 96091663,
+      "sha256": "d04afebc8dee4dab88d842fd6fea6903a8b2c95dcb8b26c00681dfd1f8ede7dc",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Tennessee/tn2020.pl.zip",
+      "member": "tngeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-TX",
+      "group": "population",
+      "year": 2020,
+      "state": "TX",
+      "path": "source-data/census/2020/redistricting/tx2020.pl/txgeo2020.pl",
+      "bytes": 362246311,
+      "sha256": "91651c86391df18accd460ef81e1291bdbf368c25f4b8fa41b923cf71995a9ce",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Texas/tx2020.pl.zip",
+      "member": "txgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-UT",
+      "group": "population",
+      "year": 2020,
+      "state": "UT",
+      "path": "source-data/census/2020/redistricting/ut2020.pl/utgeo2020.pl",
+      "bytes": 45888416,
+      "sha256": "2fa73f391c2503ec013e93221a585cf7695c42b7e0c0f92701af7d1dfc57708d",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Utah/ut2020.pl.zip",
+      "member": "utgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-VA",
+      "group": "population",
+      "year": 2020,
+      "state": "VA",
+      "path": "source-data/census/2020/redistricting/va2020.pl/vageo2020.pl",
+      "bytes": 92086859,
+      "sha256": "a774f388f2363228bec53828bae76cfdacc7f74baa9fb1ed1bf505f6044f3aba",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Virginia/va2020.pl.zip",
+      "member": "vageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-VT",
+      "group": "population",
+      "year": 2020,
+      "state": "VT",
+      "path": "source-data/census/2020/redistricting/vt2020.pl/vtgeo2020.pl",
+      "bytes": 13235486,
+      "sha256": "2244e3bf44dbb8e9f16990a76bbebc1020a5ce686791857e10d9033655b44f84",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Vermont/vt2020.pl.zip",
+      "member": "vtgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-WA",
+      "group": "population",
+      "year": 2020,
+      "state": "WA",
+      "path": "source-data/census/2020/redistricting/wa2020.pl/wageo2020.pl",
+      "bytes": 108907229,
+      "sha256": "4b65c370a69bc84a919f8603fb2a8fc8fee1ccd687ef148772132387a8edbb85",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Washington/wa2020.pl.zip",
+      "member": "wageo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-WI",
+      "group": "population",
+      "year": 2020,
+      "state": "WI",
+      "path": "source-data/census/2020/redistricting/wi2020.pl/wigeo2020.pl",
+      "bytes": 128397889,
+      "sha256": "be5573ad39ff2e710727630ce0b4f45183fc6a437a71e9a4ce28c9f5dbfc5cf6",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Wisconsin/wi2020.pl.zip",
+      "member": "wigeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-WV",
+      "group": "population",
+      "year": 2020,
+      "state": "WV",
+      "path": "source-data/census/2020/redistricting/wv2020.pl/wvgeo2020.pl",
+      "bytes": 40196175,
+      "sha256": "0c59a61dfabfb2232df074ae4b90944882ad00c5747c2e4245aa4e399e9a51a9",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/West_Virginia/wv2020.pl.zip",
+      "member": "wvgeo2020.pl"
+    },
+    {
+      "id": "pl_geography-2020-WY",
+      "group": "population",
+      "year": 2020,
+      "state": "WY",
+      "path": "source-data/census/2020/redistricting/wy2020.pl/wygeo2020.pl",
+      "bytes": 27162276,
+      "sha256": "641b06833e863675fa0914295754e0ff710b2af842d95c69b8470330e7fbe793",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Wyoming/wy2020.pl.zip",
+      "member": "wygeo2020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-AK",
+      "group": "population",
+      "year": 2020,
+      "state": "AK",
+      "path": "source-data/census/2020/redistricting/ak2020.pl/ak000012020.pl",
+      "bytes": 14622818,
+      "sha256": "a980a077d70eb0ef5e2db7a0940e4d247858b06abd4657bf82b5bc4e65c1c291",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Alaska/ak2020.pl.zip",
+      "member": "ak000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-AL",
+      "group": "population",
+      "year": 2020,
+      "state": "AL",
+      "path": "source-data/census/2020/redistricting/al2020.pl/al000012020.pl",
+      "bytes": 82109287,
+      "sha256": "dc387bf4373ff50253c9cad886ce54b7fe634cc3af11b593288f361f46497276",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Alabama/al2020.pl.zip",
+      "member": "al000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-AR",
+      "group": "population",
+      "year": 2020,
+      "state": "AR",
+      "path": "source-data/census/2020/redistricting/ar2020.pl/ar000012020.pl",
+      "bytes": 67724081,
+      "sha256": "a2ae4290c4d94ccff5fe69a9c901ef3170cb514e7b80a2731b36b81a308786bf",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Arkansas/ar2020.pl.zip",
+      "member": "ar000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-AZ",
+      "group": "population",
+      "year": 2020,
+      "state": "AZ",
+      "path": "source-data/census/2020/redistricting/az2020.pl/az000012020.pl",
+      "bytes": 69423902,
+      "sha256": "9499d586763eb68f3ebac1a01fc6aa42a247fa0d2b217007a66e0b6c4518fcab",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Arizona/az2020.pl.zip",
+      "member": "az000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-CA",
+      "group": "population",
+      "year": 2020,
+      "state": "CA",
+      "path": "source-data/census/2020/redistricting/ca2020.pl/ca000012020.pl",
+      "bytes": 219677245,
+      "sha256": "05078225921e109ed882ef9e370a1532c99f8ef92c4cc3809ba00c15afff3a12",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/California/ca2020.pl.zip",
+      "member": "ca000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-CO",
+      "group": "population",
+      "year": 2020,
+      "state": "CO",
+      "path": "source-data/census/2020/redistricting/co2020.pl/co000012020.pl",
+      "bytes": 70942784,
+      "sha256": "2940b04da49a8dbb2baf4f50c554fb20d5017a00a4e4402ca2461c65755775f8",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Colorado/co2020.pl.zip",
+      "member": "co000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-CT",
+      "group": "population",
+      "year": 2020,
+      "state": "CT",
+      "path": "source-data/census/2020/redistricting/ct2020.pl/ct000012020.pl",
+      "bytes": 26163878,
+      "sha256": "1de706b18d623dbc2c34d085fd2822e7271670e7e08da586d6e5a79ce67f077e",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Connecticut/ct2020.pl.zip",
+      "member": "ct000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-DE",
+      "group": "population",
+      "year": 2020,
+      "state": "DE",
+      "path": "source-data/census/2020/redistricting/de2020.pl/de000012020.pl",
+      "bytes": 10524639,
+      "sha256": "e9204f0149a5f4273ed5afc795fa928174f10148d71e8d19a22613a6d0e41192",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Delaware/de2020.pl.zip",
+      "member": "de000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-FL",
+      "group": "population",
+      "year": 2020,
+      "state": "FL",
+      "path": "source-data/census/2020/redistricting/fl2020.pl/fl000012020.pl",
+      "bytes": 188748968,
+      "sha256": "ce953209d13465fb97c1861fc095038542769620d4c5cb63cb0ed437552fbbf6",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Florida/fl2020.pl.zip",
+      "member": "fl000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-GA",
+      "group": "population",
+      "year": 2020,
+      "state": "GA",
+      "path": "source-data/census/2020/redistricting/ga2020.pl/ga000012020.pl",
+      "bytes": 107629549,
+      "sha256": "80b4e8694b0861f776aeb1a06463cae95d5c87b54c92d90a60171cf11d6b3655",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Georgia/ga2020.pl.zip",
+      "member": "ga000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-HI",
+      "group": "population",
+      "year": 2020,
+      "state": "HI",
+      "path": "source-data/census/2020/redistricting/hi2020.pl/hi000012020.pl",
+      "bytes": 8198003,
+      "sha256": "d30ffe06cd6371d013b51923e611938a1ec65f459ff8d9315ae20c81353699a4",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Hawaii/hi2020.pl.zip",
+      "member": "hi000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-IA",
+      "group": "population",
+      "year": 2020,
+      "state": "IA",
+      "path": "source-data/census/2020/redistricting/ia2020.pl/ia000012020.pl",
+      "bytes": 79253430,
+      "sha256": "31c18134bcca4dfd3debc99907e2663df6f845d6d99bd8f80bd1e6737bdc9609",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Iowa/ia2020.pl.zip",
+      "member": "ia000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-ID",
+      "group": "population",
+      "year": 2020,
+      "state": "ID",
+      "path": "source-data/census/2020/redistricting/id2020.pl/id000012020.pl",
+      "bytes": 35082512,
+      "sha256": "771294f3f44e5ac6059767e2ddeaa9bf9c7e412465a918de3ca88a47c619aaf8",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Idaho/id2020.pl.zip",
+      "member": "id000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-IL",
+      "group": "population",
+      "year": 2020,
+      "state": "IL",
+      "path": "source-data/census/2020/redistricting/il2020.pl/il000012020.pl",
+      "bytes": 199590170,
+      "sha256": "c3b6d40015d9429ea833deb4cd2b738f80aed61844746c4ce3405e0b2943e36d",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Illinois/il2020.pl.zip",
+      "member": "il000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-IN",
+      "group": "population",
+      "year": 2020,
+      "state": "IN",
+      "path": "source-data/census/2020/redistricting/in2020.pl/in000012020.pl",
+      "bytes": 103275533,
+      "sha256": "a475feb6dbf4cc32574270e3da88d80da2f0654acdac3530da82bed9a8abe2be",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Indiana/in2020.pl.zip",
+      "member": "in000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-KS",
+      "group": "population",
+      "year": 2020,
+      "state": "KS",
+      "path": "source-data/census/2020/redistricting/ks2020.pl/ks000012020.pl",
+      "bytes": 83326837,
+      "sha256": "b6694670dbca03bca9dcd533188affc6527db55ee5ba2deb3bab38e3d1ccd0ee",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Kansas/ks2020.pl.zip",
+      "member": "ks000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-KY",
+      "group": "population",
+      "year": 2020,
+      "state": "KY",
+      "path": "source-data/census/2020/redistricting/ky2020.pl/ky000012020.pl",
+      "bytes": 71663185,
+      "sha256": "a1c3e4f475e8ac5ebba2a80f2a66798cf2121ae0e92e7c1c1db6121ee17088c4",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Kentucky/ky2020.pl.zip",
+      "member": "ky000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-LA",
+      "group": "population",
+      "year": 2020,
+      "state": "LA",
+      "path": "source-data/census/2020/redistricting/la2020.pl/la000012020.pl",
+      "bytes": 74600491,
+      "sha256": "3570cc82b917725ed05f77d9bc258c5281d9c83b4f25661e71b5068c609fecfd",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Louisiana/la2020.pl.zip",
+      "member": "la000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-MA",
+      "group": "population",
+      "year": 2020,
+      "state": "MA",
+      "path": "source-data/census/2020/redistricting/ma2020.pl/ma000012020.pl",
+      "bytes": 55110849,
+      "sha256": "76bc732aac5a35e5bc9b3758ba80c84a4446c0ac038ae2de5ba08dd2fd244c72",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Massachusetts/ma2020.pl.zip",
+      "member": "ma000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-MD",
+      "group": "population",
+      "year": 2020,
+      "state": "MD",
+      "path": "source-data/census/2020/redistricting/md2020.pl/md000012020.pl",
+      "bytes": 47920041,
+      "sha256": "46c683e1742a39076a428d5352fe5e45f4c5b2bc6161612f640de0c8cec00bb7",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Maryland/md2020.pl.zip",
+      "member": "md000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-ME",
+      "group": "population",
+      "year": 2020,
+      "state": "ME",
+      "path": "source-data/census/2020/redistricting/me2020.pl/me000012020.pl",
+      "bytes": 20363763,
+      "sha256": "871b3c74244379f75d7ef418ea43c61aad95e7a7480ecada2f4325f02c39c32d",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Maine/me2020.pl.zip",
+      "member": "me000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-MI",
+      "group": "population",
+      "year": 2020,
+      "state": "MI",
+      "path": "source-data/census/2020/redistricting/mi2020.pl/mi000012020.pl",
+      "bytes": 122879543,
+      "sha256": "a13b62c495664318b180554b2b504d3930c2068d56000ddb05f524d36038cc6f",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Michigan/mi2020.pl.zip",
+      "member": "mi000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-MN",
+      "group": "population",
+      "year": 2020,
+      "state": "MN",
+      "path": "source-data/census/2020/redistricting/mn2020.pl/mn000012020.pl",
+      "bytes": 97316470,
+      "sha256": "622fbeea551a2c384375008cb800b70c3d104468178422d34b4d56edd0c8a3fa",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Minnesota/mn2020.pl.zip",
+      "member": "mn000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-MO",
+      "group": "population",
+      "year": 2020,
+      "state": "MO",
+      "path": "source-data/census/2020/redistricting/mo2020.pl/mo000012020.pl",
+      "bytes": 122357802,
+      "sha256": "1eb955235714a54953c97dc5e757874a0909fa7106b5d415c942f5b98367cb72",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Missouri/mo2020.pl.zip",
+      "member": "mo000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-MS",
+      "group": "population",
+      "year": 2020,
+      "state": "MS",
+      "path": "source-data/census/2020/redistricting/ms2020.pl/ms000012020.pl",
+      "bytes": 54594600,
+      "sha256": "f470c17db4fc60a525cfda8becad5f9c2048e1b662f7900ea5c0905a8fdc36da",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Mississippi/ms2020.pl.zip",
+      "member": "ms000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-MT",
+      "group": "population",
+      "year": 2020,
+      "state": "MT",
+      "path": "source-data/census/2020/redistricting/mt2020.pl/mt000012020.pl",
+      "bytes": 37573500,
+      "sha256": "25c5a73f8bb3ae1225d6c0a0ac3bd3eed18585c20ea2fd84bb42b564bbac9867",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Montana/mt2020.pl.zip",
+      "member": "mt000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-NC",
+      "group": "population",
+      "year": 2020,
+      "state": "NC",
+      "path": "source-data/census/2020/redistricting/nc2020.pl/nc000012020.pl",
+      "bytes": 112335690,
+      "sha256": "d4b1a62cafb117142f13dc8c62bfea35261b38485f80565a3cecd687b764ff6c",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/North_Carolina/nc2020.pl.zip",
+      "member": "nc000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-ND",
+      "group": "population",
+      "year": 2020,
+      "state": "ND",
+      "path": "source-data/census/2020/redistricting/nd2020.pl/nd000012020.pl",
+      "bytes": 36219444,
+      "sha256": "2680cea76fdbf4bcb26cb12a07e5af1171e3476a574d6dcd4731623d8dc43b83",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/North_Dakota/nd2020.pl.zip",
+      "member": "nd000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-NE",
+      "group": "population",
+      "year": 2020,
+      "state": "NE",
+      "path": "source-data/census/2020/redistricting/ne2020.pl/ne000012020.pl",
+      "bytes": 51281462,
+      "sha256": "ba6896f0d73c726b3ad1aac669d3f425946d6ed4b007a021e62812a63c884491",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Nebraska/ne2020.pl.zip",
+      "member": "ne000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-NH",
+      "group": "population",
+      "year": 2020,
+      "state": "NH",
+      "path": "source-data/census/2020/redistricting/nh2020.pl/nh000012020.pl",
+      "bytes": 14486434,
+      "sha256": "3f348d93a886b827d0ba5670a4befac5feaeaf54df442fd2a9407c0d0b8bf60c",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_Hampshire/nh2020.pl.zip",
+      "member": "nh000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-NJ",
+      "group": "population",
+      "year": 2020,
+      "state": "NJ",
+      "path": "source-data/census/2020/redistricting/nj2020.pl/nj000012020.pl",
+      "bytes": 86247433,
+      "sha256": "a5faedfc43600e1f79adfe82bd7e1b2b3b97594eb2d9e0828803ecc028ff4bd3",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_Jersey/nj2020.pl.zip",
+      "member": "nj000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-NM",
+      "group": "population",
+      "year": 2020,
+      "state": "NM",
+      "path": "source-data/census/2020/redistricting/nm2020.pl/nm000012020.pl",
+      "bytes": 50636916,
+      "sha256": "871d6c0e9acabd0d5e7ef050f5f42eb8c23331040c3d7d9eb6280ab2d0c832b0",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_Mexico/nm2020.pl.zip",
+      "member": "nm000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-NV",
+      "group": "population",
+      "year": 2020,
+      "state": "NV",
+      "path": "source-data/census/2020/redistricting/nv2020.pl/nv000012020.pl",
+      "bytes": 31980310,
+      "sha256": "41e170a5ea10af16e0dd9d8662cb1cc3303e9599bd047b79d4feb5fd80e40923",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Nevada/nv2020.pl.zip",
+      "member": "nv000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-NY",
+      "group": "population",
+      "year": 2020,
+      "state": "NY",
+      "path": "source-data/census/2020/redistricting/ny2020.pl/ny000012020.pl",
+      "bytes": 189756222,
+      "sha256": "2bf30b3fdb709df2952bdb236973e51cee8627fc21140ff7b6fb6159af7e5c74",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New_York/ny2020.pl.zip",
+      "member": "ny000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-OH",
+      "group": "population",
+      "year": 2020,
+      "state": "OH",
+      "path": "source-data/census/2020/redistricting/oh2020.pl/oh000012020.pl",
+      "bytes": 154597051,
+      "sha256": "5f7f49467f2d634c73b808290468e26398d9800c5510ef97682b06eeace8bcfe",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Ohio/oh2020.pl.zip",
+      "member": "oh000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-OK",
+      "group": "population",
+      "year": 2020,
+      "state": "OK",
+      "path": "source-data/census/2020/redistricting/ok2020.pl/ok000012020.pl",
+      "bytes": 81216461,
+      "sha256": "95a295bfd1b5f421a48c965cc60145ac7404930d7f2c1596e11258260cfbbbbd",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Oklahoma/ok2020.pl.zip",
+      "member": "ok000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-OR",
+      "group": "population",
+      "year": 2020,
+      "state": "OR",
+      "path": "source-data/census/2020/redistricting/or2020.pl/or000012020.pl",
+      "bytes": 50073661,
+      "sha256": "468a6a1d63c8bd70d13e2fe3498be4bc6daf7eb042537eddf170e08ffa069dc3",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Oregon/or2020.pl.zip",
+      "member": "or000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-PA",
+      "group": "population",
+      "year": 2020,
+      "state": "PA",
+      "path": "source-data/census/2020/redistricting/pa2020.pl/pa000012020.pl",
+      "bytes": 172498299,
+      "sha256": "e28519d43f1b1f63f62a7ea39fec2cc6a8a509a4f6282dce1b0a9afdfb53a094",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Pennsylvania/pa2020.pl.zip",
+      "member": "pa000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-RI",
+      "group": "population",
+      "year": 2020,
+      "state": "RI",
+      "path": "source-data/census/2020/redistricting/ri2020.pl/ri000012020.pl",
+      "bytes": 12094099,
+      "sha256": "a077a305148dd567de66c7ba28e355d62b5b6adde7e72b3bb7a876fefb773657",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Rhode_Island/ri2020.pl.zip",
+      "member": "ri000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-SC",
+      "group": "population",
+      "year": 2020,
+      "state": "SC",
+      "path": "source-data/census/2020/redistricting/sc2020.pl/sc000012020.pl",
+      "bytes": 69540759,
+      "sha256": "0c6391bb41043c7e23cd407ee7d6ab5a786f18d85cede2d9966eed42366e7c55",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/South_Carolina/sc2020.pl.zip",
+      "member": "sc000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-SD",
+      "group": "population",
+      "year": 2020,
+      "state": "SD",
+      "path": "source-data/census/2020/redistricting/sd2020.pl/sd000012020.pl",
+      "bytes": 33231078,
+      "sha256": "3f37fe84461a136815aa658a4897a40a2def67a4a135fc668a97a090b8eef098",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/South_Dakota/sd2020.pl.zip",
+      "member": "sd000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-TN",
+      "group": "population",
+      "year": 2020,
+      "state": "TN",
+      "path": "source-data/census/2020/redistricting/tn2020.pl/tn000012020.pl",
+      "bytes": 80880542,
+      "sha256": "29fb348d9250da16d6974425a69181ecf313f697f29e748ee678e89409268c3a",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Tennessee/tn2020.pl.zip",
+      "member": "tn000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-TX",
+      "group": "population",
+      "year": 2020,
+      "state": "TX",
+      "path": "source-data/census/2020/redistricting/tx2020.pl/tx000012020.pl",
+      "bytes": 306404146,
+      "sha256": "54d46a690b9ee9ccf2fab9735aade4f148ba531ad7e3f519be9d6e25744e6689",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Texas/tx2020.pl.zip",
+      "member": "tx000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-UT",
+      "group": "population",
+      "year": 2020,
+      "state": "UT",
+      "path": "source-data/census/2020/redistricting/ut2020.pl/ut000012020.pl",
+      "bytes": 40576855,
+      "sha256": "874fd93a400c9af628b6d614f6feb7d083ad251d5bede1e58d713dbf75b5903a",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Utah/ut2020.pl.zip",
+      "member": "ut000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-VA",
+      "group": "population",
+      "year": 2020,
+      "state": "VA",
+      "path": "source-data/census/2020/redistricting/va2020.pl/va000012020.pl",
+      "bytes": 79426294,
+      "sha256": "ff940962887b3670feee6f3b6a76578779b4a2388e71af77277e81595309f418",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Virginia/va2020.pl.zip",
+      "member": "va000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-VT",
+      "group": "population",
+      "year": 2020,
+      "state": "VT",
+      "path": "source-data/census/2020/redistricting/vt2020.pl/vt000012020.pl",
+      "bytes": 11172738,
+      "sha256": "46a8d7276ff05209723c5f2ac0723309b2b367562cdb1f2602c7bc0343827412",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Vermont/vt2020.pl.zip",
+      "member": "vt000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-WA",
+      "group": "population",
+      "year": 2020,
+      "state": "WA",
+      "path": "source-data/census/2020/redistricting/wa2020.pl/wa000012020.pl",
+      "bytes": 98489628,
+      "sha256": "329f94f8b8ab88b182b858022de870fabbcbf813d8a44f0c7beac5f327849354",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Washington/wa2020.pl.zip",
+      "member": "wa000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-WI",
+      "group": "population",
+      "year": 2020,
+      "state": "WI",
+      "path": "source-data/census/2020/redistricting/wi2020.pl/wi000012020.pl",
+      "bytes": 112056019,
+      "sha256": "f390650ca906e693a3ad1d18f05850c7bcc015d05583433d5db29ff80a6a2da9",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Wisconsin/wi2020.pl.zip",
+      "member": "wi000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-WV",
+      "group": "population",
+      "year": 2020,
+      "state": "WV",
+      "path": "source-data/census/2020/redistricting/wv2020.pl/wv000012020.pl",
+      "bytes": 34094558,
+      "sha256": "5a900e1ed1f838e406107576e25f9c7ef10e8af8a272651a74b452e82ed467d9",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/West_Virginia/wv2020.pl.zip",
+      "member": "wv000012020.pl"
+    },
+    {
+      "id": "pl_segment_1_population-2020-WY",
+      "group": "population",
+      "year": 2020,
+      "state": "WY",
+      "path": "source-data/census/2020/redistricting/wy2020.pl/wy000012020.pl",
+      "bytes": 22055906,
+      "sha256": "2bef210145699ec483161bb2dac47ad932ce7cf63a1c696daced88e4134bc4bd",
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Wyoming/wy2020.pl.zip",
+      "member": "wy000012020.pl"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-AK",
+      "group": "blocks",
+      "year": 2020,
+      "state": "AK",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_02_tabblock20.zip",
+      "bytes": 130404435,
+      "sha256": "6fe96f3a8bbaf78945ee3a3897264ed74f1b72bc0cb46ffd434039729dccf493",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_02_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-AL",
+      "group": "blocks",
+      "year": 2020,
+      "state": "AL",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_01_tabblock20.zip",
+      "bytes": 255921861,
+      "sha256": "5d228872ccc680374631c1c71db6b7c362dc98e782ee3c4db111aa651df48468",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_01_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-AR",
+      "group": "blocks",
+      "year": 2020,
+      "state": "AR",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_05_tabblock20.zip",
+      "bytes": 223619657,
+      "sha256": "5b330f40bf913349b428e8b19bba46bc6e2fef24b78393f8477b5b96870fe6e8",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_05_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-AZ",
+      "group": "blocks",
+      "year": 2020,
+      "state": "AZ",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_04_tabblock20.zip",
+      "bytes": 204298997,
+      "sha256": "206e94e94cf4b5ea30cf286f6569c4de697ba454659cac7252224e5c5d2c4703",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_04_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-CA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "CA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_06_tabblock20.zip",
+      "bytes": 382375859,
+      "sha256": "154ffb979e4d1f8cae4ff2676cbba9030ef39a92d4620644bc8aa7f7be2ad85f",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_06_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-CO",
+      "group": "blocks",
+      "year": 2020,
+      "state": "CO",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_08_tabblock20.zip",
+      "bytes": 218525462,
+      "sha256": "708f5ecde530a9e8d6ed10be4cfbf6d9bac3fcdf26498b7546973503de38d4b4",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_08_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-CT",
+      "group": "blocks",
+      "year": 2020,
+      "state": "CT",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_09_tabblock20.zip",
+      "bytes": 61439410,
+      "sha256": "a935a5a85717389ded782debd15d7019705d7fc0777548d22cc09552208ac6b1",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_09_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-DE",
+      "group": "blocks",
+      "year": 2020,
+      "state": "DE",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_10_tabblock20.zip",
+      "bytes": 21469676,
+      "sha256": "de20500a99debb0d5da4d12f5327fb847265656472a64fe656603cc90b9993da",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_10_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-FL",
+      "group": "blocks",
+      "year": 2020,
+      "state": "FL",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_12_tabblock20.zip",
+      "bytes": 353358123,
+      "sha256": "ce5d7a02e47df17dadfa9c889edb6d35a89dfb520b8669bc4d302c2c0e100418",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_12_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-GA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "GA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_13_tabblock20.zip",
+      "bytes": 163736833,
+      "sha256": "089bf2763209a553aa3e8223dd2529d6fbbb319e2e115fcc32a8094179d362ac",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_13_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-HI",
+      "group": "blocks",
+      "year": 2020,
+      "state": "HI",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_15_tabblock20.zip",
+      "bytes": 24070539,
+      "sha256": "c29683118cd7eada4bd4672e30de6bdd5638a752c1d0f7f795b4dd580c02259e",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_15_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-IA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "IA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_19_tabblock20.zip",
+      "bytes": 165038337,
+      "sha256": "8c63755fc5b6c825e1c3ce4f6f4cbbd379fb6a75cdc7297ebc677eab5a7423cd",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_19_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-ID",
+      "group": "blocks",
+      "year": 2020,
+      "state": "ID",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_16_tabblock20.zip",
+      "bytes": 195436937,
+      "sha256": "b3a9aaf37fff885173a51135dd81cc85fc135ff4af3aa0d01aa12adac1d82531",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_16_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-IL",
+      "group": "blocks",
+      "year": 2020,
+      "state": "IL",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_17_tabblock20.zip",
+      "bytes": 306602097,
+      "sha256": "6d6b91c73cd89295e11aefc492ffec8e9dac7456a5023b85fe9953fa33c0b243",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_17_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-IN",
+      "group": "blocks",
+      "year": 2020,
+      "state": "IN",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_18_tabblock20.zip",
+      "bytes": 198328801,
+      "sha256": "be7384a1bb8b7626b5386659bfeb0811ab69a6e5ca98c78d7e67a280ecdee2d9",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_18_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-KS",
+      "group": "blocks",
+      "year": 2020,
+      "state": "KS",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_20_tabblock20.zip",
+      "bytes": 162837181,
+      "sha256": "a0ccda5300d1994008b51bf345c77bc1b04adc8df6219b226c64b80d3a611198",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_20_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-KY",
+      "group": "blocks",
+      "year": 2020,
+      "state": "KY",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_21_tabblock20.zip",
+      "bytes": 265195721,
+      "sha256": "ebed3b0de6fee945db0064d378aa66aaebe05f05b460a5ad109a57a14a783b66",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_21_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-LA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "LA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_22_tabblock20.zip",
+      "bytes": 108629191,
+      "sha256": "cd051604d53f3cf2f33e32e9dba042c24604b808e840c7cd1e22ea3d05291bd7",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_22_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-MA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "MA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_25_tabblock20.zip",
+      "bytes": 106898194,
+      "sha256": "06fc2e4c3249cbe253981cb9056d7f71f9d9a56e91b680481101caed9165e1d3",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_25_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-MD",
+      "group": "blocks",
+      "year": 2020,
+      "state": "MD",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_24_tabblock20.zip",
+      "bytes": 109605781,
+      "sha256": "152395105863f058c32dbfd8321e8c0f364be1e4b115d38ccf6940cfce1f4990",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_24_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-ME",
+      "group": "blocks",
+      "year": 2020,
+      "state": "ME",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_23_tabblock20.zip",
+      "bytes": 112882262,
+      "sha256": "0570b36a68b14f08ba23eb69d44f48b03c2c7e40e7cb6c3a0df0bdc5b3dc5d05",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_23_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-MI",
+      "group": "blocks",
+      "year": 2020,
+      "state": "MI",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_26_tabblock20.zip",
+      "bytes": 225308229,
+      "sha256": "f14f1508e8a2921d1f660b095be7160db43c9bb95a41b9494876d09928885fba",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_26_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-MN",
+      "group": "blocks",
+      "year": 2020,
+      "state": "MN",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_27_tabblock20.zip",
+      "bytes": 265232506,
+      "sha256": "dbf8b8ad633e60e3ec4008611293ed298e4b7fb64ab5a1bdbe7d8ade4944228d",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_27_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-MO",
+      "group": "blocks",
+      "year": 2020,
+      "state": "MO",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_29_tabblock20.zip",
+      "bytes": 344256630,
+      "sha256": "555aa3e4ed39934cb7560050c873307d71a6e7e4b345995e17004cf87a5d9e66",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_29_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-MS",
+      "group": "blocks",
+      "year": 2020,
+      "state": "MS",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_28_tabblock20.zip",
+      "bytes": 202288122,
+      "sha256": "1e0429794dd7022ba8e82b0cd158fb4414920852473c1c05bd7b461eb2211997",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_28_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-MT",
+      "group": "blocks",
+      "year": 2020,
+      "state": "MT",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_30_tabblock20.zip",
+      "bytes": 237571595,
+      "sha256": "a7c9520270277e905ea6c6eec85f64bd205a9889e6275b535679f723d21cdbf0",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_30_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-NC",
+      "group": "blocks",
+      "year": 2020,
+      "state": "NC",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_37_tabblock20.zip",
+      "bytes": 348180093,
+      "sha256": "a9b5398902ddcb68906d39c1a5354134eb81c86fd0a5e2f425c7f4da7eec6893",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_37_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-ND",
+      "group": "blocks",
+      "year": 2020,
+      "state": "ND",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_38_tabblock20.zip",
+      "bytes": 90191505,
+      "sha256": "3692c87bfb834dd4dd4cd1580f11648b9cfc92a996d2b1524e8ee4da94f88156",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_38_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-NE",
+      "group": "blocks",
+      "year": 2020,
+      "state": "NE",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_31_tabblock20.zip",
+      "bytes": 96550682,
+      "sha256": "5f5469ae3c3a461a3b5f7473d414fdaaedde32ad8c3f14fb25f2664c8970493a",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_31_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-NH",
+      "group": "blocks",
+      "year": 2020,
+      "state": "NH",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_33_tabblock20.zip",
+      "bytes": 45390756,
+      "sha256": "253ef035968da2645e24effd91570cf7d091575782783840d0a4f0dbd9c63038",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_33_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-NJ",
+      "group": "blocks",
+      "year": 2020,
+      "state": "NJ",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_34_tabblock20.zip",
+      "bytes": 122300178,
+      "sha256": "33e5475f232d0f01c6a6448fb041fc38bd23eee1f8f5f5a2878cfb116690ce88",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_34_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-NM",
+      "group": "blocks",
+      "year": 2020,
+      "state": "NM",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_35_tabblock20.zip",
+      "bytes": 173663847,
+      "sha256": "cf3a71e48ec3bcbd1e415d3b5698721701a8a46690a96d14d3724d264f7f3f55",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_35_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-NV",
+      "group": "blocks",
+      "year": 2020,
+      "state": "NV",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_32_tabblock20.zip",
+      "bytes": 121326353,
+      "sha256": "cd7cdd59ecea5419953c988aa69008999e50760bb0fa3395a88c0c85538cad06",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_32_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-NY",
+      "group": "blocks",
+      "year": 2020,
+      "state": "NY",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_36_tabblock20.zip",
+      "bytes": 325849613,
+      "sha256": "b8fa7fac0cad83c378778fb07f1d2487e27eedb1a5d29e5c59cda70155c3de93",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_36_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-OH",
+      "group": "blocks",
+      "year": 2020,
+      "state": "OH",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_39_tabblock20.zip",
+      "bytes": 280427139,
+      "sha256": "8075876e141b74dbaa93f42e56ef471e4070d2ad6ae1fef333e1edfaff47515e",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_39_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-OK",
+      "group": "blocks",
+      "year": 2020,
+      "state": "OK",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_40_tabblock20.zip",
+      "bytes": 199426822,
+      "sha256": "7b0445a7d613eab02e378b50326bf3e69c8f53cf7851a0a0ad4b1c2c40490f45",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_40_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-OR",
+      "group": "blocks",
+      "year": 2020,
+      "state": "OR",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_41_tabblock20.zip",
+      "bytes": 300974144,
+      "sha256": "2a057daf7185823ff5d5195c82f91a984a5d68c2fa4e785ff90f2dc111bad283",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_41_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-PA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "PA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_42_tabblock20.zip",
+      "bytes": 409374440,
+      "sha256": "16f3cd1f7674fba685e1810ab7f66f523cd185d8ad4a7259632db13b91feef3d",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_42_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-RI",
+      "group": "blocks",
+      "year": 2020,
+      "state": "RI",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_44_tabblock20.zip",
+      "bytes": 28351631,
+      "sha256": "79d10c9dfec1e3e0962e13d6295b53856db286a156d9937d3737adb0c542f35b",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_44_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-SC",
+      "group": "blocks",
+      "year": 2020,
+      "state": "SC",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_45_tabblock20.zip",
+      "bytes": 195482135,
+      "sha256": "87ac54c63173ad2e3cd2cad03e10e97371646772e6b0026a51e6e413db49ae57",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_45_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-SD",
+      "group": "blocks",
+      "year": 2020,
+      "state": "SD",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_46_tabblock20.zip",
+      "bytes": 103000754,
+      "sha256": "a5f28c340d5b1248f5c00197a2cebd945692a302e43928e40ce4f04f494baeb8",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_46_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-TN",
+      "group": "blocks",
+      "year": 2020,
+      "state": "TN",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_47_tabblock20.zip",
+      "bytes": 313037548,
+      "sha256": "26e1045a27944d21c759a61f5022c0acf41a724bb8d89a41ffb1ff377de69118",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_47_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-TX",
+      "group": "blocks",
+      "year": 2020,
+      "state": "TX",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_48_tabblock20.zip",
+      "bytes": 746348959,
+      "sha256": "c0e71f4bf463c2126e8fc3635eadc1465235e19c7fa45468606e3bcdfa989205",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_48_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-UT",
+      "group": "blocks",
+      "year": 2020,
+      "state": "UT",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_49_tabblock20.zip",
+      "bytes": 166709303,
+      "sha256": "79b0c3dd1c9e3eee3d5300628b18d4aa8e347f1025f9b2f52240dd41ff8b5ecf",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_49_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-VA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "VA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_51_tabblock20.zip",
+      "bytes": 311011970,
+      "sha256": "5722c3a80c66acb087429ea511a47d05a742a7b99712a63a711014fca5be9d61",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_51_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-VT",
+      "group": "blocks",
+      "year": 2020,
+      "state": "VT",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_50_tabblock20.zip",
+      "bytes": 56912635,
+      "sha256": "7ffc06ba34d211ac92c933b500a095a5bb3abdfb8266555f4c5935fba16c5c78",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_50_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-WA",
+      "group": "blocks",
+      "year": 2020,
+      "state": "WA",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_53_tabblock20.zip",
+      "bytes": 203676690,
+      "sha256": "0ccdbb2b58d4cdc083097411d791ba7a61e599f0937073187617f76740c61689",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_53_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-WI",
+      "group": "blocks",
+      "year": 2020,
+      "state": "WI",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_55_tabblock20.zip",
+      "bytes": 291345891,
+      "sha256": "22aa5a4c584f9a0ecea1284bb41c22b8931c4048f7158dedf4800b68dfc1ed1f",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_55_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-WV",
+      "group": "blocks",
+      "year": 2020,
+      "state": "WV",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_54_tabblock20.zip",
+      "bytes": 170048369,
+      "sha256": "04e931a5d288ed62da3b947239f3f23f8b6a8d8b4a749ec749eb90158b50f863",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_54_tabblock20.zip"
+    },
+    {
+      "id": "tiger_tabblock_archive-2020-WY",
+      "group": "blocks",
+      "year": 2020,
+      "state": "WY",
+      "path": "source-data/census/2020/tiger/archives/tl_2020_56_tabblock20.zip",
+      "bytes": 140690499,
+      "sha256": "75a47db914c4cf3fb4d5b9c07556054f268a0c901749a98ecc93f80fceb6bfa2",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_56_tabblock20.zip"
+    }
+  ]
+}

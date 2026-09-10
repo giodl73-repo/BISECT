@@ -5,6 +5,10 @@
 # ============================================================================
 # Exclude entire data directory from GitHub (root level only)
 /data/
+/.bisect-vault.json
+/.bisect-vault-links.json
+/docs/experiments/nrs-v0.3-block-ensemble-gate/governed-wilson.json
+/docs/experiments/nrs-v0.3-block-ensemble-gate/governed-kruskal.json
 
 # ============================================================================
 # Output Files (Generated Results)

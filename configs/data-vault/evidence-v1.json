@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "revision": "d3dd4c6ef6a66ffea490bca21a6ad2853ccaf257",
+      "bytes": 42583150,
+      "repo_path": "docs/experiments/nrs-v0.3-block-ensemble-gate/governed-wilson.json",
+      "vault_path": "artifacts/git-evidence/governed-wilson.json",
+      "sha256": "c02fd333e7f55a5585a2bc2019a8124a641c67f83b95beff995cfb1fc5f69157"
+    },
+    {
+      "revision": "d3dd4c6ef6a66ffea490bca21a6ad2853ccaf257",
+      "bytes": 42579880,
+      "repo_path": "docs/experiments/nrs-v0.3-block-ensemble-gate/governed-kruskal.json",
+      "vault_path": "artifacts/git-evidence/governed-kruskal.json",
+      "sha256": "360a29575e780382b5e77902bd25e27b4424f8a9a7ae413d5c1b9d250cc05b35"
+    }
+  ],
+  "schema": "bisect-evidence-catalog-v1"
+}

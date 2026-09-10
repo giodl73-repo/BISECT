@@ -1,6 +1,9 @@
 # Gerrymandering Research Portfolio
 
 ## Overview
+Large datasets and new runs belong in a configurable external vault; see
+[portable setup and fresh-data reproduction](../docs/PORTABLE_DATA.md).
+
 This directory contains research papers on algorithmic redistricting, focusing on VRA compliance, graph partitioning methods, and practical tradeoffs in congressional redistricting.
 
 The current portfolio now includes Track N on population counting, which covers prison adjustment, student reassignment, noncitizen CVAP comparisons, military/overseas treatment, and the total-vs-citizen-VAP comparison paper that ties the track together.

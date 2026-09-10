@@ -17,11 +17,11 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | Domain | Prefix | File | Count |
 |--------|--------|------|-------|
 | Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 11 |
-| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 17 |
+| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 21 |
 | Constitutional | CP | [pitfalls-constitutional.md](pitfalls-constitutional.md) | 2 |
 | Data | DP | [pitfalls-data.md](pitfalls-data.md) | 4 |
 | Research | RP | [pitfalls-research.md](pitfalls-research.md) | 2 |
-| **Total** | | | **36** |
+| **Total** | | | **40** |
 
 ## Status
 
@@ -63,6 +63,10 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-15 | Entry-point switching without PATH pre-flight check | **SOLVED** | setup_env.bat preflight (Plan 01 Task 3.2) |
 | PP-16 | Incremental deletion commits create brittle rollback dependencies | **SOLVED** | Plan 02 Rollback section (procedural artifact) |
 | PP-17 | Sensitive-asset commit prevention via manual reminder, not structural | **SOLVED** | pre-commit hook rejecting *.pdf staging (Plan 03 Task 1.4) |
+| PP-18 | Pulse completion without trace or risk closure | **MITIGATED** | Future VTRACE-governed pulse L1 review |
+| PP-19 | Interrupted admission leaves a canonical-path partial file | **SOLVED** | test_data_vault_failures.py interruption/race tests |
+| PP-20 | Successful exit with an unsatisfied setup or selection contract | **SOLVED** | test_data_vault_failures.py CLI and real relocation tests |
+| PP-21 | Output identity mistaken for complete execution custody | **SOLVED** | receipt completeness test and isolated RI rebuild |
 
 ## Adding a Pitfall
 

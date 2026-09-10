@@ -1,0 +1,48 @@
+{
+  "schema": "bisect-builder-profile-v1",
+  "year": 2020,
+  "sources": [
+    {
+      "revision": "f7250e7200f5cd09ec1c85bdf3365f6880fbbf98",
+      "source": "archive/legacy-python/scripts/research/build_state_block_rctx.py",
+      "destination": "scripts/research/build_state_block_rctx.py",
+      "line_endings": "crlf",
+      "sha256": "9bee87dca1fae9eb8d0752f31dfd24ec278b222373e9cc932ab07326e476d54a"
+    },
+    {
+      "revision": "f7250e7200f5cd09ec1c85bdf3365f6880fbbf98",
+      "source": "archive/legacy-python/scripts/research/build_ri_block_rctx.py",
+      "destination": "scripts/research/build_ri_block_rctx.py",
+      "line_endings": "crlf",
+      "sha256": "ca0621f32fa7a2d19f56a150cbedeb02fe44dc3339af122da60a63dd3fffac97"
+    },
+    {
+      "revision": "f7250e7200f5cd09ec1c85bdf3365f6880fbbf98",
+      "source": "scripts/data/census/parse_pl94171_blocks_2020.py",
+      "destination": "scripts/data/census/parse_pl94171_blocks_2020.py",
+      "line_endings": "lf",
+      "sha256": "39d0f8f240b1057bf4b085f4a7d93b423d1471d01ea2588ba141605f2508e853"
+    },
+    {
+      "revision": "f7250e7200f5cd09ec1c85bdf3365f6880fbbf98",
+      "source": "scripts/utils/status_protocol.py",
+      "destination": "scripts/utils/status_protocol.py",
+      "line_endings": "lf",
+      "sha256": "f48f80dbbb29c080e2e686c3ef62b0a91e0ad96ffe04eb58a95ba7a0133329c0"
+    },
+    {
+      "revision": "f7250e7200f5cd09ec1c85bdf3365f6880fbbf98",
+      "source": "crates/bisect-data/src/bridge.rs",
+      "destination": "crates/bisect-data/src/bridge.rs",
+      "line_endings": "crlf",
+      "sha256": "d8c7e5292e4e768ee1ad36422dca0feff70bd3db47f9a23db8c7a3947e6fb7c4"
+    },
+    {
+      "revision": "aa11ce905f8f392f7125ee2feb23c63b79dc6330",
+      "source": "crates/bisect-data/src/adjacency.rs",
+      "destination": "crates/bisect-data/src/adjacency.rs",
+      "line_endings": "crlf",
+      "sha256": "0da364273bc9188519ed20ceda0eda4cde95bc76786745f11f41c8235b3e7468"
+    }
+  ]
+}
