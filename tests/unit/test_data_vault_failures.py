@@ -197,6 +197,11 @@ class FailureTests(unittest.TestCase):
                 context = {"id": "context-2020-RI", "group": "contexts", "state": "RI", "year": 2020, "path": "derived/context", "bytes": len(candidate_bytes), "sha256": digest(candidate_bytes)}
                 stack.enter_context(patch.object(v, "load_catalog", return_value={"items": sources + [context]}))
                 stack.enter_context(patch.object(v, "link_directory"))
+                # platform.platform() may itself call subprocess on a fresh CI
+                # host. Capture the real environment before mocking Git/build
+                # subprocess boundaries; do not feed it fake Git source bytes.
+                inventory = v.runtime_inventory()
+                stack.enter_context(patch.object(v, "runtime_inventory", return_value=inventory))
                 profile = v.load_profile()
                 for source in profile["sources"]:
                     source["line_endings"] = "lf"
