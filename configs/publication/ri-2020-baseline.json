@@ -1,0 +1,92 @@
+{
+  "schema": "bisect-publication-selection-v1",
+  "id": "ri-2020-baseline",
+  "state": "RI",
+  "year": 2020,
+  "status": "reference-baseline-candidate",
+  "source_verification_status": "pass",
+  "non_claims": [
+    "boundary global optimality",
+    "canonical global optimality",
+    "VRA compliance",
+    "partisan fairness",
+    "legal validity",
+    "official adoption"
+  ],
+  "files": [
+    {
+      "source": "derived-data/census/2020/certified/ri_blocks_2020.rctx",
+      "path": "inputs/context.rctx",
+      "bytes": 6963593,
+      "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371",
+      "url": null
+    },
+    {
+      "source": "source-data/census/2020/tiger/archives/tl_2020_44_tabblock20.zip",
+      "path": "inputs/blocks.zip",
+      "bytes": 28351631,
+      "sha256": "79d10c9dfec1e3e0962e13d6295b53856db286a156d9937d3737adb0c542f35b",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_44_tabblock20.zip"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/baseline_manifest.json",
+      "path": "inputs/plan/baseline_manifest.json",
+      "bytes": 2151,
+      "sha256": "71797c705e691c3233111c3cae56abb0972c559af14415adb332fe9ddae44de8"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/baseline-tree.json",
+      "path": "inputs/plan/baseline-tree.json",
+      "bytes": 181292,
+      "sha256": "9e0f007ff6e2154346028dce6ee1ce42b1bd4fdfa2ca3512d9c66aaf655a4359"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/baseline_assignments.json",
+      "path": "inputs/plan/baseline_assignments.json",
+      "bytes": 667012,
+      "sha256": "e9bdc209225b8667221218eb6aa76523bf7d48dfbb54f468fe8d9bee335d3785"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/nodes/root/certified-discovery.json",
+      "path": "inputs/plan/nodes/root/certified-discovery.json",
+      "bytes": 232525,
+      "sha256": "018d32379fe6e8c5f6079036ba3656126ee025644f88dce319baffce9c0438cb"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/seed/input_manifest.json",
+      "path": "inputs/plan/seed/input_manifest.json",
+      "bytes": 959,
+      "sha256": "d778b36bd6699615bc1fa9b80233ffa942749858f4ae8d573794600d9d2b1b0d"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/seed/legal_profile.json",
+      "path": "inputs/plan/seed/legal_profile.json",
+      "bytes": 1028,
+      "sha256": "5ec37dcfe1a5dccff6b8bf1593687d560eab9c9bc2a0b1944b9a2340d32590b7"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/seed/manifest.json",
+      "path": "inputs/plan/seed/manifest.json",
+      "bytes": 1193,
+      "sha256": "b808886dea1af5e300fcef2cb7b0abf7bfb6f77d3d3028e3fa765d39a7d1679b"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/seed/seed_record.json",
+      "path": "inputs/plan/seed/seed_record.json",
+      "bytes": 498,
+      "sha256": "fa0f5668701dc5d432b0f9c63e6cae2af799b0f87d3dea7795b1be28ed3aaca8"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/seed/standard_profile.json",
+      "path": "inputs/plan/seed/standard_profile.json",
+      "bytes": 6384,
+      "sha256": "c8d5336a51178283c304c9f1b538ddd36f2d8c8035543f52785a8f55efca6a92"
+    },
+    {
+      "source": "runs/nrs-v0.3-replay/external-replay-2026-09-09-r6/national-2020/states/ri/package/seed/unit_index.json",
+      "path": "inputs/plan/seed/unit_index.json",
+      "bytes": 590052,
+      "sha256": "595c92ca563f560b61dc441e6502c3d4dc9ac82dded154dab8a937749302d83d"
+    }
+  ]
+}

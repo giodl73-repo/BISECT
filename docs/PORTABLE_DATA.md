@@ -171,6 +171,10 @@ every workspace test works with an intentionally incomplete checkout.
 
 New heavyweight outputs should go to `VAULT/runs`, not under tracked `docs`.
 Publish compact metrics, hashes, provenance and recovery recipes in Git.
+For the QGIS publication workflow, active work uses the ignored local
+`.work/publication` directory and completed packages are archived afterward;
+see [local publication work and portable releases](PUBLICATION_PACKAGING.md).
+Existing repository-to-vault links are not local publication scratch space.
 The first two large historical blobs now have manifest/hydration support;
 further archival work can extend that same catalog.
 
