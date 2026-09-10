@@ -1,0 +1,21 @@
+{
+  "schema_version": "certified-bisection-ceremony-v1",
+  "ceremony_id": "sha256:7d13054a28f2a2dc6befad09d8482722cbc0eef5aaae2a01794571a798d8d607",
+  "config": {
+    "rule_profile_hash": "sha256:56be763ef766f3449b868ee9cff2a3247049e61e4173b961b07c4a14e3b326b6",
+    "root_instance_hash": "sha256:01a712949a4d2aafe93efb00caf622094b51003a1699ab4e68515cc94919db77",
+    "district_count": 4,
+    "genesis_unix_seconds": 1000,
+    "minimum_review_seconds": 100,
+    "minimum_witness_receipts": 2,
+    "genesis_witness_receipts": [
+      "fixture-log:genesis-a",
+      "fixture-tsa:genesis-b"
+    ]
+  },
+  "status": "open",
+  "halt_reason": null,
+  "tree_id": null,
+  "rounds": [],
+  "transcript_id": "sha256:f0a81d5b627b9f79475d843208f9d8ae6965cd8dfdd1821493ea149147b9246e"
+}

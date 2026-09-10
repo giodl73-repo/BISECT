@@ -21,6 +21,13 @@ Research demonstration only — not court-ready, not an official score, not a
 fairness certificate. Claim boundaries:
 [docs/vtrace/COMMUNICATIONS_STRATEGY.md](docs/vtrace/COMMUNICATIONS_STRATEGY.md).
 
+Active research: [districting-rule development roadmap](docs/specs/2026-09-09-districting-rule-development-roadmap.md).
+Pause/resume: [2026-09-10 checkpoint](docs/specs/2026-09-10-research-resume-checkpoint.md).
+Latest [RI adjacent-swap diagnostic](docs/experiments/ri-adjacent-swaps-2020/README.md):
+adjacent two-block exchanges do not escape the six single-block stopping states.
+Assignments remain connected, within the fixed population band, and split
+three counties. Broader moves and full-plan bakeoffs remain open.
+
 ## R package family
 
 BISECT is the primary application consumer of a reusable civic-evidence family:
@@ -97,6 +104,7 @@ within each required step.
 | Exact per-cut objective and canonical tie-break | Implemented |
 | Bounded optimality/infeasibility certificates | Implemented |
 | Recursive certificate tree and RPLAN binding | Implemented |
+| Staged public cut ceremony, CLI, and prefix verifier | Implemented |
 | Hostile certificate/tree verification corpus | Implemented |
 | Rhode Island 25,649-block connected RCTX | Implemented |
 | Compact parent/depth OPB proof requests | Implemented; bounded proof verified |
@@ -110,6 +118,8 @@ within each required step.
 | Rhode Island boundary/canonical stages | Unresolved after documented timeouts |
 | Rhode Island current connected incumbent | Weighted cut 43,047,238 |
 | NRS v0.3 national operational baselines | 2000/2010/2020; 150 State-cycle packages; 27,398,654 blocks; 1,305 districts |
+| NRS v0.3 clean-worktree replay | PASS; 150/150 governed assignment hashes matched from the M: data-vault corpus |
+| NRS v0.3 national Tier 1--2 bakeoff regeneration | PASS; 50/50 assignment/subdivision and 50/50 common-block geometry slices |
 | NRS v0.3 population-tolerance coverage | 1,155/1,155 recursive nodes independently verified |
 | NRS v0.3 arithmetic-floor equality | 13/1,155 nodes proved |
 | NRS v0.3 weighted-boundary / canonical proof | 0/1,155 nodes; exact-objective frontier remains open |
@@ -123,6 +133,25 @@ software then executes those choices without line-drawer discretion and proofs
 settle whether execution was correct.
 
 **[Read the plain-language certified BISECT explainer →](docs/concepts/certified-recursive-bisection.md)**
+
+**[Read the staged public cut-ceremony specification →](docs/specs/2026-09-09-certified-sequential-bisection-ceremony.md)**
+
+**[Read the certified-ceremony bakeoff protocol →](docs/specs/2026-09-09-certified-ceremony-bakeoff-extension.md)**
+
+**[Read the U.21 methods paper →](docs/papers/U.21+certified-recursive-bisection.pdf)**
+
+Reproduce the bounded ceremony bakeoff from a Windows checkout:
+
+```powershell
+cargo build -p bisect-cli
+py scripts/research/verify_certified_ceremony_bakeoff.py `
+  docs/examples/certified-ceremony-bakeoff `
+  --bisect target/debug/bisect.exe
+```
+
+This fixture verifies a complete two-round transcript and rejects a timestamp
+mutation. It is a bounded software/procedure test, not a State-scale result or
+an externally witnessed public ceremony.
 
 **[Track the autonomous nationwide 2020/2010/2000 roadmap →](context/waves/CERTIFIED_NATIONAL_ROADMAP.md)**
 
@@ -260,6 +289,7 @@ bisect label-report official_2020 --year 2020 --format html json pdf
 | County splits | 1,812 / 1,819 / 1,823 for 2000 / 2010 / 2020 |
 | Tract splits | 17,268 / 18,800 / 20,288 for 2000 / 2010 / 2020 |
 | Exact proof coverage | Arithmetic floor 13/1,155; weighted boundary 0/1,155; canonical 0/1,155 |
+| Clean-worktree source replay | 150/150 governed State-cycle assignment hashes matched; national Tier 1--2 regeneration passed |
 | Block-level ensemble replay | Rhode Island Stage 1 and all six NH/NM/GA v3 State-kernel runs regenerated exactly |
 | Block-level ensemble convergence | Rhode Island passed; NH and NM passed v3; GA failed the frozen all-or-nothing gate, so v3 closed non-converged |
 

@@ -4,6 +4,7 @@ use bisect_cli::analyze_label::{run_label_analyze, run_label_report};
 use bisect_cli::args::PlanArgs;
 use bisect_cli::args::{Cli, Commands, SuiteCommands};
 use bisect_cli::build_cmd::run_build;
+use bisect_cli::ceremony_cmd::run_ceremony;
 use bisect_cli::doctor::run_doctor;
 use bisect_cli::ensemble::run_ensemble;
 use bisect_cli::exact_cmd::run_exact;
@@ -973,6 +974,14 @@ fn main() {
         // ── BISECT exact: exact optimization family reports ─────────────────
         Commands::Exact(args) => {
             run_exact(&args).unwrap_or_else(|e| {
+                eprintln!("ERROR: {e:#}");
+                std::process::exit(1);
+            });
+        }
+
+        // ── BISECT ceremony: staged certified-cut publication ───────────────
+        Commands::Ceremony(args) => {
+            run_ceremony(&args.command).unwrap_or_else(|e| {
                 eprintln!("ERROR: {e:#}");
                 std::process::exit(1);
             });

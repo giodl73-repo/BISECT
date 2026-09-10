@@ -18,11 +18,23 @@ The portfolio-wide algorithm-paper triage scorecard is
 VTRACE evidence posture for indexed papers is controlled in
 [`docs/vtrace/PAPER_EVIDENCE_INVENTORY.md`](vtrace/PAPER_EVIDENCE_INVENTORY.md).
 
-The current governed national evidence is summarized in A.0, A.5, and U.21:
-NRS v0.3 covers 2000, 2010, and 2020 with complete operational assignments,
-an independently checked structural comparison, and explicit exact-proof
-gaps. Older papers retain their experiment-specific data vintages and should
-not be read as if they analyzed the NRS v0.3 assignments.
+The current governed national evidence is summarized in A.0, A.5, and U.21.
+Published NRS v0.3 artifacts cover 2000, 2010, and 2020 and pass the Level-1
+structural audit, with explicit exact-proof gaps. A 2026-09-09 clean-worktree
+replay from the separately held M: data-vault corpus regenerated all 150
+State-cycle assignments, matched every governed hash, and passed the national
+Tier 1--2 regeneration checks. The corpus remains outside Git, so repository
+contents alone are insufficient for a new-machine replay. Older papers retain
+their experiment-specific data vintages and should not be read as if they
+analyzed the NRS v0.3 assignments.
+
+The prospective public-process layer is the certified sequential-bisection
+ceremony: genesis commits the rule, depth rounds wait through frozen review
+windows, and disclosed prefixes verify without future cuts. It is implemented
+and integrated into U.21, A.0, B.0, B.1, and B.02. Existing bakeoffs remain
+frozen historical evidence; future runs use
+`certified-ceremony-bakeoff-extension-v1` and keep map and procedural outcomes
+on separate scoreboards.
 
 ---
 
@@ -106,7 +118,7 @@ The search, optimization, certification, and algorithm-selection layer. Once con
 | U.18 | Large-Neighborhood Search — local improvement, tabu/LNS scaffolding, and repair hooks | [PDF](papers/U.18+large-neighborhood-search.pdf) | reviewed draft; public lineage and benchmark packages |
 | U.19 | Evolutionary Search Comparison — validity-preserving crossover/mutation and selected frontier audits | [PDF](papers/U.19+evolutionary-search-comparison.pdf) | reviewed draft; public selected-frontier package |
 | U.20 | Plan Audit Certificates — RPLAN/RCTX audit certificates and lineage fixed point | [PDF](papers/U.20+plan-audit-certificates.pdf) | reviewed draft; public package corpus and audit benchmark |
-| U.21 | Certified Recursive Bisection — proof-carrying cuts and recursive certificate trees | [PDF](papers/U.21+certified-recursive-bisection.pdf) | three-cycle operational evidence, bounded exact/METIS comparison, and governed 2020 NRS/CD118 Tier 1--2 bakeoff published; exact State proof pending |
+| U.21 | Certified Recursive Bisection — proof-carrying cuts, recursive certificate trees, and staged public ceremony | [PDF](papers/U.21+certified-recursive-bisection.pdf) | ceremony implementation and bounded tests complete; externally witnessed bakeoff and exact State proof pending |
 
 U.0 and U.12-U.21 are reviewed or evidence-bounded drafts with PDFs and paper-level simulated
 review/revision artifacts. Search/optimization additions through U.21 are

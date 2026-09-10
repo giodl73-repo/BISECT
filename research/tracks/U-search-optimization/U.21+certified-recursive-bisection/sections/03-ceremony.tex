@@ -1,0 +1,50 @@
+\section{A Public Sequential-Cut Ceremony}
+\label{sec:ceremony}
+
+A certificate tree proves a completed computational object. It does not, by
+itself, show when officials committed to the rule or whether intermediate cuts
+were disclosed before later choices could be substituted. We therefore define
+a ceremony around the same canonical tree.
+
+Before geographic cuts are released, a genesis transcript commits the rule-
+profile hash, root-instance hash, district count, floor/ceiling tree, minimum
+review interval, witness threshold, and challenge policy. For a plan with $k$
+districts, the completed binary tree contains exactly $k-1$ non-leaf cut
+decisions. Round zero releases the root. Round $d$ releases every non-leaf cut
+at depth $d$, ordered by binary path, only after the frozen interval has elapsed
+since the prior publication.
+
+Every announcement embeds its complete certified split instance, certificate,
+and proof. The round also binds its timestamp, external witness receipts, and
+the prior round hash. An observer can consequently verify the public prefix,
+including exact parent-derived child universes, without receiving unreleased
+descendants. The final round changes the transcript to \texttt{completed} and
+binds the complete certified-tree identifier. A challenged process may instead
+become permanently \texttt{halted}; its accepted prefix and nonempty halt reason
+remain verifiable, and resumption requires a new ceremony identifier.
+
+Depth batching is deliberate. Requiring a separate statutory delay for all
+$k-1$ cuts would make a large delegation needlessly serial, while disclosing
+all cuts at once would eliminate intermediate review. Same-depth cuts depend on
+already accepted parents and are mutually independent, so they may be reviewed
+together. Different States may likewise proceed in parallel.
+
+The reference implementation exposes immutable \texttt{start},
+\texttt{announce}, \texttt{verify}, and \texttt{halt} transitions. It checks
+minimum elapsed time and distinct receipt bindings, but opaque receipt strings
+are not proof of real-world publication. An official deployment must validate
+the signatures and clocks of its named transparency logs or timestamp
+authorities.
+
+This ceremony sharpens the Huntington--Hill analogy. The political institution
+selects and publishes the governing rule; each subsequent geographic decision
+is a locally checkable consequence of that rule. It does not make the rule
+value-free, prove a partisan-symmetric outcome, or displace legal and public
+review.
+
+For prospective bakeoffs, ceremony evidence forms a separate procedural
+scoreboard: proof coverage, prefix verification, release completion, transcript
+size, verifier time, halt behavior, and hostile-test resistance. These fields
+must not be combined with map-quality metrics into a post hoc scalar winner.
+The preexisting bakeoff results predate this protocol and are not retroactively
+classified as ceremony runs.

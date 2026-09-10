@@ -1,0 +1,32 @@
+{
+  "input": {
+    "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ri_blocks_2020.rctx",
+    "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+  },
+  "schema": "ri-population-band-manifest-v1",
+  "settings": {
+    "alphas": [
+      "0",
+      "0.5",
+      "1",
+      "2",
+      "4",
+      "8"
+    ],
+    "bands_ppm": [
+      10,
+      100,
+      1000
+    ],
+    "execution": "serial, no RNG, no enforced time or memory cap",
+    "root_rule": "floor(j*(n-1)/4), j=0..4",
+    "scope": "RI 2020 root only",
+    "seats": 2
+  },
+  "sources": {
+    "C:\\src\\apportionment\\scripts\\research\\analyze_dfs_county_response.py": "fe135a02f752dc32419235a8f787159e22e1fb2d3685e10c39b629892c39448c",
+    "C:\\src\\apportionment\\scripts\\research\\run_multiroot_county_diagnostic.py": "5c808241fdc0b629cc554a6a9c9c45d4ca891a5063d6efb04de3453f2091c807",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_population_band.py": "c67e6cfa90bb0d006dee74a8de71b2ff90140762880cc4e41321a351a60bedfc",
+    "C:\\src\\apportionment\\signals\\discover\\hypothesis\\ri-population-band-hypothesis-2026-09-10.md": "bc714836b4483769785192182d2d5e2a65ecc2126946583902a979bf46c63acd"
+  }
+}

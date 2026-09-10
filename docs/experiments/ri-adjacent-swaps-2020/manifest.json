@@ -1,0 +1,34 @@
+{
+  "baseline_analysis_sha256": "a69e475eb5a883cd5936a7484f638e9dc171ac710c6b73e498866e2e336be3c8",
+  "baseline_manifest_sha256": "02b0969259535385c4583bb676f65d58dd15d2dc49f41106d795fb52609e0ee3",
+  "input": {
+    "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ri_blocks_2020.rctx",
+    "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+  },
+  "schema": "ri-adjacent-swaps-v1",
+  "settings": {
+    "alphas": [
+      "0",
+      "0.5",
+      "1",
+      "2",
+      "4",
+      "8"
+    ],
+    "band_ppm": 1000,
+    "connectivity_check_budget": 5000,
+    "execution": "serial deterministic; no hard wall-time or memory cap",
+    "move": "exchange labels of endpoints of an original cut edge; no single-block moves",
+    "ordering": "strict negative scaled delta, ascending endpoint indices",
+    "swap_budget": 50
+  },
+  "sources": {
+    "C:\\src\\apportionment\\scripts\\research\\analyze_dfs_county_response.py": "fe135a02f752dc32419235a8f787159e22e1fb2d3685e10c39b629892c39448c",
+    "C:\\src\\apportionment\\scripts\\research\\run_multiroot_county_diagnostic.py": "5c808241fdc0b629cc554a6a9c9c45d4ca891a5063d6efb04de3453f2091c807",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_adjacent_swaps.py": "98fc001d47a94c1b0127e9105791653862c63e929255011606c0622ea825ee5b",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_boundary_budget.py": "fe3d6d78e449f2e97a2ee5761b913cd08f8ee4c67e6cffec9313e5dbc67d7b92",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_boundary_moves.py": "426f06cd9e2592d65fd11b1da551a03e111f502ef0f8ec85cf11a9b904f15dbf",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_county_tree.py": "df24bce2511b7d82825579eed27d069930866d857e55348929f490d407f6415d",
+    "C:\\src\\apportionment\\scripts\\research\\run_ri_population_band.py": "c67e6cfa90bb0d006dee74a8de71b2ff90140762880cc4e41321a351a60bedfc"
+  }
+}

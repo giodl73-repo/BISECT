@@ -92,9 +92,19 @@ defects. After remediation, all four neutral structure runs passed native audits
 and regenerated exactly. This is a one-input implementation result, not an
 algorithm ranking.
 
+For prospective bakeoffs we add a second, non-combinable procedural scoreboard.
+It records whether an arm is replay-only, audit-packaged, tree-certified, or
+released through a certified public ceremony; it also records cut-proof
+coverage, prefix verification, completion or halt status, transcript size,
+verifier time, and hostile-test results. Existing frozen results are not
+retroactively upgraded, and no scalar score blends these fields with map
+quality.
+
 A court can audit exactly which signals were used in any plan by reading the
 \texttt{whatif-manifest v1} JSON sidecar produced by the \texttt{bisect} CLI.
 Every run is parameter-reproducible and hash-chain verifiable.
+Certified ceremony runs additionally commit the rule before the root cut and
+release later depths only after frozen public-review intervals.
 \end{abstract}
 
 \tableofcontents

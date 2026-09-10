@@ -1,0 +1,285 @@
+{
+  "census_sha256": "ecf05451c3989e5ecbf27eba49c2925654592a471169447b101be153fb0b0e6e",
+  "claim_boundary": "Root-only fixed-DFS candidate rescoring, exact rational additive county penalties. Not a full engine sweep, METIS rerun, tie-break replay, final assignment comparison, county-fragment outcome, or optimality/neutrality/legal claim. Includes retained zero-population units and graph bridges.",
+  "inputs": {
+    "IA": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ia_blocks_2020.rctx",
+      "sha256": "a4e65f196156aafd5fba20040cab3d2331dd50ec4b4e23d497dab7073857f55e"
+    },
+    "NC": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\nc_blocks_2020.rctx",
+      "sha256": "9bddeecbdca04bd89cc7b86cb4402f1cf113a9c7b9b6915da990daccb1af3c2d"
+    },
+    "RI": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\ri_blocks_2020.rctx",
+      "sha256": "3d574a360458feb915f4febee97afd42d29f8a2fccd22d8e9ee8df04f7984371"
+    },
+    "TX": {
+      "path": "M:\\DATA_VAULT\\projects\\apportionment\\derived-data\\census\\2020\\certified\\tx_blocks_2020.rctx",
+      "sha256": "7965ce00ebdc781a5935b605bf81f0498f41c4e3444144cf8daa8467fecd0858"
+    }
+  },
+  "schema_version": "dfs-root-county-response-v1",
+  "selector_source_sha256": "7b1fbe008fd4675204bc88daf8aebf3d45de2a89dda41bebb05fe9b3993628d4",
+  "source_sha256": "fe135a02f752dc32419235a8f787159e22e1fb2d3685e10c39b629892c39448c",
+  "states": {
+    "IA": {
+      "alpha_response": [
+        {
+          "alpha": "0",
+          "minimum_weighted_cut": "1462896021",
+          "winning_physical_partitions": [
+            "191030023002020"
+          ]
+        },
+        {
+          "alpha": "0.5",
+          "minimum_weighted_cut": "4343824721/2",
+          "winning_physical_partitions": [
+            "191030023002020"
+          ]
+        },
+        {
+          "alpha": "1",
+          "minimum_weighted_cut": "2880928700",
+          "winning_physical_partitions": [
+            "191030023002020"
+          ]
+        },
+        {
+          "alpha": "2",
+          "minimum_weighted_cut": "4298961379",
+          "winning_physical_partitions": [
+            "191030023002020"
+          ]
+        },
+        {
+          "alpha": "4",
+          "minimum_weighted_cut": "7135026737",
+          "winning_physical_partitions": [
+            "191030023002020"
+          ]
+        },
+        {
+          "alpha": "8",
+          "minimum_weighted_cut": "12807157453",
+          "winning_physical_partitions": [
+            "191030023002020"
+          ]
+        }
+      ],
+      "baseline_census_counters_match": true,
+      "candidate_scores": [
+        {
+          "raw_cut": 1462896021,
+          "subtree_root_geoid": "191030023002020",
+          "within_county_cut": 1418032679
+        },
+        {
+          "raw_cut": 1464731350,
+          "subtree_root_geoid": "191030023002022",
+          "within_county_cut": 1419868008
+        }
+      ],
+      "minimum_deviation": 1550,
+      "minimum_deviation_candidates": 4,
+      "minimum_deviation_cut_candidates": 2,
+      "minimum_deviation_cut_partitions": 1,
+      "minimum_deviation_physical_partitions": 2,
+      "seats": 4,
+      "unit_count": 175199,
+      "winning_set_changed": false
+    },
+    "NC": {
+      "alpha_response": [
+        {
+          "alpha": "0",
+          "minimum_weighted_cut": "2819128337",
+          "winning_physical_partitions": [
+            "371830524012000"
+          ]
+        },
+        {
+          "alpha": "0.5",
+          "minimum_weighted_cut": "8291243641/2",
+          "winning_physical_partitions": [
+            "371830524012000"
+          ]
+        },
+        {
+          "alpha": "1",
+          "minimum_weighted_cut": "5472115304",
+          "winning_physical_partitions": [
+            "371830524012000"
+          ]
+        },
+        {
+          "alpha": "2",
+          "minimum_weighted_cut": "8125102271",
+          "winning_physical_partitions": [
+            "371830524012000"
+          ]
+        },
+        {
+          "alpha": "4",
+          "minimum_weighted_cut": "13431076205",
+          "winning_physical_partitions": [
+            "371830524012000"
+          ]
+        },
+        {
+          "alpha": "8",
+          "minimum_weighted_cut": "24043024073",
+          "winning_physical_partitions": [
+            "371830524012000"
+          ]
+        }
+      ],
+      "baseline_census_counters_match": true,
+      "candidate_scores": [
+        {
+          "raw_cut": 2819128337,
+          "subtree_root_geoid": "371830524012000",
+          "within_county_cut": 2652986967
+        }
+      ],
+      "minimum_deviation": 243222,
+      "minimum_deviation_candidates": 2,
+      "minimum_deviation_cut_candidates": 2,
+      "minimum_deviation_cut_partitions": 1,
+      "minimum_deviation_physical_partitions": 1,
+      "seats": 14,
+      "unit_count": 236638,
+      "winning_set_changed": false
+    },
+    "RI": {
+      "alpha_response": [
+        {
+          "alpha": "0",
+          "minimum_weighted_cut": "243087025",
+          "winning_physical_partitions": [
+            "440070021022005"
+          ]
+        },
+        {
+          "alpha": "0.5",
+          "minimum_weighted_cut": "728389427/2",
+          "winning_physical_partitions": [
+            "440070021022005"
+          ]
+        },
+        {
+          "alpha": "1",
+          "minimum_weighted_cut": "485302402",
+          "winning_physical_partitions": [
+            "440070021022005"
+          ]
+        },
+        {
+          "alpha": "2",
+          "minimum_weighted_cut": "727517779",
+          "winning_physical_partitions": [
+            "440070021022005"
+          ]
+        },
+        {
+          "alpha": "4",
+          "minimum_weighted_cut": "1211948533",
+          "winning_physical_partitions": [
+            "440070021022005"
+          ]
+        },
+        {
+          "alpha": "8",
+          "minimum_weighted_cut": "2180810041",
+          "winning_physical_partitions": [
+            "440070021022005"
+          ]
+        }
+      ],
+      "baseline_census_counters_match": true,
+      "candidate_scores": [
+        {
+          "raw_cut": 243105038,
+          "subtree_root_geoid": "440070020001024",
+          "within_county_cut": 242233390
+        },
+        {
+          "raw_cut": 243087025,
+          "subtree_root_geoid": "440070021022005",
+          "within_county_cut": 242215377
+        }
+      ],
+      "minimum_deviation": 1303,
+      "minimum_deviation_candidates": 4,
+      "minimum_deviation_cut_candidates": 2,
+      "minimum_deviation_cut_partitions": 1,
+      "minimum_deviation_physical_partitions": 2,
+      "seats": 2,
+      "unit_count": 25649,
+      "winning_set_changed": false
+    },
+    "TX": {
+      "alpha_response": [
+        {
+          "alpha": "0",
+          "minimum_weighted_cut": "3020771228",
+          "winning_physical_partitions": [
+            "482917013001005"
+          ]
+        },
+        {
+          "alpha": "0.5",
+          "minimum_weighted_cut": "4451185931",
+          "winning_physical_partitions": [
+            "482917013001005"
+          ]
+        },
+        {
+          "alpha": "1",
+          "minimum_weighted_cut": "5881600634",
+          "winning_physical_partitions": [
+            "482917013001005"
+          ]
+        },
+        {
+          "alpha": "2",
+          "minimum_weighted_cut": "8742430040",
+          "winning_physical_partitions": [
+            "482917013001005"
+          ]
+        },
+        {
+          "alpha": "4",
+          "minimum_weighted_cut": "14464088852",
+          "winning_physical_partitions": [
+            "482917013001005"
+          ]
+        },
+        {
+          "alpha": "8",
+          "minimum_weighted_cut": "25907406476",
+          "winning_physical_partitions": [
+            "482917013001005"
+          ]
+        }
+      ],
+      "baseline_census_counters_match": true,
+      "candidate_scores": [
+        {
+          "raw_cut": 3020771228,
+          "subtree_root_geoid": "482917013001005",
+          "within_county_cut": 2860829406
+        }
+      ],
+      "minimum_deviation": 1539,
+      "minimum_deviation_candidates": 2,
+      "minimum_deviation_cut_candidates": 2,
+      "minimum_deviation_cut_partitions": 1,
+      "minimum_deviation_physical_partitions": 1,
+      "seats": 38,
+      "unit_count": 668757,
+      "winning_set_changed": false
+    }
+  }
+}

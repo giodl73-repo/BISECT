@@ -5,6 +5,7 @@
 //! Only practical for n <= 500 tracts. Spec: docs/specs/2026-05-07-ilp-redistricting.md
 
 pub mod canonical;
+pub mod ceremony;
 pub mod certificates;
 pub mod certified_single;
 pub mod certified_split;
@@ -25,6 +26,11 @@ pub use canonical::{
     ExactObjective, ExactProofTranscript, ExhaustiveProof, PrimaryObjective,
     EXACT_CERTIFICATE_SCHEMA_VERSION, EXACT_ENUMERATION_LIMIT, EXACT_INSTANCE_SCHEMA_VERSION,
     EXACT_MODEL_ID, EXACT_PROOF_SCHEMA_VERSION,
+};
+pub use ceremony::{
+    announce_next_round, build_completed_ceremony, halt_ceremony, start_ceremony, verify_ceremony,
+    verify_ceremony_prefix, CeremonyConfig, CeremonyError, CeremonyRound, CeremonyStatus,
+    CeremonyTranscript, CutAnnouncement, CERTIFIED_BISECTION_CEREMONY_SCHEMA_VERSION,
 };
 pub use certificates::{
     branch_and_cut_certificate, BranchAndCutCertificate, BranchAndCutMode,

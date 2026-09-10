@@ -6,6 +6,10 @@
 
 **Stage:** Wisconsin proof slice; national expansion is a separate decision
 
+**Prospective extension:** Runs frozen on or after 2026-09-09 also use
+`certified-ceremony-bakeoff-extension-v1`. This note does not alter this frozen
+v1 proof slice or retroactively create ceremony evidence for its outputs.
+
 ## Question
 
 Holding the 2020 tract universe, adjacency graph, population source, edge-weight
