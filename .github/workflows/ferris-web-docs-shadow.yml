@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: giodl73-repo/FERRIS
-          ref: 1f2a9d1d7047d676f5fe36832e646535d7d43c60
+          ref: 2665bfdd430a2e24e4848f22f37b912bbbcc8f6e
           path: ferris
           sparse-checkout: |
             Cargo.toml
@@ -85,7 +85,7 @@ jobs:
       - name: Write owner receipt
         if: always() && steps.ferris-plan.outcome == 'success'
         env:
-          FERRIS_REVISION: 1f2a9d1d7047d676f5fe36832e646535d7d43c60
+          FERRIS_REVISION: 2665bfdd430a2e24e4848f22f37b912bbbcc8f6e
           WEB_DOCS_SELECTED: ${{ steps.ferris-plan.outputs.web_docs_selected }}
           OWNER_INSTALL_STATUS: ${{ steps.owner-install.outcome }}
           OWNER_BUILD_STATUS: ${{ steps.owner-build.outcome }}
