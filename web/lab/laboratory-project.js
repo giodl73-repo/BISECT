@@ -48,7 +48,7 @@ export function validateLabConfig(config) {
     for(const code of config.states){const input=validateElectionInput(config.elections[code]);if(input.state!==code||input.year!==config.year)throw new Error('Election input scope must match the experiment.');}
   }
   if(config.weights==='partisan'){
-    if(config.alpha_county!==0||config.structure!=='standard-bisect'||!['single','multi'].includes(config.search)||!bounded(config.dem_threshold,0,1)||!bounded(config.rep_threshold,0,config.dem_threshold)||!record(config.partisans)||Object.keys(config.partisans).length!==config.states.length)throw new Error('Partisan weights require standard Single/Multi, ordered thresholds and explicit shares for every selected state.');
+    if(config.alpha_county!==0||config.structure!=='standard-bisect'||!['single','multi','percentile','convergence','bisection-ensemble'].includes(config.search)||!bounded(config.dem_threshold,0,1)||!bounded(config.rep_threshold,0,config.dem_threshold)||!record(config.partisans)||Object.keys(config.partisans).length!==config.states.length)throw new Error('Partisan weights require standard Single/Multi/percentile/convergence/local-ensemble, ordered thresholds and explicit shares for every selected state.');
     for(const code of config.states){const input=validatePartisanInput(config.partisans[code]);if(input.state!==code||input.year!==config.year)throw new Error('Partisan input scope must match the experiment.');}
   }
   if(vraSection){

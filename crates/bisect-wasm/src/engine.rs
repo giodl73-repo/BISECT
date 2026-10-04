@@ -201,9 +201,9 @@ pub(crate) fn validate(g: &PreparedGraph, o: &Options) -> Result<(), String> {
         if !(o.structure=="nway" || (["ratio-optimal","ratio-optimal-area","ratio-optimal-vra"].contains(&o.structure.as_str())&&["single","multi"].contains(&o.search.as_str())) || (o.structure=="standard-bisect"&&["single","multi","percentile","convergence","bisection-ensemble"].contains(&o.search.as_str()))) || o.metis_objective.as_ref().is_some_and(|v| !["cut","volume"].contains(&v.as_str())) || o.metis_trials.is_some_and(|v| !(1..=100).contains(&v)) {return Err("METIS objective/trials require nway, Geo/Area/VRASection single/multi, or standard single/multi/percentile/convergence/ensemble bisection, cut or volume, and 1..=100 trials.".into());}
     }
     if o.weights=="partisan" {
-        if o.structure!="standard-bisect" || !["single","multi"].contains(&o.search.as_str()) || o.dem_threshold.is_none() || o.rep_threshold.is_none()
+        if o.structure!="standard-bisect" || !["single","multi","percentile","convergence","bisection-ensemble"].contains(&o.search.as_str()) || o.dem_threshold.is_none() || o.rep_threshold.is_none()
             || !o.dem_threshold.is_some_and(|v|v.is_finite()&&(0.0..=1.0).contains(&v)) || !o.rep_threshold.is_some_and(|v|v.is_finite()&&(0.0..=1.0).contains(&v)) || o.dem_threshold<o.rep_threshold {
-            return Err("Partisan weights require standard Single/Multi and finite ordered thresholds in [0,1].".into());
+            return Err("Partisan weights require standard Single/Multi/percentile/convergence/local-ensemble and finite ordered thresholds in [0,1].".into());
         }
     } else if o.dem_threshold.is_some() || o.rep_threshold.is_some() {return Err("Partisan thresholds have no effect without partisan weights.".into());}
     let n = g.geoids.len();

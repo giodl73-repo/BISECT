@@ -1,4 +1,4 @@
-import {validateJsonTree,readJsonFile} from './project.js';
+import {validateJsonTree,readJsonFile,readValidatedFile} from './project.js';
 const exact=(value,fields)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===fields.length&&fields.every(k=>Object.hasOwn(value,k));
 export function validateElectionInput(input,graph){
   validateJsonTree(input);
@@ -7,7 +7,14 @@ export function validateElectionInput(input,graph){
   if(graph&&(input.state!==graph.state||input.year!==graph.year||Object.keys(input.counts).length!==graph.geoids.length||graph.geoids.some(id=>!Object.hasOwn(input.counts,id))))throw new Error('Election counts must match the graph state, Census year and complete GEOID coverage.');
   return input;
 }
-export async function readElectionFile(file){return validateElectionInput(await readJsonFile(file));}
+export async function readElectionFile(file,{csvMetadata,wasmSha256,signal}={}){
+  if(/\.csv$/i.test(file?.name||'')){
+    if(!file||!Number.isSafeInteger(file.size)||file.size<1||file.size>8*1024*1024)throw new Error('Select a nonempty election CSV of at most 8 MiB.');
+    if(!csvMetadata||! /^[a-f0-9]{64}$/.test(wasmSha256||''))throw new Error('CSV import needs explicit state and years and a verified browser engine.');
+    return validateElectionInput(await readValidatedFile({size:file.size,file,metadata:csvMetadata,sha256:wasmSha256},new URL('./election-csv-worker.js',import.meta.url),{signal}));
+  }
+  return validateElectionInput(await readJsonFile(file,{signal}));
+}
 export async function electionIdentity(input){
   validateElectionInput(input);
   const header=new TextEncoder().encode(`BISECT_ELECTION_COUNTS_V1\0${input.state}\0${input.year}\0${input.election_year}\0`),ids=Object.keys(input.counts).sort();

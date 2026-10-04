@@ -24,6 +24,8 @@ pub extern "C" fn bisect_schema_version() -> u32 {
 
 pub mod engine;
 pub mod election_input;
+pub mod partisan_input;
+mod tract_input;
 pub mod toolkit;
 mod plan_export;
 

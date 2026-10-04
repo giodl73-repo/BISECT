@@ -16,6 +16,8 @@ enum ToolRequest {
     ExportEnginePlan { request:crate::engine::Request, assignments:std::collections::BTreeMap<String,u32>, label:String, chamber:String, created_at:String },
     AttachDemographicCsv { document:Value, context:Value, source_base64:String, basis:String, source_label:String },
     ImportDemographicCsv { source_base64:String, state:String, year:String, basis:String, source_label:String },
+    ImportElectionCountsCsv { source_base64:String, state:String, year:String, election_year:String, source_label:String },
+    ImportPartisanSharesTsv { source_base64:String, state:String, year:String, source_label:String },
     VerifyHistoryFiles { files:rhist_io::PackageFiles },
     ImportStatementCsv { source_base64:String, metadata:ImportMetadata },
     ImportNistCdfJson { source_base64:String, metadata:ImportMetadata },
@@ -57,6 +59,20 @@ pub fn execute(input: Value) -> Result<Value, String> {
             let bytes=STANDARD.decode(source_base64).map_err(|_|"Invalid demographic source encoding.")?;
             let input=bisect_data::demographics::import_demographic_csv(&bytes,&state,&year,&basis,&source_label)?;
             serde_json::to_value(input).map_err(|e|e.to_string())
+        },
+        ToolRequest::ImportElectionCountsCsv {source_base64,state,year,election_year,source_label} => {
+            use base64::{Engine,engine::general_purpose::STANDARD};
+            const LIMIT:usize=8*1024*1024;
+            if source_base64.len()>LIMIT.div_ceil(3)*4 {return Err("Election CSV exceeds 8 MiB.".into());}
+            let bytes=STANDARD.decode(source_base64).map_err(|_|"Invalid election source encoding.")?;
+            serde_json::to_value(crate::election_input::import_csv(&bytes,&state,&year,&election_year,&source_label)?).map_err(|e|e.to_string())
+        },
+        ToolRequest::ImportPartisanSharesTsv {source_base64,state,year,source_label} => {
+            use base64::{Engine,engine::general_purpose::STANDARD};
+            const LIMIT:usize=8*1024*1024;
+            if source_base64.len()>LIMIT.div_ceil(3)*4 {return Err("Partisan TSV exceeds 8 MiB.".into());}
+            let bytes=STANDARD.decode(source_base64).map_err(|_|"Invalid partisan source encoding.")?;
+            serde_json::to_value(crate::partisan_input::import_tsv(&bytes,&state,&year,&source_label)?).map_err(|e|e.to_string())
         },
         ToolRequest::VerifyHistoryFiles { files } => {
             if files.len()>2000 || files.values().map(Vec::len).sum::<usize>()>8*1024*1024 { return Err("History package exceeds the portable package limit.".into()); }

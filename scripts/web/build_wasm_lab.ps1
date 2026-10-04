@@ -42,8 +42,18 @@ try {
     if($LASTEXITCODE -ne 0){throw 'Static laboratory export failed.'}
     node scripts/web/test_proportional_wasm.mjs $Output
     if($LASTEXITCODE -ne 0){throw 'Proportional native/WASM, election evidence, project and export verification failed.'}
+    node scripts/web/test_election_csv.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Election CSV native/WASM import and project roundtrip failed.'}
+    node scripts/web/test_election_csv_worker.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Election CSV worker integrity, validation and cancellation failed.'}
+    node scripts/web/test_partisan_tsv.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Partisan TSV native/WASM import and project roundtrip failed.'}
+    node scripts/web/test_partisan_tsv_worker.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Partisan TSV worker integrity, validation and cancellation failed.'}
     node scripts/web/test_partisan_wasm.mjs $Output
     if($LASTEXITCODE -ne 0){throw 'Partisan weighting, input identity and project verification failed.'}
+    node scripts/web/test_partisan_search_edges.mjs
+    if($LASTEXITCODE -ne 0){throw 'Partisan default controls, percentile endpoints and trivial/zero-proposal boundaries failed.'}
     node scripts/web/test_bfs_wasm.mjs $Output
     if($LASTEXITCODE -ne 0){throw 'BFS native/WASM reproducibility and project verification failed.'}
     node scripts/web/test_u64_seed.mjs $Output
