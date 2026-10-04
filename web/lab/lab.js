@@ -84,7 +84,7 @@ const scale = code => { const k = seatCount(code); return k <= 3 ? 'small' : k <
 function populate() {
 
   const rootDetail=document.createElement('p');rootDetail.id='root-constraint-detail';rootDetail.className='help';rootDetail.hidden=true;
-  if(browserWasm){const details=document.createElement('details');details.id='run-details';details.className='advanced';details.hidden=true;const summary=document.createElement('summary');summary.textContent='Run details';details.append(summary,rootDetail);document.querySelector('.metric-strip').after(details);}else{document.querySelector('.metric-strip').after(rootDetail);} 
+  if(browserWasm){const details=document.createElement('details');details.id='run-details';details.className='advanced';details.hidden=true;const summary=document.createElement('summary');summary.textContent='Run details';details.append(summary,rootDetail);document.querySelector('.metric-strip').after(details);}else{document.querySelector('.metric-strip').after(rootDetail);}
 
   $('structure').innerHTML = catalog.structures.map(value => `<option value="${esc(value)}">${esc(structureNames[value] || value)}</option>`).join('');
 
@@ -1314,4 +1314,3 @@ async function loadNationalGeometry() {
   $('download-map').disabled=!job?.states.some(state=>state.metrics);
 
 }
-
