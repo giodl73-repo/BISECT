@@ -34,7 +34,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'History verification parity and project roundtrip failed.' }
     New-Item -ItemType Directory -Path "$Output/fixtures" -Force | Out-Null
     Copy-Item -LiteralPath 'target/wasm32-unknown-unknown/release/bisect_wasm.wasm' -Destination "$Output/bisect_wasm.wasm"
-    foreach ($file in @('count-results.js','result-preview.js','package-files.js','project.js','project-worker.js','json-worker.js','workbench.css','workbench.js','wasm-engine.js','partisan-input.js','partisan-tsv-worker.js','election-input.js','election-csv-worker.js','wasm-worker.js')) { Copy-Item -LiteralPath "web/lab/$file" -Destination "$Output/$file" }
+    foreach ($file in @('count-results.js','result-preview.js','package-files.js','project.js','project-worker.js','json-worker.js','workbench.css','workbench.js','wasm-engine.js','partisan-input.js','partisan-tsv-worker.js','character-input.js','character-csv-worker.js','election-input.js','election-csv-worker.js','wasm-worker.js')) { Copy-Item -LiteralPath "web/lab/$file" -Destination "$Output/$file" }
     Copy-Item -LiteralPath 'web/lab/workbench.html' -Destination "$Output/index.html"
     Copy-Item -LiteralPath 'crates/rplan-audit/fixtures/grid3x3-valid.rplan' -Destination "$Output/fixtures/plan.rplan"
     Copy-Item -LiteralPath 'crates/rplan-audit/fixtures/grid3x3.rctx' -Destination "$Output/fixtures/context.rctx"

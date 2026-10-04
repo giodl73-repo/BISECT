@@ -507,6 +507,7 @@ name = "bisect-smc"
 version = "0.1.0"
 dependencies = [
  "bisect-ensemble",
+ "libm",
  "rand",
  "rand_chacha",
  "rayon",

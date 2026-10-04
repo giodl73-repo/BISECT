@@ -1,5 +1,6 @@
 import {validateElectionInput,verifyElectionResult} from './election-input.js';
 import {validatePartisanInput,partisanWeights,partisanIdentity} from './partisan-input.js';
+import {validateCharacterInput,characterWeights,characterIdentity,usesCharacterWeights} from './character-input.js';
 import {parseSafeJson, validateJsonTree, readValidatedFile} from './project.js';
 import {effectiveConfig,engineOptions,isSeed} from './static.js';
 import {validateDemographicInput,tractMeanFractions,demographicIdentity} from './demographic-input.js';
@@ -29,7 +30,7 @@ export function validateLabConfig(config) {
   const electionMethod=['proportional-bisect','proportional-section'].includes(config?.structure);
   const electionKeys=electionMethod?[...specialKeys,'elections',...(config.structure==='proportional-section'?['proportional_eta']:[])]:specialKeys;
   const tuningKeys=nway?[...electionKeys,'metis_objective','metis_trials']:electionKeys;
-  const keys=config?.weights==='partisan'?[...tuningKeys,'dem_threshold','rep_threshold','partisans']:tuningKeys;
+  const keys=config?.weights==='partisan'?[...tuningKeys,'dem_threshold','rep_threshold','partisans']:usesCharacterWeights(config?.weights)?[...tuningKeys,'character_alpha','characters']:tuningKeys;
   if(compact&&!bounded(config.compact_epsilon,0,1))throw new Error('Invalid CompactBisect slack.');
   if(mka&&(!integer(config.mka_orientations,0,10000)||!['reock','polsby'].includes(config.mka_metric)))throw new Error('Invalid moving-knife parameters.');
   if(cvd&&(!integer(config.cvd_iters,0,10000)||!['graph-distance','geographic'].includes(config.cvd_metric)))throw new Error('Invalid CVD parameters.');
@@ -41,7 +42,7 @@ export function validateLabConfig(config) {
   if (config.districts !== null && !integer(config.districts,1,500)) throw new Error('Invalid district count.');
   if (config.mode === 'national' && config.districts !== null) throw new Error('National experiments use chamber allocations.');
   for (const key of ['structure','weights','search']) if (typeof config[key] !== 'string' || !/^[a-z-]{1,40}$/.test(config[key])) throw new Error('Invalid engine setting.');
-  if(!['geographic','unweighted','county','partisan'].includes(config.weights))throw new Error('Unsupported project boundary weights.');
+  if(!['geographic','unweighted','county','partisan','economic-character','housing-character'].includes(config.weights))throw new Error('Unsupported project boundary weights.');
   if (!isSeed(config.seed) || !integer(config.seeds,pt?0:1,10000) || !integer(config.steps,['vra-recom','forest-recom','merge-split','flip','bisection-ensemble'].includes(config.search)?0:1,100000) || !integer(config.iterations,1,1000) || !bounded(config.percentile,0,1) || !bounded(config.alpha_county,0,100) || !bounded(config.balance_tolerance,0.01,25) || !bounded(config.area_swing,1.01,2) || !bounded(config.timeout_seconds,1,86400)) throw new Error('Invalid engine option bounds.');
   if(electionMethod){
     if(!record(config.elections)||Object.keys(config.elections).length!==config.states.length||!['single',...(config.structure==='proportional-section'?['multi']:[])].includes(config.search)||config.weights==='partisan'||(config.structure==='proportional-section'&&!bounded(config.proportional_eta,1,2)))throw new Error('Proportional methods require supported search, election counts per selected state and valid vote tolerance.');
@@ -50,6 +51,10 @@ export function validateLabConfig(config) {
   if(config.weights==='partisan'){
     if(config.alpha_county!==0||config.structure!=='standard-bisect'||!['single','multi','percentile','convergence','bisection-ensemble'].includes(config.search)||!bounded(config.dem_threshold,0,1)||!bounded(config.rep_threshold,0,config.dem_threshold)||!record(config.partisans)||Object.keys(config.partisans).length!==config.states.length)throw new Error('Partisan weights require standard Single/Multi/percentile/convergence/local-ensemble, ordered thresholds and explicit shares for every selected state.');
     for(const code of config.states){const input=validatePartisanInput(config.partisans[code]);if(input.state!==code||input.year!==config.year)throw new Error('Partisan input scope must match the experiment.');}
+  }
+  if(usesCharacterWeights(config.weights)){
+    if(config.alpha_county!==0||!bounded(config.character_alpha,0,1)||Object.is(config.character_alpha,-0)||!record(config.characters)||Object.keys(config.characters).length!==config.states.length)throw new Error('Character weights require blend alpha and explicit inputs for every selected state.');
+    for(const code of config.states){const input=validateCharacterInput(config.characters[code],null,config.weights.replace('-character',''));if(input.state!==code||input.year!==config.year)throw new Error('Character input scope must match the experiment.');}
   }
   if(vraSection){
     if(!['single','multi'].includes(config.search)||!bounded(config.w_vra,0,1)||!record(config.demographics)||Object.keys(config.demographics).length!==config.states.length)throw new Error('VRASection requires single/multi search, an alignment weight and demographic inputs.');
@@ -120,12 +125,14 @@ export async function createLabProject(lab, id) {
 export function verifyLabAssignments(graph, state, assignments, config) {
   const m=state.metrics, k=m.district_count, ids=graph.geoids;
   const partisan=config.weights==='partisan'?partisanWeights(graph,config):null;
-  const edgeWeight=(u,v,length)=>partisan?partisan.weight(u,v):config.weights==='unweighted'?1:config.weights==='county'&&ids[u].slice(0,5)===ids[v].slice(0,5)?length*Math.max(1,config.alpha_county):length;
+  const character=usesCharacterWeights(config.weights)?characterWeights(graph,config):null;
+  const edgeWeight=(u,v,length)=>character?character.weight(u,v,length):partisan?partisan.weight(u,v):config.weights==='unweighted'?1:config.weights==='county'&&ids[u].slice(0,5)===ids[v].slice(0,5)?length*Math.max(1,config.alpha_county):length;
   if(partisan){const e=m.weighting_evidence;if(!exact(e,['method','dem_threshold','rep_threshold','strong_tracts','tracts','alpha','baseline','boost','shares_sha256','scope'])||e.method!=='partisan-adaptive-boost'||e.dem_threshold!==config.dem_threshold||e.rep_threshold!==config.rep_threshold||e.strong_tracts!==partisan.strong||e.tracts!==ids.length||!bounded(e.alpha,3,10)||Math.abs(e.alpha-partisan.alpha)>1e-12||e.baseline!=='unit-edge-weight'||e.boost!=='same-strong-lean'||!hash(e.shares_sha256)||e.scope!=='edge-weighting')throw new Error('Project partisan weighting evidence disagrees with inputs or settings.');}
+  else if(character){const e=m.weighting_evidence;if(!exact(e,['method','kind','alpha','character_sha256','formula','zero_policy','data_year','baseline','tracts','scope'])||e.method!=='character-cosine-blend'||e.kind!==character.kind||e.alpha!==config.character_alpha||!hash(e.character_sha256)||e.formula!=='geographic-times-alpha-plus-one-minus-alpha-times-cosine'||e.zero_policy!==(character.kind==='economic'?'both-zero-one;one-zero-half':'any-zero-one')||e.data_year!==character.input.data_year||e.baseline!=='geographic-boundary-m'||e.tracts!==ids.length||e.scope!=='edge-weighting')throw new Error('Project character weighting evidence disagrees with inputs or settings.');}
   else if(m.weighting_evidence!=null)throw new Error('Unexpected project weighting evidence.');
 
   if(['ratio-optimal-area','ratio-optimal-vra'].includes(config.structure)&&Object.hasOwn(config,'metis_objective')&&k>1)verifyRatioRefinement(m.structure_evidence?.metis_refinement,config);
-  if(config.structure==='ratio-optimal-vra')verifyVraSection(graph,state,assignments,config);
+  if(config.structure==='ratio-optimal-vra')verifyVraSection(graph,state,assignments,config,edgeWeight);
   if(config.search==='vra-recom')verifyVraPreservation(graph,state,assignments,config);
   if (Object.keys(assignments).length !== ids.length || m.units !== ids.length) throw new Error('Project assignment coverage mismatch.');
   const plan=ids.map(id=>{if(!Object.hasOwn(assignments,id))throw new Error('Project omits a tract.');return assignments[id];});
@@ -158,7 +165,7 @@ export function verifyLabAssignments(graph, state, assignments, config) {
   }
   if(config.search==='smc-percentile'&&k>1){
     const e=m.structure_evidence,n=config.smc_particles,cut=graph.edges.filter(([u,v])=>plan[u]!==plan[v]).length;
-    if(!exact(e,['method','rng','objective','base_seed','sampler_seed','particles','percentile','resample_threshold','sampler_tolerance','tolerance_basis','selected_particle','selected_edge_cut','resample_count','resample_rounds','ess_trace','ranked_particles'])||e.method!=='smc-percentile'||e.rng!=='chacha12-u64-v1'||e.objective!=='unweighted-edge-cut'||e.base_seed!==String(config.seed)||typeof e.sampler_seed!=='string'||!/^(0|[1-9][0-9]{0,19})$/.test(e.sampler_seed)||BigInt(e.sampler_seed)>((1n<<64n)-1n)||e.particles!==n||e.percentile!==config.percentile||e.resample_threshold!==config.smc_resample_threshold||e.sampler_tolerance!==0.005||e.tolerance_basis!=='remaining-component-total'||e.selected_edge_cut!==cut||!integer(e.selected_particle,0,n-1)||!integer(e.resample_count,0,k-1)||!Array.isArray(e.resample_rounds)||e.resample_rounds.length!==e.resample_count||!Array.isArray(e.ess_trace)||e.ess_trace.length!==k-1||e.ess_trace.some(v=>!bounded(v,0,n+1e-8))||!Array.isArray(e.ranked_particles)||e.ranked_particles.length!==n)throw new Error('Invalid SMC evidence.');
+    if(!exact(e,['method','rng','objective','base_seed','sampler_seed','particles','percentile','resample_threshold','sampler_tolerance','tolerance_basis','selected_particle','selected_edge_cut','resample_count','resample_rounds','ess_trace','ranked_particles',...(Object.hasOwn(e,'math')?['math']:[])])||(Object.hasOwn(e,'math')&&e.math!=='libm-exp-log-v1')||e.method!=='smc-percentile'||e.rng!=='chacha12-u64-v1'||e.objective!=='unweighted-edge-cut'||e.base_seed!==String(config.seed)||typeof e.sampler_seed!=='string'||!/^(0|[1-9][0-9]{0,19})$/.test(e.sampler_seed)||BigInt(e.sampler_seed)>((1n<<64n)-1n)||e.particles!==n||e.percentile!==config.percentile||e.resample_threshold!==config.smc_resample_threshold||e.sampler_tolerance!==0.005||e.tolerance_basis!=='remaining-component-total'||e.selected_edge_cut!==cut||!integer(e.selected_particle,0,n-1)||!integer(e.resample_count,0,k-1)||!Array.isArray(e.resample_rounds)||e.resample_rounds.length!==e.resample_count||!Array.isArray(e.ess_trace)||e.ess_trace.length!==k-1||e.ess_trace.some(v=>!bounded(v,0,n+1e-8))||!Array.isArray(e.ranked_particles)||e.ranked_particles.length!==n)throw new Error('Invalid SMC evidence.');
     const expectedRounds=e.ess_trace.flatMap((ess,i)=>ess<config.smc_resample_threshold*n?[i+1]:[]);
     if(JSON.stringify(expectedRounds)!==JSON.stringify(e.resample_rounds))throw new Error('SMC resampling evidence disagrees with ESS.');
     const seen=new Set();let totalWeight=0,cumulative=0,chosen,lastPositive;
@@ -314,7 +321,7 @@ function verifyRatioRefinement(r,config){
   if(!exact(r,['objective','internal_trials','iterations','scope','internal_trial_selection','candidate_selection','seeds_per_ratio','seed_schedule','post_refinement','partial_assignment_fallback'])||r.objective!==config.metis_objective||r.internal_trials!==config.metis_trials||r.iterations!==config.iterations||r.scope!=='each-recursive-ratio-search-and-two-seat-shortcut'||r.internal_trial_selection!=='population-excess-then-edge-cut'||r.candidate_selection!=='minimum-original-weighted-cut-per-ratio'||r.seeds_per_ratio!==(config.search==='multi'?config.seeds:1)||r.seed_schedule!=='base-plus-candidate-index-wrapping-u64-at-each-node'||r.post_refinement!=='native-population-rebalance'||r.partial_assignment_fallback!=='legacy-standard-cut-one-trial')throw new Error('Project ratio refinement evidence disagrees with options.');
 }
 
-function verifyVraSection(graph,state,assignments,config){
+function verifyVraSection(graph,state,assignments,config,edgeWeight){
   const input=validateDemographicInput(config.demographics[state.code??graph.state],graph),k=state.metrics.district_count,e=state.metrics.structure_evidence,root=state.metrics.root_split;
   if(input.basis!=='total-population')throw new Error('VRASection requires total-population fractions.');
   if(k===1){if(e!=null)throw new Error('One-district project must not claim VRASection execution.');return;}
@@ -322,7 +329,7 @@ function verifyVraSection(graph,state,assignments,config){
   const mass=graph.geoids.map((id,i)=>input.minority_fractions[id]*graph.population[i]),total=mass.reduce((sum,v)=>sum+v,0);
   let left=0,cut=0;
   for(let i=0;i<mass.length;i++)if(assignments[graph.geoids[i]]<=root.left_districts)left+=mass[i];
-  for(const [u,v,length]of [...graph.edges].sort((a,b)=>a[0]-b[0]||a[1]-b[1]))if((assignments[graph.geoids[u]]<=root.left_districts)!==(assignments[graph.geoids[v]]<=root.left_districts))cut+=config.weights==='unweighted'?1:config.weights==='county'&&graph.geoids[u].slice(0,5)===graph.geoids[v].slice(0,5)?length*Math.max(1,config.alpha_county):length;
+  for(const [u,v,length]of [...graph.edges].sort((a,b)=>a[0]-b[0]||a[1]-b[1]))if((assignments[graph.geoids[u]]<=root.left_districts)!==(assignments[graph.geoids[v]]<=root.left_districts))cut+=edgeWeight(u,v,length);
   const alignment=total>0?Math.abs(left/total-0.5)*2:0,normalised=cut/Math.sqrt(Math.min(root.left_districts,k-root.left_districts)),score=normalised-config.w_vra*alignment*Math.max(normalised,1);
   const close=(a,b)=>Number.isFinite(a)&&Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(b));
   if(!exact(e,['method','scope','basis','aggregation','w_vra','minority_mass_total','minority_mass_left','minority_share_left','alignment','normalised_cut','selection_score','selection_policy','ratio_count','root_shortcut','tie_policy','demographics_sha256',...(Object.hasOwn(config,'metis_objective')?['metis_refinement']:[])])||e.method!=='vra-section'||e.scope!=='root-only'||e.basis!==input.basis||e.aggregation!=='fraction-times-graph-population'||e.w_vra!==config.w_vra||!close(e.minority_mass_total,total)||!close(e.minority_mass_left,left)||(total>0?!close(e.minority_share_left,left/total):e.minority_share_left!==null)||!close(e.alignment,alignment)||!close(e.normalised_cut,normalised)||!close(e.selection_score,score)||e.selection_policy!=='minimum-weighted-cut-per-ratio-then-alignment-adjusted-ratio'||e.ratio_count!==Math.floor(k/2)||e.root_shortcut!==(k===2&&config.search==='single')||e.tie_policy!=='strict-first-minimum'||!hash(e.demographics_sha256))throw new Error('VRASection scoring evidence disagrees with demographic data, assignments or options.');
@@ -343,6 +350,7 @@ export async function verifyDemographicEvidence(graph,state,config,assignments){
   if(['proportional-bisect','proportional-section'].includes(config.structure))await verifyElectionResult(graph,{...config,districts:state.metrics.district_count},config.elections[state.code??graph.state],{metrics:state.metrics,assignments});
   else if(state.metrics.election_input_evidence!=null)throw new Error('Unexpected election execution evidence.');
   if(config.weights==='partisan'&&state.metrics.weighting_evidence.shares_sha256!==await partisanIdentity(config.partisans[state.code??graph.state]))throw new Error('Project partisan input identity mismatch.');
+  if(usesCharacterWeights(config.weights)&&state.metrics.weighting_evidence.character_sha256!==await characterIdentity(config.characters[state.code??graph.state]))throw new Error('Project character input identity mismatch.');
   if(config.search!=='vra-recom'&&config.structure!=='ratio-optimal-vra')return;
   const input=validateDemographicInput(config.demographics[state.code??graph.state],graph);
   if(state.metrics.district_count>1&&state.metrics.structure_evidence.demographics_sha256!==await demographicIdentity(input))throw new Error('Project demographic identity mismatch.');

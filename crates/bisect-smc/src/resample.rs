@@ -21,7 +21,7 @@ pub fn ess(log_weights: &[f64]) -> f64 {
     let sum_sq: f64 = log_weights
         .iter()
         .map(|&lw| {
-            let w = (lw - lse).exp();
+            let w = libm::exp(lw - lse);
             w * w
         })
         .sum();
@@ -41,8 +41,10 @@ pub fn logsumexp(log_weights: &[f64]) -> f64 {
     if max.is_infinite() {
         return f64::NEG_INFINITY;
     }
-    let sum: f64 = log_weights.iter().map(|&lw| (lw - max).exp()).sum();
-    max + sum.ln()
+    // The same Rust kernels run on native and WASM; platform libm can differ
+    // by an ulp and change ESS threshold decisions or particle selection.
+    let sum: f64 = log_weights.iter().map(|&lw| libm::exp(lw - max)).sum();
+    max + libm::log(sum)
 }
 
 /// Kahan-compensated softmax: convert log-weights to normalised weights summing to 1.0.
@@ -51,7 +53,7 @@ pub fn logsumexp(log_weights: &[f64]) -> f64 {
 /// ensuring sum ≤ 1.0 ± 1e-6 even for N = 50,000 (per spec §7 L0).
 pub fn kahan_softmax(log_weights: &[f64]) -> Vec<f64> {
     let lse = logsumexp(log_weights);
-    let weights: Vec<f64> = log_weights.iter().map(|&lw| (lw - lse).exp()).collect();
+    let weights: Vec<f64> = log_weights.iter().map(|&lw| libm::exp(lw - lse)).collect();
 
     // Kahan-renormalise to guarantee sum == 1.0 ± eps
     let mut sum = 0.0f64;

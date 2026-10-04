@@ -1,4 +1,6 @@
 pub mod bisection;
+pub mod economic_character;
+pub mod housing_character;
 pub mod fips;
 pub mod graph;
 pub mod metis_format;

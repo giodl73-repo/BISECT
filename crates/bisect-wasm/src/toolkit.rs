@@ -18,6 +18,8 @@ enum ToolRequest {
     ImportDemographicCsv { source_base64:String, state:String, year:String, basis:String, source_label:String },
     ImportElectionCountsCsv { source_base64:String, state:String, year:String, election_year:String, source_label:String },
     ImportPartisanSharesTsv { source_base64:String, state:String, year:String, source_label:String },
+    ImportCharacterCsv { source_base64:String, state:String, year:String, data_year:String, source_label:String, kind:String },
+    BuildCharacterWeights { input:crate::character_input::CharacterInput, geoids:Vec<String>, edges:Vec<(usize,usize,f64)>, alpha:f64 },
     VerifyHistoryFiles { files:rhist_io::PackageFiles },
     ImportStatementCsv { source_base64:String, metadata:ImportMetadata },
     ImportNistCdfJson { source_base64:String, metadata:ImportMetadata },
@@ -74,6 +76,14 @@ pub fn execute(input: Value) -> Result<Value, String> {
             let bytes=STANDARD.decode(source_base64).map_err(|_|"Invalid partisan source encoding.")?;
             serde_json::to_value(crate::partisan_input::import_tsv(&bytes,&state,&year,&source_label)?).map_err(|e|e.to_string())
         },
+        ToolRequest::ImportCharacterCsv {source_base64,state,year,data_year,source_label,kind} => {
+            use base64::{Engine,engine::general_purpose::STANDARD};
+            const LIMIT:usize=8*1024*1024;
+            if source_base64.len()>LIMIT.div_ceil(3)*4 {return Err("Character CSV exceeds 8 MiB.".into());}
+            let bytes=STANDARD.decode(source_base64).map_err(|_|"Invalid character source encoding.")?;
+            serde_json::to_value(crate::character_input::import_csv(&bytes,&state,&year,&data_year,&source_label,&kind)?).map_err(|e|e.to_string())
+        },
+        ToolRequest::BuildCharacterWeights {input,geoids,edges,alpha} => serde_json::to_value(crate::character_input::build_weights(&input,&geoids,&edges,alpha)?).map_err(|e|e.to_string()),
         ToolRequest::VerifyHistoryFiles { files } => {
             if files.len()>2000 || files.values().map(Vec::len).sum::<usize>()>8*1024*1024 { return Err("History package exceeds the portable package limit.".into()); }
             serde_json::to_value(rhist_io::verification_transcript(rhist_io::read_package_files(&files)).map_err(|e|e.to_string())?).map_err(|e|e.to_string())

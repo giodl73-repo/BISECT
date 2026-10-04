@@ -8,6 +8,17 @@ use std::collections::BTreeMap;
 pub(crate) fn export(request: Request, assignments: BTreeMap<String, u32>, label: String, chamber: String, created_at: String) -> Result<Value, String> {
     let g = &request.graph;
     validate(g, &request.options)?;
+    let character_hash=match (["economic-character","housing-character"].contains(&request.options.weights.as_str()),request.character.as_ref()) {
+        (true,Some(input))=>{
+            if input.state!=g.state||input.year!=g.year {return Err("Character export scope must match the graph.".into());}
+            let weights=crate::character_input::build_weights(input,&g.geoids,&g.edges,request.options.character_alpha.unwrap())?;
+            if format!("{}-character",weights.kind)!=request.options.weights {return Err("Character export kind must match the weights.".into());}
+            Some(weights.character_hash)
+        },
+        (true,None)=>return Err("Character export requires complete supplied observations.".into()),
+        (false,Some(_))=>return Err("Character input has no effect on these export options.".into()),
+        _=>None,
+    };
     let partisan_hash=match (request.options.weights=="partisan",request.partisan.as_ref()) {
         (true,Some(input))=>Some(crate::engine::partisan_shares(g,input)?.1),
         (true,None)=>return Err("Partisan export requires complete supplied shares.".into()),
@@ -40,6 +51,7 @@ pub(crate) fn export(request: Request, assignments: BTreeMap<String, u32>, label
     let mut context=RplanContext {rctx_version:RCTX_VERSION.into(),context_hash:String::new(),units,graph:Some(UnitGraph {edge_semantics:EdgeSemantics::Undirected,adjacency:g.adjacency.iter().enumerate().map(|(u,neighbors)|neighbors.iter().map(|&v|UnitEdge {to:v as u32,kind:EdgeKind::Custom,weight:Some(weights[&(u.min(v),u.max(v))])}).collect()).collect()}),populations:Some(g.population.clone()),subdivisions:Some(SubdivisionContext {county_ids:Some(g.geoids.iter().map(|id|Some(id[..5].into())).collect()),municipal_ids:None}),demographics:None,geometry:None,source_hashes:SourceHashes {entries:BTreeMap::from([("bisect.prepared-graph".into(),graph_hash.clone())])}};
     if let Some(digest)=&partisan_hash {context.source_hashes.entries.insert("bisect.partisan-shares".into(),digest.clone());}
     if let Some(digest)=&election_hash {context.source_hashes.entries.insert("bisect.election-counts".into(),digest.clone());}
+    if let Some(digest)=&character_hash {context.source_hashes.entries.insert("bisect.character-input".into(),digest.clone());}
     context.validate().map_err(|e|e.to_string())?;
     if let Some(input)=&request.demographics {
         crate::engine::demographic_fractions(g,input)?;
@@ -53,6 +65,7 @@ pub(crate) fn export(request: Request, assignments: BTreeMap<String, u32>, label
     }
     context.context_hash=context.compute_context_hash().map_err(|e|e.to_string())?;
     let mut producer=BTreeMap::from([("engine_options".into(),serde_json::to_value(&request.options).map_err(|e|e.to_string())?)]);
+    if let Some(input)=&request.character {producer.insert("character_input".into(),serde_json::to_value(input).map_err(|e|e.to_string())?);}
     if let Some(input)=&request.partisan {producer.insert("partisan_input".into(),serde_json::to_value(input).map_err(|e|e.to_string())?);}
     if let Some(input)=&request.elections {producer.insert("election_input".into(),serde_json::to_value(input).map_err(|e|e.to_string())?);}
     let document=RplanDocument {rplan_version:RPLAN_V02.into(),plan,metadata:RplanMetadataV02 {label,jurisdiction:g.state.clone(),chamber,created_at,description:Some("Prepared graph export; engine district labels converted from one-based to native zero-based IDs. Generation and optimality are not certified.".into())},provenance:RplanProvenance {producer,source_hashes:context.source_hashes.entries.clone(),conversion_lineage:vec![json!({"operation":"prepared-graph-export","edge_kind":"custom","reason":"Prepared graph does not retain bridge or physical edge classification."})]},geometry:None,extensions:BTreeMap::new()};

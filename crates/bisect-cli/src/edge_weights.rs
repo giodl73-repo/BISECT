@@ -378,10 +378,9 @@ impl EdgeWeighter for EconomicCharacterWeighter {
             .map(|((u, v), w)| {
                 let cu = self.chars.get(u).unwrap_or(&zero);
                 let cv = self.chars.get(v).unwrap_or(&zero);
-                let sim = crate::lodes::cosine_similarity(cu, cv);
                 // Blend: alpha keeps existing weight, (1-alpha) scales by similarity.
                 // Similar tracts (sim=1): weight unchanged. Dissimilar (sim=0): weight * alpha.
-                let w_new = w * (self.alpha + (1.0 - self.alpha) * sim);
+                let w_new = bisect_core::economic_character::blend_edge(w, cu, cv, self.alpha);
                 ((u, v), w_new)
             })
             .collect()
@@ -412,8 +411,7 @@ impl EdgeWeighter for HousingCharacterWeighter {
             .map(|((u, v), w)| {
                 let cu = self.chars.get(u).unwrap_or(&neutral);
                 let cv = self.chars.get(v).unwrap_or(&neutral);
-                let sim = crate::housing::cosine_similarity(cu, cv);
-                ((u, v), w * (self.alpha + (1.0 - self.alpha) * sim))
+                ((u, v), bisect_core::housing_character::blend_edge(w, cu, cv, self.alpha))
             })
             .collect()
     }
