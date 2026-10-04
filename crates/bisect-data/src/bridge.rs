@@ -74,7 +74,10 @@ fn find_components(adjacency: &[Vec<usize>]) -> Vec<Vec<usize>> {
     }
     let mut components: Vec<Vec<usize>> = component_map.into_values().collect();
     // Largest first
-    components.sort_by(|a, b| b.len().cmp(&a.len()));
+    // Equal-size components otherwise inherit randomized HashMap iteration.
+    // Their vertices are already in ascending input order; use that order to
+    // choose a stable main component and stable subsequent bridge candidates.
+    components.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
     components
 }
 
@@ -146,6 +149,17 @@ pub fn connect_island_components(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn equal_size_components_have_stable_main_and_bridge_edges() {
+        let adjacency=vec![vec![],vec![],vec![]];
+        let centroids=vec![(0.,0.),(1.,0.),(2.,0.)];
+        let geoids=vec!["440050401051".into(),"440050401052".into(),"440050401053".into()];
+        for _ in 0..100 {
+            assert_eq!(find_components(&adjacency),vec![vec![0],vec![1],vec![2]]);
+            assert_eq!(connect_island_components(&adjacency,&centroids,&geoids),vec![(0,1),(0,2)]);
+        }
+    }
 
     #[test]
     fn test_county_from_geoid() {

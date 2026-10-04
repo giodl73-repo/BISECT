@@ -25,6 +25,8 @@ pub enum TigerError {
     UnsupportedGeometry(usize),
     #[error("GEOID {0} is not 11 characters (tract GEOID must be 11 digits: SSCCCTTTTTT)")]
     InvalidGeoidLength(String),
+    #[error("block-group GEOID {0} must contain exactly 12 ASCII digits")]
+    InvalidBlockGroupGeoid(String),
     #[error("block GEOID {0} is not 15 digits")]
     InvalidBlockGeoid(String),
     #[error("projected geometry at record {0} has no centroid")]
@@ -57,7 +59,17 @@ pub struct TractRecord {
 /// disconnected pieces). Those are preserved as a WKB MultiPolygon rather
 /// than being misclassified as holes in the first polygon.
 pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>, TigerError> {
-    let shp_path = shp_path.as_ref();
+    read_tiger_units(shp_path.as_ref(), false)
+}
+
+/// Read block-group polygons using the same geometry decoder as tract inputs.
+/// Every record must have a unique numeric twelve-digit GEOID and nonempty
+/// geometry. Population is joined separately, as for tract records.
+pub fn read_tiger_block_groups<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>, TigerError> {
+    read_tiger_units(shp_path.as_ref(), true)
+}
+
+fn read_tiger_units(shp_path: &Path, block_groups: bool) -> Result<Vec<TractRecord>, TigerError> {
 
     let mut reader = shapefile::Reader::from_path(shp_path)
         .map_err(|e| TigerError::ShapefileError(e.to_string()))?;
@@ -80,7 +92,10 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
         };
 
         // Validate GEOID length (tract = 11 chars: SS CCC TTTTTT)
-        if geoid.len() != 11 {
+        if block_groups && (geoid.len()!=12 || !geoid.bytes().all(|b|b.is_ascii_digit())) {
+            return Err(TigerError::InvalidBlockGroupGeoid(geoid));
+        }
+        if !block_groups && geoid.len() != 11 {
             return Err(TigerError::InvalidGeoidLength(geoid));
         }
 
@@ -97,6 +112,7 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
         // Convert shapefile geometry to WKB
         let geometry_wkb = shape_to_wkb(&shape, idx)?;
         if geometry_wkb.is_empty() {
+            if block_groups {return Err(TigerError::UnsupportedGeometry(idx));}
             continue; // skip empty geometries
         }
 
@@ -111,6 +127,9 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
 
     // Sort by GEOID for deterministic ordering (matches Python sort)
     records.sort_by(|a, b| a.geoid.cmp(&b.geoid));
+    if block_groups && (records.is_empty() || records.windows(2).any(|r|r[0].geoid==r[1].geoid)) {
+        return Err(TigerError::ShapefileError("Empty or duplicate block-group universe.".into()));
+    }
 
     Ok(records)
 }
@@ -436,6 +455,37 @@ fn write_ring(buf: &mut Vec<u8>, coords: &[geo_types::Point<f64>]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn write_block_group_fixture(ids:&[&str])->tempfile::TempDir {
+        let dir=tempfile::tempdir().unwrap();
+        let path=dir.path().join("block_groups.shp");
+        let fields=shapefile::dbase::TableWriterBuilder::new().add_character_field("GEOID".try_into().unwrap(),12);
+        let mut writer=shapefile::Writer::from_path(&path,fields).unwrap();
+        for id in ids {
+            let polygon=shapefile::Polygon::new(PolygonRing::Outer(vec![shapefile::Point::new(-71.,41.),shapefile::Point::new(-71.,41.1),shapefile::Point::new(-70.9,41.1),shapefile::Point::new(-70.9,41.),shapefile::Point::new(-71.,41.)]));
+            let mut record=shapefile::dbase::Record::default();record.insert("GEOID".into(),shapefile::dbase::FieldValue::Character(Some((*id).into())));
+            writer.write_shape_and_record(&polygon,&record).unwrap();
+        }
+        drop(writer);dir
+    }
+
+    #[test]
+    fn block_group_reader_preserves_numeric_unit_order(){
+        let path=write_block_group_fixture(&["440010002001","440010001001"]);
+        let records=read_tiger_block_groups(path.path().join("block_groups.shp")).unwrap();
+        assert_eq!(records.iter().map(|r|r.geoid.as_str()).collect::<Vec<_>>(),vec!["440010001001","440010002001"]);
+        assert!(records.iter().all(|r|!r.geometry_wkb.is_empty()));
+    }
+
+    #[test]
+    fn block_group_reader_rejects_foreign_resolution_and_nonnumeric_ids(){
+        for id in ["44001000100","44001000100x"]{assert!(read_tiger_block_groups(write_block_group_fixture(&[id]).path().join("block_groups.shp")).is_err());}
+    }
+
+    #[test]
+    fn block_group_reader_rejects_duplicate_units(){
+        assert!(read_tiger_block_groups(write_block_group_fixture(&["440010001001","440010001001"]).path().join("block_groups.shp")).is_err());
+    }
 
     #[test]
     fn reads_legacy_tract_attribute_names() {

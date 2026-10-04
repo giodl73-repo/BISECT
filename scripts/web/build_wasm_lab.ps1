@@ -4,6 +4,10 @@ $labRepo=(Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Push-Location $labRepo
 try {
     if((Test-Path -LiteralPath $Output) -and (Get-ChildItem -LiteralPath $Output -Force | Select-Object -First 1)){throw 'Choose a new or empty output directory.'}
+    cargo test -p bisect-data --lib block_group_reader --locked --offline
+    if($LASTEXITCODE -ne 0){throw 'Native block-group TIGER reader verification failed.'}
+    cargo test -p bisect-data --lib bridge --locked --offline
+    if($LASTEXITCODE -ne 0){throw 'Deterministic native island bridge verification failed.'}
     cargo test -p bisect-core --lib character --locked --offline
     if($LASTEXITCODE -ne 0){throw 'Shared economic/housing character formula and zero-policy verification failed.'}
     cargo test -p bisect-runner --lib --no-default-features proportional --locked --offline
@@ -50,6 +54,8 @@ try {
     if($LASTEXITCODE -ne 0){throw 'Portable multiscale fixed/adaptive resolution and input verification failed.'}
     node scripts/web/test_multiscale_project.mjs $Output
     if($LASTEXITCODE -ne 0){throw 'Multiscale state/national Save/Open and fine-map verification failed.'}
+    node scripts/web/test_multiscale_export.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Multiscale practitioner export, audit and certificate verification failed.'}
     node scripts/web/test_multiscale_input_worker.mjs
     if($LASTEXITCODE -ne 0){throw 'Fine input Worker validation and cancellation failed.'}
     node scripts/web/test_character_national.mjs $Output

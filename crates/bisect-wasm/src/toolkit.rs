@@ -14,6 +14,7 @@ struct ImportMetadata { country:String, state:String, county:String, date:String
 #[serde(tag = "operation", rename_all = "kebab-case", deny_unknown_fields)]
 enum ToolRequest {
     RunMultiscale { input:crate::multiscale_input::MultiscaleRequest },
+    ExportMultiscalePlan { input:crate::multiscale_input::MultiscaleRequest, fine_edges:Option<Vec<(usize,usize,f64)>>, assignments:std::collections::BTreeMap<String,u32>, label:String, chamber:String, created_at:String },
     ExportEnginePlan { request:crate::engine::Request, assignments:std::collections::BTreeMap<String,u32>, label:String, chamber:String, created_at:String },
     AttachDemographicCsv { document:Value, context:Value, source_base64:String, basis:String, source_label:String },
     ImportDemographicCsv { source_base64:String, state:String, year:String, basis:String, source_label:String },
@@ -54,6 +55,7 @@ pub fn execute(input: Value) -> Result<Value, String> {
         serde_json::from_value(input).map_err(|e| format!("Invalid practitioner request: {e}"))?;
     match request {
         ToolRequest::RunMultiscale { input } => crate::multiscale_input::execute(input),
+        ToolRequest::ExportMultiscalePlan {input,fine_edges,assignments,label,chamber,created_at} => crate::plan_export::export_multiscale(input,fine_edges,assignments,label,chamber,created_at),
         ToolRequest::ExportEnginePlan {request,assignments,label,chamber,created_at} => crate::plan_export::export(request,assignments,label,chamber,created_at),
         ToolRequest::AttachDemographicCsv {document,context,source_base64,basis,source_label} => attach_demographic_csv(document,context,source_base64,basis,source_label),
         ToolRequest::ImportDemographicCsv {source_base64,state,year,basis,source_label} => {
