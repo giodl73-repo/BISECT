@@ -158,14 +158,30 @@ fn flip_tolerance_is_relative_to_ideal_without_integer_slack() {
     let ew = HashMap::new();
     for unit_population in [1i64, 100] {
         let pop = vec![unit_population; 16];
+        let mut balanced_starts = 0;
         for seed in [1, 42, 777] {
-            let (plan, records, _) = run_flip_chain(&adj, &pop, &ew, 4, 0.1, 200, seed, 1.0).unwrap();
-            assert_eq!(records, 1, "a 25% move must not fit a 10% tolerance");
+            let (plan, records, _) =
+                run_flip_chain(&adj, &pop, &ew, 4, 0.1, 200, seed, 1.0).unwrap();
+            let (initial, _, _) = run_flip_chain(&adj, &pop, &ew, 4, 0.1, 0, seed, 1.0).unwrap();
+            let initially_balanced = (1..=4).all(|d| {
+                (0..16)
+                    .filter(|i| initial[i] == d)
+                    .map(|i| pop[i])
+                    .sum::<i64>()
+                    == 4 * unit_population
+            });
+            // The initializer is heuristic: a 3/5 split can accept a repair
+            // to 4/4. Only a balanced starting plan must reject every move.
+            if initially_balanced {
+                balanced_starts += 1;
+                assert_eq!(records, 1, "a 25% move must not fit a 10% tolerance");
+            }
             for d in 1..=4 {
                 let population: i64 = (0..16).filter(|i| plan[i] == d).map(|i| pop[i]).sum();
                 assert_eq!(population, 4 * unit_population);
             }
         }
+        assert!(balanced_starts > 0, "must exercise a balanced initial plan");
     }
 }
 
@@ -179,7 +195,9 @@ fn flip_accepted_records_preserve_requested_population_bound() {
             let members: Vec<_> = (0..16).filter(|i| plan[i] == d).collect();
             assert!(!members.is_empty());
             let population: i64 = members.iter().map(|&i| pop[i]).sum();
-            assert!((population as f64 / (pop.iter().sum::<i64>() as f64 / 4.0) - 1.0).abs() <= 0.25);
+            assert!(
+                (population as f64 / (pop.iter().sum::<i64>() as f64 / 4.0) - 1.0).abs() <= 0.25
+            );
         }
     }
 }
