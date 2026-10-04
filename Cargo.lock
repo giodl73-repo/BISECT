@@ -544,6 +544,7 @@ dependencies = [
  "bisect-data",
  "bisect-flow",
  "bisect-runner",
+ "csv",
  "getrandom 0.2.17",
  "rcount-audit",
  "rcount-core",

@@ -1,4 +1,4 @@
-import {validateJsonTree,readJsonFile} from './project.js';
+import {validateJsonTree,readJsonFile,readValidatedFile} from './project.js';
 export function validatePartisanInput(input,graph){
   validateJsonTree(input);
   const fields=['schema_version','state','year','source_label','dem_shares'];
@@ -8,7 +8,14 @@ export function validatePartisanInput(input,graph){
   if(graph&&(input.state!==graph.state||input.year!==graph.year||Object.keys(values).length!==graph.geoids.length||graph.geoids.some(id=>!Object.hasOwn(values,id))))throw new Error('Partisan shares must match the graph state, year and complete tract coverage.');
   return input;
 }
-export async function readPartisanFile(file){return validatePartisanInput(await readJsonFile(file));}
+export async function readPartisanFile(file,{tsvMetadata,wasmSha256,signal}={}){
+  if(/\.tsv$/i.test(file?.name||'')){
+    if(!file||!Number.isSafeInteger(file.size)||file.size<1||file.size>8*1024*1024)throw new Error('Select a nonempty partisan TSV of at most 8 MiB.');
+    if(!tsvMetadata||! /^[a-f0-9]{64}$/.test(wasmSha256||''))throw new Error('TSV import needs explicit state and Census year and a verified browser engine.');
+    return validatePartisanInput(await readValidatedFile({size:file.size,file,metadata:tsvMetadata,sha256:wasmSha256},new URL('./partisan-tsv-worker.js',import.meta.url),{signal}));
+  }
+  return validatePartisanInput(await readJsonFile(file,{signal}));
+}
 export function partisanWeights(graph,config){
   const input=validatePartisanInput(config.partisans[graph.state],graph),shares=graph.geoids.map(id=>input.dem_shares[id]);
   const strong=shares.filter(v=>v>=config.dem_threshold||v<=config.rep_threshold).length;

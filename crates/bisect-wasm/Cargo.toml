@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 base64 = "0.22"
+csv.workspace = true
 bisect-core = { path = "../bisect-core" }
 bisect-clustering = { path = "../bisect-clustering" }
 bisect-flow = { path = "../bisect-flow" }
