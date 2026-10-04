@@ -18,6 +18,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Package file roundtrip failed.' }
     cargo build -p bisect-wasm --release --example execute_tool_request --locked --offline
     if ($LASTEXITCODE -ne 0) { throw 'Native election import reference build failed.' }
+    node scripts/web/test_multiscale_wasm.mjs
+    if ($LASTEXITCODE -ne 0) { throw 'Portable multiscale native/WASM boundary verification failed.' }
     node scripts/web/test_vra_audit_wasm.mjs
     if ($LASTEXITCODE -ne 0) { throw 'VRA audit verification failed.' }
     node scripts/web/test_plan_export.mjs

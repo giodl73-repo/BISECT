@@ -46,6 +46,12 @@ try {
     if($LASTEXITCODE -ne 0){throw 'Static laboratory export failed.'}
     node scripts/web/test_character_wasm.mjs $Output
     if($LASTEXITCODE -ne 0){throw 'Character weighting, native/WASM parity, project and export verification failed.'}
+    node scripts/web/test_multiscale_wasm.mjs
+    if($LASTEXITCODE -ne 0){throw 'Portable multiscale fixed/adaptive resolution and input verification failed.'}
+    node scripts/web/test_multiscale_project.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Multiscale state/national Save/Open and fine-map verification failed.'}
+    node scripts/web/test_multiscale_input_worker.mjs
+    if($LASTEXITCODE -ne 0){throw 'Fine input Worker validation and cancellation failed.'}
     node scripts/web/test_character_national.mjs $Output
     if($LASTEXITCODE -ne 0){throw 'National character inputs, saved projects and maps failed verification.'}
     node scripts/web/test_character_csv_worker.mjs $Output
