@@ -1,0 +1,13 @@
+{
+  "schema": "ferris.owner-validation-domains/v1",
+  "workspace_id": "giodl73-repo/BISECT",
+  "domains": [
+    {
+      "domain_id": "web-docs",
+      "path_prefix": "web/docs",
+      "entrypoint_ids": [
+        "web-docs-build"
+      ]
+    }
+  ]
+}
