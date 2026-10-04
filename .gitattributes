@@ -1,4 +1,6 @@
 docs/papers/*.pdf binary
+# Preserve the exact source bytes referenced by the shared-context fixture hash.
+docs/fixtures/rctx/l0-shared-context/sources/syn-precincts.csv text eol=crlf
 docs/examples/**/*.json text eol=crlf
 docs/examples/**/*.ndjson text eol=crlf
 docs/examples/**/*.rctx text eol=lf
