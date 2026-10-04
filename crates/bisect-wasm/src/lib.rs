@@ -26,6 +26,7 @@ pub mod engine;
 pub mod election_input;
 pub mod partisan_input;
 pub mod character_input;
+pub mod multiscale_input;
 mod tract_input;
 pub mod toolkit;
 mod plan_export;

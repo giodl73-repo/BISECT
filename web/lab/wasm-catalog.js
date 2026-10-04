@@ -1,3 +1,4 @@
+import {isMultiscale,multiscaleRequest,adaptMultiscaleResult,bundleIdentity,fineGraph} from './multiscale-input.js';
 import {validateElectionInput} from './election-input.js';
 import {validatePartisanInput} from './partisan-input.js';
 import {validateCharacterInput,usesCharacterWeights} from './character-input.js';
@@ -93,6 +94,7 @@ export class WasmCatalog extends StaticCatalog {
     if(this.active||this.exporting)throw new Error('Finish or cancel the active operation first.');
     const job=this.jobs.get(jobId),state=job?.states.find(s=>s.code===code);
     if(!state?.metrics||state.status!=='completed')throw new Error('Select a completed state result.');
+    if(isMultiscale(job.config))throw new Error('Multiscale practitioner export is not yet integrated. Save the laboratory project to retain its inputs and assignments.');
     const assignments=this.outputs.get(`${jobId}:${code}`),entry=this.manifest.graphs[`${code}:${job.config.year}`];
     if(!assignments||!entry)throw new Error('Prepared graph or assignments unavailable.');
     this.exporting=true;
@@ -117,7 +119,9 @@ export class WasmCatalog extends StaticCatalog {
         if(job.status==='cancelled'){state.status='cancelled';continue;}
         if(graph.state!==state.code||graph.year!==job.config.year)throw new Error('Prepared graph identity mismatch.');
         const c=job.config,options={...engineOptions(c),structure:c.structure,weights:c.weights,search:c.search,districts:this.districtCount(state.code,c),seed:c.seed,seeds:c.seeds,steps:c.steps,percentile:c.percentile,alpha_county:c.alpha_county,balance_tolerance:c.balance_tolerance,area_swing:c.area_swing,iterations:c.iterations};
-        const result=await this.execute({graph,options,...(usesCharacterWeights(c.weights)?{character:validateCharacterInput(c.characters[state.code],graph,c.weights.replace('-character',''))}:{}),...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[state.code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[state.code],graph)}:{}),...((c.search==='vra-recom'||c.structure==='ratio-optimal-vra')?{demographics:validateDemographicInput(c.demographics[state.code],graph)}:{})},c.timeout_seconds);
+        let result;
+        if(isMultiscale(c)){const raw=await this.execute(multiscaleRequest(graph,options,c),c.timeout_seconds);result=adaptMultiscaleResult(raw,graph,options,c);result.metrics.fine_input_sha256=c.multiscale.fine_level==='bg'?await bundleIdentity(c.multiscale.inputs[state.code]):null;}else {result=await this.execute({graph,options,...(usesCharacterWeights(c.weights)?{character:validateCharacterInput(c.characters[state.code],graph,c.weights.replace('-character',''))}:{}),...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[state.code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[state.code],graph)}:{}),...((c.search==='vra-recom'||c.structure==='ratio-optimal-vra')?{demographics:validateDemographicInput(c.demographics[state.code],graph)}:{})},c.timeout_seconds);}
+
         if(job.status==='cancelled'){state.status='cancelled';continue;}
         const m=result.metrics;
         state.metrics={...m,district_count:m.districts,districts:m.district_metrics,balance_passed:m.within_requested_tolerance,balance_tolerance_percent:c.balance_tolerance,graph_sha256:entry.native_graph_sha256,prepared_graph_sha256:this.manifest.assets[entry.graph_ref],engine_provenance:{backend:result.backend,runtime:'wasm-browser',wasm_sha256:this.manifest.wasm_sha256},requested_options:options,recorded_options:result.options,effective_config:effectiveConfig(c,options.districts),wasm_memory_bytes:this.lastMemoryBytes};
@@ -139,7 +143,7 @@ export class WasmCatalog extends StaticCatalog {
     if(match&&this.outputs.has(`${match[1]}:${match[2]}`)){
       const assignments=this.outputs.get(`${match[1]}:${match[2]}`);
       if(match[3]==='assignments')return structuredClone(assignments);
-      const job=this.jobs.get(match[1]),geometry=structuredClone(await this.asset(this.manifest.geometries[`${match[2]}:${job.config.year}`]));
+      const job=this.jobs.get(match[1]),geometry=structuredClone(isMultiscale(job.config)&&job.config.multiscale.fine_level==='bg'?job.config.multiscale.inputs[match[2]].geometry:await this.asset(this.manifest.geometries[`${match[2]}:${job.config.year}`]));
       const ids=new Set();for(const feature of geometry.features){const id=feature.properties.geoid;if(ids.has(id)||!Object.hasOwn(assignments,id))throw new Error('Map/assignment join failed.');ids.add(id);feature.properties.district=assignments[id];}
       if(ids.size!==Object.keys(assignments).length)throw new Error('Map omits assigned units.');return geometry;
     }

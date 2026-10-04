@@ -21,14 +21,18 @@ export async function instantiateEngine(bytes) {
   if (api.bisect_schema_version()!==1) throw new Error('Unsupported browser engine ABI.');
   return {
     execute(request) {
-      const options=request?.operation==='export-engine-plan'?request.request?.options:request?.graph?request.options:null;
+      const options=request?.operation==='run-multiscale'?request.input?.request?.options:request?.operation==='export-engine-plan'?request.request?.options:request?.graph?request.options:null;
       if(options && typeof options.proportional_eta==='number' && !Number.isFinite(options.proportional_eta))throw new Error('ProportionalSection eta must be finite.');
       if(options){
         const seed=options.seed;
         if(typeof seed==='number'?(!Number.isSafeInteger(seed)||seed<0||Object.is(seed,-0)):(typeof seed!=='string'||!/^(0|[1-9][0-9]{0,19})$/.test(seed)||BigInt(seed)>((1n<<64n)-1n)))throw new Error('Seed must be an exact unsigned integer or canonical decimal u64 string.');
       }
 
-      const engineRequest=request?.operation==='export-engine-plan'?request.request:request;
+      const engineRequest=request?.operation==='run-multiscale'?request.input?.request:request?.operation==='export-engine-plan'?request.request:request;
+      if(request?.operation==='run-multiscale'){
+        const input=request.input;
+        for(const value of [input?.alpha,input?.percentile,input?.adaptive?.target_accept,input?.adaptive?.gamma_0])if(value!==undefined&&(!Number.isFinite(value)||Object.is(value,-0)))throw new Error('Multiscale probabilities must be finite and nonnegative.');
+      }
       if(engineRequest?.elections)validateElectionInput(engineRequest.elections,engineRequest.graph);
       if(engineRequest?.partisan)validatePartisanInput(engineRequest.partisan,engineRequest.graph);
       if(engineRequest?.character)validateCharacterInput(engineRequest.character,engineRequest.graph,engineRequest.options?.weights?.replace('-character',''));

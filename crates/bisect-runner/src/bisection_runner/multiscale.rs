@@ -70,9 +70,64 @@ pub fn run_multiscale(
         &std::collections::HashMap<usize, String>,
     )>,
 ) -> Result<HashMap<usize, usize>, String> {
+    run_multiscale_impl::<SmallRng>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, false)
+}
+
+/// Fixed-width ChaCha12 and portable Wilson draws for cross-platform replay.
+pub fn run_multiscale_portable(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    total_steps: usize,
+    alpha: f64,
+    p: f64,
+    // GEOID map for building county coarsening — None falls back to CONFIG error
+    geoids: Option<&std::collections::HashMap<usize, String>>,
+    // Resolution level for the fine side (Tract = Option B; BlockGroup = Option A or C)
+    fine_level: MultiscaleFineLevel,
+    // Coarse level string: "county" or "tract"
+    coarse_level: &str,
+    // BG adjacency graph (required for Options A and C; None for Option B)
+    bg_graph: Option<(
+        &[Vec<usize>],
+        &[i64],
+        &std::collections::HashMap<usize, String>,
+    )>,
+) -> Result<HashMap<usize, usize>, String> {
+    run_multiscale_impl::<rand_chacha::ChaCha12Rng>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, true)
+}
+
+fn run_multiscale_impl<R: rand::Rng + rand::SeedableRng>(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    total_steps: usize,
+    alpha: f64,
+    p: f64,
+    // GEOID map for building county coarsening — None falls back to CONFIG error
+    geoids: Option<&std::collections::HashMap<usize, String>>,
+    // Resolution level for the fine side (Tract = Option B; BlockGroup = Option A or C)
+    fine_level: MultiscaleFineLevel,
+    // Coarse level string: "county" or "tract"
+    coarse_level: &str,
+    // BG adjacency graph (required for Options A and C; None for Option B)
+    bg_graph: Option<(
+        &[Vec<usize>],
+        &[i64],
+        &std::collections::HashMap<usize, String>,
+    )>,
+    portable: bool,
+) -> Result<HashMap<usize, usize>, String> {
     use bisect_ensemble::recom::RecomChain;
     use bisect_multiscale::rebalance::rebalance;
-    use rand::Rng;
     use sha2::Digest;
 
     let geoids = geoids.ok_or_else(|| {
@@ -208,13 +263,13 @@ pub fn run_multiscale(
 
     for step in 1..=total_steps {
         let seed = step_seed_fn(step as u64);
-        let mut rng = SmallRng::seed_from_u64(seed);
+        let mut rng = R::seed_from_u64(seed);
 
         let is_coarse = rng.gen::<f64>() < alpha;
 
         if is_coarse {
             // Coarse move: step the coarse-level chain
-            coarse_chain.step(&mut rng);
+            if portable { coarse_chain.step_portable(&mut rng); } else { coarse_chain.step(&mut rng); }
 
             // Project coarse assignment back to fine level
             for (fine_idx, &coarse_idx) in fine_to_coarse.iter().enumerate() {
@@ -255,7 +310,7 @@ pub fn run_multiscale(
             }
         } else {
             // Fine move: step the fine-level chain
-            fine_chain.step(&mut rng);
+            if portable { fine_chain.step_portable(&mut rng); } else { fine_chain.step(&mut rng); }
             assignment_fine = fine_chain.assignment.clone();
             // Sync coarse assignment
             for (fine_idx, &coarse_idx) in fine_to_coarse.iter().enumerate() {

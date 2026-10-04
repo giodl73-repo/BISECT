@@ -1,3 +1,4 @@
+import {isMultiscale,validateMultiscaleConfig,fineGraph,verifyMultiscaleEvidence} from './multiscale-input.js';
 import {validateElectionInput,verifyElectionResult} from './election-input.js';
 import {validatePartisanInput,partisanWeights,partisanIdentity} from './partisan-input.js';
 import {validateCharacterInput,characterWeights,characterIdentity,usesCharacterWeights} from './character-input.js';
@@ -13,7 +14,8 @@ const integer = (value,min,max) => Number.isSafeInteger(value) && value >= min &
 const bounded = (value,min,max) => Number.isFinite(value) && value >= min && value <= max;
 export function validateLabConfig(config) {
   const sa=config?.structure==='simulated-annealing';
-  const baseKeys=config?.search==='smc-percentile'?[...configKeys,'smc_particles','smc_resample_threshold']:sa?[...configKeys,'sa_steps_per_tract','sa_t0_factor','sa_t_final']:config?.structure==='flow-construction'&&Object.hasOwn(config,'flow_repair')?[...configKeys,'flow_repair']:configKeys;
+  const scopeKeys=isMultiscale(config)?[...configKeys,'multiscale']:configKeys;
+  const baseKeys=config?.search==='smc-percentile'?[...scopeKeys,'smc_particles','smc_resample_threshold']:sa?[...scopeKeys,'sa_steps_per_tract','sa_t0_factor','sa_t_final']:config?.structure==='flow-construction'&&Object.hasOwn(config,'flow_repair')?[...scopeKeys,'flow_repair']:scopeKeys;
   const nway=['nway','standard-bisect','ratio-optimal','ratio-optimal-area','ratio-optimal-vra'].includes(config?.structure)&&(Object.hasOwn(config,'metis_objective')||Object.hasOwn(config,'metis_trials'));
   if(nway&&((['ratio-optimal','ratio-optimal-area','ratio-optimal-vra'].includes(config.structure)&&!['single','multi'].includes(config.search))||(config.structure==='standard-bisect'&&!['single','multi','percentile','convergence','bisection-ensemble'].includes(config.search))||!['cut','volume'].includes(config.metis_objective)||!integer(config.metis_trials,1,100)))throw new Error('Invalid METIS objective/trial controls or search.');
   const cvd=config?.structure==='centroidal-voronoi'&&(Object.hasOwn(config,'cvd_iters')||Object.hasOwn(config,'cvd_metric'));
@@ -43,7 +45,7 @@ export function validateLabConfig(config) {
   if (config.mode === 'national' && config.districts !== null) throw new Error('National experiments use chamber allocations.');
   for (const key of ['structure','weights','search']) if (typeof config[key] !== 'string' || !/^[a-z-]{1,40}$/.test(config[key])) throw new Error('Invalid engine setting.');
   if(!['geographic','unweighted','county','partisan','economic-character','housing-character'].includes(config.weights))throw new Error('Unsupported project boundary weights.');
-  if (!isSeed(config.seed) || !integer(config.seeds,pt?0:1,10000) || !integer(config.steps,['vra-recom','forest-recom','merge-split','flip','bisection-ensemble'].includes(config.search)?0:1,100000) || !integer(config.iterations,1,1000) || !bounded(config.percentile,0,1) || !bounded(config.alpha_county,0,100) || !bounded(config.balance_tolerance,0.01,25) || !bounded(config.area_swing,1.01,2) || !bounded(config.timeout_seconds,1,86400)) throw new Error('Invalid engine option bounds.');
+  if (!isSeed(config.seed) || !integer(config.seeds,pt?0:1,10000) || !integer(config.steps,['multiscale','multiscale-adaptive','vra-recom','forest-recom','merge-split','flip','bisection-ensemble'].includes(config.search)?0:1,100000) || !integer(config.iterations,1,1000) || !bounded(config.percentile,0,1) || !bounded(config.alpha_county,0,100) || !bounded(config.balance_tolerance,0.01,25) || !bounded(config.area_swing,1.01,2) || !bounded(config.timeout_seconds,1,86400)) throw new Error('Invalid engine option bounds.');
   if(electionMethod){
     if(!record(config.elections)||Object.keys(config.elections).length!==config.states.length||!['single',...(config.structure==='proportional-section'?['multi']:[])].includes(config.search)||config.weights==='partisan'||(config.structure==='proportional-section'&&!bounded(config.proportional_eta,1,2)))throw new Error('Proportional methods require supported search, election counts per selected state and valid vote tolerance.');
     for(const code of config.states){const input=validateElectionInput(config.elections[code]);if(input.state!==code||input.year!==config.year)throw new Error('Election input scope must match the experiment.');}
@@ -64,6 +66,7 @@ export function validateLabConfig(config) {
     for(const code of config.states){if(!config.demographics[code])throw new Error(`Load demographic data for ${code} ${config.year}.`);const input=validateDemographicInput(config.demographics[code]);if(vraSection&&input.basis!=='total-population')throw new Error('VRASection requires total-population fractions for its native mass proxy.');if(input.state!==code||input.year!==config.year)throw new Error('Demographic scope must match the experiment.');}
   }
   if(sa&&(!integer(config.sa_steps_per_tract,0,10000)||!bounded(config.sa_t0_factor,0,1000)||!bounded(config.sa_t_final,1e-15,1e6)))throw new Error('Invalid simulated annealing parameters.');
+  if(isMultiscale(config))validateMultiscaleConfig(config);
   return config;
 }
 export function validateLabProject(project) {
@@ -92,7 +95,7 @@ export function validateLabProject(project) {
     const c=job.config, options={...engineOptions(c),structure:c.structure,weights:c.weights,search:c.search,districts:m.district_count,seed:c.seed,seeds:c.seeds,steps:c.steps,percentile:c.percentile,alpha_county:c.alpha_county,balance_tolerance:c.balance_tolerance,area_swing:c.area_swing,iterations:c.iterations};
     const same=(actual,expected)=>exact(actual,Object.keys(expected))&&Object.keys(expected).every(key=>actual[key]===expected[key]);
     if(!same(m.requested_options,options)||!same(m.recorded_options,options)||(!same(m.effective_config,effectiveConfig(c,m.district_count))&&!(c.search==='flip'&&m.structure_evidence==null&&same(m.effective_config,{...effectiveConfig(c,m.district_count),iterations:c.iterations}))))throw new Error('Recorded options disagree with the experiment.');
-    for (const [id,district] of Object.entries(assignments)) if (!/^\d{11}$/.test(id) || !integer(district,1,m.district_count)) throw new Error('Invalid tract assignment.');
+    for (const [id,district] of Object.entries(assignments)) if (!(isMultiscale(c)&&c.multiscale.fine_level==='bg'?/^\d{12}$/:/^\d{11}$/).test(id) || !integer(district,1,m.district_count)) throw new Error('Invalid tract assignment.');
     for (let i = 0; i < m.districts.length; i++) {
       const d = m.districts[i];
       if (!record(d) || d.district !== i+1 || !integer(d.population,0,m.population) || !integer(d.units,0,m.units) || !integer(d.components,0,m.units) || !bounded(d.deviation_percent,-100,Number.MAX_SAFE_INTEGER)) throw new Error('Invalid district result.');
@@ -123,6 +126,7 @@ export async function createLabProject(lab, id) {
 // Independently check stored measurements against hashed prepared inputs. This
 // establishes data consistency, not that the claimed engine generated the plan.
 export function verifyLabAssignments(graph, state, assignments, config) {
+  if(isMultiscale(config))graph=fineGraph(graph,config);
   const m=state.metrics, k=m.district_count, ids=graph.geoids;
   const partisan=config.weights==='partisan'?partisanWeights(graph,config):null;
   const character=usesCharacterWeights(config.weights)?characterWeights(graph,config):null;
@@ -158,7 +162,7 @@ export function verifyLabAssignments(graph, state, assignments, config) {
     const e=m.structure_evidence;
     if(!exact(e,['method','rng','steps','percentile','selection','rank_rule','seed_domain','initial_refinement_iterations','population_allowance','nonempty_districts','record_count','selected_rank'])||e.method!=='boundary-flip'||e.rng!=='chacha12-u64-v1'||e.steps!==config.steps||e.percentile!==config.percentile||e.selection!=='initial-and-accepted-unweighted-cut-percentile'||e.rank_rule!=='floor(p*record-count), clamped'||e.seed_domain!=='FLIP_CHAIN_'||e.initial_refinement_iterations!==100||e.population_allowance!=='fraction-of-ideal-district'||e.nonempty_districts!==true||!integer(e.record_count,1,config.steps+1)||e.selected_rank!==Math.min(Math.floor(config.percentile*e.record_count),e.record_count-1)||units.some(n=>n===0))throw new Error('Project boundary-flip evidence disagrees with requested options.');
   }
-  if(k===1&&(m.root_split!=null||m.structure_evidence!=null))throw new Error('One-district project must not claim split or search evidence.');
+  if(!isMultiscale(config)&&k===1&&(m.root_split!=null||m.structure_evidence!=null))throw new Error('One-district project must not claim split or search evidence.');
   if(config.structure==='simulated-annealing'&&k>1){
     const evidence=m.structure_evidence;
     if(!exact(evidence,['method','rng','objective','steps_per_tract','t0_factor','t_final','initial_refinement_iterations','population_targets','temperature_schedule'])||evidence.method!=='simulated-annealing'||evidence.rng!=='chacha12-u64-v1'||evidence.objective!=='unweighted-edge-cut'||evidence.steps_per_tract!==config.sa_steps_per_tract||evidence.t0_factor!==config.sa_t0_factor||evidence.t_final!==config.sa_t_final||evidence.initial_refinement_iterations!==100||evidence.population_targets!=='floor-ceil-seat-ratio'||evidence.temperature_schedule!=='geometric; T0=max(1,factor*initial-cut); final clamped to [1e-12,T0]'||!contiguous||max>config.balance_tolerance)throw new Error('Project annealing parameters or feasibility disagree with assignments.');
@@ -347,6 +351,7 @@ function verifyVraPreservation(graph,state,assignments,config){
 }
 
 export async function verifyDemographicEvidence(graph,state,config,assignments){
+  if(isMultiscale(config))await verifyMultiscaleEvidence(graph,state,config);
   if(['proportional-bisect','proportional-section'].includes(config.structure))await verifyElectionResult(graph,{...config,districts:state.metrics.district_count},config.elections[state.code??graph.state],{metrics:state.metrics,assignments});
   else if(state.metrics.election_input_evidence!=null)throw new Error('Unexpected election execution evidence.');
   if(config.weights==='partisan'&&state.metrics.weighting_evidence.shares_sha256!==await partisanIdentity(config.partisans[state.code??graph.state]))throw new Error('Project partisan input identity mismatch.');
