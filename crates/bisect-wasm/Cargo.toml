@@ -1,0 +1,32 @@
+[package]
+name = "bisect-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Browser boundary for the BISECT Rust engine"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+base64 = "0.22"
+bisect-core = { path = "../bisect-core" }
+bisect-clustering = { path = "../bisect-clustering" }
+bisect-flow = { path = "../bisect-flow" }
+bisect-apportion = { path = "../bisect-apportion", default-features = false }
+bisect-runner = { path = "../bisect-runner", default-features = false }
+bisect-data = { path = "../bisect-data" }
+serde.workspace = true
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+sha2.workspace = true
+rplan-core = { path = "../rplan-core" }
+rplan-io = { path = "../rplan-io" }
+rplan-audit = { path = "../rplan-audit" }
+rcount-core = { path = "../rcount-core" }
+rcount-io = { path = "../rcount-io" }
+rcount-audit = { path = "../rcount-audit" }
+rcount-district = { path = "../rcount-district" }
+rhist-io = { path = "../rhist-io" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["custom"] }

@@ -1,6 +1,7 @@
 use rhist_core::{package_content_hash, verify_package, RhistPackage, SourceIndexEntry};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -35,6 +36,89 @@ pub struct PackageHashes {
     pub context_count: usize,
     pub lineage_event_count: usize,
     pub crosswalk_count: usize,
+}
+
+/// Exact package-relative files selected in a browser; never extracted to disk.
+pub type PackageFiles = BTreeMap<String, Vec<u8>>;
+
+pub fn read_package_files(files: &PackageFiles) -> Result<RhistPackage, RhistIoError> {
+    fn bytes<'a>(files: &'a PackageFiles, path: &str) -> Result<&'a [u8], RhistIoError> {
+        files
+            .get(path)
+            .map(Vec::as_slice)
+            .ok_or_else(|| RhistIoError::MissingSourceFile { path: path.into() })
+    }
+    fn records<T: for<'de> Deserialize<'de>>(bytes: &[u8]) -> Result<Vec<T>, RhistIoError> {
+        let mut records = Vec::new();
+        for line in BufReader::new(bytes).lines() {
+            let line = line?;
+            if !line.trim().is_empty() {
+                records.push(serde_json::from_str(&line)?);
+            }
+        }
+        Ok(records)
+    }
+    let package = RhistPackage {
+        manifest: serde_json::from_slice(bytes(files, "manifest.json")?)?,
+        source_index: serde_json::from_slice(bytes(files, "sources/source-index.json")?)?,
+        context_index: records(bytes(files, "contexts/context-index.ndjson")?)?,
+        cycles: records(bytes(files, "units/cycles.ndjson")?)?,
+        lineage_events: records(bytes(files, "units/lineage-events.ndjson")?)?,
+        crosswalks: files
+            .get("units/crosswalks.ndjson")
+            .map(|data| records(data))
+            .transpose()?
+            .unwrap_or_default(),
+        claim_boundary: serde_json::from_slice(bytes(files, "claims/claim-boundary.json")?)?,
+    };
+    for source in &package.source_index {
+        validate_source_path(&source.path)?;
+        verify_source_hash(source, sha256_bytes(bytes(files, &source.path)?))?;
+    }
+    verify_package_hash(&package)?;
+    verify_package(&package)?;
+    Ok(package)
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct VerifyTranscript {
+    pub status: VerificationStatus,
+    pub package_id: Option<String>,
+    pub package_content_hash: Option<String>,
+    pub checks: Vec<String>,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum VerificationStatus {
+    Pass,
+    Fail,
+}
+
+/// Same transcript for the disk CLI and the in-memory browser boundary.
+pub fn verification_transcript(
+    package: Result<RhistPackage, RhistIoError>,
+) -> Result<VerifyTranscript, RhistIoError> {
+    match package {
+        Ok(package) => Ok(VerifyTranscript {
+            status: VerificationStatus::Pass,
+            package_id: Some(package.manifest.package_id.clone()),
+            package_content_hash: Some(package_content_hash(&package)?),
+            checks: verify_package(&package)?
+                .into_iter()
+                .map(|report| report.check_id.to_string())
+                .collect(),
+            error: None,
+        }),
+        Err(error) => Ok(VerifyTranscript {
+            status: VerificationStatus::Fail,
+            package_id: None,
+            package_content_hash: None,
+            checks: Vec::new(),
+            error: Some(error.to_string()),
+        }),
+    }
 }
 
 pub fn read_package_dir(dir: impl AsRef<Path>) -> Result<RhistPackage, RhistIoError> {
@@ -168,11 +252,7 @@ pub fn verify_source_files(
 ) -> Result<(), RhistIoError> {
     let package_root = package_root.as_ref();
     for source in source_index {
-        if !source.path.starts_with("sources/") || source.path.contains("..") {
-            return Err(RhistIoError::InvalidSourcePath {
-                path: source.path.clone(),
-            });
-        }
+        validate_source_path(&source.path)?;
         let path = package_root.join(&source.path);
         if !path.is_file() {
             return Err(RhistIoError::MissingSourceFile {
@@ -180,13 +260,7 @@ pub fn verify_source_files(
             });
         }
         let computed = sha256_file(&path)?;
-        if computed != source.sha256 {
-            return Err(RhistIoError::SourceHashMismatch {
-                source_id: source.source_id.clone(),
-                declared: source.sha256.clone(),
-                computed,
-            });
-        }
+        verify_source_hash(source, computed)?;
     }
     Ok(())
 }
@@ -252,12 +326,39 @@ fn write_ndjson<T: Serialize>(path: &Path, records: &[T]) -> Result<(), RhistIoE
 
 fn sha256_file(path: &Path) -> Result<String, RhistIoError> {
     let bytes = fs::read(path)?;
+    Ok(sha256_bytes(&bytes))
+}
+
+fn validate_source_path(path: &str) -> Result<(), RhistIoError> {
+    if !path.starts_with("sources/")
+        || path.contains("..")
+        || path.contains('\\')
+        || path.contains(':')
+        || path.split('/').any(|part| part.is_empty() || part == ".")
+    {
+        return Err(RhistIoError::InvalidSourcePath { path: path.into() });
+    }
+    Ok(())
+}
+
+fn verify_source_hash(source: &SourceIndexEntry, computed: String) -> Result<(), RhistIoError> {
+    if computed != source.sha256 {
+        return Err(RhistIoError::SourceHashMismatch {
+            source_id: source.source_id.clone(),
+            declared: source.sha256.clone(),
+            computed,
+        });
+    }
+    Ok(())
+}
+
+fn sha256_bytes(bytes: &[u8]) -> String {
     let digest = Sha256::digest(bytes);
     let mut hex = String::with_capacity(64);
     for byte in digest {
         hex.push_str(&format!("{byte:02x}"));
     }
-    Ok(format!("sha256:{hex}"))
+    format!("sha256:{hex}")
 }
 
 fn is_zero_hash(value: &str) -> bool {
@@ -268,6 +369,77 @@ fn is_zero_hash(value: &str) -> bool {
 mod tests {
     use super::*;
     use std::fs;
+
+    fn fixture_files(root: &Path) -> PackageFiles {
+        fn collect(root: &Path, dir: &Path, files: &mut PackageFiles) {
+            for entry in fs::read_dir(dir).unwrap() {
+                let path = entry.unwrap().path();
+                if path.is_dir() {
+                    collect(root, &path, files);
+                } else {
+                    files.insert(
+                        path.strip_prefix(root)
+                            .unwrap()
+                            .to_string_lossy()
+                            .replace('\\', "/"),
+                        fs::read(path).unwrap(),
+                    );
+                }
+            }
+        }
+        let mut files = PackageFiles::new();
+        collect(root, root, &mut files);
+        files
+    }
+
+    #[test]
+    fn memory_and_disk_history_verification_match() {
+        for name in [
+            "l0-rename",
+            "l1-split-merge",
+            "l2-three-cycle",
+            "real-ri-tract-unchanged",
+            "l0-missing-unit",
+            "l1-bad-weights",
+        ] {
+            let dir = default_fixture_dir(name);
+            let disk = verification_transcript(read_package_dir(&dir)).unwrap();
+            let memory = verification_transcript(read_package_files(&fixture_files(&dir))).unwrap();
+            assert_eq!(memory, disk, "{name}");
+        }
+    }
+
+    #[test]
+    fn memory_reader_rejects_modified_missing_and_unsafe_sources() {
+        let original = fixture_files(&default_fixture_dir("l0-rename"));
+        let package = read_package_files(&original).unwrap();
+        let source = &package.source_index[0].path;
+        let mut modified = original.clone();
+        modified.get_mut(source).unwrap().push(0);
+        assert!(matches!(
+            read_package_files(&modified),
+            Err(RhistIoError::SourceHashMismatch { .. })
+        ));
+        let mut missing = original.clone();
+        missing.remove(source);
+        assert!(matches!(
+            read_package_files(&missing),
+            Err(RhistIoError::MissingSourceFile { .. })
+        ));
+        for path in [
+            "sources/../private",
+            "sources/..\\private",
+            "sources/C:private",
+            "sources/./private",
+            "sources//private",
+            "C:/private",
+        ] {
+            assert!(matches!(
+                validate_source_path(path),
+                Err(RhistIoError::InvalidSourcePath { .. })
+            ));
+        }
+    }
 
     #[test]
     fn reads_l0_rename_fixture() {

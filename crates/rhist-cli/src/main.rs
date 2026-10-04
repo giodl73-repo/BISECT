@@ -1,8 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
-use rhist_core::package_content_hash;
-use rhist_io::read_package_dir;
-use serde::Serialize;
+use rhist_io::{read_package_dir, verification_transcript, VerificationStatus};
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -33,22 +31,6 @@ enum OutputFormat {
     PrettyJson,
 }
 
-#[derive(Debug, Serialize)]
-struct VerifyTranscript {
-    status: VerificationStatus,
-    package_id: Option<String>,
-    package_content_hash: Option<String>,
-    checks: Vec<String>,
-    error: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "kebab-case")]
-enum VerificationStatus {
-    Pass,
-    Fail,
-}
-
 fn main() {
     match run() {
         Ok(code) => std::process::exit(code),
@@ -66,33 +48,11 @@ fn run() -> Result<i32> {
 }
 
 fn run_verify(args: VerifyArgs) -> Result<i32> {
-    let (code, transcript) = match read_package_dir(&args.package_dir) {
-        Ok(package) => {
-            let checks = rhist_core::verify_package(&package)?
-                .into_iter()
-                .map(|report| report.check_id.to_string())
-                .collect();
-            (
-                0,
-                VerifyTranscript {
-                    status: VerificationStatus::Pass,
-                    package_id: Some(package.manifest.package_id.clone()),
-                    package_content_hash: Some(package_content_hash(&package)?),
-                    checks,
-                    error: None,
-                },
-            )
-        }
-        Err(err) => (
-            1,
-            VerifyTranscript {
-                status: VerificationStatus::Fail,
-                package_id: None,
-                package_content_hash: None,
-                checks: Vec::new(),
-                error: Some(err.to_string()),
-            },
-        ),
+    let transcript = verification_transcript(read_package_dir(&args.package_dir))?;
+    let code = if transcript.status == VerificationStatus::Pass {
+        0
+    } else {
+        1
     };
 
     let output = match args.format {

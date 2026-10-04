@@ -14,6 +14,7 @@
 //! Weight derivation (spec §2.2): proposal probability = 1/|valid_cuts|;
 //! target = uniform; importance correction = |valid_cuts|; log_increment = log(|valid_cuts|).
 
+#[cfg(test)]
 use rand::rngs::SmallRng;
 use rand::Rng;
 #[cfg(test)]
@@ -21,7 +22,7 @@ use rand::SeedableRng;
 use thiserror::Error;
 
 use crate::partial_plan::PartialPlan;
-use bisect_ensemble::spanning::random_spanning_tree;
+use bisect_ensemble::spanning::random_spanning_tree_portable;
 
 #[derive(Debug, Error)]
 pub enum ProposeError {
@@ -37,14 +38,14 @@ pub enum ProposeError {
 ///
 /// Returns `(updated_partial_plan, log_weight_increment)`.
 /// If no balanced cut exists, returns `ProposeError::NoValidCut`.
-pub fn propose_district(
+pub fn propose_district<R: Rng>(
     partial: &PartialPlan,
     adj: &[Vec<usize>],
     pop: &[i64],
     k: usize,
     stage: usize, // 1-based: we are assigning district `stage`
     pop_tolerance: f64,
-    rng: &mut SmallRng,
+    rng: &mut R,
     particle_idx: usize,
 ) -> Result<(PartialPlan, f64), ProposeError> {
     // Step 1: find largest connected component of unassigned tracts.
@@ -92,10 +93,10 @@ pub fn propose_district(
     }
 
     // Step 3: sample seed tract uniformly from the component
-    let seed_local = rng.gen_range(0..m) as u32;
+    let seed_local = rng.gen_range(0..m as u64) as u32;
 
     // Step 4: sample a uniform spanning tree of the component
-    let tree = random_spanning_tree(&local_adj, rng);
+    let tree = random_spanning_tree_portable(&local_adj, rng);
 
     // Step 5: enumerate all tree edges and find balanced cuts
     // For each tree edge (a, b), split_on gives two components.
@@ -121,7 +122,7 @@ pub fn propose_district(
     }
 
     // Step 6: select one valid cut uniformly at random
-    let cut_idx = rng.gen_range(0..valid_cuts.len());
+    let cut_idx = rng.gen_range(0..valid_cuts.len() as u64) as usize;
     let (a, b) = valid_cuts[cut_idx];
     let (comp_a, comp_b) = tree.split_on(a, b);
 

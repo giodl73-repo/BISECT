@@ -30,6 +30,7 @@ pub fn run_flip_chain(
     p: f64,
 ) -> Result<(HashMap<usize, usize>, usize, usize), String> {
     use rand::Rng;
+    use rand_chacha::ChaCha12Rng;
     use sha2::Digest;
 
     let n = adjacency.len();
@@ -62,7 +63,7 @@ pub fn run_flip_chain(
         u64::from_le_bytes(d[..8].try_into().unwrap())
     };
 
-    let mut rng = SmallRng::seed_from_u64(chain_seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(chain_seed);
 
     // Work with a flat Vec<usize> for O(1) access.
     let mut plan: Vec<usize> = (0..n)
@@ -72,7 +73,6 @@ pub fn run_flip_chain(
     // Per-district population (districts are 1-based up to num_districts).
     let total_pop: i64 = vertex_weights.iter().sum();
     let ideal_pop = total_pop as f64 / num_districts as f64;
-    let max_dev = ((balance_tolerance * total_pop as f64) as i64 + 1).max(1);
 
     let mut dist_pop: Vec<i64> = vec![0i64; num_districts + 1];
     for (i, &d) in plan.iter().enumerate() {
@@ -100,7 +100,7 @@ pub fn run_flip_chain(
             break;
         }
 
-        let t = boundary[rng.gen_range(0..boundary.len())];
+        let t = boundary[rng.gen_range(0..boundary.len() as u64) as usize];
         let d_src = plan[t];
 
         // Collect adjacent districts (unique, not d_src).
@@ -114,8 +114,9 @@ pub fn run_flip_chain(
         if adj_set.is_empty() {
             continue;
         }
-        let adj_districts: Vec<usize> = adj_set.into_iter().collect();
-        let d_target = adj_districts[rng.gen_range(0..adj_districts.len())];
+        let mut adj_districts: Vec<usize> = adj_set.into_iter().collect();
+        adj_districts.sort_unstable();
+        let d_target = adj_districts[rng.gen_range(0..adj_districts.len() as u64) as usize];
 
         // Tentatively flip.
         plan[t] = d_target;
@@ -123,9 +124,9 @@ pub fn run_flip_chain(
         dist_pop[d_target] += vertex_weights[t];
 
         // Population balance check.
-        let dev_src = (dist_pop[d_src] as f64 - ideal_pop).abs() as i64;
-        let dev_tgt = (dist_pop[d_target] as f64 - ideal_pop).abs() as i64;
-        if dev_src > max_dev || dev_tgt > max_dev {
+        let dev_src = (dist_pop[d_src] as f64 / ideal_pop - 1.0).abs();
+        let dev_tgt = (dist_pop[d_target] as f64 / ideal_pop - 1.0).abs();
+        if dev_src > balance_tolerance || dev_tgt > balance_tolerance {
             plan[t] = d_src;
             dist_pop[d_src] += vertex_weights[t];
             dist_pop[d_target] -= vertex_weights[t];
@@ -136,7 +137,7 @@ pub fn run_flip_chain(
         // BFS over tracts still in d_src (plan[v] == d_src, which excludes t now).
         let d_src_first = (0..n).find(|&v| plan[v] == d_src);
         let contiguous = match d_src_first {
-            None => true, // d_src is empty — vacuously connected
+            None => false, // Every district must retain at least one tract.
             Some(start) => {
                 let mut vis_bfs = vec![false; n];
                 vis_bfs[start] = true;

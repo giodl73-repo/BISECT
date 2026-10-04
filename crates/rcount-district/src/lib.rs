@@ -305,6 +305,12 @@ pub fn aggregate_package_districts(
     contest_id: &str,
     status: CountStatus,
 ) -> Result<DistrictAggregationTranscript, RcountDistrictError> {
+    let bytes=crosswalk_path.map(std::fs::read).transpose()?;
+    aggregate_package_districts_bytes(package,plan,context,bytes.as_deref(),contest_id,status)
+}
+
+/// Aggregate using an optional exact NDJSON crosswalk without accessing disk.
+pub fn aggregate_package_districts_bytes(package:&RcountPackage, plan:&DistrictPlan, context:Option<&RplanContext>, crosswalk_bytes:Option<&[u8]>, contest_id:&str, status:CountStatus) -> Result<DistrictAggregationTranscript,RcountDistrictError> {
     verify_package(package)?;
     plan.validate()?;
     validate_context_matches_plan(plan, context)?;
@@ -322,8 +328,8 @@ pub fn aggregate_package_districts(
     let rctx_reference = context_hash
         .as_deref()
         .and_then(|hash| rctx_reference_for_context(package, hash));
-    let explicit_crosswalk = match crosswalk_path {
-        Some(path) => Some(validate_crosswalk_path(path, context, rctx_reference)?),
+    let explicit_crosswalk = match crosswalk_bytes {
+        Some(bytes) => Some(validate_crosswalk_bytes(bytes, context, rctx_reference)?),
         None => None,
     };
     let transcript_crosswalk_hash = explicit_crosswalk
@@ -511,13 +517,13 @@ struct ValidatedCrosswalk {
     records: Vec<rctx_core::CrosswalkRecord>,
 }
 
-fn validate_crosswalk_path(
-    path: &Path,
+fn validate_crosswalk_bytes(
+    bytes: &[u8],
     context: Option<&RplanContext>,
     rctx_reference: Option<&RctxReference>,
 ) -> Result<ValidatedCrosswalk, RcountDistrictError> {
     let context = context.ok_or(RcountDistrictError::CrosswalkRequiresContext)?;
-    let records = read_crosswalk_ndjson(path)?;
+    let records = read_crosswalk_ndjson_bytes(bytes)?;
     let computed = rctx_core::crosswalk_set_hash(&records)?;
     if let Some(declared) = rctx_reference.and_then(|reference| reference.crosswalk_hash.as_ref()) {
         if declared != &computed {
@@ -543,11 +549,10 @@ fn validate_crosswalk_path(
     })
 }
 
-fn read_crosswalk_ndjson(
-    path: &Path,
+fn read_crosswalk_ndjson_bytes(
+    bytes: &[u8],
 ) -> Result<Vec<rctx_core::CrosswalkRecord>, RcountDistrictError> {
-    let file = std::fs::File::open(path)?;
-    let reader = std::io::BufReader::new(file);
+    let reader = std::io::BufReader::new(bytes);
     let mut records = Vec::new();
     for line in reader.lines() {
         let line = line?;
@@ -617,7 +622,7 @@ fn aggregate_direct(
         let label = district_label(plan, district_id);
         let sources = &district_sources[district_id];
         let summary =
-            sum_sources_for_district(contest, contest_id, status, district_id, &label, sources);
+            sum_sources_for_district(contest, contest_id, status, district_id, &label, sources)?;
         checks.push(DistrictAggregationCheck {
             equation_id: "district_aggregation_total".to_string(),
             district_id: district_id as u32,
@@ -858,48 +863,10 @@ fn sum_sources_for_district(
     district_id: usize,
     district_label: &str,
     sources: &[&Summary],
-) -> Summary {
-    let mut selection_sums: BTreeMap<&str, i64> = contest
-        .selections
-        .iter()
-        .map(|selection| (selection.selection_id.as_str(), 0))
-        .collect();
-    let mut undervotes = 0;
-    let mut overvotes = 0;
-    let mut blank_contests = 0;
-    let mut counted_ballots = 0;
-    for source in sources {
-        for total in &source.totals {
-            *selection_sums
-                .entry(total.selection_id.as_str())
-                .or_default() += total.votes;
-        }
-        undervotes += source.undervotes;
-        overvotes += source.overvotes;
-        blank_contests += source.blank_contests;
-        counted_ballots += source.counted_ballots;
-    }
-    Summary {
-        contest_id: contest_id.to_string(),
-        reporting_unit_id: format!("rplan:district:{district_id}:{district_label}"),
-        batch_id: None,
-        status,
-        totals: contest
-            .selections
-            .iter()
-            .map(|selection| SelectionTotal {
-                selection_id: selection.selection_id.clone(),
-                votes: selection_sums
-                    .get(selection.selection_id.as_str())
-                    .copied()
-                    .unwrap_or_default(),
-            })
-            .collect(),
-        undervotes,
-        overvotes,
-        blank_contests,
-        counted_ballots,
-    }
+) -> Result<Summary,RcountDistrictError> {
+    let mut accumulator=DistrictAccumulator::new(contest);
+    for source in sources { accumulator.add_weighted(source,rctx_core::RationalWeight{num:1,den:1})?; }
+    accumulator.into_summary(contest,contest_id,status,district_id,district_label)
 }
 
 fn synthetic_cycle_2024_package(contest_id: &str, status: CountStatus) -> RcountPackage {
@@ -1181,6 +1148,15 @@ mod tests {
     use rcount_core::{synthetic_summary_basic_package, CountStatus};
 
     #[test]
+    fn direct_aggregation_rejects_overflow_instead_of_wrapping() {
+        let package=synthetic_summary_basic_package();let mut source=package.summaries[0].clone();
+        source.totals[0].votes=i64::MAX;
+        assert!(matches!(sum_sources_for_district(&package.contests[0],"syn-2024-mayor",CountStatus::Canvassed,0,"1",&[&source,&source]),Err(RcountDistrictError::DistrictTotalOverflow{field}) if field=="votes"));
+        source=package.summaries[0].clone();source.counted_ballots=i64::MAX;
+        assert!(matches!(sum_sources_for_district(&package.contests[0],"syn-2024-mayor",CountStatus::Canvassed,0,"1",&[&source,&source]),Err(RcountDistrictError::DistrictTotalOverflow{field}) if field=="counted_ballots"));
+    }
+
+    #[test]
     fn aggregates_summary_basic_into_rplan_districts() {
         let package = synthetic_summary_basic_package();
         let plan_doc = synthetic_summary_basic_rplan_document().unwrap();
@@ -1275,6 +1251,7 @@ mod tests {
             transcript.rctx_crosswalk_hash.as_deref(),
             Some(crosswalk_hash.as_str())
         );
+        assert_eq!(transcript,aggregate_package_districts_bytes(&package,&plan_doc.plan,Some(&context),Some(&std::fs::read(&crosswalk_path).unwrap()),"syn-2024-mayor",CountStatus::Canvassed).unwrap());
     }
 
     #[test]

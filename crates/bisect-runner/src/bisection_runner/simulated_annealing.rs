@@ -38,7 +38,7 @@ pub(crate) fn is_side_connected(partition: &[u8], sub_adj: &[Vec<usize>], side_v
         .filter(|&v| partition[v] == side_val)
         .collect();
     if members.len() <= 1 {
-        return true;
+        return !members.is_empty();
     }
     // BFS from first member
     let mut visited = vec![false; partition.len()];
@@ -76,12 +76,37 @@ pub fn split_subgraph_sa(
     t_final: f64,
     sa_seed: u64,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
-    use rand::rngs::SmallRng;
+    split_subgraph_sa_target(adjacency, vertex_weights, edge_weights, tract_indices,
+        balance_tolerance, 0.5, steps_per_tract, t0_factor, t_final, sa_seed)
+}
+
+/// Anneal a split around its prescribed population fraction. Tolerance is a
+/// relative deviation from each child's target, not a METIS multiplier.
+#[allow(clippy::too_many_arguments)]
+pub fn split_subgraph_sa_target(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    tract_indices: &HashSet<usize>,
+    balance_tolerance: f64,
+    target_left: f64,
+    steps_per_tract: usize,
+    t0_factor: f64,
+    t_final: f64,
+    sa_seed: u64,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    use rand_chacha::ChaCha12Rng;
     use rand::Rng;
     use rand::SeedableRng;
 
-    if tract_indices.len() <= 1 {
-        return Ok((tract_indices.clone(), HashSet::new()));
+    if tract_indices.len() < 2 || adjacency.len() != vertex_weights.len()
+        || tract_indices.iter().any(|&v| v >= adjacency.len())
+        || !balance_tolerance.is_finite() || !(0.0..1.0).contains(&balance_tolerance)
+        || !target_left.is_finite() || !(0.0..1.0).contains(&target_left) || target_left == 0.0
+        || !t0_factor.is_finite() || t0_factor < 0.0
+        || !t_final.is_finite() || t_final <= 0.0
+    {
+        return Err("Invalid simulated annealing dimensions or parameters.".into());
     }
 
     // Build local index mapping (sorted for determinism)
@@ -104,10 +129,15 @@ pub fn split_subgraph_sa(
         .collect();
 
     // Build local vertex weights
-    let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
-    let total_pop: i64 = local_pop.iter().sum();
-    let half_pop = total_pop / 2;
-    let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
+    let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g]).collect();
+    if local_pop.iter().any(|&pop| pop < 0) {
+        return Err("SA populations must be nonnegative.".into());
+    }
+    let total_pop = local_pop.iter().try_fold(0i64, |sum, &pop| sum.checked_add(pop))
+        .filter(|&total| total > 0).ok_or("SA population total is zero or overflows i64.")?;
+    let targets = [total_pop as f64 * target_left, total_pop as f64 * (1.0 - target_left)];
+    let balanced = |left: i64| [left, total_pop - left].iter().zip(targets)
+        .all(|(&pop, target)| (pop as f64 - target).abs() <= target * balance_tolerance + 1e-9);
 
     // Get initial METIS partition.
     let (metis_left, _) = split_subgraph(
@@ -116,10 +146,10 @@ pub fn split_subgraph_sa(
         1,
         edge_weights,
         tract_indices,
-        balance_tolerance + 1.0, // let METIS use full state tolerance (we re-check ourselves)
+        balance_tolerance + 1.0,
         100,
         None,
-        None,
+        Some(vec![target_left as f32, (1.0 - target_left) as f32]),
         None,
     )?;
 
@@ -129,11 +159,18 @@ pub fn split_subgraph_sa(
         .map(|g| if metis_left.contains(g) { 0 } else { 1 })
         .collect();
 
-    let n_steps = steps_per_tract * n;
+    let n_steps = steps_per_tract.checked_mul(n).ok_or("SA step count overflows usize.")?;
+    let initial_left: i64 = partition.iter().enumerate().filter(|(_, &side)| side == 0)
+        .map(|(i, _)| local_pop[i]).sum();
+    if !balanced(initial_left) || !is_side_connected(&partition, &sub_adj, 0)
+        || !is_side_connected(&partition, &sub_adj, 1) {
+        return Err("SA initial partition does not satisfy prescribed population targets and connectivity.".into());
+    }
     let initial_ec = count_ec_local(&partition, &sub_adj);
 
     // T_0 = max(1.0, t0_factor * initial_ec)
     let t0 = (t0_factor * initial_ec as f64).max(1.0);
+    if !t0.is_finite() { return Err("SA initial temperature exceeds finite range.".into()); }
     // Guard: t_final must be > 0 and <= t0; clamp to a small epsilon if zero
     let t_final_safe = t_final.max(1e-12).min(t0);
 
@@ -142,7 +179,7 @@ pub fn split_subgraph_sa(
     // Track current plan's EC for Metropolis comparison (spec: delta_ec = count_ec(proposed) - count_ec(plan))
     let mut current_ec = initial_ec;
 
-    let mut rng = SmallRng::seed_from_u64(sa_seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(sa_seed);
 
     // Helper: compute population of each side
     let side_pop = |p: &[u8], side: u8| -> i64 {
@@ -174,14 +211,15 @@ pub fn split_subgraph_sa(
         }
 
         // Pick random boundary tract
-        let tract = boundary[rng.gen_range(0..boundary.len())];
+        let tract = boundary[rng.gen_range(0..boundary.len() as u64) as usize];
         let current_side = partition[tract];
         let other_side = 1 - current_side;
 
         // Population check: would the flip remain balanced?
         let pop_current = side_pop(&partition, current_side);
         let pop_after_flip = pop_current - local_pop[tract];
-        if (pop_after_flip - half_pop).abs() > tolerance_pop {
+        let left_after = if current_side == 0 { pop_after_flip } else { total_pop - pop_after_flip };
+        if !balanced(left_after) {
             continue; // skip: would violate balance
         }
 
@@ -251,6 +289,10 @@ pub fn run_all_splits_sa(
     base_seed: u64,
 ) -> Result<HashMap<usize, usize>, String> {
     let n = adjacency.len();
+    if num_districts == 0 || num_districts > n || vertex_weights.len() != n
+        || !balance_tolerance.is_finite() || !(0.0..1.0).contains(&balance_tolerance) {
+        return Err("Invalid SA recursive dimensions or tolerance.".into());
+    }
 
     if num_districts == 1 {
         if let Some(dir) = intermediate_dir {
@@ -263,6 +305,8 @@ pub fn run_all_splits_sa(
     }
 
     let tree = BisectionTree::from_k(num_districts);
+    // Bound accumulated relative error along the deepest recursive path.
+    let node_tolerance = (1.0 + balance_tolerance).powf(1.0 / tree.max_depth as f64) - 1.0;
     let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
     node_tracts.insert(String::new(), (0..n).collect());
 
@@ -277,14 +321,14 @@ pub fn run_all_splits_sa(
         let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
             .into_par_iter()
             .map(|(node, tracts)| {
-                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
                 let sa_seed = derive_sa_seed(base_seed, &node.path);
-                let (left, right) = split_subgraph_sa(
+                let (left, right) = split_subgraph_sa_target(
                     adjacency,
                     vertex_weights,
                     edge_weights,
                     &tracts,
-                    node_ufactor,
+                    node_tolerance,
+                    node.k_left as f64 / node.k as f64,
                     steps_per_tract,
                     t0_factor,
                     t_final,

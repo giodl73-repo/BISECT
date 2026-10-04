@@ -137,9 +137,18 @@ impl RecomChain {
 
     /// Run one ReCom step. Returns a `StepRecord` with outcome metrics.
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> StepRecord {
+        self.step_impl(rng, false)
+    }
+
+    /// Uses fixed-width random draws with the Wilson tree sampler.
+    pub fn step_portable<R: Rng>(&mut self, rng: &mut R) -> StepRecord {
+        self.step_impl(rng, true)
+    }
+
+    fn step_impl<R: Rng>(&mut self, rng: &mut R, portable: bool) -> StepRecord {
         self.steps_taken += 1;
 
-        let accepted = self.try_step(rng);
+        let accepted = self.try_step(rng, portable);
 
         let cut = self.count_cut_edges();
         let max_dev = self.max_pop_deviation();
@@ -155,15 +164,16 @@ impl RecomChain {
 
     /// Attempt a ReCom step with pair reselection on persistent balance failure.
     /// Returns true if the assignment was updated.
-    fn try_step<R: Rng>(&mut self, rng: &mut R) -> bool {
-        let pairs = self.adjacent_pairs();
+    fn try_step<R: Rng>(&mut self, rng: &mut R, portable: bool) -> bool {
+        let mut pairs = self.adjacent_pairs();
+        if portable { pairs.sort_unstable(); }
         if pairs.is_empty() {
             return false;
         }
 
         // Shuffle pairs for random pair reselection.
         let mut pair_order: Vec<usize> = (0..pairs.len()).collect();
-        pair_order.shuffle(rng);
+        if portable { crate::portable_shuffle(&mut pair_order, rng); } else { pair_order.shuffle(rng); }
 
         for &pair_idx in pair_order.iter().take(MAX_PAIR_ATTEMPTS) {
             let (d_i, d_j) = pairs[pair_idx];
@@ -201,7 +211,7 @@ impl RecomChain {
             // Try up to MAX_TREE_RESAMPLES spanning trees.
             for _ in 0..MAX_TREE_RESAMPLES {
                 let tree = match self.tree_sampler {
-                    TreeSampler::Wilson => random_spanning_tree(&local_adj, rng),
+                    TreeSampler::Wilson => if portable { crate::spanning::random_spanning_tree_portable(&local_adj, rng) } else { random_spanning_tree(&local_adj, rng) },
                     TreeSampler::GerryChainKruskal => random_kruskal_spanning_tree(&local_adj, rng),
                 };
 
@@ -210,7 +220,7 @@ impl RecomChain {
 
                 if !balanced_cuts.is_empty() {
                     // Pick one uniformly at random and apply it.
-                    let &(local_a, local_b) = balanced_cuts.choose(rng).unwrap();
+                    let &(local_a, local_b) = if portable { &balanced_cuts[crate::portable_index(balanced_cuts.len(), rng)] } else { balanced_cuts.choose(rng).unwrap() };
                     let (comp_a, comp_b) = tree.split_on(local_a, local_b);
                     for &local in &comp_a {
                         self.assignment[region[local as usize] as usize] = d_i;

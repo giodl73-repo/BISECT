@@ -149,3 +149,37 @@ fn flip_nc_improves_ec() {
     // Placeholder: load NC adjacency, compare flip p=0.0 EC vs baseline.
     // Skipped unless --include-ignored is passed.
 }
+
+// A one-tract move is 25% of ideal district population on this grid.
+// Ten percent must reject it, even though it is only 6.25% of state population.
+#[test]
+fn flip_tolerance_is_relative_to_ideal_without_integer_slack() {
+    let (adj, _) = grid_4x4();
+    let ew = HashMap::new();
+    for unit_population in [1i64, 100] {
+        let pop = vec![unit_population; 16];
+        for seed in [1, 42, 777] {
+            let (plan, records, _) = run_flip_chain(&adj, &pop, &ew, 4, 0.1, 200, seed, 1.0).unwrap();
+            assert_eq!(records, 1, "a 25% move must not fit a 10% tolerance");
+            for d in 1..=4 {
+                let population: i64 = (0..16).filter(|i| plan[i] == d).map(|i| pop[i]).sum();
+                assert_eq!(population, 4 * unit_population);
+            }
+        }
+    }
+}
+
+#[test]
+fn flip_accepted_records_preserve_requested_population_bound() {
+    let (adj, pop) = grid_4x4();
+    let ew = HashMap::new();
+    for percentile in [0.0, 0.5, 1.0] {
+        let (plan, _, _) = run_flip_chain(&adj, &pop, &ew, 4, 0.25, 500, 42, percentile).unwrap();
+        for d in 1..=4 {
+            let members: Vec<_> = (0..16).filter(|i| plan[i] == d).collect();
+            assert!(!members.is_empty());
+            let population: i64 = members.iter().map(|&i| pop[i]).sum();
+            assert!((population as f64 / (pop.iter().sum::<i64>() as f64 / 4.0) - 1.0).abs() <= 0.25);
+        }
+    }
+}

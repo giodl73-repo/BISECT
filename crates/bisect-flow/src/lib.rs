@@ -423,7 +423,9 @@ fn search_assignment(
         }
         district_pop[district] -= weights[unit];
         assignment[unit] = usize::MAX;
-        if district_pop[district] == 0 {
+        // Zero population does not mean an unused label: unpopulated tracts
+        // can already occupy this district and constrain its connectivity.
+        if !assignment[..unit].contains(&district) {
             break;
         }
     }
@@ -454,10 +456,18 @@ fn validate_inputs(
             weights.len()
         )));
     }
-    if weights.iter().any(|&weight| weight <= 0) {
+    if weights.iter().any(|&weight| weight < 0) {
         return Err(FlowError::InvalidInput(
-            "weights must be positive".to_string(),
+            "weights must be nonnegative".to_string(),
         ));
+    }
+    let total = weights.iter().try_fold(0i64, |sum, &weight| sum.checked_add(weight))
+        .ok_or_else(|| FlowError::InvalidInput("total population exceeds i64 range".to_string()))?;
+    if total == 0 {
+        return Err(FlowError::InvalidInput("total population must be positive".to_string()));
+    }
+    if !config.tolerance.is_finite() || !(0.0..1.0).contains(&config.tolerance) {
+        return Err(FlowError::InvalidInput("tolerance must be finite and in [0, 1)".to_string()));
     }
     for (node, neighbors) in adjacency.iter().enumerate() {
         for &neighbor in neighbors {
@@ -557,6 +567,49 @@ mod tests {
         assert_eq!(result.summary.edge_cut, 1);
         assert_eq!(result.summary.population_deviation, 0.0);
         assert!(result.summary.parameter_hash.starts_with("sha256:"));
+    }
+
+    #[test]
+    fn unpopulated_tracts_remain_assigned_and_connected() {
+        for weights in [&[100, 0, 100, 100, 0, 100][..], &[0, 100, 100, 100, 100, 0][..]] {
+            let adjacency = path_adj(weights.len());
+            let result = construct_flow(&adjacency, weights, FlowConfig::new(2, 0.01)).unwrap();
+            assert_eq!(result.status, FlowStatus::Valid);
+            assert_eq!(result.assignment.len(), weights.len());
+            assert!(all_districts_connected(&adjacency, &result.assignment, 2));
+            assert_eq!(result.summary.population_deviation, 0.0);
+        }
+    }
+
+    #[test]
+    fn rejects_invalid_population_and_tolerance() {
+        for weights in [[0, 0], [-1, 2], [i64::MAX, 1]] {
+            assert!(construct_flow(&path_adj(2), &weights, FlowConfig::new(2, 0.01)).is_err());
+        }
+        for tolerance in [f64::NAN, f64::INFINITY, -0.01, 1.0] {
+            assert!(construct_flow(&path_adj(2), &[100, 100], FlowConfig::new(2, tolerance)).is_err());
+        }
+    }
+
+    #[test]
+    fn small_repair_matches_all_contiguous_path_cuts_with_zero_population() {
+        let adjacency = path_adj(6);
+        for pattern in 1..729 {
+            let mut encoded = pattern;
+            let mut weights = vec![0; 6];
+            for weight in &mut weights {
+                *weight = (encoded % 3) * 100;
+                encoded /= 3;
+            }
+            let (lower, _, upper) = capacity_bounds(&weights, 2, 0.01);
+            let total: i64 = weights.iter().sum();
+            let expected = (1..6).any(|split| {
+                let left: i64 = weights[..split].iter().sum();
+                [left, total - left].iter().all(|&pop| pop as f64 >= lower && pop as f64 <= upper)
+            });
+            let repaired = exhaustive_valid_small(&adjacency, &weights, 2, lower, upper);
+            assert_eq!(repaired.is_some(), expected, "population {weights:?}");
+        }
     }
 
     #[test]

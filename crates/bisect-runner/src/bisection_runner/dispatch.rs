@@ -37,6 +37,82 @@ pub fn run_all_splits_with_search(
     intermediate_dir: Option<&Path>,
     bisection_ensemble: Option<(f64, usize)>, // (p, ensemble_steps)
 ) -> Result<HashMap<usize, usize>, String> {
+    run_all_splits_search(
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        seed,
+        intermediate_dir,
+        bisection_ensemble,
+        None, "cut", 1,
+    )
+}
+
+/// Try the requested seed budget at each cut, selecting the least weighted
+/// boundary cost among contiguous candidates that meet both child targets.
+/// This is local cut search; no child plans are evaluated to choose a parent.
+pub fn run_all_splits_multi(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    seeds: usize,
+    intermediate_dir: Option<&Path>,
+) -> Result<HashMap<usize, usize>, String> {
+    if seeds == 0 {
+        return Err("Multi search requires at least one seed.".into());
+    }
+    run_all_splits_search(
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        Some(base_seed),
+        intermediate_dir,
+        None,
+        Some(seeds), "cut", 1,
+    )
+}
+
+/// Standard floor/ceil recursive tree with explicit per-node METIS tuning.
+pub fn run_all_splits_tuned(adjacency:&[Vec<usize>],vertex_weights:&[i64],edge_weights:&HashMap<(usize,usize),f64>,num_districts:usize,balance_tolerance:f64,niter:u32,seed:Option<u64>,multi_seeds:Option<usize>,objective:&str,trials:u32) -> Result<HashMap<usize,usize>,String> {
+    if multi_seeds==Some(0)||!["cut","volume"].contains(&objective)||!(1..=100).contains(&trials){return Err("Invalid recursive tuning or seed budget.".into());}
+    run_all_splits_search(adjacency,vertex_weights,edge_weights,num_districts,balance_tolerance,niter,seed,None,None,multi_seeds,objective,trials)
+}
+
+/// Local ensemble with tuned initialization and small-region fallback.
+#[allow(clippy::too_many_arguments)]
+pub fn run_all_splits_ensemble_tuned(
+    adjacency:&[Vec<usize>],population:&[i64],edges:&HashMap<(usize,usize),f64>,
+    k:usize,tolerance:f64,niter:u32,seed:u64,steps:usize,percentile:f64,objective:&str,trials:u32,
+) -> Result<HashMap<usize,usize>,String> {
+    if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials) || !percentile.is_finite() || !(0.0..=1.0).contains(&percentile) {
+        return Err("Invalid local ensemble refinement or percentile.".into());
+    }
+    run_all_splits_search(adjacency,population,edges,k,tolerance,niter,Some(seed),None,Some((percentile,steps)),None,objective,trials)
+}
+
+fn run_all_splits_search(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seed: Option<u64>,
+    intermediate_dir: Option<&Path>,
+    bisection_ensemble: Option<(f64, usize)>,
+    multi_seeds: Option<usize>,
+    objective:&str, trials:u32,
+) -> Result<HashMap<usize, usize>, String> {
     let n = adjacency.len();
 
     // Single-district: all tracts to district 1, no METIS call
@@ -85,8 +161,39 @@ pub fn run_all_splits_with_search(
                     let left_w = node.k_left as f32 / node.k as f32;
                     Some(vec![left_w, 1.0_f32 - left_w]) // right = 1-left (exact f32 sum)
                 };
-                let (left, right) = if let Some((p, ens_steps)) = bisection_ensemble {
-                    split_subgraph_bisection_ensemble(
+                let (left, right) = if let Some(seeds) = multi_seeds {
+                    let total:i64=tracts.iter().map(|&v|vertex_weights[v]).sum();
+                    let left_target=total as f64*node.k_left as f64/node.k as f64;
+                    let right_target=total as f64-left_target;
+                    let mut best:Option<(f64,usize,HashSet<usize>,HashSet<usize>)>=None;
+                    let mut failures=0;
+                    for index in 0..seeds {
+                        let candidate=split_subgraph_tuned(adjacency,vertex_weights,1,edge_weights,&tracts,node_ufactor,niter,
+                            Some(seed.unwrap_or(0).wrapping_add(index as u64)),tpwgts.clone(),None,objective,trials);
+                        let Ok((left,right))=candidate else {failures+=1;continue;};
+                        let left_pop:i64=left.iter().map(|&v|vertex_weights[v]).sum();
+                        let right_pop=total-left_pop;
+                        if left.is_empty() || right.is_empty()
+                            || !is_connected_subset(adjacency,&left) || !is_connected_subset(adjacency,&right)
+                            || (left_pop as f64-left_target).abs()>left_target*(node_ufactor-1.0)+1.0
+                            || (right_pop as f64-right_target).abs()>right_target*(node_ufactor-1.0)+1.0 {
+                            failures+=1;continue;
+                        }
+                        let cut=if edge_weights.is_empty() {
+                            adjacency.iter().enumerate().map(|(u,neighbors)|neighbors.iter()
+                                .filter(|&&v|u<v && left.contains(&u)!=left.contains(&v)).count()).sum::<usize>() as f64
+                        } else {weighted_edge_cut(edge_weights,&left)};
+                        if best.as_ref().map_or(true,|(best_cut,best_index,_,_)|
+                            cut.total_cmp(best_cut).then(index.cmp(best_index)).is_lt()) {
+                            best=Some((cut,index,left,right));
+                        }
+                    }
+                    let Some((_,_,left,right))=best else {
+                        return Err(format!("depth {} node '{}': multi search found no balanced contiguous cut in {} seeds ({} rejected).",depth,node.path,seeds,failures));
+                    };
+                    (left,right)
+                } else if let Some((p, ens_steps)) = bisection_ensemble {
+                    split_subgraph_bisection_ensemble_tuned(
                         adjacency,
                         vertex_weights,
                         edge_weights,
@@ -96,11 +203,11 @@ pub fn run_all_splits_with_search(
                         seed,
                         tpwgts.clone(),
                         ens_steps,
-                        p,
+                        p, objective, trials,
                     )
                     .map_err(|e| format!("depth {} node '{}' (ensemble): {e}", depth, node.path))?
                 } else {
-                    split_subgraph(
+                    split_subgraph_tuned(
                         adjacency,
                         vertex_weights,
                         1,
@@ -110,7 +217,7 @@ pub fn run_all_splits_with_search(
                         niter,
                         seed,
                         tpwgts,
-                        None,
+                        None, objective, trials,
                     )
                     .map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?
                 };
@@ -311,26 +418,16 @@ pub fn run_all_splits_compact(
 
 // ── Proportional Bisection (B.7) ─────────────────────────────────────────────
 
-/// At each bisection, compute the Dem vote share within the current subgraph
-/// and split the subgraph proportionally: the "left" half gets
-/// round(dem_share * k) districts and the "right" half gets the remainder.
-///
-/// Within that proportional constraint, edge-cut minimisation (METIS) determines
-/// WHERE the boundary is drawn. No partisan data enters the boundary decision —
-/// only the RATIO of districts allocated to each side.
-///
-/// Theorem (B.7): this achieves near-proportional seat allocation without
-/// picking which party's voters land in which half. The proportional ratio is
-/// applied symmetrically; METIS draws the most compact boundary satisfying it.
-///
-/// Requires: per-vertex dem_votes (from partisan_shares CSV, same as partisan-weighted mode).
-/// §104(e) of the Districting Integrity Act prohibits this for federal congressional
-/// districts. Valid for state legislative redistricting.
+/// At each node, use Democratic votes divided by census population to choose
+/// round(share * seats), clamped to one through seats minus one, for the left
+/// region. This is the legacy vote/population heuristic, not two-party share.
+/// METIS chooses the boundary using population and the supplied edge weights.
+/// Child recursion follows the chosen seat counts. This procedure does not
+/// guarantee partisan election outcomes or certify proportional representation.
 pub fn run_all_splits_proportional(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
     edge_weights: &HashMap<(usize, usize), f64>,
-    // Per-vertex Dem vote total (from partisan_shares CSV).
     dem_votes: &[f64],
     num_districts: usize,
     balance_tolerance: f64,
@@ -338,115 +435,88 @@ pub fn run_all_splits_proportional(
     seed: Option<u64>,
     intermediate_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
+    run_all_splits_proportional_recorded(adjacency,vertex_weights,edge_weights,dem_votes,num_districts,balance_tolerance,niter,seed,intermediate_dir).map(|(assignments,_)|assignments)
+}
+
+pub fn run_all_splits_proportional_recorded(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    dem_votes: &[f64],
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seed: Option<u64>,
+    intermediate_dir: Option<&Path>,
+) -> Result<(HashMap<usize, usize>,Vec<serde_json::Value>), String> {
     let n = adjacency.len();
-
-    if num_districts == 1 {
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join("depth_00");
-            let _ = std::fs::create_dir_all(&round_dir);
-            let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
-            let _ = write_intermediate_round(&round_dir, &asgn);
-        }
-        return Ok((0..n).map(|i| (i, 1)).collect());
+    if n == 0 || vertex_weights.len() != n || dem_votes.len() != n
+        || num_districts == 0 || num_districts > n
+        || !balance_tolerance.is_finite() || balance_tolerance < 0.0
+        || balance_tolerance > 1.0 || niter == 0
+        || vertex_weights.iter().any(|&p| p < 0)
+        || dem_votes.iter().zip(vertex_weights).any(|(&v,&p)| !v.is_finite() || v.is_sign_negative() || v > p as f64)
+        || adjacency.iter().enumerate().any(|(u,ns)| ns.iter().any(|&v| v >= n || v == u || !adjacency[v].contains(&u)))
+    {
+        return Err("Invalid proportional graph, vote/population dimensions or options.".into());
     }
+    let total_population = vertex_weights.iter().try_fold(0i64, |sum,&p| sum.checked_add(p))
+        .ok_or("Proportional population total overflows i64.")?;
+    if total_population == 0 {return Err("Proportional population total must be positive.".into());}
 
-    let tree = BisectionTree::from_k(num_districts);
-    let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
-    node_tracts.insert(String::new(), (0..n).collect());
-
-    for depth in 0..tree.max_depth {
-        let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
-        let nodes_with_tracts: Vec<(bisect_core::BisectionNode, HashSet<usize>)> = nodes_at_depth
-            .into_iter()
-            .filter_map(|node| node_tracts.remove(&node.path).map(|t| (node, t)))
-            .collect();
-
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> = nodes_with_tracts
-            // Recursive METIS calls must remain sequential for exact regeneration.
-            .into_iter()
-            .map(|(node, tracts)| {
-                let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-
-                // Compute Dem vote share within this subgraph
-                let total_dem: f64 = tracts.iter().map(|&v| dem_votes[v]).sum();
-                let total_votes: f64 = tracts.iter().map(|&v| vertex_weights[v] as f64).sum();
-                let dem_share = if total_votes > 0.0 {
-                    total_dem / total_votes
-                } else {
-                    0.5 // fallback: equal split
-                };
-
-                // Proportional district allocation: round to nearest integer
-                let k_dem = (dem_share * node.k as f64).round() as usize;
-                let k_dem = k_dem.max(1).min(node.k - 1); // at least 1 per side
-                let k_rep = node.k - k_dem;
-
-                // Use the proportional allocation as METIS target weights.
-                // METIS will minimise edge-cut subject to this population-ratio constraint.
-                let tpwgts = if k_dem == k_rep {
-                    None // equal — use default
-                } else {
-                    Some(vec![
-                        k_dem as f32 / node.k as f32,
-                        k_rep as f32 / node.k as f32,
-                    ])
-                };
-
-                let (left, right) = split_subgraph(
-                    adjacency,
-                    vertex_weights,
-                    1,
-                    edge_weights,
-                    &tracts,
-                    node_ufactor,
-                    niter,
-                    seed,
-                    tpwgts,
-                    None,
-                )
-                .map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
-
-                Ok((node.path, left, right))
-            })
-            .collect::<Result<Vec<_>, String>>()?;
-
-        let mut sorted = split_results;
-        sorted.sort_by_key(|(path, _, _)| path.clone());
-        for (path, left, right) in sorted {
-            node_tracts.insert(format!("{path}0"), left);
-            node_tracts.insert(format!("{path}1"), right);
-        }
-
+    // Keep leaves in the frontier so intermediate snapshots cover every tract.
+    let mut frontier: Vec<(String,usize,HashSet<usize>)> = vec![(String::new(),num_districts,(0..n).collect())];
+    let mut depth = 0;
+    let mut splits = Vec::new();
+    loop {
         if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
+            let mut regions: Vec<_> = frontier.iter().collect();
+            regions.sort_by_key(|(path,_,_)| (path.len(),path.clone()));
+            let round_asgn: HashMap<usize,usize> = regions.iter().enumerate()
+                .flat_map(|(id,(_,_,tracts))| tracts.iter().map(move |&v| (v,id+1))).collect();
+            let round_dir = dir.join(format!("depth_{depth:02}"));
             let _ = std::fs::create_dir_all(&round_dir);
-            let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
-            nodes.sort_by_key(|(path, _)| (path.len(), *path));
-            let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
-            for (region_id, (_, tracts)) in nodes.iter().enumerate() {
-                for &tract in tracts.iter() {
-                    round_asgn.insert(tract, region_id + 1);
-                }
+            let _ = write_intermediate_round(&round_dir,&round_asgn);
+        }
+        if frontier.iter().all(|(_,k,_)| *k == 1) {break;}
+        frontier.sort_by_key(|(path,_,_)| path.clone());
+        let mut next = Vec::new();
+        for (path,k,tracts) in frontier {
+            if k == 1 {next.push((path,k,tracts));continue;}
+            // Float accumulation order must match across native and WASM.
+            let mut indices: Vec<_> = tracts.iter().copied().collect();
+            indices.sort_unstable();
+            let population: i64 = indices.iter().map(|&v| vertex_weights[v]).sum();
+            let votes: f64 = indices.iter().map(|&v| dem_votes[v]).sum();
+            let share = if population > 0 {votes/population as f64} else {0.5};
+            let left_k = ((share*k as f64).round() as usize).clamp(1,k-1);
+            let right_k = k-left_k;
+            splits.push((path.clone(),left_k,right_k,population,votes,share));
+            let targets = if left_k == right_k {None} else {Some(vec![left_k as f32/k as f32,right_k as f32/k as f32])};
+            let (left,right) = split_subgraph(adjacency,vertex_weights,1,edge_weights,&tracts,
+                1.0+balance_tolerance/k as f64,niter,seed,targets,None)
+                .map_err(|e| format!("depth {depth} node '{path}': {e}"))?;
+            if left.len() < left_k || right.len() < right_k {
+                return Err(format!("depth {depth} node '{path}': insufficient tracts for chosen {left_k}:{right_k} seats"));
             }
-            let _ = write_intermediate_round(&round_dir, &round_asgn);
+            next.push((format!("{path}0"),left_k,left));
+            next.push((format!("{path}1"),right_k,right));
         }
+        frontier = next;
+        depth += 1;
     }
-
-    let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
-    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
-    let mut assignments: HashMap<usize, usize> = HashMap::new();
-    for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
-        for tract in tracts {
-            assignments.insert(tract, district_id + 1);
-        }
-    }
-    if assignments.len() != n {
-        return Err(format!(
-            "bisection incomplete: {}/{n} tracts assigned",
-            assignments.len()
-        ));
-    }
-    Ok(assignments)
+    frontier.sort_by_key(|(path,_,_)| (path.len(),path.clone()));
+    let leaf_paths: Vec<_> = frontier.iter().enumerate().map(|(id,(path,_,_))|(path.clone(),id+1)).collect();
+    let assignments: HashMap<usize,usize> = frontier.into_iter().enumerate()
+        .flat_map(|(id,(_,_,tracts))| tracts.into_iter().map(move |v| (v,id+1))).collect();
+    if assignments.len() != n {return Err(format!("proportional bisection incomplete: {}/{n}",assignments.len()));}
+    let evidence=splits.into_iter().map(|(path,left_k,right_k,population,votes,share)| {
+        let left_path=format!("{path}0");let right_path=format!("{path}1");
+        let left:Vec<_>=leaf_paths.iter().filter_map(|(p,id)|p.starts_with(&left_path).then_some(*id)).collect();
+        let right:Vec<_>=leaf_paths.iter().filter_map(|(p,id)|p.starts_with(&right_path).then_some(*id)).collect();
+        serde_json::json!({"path":path,"left_seats":left_k,"right_seats":right_k,"population":population,"dem_votes":votes,"share":share,"left_district_ids":left,"right_district_ids":right})
+    }).collect();
+    Ok((assignments,evidence))
 }
 
 /// Return the set of vertices reachable from any member of `subset` using only
@@ -594,8 +664,10 @@ pub(crate) fn ilp_model_artifact_for_report(
         .map_err(|e| format!("derive ilp model relative path: {e}"))?
         .to_string_lossy()
         .replace('\\', "/");
-    let sha256 = bisect_report::sha256_file(model_path)
+    use sha2::Digest;
+    let model_bytes = std::fs::read(model_path)
         .map_err(|e| format!("hash ilp model LP {}: {e}", model_path.display()))?;
+    let sha256 = format!("{:x}", sha2::Sha256::digest(&model_bytes));
     Ok(bisect_ilp::IlpModelArtifact {
         format: "cplex-lp".to_string(),
         path: rel_path,

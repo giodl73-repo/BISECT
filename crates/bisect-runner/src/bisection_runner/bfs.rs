@@ -1,5 +1,103 @@
 use super::*;
 
+// Fix the BFS seed stream to the existing 64-bit native SmallRng algorithm.
+// SmallRng itself selects a different algorithm on wasm32. Keeping its default
+// SeedableRng u64 expansion and the xoshiro256++ transition preserves native
+// results while making browser generation independent of pointer width.
+// Transition adapted from rand 0.8's xoshiro256plusplus.rs (MIT OR Apache-2.0),
+// Copyright 2018 Developers of the Rand project.
+#[derive(Clone)]
+struct BfsSeedRng([u64; 4]);
+
+impl rand::SeedableRng for BfsSeedRng {
+    type Seed = [u8; 32];
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut state = [0u64; 4];
+        for (value, bytes) in state.iter_mut().zip(seed.chunks_exact(8)) {
+            *value = u64::from_le_bytes(bytes.try_into().unwrap());
+        }
+        // Match xoshiro256++'s zero-state fallback (SplitMix64 seeded with 0).
+        if state == [0; 4] {
+            let mut x = 0u64;
+            for value in &mut state {
+                x = x.wrapping_add(0x9e3779b97f4a7c15);
+                let mut z = x;
+                z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+                z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+                *value = z ^ (z >> 31);
+            }
+        }
+        Self(state)
+    }
+}
+
+impl rand::RngCore for BfsSeedRng {
+    fn next_u32(&mut self) -> u32 {
+        (self.next_u64() >> 32) as u32
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        let s = &mut self.0;
+        let result = s[0].wrapping_add(s[3]).rotate_left(23).wrapping_add(s[0]);
+        let t = s[1] << 17;
+        s[2] ^= s[0];
+        s[3] ^= s[1];
+        s[1] ^= s[2];
+        s[0] ^= s[3];
+        s[2] ^= t;
+        s[3] = s[3].rotate_left(45);
+        result
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        let mut chunks = dest.chunks_exact_mut(8);
+        for chunk in &mut chunks {
+            chunk.copy_from_slice(&self.next_u64().to_le_bytes());
+        }
+        let tail = chunks.into_remainder();
+        if tail.len() > 4 {
+            tail.copy_from_slice(&self.next_u64().to_le_bytes()[..tail.len()]);
+        } else if !tail.is_empty() {
+            tail.copy_from_slice(&self.next_u32().to_le_bytes()[..tail.len()]);
+        }
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand::Error> {
+        self.fill_bytes(dest);
+        Ok(())
+    }
+}
+
+#[cfg(all(test, target_pointer_width = "64"))]
+mod rng_compatibility {
+    use super::BfsSeedRng;
+    use rand::{RngCore, SeedableRng};
+
+    #[test]
+    fn bfs_seed_stream_preserves_native_64_bit_results() {
+        for seed in [0, 1, 42, 9007199254740991, 9007199254740993, 1 << 63, u64::MAX] {
+            let mut portable = BfsSeedRng::seed_from_u64(seed);
+            let mut legacy = rand::rngs::SmallRng::seed_from_u64(seed);
+            for _ in 0..128 {
+                assert_eq!(portable.next_u64(), legacy.next_u64());
+                assert_eq!(portable.next_u32(), legacy.next_u32());
+            }
+            for size in 0..33 {
+                let mut actual = vec![0; size];
+                let mut expected = vec![0; size];
+                portable.fill_bytes(&mut actual);
+                legacy.fill_bytes(&mut expected);
+                assert_eq!(actual, expected);
+            }
+        }
+        let mut portable = BfsSeedRng::from_seed([0; 32]);
+        let mut legacy = rand::rngs::SmallRng::from_seed([0; 32]);
+        assert_eq!(portable.next_u64(), legacy.next_u64());
+    }
+}
+
+
 // ── BFS Region-Growing (T.12) ─────────────────────────────────────────────────
 
 /// Derive the BFS-algorithm seed from base_seed.
@@ -54,7 +152,6 @@ pub fn split_subgraph_bfs(
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
     use rand::distributions::WeightedIndex;
     use rand::prelude::*;
-    use rand::rngs::SmallRng;
     use rand::SeedableRng;
     use std::cmp::Reverse;
     use std::collections::BinaryHeap;
@@ -91,7 +188,7 @@ pub fn split_subgraph_bfs(
     // ── Step 1: Seed selection ────────────────────────────────────────────────
     // seed[0]: population-weighted random sample
     let seed_rng_val = bfs_growth_seed(base_seed);
-    let mut rng = SmallRng::seed_from_u64(seed_rng_val);
+    let mut rng = BfsSeedRng::seed_from_u64(seed_rng_val);
 
     let weights: Vec<u64> = local_pop.iter().map(|&p| p.max(1) as u64).collect();
     let dist =

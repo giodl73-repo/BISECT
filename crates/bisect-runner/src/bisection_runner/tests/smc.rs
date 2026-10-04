@@ -1,5 +1,18 @@
 use super::*;
 
+#[test]
+fn smc_percentile_evidence_has_positive_selected_weight() {
+    let adj=vec![vec![1usize],vec![0,2],vec![1,3],vec![2]];
+    for p in [0.0,0.5,1.0] {
+        let (plan,evidence)=run_smc_percentile_with_evidence(&adj,&[100;4],2,42,32,p,0.5).unwrap();
+        let chosen=evidence["selected_particle"].as_u64().unwrap();
+        assert!(evidence["ranked_particles"].as_array().unwrap().iter().find(|entry|entry["particle"].as_u64()==Some(chosen)).unwrap()["weight"].as_f64().unwrap()>0.0);
+        assert_eq!(evidence["selected_edge_cut"].as_u64().unwrap() as usize,count_edge_cuts(&plan,&adj));
+    }
+    assert!(run_smc_percentile(&adj,&[100;4],2,42,32,f64::NAN,0.5).is_err());
+    assert!(run_smc_percentile(&adj,&[100;4],2,42,32,1.01,0.5).is_err());
+}
+
 // ── SMC-Percentile tests (SeedCompositor::SmcPercentile) ─────────────────
 
 // L0: 4-node path k=2, n_particles=50: returns valid 2-district plan.

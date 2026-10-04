@@ -115,7 +115,7 @@ pub fn capacity_cluster_repaired(
     Ok(result)
 }
 
-fn validate_inputs(
+pub(crate) fn validate_inputs(
     adjacency: &[Vec<usize>],
     weights: &[i64],
     config: &ClusterConfig,
@@ -139,10 +139,21 @@ fn validate_inputs(
             weights.len()
         )));
     }
-    if weights.iter().any(|&weight| weight <= 0) {
+    if weights.iter().any(|&weight| weight < 0) {
         return Err(ClusterError::InvalidInput(
-            "weights must be positive".to_string(),
+            "weights must be nonnegative".to_string(),
         ));
+    }
+    let total = weights.iter().try_fold(0i64, |sum, &weight| sum.checked_add(weight))
+        .ok_or_else(|| ClusterError::InvalidInput("total population exceeds i64 range".to_string()))?;
+    if total == 0 {
+        return Err(ClusterError::InvalidInput("total population must be positive".to_string()));
+    }
+    if !config.tolerance.is_finite() || !(0.0..1.0).contains(&config.tolerance) {
+        return Err(ClusterError::InvalidInput("tolerance must be finite and in [0, 1)".to_string()));
+    }
+    if adjacency.iter().flatten().any(|&neighbor| neighbor >= weights.len()) {
+        return Err(ClusterError::InvalidInput("adjacency endpoint is out of bounds".to_string()));
     }
     Ok(())
 }

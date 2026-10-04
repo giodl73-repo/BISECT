@@ -1,15 +1,16 @@
-//! VRA-Aware Forest-ReCom chain — samples the conditional distribution over
-//! VRA-compliant redistricting plans.
+//! Forest-ReCom chain with a protected-district minority-fraction rule.
 //!
-//! Wraps [`ForestRecomChain`] with a hard rejection rule: before the MH
-//! acceptance step, any proposal that would reduce the minority VAP fraction
-//! of a protected district below `vap_threshold` is rejected unconditionally.
+//! Wraps [`ForestRecomChain`] with a hard rejection rule: after underlying MH
+//! acceptance, any proposal that would reduce the minority VAP fraction
+//! of a protected district below `vap_threshold` is rolled back.
+//! Fractions are averaged across tracts without population weighting. This
+//! heuristic alone does not establish legal VRA compliance.
 //!
 //! # Design
 //!
 //! - Protected districts are identified from the **initial** assignment at
 //!   construction time and never change.
-//! - The VRA check fires **before** MH acceptance (hard rejection, not soft).
+//! - The minority-fraction check follows underlying MH acceptance and rolls back violations.
 //! - Seeding is identical to [`ForestRecomChain`] (`FR_FORWARD_` / `FR_REVERSE_`
 //!   prefixes), so proposals are bit-for-bit identical to an unconstrained
 //!   chain with the same seed.
@@ -37,7 +38,7 @@ pub const SEED_PREFIX_REVERSE: &str = "FR_REVERSE_";
 pub struct VraStepRecord {
     /// True if the proposal was accepted by both VRA and MH.
     pub accepted: bool,
-    /// True if the proposal was rejected by the VRA hard rule (before MH).
+    /// True if an underlying MH-accepted proposal was rolled back by the minority rule.
     pub vra_rejected: bool,
     /// True if the proposal passed VRA but was rejected by MH.
     pub mh_rejected: bool,
@@ -172,13 +173,22 @@ impl VraRecomChain {
     /// steps_accepted + vra_rejections + mh_rejections == steps_taken
     /// ```
     pub fn step<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R) -> VraStepRecord {
+        self.step_impl(rng_forward, rng_reverse, false)
+    }
+
+    /// Portable Forest ReCom proposals, retaining the same minority-fraction rule.
+    pub fn step_portable<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R) -> VraStepRecord {
+        self.step_impl(rng_forward, rng_reverse, true)
+    }
+
+    fn step_impl<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R, portable: bool) -> VraStepRecord {
         self.steps_taken += 1;
 
         // Snapshot the current assignment so we can revert a VRA violation.
         let assignment_before = self.inner.assignment.clone();
 
         // Let ForestRecomChain run one full MH step (may accept or reject).
-        let step_record = self.inner.step(rng_forward, rng_reverse);
+        let step_record = if portable { self.inner.step_portable(rng_forward, rng_reverse) } else { self.inner.step(rng_forward, rng_reverse) };
 
         if !step_record.accepted {
             // ForestRecomChain's MH step rejected — count as MH rejection.

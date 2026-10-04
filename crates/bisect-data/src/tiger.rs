@@ -69,7 +69,12 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
             shape_record.map_err(|e| TigerError::ShapefileError(e.to_string()))?;
 
         // Extract GEOID from attributes
-        let geoid = match record.get("GEOID") {
+        let geoid = match record
+            .get("GEOID")
+            .or_else(|| record.get("GEOID10"))
+            .or_else(|| record.get("GEOID00"))
+            .or_else(|| record.get("CTIDFP00"))
+        {
             Some(shapefile::dbase::FieldValue::Character(Some(s))) => s.trim().to_string(),
             _ => return Err(TigerError::MissingGeoid),
         };
@@ -80,11 +85,11 @@ pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>
         }
 
         // Extract area fields (both in square metres in TIGER files)
-        let aland = match record.get("ALAND") {
+        let aland = match record.get("ALAND").or_else(|| record.get("ALAND10")).or_else(|| record.get("ALAND00")) {
             Some(shapefile::dbase::FieldValue::Numeric(Some(v))) => *v as i64,
             _ => 0,
         };
-        let awater = match record.get("AWATER") {
+        let awater = match record.get("AWATER").or_else(|| record.get("AWATER10")).or_else(|| record.get("AWATER00")) {
             Some(shapefile::dbase::FieldValue::Numeric(Some(v))) => *v as i64,
             _ => 0,
         };
@@ -431,6 +436,35 @@ fn write_ring(buf: &mut Vec<u8>, coords: &[geo_types::Point<f64>]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_legacy_tract_attribute_names() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("legacy.shp");
+        let fields = shapefile::dbase::TableWriterBuilder::new()
+            .add_character_field("GEOID10".try_into().unwrap(), 11)
+            .add_numeric_field("ALAND10".try_into().unwrap(), 18, 0)
+            .add_numeric_field("AWATER10".try_into().unwrap(), 18, 0);
+        let mut writer = shapefile::Writer::from_path(&path, fields).unwrap();
+        let polygon = shapefile::Polygon::new(PolygonRing::Outer(vec![
+            shapefile::Point::new(-71.0, 41.0),
+            shapefile::Point::new(-71.0, 41.1),
+            shapefile::Point::new(-70.9, 41.1),
+            shapefile::Point::new(-70.9, 41.0),
+        ]));
+        let mut attributes = shapefile::dbase::Record::default();
+        attributes.insert("GEOID10".into(), shapefile::dbase::FieldValue::Character(Some("44001000100".into())));
+        attributes.insert("ALAND10".into(), shapefile::dbase::FieldValue::Numeric(Some(1234.0)));
+        attributes.insert("AWATER10".into(), shapefile::dbase::FieldValue::Numeric(Some(56.0)));
+        writer.write_shape_and_record(&polygon, &attributes).unwrap();
+        drop(writer);
+        let records = read_tiger_tracts(path).unwrap();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].geoid, "44001000100");
+        assert_eq!(records[0].aland, 1234);
+        assert_eq!(records[0].awater, 56);
+        assert!(!records[0].geometry_wkb.is_empty());
+    }
 
     #[test]
     fn test_geoid_validation_passes_11_chars() {

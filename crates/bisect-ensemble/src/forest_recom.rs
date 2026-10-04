@@ -78,9 +78,18 @@ impl ForestRecomChain {
     /// - `rng_forward`: drives the forward tree, proposal selection, and acceptance coin flip.
     /// - `rng_reverse`: drives the reverse tree only.
     pub fn step<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R) -> StepRecord {
+        self.step_impl(rng_forward, rng_reverse, false)
+    }
+
+    /// Uses fixed-width random draws with the Wilson tree sampler.
+    pub fn step_portable<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R) -> StepRecord {
+        self.step_impl(rng_forward, rng_reverse, true)
+    }
+
+    fn step_impl<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R, portable: bool) -> StepRecord {
         self.steps_taken += 1;
 
-        let accepted = self.try_step(rng_forward, rng_reverse);
+        let accepted = self.try_step(rng_forward, rng_reverse, portable);
         if accepted {
             self.steps_accepted += 1;
         }
@@ -99,15 +108,16 @@ impl ForestRecomChain {
 
     /// MH Forest-ReCom step with pair reselection on persistent balance failure.
     /// Returns true if the assignment was updated.
-    fn try_step<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R) -> bool {
-        let pairs = self.adjacent_pairs();
+    fn try_step<R: Rng>(&mut self, rng_forward: &mut R, rng_reverse: &mut R, portable: bool) -> bool {
+        let mut pairs = self.adjacent_pairs();
+        if portable { pairs.sort_unstable(); }
         if pairs.is_empty() {
             return false;
         }
 
         // Shuffle pairs for random pair reselection.
         let mut pair_order: Vec<usize> = (0..pairs.len()).collect();
-        pair_order.shuffle(rng_forward);
+        if portable { crate::portable_shuffle(&mut pair_order, rng_forward); } else { pair_order.shuffle(rng_forward); }
 
         for &pair_idx in pair_order.iter().take(MAX_PAIR_ATTEMPTS) {
             let (d_i, d_j) = pairs[pair_idx];
@@ -148,7 +158,7 @@ impl ForestRecomChain {
             let tol_abs = self.ideal_pop * self.pop_tolerance;
 
             // (a) Sample forward spanning tree.
-            let t_fwd = random_spanning_tree(&local_adj, rng_forward);
+            let t_fwd = if portable { crate::spanning::random_spanning_tree_portable(&local_adj, rng_forward) } else { random_spanning_tree(&local_adj, rng_forward) };
 
             // (b) Count balanced cuts in the forward tree.
             let valid_cuts_fwd = count_balanced_cuts(&t_fwd, &local_pop, self.ideal_pop, tol_abs);
@@ -160,7 +170,7 @@ impl ForestRecomChain {
             let valid_cuts_forward = valid_cuts_fwd.len();
 
             // (c) Pick one cut uniformly at random and build the proposed assignment.
-            let &(local_a, local_b) = valid_cuts_fwd.choose(rng_forward).unwrap();
+            let &(local_a, local_b) = if portable { &valid_cuts_fwd[crate::portable_index(valid_cuts_fwd.len(), rng_forward)] } else { valid_cuts_fwd.choose(rng_forward).unwrap() };
             let (comp_a, comp_b) = t_fwd.split_on(local_a, local_b);
 
             // Verify the proposed split is population-balanced (sanity).
@@ -168,14 +178,13 @@ impl ForestRecomChain {
             let pop_b = total_pop - pop_a;
             let dev_a = (pop_a as f64 - self.ideal_pop).abs();
             let dev_b = (pop_b as f64 - self.ideal_pop).abs();
-            if dev_a > tol_abs && dev_b > tol_abs {
-                // count_balanced_cuts guarantees at least one side is balanced;
-                // both failing should be impossible, but skip defensively.
+            if dev_a > tol_abs || dev_b > tol_abs {
+                // Both replacement districts must satisfy the global target.
                 continue;
             }
 
             // (d) Sample reverse spanning tree (same local_adj, different rng).
-            let t_rev = random_spanning_tree(&local_adj, rng_reverse);
+            let t_rev = if portable { crate::spanning::random_spanning_tree_portable(&local_adj, rng_reverse) } else { random_spanning_tree(&local_adj, rng_reverse) };
 
             // (e) Count balanced cuts in the reverse tree.
             let valid_cuts_rev = count_balanced_cuts(&t_rev, &local_pop, self.ideal_pop, tol_abs);
@@ -259,11 +268,9 @@ impl ForestRecomChain {
 /// Count all tree edges whose removal produces two population-balanced components.
 ///
 /// Returns a list of `(local_a, local_b)` valid cut edges.
-/// A cut is valid if at least one of the two resulting components has population
-/// within `tol_abs` of `target_pop`.
-/// (Since total = 2 × target_pop and both must be within tolerance, checking one
-/// side suffices when both sides must pass — but we use the spec's OR condition
-/// to be permissive: at least one side balanced.)
+/// Both resulting components must be within `tol_abs` of `target_pop`.
+/// Merged district populations need not sum to exactly twice the global target,
+/// so checking only one side can admit an invalid replacement district.
 pub fn count_balanced_cuts(
     tree: &SpanningTree,
     local_pop: &[i64],
@@ -279,7 +286,7 @@ pub fn count_balanced_cuts(
         let pop_b = total_pop - pop_a;
         let ok_a = (pop_a as f64 - target_pop).abs() <= tol_abs;
         let ok_b = (pop_b as f64 - target_pop).abs() <= tol_abs;
-        if ok_a || ok_b {
+        if ok_a && ok_b {
             valid.push((a, b));
         }
     }
@@ -593,5 +600,13 @@ mod tests {
             cuts2.len(),
             "count must be stable / deterministic"
         );
+    }
+    #[test]
+    fn rejects_cut_when_only_one_component_is_balanced() {
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let mut rng = SmallRng::seed_from_u64(42);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        // Every cut has populations 100 and 200: the 100 side alone is insufficient.
+        assert!(count_balanced_cuts(&tree, &[100, 100, 100], 100.0, 0.0).is_empty());
     }
 }

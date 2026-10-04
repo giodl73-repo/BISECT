@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {parseProject,parseSafeJson} from '../../web/lab/project.js';
+import {validatePackageArchive,decodePackageFiles} from '../../web/lab/package-files.js';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+const [root,projectPath,archivePath]=process.argv.slice(2);
+if(!root||!projectPath||!archivePath)throw new Error('Usage: verify_election_project.mjs <preview> <downloaded-project> <downloaded-archive>');
+const project=parseProject(await fs.readFile(projectPath,'utf8'));
+assert.ok(['import-statement-csv','import-nist-cdf-json','import-ri2024-rep28-rla'].includes(project.operation));
+assert.equal(project.lastOperation,project.operation);
+const module=await fs.readFile(path.join(root,'bisect_wasm.wasm')),engine=await instantiateEngine(module);
+const ri=project.operation==='import-ri2024-rep28-rla';
+const request=ri?{operation:project.operation,audit_report_base64:project.files.riSources.auditReport.base64,ballot_manifest_base64:project.files.riSources.ballotManifest.base64,ballot_retrieval_base64:project.files.riSources.ballotRetrieval.base64}:{operation:project.operation,source_base64:project.files.sourceFile.base64,metadata:project.files.importSettings};
+const rerun=engine.execute(request);
+assert.deepEqual(project.result,rerun);
+const files=validatePackageArchive(parseSafeJson(await fs.readFile(archivePath,'utf8')));
+assert.deepEqual(files,project.result.package_files);
+const source=ri?'sources/ri-2024-rep28-audit-report.csv':project.operation==='import-statement-csv'?'sources/statement-of-votes.csv':'sources/nist-cdf-results.json';
+if(ri){for(const [key,file]of Object.entries({auditReport:'audit-report',ballotManifest:'ballot-manifest',ballotRetrieval:'ballot-retrieval'}))assert.equal(files[`sources/ri-2024-rep28-${file}.csv`],project.files.riSources[key].base64);}else assert.equal(files[source],project.files.sourceFile.base64);
+const verification=engine.execute({operation:'verify-count-files',files:decodePackageFiles(files)});
+assert.equal(verification.status,'pass');
+let replay_status=null;if(ri){replay_status=engine.execute({operation:'replay-count-audits',files:decodePackageFiles(files)}).status;assert.equal(replay_status,'boundary');}
+console.log(JSON.stringify({project:projectPath,archive:archivePath,operation:project.operation,files:Object.keys(files).length,source_sha256:createHash('sha256').update(Buffer.from(files[source],'base64')).digest('hex'),wasm_sha256:createHash('sha256').update(module).digest('hex'),verification:verification.status,replay_status,exact_rerun_match:true},null,2));

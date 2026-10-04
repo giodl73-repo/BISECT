@@ -1,5 +1,24 @@
 use super::*;
 
+#[cfg(test)]
+mod compact_selection_parameter_tests {
+    use super::*;
+    #[test]
+    fn cut_slack_controls_which_compactness_candidate_can_win() {
+        let graph=bisect_data::AdjacencyGraph {
+            adjacency:vec![vec![1],vec![0,2],vec![1,3],vec![2]],
+            vertex_weights:vec![100;4],edge_weights:HashMap::from([((0,1),1.0),((1,2),1.5),((2,3),1.0)]),
+            n_vertices:4,n_edges:3,vertex_areas:vec![0.01,1.0,1.0,1.0],vertex_ext_perimeters:vec![10.0;4],
+        };
+        let low_cut=(HashSet::from([0]),HashSet::from([1,2,3]),1.0);
+        let compact=(HashSet::from([0,1]),HashSet::from([2,3]),1.5);
+        assert!(graph.geometric_mean_pp(&compact.0,&compact.1).unwrap()>graph.geometric_mean_pp(&low_cut.0,&low_cut.1).unwrap());
+        let candidates=vec![low_cut.clone(),compact.clone()];
+        assert_eq!(select_compact_split(&candidates,&graph,0.0),(low_cut.0,low_cut.1));
+        assert_eq!(select_compact_split(&candidates,&graph,0.5),(compact.0,compact.1));
+    }
+}
+
 // ── CompactBisect (B.7) ───────────────────────────────────────────────────────
 
 /// Configuration for the CompactBisect algorithm.
@@ -160,7 +179,11 @@ pub(crate) fn ew_to_adjwgt(
 ///   None = METIS default (equal split).
 /// - `ubvec`: per-constraint imbalance tolerances (length = ncon).
 ///   None = use ufactor default for all constraints.
-pub fn split_subgraph(
+pub fn split_subgraph(adjacency:&[Vec<usize>],vwgt:&[i64],ncon:usize,edge_weights:&HashMap<(usize,usize),f64>,tract_indices:&HashSet<usize>,ufactor:f64,niter:u32,seed:Option<u64>,tpwgts:Option<Vec<f32>>,ubvec:Option<Vec<f32>>) -> Result<(HashSet<usize>,HashSet<usize>),String> {
+    split_subgraph_tuned(adjacency,vwgt,ncon,edge_weights,tract_indices,ufactor,niter,seed,tpwgts,ubvec,"cut",1)
+}
+
+pub fn split_subgraph_tuned(
     adjacency: &[Vec<usize>],
     vwgt: &[i64],
     ncon: usize,
@@ -171,7 +194,23 @@ pub fn split_subgraph(
     seed: Option<u64>,
     tpwgts: Option<Vec<f32>>,
     ubvec: Option<Vec<f32>>,
+    objective:&str, trials:u32,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    if !(1..=2).contains(&ncon)
+        || vwgt.len() != adjacency.len() * ncon
+        || tract_indices.iter().any(|&v| v >= adjacency.len())
+        || tpwgts.as_ref().is_some_and(|values| {
+            values.len() != 2 * ncon || values.iter().any(|v| !v.is_finite() || *v <= 0.0)
+        })
+        || ubvec.as_ref().is_some_and(|values| {
+            values.len() != ncon
+                || values
+                    .iter()
+                    .any(|v| !v.is_finite() || *v < 1.0 || *v > 2.0)
+        })
+    {
+        return Err("Invalid split constraint dimensions or bounds.".into());
+    }
     split_subgraph_profile(
         adjacency,
         vwgt,
@@ -183,7 +222,7 @@ pub fn split_subgraph(
         seed,
         tpwgts,
         ubvec,
-        false,
+        false, objective, trials,
     )
 }
 
@@ -214,7 +253,7 @@ pub fn split_subgraph_nrs_v0_1(
         seed,
         tpwgts,
         ubvec,
-        true,
+        true, "cut", 1,
     )
 }
 
@@ -235,7 +274,11 @@ fn split_subgraph_profile(
     // ubvec: per-constraint imbalance tolerances.  None = use ufactor for all constraints.
     ubvec: Option<Vec<f32>>,
     nrs_v0_1_profile: bool,
+    objective:&str, trials:u32,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials) {return Err("Invalid recursive METIS objective or trials.".into());}
+    #[cfg(feature="c-ffi-engine")]
+    if objective!="cut" || trials!=1 {return Err("Advanced recursive METIS controls require the pure Rust engine.".into());}
     if tract_indices.len() <= 1 {
         return Ok((tract_indices.clone(), HashSet::new()));
     }
@@ -381,13 +424,15 @@ fn split_subgraph_profile(
         }
         #[cfg(not(feature = "c-ffi-engine"))]
         {
-            // Pure-Rust fallback via metis-core.
-            // ncon=2 (AreaSection dual constraint) is not supported without c-ffi-engine.
-            if ncon > 1 {
+            // Rust refinement preserves both population and AreaSection's
+            // equal-area target, with an independent tolerance for each.
+            if ncon == 2
+                && tpwgts
+                    .as_ref()
+                    .is_some_and(|tw| (tw[1] - 0.5).abs() > 1e-6 || (tw[3] - 0.5).abs() > 1e-6)
+            {
                 return Err(
-                    "[CONFIG] AreaSection (ncon=2) requires the c-ffi-engine feature. \
-                     Rebuild with default features or use --metis-engine c-ffi."
-                        .to_string(),
+                    "Rust dual-constraint splits currently require equal secondary targets.".into(),
                 );
             }
             use metis_core::{
@@ -397,20 +442,35 @@ fn split_subgraph_profile(
             let g = RustCsrGraph::new(
                 xadj.iter().map(|&x| x as u32).collect(),
                 adjncy.iter().map(|&x| x as u32).collect(),
-                1,
+                ncon as u32,
                 local_vwgt.clone(),
                 adjwgt.clone(),
             )
             .map_err(|e| format!("metis-core bisection graph: {e}"))?;
             let uf_u32 = (uf_int as u32).clamp(1, 1000);
             let mut params = RustBisectParams::kway()
+                .with_objective(if objective=="volume" {metis_core::ObjectiveType::Volume} else {metis_core::ObjectiveType::Cut})
+                .with_ncuts(trials)
                 .with_ufactor(uf_u32)
                 .with_niter(niter)
+                .with_contiguity(!nrs_v0_1_profile)
                 .with_coarsen_to(20);
             if let Some(seed) = seed {
                 params = params.with_seed(seed);
             }
-            let partition = if let Some(ref tw) = tpwgts {
+            if let Some(ref bounds) = ubvec {
+                params = params
+                    .with_constraint_tolerances(bounds.clone())
+                    .map_err(|e| format!("metis-core constraint tolerances: {e}"))?;
+            }
+            let partition = if ncon > 1 {
+                if let Some(ref tw) = tpwgts {
+                    params = params
+                        .with_target_weights(2, vec![tw[0], tw[ncon]])
+                        .map_err(|e| format!("metis-core dual targets: {e}"))?;
+                }
+                RustBisectPartitioner::with_params(params, 2).split(&g, 2, seed)
+            } else if let Some(ref tw) = tpwgts {
                 // Asymmetric split: convert f32 fracs (first 2 values) to u32 thousandths.
                 let fracs: Vec<u32> = tw
                     .iter()
@@ -435,6 +495,12 @@ fn split_subgraph_profile(
         } else {
             right.insert(global);
         }
+    }
+
+    // The scalar boundary repair below must never discard a second constraint.
+    // Multiconstraint refinement performs its own moves under both bounds.
+    if ncon > 1 {
+        return Ok((left, right));
     }
 
     // Post-hoc boundary-swap rebalancing.

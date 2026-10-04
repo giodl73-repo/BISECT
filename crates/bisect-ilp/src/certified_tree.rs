@@ -473,6 +473,100 @@ mod tests {
     }
 
     #[test]
+    fn locally_optimal_root_can_block_an_otherwise_completable_schedule() {
+        let mut root = path_root(8, 8);
+        // The cheapest balanced root separates a four-unit star from a path.
+        // The star cannot supply connected 2/2 children, despite having four units.
+        root.edges = [
+            (0, 1, 10),
+            (0, 2, 10),
+            (0, 3, 10),
+            (4, 5, 10),
+            (5, 6, 10),
+            (6, 7, 10),
+            (1, 4, 1),
+            (2, 6, 1),
+            (3, 7, 1),
+        ]
+        .into_iter()
+        .map(|(left, right, weight)| ExactEdge {
+            left,
+            right,
+            weight,
+        })
+        .collect();
+        let artifacts = solve_certified_split_bounded(&root).unwrap();
+        let CertifiedSplitResult::Optimal {
+            assignment,
+            objective,
+        } = &artifacts.certificate.result
+        else {
+            panic!("root must be feasible")
+        };
+        assert_eq!(assignment, &vec![0, 0, 0, 0, 1, 1, 1, 1]);
+        assert_eq!(objective.primary.max_population_deviation_scaled, 0);
+        assert_eq!(objective.primary.weighted_boundary_cut, 3);
+        assert_eq!(
+            solve_certified_bisection_tree_bounded(root.clone()),
+            Err(CertifiedTreeError::InfeasibleNode("0".into()))
+        );
+
+        // A more expensive, equally balanced root yields two paths, each of
+        // which completes the unchanged four-seat schedule with unit leaves.
+        // This is a counterfactual root, not a certificate for the current rule.
+        let alternative = vec![0, 0, 1, 1, 0, 0, 1, 1];
+        for label in [0, 1] {
+            let child = derive_child_instance(
+                &root,
+                &alternative,
+                label,
+                4,
+                label.to_string(),
+                artifacts.certificate.certificate_id.clone(),
+            )
+            .unwrap();
+            let tree = solve_certified_bisection_tree_bounded(child_as_root(child)).unwrap();
+            assert_eq!(tree.leaves.len(), 4);
+            assert!(tree.leaves.iter().all(|leaf| leaf.unit_ids.len() == 1));
+        }
+    }
+
+    fn child_as_root(mut child: CertifiedSplitInstance) -> CertifiedSplitInstance {
+        child.node_path.clear();
+        child.parent_certificate_id = None;
+        child
+    }
+
+    #[test]
+    fn perfect_parent_balance_does_not_establish_final_leaf_balance() {
+        let mut root = path_root(4, 4);
+        root.populations = vec![3, 1, 2, 2];
+        let tree = solve_certified_bisection_tree_bounded(root.clone()).unwrap();
+        let CertifiedSplitResult::Optimal { objective, .. } = &tree.nodes[0].certificate.result
+        else {
+            panic!("root must be feasible")
+        };
+        assert_eq!(objective.primary.max_population_deviation_scaled, 0);
+        let leaf_populations = tree
+            .leaves
+            .iter()
+            .map(|leaf| {
+                leaf.unit_ids
+                    .iter()
+                    .map(|id| root.populations[root.unit_ids.binary_search(id).unwrap()])
+                    .sum::<i64>()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(leaf_populations, vec![3, 1, 2, 2]);
+        assert_eq!(verify_certified_bisection_tree_bounded(&tree), Ok(()));
+        // Exact execution is valid, but the maximum final deviation is 50%.
+        assert_eq!(
+            leaf_populations.iter().map(|p| (p - 2).abs()).max(),
+            Some(1)
+        );
+    }
+
+    #[test]
     fn tree_verifier_rejects_child_universe_tamper() {
         let mut tree = solve_certified_bisection_tree_bounded(path_root(4, 8)).unwrap();
         tree.nodes[1].instance.unit_ids.swap(0, 1);

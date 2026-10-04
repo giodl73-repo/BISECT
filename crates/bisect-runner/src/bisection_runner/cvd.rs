@@ -1,11 +1,11 @@
 use super::*;
 
-// ── Centroidal Voronoi Districts (CVD) — Phase 1 (graph-distance) ─────────────
+// â”€â”€ Centroidal Voronoi Districts (CVD) â€” Phase 1 (graph-distance) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// Derive a per-node seed for CVD via SHA-256.
 ///
 /// Prefix "CVD_INIT_" is distinct from SA_NODE_, FLIP_CHAIN_, etc.
-/// An auditor can recompute: SHA-256("CVD_INIT_" || path || "_" || base_seed:le64) → u64le.
+/// An auditor can recompute: SHA-256("CVD_INIT_" || path || "_" || base_seed:le64) â†’ u64le.
 pub fn derive_cvd_seed(base_seed: u64, path: &str) -> u64 {
     use sha2::{Digest, Sha256};
     let mut h = Sha256::new();
@@ -113,9 +113,9 @@ pub(crate) fn bfs_distances_from(start: usize, local_adj: &[Vec<usize>]) -> Vec<
 pub(crate) fn find_medoid(
     district_tracts: &[usize],
     local_adj: &[Vec<usize>],
-    rng: &mut rand::rngs::SmallRng,
+    rng: &mut rand_chacha::ChaCha12Rng,
 ) -> usize {
-    use rand::seq::SliceRandom;
+    use rand::Rng;
     if district_tracts.is_empty() {
         return 0;
     }
@@ -125,7 +125,11 @@ pub(crate) fn find_medoid(
     // Sample up to 50 tracts as probe set (exact for small districts)
     let sample_size = district_tracts.len().min(50);
     let mut probe: Vec<usize> = district_tracts.to_vec();
-    probe.shuffle(rng);
+    // Fix draw width across 32-bit WASM and 64-bit native targets.
+    for i in (1..probe.len()).rev() {
+        let j=rng.gen_range(0..=i as u64) as usize;
+        probe.swap(i,j);
+    }
     probe.truncate(sample_size);
 
     let mut best_node = district_tracts[0];
@@ -145,13 +149,13 @@ pub(crate) fn find_medoid(
     best_node
 }
 
-/// Centroidal Voronoi Districts — graph-distance variant (Phase 1, T.10 spec).
+/// Centroidal Voronoi Districts â€” graph-distance variant (Phase 1, T.10 spec).
 ///
 /// Seeds k=2 district centers by k-farthest spread, assigns tracts to nearest
 /// center by BFS hop count, iterates until seeds stabilise (medoid update),
 /// then applies the same post-hoc boundary-swap rebalance as split_subgraph().
 ///
-/// Phase 1: no geographic coordinate data required — pure graph topology.
+/// Phase 1: no geographic coordinate data required â€” pure graph topology.
 /// Phase 2 (geographic Euclidean) is deferred until tract_centroids land in LoadedGraph.
 pub fn split_subgraph_cvd(
     adjacency: &[Vec<usize>],
@@ -162,7 +166,7 @@ pub fn split_subgraph_cvd(
     n_iter: usize, // max CVD iterations (default: 20)
     base_seed: u64,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
     use rand::SeedableRng;
 
     // Degenerate: 0 or 1 tracts
@@ -201,11 +205,11 @@ pub fn split_subgraph_cvd(
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
     let total_pop: i64 = local_pop.iter().sum();
 
-    let mut rng = SmallRng::seed_from_u64(base_seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(base_seed);
 
-    // ── Step 1: k-farthest seed initialisation ──────────────────────────────
+    // â”€â”€ Step 1: k-farthest seed initialisation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // seed[0] = base_seed % m (deterministic, CVD_INIT prefix ensures separation from SA)
-    let seed0 = (base_seed as usize) % m;
+    let seed0 = (base_seed % m as u64) as usize;
 
     // seed[1] = tract with max BFS distance from seed[0]
     let dist_from_s0 = bfs_distances_from(seed0, &local_adj);
@@ -220,10 +224,10 @@ pub fn split_subgraph_cvd(
         seeds[1] = (seeds[0] + 1) % m;
     }
 
-    // ── CVD iteration ────────────────────────────────────────────────────────
+    // â”€â”€ CVD iteration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let mut assignment: Vec<usize> = vec![0; m]; // 0 = left, 1 = right
     for _iter in 0..n_iter.max(1) {
-        // ── Voronoi assignment: assign each tract to nearest seed by BFS ──
+        // â”€â”€ Voronoi assignment: assign each tract to nearest seed by BFS â”€â”€
         // Compute BFS distances from each seed
         let dist_s: Vec<Vec<usize>> = seeds
             .iter()
@@ -238,7 +242,7 @@ pub fn split_subgraph_cvd(
             assignment[v] = if d1 < d0 { 1 } else { 0 };
         }
 
-        // ── Update seeds to medoid of each district ──────────────────────
+        // â”€â”€ Update seeds to medoid of each district â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let prev_seeds = seeds;
         for j in 0..k {
             let district_tracts: Vec<usize> = (0..m).filter(|&v| assignment[v] == j).collect();
@@ -248,14 +252,14 @@ pub fn split_subgraph_cvd(
             // else: seed unchanged (shouldn't happen unless one district is empty)
         }
 
-        // ── Check convergence ────────────────────────────────────────────
-        // Seeds stable AND assignment stable → converged
+        // â”€â”€ Check convergence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Seeds stable AND assignment stable â†’ converged
         if seeds == prev_seeds || assignment == prev_assignment {
             break;
         }
     }
 
-    // ── Post-hoc rebalance: same boundary-swap as split_subgraph ────────────
+    // â”€â”€ Post-hoc rebalance: same boundary-swap as split_subgraph â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let half_pop = total_pop / 2;
     let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
 
@@ -295,7 +299,7 @@ pub fn split_subgraph_cvd(
         }
     }
 
-    // ── Convert local assignment to global HashSets ──────────────────────────
+    // â”€â”€ Convert local assignment to global HashSets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let mut left = HashSet::new();
     let mut right = HashSet::new();
     for (local, &side) in assignment.iter().enumerate() {
@@ -368,7 +372,7 @@ pub fn split_subgraph_cvd_geographic(
 
     // k-farthest seed initialisation (Euclidean, deterministic)
     let cvd_geo_seed = derive_cvd_geo_seed(base_seed, node_path);
-    let seed0_local = (cvd_geo_seed as usize) % m;
+    let seed0_local = (cvd_geo_seed % m as u64) as usize;
     let seed1_local = (0..m)
         .max_by(|&a, &b| {
             let da = euclidean_dist(projected[seed0_local], projected[a]);

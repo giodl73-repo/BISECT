@@ -75,7 +75,11 @@ pub struct RhodeIslandRlaSourceSummary {
 /// model. This adapter is the V.9 fixture surface: one row per
 /// contest/reporting-unit/selection total, plus repeated residual columns.
 pub fn import_statement_csv(path: &Path) -> Result<RcountPackage, RcountIoError> {
-    let mut reader = csv::Reader::from_path(path)?;
+    import_statement_csv_bytes(&fs::read(path)?)
+}
+
+pub fn import_statement_csv_bytes(bytes: &[u8]) -> Result<RcountPackage, RcountIoError> {
+    let mut reader = csv::Reader::from_reader(bytes);
     let mut contests: BTreeMap<String, Contest> = BTreeMap::new();
     let mut reporting_units: BTreeMap<String, ReportingUnit> = BTreeMap::new();
     let mut summaries: BTreeMap<(String, String, CountStatus), SummaryAccumulator> =
@@ -292,10 +296,30 @@ pub fn write_statement_csv_package_dir(
     Ok(())
 }
 
+pub fn write_statement_csv_package_files(bytes: &[u8], manifest: &RcountManifest, package: &RcountPackage) -> Result<PackageFiles, RcountIoError> {
+    write_import_package_files(bytes, manifest, package, "sources/statement-of-votes.csv", "source:statement-csv")
+}
+
+pub fn write_nist_cdf_package_files(bytes: &[u8], manifest: &RcountManifest, package: &RcountPackage) -> Result<PackageFiles, RcountIoError> {
+    write_import_package_files(bytes, manifest, package, "sources/nist-cdf-results.json", "source:nist-cdf-json")
+}
+
+fn write_import_package_files(bytes: &[u8], manifest: &RcountManifest, package: &RcountPackage, path: &str, source_id: &str) -> Result<PackageFiles, RcountIoError> {
+    let mut files=write_package_files(manifest,package)?;
+    files.remove("sources/synthetic-summary-export.json");
+    files.insert(path.to_owned(),bytes.to_vec());
+    insert_json_pretty(&mut files,"sources/source-index.json",&SourceIndex { sources:vec![SourceEntry { source_id:source_id.to_owned(),path:path.to_owned(),sha256:source_bytes_hash(bytes) }] })?;
+    Ok(files)
+}
+
 /// Imports a small NIST Election Results Reporting CDF-style JSON fixture into
 /// RCOUNT. This is a first adapter slice, not a complete CDF implementation.
 pub fn import_nist_cdf_json(path: &Path) -> Result<RcountPackage, RcountIoError> {
-    let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+    import_nist_cdf_json_bytes(&fs::read(path)?)
+}
+
+pub fn import_nist_cdf_json_bytes(bytes: &[u8]) -> Result<RcountPackage, RcountIoError> {
+    let value: Value = serde_json::from_slice(bytes)?;
     let report = value.get("ElectionReport").unwrap_or(&value);
     let status = parse_nist_status(
         report
@@ -498,7 +522,10 @@ pub fn import_ri_2024_rep28_ballot_polling_audit(
     ballot_manifest_csv: &Path,
     ballot_retrieval_csv: &Path,
 ) -> Result<RcountPackage, RcountIoError> {
-    let report_rows = read_csv_rows(audit_report_csv)?;
+    import_ri_2024_rep28_ballot_polling_audit_bytes(&fs::read(audit_report_csv)?, &fs::read(ballot_manifest_csv)?, &fs::read(ballot_retrieval_csv)?)
+}
+pub fn import_ri_2024_rep28_ballot_polling_audit_bytes(audit_report_csv: &[u8], ballot_manifest_csv: &[u8], ballot_retrieval_csv: &[u8]) -> Result<RcountPackage, RcountIoError> {
+    let report_rows = read_csv_rows_bytes(audit_report_csv)?;
     let contest_row = section_data_row(&report_rows, "######## CONTESTS ########")?;
     let settings_row = section_data_row(&report_rows, "######## AUDIT SETTINGS ########")?;
     let rounds_row = section_data_row(&report_rows, "######## ROUNDS ########")?;
@@ -514,8 +541,9 @@ pub fn import_ri_2024_rep28_ballot_polling_audit(
     let vote_totals = parse_ri_vote_totals(ri_field(contest_row, 5, "vote totals")?)?;
     let contest_id = "ri-2024-rep-28".to_string();
     let jurisdiction_unit_id = "ri:state:representative-28".to_string();
-    let residual_ballots =
-        counted_ballots - vote_totals.iter().map(|(_, votes)| votes).sum::<i64>();
+    let invalid_count = || RcountIoError::InvalidRhodeIslandRlaField { field:"vote totals".into(), value:"negative or overflowing ballot counts".into() };
+    let vote_sum = vote_totals.iter().try_fold(0i64, |sum,(_,votes)| if *votes<0 {None} else {sum.checked_add(*votes)}).ok_or_else(invalid_count)?;
+    let residual_ballots = counted_ballots.checked_sub(vote_sum).ok_or_else(invalid_count)?;
     if residual_ballots < 0 {
         return Err(RcountIoError::InvalidRhodeIslandRlaField {
             field: "vote totals".to_string(),
@@ -547,7 +575,7 @@ pub fn import_ri_2024_rep28_ballot_polling_audit(
     }];
 
     let mut batches = Vec::new();
-    let mut manifest_reader = csv::Reader::from_path(ballot_manifest_csv)?;
+    let mut manifest_reader = csv::Reader::from_reader(ballot_manifest_csv);
     for (index, row) in manifest_reader
         .deserialize::<RhodeIslandManifestRow>()
         .enumerate()
@@ -589,10 +617,7 @@ pub fn import_ri_2024_rep28_ballot_polling_audit(
             ],
         });
     }
-    let manifest_ballots = batches
-        .iter()
-        .map(|batch| batch.counted_ballots)
-        .sum::<i64>();
+    let manifest_ballots = batches.iter().try_fold(0i64, |sum,batch| if batch.counted_ballots<0 {None} else {sum.checked_add(batch.counted_ballots)}).ok_or_else(|| RcountIoError::InvalidRhodeIslandRlaField {field:"manifest ballot total".into(),value:"negative or overflowing ballot counts".into()})?;
     if manifest_ballots != counted_ballots {
         return Err(RcountIoError::InvalidRhodeIslandRlaField {
             field: "manifest ballot total".to_string(),
@@ -756,7 +781,10 @@ pub fn ri_2024_rep28_source_summary(
     audit_report_csv: &Path,
     ballot_retrieval_csv: &Path,
 ) -> Result<RhodeIslandRlaSourceSummary, RcountIoError> {
-    let report_rows = read_csv_rows(audit_report_csv)?;
+    ri_2024_rep28_source_summary_bytes(&fs::read(audit_report_csv)?, &fs::read(ballot_retrieval_csv)?)
+}
+pub fn ri_2024_rep28_source_summary_bytes(audit_report_csv: &[u8], ballot_retrieval_csv: &[u8]) -> Result<RhodeIslandRlaSourceSummary, RcountIoError> {
+    let report_rows = read_csv_rows_bytes(audit_report_csv)?;
     let settings_row = section_data_row(&report_rows, "######## AUDIT SETTINGS ########")?;
     let rounds_row = section_data_row(&report_rows, "######## ROUNDS ########")?;
     let sampled_ballots = ri_sampled_ballot_keys(&report_rows)?;
@@ -778,6 +806,19 @@ pub fn ri_2024_rep28_source_summary(
             "ballot-level human observations are not independently verified".to_string(),
         ],
     })
+}
+
+pub fn write_ri_2024_rep28_package_files(audit_report_csv:&[u8], ballot_manifest_csv:&[u8], ballot_retrieval_csv:&[u8], manifest:&RcountManifest, package:&RcountPackage) -> Result<PackageFiles,RcountIoError> {
+    let mut files=write_package_files(manifest,package)?;
+    files.remove("sources/synthetic-summary-export.json");
+    let mut entries=Vec::new();
+    for (id,name,bytes) in [("source:ri-rla-audit-report","ri-2024-rep28-audit-report.csv",audit_report_csv),("source:ri-rla-ballot-manifest","ri-2024-rep28-ballot-manifest.csv",ballot_manifest_csv),("source:ri-rla-ballot-retrieval","ri-2024-rep28-ballot-retrieval.csv",ballot_retrieval_csv)] {
+        let path=format!("sources/{name}");files.insert(path.clone(),bytes.to_vec());
+        entries.push(SourceEntry{source_id:id.into(),path,sha256:source_bytes_hash(bytes)});
+    }
+    insert_json_pretty(&mut files,"sources/source-index.json",&SourceIndex{sources:entries})?;
+    insert_json_pretty(&mut files,"transcripts/ri-2024-rep28-source-summary.json",&ri_2024_rep28_source_summary_bytes(audit_report_csv,ballot_retrieval_csv)?)?;
+    Ok(files)
 }
 
 pub fn write_ri_2024_rep28_package_dir(

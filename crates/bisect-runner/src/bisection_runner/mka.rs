@@ -252,7 +252,9 @@ pub fn split_subgraph_mka_direction(
         let rr = reock_score(&right_pts, &[]);
         let score = rl.min(rr);
 
-        if score > best_score {
+        // Reock scores are in [0,1]. Keep the earliest orientation when
+        // scores differ only by floating-point noise across native/WASM math.
+        if score > best_score + 1e-10 {
             best_score = score;
             best_theta = theta;
         }

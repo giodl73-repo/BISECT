@@ -1,5 +1,110 @@
 use super::*;
 
+#[test]
+fn multi_selects_best_feasible_weighted_cut_and_is_deterministic() {
+    let (adj, pop) = small_grid(4, 4);
+    let ew: HashMap<_, _> = adj
+        .iter()
+        .enumerate()
+        .flat_map(|(u, neighbors)| {
+            neighbors
+                .iter()
+                .filter(move |&&v| u < v)
+                .map(move |&v| ((u, v), if u % 4 == 1 { 100.0 } else { 1.0 }))
+        })
+        .collect();
+    let vertices: HashSet<_> = (0..pop.len()).collect();
+    let total: i64 = pop.iter().sum();
+    let target = total as f64 / 2.0;
+    let mut expected = None;
+    for index in 0..4 {
+        let (left, right) = split_subgraph(
+            &adj,
+            &pop,
+            1,
+            &ew,
+            &vertices,
+            1.125,
+            10,
+            Some(42 + index),
+            None,
+            None,
+        )
+        .unwrap();
+        let left_pop: i64 = left.iter().map(|&v| pop[v]).sum();
+        if (left_pop as f64 - target).abs() <= target * 0.125 + 1.0
+            && is_connected_subset(&adj, &left)
+            && is_connected_subset(&adj, &right)
+        {
+            let cut = weighted_edge_cut(&ew, &left);
+            if expected.as_ref().map_or(true, |(old, _, _)| cut < *old) {
+                expected = Some((cut, left, right));
+            }
+        }
+    }
+    let (_, left, right) = expected.expect("fixture needs at least one feasible seed");
+    let actual = run_all_splits_multi(&adj, &pop, &ew, 2, 0.25, 10, 42, 4, None).unwrap();
+    for v in left {
+        assert_eq!(actual[&v], 1);
+    }
+    for v in right {
+        assert_eq!(actual[&v], 2);
+    }
+    assert_eq!(
+        actual,
+        run_all_splits_multi(&adj, &pop, &ew, 2, 0.25, 10, 42, 4, None).unwrap()
+    );
+}
+
+#[test]
+fn multi_reports_impossible_balance_and_zero_budget() {
+    let (adj, mut pop) = small_grid(4, 4);
+    pop[0] = 1_000_000;
+    assert!(
+        run_all_splits_multi(&adj, &pop, &HashMap::new(), 2, 0.05, 10, 42, 4, None)
+            .unwrap_err()
+            .contains("no balanced contiguous cut")
+    );
+    assert!(run_all_splits_multi(&adj, &pop, &HashMap::new(), 2, 0.05, 10, 42, 0, None).is_err());
+}
+
+#[test]
+fn percentile_rejects_invalid_budget_and_propagates_failed_splits() {
+    let (adj, pop) = small_grid(4, 4);
+    assert!(
+        run_all_splits_percentile(&adj, &pop, &HashMap::new(), 2, 0.05, 10, 42, 0, 0.5, None)
+            .is_err()
+    );
+    assert!(run_all_splits_percentile(
+        &adj,
+        &pop,
+        &HashMap::new(),
+        2,
+        0.05,
+        10,
+        42,
+        2,
+        f64::NAN,
+        None
+    )
+    .is_err());
+    let disconnected = vec![vec![1], vec![0], vec![3], vec![2]];
+    // A rejected graph must not become an invented zero-cut one-district plan.
+    assert!(run_all_splits_percentile(
+        &disconnected,
+        &vec![100; 4],
+        &HashMap::new(),
+        2,
+        0.05,
+        10,
+        42,
+        2,
+        0.5,
+        None
+    )
+    .is_err());
+}
+
 // ── PercentileSweep tests ─────────────────────────────────────────────────
 
 #[test]

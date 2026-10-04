@@ -29,6 +29,8 @@ members = [
     "crates/bisect-map",
     "crates/bisect-report",
     "crates/bisect-tui",
+    "crates/bisect-web",
+    "crates/bisect-wasm",
     "crates/bisect-ensemble",
     "crates/bisect-smc",
     "crates/bisect-pareto",
@@ -41,6 +43,10 @@ members = [
     "python/bisect_py",
 ]
 resolver = "2"
+exclude = ["vendor/metis-core"]
+
+[patch."https://github.com/giodl73-repo/METIS-CORE.git"]
+metis-core = { path = "vendor/metis-core" }
 
 [workspace.package]
 version = "0.1.0"

@@ -156,7 +156,7 @@ impl SmcResult {
                 "SHA-256('SMC_PARTICLE_' || stage:u32le || '_' || particle:u32le || '_' || base_seed:u64le) → first 8 bytes as u64le".into(),
             resample_seed_formula:
                 "SHA-256('SMC_RESAMPLE_' || round:u32le || '_' || base_seed:u64le) → first 8 bytes as u64le".into(),
-            smc_version: "1.0".into(),
+            smc_version: "2.0-chacha12-u64-v1".into(),
             ensemble_output_version: "1.0".into(),
             file_sha256: file_hash,
         };
@@ -343,6 +343,6 @@ mod tests {
         let meta = SmcResult::read_metadata_from_ndjson(&s).expect("metadata must be parseable");
         assert_eq!(meta.base_seed, 42);
         assert_eq!(meta.n_particles, 3);
-        assert_eq!(meta.smc_version, "1.0");
+        assert_eq!(meta.smc_version, "2.0-chacha12-u64-v1");
     }
 }

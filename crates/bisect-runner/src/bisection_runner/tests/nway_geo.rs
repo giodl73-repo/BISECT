@@ -170,7 +170,6 @@ fn test_dual_tpwgts_format_ncon2() {
 /// Integration test: call split_subgraph with ncon=2 (unified dual-constraint path).
 /// Tests that the new unified split_subgraph handles ncon=2 correctly.
 #[test]
-#[ignore = "requires METIS with ncon=2 support"]
 fn test_split_subgraph_ncon2_small_graph() {
     // 8-vertex grid: 0-1-2-3 (top row), 4-5-6-7 (bottom row)
     // Edges: 0-1, 1-2, 2-3, 4-5, 5-6, 6-7, 0-4, 1-5, 2-6, 3-7
@@ -234,19 +233,144 @@ fn test_split_subgraph_ncon2_small_graph() {
             let pop_total: i64 = pop.iter().sum();
             let ratio = pop_left as f64 / pop_total as f64;
             assert!(
-                (ratio - 0.5).abs() < 0.15,
+                (ratio - 0.5).abs() <= 0.001,
                 "pop balance should be ~50%: got {:.1}%",
                 ratio * 100.0
             );
+            let area_left: i64 = left.iter().map(|&v| area_ha[v]).sum();
+            assert_eq!(
+                area_left, 400,
+                "both area and population constraints must be met"
+            );
+            assert!(is_connected_subset(&adj, &left) && is_connected_subset(&adj, &right));
         }
-        Err(e) => {
-            // METIS may fail on this version — log and skip
-            eprintln!("split_subgraph ncon=2 error: {e}");
-        }
+        Err(e) => panic!("dual-constraint split must be supported: {e}"),
     }
 }
 
+#[test]
+fn areasection_two_districts_enforces_area_and_honors_swing() {
+    let adj = vec![
+        vec![1, 4],
+        vec![0, 2, 5],
+        vec![1, 3, 6],
+        vec![2, 7],
+        vec![0, 5],
+        vec![1, 4, 6],
+        vec![2, 5, 7],
+        vec![3, 6],
+    ];
+    let population = vec![100i64; 8];
+    let areas = vec![
+        9000000.0, 9000000.0, 1000000.0, 1000000.0, 9000000.0, 9000000.0, 1000000.0, 1000000.0,
+    ];
+    let mut edges = HashMap::new();
+    for u in 0..8 {
+        for &v in &adj[u] {
+            if u < v {
+                edges.insert(
+                    (u, v),
+                    if (u == 1 && v == 2) || (u == 5 && v == 6) {
+                        1.0
+                    } else if v - u == 4 {
+                        100.0
+                    } else {
+                        1000.0
+                    },
+                );
+            }
+        }
+    }
+    let empty = crate::geosection_orientation::CentroidMap::new();
+    let run = |swing| {
+        run_geosection_seeded(
+            &adj,
+            &population,
+            &edges,
+            2,
+            0.05,
+            20,
+            64,
+            None,
+            &empty,
+            0.0,
+            Some(&areas),
+            swing,
+            None,
+            0.0,
+            None,
+            42,
+        )
+        .unwrap()
+    };
+    let (tight, _, _, tight_cost) = run(1.1);
+    let left: HashSet<_> = tight
+        .iter()
+        .filter(|(_, d)| **d == 1)
+        .map(|(&v, _)| v)
+        .collect();
+    assert_eq!(left.len(), 4);
+    assert!(is_connected_subset(&adj, &left));
+    let fraction = left.iter().map(|&v| areas[v]).sum::<f64>() / areas.iter().sum::<f64>();
+    assert!(
+        (fraction - 0.5).abs() < 1e-10,
+        "two-district shortcut must not ignore area: {fraction}"
+    );
+    let (loose, _, _, loose_cost) = run(1.9);
+    let loose_fraction = loose
+        .iter()
+        .filter(|(_, d)| **d == 1)
+        .map(|(&v, _)| areas[v])
+        .sum::<f64>()
+        / areas.iter().sum::<f64>();
+    assert!(
+        (loose_fraction - 0.5).abs() > 0.3,
+        "looser area budget should permit the cheap split"
+    );
+    assert!(loose_cost < tight_cost);
+}
+
+#[test]
+fn areasection_infeasible_atomic_area_returns_error() {
+    let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
+    let empty = crate::geosection_orientation::CentroidMap::new();
+    let result = run_geosection_seeded(
+        &adj,
+        &[100; 4],
+        &HashMap::new(),
+        2,
+        0.05,
+        10,
+        8,
+        None,
+        &empty,
+        0.0,
+        Some(&[9000000.0, 10000.0, 10000.0, 10000.0]),
+        1.1,
+        None,
+        0.0,
+        None,
+        42,
+    );
+    assert!(result
+        .unwrap_err()
+        .contains("no sampled feasible root split"));
+}
+
 // ── VRASection (T.7): alignment score unit tests ─────────────────────────
+
+#[test]
+fn vra_section_rejects_invalid_mass_and_weight() {
+    let (adj,pop)=small_grid(4,4);
+    let edges=HashMap::new();
+    let centers=crate::geosection_orientation::CentroidMap::new();
+    for mass in [vec![1.0;15],vec![-1.0;16],vec![f64::NAN;16],vec![f64::INFINITY;16]] {
+        assert!(run_geosection_seeded(&adj,&pop,&edges,2,0.005,100,1,None,&centers,0.0,None,1.1,Some(&mass),0.4,None,42).is_err());
+    }
+    for weight in [-0.1,1.01,f64::NAN,f64::INFINITY] {
+        assert!(run_geosection_seeded(&adj,&pop,&edges,2,0.005,100,1,None,&centers,0.0,None,1.1,Some(&[0.5;16]),weight,None,42).is_err());
+    }
+}
 
 #[test]
 fn test_vra_alignment_perfectly_concentrated() {
@@ -395,4 +519,41 @@ fn vra_score_symmetric_around_half() {
         (a_fwd - a_rev).abs() < 1e-9,
         "alignment must be symmetric: fwd={a_fwd:.6} rev={a_rev:.6}"
     );
+}
+
+
+#[test]
+fn geosection_tuning_preserves_defaults_and_local_ratio_ranking() {
+    let (adj, pop) = small_grid(10, 10);
+    let edges: HashMap<(usize,usize),f64> = adj.iter().enumerate().flat_map(|(u,ns)|ns.iter().filter(move |&&v|v>u).map(move |&v|((u,v),(1+u%5) as f64))).collect();
+    let centers = crate::geosection_orientation::CentroidMap::new();
+    let tracts: HashSet<usize> = (0..pop.len()).collect();
+    for k in [2, 3, 4, 6] {
+        let legacy = run_geosection_seeded(&adj,&pop,&edges,k,0.1,10,2,None,&centers,0.0,None,1.1,None,0.0,None,u64::MAX).unwrap();
+        let defaults = run_geosection_seeded_tuned(&adj,&pop,&edges,k,0.1,10,2,None,&centers,0.0,None,1.1,None,0.0,None,u64::MAX,"cut",1).unwrap();
+        assert_eq!(legacy.0,defaults.0);
+        assert_eq!((legacy.1,legacy.2),(defaults.1,defaults.2));
+        for objective in ["cut","volume"] {
+            for trials in [1,3] {
+                let actual = run_geosection_seeded_tuned(&adj,&pop,&edges,k,0.1,10,2,None,&centers,0.0,None,1.1,None,0.0,None,u64::MAX,objective,trials).unwrap();
+                let mut best = (f64::INFINITY,0usize);
+                for left_k in 1..=k/2 {
+                    let left = left_k as f32/k as f32;
+                    let targets = if left_k==k-left_k {None} else {Some(vec![left,1.0-left])};
+                    let mut cut = f64::INFINITY;
+                    for index in 0..2 {
+                        let (l,_) = split_subgraph_tuned(&adj,&pop,1,&edges,&tracts,1.0+0.1/k as f64,10,Some(u64::MAX.wrapping_add(index)),targets.clone(),None,objective,trials).unwrap();
+                        cut=cut.min(edges.iter().filter(|((u,v),_)|l.contains(u)!=l.contains(v)).map(|(_,w)|w).sum());
+                    }
+                    let score=cut/(left_k as f64).sqrt();
+                    if score<best.0 {best=(score,left_k);}
+                }
+                assert_eq!(actual.1,best.1,"ratio selection uses local original weighted cuts");
+                assert!((actual.3/(actual.1 as f64).sqrt()-best.0).abs()<1e-8);
+            }
+        }
+    }
+    for (objective,trials) in [("invalid",1),("cut",0),("volume",101)] {
+        assert!(run_geosection_seeded_tuned(&adj,&pop,&edges,4,0.1,10,1,None,&centers,0.0,None,1.1,None,0.0,None,42,objective,trials).is_err());
+    }
 }

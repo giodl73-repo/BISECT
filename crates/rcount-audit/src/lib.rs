@@ -136,21 +136,30 @@ pub fn replay_audit_algorithm_statistics(run: &AuditAlgorithmRun) -> AlgorithmRe
 
 pub fn verify_package_dir(dir: &Path) -> VerificationTranscript {
     match read_package_dir(dir) {
-        Ok((manifest, package)) => verify_loaded_package(dir, &manifest, &package),
-        Err(err) => VerificationTranscript {
-            transcript_version: RCOUNT_AUDIT_TRANSCRIPT_VERSION.to_string(),
-            verifier: "rcount-audit".to_string(),
-            status: VerificationStatus::Fail,
-            package_content_hash: "<unavailable>".to_string(),
-            manifest_content_hash: "<unavailable>".to_string(),
-            checks: vec![CheckResult {
-                equation_id: "package_read".to_string(),
-                status: VerificationStatus::Fail,
-                contest_id: None,
-                reporting_unit_id: None,
-                error: Some(err.to_string()),
-            }],
-        },
+        Ok((manifest, package)) => verify_loaded_package(&manifest, &package, verify_source_index(dir)),
+        Err(err) => package_read_failure(err),
+    }
+}
+
+/// Verify selected package bytes with the same checks as the native directory command.
+pub fn verify_package_files(files: &rcount_io::PackageFiles) -> VerificationTranscript {
+    match rcount_io::read_package_files(files) {
+        Ok((manifest, package)) => verify_loaded_package(&manifest, &package, rcount_io::verify_source_files(files)),
+        Err(err) => package_read_failure(err),
+    }
+}
+
+fn package_read_failure(err: RcountIoError) -> VerificationTranscript {
+    VerificationTranscript {
+        transcript_version: RCOUNT_AUDIT_TRANSCRIPT_VERSION.to_string(),
+        verifier: "rcount-audit".to_string(),
+        status: VerificationStatus::Fail,
+        package_content_hash: "<unavailable>".to_string(),
+        manifest_content_hash: "<unavailable>".to_string(),
+        checks: vec![CheckResult {
+            equation_id: "package_read".to_string(), status: VerificationStatus::Fail,
+            contest_id: None, reporting_unit_id: None, error: Some(err.to_string()),
+        }],
     }
 }
 
@@ -645,9 +654,9 @@ pub fn verify_and_write_transcript(dir: &Path) -> Result<VerificationTranscript,
 }
 
 fn verify_loaded_package(
-    dir: &Path,
     manifest: &RcountManifest,
     package: &RcountPackage,
+    source_verification: Result<Vec<rcount_io::SourceCheck>, RcountIoError>,
 ) -> VerificationTranscript {
     let package_hash = package_content_hash(package).unwrap_or_else(|err| format!("error:{err}"));
     let mut checks = Vec::new();
@@ -707,7 +716,7 @@ fn verify_loaded_package(
         }
     }
 
-    match verify_source_index(dir) {
+    match source_verification {
         Ok(source_checks) => {
             checks.extend(source_checks.into_iter().map(|source| CheckResult {
                 equation_id: "source_hash_match".to_string(),

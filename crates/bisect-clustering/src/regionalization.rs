@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::assign::{ClusterConfig, ClusterError, ClusterStatus};
+use crate::assign::{validate_inputs, ClusterConfig, ClusterError, ClusterStatus};
 use crate::metrics::{all_clusters_connected, edge_cut, population_deviation};
 use crate::output::RegionalizationSummary;
 use crate::repair::{repair_to_valid_small, RepairStatus};
@@ -213,38 +213,6 @@ fn unit_region_index(n_units: usize, regions: &BTreeMap<usize, Region>) -> Vec<u
 
 fn ordered_f64(value: f64) -> u64 {
     value.to_bits()
-}
-
-fn validate_inputs(
-    adjacency: &[Vec<usize>],
-    weights: &[i64],
-    config: &ClusterConfig,
-) -> Result<(), ClusterError> {
-    if config.k == 0 {
-        return Err(ClusterError::InvalidInput(
-            "k must be greater than zero".to_string(),
-        ));
-    }
-    if adjacency.len() != weights.len() {
-        return Err(ClusterError::InvalidInput(format!(
-            "adjacency has {} units but weights has {}",
-            adjacency.len(),
-            weights.len()
-        )));
-    }
-    if config.k > weights.len() {
-        return Err(ClusterError::InvalidInput(format!(
-            "k={} exceeds unit count {}",
-            config.k,
-            weights.len()
-        )));
-    }
-    if weights.iter().any(|&weight| weight <= 0) {
-        return Err(ClusterError::InvalidInput(
-            "weights must be positive".to_string(),
-        ));
-    }
-    Ok(())
 }
 
 fn capacity_feasible(weights: &[i64], k: usize, tolerance: f64) -> bool {

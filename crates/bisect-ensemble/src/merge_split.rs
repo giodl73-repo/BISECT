@@ -80,8 +80,17 @@ impl MergeSplitChain {
     /// `rng`         — forward stream: pair shuffle, forward UST, cut selection, acceptance coin.
     /// `rng_reverse` — reverse stream: reverse UST only.
     pub fn step<R: Rng>(&mut self, rng: &mut R, rng_reverse: &mut R) -> StepRecord {
+        self.step_impl(rng, rng_reverse, false)
+    }
+
+    /// Uses fixed-width random draws with the Wilson tree sampler.
+    pub fn step_portable<R: Rng>(&mut self, rng: &mut R, rng_reverse: &mut R) -> StepRecord {
+        self.step_impl(rng, rng_reverse, true)
+    }
+
+    fn step_impl<R: Rng>(&mut self, rng: &mut R, rng_reverse: &mut R, portable: bool) -> StepRecord {
         self.steps_taken += 1;
-        let rec = self.try_step(rng, rng_reverse);
+        let rec = self.try_step(rng, rng_reverse, portable);
         if rec.accepted {
             self.steps_accepted += 1;
         }
@@ -89,8 +98,9 @@ impl MergeSplitChain {
     }
 
     /// Attempt one Merge-Split step with pair reselection on zero forward cuts.
-    fn try_step<R: Rng>(&mut self, rng: &mut R, rng_reverse: &mut R) -> StepRecord {
-        let pairs = self.adjacent_pairs();
+    fn try_step<R: Rng>(&mut self, rng: &mut R, rng_reverse: &mut R, portable: bool) -> StepRecord {
+        let mut pairs = self.adjacent_pairs();
+        if portable { pairs.sort_unstable(); }
         if pairs.is_empty() {
             return StepRecord {
                 accepted: false,
@@ -107,7 +117,7 @@ impl MergeSplitChain {
 
         // Shuffle pairs for random pair reselection.
         let mut pair_order: Vec<usize> = (0..pairs.len()).collect();
-        pair_order.shuffle(rng);
+        if portable { crate::portable_shuffle(&mut pair_order, rng); } else { pair_order.shuffle(rng); }
 
         for &pair_idx in pair_order.iter().take(max_attempts) {
             let (d_i, d_j) = pairs[pair_idx];
@@ -143,7 +153,7 @@ impl MergeSplitChain {
                 .collect();
 
             // Step 3: Sample FORWARD spanning tree.
-            let t_fwd = random_spanning_tree(&local_adj, rng);
+            let t_fwd = if portable { crate::spanning::random_spanning_tree_portable(&local_adj, rng) } else { random_spanning_tree(&local_adj, rng) };
 
             // Step 4: Count all balanced cuts in the forward tree.
             let valid_cuts_forward = count_balanced_cuts(
@@ -167,11 +177,11 @@ impl MergeSplitChain {
                 self.ideal_pop,
                 self.pop_tolerance,
             );
-            let &(local_a, local_b) = balanced_edges.choose(rng).unwrap();
+            let &(local_a, local_b) = if portable { &balanced_edges[crate::portable_index(balanced_edges.len(), rng)] } else { balanced_edges.choose(rng).unwrap() };
             let (comp_a, comp_b) = t_fwd.split_on(local_a, local_b);
 
             // Step 7: Sample REVERSE spanning tree (independent, uses rng_reverse).
-            let t_rev = random_spanning_tree(&local_adj, rng_reverse);
+            let t_rev = if portable { crate::spanning::random_spanning_tree_portable(&local_adj, rng_reverse) } else { random_spanning_tree(&local_adj, rng_reverse) };
 
             // Step 8: Count all balanced cuts in the reverse tree.
             let valid_cuts_reverse = count_balanced_cuts(

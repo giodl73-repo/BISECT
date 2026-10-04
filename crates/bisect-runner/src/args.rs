@@ -258,7 +258,7 @@ pub enum SearchMode {
     #[value(name = "multi")]
     Multi,
     /// Run until --convergence-threshold T consecutive non-improving seeds.
-    /// Certifies convergence per B.7. The seed-buster for the federal statute.
+    /// Reports a non-improvement stopping rule; does not certify global optimality.
     #[value(name = "convergence")]
     Convergence,
     /// Run --seeds T plans, sort by edge cut, return plan at rank floor(--percentile * T).

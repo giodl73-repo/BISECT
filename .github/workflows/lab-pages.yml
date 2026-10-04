@@ -1,0 +1,90 @@
+name: Publish precomputed laboratory
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub Release tag containing the prepared catalog
+        required: true
+        type: string
+      asset_name:
+        description: Catalog tar.gz asset name
+        required: true
+        default: lab-catalog.tar.gz
+        type: string
+      sha256:
+        description: Expected SHA-256 of the archive bytes
+        required: true
+        type: string
+      existing_site_ref:
+        description: Branch or commit containing the existing static Pages site
+        required: true
+        default: gh-pages
+        type: string
+      existing_site_path:
+        description: Site directory within that ref (use docs for a docs-based site)
+        required: true
+        default: '.'
+        type: string
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: lab-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.existing_site_ref }}
+          path: existing-site
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download and verify prepared artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          CATALOG_ASSET: ${{ inputs.asset_name }}
+          EXPECTED_SHA: ${{ inputs.sha256 }}
+          EXISTING_SITE_PATH: ${{ inputs.existing_site_path }}
+        run: |
+          [[ "$CATALOG_ASSET" =~ ^[a-zA-Z0-9._-]+\.tar\.gz$ ]]
+          [[ "$EXPECTED_SHA" =~ ^[a-f0-9]{64}$ ]]
+          mkdir incoming site
+          python3 - <<'PY'
+          import os, pathlib, shutil
+          base = pathlib.Path('existing-site').resolve()
+          source = (base / os.environ['EXISTING_SITE_PATH']).resolve()
+          assert source.is_relative_to(base) and (source / 'index.html').is_file(), 'Existing site must contain index.html'
+          shutil.copytree(source, 'site', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.git', '.github', 'laboratory'))
+          PY
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern "$CATALOG_ASSET" --dir incoming
+          printf '%s  %s\n' "$EXPECTED_SHA" "incoming/$CATALOG_ASSET" | sha256sum --check
+          python3 - "$CATALOG_ASSET" <<'PY'
+          import sys, tarfile, pathlib
+          with tarfile.open('incoming/' + sys.argv[1], 'r:gz') as archive:
+              members = archive.getmembers()
+              assert sum(m.size for m in members) <= 900_000_000, 'Archive exceeds size budget'
+              for member in members:
+                  name = pathlib.PurePosixPath(member.name)
+                  assert not name.is_absolute() and '..' not in name.parts, 'Unsafe archive path'
+                  assert member.isfile() or member.isdir(), 'Links and special files are disallowed'
+              archive.extractall('site/laboratory', filter='data')
+          assert sum(p.stat().st_size for p in pathlib.Path('site').rglob('*') if p.is_file()) <= 900_000_000, 'Combined site exceeds size budget'
+          pathlib.Path('site/.nojekyll').touch()
+          PY
+          node scripts/web/verify_catalog.mjs site/laboratory
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
