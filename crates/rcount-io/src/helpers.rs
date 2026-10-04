@@ -12,10 +12,13 @@ pub(crate) fn required(row: usize, field: &str, value: String) -> Result<String,
 }
 
 pub(crate) fn read_csv_rows(path: &Path) -> Result<Vec<Vec<String>>, RcountIoError> {
+    read_csv_rows_bytes(&fs::read(path)?)
+}
+pub(crate) fn read_csv_rows_bytes(bytes: &[u8]) -> Result<Vec<Vec<String>>, RcountIoError> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .flexible(true)
-        .from_path(path)?;
+        .from_reader(bytes);
     reader
         .records()
         .map(|record| {
@@ -79,7 +82,7 @@ pub(crate) fn ri_u32(row: &[String], index: usize, field: &str) -> Result<u32, R
 pub(crate) fn validate_ri_sample_sources(
     report_rows: &[Vec<String>],
     rounds_row: &[String],
-    ballot_retrieval_csv: &Path,
+    ballot_retrieval_csv: &[u8],
 ) -> Result<(), RcountIoError> {
     let declared_sample_size = ri_u32(rounds_row, 3, "sample size")?;
     let sampled_ballots = ri_sampled_ballot_keys(report_rows)?;
@@ -158,8 +161,8 @@ pub(crate) fn ri_sampled_ballot_keys(
     Ok(keys)
 }
 
-pub(crate) fn ri_retrieval_ballot_keys(path: &Path) -> Result<BTreeSet<String>, RcountIoError> {
-    let mut reader = csv::Reader::from_path(path)?;
+pub(crate) fn ri_retrieval_ballot_keys(bytes: &[u8]) -> Result<BTreeSet<String>, RcountIoError> {
+    let mut reader = csv::Reader::from_reader(bytes);
     let mut keys = BTreeSet::new();
     for (index, row) in reader.deserialize::<RhodeIslandRetrievalRow>().enumerate() {
         let row_number = index + 2;
@@ -550,12 +553,11 @@ pub(crate) fn write_json_pretty<T: Serialize>(path: &Path, value: &T) -> Result<
     Ok(())
 }
 
-pub(crate) fn write_synthetic_source_export(
-    dir: &Path,
+pub(crate) fn write_synthetic_source_export_files(
+    files: &mut PackageFiles,
     package: &RcountPackage,
 ) -> Result<SourceEntry, RcountIoError> {
     let path = PathBuf::from("sources").join("synthetic-summary-export.json");
-    let full_path = dir.join(&path);
     let value = serde_json::json!({
         "source_format": "synthetic-summary-export-v1",
         "contest_count": package.contests.len(),
@@ -573,7 +575,7 @@ pub(crate) fn write_synthetic_source_export(
         "status_event_count": package.status_events.len(),
     });
     let bytes = serde_json::to_vec_pretty(&value)?;
-    fs::write(&full_path, &bytes)?;
+    files.insert(path.to_string_lossy().replace('\\', "/"), bytes.clone());
     Ok(SourceEntry {
         source_id: "source:synthetic-summary-export".to_string(),
         path: path.to_string_lossy().replace('\\', "/"),
@@ -624,32 +626,6 @@ pub(crate) fn write_ndjson<T: Serialize>(path: &Path, records: &[T]) -> Result<(
     Ok(())
 }
 
-pub(crate) fn read_ndjson<T: for<'de> Deserialize<'de>>(
-    path: &Path,
-) -> Result<Vec<T>, RcountIoError> {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-    let mut records = Vec::new();
-    for line in reader.lines() {
-        let line = line?;
-        if line.trim().is_empty() {
-            continue;
-        }
-        records.push(serde_json::from_str(&line)?);
-    }
-    Ok(records)
-}
-
-pub(crate) fn read_optional_ndjson<T: for<'de> Deserialize<'de>>(
-    path: &Path,
-) -> Result<Vec<T>, RcountIoError> {
-    if path.exists() {
-        read_ndjson(path)
-    } else {
-        Ok(Vec::new())
-    }
-}
-
 pub(crate) fn write_lines(path: &Path, lines: &[&str]) -> Result<(), RcountIoError> {
     let mut file = File::create(path)?;
     for line in lines {
@@ -657,4 +633,15 @@ pub(crate) fn write_lines(path: &Path, lines: &[&str]) -> Result<(), RcountIoErr
         file.write_all(b"\n")?;
     }
     Ok(())
+}
+
+pub(crate) fn insert_json_pretty<T: Serialize>(files: &mut PackageFiles, path: &str, value: &T) -> Result<(), RcountIoError> {
+    files.insert(path.to_owned(), serde_json::to_vec_pretty(value)?); Ok(())
+}
+pub(crate) fn insert_ndjson<T: Serialize>(files: &mut PackageFiles, path: &str, records: &[T]) -> Result<(), RcountIoError> {
+    let mut bytes=Vec::new(); for record in records { serde_json::to_writer(&mut bytes,record)?; bytes.push(b'\n'); }
+    files.insert(path.to_owned(),bytes); Ok(())
+}
+pub(crate) fn insert_lines(files: &mut PackageFiles, path: &str, lines: &[&str]) -> Result<(), RcountIoError> {
+    files.insert(path.to_owned(),lines.iter().flat_map(|line|line.bytes().chain(std::iter::once(b'\n'))).collect()); Ok(())
 }

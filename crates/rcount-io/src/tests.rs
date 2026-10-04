@@ -1,4 +1,14 @@
 use super::*;
+fn selected_package_bytes(root: &Path) -> PackageFiles {
+    fn collect(root: &Path, dir: &Path, files: &mut PackageFiles) {
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() { collect(root, &path, files); }
+            else { files.insert(path.strip_prefix(root).unwrap().to_string_lossy().replace('\\', "/"), std::fs::read(path).unwrap()); }
+        }
+    }
+    let mut files = PackageFiles::new(); collect(root, root, &mut files); files
+}
 use rcount_core::{
     synthetic_athena_boundary_package, synthetic_awaire_boundary_package,
     synthetic_bad_california_rla_package, synthetic_bad_colorado_rla_package,
@@ -216,6 +226,9 @@ fn imports_statement_csv_and_preserves_source_hash() {
     let manifest = synthetic_summary_basic_manifest(&package).unwrap();
     let package_dir = tmp.path().join("package");
     write_statement_csv_package_dir(&package_dir, &csv_path, &manifest, &package).unwrap();
+    let bytes = std::fs::read(&csv_path).unwrap();
+    assert_eq!(serde_json::to_value(import_statement_csv_bytes(&bytes).unwrap()).unwrap(), serde_json::to_value(&package).unwrap());
+    assert_eq!(write_statement_csv_package_files(&bytes, &manifest, &package).unwrap(), selected_package_bytes(&package_dir));
 
     let (_, decoded_package) = read_package_dir(&package_dir).unwrap();
     verify_package(&decoded_package).unwrap();
@@ -280,6 +293,9 @@ fn imports_nist_cdf_json_and_preserves_source_hash() {
     let manifest = synthetic_summary_basic_manifest(&package).unwrap();
     let package_dir = tmp.path().join("package");
     write_nist_cdf_package_dir(&package_dir, &json_path, &manifest, &package).unwrap();
+    let bytes = std::fs::read(&json_path).unwrap();
+    assert_eq!(serde_json::to_value(import_nist_cdf_json_bytes(&bytes).unwrap()).unwrap(), serde_json::to_value(&package).unwrap());
+    assert_eq!(write_nist_cdf_package_files(&bytes, &manifest, &package).unwrap(), selected_package_bytes(&package_dir));
 
     let (_, decoded_package) = read_package_dir(&package_dir).unwrap();
     verify_package(&decoded_package).unwrap();
@@ -387,6 +403,14 @@ fn imports_ri_2024_rep28_rla_sources_and_manifest_batches() {
     .unwrap();
     let checks = verify_source_index(&package_dir).unwrap();
     assert_eq!(checks.len(), 3);
+    let audit_bytes=std::fs::read(&audit_path).unwrap();let manifest_bytes=std::fs::read(&manifest_path).unwrap();let retrieval_bytes=std::fs::read(&retrieval_path).unwrap();
+    assert_eq!(serde_json::to_value(import_ri_2024_rep28_ballot_polling_audit_bytes(&audit_bytes,&manifest_bytes,&retrieval_bytes).unwrap()).unwrap(),serde_json::to_value(&package).unwrap());
+    assert_eq!(write_ri_2024_rep28_package_files(&audit_bytes,&manifest_bytes,&retrieval_bytes,&manifest,&package).unwrap(),selected_package_bytes(&package_dir));
+    for bad in [String::from_utf8(audit_bytes.clone()).unwrap().replace("Scott Guthrie: 3418", "Scott Guthrie: -1"),String::from_utf8(audit_bytes.clone()).unwrap().replace("Scott Guthrie: 3418", "Scott Guthrie: 9223372036854775807")] {
+        assert!(import_ri_2024_rep28_ballot_polling_audit_bytes(bad.as_bytes(),&manifest_bytes,&retrieval_bytes).is_err());
+    }
+    let overflow_manifest=String::from_utf8(manifest_bytes.clone()).unwrap().replace("EV Coventry,6751", "EV Coventry,9223372036854775807");
+    assert!(import_ri_2024_rep28_ballot_polling_audit_bytes(&audit_bytes,overflow_manifest.as_bytes(),&retrieval_bytes).is_err());
     assert!(package_dir
         .join("sources/ri-2024-rep28-ballot-retrieval.csv")
         .exists());

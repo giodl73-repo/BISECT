@@ -17,9 +17,13 @@ geo-types.workspace = true
 rayon.workspace = true
 rstar.workspace = true
 thiserror.workspace = true
+csv.workspace = true
 
 # Shapefile reading (pure Rust, no GDAL)
 shapefile = "0.6"
 
 # WKB encoding for geometry output
 wkb = "0.7"
+
+[dev-dependencies]
+tempfile.workspace = true

@@ -101,7 +101,7 @@ pub fn run_short_burst(
         let chain_seed = derive_seed(burst_idx);
         burst_seeds.push(chain_seed);
 
-        let mut rng = SmallRng::seed_from_u64(chain_seed);
+        let mut rng = rand_chacha::ChaCha12Rng::seed_from_u64(chain_seed);
         let mut chain = RecomChain::new(
             adj_u32.clone(),
             pop.clone(),
@@ -111,7 +111,7 @@ pub fn run_short_burst(
         );
 
         for _ in 0..burst_length {
-            chain.step(&mut rng);
+            chain.step_portable(&mut rng);
         }
 
         // Record ENDPOINT (not minimum within burst).
@@ -171,7 +171,6 @@ pub fn run_short_burst_forest(
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
     use bisect_ensemble::forest_recom::ForestRecomChain;
-    use rand::rngs::SmallRng;
     use rand::SeedableRng;
     use sha2::Digest;
 
@@ -276,9 +275,9 @@ pub fn run_short_burst_forest(
         for step in 0..burst_length {
             let fwd_seed = derive_forward_seed(step as u32, burst_seed);
             let rev_seed = derive_reverse_seed(step as u32, burst_seed);
-            let mut rng_fwd = SmallRng::seed_from_u64(fwd_seed);
-            let mut rng_rev = SmallRng::seed_from_u64(rev_seed);
-            chain.step(&mut rng_fwd, &mut rng_rev);
+            let mut rng_fwd = rand_chacha::ChaCha12Rng::seed_from_u64(fwd_seed);
+            let mut rng_rev = rand_chacha::ChaCha12Rng::seed_from_u64(rev_seed);
+            chain.step_portable(&mut rng_fwd, &mut rng_rev);
         }
 
         // Record ENDPOINT (not minimum within burst).
@@ -338,7 +337,6 @@ pub fn run_short_burst_merge_split(
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
     use bisect_ensemble::merge_split::MergeSplitChain;
-    use rand::rngs::SmallRng;
     use rand::SeedableRng;
     use sha2::Digest;
 
@@ -443,9 +441,9 @@ pub fn run_short_burst_merge_split(
         for step in 0..burst_length {
             let fwd_seed = derive_forward_seed(step as u32, burst_seed);
             let rev_seed = derive_reverse_seed(step as u32, burst_seed);
-            let mut rng_fwd = SmallRng::seed_from_u64(fwd_seed);
-            let mut rng_rev = SmallRng::seed_from_u64(rev_seed);
-            chain.step(&mut rng_fwd, &mut rng_rev);
+            let mut rng_fwd = rand_chacha::ChaCha12Rng::seed_from_u64(fwd_seed);
+            let mut rng_rev = rand_chacha::ChaCha12Rng::seed_from_u64(rev_seed);
+            chain.step_portable(&mut rng_fwd, &mut rng_rev);
         }
 
         // Record ENDPOINT (not minimum within burst).

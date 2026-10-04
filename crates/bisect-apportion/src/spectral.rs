@@ -1,7 +1,7 @@
 use rmath_core::normalize_centered;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use thiserror::Error;
 
 pub const SPECTRAL_SUMMARY_SCHEMA_VERSION: &str = "bisect-spectral-summary-v1";
@@ -337,5 +337,176 @@ mod tests {
         adjacency[2].push(3);
         adjacency[3].push(2);
         adjacency
+    }
+}
+
+/// Shared recursive spectral schedule used by the native CLI and browser engine.
+pub fn run_spectral_recursive(
+    adjacency: &[Vec<usize>],
+    weights: &[i64],
+    k: usize,
+    tolerance: f64,
+    max_iters: usize,
+) -> Result<(Vec<usize>, serde_json::Value), String> {
+    if k == 0 || k > adjacency.len() {
+        return Err("spectral: k must be between one and the vertex count".to_string());
+    }
+    if adjacency.len() != weights.len() {
+        return Err("spectral: adjacency and weight lengths must match".to_string());
+    }
+    if max_iters == 0 || !tolerance.is_finite() || !(0.0..=1.0).contains(&tolerance)
+        || weights.iter().any(|&weight| weight < 0)
+        || weights.iter().try_fold(0i64, |sum, &weight| sum.checked_add(weight)).filter(|&sum| sum > 0).is_none()
+        || adjacency.iter().flatten().any(|&neighbor| neighbor >= adjacency.len()) {
+        return Err("spectral: invalid iterations, tolerance, weights or adjacency".into());
+    }
+    let mut assignment = vec![0usize; adjacency.len()];
+    let mut node_summaries = Vec::new();
+    split_spectral_node(
+        adjacency,
+        weights,
+        &(0..adjacency.len()).collect::<Vec<_>>(),
+        k,
+        0,
+        tolerance,
+        max_iters,
+        &mut assignment,
+        &mut node_summaries,
+    )?;
+    let edge_cut = count_edge_cuts_zero_based(&assignment, adjacency);
+    Ok((
+        assignment,
+        serde_json::json!({
+            "schema_version": "bisect-spectral-run-summary-v1",
+            "method": "spectral",
+            "max_iters": max_iters,
+            "tolerance": tolerance,
+            "k": k,
+            "edge_cut": edge_cut,
+            "nodes": node_summaries,
+        }),
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn split_spectral_node(
+    adjacency: &[Vec<usize>],
+    weights: &[i64],
+    vertices: &[usize],
+    k: usize,
+    district_offset: usize,
+    tolerance: f64,
+    max_iters: usize,
+    assignment: &mut [usize],
+    node_summaries: &mut Vec<serde_json::Value>,
+) -> Result<(), String> {
+    if k == 1 {
+        for &vertex in vertices {
+            assignment[vertex] = district_offset;
+        }
+        return Ok(());
+    }
+    let local_index: HashMap<usize, usize> = vertices
+        .iter()
+        .enumerate()
+        .map(|(local, &global)| (global, local))
+        .collect();
+    let local_adjacency: Vec<Vec<usize>> = vertices
+        .iter()
+        .map(|&global| {
+            adjacency[global]
+                .iter()
+                .filter_map(|neighbor| local_index.get(neighbor).copied())
+                .collect()
+        })
+        .collect();
+    let local_weights: Vec<i64> = vertices.iter().map(|&global| weights[global]).collect();
+    let left_k = k / 2;
+    let right_k = k - left_k;
+    let result = crate::spectral_bisect(
+        &local_adjacency,
+        &local_weights,
+        crate::SpectralConfig {
+            max_iters,
+            tolerance,
+            target_fraction: left_k as f64 / k as f64,
+        },
+    )
+    .map_err(|e| format!("spectral split failed: {e}"))?;
+    node_summaries.push(serde_json::to_value(&result.summary).map_err(|e| e.to_string())?);
+
+    let mut left = Vec::new();
+    let mut right = Vec::new();
+    for (local, &global) in vertices.iter().enumerate() {
+        if result.assignment[local] == 0 {
+            left.push(global);
+        } else {
+            right.push(global);
+        }
+    }
+    split_spectral_node(
+        adjacency,
+        weights,
+        &left,
+        left_k,
+        district_offset,
+        tolerance,
+        max_iters,
+        assignment,
+        node_summaries,
+    )?;
+    split_spectral_node(
+        adjacency,
+        weights,
+        &right,
+        right_k,
+        district_offset + left_k,
+        tolerance,
+        max_iters,
+        assignment,
+        node_summaries,
+    )
+}
+
+fn count_edge_cuts_zero_based(assignment: &[usize], adjacency: &[Vec<usize>]) -> usize {
+    rgraph_core::undirected_edge_cut(adjacency, assignment)
+        .expect("validated zero-based spectral adjacency and assignment")
+}
+
+
+#[cfg(test)]
+mod recursive_tests {
+    use super::*;
+    fn grid() -> (Vec<Vec<usize>>,Vec<i64>) {
+        let width=12;let n=width*width;
+        let adjacency=(0..n).map(|i| {
+            let mut neighbors=Vec::new();
+            if i%width>0 {neighbors.push(i-1);} if i%width<width-1 {neighbors.push(i+1);}
+            if i>=width {neighbors.push(i-width);} if i<n-width {neighbors.push(i+width);}
+            neighbors
+        }).collect();
+        (adjacency,vec![100;n])
+    }
+    #[test]
+    fn recursive_schedule_preserves_summary_and_every_vertex() {
+        let (adjacency,weights)=grid();
+        for k in [1,2,3,6] {
+            let (assignment,summary)=run_spectral_recursive(&adjacency,&weights,k,0.05,200).unwrap();
+            assert_eq!(assignment.len(),weights.len());
+            assert!(assignment.iter().all(|&district|district<k));
+            assert_eq!(summary["nodes"].as_array().unwrap().len(),k-1);
+            assert_eq!(summary["edge_cut"].as_u64().unwrap() as usize,rgraph_core::undirected_edge_cut(&adjacency,&assignment).unwrap());
+            assert_eq!(run_spectral_recursive(&adjacency,&weights,k,0.05,200).unwrap(),(assignment,summary));
+        }
+    }
+    #[test]
+    fn recursive_rejects_invalid_dimensions_and_numeric_inputs() {
+        let (adjacency,weights)=grid();
+        for (k,tolerance,iters) in [(0,0.05,200),(145,0.05,200),(2,f64::NAN,200),(2,0.05,0)] {
+            assert!(run_spectral_recursive(&adjacency,&weights,k,tolerance,iters).is_err());
+        }
+        assert!(run_spectral_recursive(&adjacency,&weights[..2],2,0.05,200).is_err());
+        assert!(run_spectral_recursive(&[vec![10],vec![0]],&[1,1],2,0.05,200).is_err());
+        assert!(run_spectral_recursive(&[vec![1],vec![0]],&[i64::MAX,i64::MAX],2,0.05,200).is_err());
     }
 }

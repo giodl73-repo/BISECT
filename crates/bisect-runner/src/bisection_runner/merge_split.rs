@@ -31,7 +31,7 @@ pub fn run_merge_split(
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
     use bisect_ensemble::merge_split::MergeSplitChain;
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
     use rand::SeedableRng;
     use sha2::Digest;
 
@@ -108,10 +108,10 @@ pub fn run_merge_split(
             u64::from_le_bytes(d[..8].try_into().unwrap())
         };
 
-        let mut rng_step = SmallRng::seed_from_u64(step_seed);
-        let mut rng_rev = SmallRng::seed_from_u64(reverse_seed);
+        let mut rng_step = ChaCha12Rng::seed_from_u64(step_seed);
+        let mut rng_rev = ChaCha12Rng::seed_from_u64(reverse_seed);
 
-        let rec = chain.step(&mut rng_step, &mut rng_rev);
+        let rec = chain.step_portable(&mut rng_step, &mut rng_rev);
         if rec.accepted {
             // Compute edge cut from the current chain assignment.
             let ec = {
@@ -171,9 +171,9 @@ pub fn run_parallel_tempering(
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
     use bisect_ensemble::parallel_tempering::{
-        replica_rngs, replica_seed, swap_seed, ParallelTemperingChain,
+        replica_rngs_with, replica_seed, swap_seed, ParallelTemperingChain,
     };
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
     use rand::SeedableRng;
 
     let n = adjacency.len();
@@ -226,18 +226,18 @@ pub fn run_parallel_tempering(
     // 5. Run `steps` steps.
     for step in 1..=steps {
         // Build per-replica (rng_fwd, rng_rev) pairs.
-        let mut rng_replicas: Vec<(SmallRng, SmallRng)> = (0..n_replicas)
+        let mut rng_replicas: Vec<(ChaCha12Rng, ChaCha12Rng)> = (0..n_replicas)
             .map(|i| {
                 let rseed = replica_seed(base_seed, i as u32, step as u64);
-                replica_rngs(rseed)
+                replica_rngs_with(rseed)
             })
             .collect();
 
         // Swap RNG: pair index 0 covers all adjacent swaps for this step.
         let sseed = swap_seed(base_seed, step as u64, 0u32);
-        let mut rng_swap = SmallRng::seed_from_u64(sseed);
+        let mut rng_swap = ChaCha12Rng::seed_from_u64(sseed);
 
-        chain.step(&mut rng_replicas, &mut rng_swap);
+        chain.step_portable(&mut rng_replicas, &mut rng_swap);
     }
 
     // 6. Select plan from cold chain at percentile p.
@@ -261,7 +261,7 @@ pub fn run_parallel_tempering(
 /// districts (those with `minority_vap[t]` fraction >= `vap_threshold`).
 ///
 /// `minority_vap`: per-tract minority VAP fraction (0.0–1.0), aligned to `adjacency`.
-/// Returns the plan at percentile `p` of accepted cold-chain EC distribution.
+/// Returns the plan at percentile `p` of initial and accepted unweighted-cut records.
 pub fn run_vra_recom(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
@@ -274,15 +274,59 @@ pub fn run_vra_recom(
     vap_threshold: f64,
     minority_vap: &[f64],
 ) -> Result<HashMap<usize, usize>, String> {
+    run_vra_recom_detailed(adjacency, vertex_weights, edge_weights, num_districts, niter,
+        base_seed, steps, p, vap_threshold, minority_vap).map(|(plan, _)| plan)
+}
+
+/// Execution evidence for the native unweighted tract-mean preservation rule.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct VraRecomReport {
+    pub initial_assignment: Vec<u32>,
+    pub protected_districts: Vec<u32>,
+    pub proposals: u64,
+    pub accepted_moves: u64,
+    pub mh_rejections: u64,
+    pub minority_rejections: u64,
+    pub retained_records: usize,
+    pub selected_rank: usize,
+}
+
+impl VraRecomReport {
+    fn initial(assignment: Vec<u32>, minority: &[f64], k: usize, threshold: f64) -> Self {
+        let mut sum = vec![0.0; k + 1];
+        let mut count = vec![0usize; k + 1];
+        for (i, &d) in assignment.iter().enumerate() { sum[d as usize] += minority[i];count[d as usize] += 1; }
+        let protected_districts = (1..=k).filter(|&d| count[d] > 0 && sum[d] / count[d] as f64 >= threshold).map(|d| d as u32).collect();
+        Self { initial_assignment: assignment, protected_districts, proposals: 0, accepted_moves: 0,
+            mh_rejections: 0, minority_rejections: 0, retained_records: 1, selected_rank: 0 }
+    }
+}
+
+pub fn run_vra_recom_detailed(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    niter: u32,
+    base_seed: u64,
+    steps: usize,
+    p: f64,
+    vap_threshold: f64,
+    minority_vap: &[f64],
+) -> Result<(HashMap<usize, usize>, VraRecomReport), String> {
     use bisect_ensemble::vra_recom::VraRecomChain;
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
     use rand::SeedableRng;
     use sha2::Digest;
 
     let n = adjacency.len();
 
+    if n == 0 || minority_vap.len() != n || minority_vap.iter().any(|v| !v.is_finite() || !(0.0..=1.0).contains(v))
+        || !vap_threshold.is_finite() || !(0.0..=1.0).contains(&vap_threshold) {
+        return Err("Supply complete finite minority fractions and a threshold between zero and one.".into());
+    }
     if num_districts <= 1 {
-        return Ok((0..n).map(|i| (i, 1)).collect());
+        return Ok(((0..n).map(|i| (i, 1)).collect(), VraRecomReport::initial(vec![1;n], minority_vap, 1, vap_threshold)));
     }
 
     // Build initial plan from METIS.
@@ -297,9 +341,6 @@ pub fn run_vra_recom(
         None,
     )?;
 
-    if steps == 0 {
-        return Ok(initial);
-    }
 
     // Convert adjacency Vec<Vec<usize>> → Vec<Vec<u32>>.
     let local_adj: Vec<Vec<u32>> = adjacency
@@ -311,6 +352,9 @@ pub fn run_vra_recom(
     let initial_assignment: Vec<u32> = (0..n)
         .map(|i| initial.get(&i).copied().unwrap_or(1) as u32)
         .collect();
+
+    let mut report = VraRecomReport::initial(initial_assignment.clone(), minority_vap, num_districts, vap_threshold);
+    if steps == 0 { return Ok((initial, report)); }
 
     let pop: Vec<i64> = vertex_weights.to_vec();
     let mvap: Vec<f64> = minority_vap.to_vec();
@@ -354,10 +398,10 @@ pub fn run_vra_recom(
             u64::from_le_bytes(d[..8].try_into().unwrap())
         };
 
-        let mut rng_forward = SmallRng::seed_from_u64(forward_seed);
-        let mut rng_reverse = SmallRng::seed_from_u64(reverse_seed);
+        let mut rng_forward = ChaCha12Rng::seed_from_u64(forward_seed);
+        let mut rng_reverse = ChaCha12Rng::seed_from_u64(reverse_seed);
 
-        let rec = chain.step(&mut rng_forward, &mut rng_reverse);
+        let rec = chain.step_portable(&mut rng_forward, &mut rng_reverse);
         if rec.accepted {
             let ec = rec.inner.cut_edges;
             accepted.push((ec, step_idx + 1, chain.inner.assignment.clone()));
@@ -380,5 +424,11 @@ pub fn run_vra_recom(
 
     let _ = edge_weights;
 
-    Ok(assignment)
+    report.proposals = chain.steps_taken;
+    report.accepted_moves = chain.steps_accepted;
+    report.mh_rejections = chain.mh_rejections;
+    report.minority_rejections = chain.vra_rejections;
+    report.retained_records = accepted_count;
+    report.selected_rank = rank;
+    Ok((assignment, report))
 }

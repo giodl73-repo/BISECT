@@ -20,6 +20,18 @@ pub fn run_nway_partition(
     niter: u32,
     seed: Option<u64>,
 ) -> Result<HashMap<usize, usize>, String> {
+    run_nway_partition_tuned(adjacency,vertex_weights,edge_weights,num_districts,ufactor,niter,seed,"cut",1)
+}
+
+/// Pure Rust refinement objective and internal trial controls. Trial selection
+/// retains metis-core's population-excess then edge-cut ordering.
+pub fn run_nway_partition_tuned(
+    adjacency:&[Vec<usize>], vertex_weights:&[i64], edge_weights:&HashMap<(usize,usize),f64>,
+    num_districts:usize, ufactor:f64, niter:u32, seed:Option<u64>, objective:&str, trials:u32,
+) -> Result<HashMap<usize,usize>,String> {
+    if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials) {return Err("Invalid n-way objective or internal trial count.".into());}
+    #[cfg(feature="c-ffi-engine")]
+    if objective!="cut" || trials!=1 {return Err("Advanced n-way controls require the pure Rust engine.".into());}
     let n = adjacency.len();
     if num_districts == 1 {
         return Ok((0..n).map(|i| (i, 1)).collect());
@@ -90,12 +102,18 @@ pub fn run_nway_partition(
             )
             .map_err(|e| format!("metis-core n-way graph: {e}"))?;
             let uf_u32 = (uf_int as u32).clamp(1, 1000);
-            // Recursive bisection balances each split into two equal halves, so balance
-            // compounds predictably on low-connectivity graphs.
-            let mut params = RustNwayParams::recursive()
+            // N-way must use the direct k-way algorithm, matching its native contract.
+            let mut params = RustNwayParams::kway()
+                .with_objective(if objective=="volume" {metis_core::ObjectiveType::Volume} else {metis_core::ObjectiveType::Cut})
+                .with_ncuts(trials)
                 .with_ufactor(uf_u32)
                 .with_niter(niter as u32)
-                .with_coarsen_to(20);
+                .with_contiguity(true)
+                .with_min_connectivity(true)
+                // Retain enough coarse vertices for every requested district.
+                // A fixed target of 20 can collapse a large k-way problem to
+                // one indivisible heavy vertex per part before refinement.
+                .with_coarsen_to((num_districts as u32).saturating_mul(40).max(20));
             if let Some(seed) = seed {
                 params = params.with_seed(seed);
             }
@@ -115,40 +133,29 @@ pub fn run_nway_partition(
         .collect())
 }
 
-/// Run the full level-parallel bisection for k districts.
-/// Returns HashMap<tract_index, district_id> (1-based district IDs).
-///
-/// RACE CONDITION FIX: tract data extracted from node_tracts sequentially
-/// BEFORE par_iter, so closures own their data with no shared references.
-///
-/// SORT FIX: leaves sorted by (depth, path) not plain lex, which gives
-/// correct BFS order for mixed-length binary paths.
-/// Run recursive bisection with mathematically-derived per-node ufactor.
-///
-/// **Key insight**: at each bisection node producing `k` final districts, the allowed
-/// per-split imbalance must be `balance_tolerance / k` — not a fixed value — so that
-/// cumulative error across all splits never exceeds `balance_tolerance` per final district.
-///
-/// For k=98 (WA house) with 10% target: root ufactor=0.102% (very tight), leaf ufactor=5% (loose).
-/// This prevents the compounding error (28% deviation) seen with fixed ufactor per depth.
-///
-/// Formula: `node_ufactor = 1.0 + balance_tolerance_frac / node.k`
-/// GeoSection: find the natural geographic split ratio.
-///
-/// At the first bisection level (depth 0), try ALL feasible split ratios
-/// (1:k-1, 2:k-2, ..., ⌊k/2⌋:⌈k/2⌉), each with `seeds_per_ratio` seeds.
-/// The ratio with the globally minimum edge-cut is the "natural" ratio.
-/// All subsequent levels use the standard ⌊k/2⌋:⌈k/2⌉ split.
-///
-/// When `vertex_areas_m2` is Some, activates AreaSection mode (ncon=2):
-///   - Interleaves population and area (hectares) as dual vertex weights.
-/// ProportionalSection (T.5): partisan-proportional bisection using HH seat allocation.
+/// Round the Democratic quota at its geometric-mean threshold, then use the
+/// complement for the other child. Both children must receive at least one seat.
+/// This is the existing HH-style quota rounding rule, not an outcome guarantee.
+pub fn proportional_section_seat_counts(d: f64, seats: usize) -> Result<(usize,usize),String> {
+    if !d.is_finite() || !(0.0..=1.0).contains(&d) || seats < 2 {
+        return Err("ProportionalSection seat allocation requires a finite share and at least two seats.".into());
+    }
+    let quota = d.clamp(0.01,0.99)*seats as f64;
+    let floor = quota.floor() as usize;
+    let threshold = ((floor as f64)*(floor as f64+1.0)).sqrt();
+    let rounded = if floor > 0 && quota > threshold {floor+1} else {floor.max(1)};
+    let left = rounded.clamp(1,seats-1);
+    Ok((left,seats-left))
+}
+
+/// ProportionalSection (T.5): root population/vote constraint with quota rounding.
 ///
 /// Uses ncon=2 with vertex weights [population, D_votes]. The tpwgts are set by
 /// the T.5 formula: [k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] where d is the
-/// statewide Democratic fraction and k_D/k_R are the Huntington-Hill seat counts.
+/// statewide two-party Democratic fraction. k_D is rounded at the geometric
+/// mean threshold, k_R is its complement, and both are clamped to positive counts.
 ///
-/// Only the HH-proportional ratio is tried (not all ratios). Multiple seeds.
+/// Only this rounded quota ratio is tried (not all ratios). Multiple seeds.
 /// Recursive calls use ncon=1 (partisan constraint only at first bisection).
 ///
 /// Returns (assignments, k_D, k_R, best_ec, d_statewide).
@@ -175,31 +182,25 @@ pub fn run_proportional_section(
     String,
 > {
     let n = adjacency.len();
-    if num_districts <= 1 {
-        let asgn = (0..n).map(|i| (i, 1)).collect();
-        return Ok((asgn, 1, 0, 0.0, 0.5));
+    if n == 0 || vertex_weights.len()!=n || vertex_d_votes.len()!=n || vertex_two_party.len()!=n
+        || num_districts==0 || num_districts>n || seeds==0 || niter==0
+        || !balance_tolerance.is_finite() || !(0.0..=1.0).contains(&balance_tolerance)
+        || !eta.is_finite() || !(1.0..=2.0).contains(&eta)
+        || vertex_weights.iter().any(|&p|p<0)
+        || vertex_d_votes.iter().zip(vertex_two_party).any(|(&dv,&tv)| !dv.is_finite() || dv.is_sign_negative() || !tv.is_finite() || tv.is_sign_negative() || dv>tv)
+        || adjacency.iter().enumerate().any(|(u,ns)|ns.iter().any(|&v|v>=n || v==u || !adjacency[v].contains(&u))) {
+        return Err("Invalid ProportionalSection graph, election dimensions, counts or options.".into());
     }
-
-    // Compute statewide D fraction
-    let total_pop: i64 = vertex_weights.iter().sum();
+    let total_pop = vertex_weights.iter().try_fold(0i64,|sum,&p|sum.checked_add(p))
+        .ok_or("ProportionalSection population total overflows i64.")?;
     let total_d: f64 = vertex_d_votes.iter().sum();
     let total_two_party: f64 = vertex_two_party.iter().sum();
-    // d = Democratic fraction of TWO-PARTY vote (not census population)
-    let d = (total_d / total_two_party.max(1.0)).clamp(0.01, 0.99);
-
-    // Huntington-Hill allocation
-    let k_d_float = d * num_districts as f64;
-    let k_d_floor = k_d_float as usize;
-    let k_d = if k_d_floor > 0
-        && k_d_float
-            > (k_d_floor * (k_d_floor + 1)) as f64
-                / ((k_d_floor as f64).sqrt() * (k_d_floor as f64 + 1.0).sqrt())
-    {
-        k_d_floor + 1
-    } else {
-        k_d_floor.max(1)
-    };
-    let k_r = num_districts - k_d;
+    if total_pop==0 || !total_d.is_finite() || total_d<=0.0 || !total_two_party.is_finite() || total_two_party<=0.0 {
+        return Err("ProportionalSection requires positive finite population, Democratic and two-party totals.".into());
+    }
+    let d = (total_d/total_two_party).clamp(0.01,0.99);
+    if num_districts == 1 {return Ok(((0..n).map(|i|(i,1)).collect(),1,0,0.0,d));}
+    let (k_d,k_r) = proportional_section_seat_counts(d,num_districts)?;
 
     eprintln!(
         "[proportional] d={:.3} k_D={} k_R={} eta={}",
@@ -280,7 +281,9 @@ pub fn run_proportional_section(
     }
 
     // Actual D fraction achieved
-    let d_left_actual: f64 = best_left.iter().map(|&v| vertex_d_votes[v]).sum::<f64>() / total_d;
+    let mut left_indices: Vec<_> = best_left.iter().copied().collect();
+    left_indices.sort_unstable();
+    let d_left_actual: f64 = left_indices.iter().map(|&v| vertex_d_votes[v]).sum::<f64>() / total_d;
     eprintln!(
         "[proportional] winner: D_left={:.1}% (target {:.1}%), EC={:.0}km",
         d_left_actual * 100.0,
@@ -313,6 +316,7 @@ pub fn run_proportional_section(
         1,
         &crate::geosection_orientation::CentroidMap::new(),
         0.0,
+        1,
     )?;
     let right_asgn = recurse_geosection(
         &best_right,
@@ -326,6 +330,7 @@ pub fn run_proportional_section(
         k_d + 1,
         &crate::geosection_orientation::CentroidMap::new(),
         0.0,
+        1,
     )?;
 
     let mut assignments = left_asgn;
@@ -355,6 +360,44 @@ pub fn run_geosection(
     niter: u32,
     seeds_per_ratio: usize,
     intermediate_dir: Option<&Path>,
+    centroids: &crate::geosection_orientation::CentroidMap,
+    lambda: f64,
+    vertex_areas_m2: Option<&[f64]>,
+    area_swing: f64,
+    minority_vap: Option<&[f64]>,
+    w_vra: f64,
+    mka_theta_override: Option<f64>,
+) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
+    run_geosection_seeded(
+        adjacency,
+        vertex_weights,
+        edge_weights,
+        num_districts,
+        balance_tolerance,
+        niter,
+        seeds_per_ratio,
+        intermediate_dir,
+        centroids,
+        lambda,
+        vertex_areas_m2,
+        area_swing,
+        minority_vap,
+        w_vra,
+        mka_theta_override,
+        1,
+    )
+}
+
+/// Ratio search using the configured consecutive seed walk at every level.
+pub fn run_geosection_seeded(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seeds_per_ratio: usize,
+    intermediate_dir: Option<&Path>,
     // Phase 2: centroid map for directional penalty (empty = no penalty)
     centroids: &crate::geosection_orientation::CentroidMap,
     // Phase 2: directional penalty strength (0.0 = off, use GeoSection without penalty)
@@ -365,7 +408,7 @@ pub fn run_geosection(
     area_swing: f64,
     // VRASection (T.7): per-vertex minority VAP counts. None = standard GeoSection.
     // When Some, ratio selection score is: normalised - w_vra * alignment * normalised.max(1)
-    // where alignment = |MVAP_frac(left) - MVAP_frac(right)|.
+    // where alignment = 2 * |left share of total minority mass - 0.5|.
     minority_vap: Option<&[f64]>,
     // VRASection alignment weight (default 0.40). Only consulted when minority_vap is Some.
     w_vra: f64,
@@ -373,25 +416,86 @@ pub fn run_geosection(
     // bias at the top level using theta as the cut angle (radians) computed by
     // split_subgraph_mka_direction(). Ignored when centroids map is non-empty (GeoSection Phase 2).
     mka_theta_override: Option<f64>,
+    base_seed: u64,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
+    run_geosection_seeded_tuned(adjacency,vertex_weights,edge_weights,num_districts,balance_tolerance,niter,seeds_per_ratio,intermediate_dir,centroids,lambda,vertex_areas_m2,area_swing,minority_vap,w_vra,mka_theta_override,base_seed,"cut",1)
+}
+
+/// Ratio search with explicit METIS refinement controls at each recursive node.
+#[allow(clippy::too_many_arguments)]
+pub fn run_geosection_seeded_tuned(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seeds_per_ratio: usize,
+    intermediate_dir: Option<&Path>,
+    // Phase 2: centroid map for directional penalty (empty = no penalty)
+    centroids: &crate::geosection_orientation::CentroidMap,
+    // Phase 2: directional penalty strength (0.0 = off, use GeoSection without penalty)
+    lambda: f64,
+    // AreaSection mode: ALAND in m² per vertex. None = standard GeoSection (ncon=1).
+    vertex_areas_m2: Option<&[f64]>,
+    // AreaSection area imbalance tolerance (ubvec[1]). Default 1.10 = ±10%.
+    area_swing: f64,
+    // VRASection (T.7): per-vertex minority VAP counts. None = standard GeoSection.
+    // When Some, ratio selection score is: normalised - w_vra * alignment * normalised.max(1)
+    // where alignment = 2 * |left share of total minority mass - 0.5|.
+    minority_vap: Option<&[f64]>,
+    // VRASection alignment weight (default 0.40). Only consulted when minority_vap is Some.
+    w_vra: f64,
+    // MKA warm-start (AreaSection only): when Some(theta), applies a directional edge-weight
+    // bias at the top level using theta as the cut angle (radians) computed by
+    // split_subgraph_mka_direction(). Ignored when centroids map is non-empty (GeoSection Phase 2).
+    mka_theta_override: Option<f64>,
+    base_seed: u64,
+    objective: &str,
+    trials: u32,
+) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
+    #[cfg(feature="c-ffi-engine")]
+    if objective!="cut" || trials!=1 {return Err("Advanced GeoSection METIS controls require the pure Rust engine.".into());}
     let n = adjacency.len();
+    if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials)
+        || vertex_weights.len() != n
+        || seeds_per_ratio == 0
+        || num_districts == 0
+        || num_districts > n
+        || minority_vap.is_some_and(|mass|mass.len()!=n||mass.iter().any(|v|!v.is_finite()||*v<0.0)||!mass.iter().sum::<f64>().is_finite())
+        || (minority_vap.is_some()&&(!w_vra.is_finite()||!(0.0..=1.0).contains(&w_vra)))
+        || vertex_areas_m2.is_some_and(|areas| {
+            areas.len() != n
+                || areas.iter().any(|v| !v.is_finite() || *v < 0.0)
+                || areas.iter().sum::<f64>() <= 0.0
+        })
+    {
+        return Err("Invalid GeoSection/AreaSection input dimensions or budget.".into());
+    }
 
     if num_districts == 1 {
         let asgn = (0..n).map(|i| (i, 1)).collect();
         return Ok((asgn, 1, 0, 0.0));
     }
-    if num_districts == 2 {
+    if num_districts == 2 && vertex_areas_m2.is_none() && seeds_per_ratio == 1 {
         // Only one ratio possible: 1:1
-        let asgn = run_all_splits(
+        let asgn = if objective=="cut" && trials==1 { run_all_splits(
             adjacency,
             vertex_weights,
             edge_weights,
             2,
             balance_tolerance,
             niter,
-            Some(1),
+            Some(base_seed),
             intermediate_dir,
-        )?;
+        )? } else { run_all_splits_tuned(adjacency,vertex_weights,edge_weights,2,balance_tolerance,niter,Some(base_seed),None,objective,trials)? };
+        if objective!="cut" || trials!=1 {
+            if let Some(dir)=intermediate_dir {
+                let round=dir.join("depth_01");
+                let _=std::fs::create_dir_all(&round);
+                let _=write_intermediate_round(&round,&asgn);
+            }
+        }
         let ec: f64 = edge_weights
             .iter()
             .map(
@@ -435,7 +539,7 @@ pub fn run_geosection(
 
         // Lorenz pre-filtering: skip ratios where area balance is geometrically impossible
         let area_max = 0.5 * area_swing;
-        let area_min = 0.5 / area_swing;
+        let area_min = 1.0 - area_max;
         let (_, natural_pop, suggested_k) = population_lorenz(vertex_weights, areas, num_districts);
         eprintln!("[areasection] Lorenz: dense-half contains {:.1}% of population -> natural split ~{}:{}",
                   natural_pop * 100.0, num_districts - suggested_k, suggested_k);
@@ -551,8 +655,9 @@ pub fn run_geosection(
         let mut ratio_best_left = HashSet::new();
         let mut ratio_best_right = HashSet::new();
 
-        for seed in 1..=(seeds_per_ratio as u64) {
-            match split_subgraph(
+        for index in 0..seeds_per_ratio {
+            let seed = base_seed.wrapping_add(index as u64);
+            match split_subgraph_tuned(
                 adjacency,
                 &vwgt_flat,
                 ncon,
@@ -563,8 +668,27 @@ pub fn run_geosection(
                 Some(seed),
                 tpwgts.clone(),
                 ubvec.clone(),
+                objective, trials,
             ) {
                 Ok((l, r)) => {
+                    if ncon == 2 {
+                        let pop_total = vertex_weights.iter().sum::<i64>() as f64;
+                        let left_pop = l.iter().map(|&v| vertex_weights[v]).sum::<i64>() as f64;
+                        let areas = vertex_areas_m2.unwrap();
+                        let total_area = areas.iter().sum::<f64>();
+                        let left_area = l.iter().map(|&v| areas[v]).sum::<f64>();
+                        if l.is_empty()
+                            || r.is_empty()
+                            || !is_connected_subset(adjacency, &l)
+                            || !is_connected_subset(adjacency, &r)
+                            || left_pop > pop_total * pop_frac * 1.001 + 1e-6
+                            || pop_total - left_pop > pop_total * (1.0 - pop_frac) * 1.001 + 1e-6
+                            || left_area > total_area * 0.5 * area_swing + 1e-6
+                            || total_area - left_area > total_area * 0.5 * area_swing + 1e-6
+                        {
+                            continue;
+                        }
+                    }
                     // EC measured on original (unbiased) edge weights for fair comparison.
                     let ec = weighted_edge_cut(edge_weights, &l);
                     if ec < ratio_best {
@@ -594,13 +718,14 @@ pub fn run_geosection(
         let normalised = ratio_best / smaller.sqrt();
 
         // VRASection (T.7): subtract alignment bonus from the normalised score.
-        // A(split) = |MVAP_frac(left) - MVAP_frac(right)| (0=equal, 1=fully concentrated)
+        // A(split) = 2 * |left share of total minority mass - 0.5|.
         // score(ratio) = normalised - w_vra * alignment * normalised.max(1.0)
         // Lower score = preferred. Subtracting means concentrated splits win over dispersed.
         let selection_score = if let Some(mvap) = minority_vap {
             let mvap_total: f64 = mvap.iter().sum();
             let score = if mvap_total > 0.0 {
-                let mvap_left: f64 = ratio_best_left.iter().map(|&v| mvap[v]).sum();
+                // Fixed graph-index order is required for portable scores.
+                let mvap_left: f64 = (0..n).filter(|v|ratio_best_left.contains(v)).map(|v| mvap[v]).sum();
                 let alignment = (mvap_left / mvap_total - 0.5).abs() * 2.0;
                 normalised - w_vra * alignment * normalised.max(1.0)
             } else {
@@ -664,6 +789,12 @@ pub fn run_geosection(
     } else {
         "geosection"
     };
+    if best_left == 0 || !best_ec.is_finite() {
+        return Err(format!(
+            "{mode_tag}: no sampled feasible root split ({} seeds per ratio)",
+            seeds_per_ratio
+        ));
+    }
     eprintln!(
         "[{mode_tag}] natural ratio {}:{} at {:.0}km (normalised={:.1})",
         best_left,
@@ -678,7 +809,7 @@ pub fn run_geosection(
             let area_left: f64 = best_left_set.iter().map(|&v| areas[v]).sum();
             let total_area: f64 = areas.iter().sum();
             let area_frac = area_left / total_area;
-            let area_min = 0.5 / area_swing;
+            let area_min = 1.0 - 0.5 * area_swing;
             let area_max = 0.5 * area_swing;
             let in_bounds = area_frac >= area_min && area_frac <= area_max;
             let pop_left: i64 = best_left_set.iter().map(|&v| vertex_weights[v]).sum();
@@ -708,7 +839,7 @@ pub fn run_geosection(
 
     // Recurse: each half finds its own natural ratio with its own orientation.
     // Recursive calls always use ncon=1 (area constraint only at the first level).
-    let left_asgn = recurse_geosection(
+    let left_asgn = recurse_geosection_tuned(
         &best_left_set,
         adjacency,
         vertex_weights,
@@ -720,8 +851,10 @@ pub fn run_geosection(
         1,
         centroids,
         lambda,
+        base_seed,
+        objective, trials,
     )?;
-    let right_asgn = recurse_geosection(
+    let right_asgn = recurse_geosection_tuned(
         &best_right_set,
         adjacency,
         vertex_weights,
@@ -733,6 +866,8 @@ pub fn run_geosection(
         best_left + 1,
         centroids,
         lambda,
+        base_seed,
+        objective, trials,
     )?;
 
     let mut assignments = left_asgn;
@@ -767,6 +902,26 @@ pub(crate) fn recurse_geosection(
     district_base: usize,
     centroids: &crate::geosection_orientation::CentroidMap,
     lambda: f64,
+    base_seed: u64,
+) -> Result<HashMap<usize, usize>, String> {
+    recurse_geosection_tuned(verts,adjacency,vertex_weights,edge_weights,k,balance_tolerance,niter,seeds_per_ratio,district_base,centroids,lambda,base_seed,"cut",1)
+}
+
+fn recurse_geosection_tuned(
+    verts: &HashSet<usize>,
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    k: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seeds_per_ratio: usize,
+    district_base: usize,
+    centroids: &crate::geosection_orientation::CentroidMap,
+    lambda: f64,
+    base_seed: u64,
+    objective: &str,
+    trials: u32,
 ) -> Result<HashMap<usize, usize>, String> {
     if k == 0 {
         return Ok(HashMap::new());
@@ -813,7 +968,7 @@ pub(crate) fn recurse_geosection(
     // applied to local_ew above; run_geosection sees the modified weights.
     // Always ncon=1 for recursive levels (area constraint only at first level).
     let empty_centroids = crate::geosection_orientation::CentroidMap::new();
-    let (local_asgn, _, _, _) = run_geosection(
+    let (local_asgn, _, _, _) = run_geosection_seeded_tuned(
         &local_adj,
         &local_vw,
         &local_ew,
@@ -829,6 +984,8 @@ pub(crate) fn recurse_geosection(
         None,
         0.0,  // recursive: no VRA alignment at sub-levels
         None, // recursive: no MKA override at sub-levels
+        base_seed,
+        objective, trials,
     )?;
 
     if local_asgn.len() < sorted.len().saturating_sub(1) {

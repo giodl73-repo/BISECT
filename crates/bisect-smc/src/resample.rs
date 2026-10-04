@@ -1,7 +1,7 @@
 //! ESS computation, Kahan softmax, and systematic resampling for SMC.
 //! Per spec §2.5 and §7 (L0 test invariants).
 
-use rand::rngs::SmallRng;
+use rand_chacha::ChaCha12Rng;
 use rand::{Rng, SeedableRng};
 
 /// Effective Sample Size from log-weights.
@@ -99,7 +99,7 @@ pub fn systematic_resample(n: usize, log_weights: &[f64], seed: u64) -> (Vec<usi
         *last = 1.0;
     }
 
-    let mut rng = SmallRng::seed_from_u64(seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(seed);
     // Single uniform draw in [0, 1/N)
     let u: f64 = rng.gen::<f64>() / n as f64;
 

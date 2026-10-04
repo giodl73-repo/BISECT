@@ -22,3 +22,5 @@ pub mod bisection_runner;
 pub mod geosection_orientation;
 pub mod ilp_audit;
 pub mod runner;
+#[cfg(target_arch = "wasm32")]
+mod serial;

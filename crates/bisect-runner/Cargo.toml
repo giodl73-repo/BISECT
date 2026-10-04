@@ -12,7 +12,6 @@ bisect-data      = { path = "../bisect-data" }
 bisect-ensemble  = { path = "../bisect-ensemble" }
 bisect-ilp       = { path = "../bisect-ilp" }
 bisect-multiscale = { path = "../bisect-multiscale" }
-bisect-report    = { path = "../bisect-report" }
 bisect-smc       = { path = "../bisect-smc" }
 metis-core       = { workspace = true }
 rgraph-core      = { path = "../rgraph-core" }
@@ -20,6 +19,7 @@ rmath-core       = { path = "../rmath-core" }
 # metis is only compiled when the c-ffi-engine feature is enabled.
 metis            = { workspace = true, optional = true }
 rand.workspace        = true
+rand_chacha = "0.3"
 rayon.workspace       = true
 serde.workspace       = true
 serde_json.workspace  = true

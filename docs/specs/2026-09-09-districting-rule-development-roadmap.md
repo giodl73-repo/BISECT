@@ -124,3 +124,51 @@ prove honest publication time or legal validity.
 Review: `signals/roles/check/districting-rule-roadmap-roles-check-2026-09-09.md`.
 First output: `docs/experiments/county-preservation-readiness-2020/analysis.json`.
 Subsequent work is gated by observed evidence, not by a promise of improvement.
+
+## Validation sequence added 2026-10-02
+
+Preserve the immediate-cut rule before another national sweep. Bounded
+regressions now demonstrate that the current locally optimal recursive rule
+can fail to complete despite an alternative completable root, and that perfect
+root balance does not establish final-leaf balance. The witnesses are in
+`crates/bisect-ilp/src/certified_tree.rs`; run
+`cargo test -p bisect-ilp --locked --offline certified_tree::tests`.
+They describe synthetic instances and do not invalidate the separately
+verified operational State assignments.
+
+1. **Immediate-cut contract and failure semantics (W2/W3):** keep population,
+   boundary and canonical ranking local to the current region. Descendant
+   outcomes must not change cut eligibility or ranking under this rule.
+   Specify how execution reports an infeasible descendant and separately checks
+   final-leaf population requirements. Acceptance: the star witness returns
+   the declared descendant failure without replacing its optimal root; the
+   path witness is not presented as passing an undeclared final-leaf band.
+   Consolidate existing cut experiments under identical instances and objective
+   definitions, reporting incumbent and unrestricted lower bounds separately
+   from restricted-neighborhood optima. A completion-aware oracle would be a
+   distinct rule, not an improvement to execution of the current one.
+2. **Rule/profile binding (W6):** define a machine-readable certified profile,
+   validate its semantics against the instance, and include its version in
+   proof/model bindings. Hashing an arbitrary profile file is insufficient.
+   Acceptance: changed population field, weights, schedule or unsupported
+   policy cannot produce a successful conformance claim merely by rebuilding
+   envelope hashes. Keep external witness verification as a separate gate.
+3. **Search versus policy (W1/W3):** freeze a nonadjacent exchange or connected
+   group move experiment using existing RI starts and population bands. Test
+   direct county fragmentation in a separate objective arm. Acceptance:
+   independent final-label checks, exact score recomputation, retained failed
+   cells, final-leaf checks for every full-tree experiment, and paired results.
+4. **Proof milestone (W5):** preselect one nontrivial two-district State for
+   full boundary and canonical proofs. Publish incumbent, lower bound, gap,
+   runtime, memory, proof bytes and checking time, including timeouts. Restricted
+   disagreement-band optima remain conditional; fixed cores must be justified
+   before claiming unrestricted optimality.
+5. **Confirmation and pitch (W7):** have a non-author reproduce the selected
+   complete-plan demonstration. Publish one table distinguishing NRS v0.3,
+   certified-standard-bisect and the ApportionRegions official proposal, with
+   each profile's own evidence. Update adoption wording only after its gates
+   pass; national operational evidence does not validate a different profile.
+
+The first two items address correctness of the proposed execution claim;
+the third tests map quality; the fourth establishes certification scale;
+the fifth supplies external evidence. None is completed by adding this plan.

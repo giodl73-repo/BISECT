@@ -7,7 +7,10 @@
 pub(crate) use bisect_core::BisectionTree;
 pub(crate) use rand::rngs::SmallRng;
 pub(crate) use rand::SeedableRng;
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) use rayon::prelude::*;
+#[cfg(target_arch = "wasm32")]
+pub(crate) use crate::serial::*;
 pub(crate) use std::collections::{HashMap, HashSet};
 pub(crate) use std::path::Path;
 
@@ -15,6 +18,7 @@ mod adaptive_multiscale;
 mod bfs;
 mod bisection_ensemble;
 mod core;
+mod convergence;
 mod cvd;
 mod dispatch;
 mod flip;
@@ -33,6 +37,7 @@ pub use adaptive_multiscale::*;
 pub use bfs::*;
 pub use bisection_ensemble::*;
 pub use core::*;
+pub use convergence::*;
 pub use cvd::*;
 pub use dispatch::*;
 pub use flip::*;

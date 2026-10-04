@@ -2,6 +2,7 @@
 
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
+#[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 use ropt_core::{derive_seed, SeedPart};
 use serde::{Deserialize, Serialize};
@@ -132,8 +133,11 @@ pub fn run_ensemble(
 ) -> EnsembleResult {
     let seeds: Vec<u64> = (0..n_chains).map(|i| chain_seed(base_seed, i)).collect();
 
-    let chains: Vec<ChainResult> = seeds
-        .par_iter()
+    #[cfg(not(target_arch = "wasm32"))]
+    let seeds_iter = seeds.par_iter();
+    #[cfg(target_arch = "wasm32")]
+    let seeds_iter = seeds.iter();
+    let chains: Vec<ChainResult> = seeds_iter
         .enumerate()
         .map(|(i, &seed)| {
             run_chain(

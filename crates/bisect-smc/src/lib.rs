@@ -1,10 +1,10 @@
 //! `bisect-smc` — Sequential Monte Carlo redistricting sampler.
 //!
-//! Implements the Fifield, Imai, Kawahara & Kenny (2020) SMC algorithm for
-//! generating a calibrated weighted sample from the space of valid k-district
-//! redistricting plans. Unlike ReCom (a Markov chain approximation), SMC
-//! produces importance-weighted plans that correctly represent the uniform
-//! distribution over all valid plans, without mixing assumptions.
+//! Runs the repository's sequential particle proposals, importance weights and
+//! ESS-triggered resampling. Numerical diagnostics and a finite weighted sample
+//! do not establish distribution calibration. Check final plan constraints
+//! independently; proposal tolerance is based on remaining-component population.
+//! Protocol 2 uses ChaCha12 and u64 index draws across native and WASM targets.
 //!
 //! Spec: docs/specs/2026-05-07-smc-redistricting.md (Accepted, R2 avg 3.1/4)
 

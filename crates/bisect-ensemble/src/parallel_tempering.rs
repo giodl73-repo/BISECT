@@ -50,10 +50,15 @@ pub fn swap_seed(base_seed: u64, step: u64, pair: u32) -> u64 {
 /// Uses domain-separated `"PT_FWD_"` / `"PT_REV_"` prefixes, matching the
 /// seeding convention in `forest_recom`.
 pub fn replica_rngs(rseed: u64) -> (SmallRng, SmallRng) {
+    replica_rngs_with(rseed)
+}
+
+/// Same seed domains with an explicitly selected generator.
+pub fn replica_rngs_with<R: SeedableRng>(rseed: u64) -> (R, R) {
     let fwd_seed = derive_seed(b"PT_FWD_", &[SeedPart::U64(rseed)]).expect("non-empty seed domain");
     let rev_seed = derive_seed(b"PT_REV_", &[SeedPart::U64(rseed)]).expect("non-empty seed domain");
-    let fwd = SmallRng::seed_from_u64(fwd_seed);
-    let rev = SmallRng::seed_from_u64(rev_seed);
+    let fwd = R::seed_from_u64(fwd_seed);
+    let rev = R::seed_from_u64(rev_seed);
     (fwd, rev)
 }
 
@@ -142,11 +147,20 @@ impl ParallelTemperingChain {
     /// seeds externally (see [`replica_rngs`]).
     /// `rng_swap`: RNG for the swap coin flips.
     pub fn step(&mut self, rng_replicas: &mut Vec<(SmallRng, SmallRng)>, rng_swap: &mut SmallRng) {
+        self.step_impl(rng_replicas, rng_swap, false)
+    }
+
+    /// Fixed-width Wilson draws with canonical replica pair ordering.
+    pub fn step_portable<R: Rng>(&mut self, rng_replicas: &mut Vec<(R, R)>, rng_swap: &mut R) {
+        self.step_impl(rng_replicas, rng_swap, true)
+    }
+
+    fn step_impl<R: Rng>(&mut self, rng_replicas: &mut Vec<(R, R)>, rng_swap: &mut R, portable: bool) {
         self.steps_taken += 1;
 
         // 1. Each replica takes one step.
         for ((rng_fwd, rng_rev), replica) in rng_replicas.iter_mut().zip(self.replicas.iter_mut()) {
-            replica.step(rng_fwd, rng_rev);
+            if portable { replica.step_portable(rng_fwd, rng_rev); } else { replica.step(rng_fwd, rng_rev); }
         }
 
         // 2. Record cold chain state after the step.
@@ -160,6 +174,9 @@ impl ParallelTemperingChain {
             for i in 0..self.n_replicas.saturating_sub(1) {
                 self.swap_attempts += 1;
 
+                // A hot plan must satisfy the receiving cold replica's support.
+                if !self.plan_fits_replica(&self.replicas[i + 1].assignment, i)
+                    || !self.plan_fits_replica(&self.replicas[i].assignment, i + 1) { continue; }
                 let ec_i = count_edge_cuts_u32(&self.replicas[i].assignment, &self.replicas[i].adj);
                 let ec_j = count_edge_cuts_u32(
                     &self.replicas[i + 1].assignment,
@@ -180,6 +197,17 @@ impl ParallelTemperingChain {
                 }
             }
         }
+    }
+
+    fn plan_fits_replica(&self, assignment: &[u32], index: usize) -> bool {
+        let replica = &self.replicas[index];
+        let mut populations = vec![0i64; self.k as usize];
+        for (&district, &pop) in assignment.iter().zip(replica.pop.iter()) {
+            if district == 0 || district > self.k { return false; }
+            populations[district as usize - 1] += pop;
+        }
+        let ideal = replica.pop.iter().sum::<i64>() as f64 / self.k as f64;
+        populations.iter().all(|&pop| (pop as f64 - ideal).abs() <= ideal * self.tolerances[index] + 1e-9)
     }
 
     /// Current assignment of the cold chain (replica 0).
@@ -244,6 +272,22 @@ impl ParallelTemperingChain {
 mod tests {
     use super::*;
     use std::collections::HashSet;
+
+    #[test]
+    fn swaps_reject_plans_outside_receiving_tolerance() {
+        let mut pt=ParallelTemperingChain::new(vec![vec![1],vec![0,2],vec![1,3],vec![2]],vec![100;4],vec![1,1,2,2],2,0.01,0.5,2,1);
+        pt.replicas[1].assignment=vec![1,1,1,2];
+        let mut swap=SmallRng::seed_from_u64(42);
+        // Isolate replica exchange: skip internal proposals for this test.
+        pt.step(&mut vec![], &mut swap);
+        assert_eq!(pt.swap_attempts,1);
+        assert_eq!(pt.swap_acceptances,0);
+        assert_eq!(pt.replicas[0].assignment,vec![1,1,2,2]);
+        pt.replicas[1].assignment=vec![2,2,1,1];
+        pt.step(&mut vec![], &mut swap);
+        assert_eq!(pt.swap_acceptances,1);
+        assert_eq!(pt.replicas[0].assignment,vec![2,2,1,1]);
+    }
 
     // ── Graph helpers ─────────────────────────────────────────────────────────
 

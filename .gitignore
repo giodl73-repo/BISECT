@@ -251,6 +251,7 @@ reports/
 .claude/worktrees/
 
 # Pipeline run logs
+/runs/lab/
 *.log
 run_*.log
 *_house_*.log

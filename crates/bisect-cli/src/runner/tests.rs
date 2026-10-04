@@ -1,7 +1,47 @@
 //! Runner unit/integration tests (moved with the module split).
 
 use super::*;
+use std::collections::HashSet;
 use tempfile::TempDir;
+
+#[test]
+fn geographic_nway_writes_results_without_demographic_csvs() {
+    let temp = TempDir::new().unwrap();
+    let graph = bisect_data::AdjacencyGraph {
+        adjacency: vec![vec![1, 3], vec![0, 2], vec![1, 3], vec![0, 2]],
+        vertex_weights: vec![100; 4],
+        edge_weights: [
+            ((0, 1), 10.0),
+            ((1, 2), 10.0),
+            ((2, 3), 10.0),
+            ((0, 3), 10.0),
+        ]
+        .into_iter()
+        .collect(),
+        n_vertices: 4,
+        n_edges: 4,
+        vertex_areas: vec![],
+        vertex_ext_perimeters: vec![],
+    };
+    let adjacency = temp.path().join("fixture.adj.bin");
+    std::fs::write(&adjacency, bisect_data::serialize_adjacency(&graph)).unwrap();
+    let mut cfg = make_config("RI");
+    cfg.state_name = "missing_demographics_fixture".into();
+    cfg.num_districts = 2;
+    cfg.num_districts_override = Some(2);
+    cfg.output_dir = temp.path().join("outputs");
+    cfg.adjacency_override = Some(adjacency);
+    cfg.algo.split = SplitStrategy::NWay;
+    cfg.algo.weights.minority_weighting = false;
+    run_single_state(&cfg).expect("geographic n-way must not load unrelated demographics");
+    let output = cfg
+        .output_dir
+        .join("2020/states/missing_demographics_fixture/data/final_assignments.json");
+    let assignments: HashMap<usize, usize> =
+        serde_json::from_slice(&std::fs::read(output).unwrap()).unwrap();
+    assert_eq!(assignments.len(), 4);
+    assert_eq!(assignments.values().copied().collect::<HashSet<_>>().len(), 2);
+}
 
 // --- from original mod tests (L4466) ---
 

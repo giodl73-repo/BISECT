@@ -295,11 +295,14 @@ The content-derived seed is publicly verifiable: any party can compute s_0 from
 the Census Bureau's release identifier. No expert discretion or manual seed
 selection enters the algorithm.
 
-**Statutory rationale**: T=600 satisfies the Districting Integrity Act (DIA)
-statutory stopping criterion. The empirical B.7 finding that all 50 states
-plateau before seed index 1,023 means T=600 is conservative: the algorithm
-always terminates within the statutory window and always finds the true
-compactness optimum.
+**Implementation scope (2026-10-03)**: standard bisection now executes this
+search in the shared native/WASM runner. It scores complete feasible plans by
+the fixed tree's recursively normalized weighted cut and retains the earliest
+seed on ties. Failed or infeasible candidates count as non-improvements. The
+browser also exposes a maximum seed count; reaching it is reported as a seed
+limit, not convergence. A non-improvement tail is a measured stopping rule,
+not proof of global optimality. Other structures' convergence composition
+remains unfinished; the browser does not advertise it for those structures.
 
 ### PercentileSweep (U.8)
 

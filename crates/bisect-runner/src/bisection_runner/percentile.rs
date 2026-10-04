@@ -24,10 +24,22 @@ pub fn run_all_splits_percentile(
     p: f64,
     _intermediate_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
+    run_all_splits_percentile_tuned(adjacency,vertex_weights,edge_weights,num_districts,balance_tolerance,niter,base_seed,n_seeds,p,"cut",1).map(|(plan,_)|plan)
+}
+
+/// Preserve the seed walk and unweighted full-plan rank while tuning every split.
+pub fn run_all_splits_percentile_tuned(adjacency:&[Vec<usize>],vertex_weights:&[i64],edge_weights:&HashMap<(usize,usize),f64>,num_districts:usize,balance_tolerance:f64,niter:u32,base_seed:u64,n_seeds:usize,p:f64,objective:&str,trials:u32) -> Result<(HashMap<usize,usize>,Option<serde_json::Value>),String> {
     use sha2::Digest;
+    if !["cut","volume"].contains(&objective)||!(1..=100).contains(&trials){return Err("Invalid percentile METIS controls.".into());}
+
+    if n_seeds == 0 || !p.is_finite() || !(0.0..=1.0).contains(&p) {
+        return Err(
+            "Percentile search requires a positive seed budget and a percentile in [0,1].".into(),
+        );
+    }
 
     if num_districts == 1 {
-        return Ok((0..adjacency.len()).map(|i| (i, 1)).collect());
+        return Ok(((0..adjacency.len()).map(|i| (i, 1)).collect(),None));
     }
 
     // Derive n_seeds seeds from SHA-256 walk.
@@ -35,7 +47,8 @@ pub fn run_all_splits_percentile(
         .map(|i| {
             let mut h = sha2::Sha256::new();
             h.update(b"PERCENTILE_SWEEP_V1_");
-            h.update(i.to_le_bytes());
+            // Fixed-width seed walk must match native64 and wasm32.
+            h.update((i as u64).to_le_bytes());
             h.update(b"_");
             h.update(base_seed.to_le_bytes());
             let d = h.finalize();
@@ -48,12 +61,11 @@ pub fn run_all_splits_percentile(
     // not thread-safe, producing non-deterministic results under concurrent calls.
     // The pure-Rust metis-core engine is thread-safe, but we use sequential
     // iteration unconditionally so both engine paths produce identical output.
-    let n = adjacency.len();
     let results: Vec<(usize, usize, HashMap<usize, usize>)> = seeds
         .iter()
         .enumerate()
         .map(|(idx, &seed)| {
-            let asgn = run_all_splits(
+            let asgn = run_all_splits_tuned(
                 adjacency,
                 vertex_weights,
                 edge_weights,
@@ -61,13 +73,15 @@ pub fn run_all_splits_percentile(
                 balance_tolerance,
                 niter,
                 Some(seed),
-                None,
+                None, objective, trials,
             )
-            .unwrap_or_else(|_| (0..n).map(|i| (i, 1)).collect());
+            .map_err(|error| format!("Percentile seed {idx} failed: {error}"))?;
             let ec = count_edge_cuts(&asgn, adjacency);
-            (idx, ec, asgn)
+            Ok((idx, ec, asgn))
         })
-        .collect();
+        .collect::<Result<Vec<_>, String>>()?;
+
+    let cuts_by_seed:Vec<usize>=results.iter().map(|(_,cut,_)|*cut).collect();
 
     // Sort by (edge_cut ASC, seed_index ASC) — secondary key breaks ties deterministically.
     let mut sorted = results;
@@ -75,7 +89,8 @@ pub fn run_all_splits_percentile(
 
     // Pick plan at rank floor(p * n_seeds), clamped to [0, n_seeds-1].
     let rank = ((p * n_seeds as f64).floor() as usize).min(sorted.len() - 1);
-    Ok(sorted.into_iter().nth(rank).map(|(_, _, a)| a).unwrap())
+    let (selected_index,selected_cut,plan)=sorted.into_iter().nth(rank).unwrap();
+    Ok((plan,Some(serde_json::json!({"method":"percentile-metis","refinement_objective":objective,"internal_trials_per_candidate":trials,"refinement_iterations":niter,"seed_count":n_seeds,"rank":rank,"selected_seed_index":selected_index,"selected_edge_cut":selected_cut,"cuts_by_seed":cuts_by_seed,"seed_walk":"PERCENTILE_SWEEP_V1-u64-le-sha256","selection":"unweighted-edge-cut-then-seed-index","scope":"full-plans-from-prescribed-floor-ceil-tree","internal_trial_selection":"population-excess-then-edge-cut"}))))
 }
 
 /// Count total edge cuts in an assignment.

@@ -1,0 +1,28 @@
+[package]
+name = "bisect-web"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Local state and national experiment laboratory for the BISECT Rust engine"
+default-run = "bisect-web"
+
+[[bin]]
+name = "lab-catalog"
+path = "src/bin/lab-catalog.rs"
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+geo.workspace = true
+geo-types.workspace = true
+bisect-data = { path = "../bisect-data" }
+bisect-map = { path = "../bisect-map" }
+bisect-cli = { path = "../bisect-cli", default-features = false }
+tiny_http = "0.12"
+rand.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

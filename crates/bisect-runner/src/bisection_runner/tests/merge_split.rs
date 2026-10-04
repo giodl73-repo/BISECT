@@ -281,6 +281,32 @@ fn vra_recom_zero_minority_vap_no_vra_rejection() {
 
 // L0: SearchMode parses "vra-recom" successfully (CLI integration).
 #[test]
+fn vra_recom_report_and_invalid_demographics() {
+    use crate::bisection_runner::merge_split::run_vra_recom_detailed;
+    let (adj, pop) = small_grid(4, 4);
+    let ew = HashMap::new();
+    for fractions in [vec![0.5; 15], vec![f64::NAN; 16], vec![1.01; 16], vec![-0.1; 16]] {
+        assert!(run_vra_recom_detailed(&adj, &pop, &ew, 2, 100, 42, 0, 0.5, 0.5, &fractions).is_err());
+    }
+    for threshold in [f64::NAN, -0.1, 1.01] {
+        assert!(run_vra_recom_detailed(&adj, &pop, &ew, 2, 100, 42, 0, 0.5, threshold, &[0.5; 16]).is_err());
+    }
+    for steps in [0, 30] {
+        let (plan, report) = run_vra_recom_detailed(&adj, &pop, &ew, 2, 100, 4294967297, steps, 0.5, 0.5, &[0.5; 16]).unwrap();
+        assert_eq!(report.protected_districts, vec![1, 2]);
+        assert_eq!(report.proposals, steps as u64);
+        assert_eq!(report.accepted_moves + report.mh_rejections + report.minority_rejections, report.proposals);
+        assert_eq!(report.retained_records, report.accepted_moves as usize + 1);
+        assert_eq!(report.selected_rank, report.retained_records / 2);
+        assert_eq!(plan, run_vra_recom(&adj, &pop, &ew, 2, 100, 4294967297, steps, 0.5, 0.5, &[0.5; 16]).unwrap());
+        if steps == 0 {
+            assert!(report.initial_assignment.iter().enumerate().all(|(i, d)| plan[&i] == *d as usize));
+        }
+    }
+}
+
+// L0: SearchMode parses "vra-recom" successfully (CLI integration).
+#[test]
 fn vra_recom_search_mode_parses() {
     use crate::args::SearchMode;
     use clap::ValueEnum;

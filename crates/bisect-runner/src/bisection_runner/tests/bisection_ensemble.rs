@@ -185,3 +185,53 @@ fn weighted_edge_cut_uses_canonical_edge_order() {
         10_000_000_000_000_002.0
     );
 }
+
+#[test]
+fn bisection_ensemble_preserves_asymmetric_target_orientation() {
+    let (adj, _) = small_grid(6, 5);
+    let pop = vec![100i64; 30];
+    let tracts = (0..30).collect();
+    let ew = HashMap::new();
+    for (fraction, expected_left) in [(1.0f32 / 3.0, 10), (0.4, 12), (2.0 / 3.0, 20)] {
+        for percentile in [0.0, 0.5, 1.0] {
+            let (left, right) = split_subgraph_bisection_ensemble(
+                &adj, &pop, &ew, &tracts, 1.005, 100, Some(42),
+                Some(vec![fraction, 1.0 - fraction]), 60, percentile,
+            ).unwrap();
+            assert_eq!(left.len(), expected_left);
+            assert_eq!(right.len(), 30 - expected_left);
+            assert!(is_connected_subset(&adj, &left));
+            assert!(is_connected_subset(&adj, &right));
+        }
+    }
+}
+
+#[test]
+fn bisection_ensemble_zero_steps_and_small_regions_match_initialization() {
+    for size in [3usize, 4, 12] {
+        let adj: Vec<Vec<usize>> = (0..size).map(|i| {
+            let mut neighbors = Vec::new();
+            if i > 0 { neighbors.push(i - 1); }
+            if i + 1 < size { neighbors.push(i + 1); }
+            neighbors
+        }).collect();
+        let mut pop = vec![100i64; size];
+        if size == 3 { pop[2] = 200; }
+        let tracts = (0..size).collect();
+        let ew = HashMap::new();
+        let initial = split_subgraph(&adj, &pop, 1, &ew, &tracts, 1.05, 100, Some(42), None, None).unwrap();
+        for steps in if size <= 4 { vec![0, 20] } else { vec![0] } {
+            let actual = split_subgraph_bisection_ensemble(&adj, &pop, &ew, &tracts, 1.05, 100, Some(42), None, steps, 1.0).unwrap();
+            assert_eq!(actual, initial);
+        }
+    }
+}
+
+#[test]
+fn bisection_ensemble_high_seed_is_reproducible() {
+    let (adj, pop) = small_grid(6, 5);
+    let tracts = (0..30).collect();
+    let ew = HashMap::new();
+    let run = || split_subgraph_bisection_ensemble(&adj, &pop, &ew, &tracts, 1.1, 100, Some(4294967297), Some(vec![0.4, 0.6]), 60, 0.5).unwrap();
+    assert_eq!(run(), run());
+}

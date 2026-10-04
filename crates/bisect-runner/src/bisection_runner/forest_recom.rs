@@ -23,7 +23,7 @@ pub fn run_forest_recom(
     p: f64,
 ) -> Result<HashMap<usize, usize>, String> {
     use bisect_ensemble::forest_recom::ForestRecomChain;
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
     use rand::SeedableRng;
     use sha2::Digest;
 
@@ -100,10 +100,10 @@ pub fn run_forest_recom(
             u64::from_le_bytes(d[..8].try_into().unwrap())
         };
 
-        let mut rng_forward = SmallRng::seed_from_u64(forward_seed);
-        let mut rng_reverse = SmallRng::seed_from_u64(reverse_seed);
+        let mut rng_forward = ChaCha12Rng::seed_from_u64(forward_seed);
+        let mut rng_reverse = ChaCha12Rng::seed_from_u64(reverse_seed);
 
-        let rec = chain.step(&mut rng_forward, &mut rng_reverse);
+        let rec = chain.step_portable(&mut rng_forward, &mut rng_reverse);
         if rec.accepted {
             let ec = rec.cut_edges;
             accepted.push((ec, step_idx + 1, chain.assignment.clone()));

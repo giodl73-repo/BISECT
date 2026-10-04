@@ -1,7 +1,7 @@
 use crate::adjacency_loader::load_adjacency_pkl;
 use crate::bisection_runner::{
     run_all_splits, run_all_splits_compact, run_all_splits_percentile, run_all_splits_with_search,
-    run_flip_chain, run_forest_recom, run_geosection, run_merge_split, run_multiscale,
+    run_flip_chain, run_forest_recom, run_geosection_seeded, run_merge_split, run_multiscale,
     run_multiscale_adaptive, run_nway_partition, run_parallel_tempering, run_short_burst,
     run_short_burst_forest, run_short_burst_merge_split, AdaptiveConfig, CompactBisectOpts,
 };
@@ -71,7 +71,7 @@ pub enum SeedCompositor {
     Multi { seeds: usize },
     /// Run seeds sequentially from the content-derived start until
     /// `threshold` consecutive seeds produce no improvement in normalised EC.
-    /// Certifies convergence per B.7. The seed-buster for the federal statute.
+    /// Stops after a measured non-improvement tail; this is not an optimality certificate.
     ConvergenceSweep { threshold: u32 },
     /// Run `seeds` plans, sort by edge cut, return the plan at rank floor(p * seeds).
     /// p=0.0 → minimum EC (same as ConvergenceSweep), p=0.5 → median EC, p=1.0 → maximum EC.
@@ -1842,7 +1842,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         ),
                     );
                 }
-                let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                let (asgn, nat_left, nat_right, nat_ec) = run_geosection_seeded(
                     &graph.adjacency,
                     &vwgt,
                     &edge_weights,
@@ -1858,6 +1858,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     None,
                     0.0,
                     None, // GeoSection does not use MKA override
+                    seed.unwrap_or(1),
                 )
                 .map_err(|e| format!("geosection failed: {e}"))?;
                 status(
@@ -1947,7 +1948,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         area_section_init
                     ),
                 );
-                let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                let (asgn, nat_left, nat_right, nat_ec) = run_geosection_seeded(
                     &graph.adjacency,
                     &graph.vertex_weights,
                     &edge_weights,
@@ -1963,6 +1964,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     None,
                     0.0,
                     mka_theta_override,
+                    seed.unwrap_or(1),
                 )
                 .map_err(|e| format!("areasection failed: {e}"))?;
                 status(
@@ -2028,7 +2030,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         w_vra
                     ),
                 );
-                let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                let (asgn, nat_left, nat_right, nat_ec) = run_geosection_seeded(
                     &graph.adjacency,
                     &vwgt,
                     &edge_weights,
@@ -2044,6 +2046,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     mvap_opt,
                     *w_vra,
                     None, // VRASection does not use MKA override
+                    seed.unwrap_or(1),
                 )
                 .map_err(|e| format!("vra-section failed: {e}"))?;
                 status(
@@ -2487,6 +2490,30 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             }
             _ => {
                 match &cfg.algo.seeds {
+                    SeedCompositor::ConvergenceSweep { threshold } => {
+                        let (plan,summary)=crate::bisection_runner::run_all_splits_convergence(
+                            &graph.adjacency,&vwgt,&edge_weights,num_districts,balance_tolerance_frac,
+                            niter,seed.unwrap_or(0),*threshold as usize,None,
+                        ).map_err(|e|format!("convergence search failed: {e}"))?;
+                        std::fs::write(intermediate_dir.join("convergence_summary.json"),
+                            serde_json::to_vec_pretty(&summary).map_err(|e|e.to_string())?)
+                            .map_err(|e|format!("write convergence summary failed: {e}"))?;
+                        plan
+                    }
+                    SeedCompositor::Multi { seeds } => {
+                        crate::bisection_runner::run_all_splits_multi(
+                            &graph.adjacency,
+                            &vwgt,
+                            &edge_weights,
+                            num_districts,
+                            balance_tolerance_frac,
+                            niter,
+                            seed.unwrap_or(0),
+                            *seeds,
+                            Some(&intermediate_dir),
+                        )
+                        .map_err(|e| format!("multi-seed bisection failed: {e}"))?
+                    }
                     SeedCompositor::Percentile { p, seeds } => {
                         let base = seed.unwrap_or(0);
                         status(
@@ -2970,7 +2997,10 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     );
 
     // 5. VRA analysis (if VRA mode and multi-district)
-    let vra = if matches!(&cfg.algo.split, SplitStrategy::NWay) && num_districts > 1 {
+    let vra = if matches!(&cfg.algo.split, SplitStrategy::NWay)
+        && cfg.algo.weights.minority_weighting
+        && num_districts > 1
+    {
         let demo_path = std::path::Path::new("data")
             .join(&cfg.year)
             .join("demographics")

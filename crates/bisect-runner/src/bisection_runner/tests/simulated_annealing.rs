@@ -1,5 +1,36 @@
 use super::*;
 
+#[test]
+fn sa_recursive_odd_schedule_preserves_requested_balance() {
+    let (adj, pop) = small_grid(4, 6);
+    for steps in [0, 5] {
+        let assignment = run_all_splits_sa(&adj, &pop, &HashMap::new(), 3, 0.05, 100,
+            Some(42), None, steps, 0.01, 1e-4, 42).unwrap();
+        let ideal = pop.iter().sum::<i64>() as f64 / 3.0;
+        for district in 1..=3 {
+            let vertices: HashSet<_> = (0..pop.len()).filter(|v| assignment[v] == district).collect();
+            let population: i64 = vertices.iter().map(|&v| pop[v]).sum();
+            assert!((population as f64 / ideal - 1.0).abs() <= 0.05);
+            assert!(!vertices.is_empty());
+            let partition: Vec<_> = (0..pop.len()).map(|v| if vertices.contains(&v) { 0 } else { 1 }).collect();
+            assert!(is_side_connected(&partition, &adj, 0));
+        }
+    }
+}
+
+#[test]
+fn sa_uses_actual_zero_population_and_rejects_infeasible_initial_plans() {
+    let (adj, mut pop) = small_grid(4, 4);
+    pop.fill(0);pop[0]=100;pop[15]=100;
+    let tracts=(0..pop.len()).collect();
+    let (left,right)=split_subgraph_sa(&adj,&pop,&HashMap::new(),&tracts,0.01,5,0.01,1e-4,42).unwrap();
+    assert_eq!(left.iter().map(|&v|pop[v]).sum::<i64>(),100);
+    assert_eq!(right.iter().map(|&v|pop[v]).sum::<i64>(),100);
+    pop[15]=1;
+    assert!(split_subgraph_sa(&adj,&pop,&HashMap::new(),&tracts,0.01,5,0.01,1e-4,42).is_err());
+    assert!(!is_side_connected(&vec![1;pop.len()],&adj,0));
+}
+
 // ── Simulated Annealing tests ─────────────────────────────────────────────
 
 // L0: zero steps returns the initial METIS plan unchanged (best = initial).

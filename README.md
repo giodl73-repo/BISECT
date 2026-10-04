@@ -19,6 +19,8 @@ maintainer tour:
 | **Election researcher / journalist** | [SHOWCASE.md](SHOWCASE.md) → [researcher brief](docs/show/researcher-brief.md) → [dashboards](https://giodl73-repo.github.io/BISECT/) | 15–25 min |
 | **Algorithm implementer** | [SHOWCASE.md](SHOWCASE.md) → [implementer brief](docs/show/implementer-brief.md) → [algorithm explorer](docs/quickstart/quickstart-algorithm-explorer.md) | 20–40 min |
 | **Either, hands-on** | [Vermont 2020 walkthrough](examples/vermont-2020-walkthrough/README.md) | 2–5 min after build |
+| **Experiment laboratory** | [Local web UI](docs/guides/web-laboratory.md): state and national runs, dimension controls, maps and comparisons | Start with `scripts/web/start_lab.ps1` |
+| **Public saved experiments** | [Static catalog guide](docs/guides/precomputed-laboratory.md): build reviewed experiment matrices and publish a GitHub Pages viewer | No compute server for visitors |
 
 Research demonstration only — not court-ready, not an official score, not a
 fairness certificate. Claim boundaries:

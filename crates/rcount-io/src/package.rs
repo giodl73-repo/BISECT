@@ -1,78 +1,75 @@
 use crate::*;
 
-pub fn write_package_dir(
-    dir: &Path,
-    manifest: &RcountManifest,
-    package: &RcountPackage,
-) -> Result<(), RcountIoError> {
-    fs::create_dir_all(dir.join("sources"))?;
-    fs::create_dir_all(dir.join("normalized"))?;
-    fs::create_dir_all(dir.join("reconciliation"))?;
-    fs::create_dir_all(dir.join("status"))?;
-    fs::create_dir_all(dir.join("proofs"))?;
-    fs::create_dir_all(dir.join("audits"))?;
-    fs::create_dir_all(dir.join("transcripts"))?;
+pub fn write_package_dir(dir: &Path, manifest: &RcountManifest, package: &RcountPackage) -> Result<(), RcountIoError> {
+    let files = write_package_files(manifest, package)?;
+    for folder in ["sources", "normalized", "reconciliation", "status", "proofs", "audits", "transcripts"] { fs::create_dir_all(dir.join(folder))?; }
+    for (path, bytes) in files { fs::write(dir.join(path), bytes)?; }
+    Ok(())
+}
 
+/// Exact package bytes, with the same serialization and hashes as disk output.
+pub fn write_package_files(manifest: &RcountManifest, package: &RcountPackage) -> Result<PackageFiles, RcountIoError> {
+    let mut files = PackageFiles::new();
     let computed = package_content_hash(package)?;
     let mut manifest = manifest.clone();
     manifest.content_hash = computed.clone();
 
-    write_json_pretty(&dir.join("manifest.json"), &manifest)?;
-    let source_entry = write_synthetic_source_export(dir, package)?;
-    write_json_pretty(
-        &dir.join("sources").join("source-index.json"),
+    insert_json_pretty(&mut files, "manifest.json", &manifest)?;
+    let source_entry = write_synthetic_source_export_files(&mut files, package)?;
+    insert_json_pretty(
+        &mut files, "sources/source-index.json",
         &SourceIndex {
             sources: vec![source_entry],
         },
     )?;
-    write_ndjson(
-        &dir.join("normalized").join("contests.ndjson"),
+    insert_ndjson(
+        &mut files, "normalized/contests.ndjson",
         &package.contests,
     )?;
-    write_ndjson(
-        &dir.join("normalized").join("reporting-units.ndjson"),
+    insert_ndjson(
+        &mut files, "normalized/reporting-units.ndjson",
         &package.reporting_units,
     )?;
-    write_ndjson(
-        &dir.join("normalized").join("batches.ndjson"),
+    insert_ndjson(
+        &mut files, "normalized/batches.ndjson",
         &package.batches,
     )?;
-    write_ndjson(
-        &dir.join("normalized").join("lineage.ndjson"),
+    insert_ndjson(
+        &mut files, "normalized/lineage.ndjson",
         &package.lineage,
     )?;
-    write_ndjson(
-        &dir.join("normalized").join("rhist-refs.ndjson"),
+    insert_ndjson(
+        &mut files, "normalized/rhist-refs.ndjson",
         &package.rhist_refs,
     )?;
-    write_ndjson(
-        &dir.join("normalized").join("rctx-refs.ndjson"),
+    insert_ndjson(
+        &mut files, "normalized/rctx-refs.ndjson",
         &package.rctx_refs,
     )?;
-    write_ndjson(
-        &dir.join("proofs").join("inclusion-proofs.ndjson"),
+    insert_ndjson(
+        &mut files, "proofs/inclusion-proofs.ndjson",
         &package.inclusion_proofs,
     )?;
-    write_ndjson(&dir.join("normalized").join("cvr.ndjson"), &package.cvr)?;
-    write_ndjson(
-        &dir.join("audits").join("algorithm-runs.ndjson"),
+    insert_ndjson(&mut files, "normalized/cvr.ndjson", &package.cvr)?;
+    insert_ndjson(
+        &mut files, "audits/algorithm-runs.ndjson",
         &package.audit_algorithm_runs,
     )?;
-    write_ndjson(&dir.join("audits").join("rla.ndjson"), &package.rla_audits)?;
-    write_ndjson(
-        &dir.join("audits").join("manual.ndjson"),
+    insert_ndjson(&mut files, "audits/rla.ndjson", &package.rla_audits)?;
+    insert_ndjson(
+        &mut files, "audits/manual.ndjson",
         &package.manual_audits,
     )?;
-    write_ndjson(
-        &dir.join("audits").join("batch-comparison.ndjson"),
+    insert_ndjson(
+        &mut files, "audits/batch-comparison.ndjson",
         &package.batch_comparison_audits,
     )?;
-    write_ndjson(
-        &dir.join("normalized").join("summaries.ndjson"),
+    insert_ndjson(
+        &mut files, "normalized/summaries.ndjson",
         &package.summaries,
     )?;
-    write_lines(
-        &dir.join("reconciliation").join("equations.ndjson"),
+    insert_lines(
+        &mut files, "reconciliation/equations.ndjson",
         &[
             r#"{"equation_id":"contest_selection_sum","status":"declared"}"#,
             r#"{"equation_id":"jurisdiction_contest_total","status":"declared"}"#,
@@ -90,12 +87,12 @@ pub fn write_package_dir(
             r#"{"equation_id":"batch_comparison_overstatement","status":"declared"}"#,
         ],
     )?;
-    write_ndjson(
-        &dir.join("status").join("events.ndjson"),
+    insert_ndjson(
+        &mut files, "status/events.ndjson",
         &package.status_events,
     )?;
-    write_json_pretty(
-        &dir.join("proofs").join("package-hashes.json"),
+    insert_json_pretty(
+        &mut files, "proofs/package-hashes.json",
         &PackageHashes {
             package_content_hash: computed,
             contest_count: package.contests.len(),
@@ -113,53 +110,19 @@ pub fn write_package_dir(
             summary_count: package.summaries.len(),
         },
     )?;
-    write_json_pretty(
-        &dir.join("transcripts").join("verify-transcript.json"),
+    insert_json_pretty(
+        &mut files, "transcripts/verify-transcript.json",
         &serde_json::json!({
             "status": "generated-fixture",
             "verifier": "rcount-io",
             "checks": ["contest_selection_sum", "jurisdiction_contest_total"]
         }),
     )?;
-    Ok(())
+    Ok(files)
 }
 
 pub fn read_package_dir(dir: &Path) -> Result<(RcountManifest, RcountPackage), RcountIoError> {
-    let manifest: RcountManifest = read_json(&dir.join("manifest.json"))?;
-    if manifest.rcount_version != RCOUNT_VERSION {
-        return Err(RcountIoError::UnsupportedVersion(manifest.rcount_version));
-    }
-    let package = RcountPackage {
-        rcount_version: manifest.rcount_version.clone(),
-        contests: read_ndjson(&dir.join("normalized").join("contests.ndjson"))?,
-        reporting_units: read_ndjson(&dir.join("normalized").join("reporting-units.ndjson"))?,
-        batches: read_optional_ndjson(&dir.join("normalized").join("batches.ndjson"))?,
-        lineage: read_optional_ndjson(&dir.join("normalized").join("lineage.ndjson"))?,
-        rhist_refs: read_optional_ndjson(&dir.join("normalized").join("rhist-refs.ndjson"))?,
-        rctx_refs: read_optional_ndjson(&dir.join("normalized").join("rctx-refs.ndjson"))?,
-        inclusion_proofs: read_optional_ndjson(
-            &dir.join("proofs").join("inclusion-proofs.ndjson"),
-        )?,
-        cvr: read_optional_ndjson(&dir.join("normalized").join("cvr.ndjson"))?,
-        audit_algorithm_runs: read_optional_ndjson(
-            &dir.join("audits").join("algorithm-runs.ndjson"),
-        )?,
-        rla_audits: read_optional_ndjson(&dir.join("audits").join("rla.ndjson"))?,
-        manual_audits: read_optional_ndjson(&dir.join("audits").join("manual.ndjson"))?,
-        batch_comparison_audits: read_optional_ndjson(
-            &dir.join("audits").join("batch-comparison.ndjson"),
-        )?,
-        summaries: read_ndjson(&dir.join("normalized").join("summaries.ndjson"))?,
-        status_events: read_ndjson(&dir.join("status").join("events.ndjson"))?,
-    };
-    let computed = package_content_hash(&package)?;
-    if manifest.content_hash != computed {
-        return Err(RcountIoError::ContentHashMismatch {
-            declared: manifest.content_hash,
-            computed,
-        });
-    }
-    Ok((manifest, package))
+    read_package_with(&mut |path| package_reader::read_disk_optional(dir, path))
 }
 
 pub fn read_source_index(dir: &Path) -> Result<SourceIndex, RcountIoError> {
@@ -167,35 +130,7 @@ pub fn read_source_index(dir: &Path) -> Result<SourceIndex, RcountIoError> {
 }
 
 pub fn verify_source_index(dir: &Path) -> Result<Vec<SourceCheck>, RcountIoError> {
-    let index = read_source_index(dir)?;
-    if index.sources.is_empty() {
-        return Err(RcountIoError::EmptySourceIndex);
-    }
-
-    let mut checks = Vec::new();
-    for source in index.sources {
-        let path = package_relative_source_path(&source.path)?;
-        let full_path = dir.join(&path);
-        if !full_path.exists() {
-            return Err(RcountIoError::MissingSourceFile {
-                path: source.path.clone(),
-            });
-        }
-        let computed = source_file_hash(&full_path)?;
-        if computed != source.sha256 {
-            return Err(RcountIoError::SourceHashMismatch {
-                source_id: source.source_id,
-                declared: source.sha256,
-                computed,
-            });
-        }
-        checks.push(SourceCheck {
-            source_id: source.source_id,
-            path: source.path,
-            sha256: computed,
-        });
-    }
-    Ok(checks)
+    verify_sources_with(&mut |path| package_reader::read_disk_optional(dir, path))
 }
 
 pub fn source_file_hash(path: &Path) -> Result<String, RcountIoError> {

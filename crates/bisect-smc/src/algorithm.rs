@@ -3,8 +3,9 @@
 //! Runs the Fifield et al. (2020) Sequential Monte Carlo redistricting sampler.
 //! Produces a weighted sample of N valid k-district plans.
 
-use rand::rngs::SmallRng;
+use rand_chacha::ChaCha12Rng;
 use rand::SeedableRng;
+#[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 use thiserror::Error;
 
@@ -58,6 +59,17 @@ pub fn run_smc(
     let n = adjacency.len();
     let n_p = config.n_particles;
 
+    let total = vertex_weights.iter().try_fold(0i64, |sum, &pop| {
+        if pop < 0 { None } else { sum.checked_add(pop) }
+    });
+    if n == 0 || vertex_weights.len() != n || k > n || k > u32::MAX as usize
+        || !total.is_some_and(|pop| pop > 0)
+        || !config.pop_tolerance.is_finite() || !(0.0..=1.0).contains(&config.pop_tolerance)
+        || !config.resample_threshold.is_finite() || !(0.0..=1.0).contains(&config.resample_threshold)
+        || adjacency.iter().enumerate().any(|(v, neighbors)| neighbors.iter().any(|&u| u >= n || u == v || !adjacency[u].contains(&v))) {
+        return Err(SmcError::InvalidConfig { msg: "invalid graph, populations, tolerance or resampling threshold".into() });
+    }
+
     if k == 0 {
         return Err(SmcError::InvalidConfig {
             msg: "k must be ≥ 1".into(),
@@ -103,14 +115,17 @@ pub fn run_smc(
         //
         // Note: we do NOT use par_iter() on the C METIS library (the proposal uses
         // BISECT-ensemble's pure-Rust Wilson's algorithm, which is thread-safe).
-        let proposal_results: Vec<(Option<PartialPlan>, f64)> = (0..n_p)
-            .into_par_iter()
+        #[cfg(not(target_arch = "wasm32"))]
+        let particle_iter = (0..n_p).into_par_iter();
+        #[cfg(target_arch = "wasm32")]
+        let particle_iter = 0..n_p;
+        let proposal_results: Vec<(Option<PartialPlan>, f64)> = particle_iter
             .map(|i| {
                 if log_weights[i] == f64::NEG_INFINITY {
                     return (None, f64::NEG_INFINITY); // already killed
                 }
                 let seed = particle_seed(config.base_seed, stage as u32, i as u32);
-                let mut rng = SmallRng::seed_from_u64(seed);
+                let mut rng = ChaCha12Rng::seed_from_u64(seed);
                 match propose_district(
                     &particles[i],
                     adjacency,
@@ -356,5 +371,18 @@ mod tests {
             run_smc(&adj, &pop, 2, cfg),
             Err(SmcError::InvalidConfig { .. })
         ));
+    }
+
+    #[test]
+    fn invalid_inputs_are_errors_before_proposals() {
+        let adj=path_adj(4);
+        for weights in [vec![0;4],vec![-1,100,100,100],vec![i64::MAX,1,1,1],vec![100;3]] {
+            assert!(matches!(run_smc(&adj,&weights,2,SmcConfig::default()),Err(SmcError::InvalidConfig{..})));
+        }
+        for value in [f64::NAN,-0.1,1.1] {
+            assert!(matches!(run_smc(&adj,&[100;4],2,SmcConfig{resample_threshold:value,..Default::default()}),Err(SmcError::InvalidConfig{..})));
+            assert!(matches!(run_smc(&adj,&[100;4],2,SmcConfig{pop_tolerance:value,..Default::default()}),Err(SmcError::InvalidConfig{..})));
+        }
+        assert!(matches!(run_smc(&[vec![9],vec![],vec![],vec![]],&[100;4],2,SmcConfig::default()),Err(SmcError::InvalidConfig{..})));
     }
 }

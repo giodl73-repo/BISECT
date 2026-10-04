@@ -1,0 +1,583 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "bisect.Run",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.State",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.States",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Fetch",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.FletchSources",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.FletchCacheIndex",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Analyze",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Compare",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Map",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Aggregate",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Validate",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Migrate",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Suite",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Report",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Export",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Import",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Improve",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Exact",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Ceremony",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Civic",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Research",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Policy",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Doctor",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Verify",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.IlpAudit",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Sweep",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Tui",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Config",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Build",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Ls",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Show",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Mv",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.LabelVerify",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.LabelAnalyze",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.LabelReport",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.LabelImport",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.LabelCompare",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Plan",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Ensemble",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "bisect.Pareto",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "Commands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "suite.Draw",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "SuiteCommands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "suite.Validate",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "SuiteCommands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "suite.Stability",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "SuiteCommands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "config.New",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "ConfigCommands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "config.Validate",
+      "source": "crates/bisect-cli/src/args.rs",
+      "enum": "ConfigCommands",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "ceremony.Start",
+      "source": "crates/bisect-cli/src/ceremony_cmd.rs",
+      "enum": "CeremonySubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "ceremony.Announce",
+      "source": "crates/bisect-cli/src/ceremony_cmd.rs",
+      "enum": "CeremonySubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "ceremony.Halt",
+      "source": "crates/bisect-cli/src/ceremony_cmd.rs",
+      "enum": "CeremonySubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "ceremony.Verify",
+      "source": "crates/bisect-cli/src/ceremony_cmd.rs",
+      "enum": "CeremonySubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "civic.Ingest",
+      "source": "crates/bisect-cli/src/civic.rs",
+      "enum": "CivicSubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "civic.Conflicts",
+      "source": "crates/bisect-cli/src/civic.rs",
+      "enum": "CivicSubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "civic.List",
+      "source": "crates/bisect-cli/src/civic.rs",
+      "enum": "CivicSubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "civic.Show",
+      "source": "crates/bisect-cli/src/civic.rs",
+      "enum": "CivicSubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "civic.AddCandidateRace",
+      "source": "crates/bisect-cli/src/civic.rs",
+      "enum": "CivicSubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "research.ValidateEnsemble",
+      "source": "crates/bisect-cli/src/research.rs",
+      "enum": "ResearchSubcommand",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "rplan.Audit",
+      "source": "crates/rplan-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "implemented in WASM",
+      "ui": "preview implemented",
+      "verification": "public grid fixture: WASM certificate generation and tamper rejection; browser Worker generation passed",
+      "evidence": [
+        "crates/bisect-wasm/src/toolkit.rs",
+        "web/lab/workbench.js",
+        "scripts/web/test_wasm.mjs"
+      ]
+    },
+    {
+      "id": "rplan.VerifyCertificate",
+      "source": "crates/rplan-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "implemented in WASM",
+      "ui": "preview implemented",
+      "verification": "native fixture and generated WASM certificate verified; tamper rejected; browser Worker verified the just-generated certificate",
+      "evidence": [
+        "crates/bisect-wasm/src/toolkit.rs",
+        "scripts/web/test_wasm.mjs"
+      ]
+    },
+    {
+      "id": "rcount.Verify",
+      "source": "crates/rcount-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "verify-count-files",
+      "ui": "Complete package folder, saved-project input, readable checks/rounds and JSON download",
+      "verification": "WASM/native reference parity; browser execution verified",
+      "evidence": [
+        "crates/rcount-audit/examples/wasm_fixtures.rs",
+        "scripts/web/test_count_wasm.mjs",
+        "scripts/web/test_package_files.mjs",
+        "web/lab/workbench.js"
+      ]
+    },
+    {
+      "id": "rcount.ReplayAuditAlgorithms",
+      "source": "crates/rcount-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "replay-count-audits",
+      "ui": "Complete package folder, saved-project input, readable checks/rounds and JSON download",
+      "verification": "WASM/native reference parity; browser execution verified",
+      "evidence": [
+        "crates/rcount-audit/examples/wasm_fixtures.rs",
+        "scripts/web/test_count_wasm.mjs",
+        "scripts/web/test_package_files.mjs",
+        "web/lab/workbench.js"
+      ]
+    },
+    {
+      "id": "rcount.AggregateDistricts",
+      "source": "crates/rcount-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "aggregate-districts (shared native byte adapter, direct and explicit integral crosswalk aggregation)",
+      "ui": "Complete RCOUNT package, RPLAN, optional RCTX/crosswalk, explicit contest/status, district and selection tables, exact compact/pretty transcript download and project Save/Open; browser limit 500 districts",
+      "verification": "Eight exact native/WASM results and nine matching rejections; checked integer overflow; actual browser Run, download, reload/Open, unverified labeling and explicit rerun. Downloaded transcript bytes match fresh WASM execution. Native missing-source-index crosswalk limitation remains explicit; package checks do not certify an election.",
+      "evidence": ["scripts/web/test_district_aggregation.mjs", "scripts/web/verify_aggregation_project.mjs", "crates/rcount-district/src/lib.rs", "target/district-aggregation-native-tests.log", "target/district-aggregation-preview-build.log", "target/wasm-district-aggregation-browser-project.bisect", "target/wasm-district-aggregation-browser-transcript.json", "target/wasm-district-aggregation-browser-verification.json", "target/wasm-district-aggregation-browser.png"]
+    },
+    {
+      "id": "rcount.ImportStatementCsv",
+      "source": "crates/rcount-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "import-statement-csv (shared native adapter, in-memory source and package writer)",
+      "ui": "Local source selection, explicit election/jurisdiction metadata, verification checks, exact package archive export/import and project Save/Open",
+      "verification": "Native disk/memory package byte parity; native/WASM exact results including counts above 2^53; actual browser import, download, reload/Open and package verification. Native adapter subset retained; package checks are not election certification.",
+      "evidence": ["scripts/web/test_election_imports.mjs", "crates/rcount-io/src/tests.rs", "target/wasm-election-import-browser-project.bisect", "target/wasm-election-import-browser-archive.json", "target/wasm-election-import-browser-verification.json"]
+    },
+    {
+      "id": "rcount.ImportNistCdfJson",
+      "source": "crates/rcount-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "import-nist-cdf-json (shared native adapter, in-memory source and package writer)",
+      "ui": "Local source selection, explicit election/jurisdiction metadata, verification checks, exact package archive export/import and project Save/Open",
+      "verification": "Native disk/memory package byte parity; native/WASM exact results including counts above 2^53; actual browser import, download, reload/Open and package verification. Native adapter subset retained; package checks are not election certification.",
+      "evidence": ["scripts/web/test_election_imports.mjs", "crates/rcount-io/src/tests.rs", "target/wasm-nist-import-browser-project.bisect", "target/wasm-nist-import-browser-archive.json", "target/wasm-nist-import-browser-verification.json", "target/wasm-election-import-browser.png"]
+    },
+    {
+      "id": "rcount.ImportRi2024Rep28Rla",
+      "source": "crates/rcount-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "import-ri2024-rep28-rla (shared native three-source RI adapter and in-memory package writer)",
+      "ui": "Three local CSV selections, partial selection persistence, restored filenames, package/source-summary checks, archive export/import, Save/Open and explicit replay boundary",
+      "verification": "Native disk/memory exact package bytes; two exact native/WASM results including counts above 2^53 and seed above u64; six matching invalid-source rejections, each-source tamper rejection; actual browser import/download/reload/Open/archive replay. Native RI-specific adapter scope retained; reported risk calculations and human observations are not independently verified.",
+      "evidence": ["crates/rcount-io/src/tests.rs", "scripts/web/test_ri_rla_import.mjs", "target/wasm-ri-rla-browser-project.bisect", "target/wasm-ri-rla-browser-archive.json", "target/wasm-ri-rla-browser-verification.json", "target/wasm-ri-rla-browser.png"]
+    },
+    {
+      "id": "rhist.Verify",
+      "source": "crates/rhist-cli/src/main.rs",
+      "enum": "Commands",
+      "operation": "verify-history-files (shared native byte reader and verification transcript)",
+      "ui": "Complete RHIST folder selection, readable history checks, native transcript download, exact package persistence and project Save/Open",
+      "verification": "24 native history tests; six exact disk CLI/native/WASM fixture results and seven matching failed memory packages; actual browser folder selection, Run, download, reload/Open and explicit rerun. Source paths validated in disk and memory readers; package consistency does not establish historical truth or provenance.",
+      "evidence": ["crates/rhist-io/src/lib.rs", "scripts/web/test_history_wasm.mjs", "scripts/web/verify_history_project.mjs", "scripts/web/test_project.mjs", "target/history-preview-build.log", "target/wasm-history-browser-project.bisect", "target/wasm-history-browser-transcript.json", "target/wasm-history-browser-verification.json", "target/wasm-history-browser.png"]
+    },
+    {
+      "id": "tui.Home",
+      "source": "crates/bisect-tui/src/app.rs",
+      "enum": "Screen",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "tui.Run",
+      "source": "crates/bisect-tui/src/app.rs",
+      "enum": "Screen",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "tui.Compare",
+      "source": "crates/bisect-tui/src/app.rs",
+      "enum": "Screen",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "tui.Verify",
+      "source": "crates/bisect-tui/src/app.rs",
+      "enum": "Screen",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    },
+    {
+      "id": "tui.Doctor",
+      "source": "crates/bisect-tui/src/app.rs",
+      "enum": "Screen",
+      "operation": "pending",
+      "ui": "pending",
+      "verification": "pending"
+    }
+  ]
+}

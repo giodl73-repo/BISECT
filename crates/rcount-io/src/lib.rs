@@ -25,6 +25,7 @@ mod helpers;
 mod import;
 mod manifest;
 mod package;
+mod package_reader;
 
 pub use docs_dirs::*;
 pub use error::*;
@@ -32,6 +33,7 @@ pub(crate) use helpers::*;
 pub use import::*;
 pub use manifest::*;
 pub use package::*;
+pub use package_reader::*;
 
 #[cfg(test)]
 mod tests;

@@ -23,6 +23,8 @@ statistical, or implementation claims. For public-facing claim discipline, use
 | [ensemble-methods.md](ensemble-methods.md) | GerryChain ReCom evaluation, the Rust ensemble engine, and review-stage evidence packets |
 | [research-press.md](research-press.md) | Public journal model, issue states, claim classes, and review gates |
 | [algorithmic-baseline.md](algorithmic-baseline.md) | Conservative public language for Bisect as a reproducible redistricting baseline |
+| [best-immediate-cut.md](best-immediate-cut.md) | Proportional representation, minimum added boundary, and the argument for a unique immediate cut |
+| [certified-recursive-bisection.md](certified-recursive-bisection.md) | How independent proofs establish that each cut follows the published rule |
 
 ## Where to go next
 

@@ -12,7 +12,7 @@ fn test_detect_gpmetis_version_returns_string() {
         version
     );
     assert!(
-        version.contains("METIS"),
+        version.to_ascii_lowercase().contains("metis"),
         "expected METIS in version string, got: {version}"
     );
 }

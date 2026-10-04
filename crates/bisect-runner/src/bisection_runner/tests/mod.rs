@@ -116,3 +116,5 @@ mod percentile;
 mod short_burst;
 mod simulated_annealing;
 mod smc;
+
+mod proportional;

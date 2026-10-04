@@ -9,8 +9,8 @@ use super::*;
 /// rank `floor(p * accepted_count)`.
 ///
 /// This replaces the single METIS call at each bisection tree node with a
-/// local feasibility sample. Because it's always k=2, there are no prime-k
-/// bipartition failures regardless of the full-state k.
+/// local feasibility sample. Target populations retain the prescribed seat ratio,
+/// including unequal splits; feasibility is still limited by the input graph.
 pub fn split_subgraph_bisection_ensemble(
     adjacency: &[Vec<usize>],
     vwgt: &[i64],
@@ -23,12 +23,25 @@ pub fn split_subgraph_bisection_ensemble(
     ensemble_steps: usize,
     p: f64,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
-    use rand::rngs::SmallRng;
+    split_subgraph_bisection_ensemble_tuned(adjacency,vwgt,edge_weights,tract_indices,ufactor,niter,base_seed,tpwgts,ensemble_steps,p,"cut",1)
+}
+
+/// Explicit METIS initialization; local sampling retains the same policy.
+#[allow(clippy::too_many_arguments)]
+pub fn split_subgraph_bisection_ensemble_tuned(
+    adjacency:&[Vec<usize>],vwgt:&[i64],edge_weights:&HashMap<(usize,usize),f64>,
+    tract_indices:&HashSet<usize>,ufactor:f64,niter:u32,base_seed:Option<u64>,
+    tpwgts:Option<Vec<f32>>,ensemble_steps:usize,p:f64,objective:&str,trials:u32,
+) -> Result<(HashSet<usize>,HashSet<usize>),String> {
+    if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials) {
+        return Err("Invalid local ensemble METIS initialization controls.".into());
+    }
+    use rand_chacha::ChaCha12Rng;
     use rand::SeedableRng;
 
     // Fall back to standard METIS bisection for very small regions.
     if tract_indices.len() <= 4 {
-        return split_subgraph(
+        return split_subgraph_tuned(
             adjacency,
             vwgt,
             1,
@@ -38,7 +51,7 @@ pub fn split_subgraph_bisection_ensemble(
             niter,
             base_seed,
             tpwgts,
-            None,
+            None, objective, trials,
         );
     }
 
@@ -65,7 +78,7 @@ pub fn split_subgraph_bisection_ensemble(
     let local_pop: Vec<i64> = sorted.iter().map(|&g| vwgt[g]).collect();
 
     // Seed initial partition via METIS bisection.
-    let (init_left, init_right) = split_subgraph(
+    let (init_left, init_right) = split_subgraph_tuned(
         adjacency,
         vwgt,
         1,
@@ -75,7 +88,7 @@ pub fn split_subgraph_bisection_ensemble(
         niter,
         base_seed,
         tpwgts.clone(),
-        None,
+        None, objective, trials,
     )?;
     let initial_assignment: Vec<u32> = sorted
         .iter()
@@ -84,7 +97,7 @@ pub fn split_subgraph_bisection_ensemble(
 
     // Run local ReCom ensemble.
     let seed = base_seed.unwrap_or(0xDEAD_BEEF_CAFE_1234);
-    let mut rng = SmallRng::seed_from_u64(seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(seed);
     let total_pop: f64 = local_pop.iter().map(|&p| p as f64).sum();
     let chain_tolerance = ufactor - 1.0;
     let mut chain = if let Some(ref tw) = tpwgts {
@@ -113,7 +126,7 @@ pub fn split_subgraph_bisection_ensemble(
     }
 
     for _ in 0..ensemble_steps {
-        let rec = chain.step(&mut rng);
+        let rec = chain.step_portable(&mut rng);
         if rec.accepted {
             let ec = rec.cut_edges;
             accepted_assignments.push((ec, chain.assignment.clone()));

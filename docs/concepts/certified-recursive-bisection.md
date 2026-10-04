@@ -16,6 +16,12 @@ The governing body first fixes:
 
 The software then proves that every required cut follows those rules.
 
+The [best immediate cut argument](best-immediate-cut.md) explains the selection
+principle: proportional representation first, then minimum weighted separation.
+For physical boundary lengths, minimum added boundary is equivalent to minimum
+combined child perimeter. The argument states the policy premises separately
+from the conditional optimality claim that certification checks.
+
 ## What stays unchanged
 
 This is still recursive bisection.
@@ -46,6 +52,23 @@ The certified procedure asks three decision questions at each node:
 
 Three independently checked UNSAT proofs answer “no.” The selected cut is then
 unique under the enacted rules.
+
+These are conditional, per-node objectives. They do not minimize a statewide
+final-plan objective or establish a final-district population tolerance.
+The current bounded solver commits to the optimal parent cut before solving
+its children. A locally optimal cut can leave a child unable to complete its
+required schedule, even when a different parent cut would permit completion.
+Having enough units for the child's seat count is necessary but insufficient.
+
+Two executable counterexamples in `certified_tree.rs` establish these limits:
+an eight-unit, eight-seat graph whose cheapest balanced root strands a
+four-unit star, and a four-unit path with populations 3, 1, 2, 2 whose perfectly
+balanced root produces final districts with 50% maximum relative deviation.
+These are synthetic model counterexamples, not findings about published
+State assignments. The immediate-cut rule needs declared failure semantics
+and separate final-leaf checks before claiming guaranteed usable plans.
+Making completion a condition of cut eligibility would define a different
+rule; it is not part of the current sequential bisection proposal.
 
 ## Why this is the Huntington--Hill analogy
 

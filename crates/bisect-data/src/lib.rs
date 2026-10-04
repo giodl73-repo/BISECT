@@ -1,5 +1,6 @@
 pub mod adjacency;
 pub mod bridge;
+pub mod demographics;
 pub mod enacted;
 pub mod fiedler;
 pub mod pl94;
