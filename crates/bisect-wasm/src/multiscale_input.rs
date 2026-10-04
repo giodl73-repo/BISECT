@@ -17,7 +17,7 @@ pub struct BlockGroupGraph {
     pub population: Vec<i64>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct AdaptiveOptions {
     pub target_accept: f64,
@@ -26,7 +26,7 @@ pub struct AdaptiveOptions {
     pub coarse_tol_factor: f64,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct MultiscaleRequest {
     pub request: Request,
@@ -104,7 +104,7 @@ fn validate_bg(g: &PreparedGraph, b: &BlockGroupGraph) -> Result<(), String> {
     Ok(())
 }
 
-pub fn execute(input: MultiscaleRequest) -> Result<Value, String> {
+pub(crate) fn validate(input: &MultiscaleRequest) -> Result<(), String> {
     let r = &input.request; let g = &r.graph; let o = &r.options;
     crate::engine::validate(g, o)?;
     let fips = crate::tract_input::import_scope(&g.state, &g.year, "multiscale graph")?;
@@ -135,12 +135,20 @@ pub fn execute(input: MultiscaleRequest) -> Result<Value, String> {
     }
     let bg = input.block_groups.as_ref();
     let fine_ids = bg.map_or(&g.geoids, |b| &b.geoids);
-    let fine_pop = bg.map_or(&g.population, |b| &b.population);
-    let fine_adj = bg.map_or(&g.adjacency, |b| &b.adjacency);
     // The native algorithm retains every candidate assignment for percentile ranking.
     if (input.total_steps + 1).checked_mul(fine_ids.len()).is_none_or(|n| n > 10_000_000) {
         return Err("Multiscale retained-plan work limit exceeded.".into());
     }
+    Ok(())
+}
+
+pub fn execute(input: MultiscaleRequest) -> Result<Value, String> {
+    validate(&input)?;
+    let g = &input.request.graph; let o = &input.request.options;
+    let bg = input.block_groups.as_ref();
+    let fine_ids = bg.map_or(&g.geoids, |b| &b.geoids);
+    let fine_pop = bg.map_or(&g.population, |b| &b.population);
+    let fine_adj = bg.map_or(&g.adjacency, |b| &b.adjacency);
     let geoids: HashMap<_, _> = g.geoids.iter().cloned().enumerate().collect();
     let bg_geoids: HashMap<_, _> = bg.map(|b| b.geoids.iter().cloned().enumerate().collect()).unwrap_or_default();
     let bg_tuple = bg.map(|b| (b.adjacency.as_slice(), b.population.as_slice(), &bg_geoids));

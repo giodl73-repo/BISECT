@@ -94,7 +94,6 @@ export class WasmCatalog extends StaticCatalog {
     if(this.active||this.exporting)throw new Error('Finish or cancel the active operation first.');
     const job=this.jobs.get(jobId),state=job?.states.find(s=>s.code===code);
     if(!state?.metrics||state.status!=='completed')throw new Error('Select a completed state result.');
-    if(isMultiscale(job.config))throw new Error('Multiscale practitioner export is not yet integrated. Save the laboratory project to retain its inputs and assignments.');
     const assignments=this.outputs.get(`${jobId}:${code}`),entry=this.manifest.graphs[`${code}:${job.config.year}`];
     if(!assignments||!entry)throw new Error('Prepared graph or assignments unavailable.');
     this.exporting=true;
@@ -105,7 +104,8 @@ export class WasmCatalog extends StaticCatalog {
       await verifyAssignments(graph,state,assignments,job.config);
       const c=job.config,options=state.metrics.recorded_options;
       if(!options)throw new Error('Recorded native options are required for export.');
-      const exported=await this.execute({operation:'export-engine-plan',request:{graph,options,...(usesCharacterWeights(c.weights)?{character:validateCharacterInput(c.characters[code],graph,c.weights.replace('-character',''))}:{}),...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[code],graph)}:{}),...(c.demographics?.[code]?{demographics:validateDemographicInput(c.demographics[code],graph)}:{})},assignments,label:`${c.name} · ${code}`,chamber:c.chamber,created_at:new Date(job.created_unix*1000).toISOString()},c.timeout_seconds);
+      const metadata={assignments,label:`${c.name} · ${code}`,chamber:c.chamber,created_at:new Date(job.created_unix*1000).toISOString()};
+      const exported=await this.execute(isMultiscale(c)?{operation:'export-multiscale-plan',input:multiscaleRequest(graph,options,c).input,fine_edges:c.multiscale.fine_level==='bg'?c.multiscale.inputs[code].boundary_edges:null,...metadata}:{operation:'export-engine-plan',request:{graph,options,...(usesCharacterWeights(c.weights)?{character:validateCharacterInput(c.characters[code],graph,c.weights.replace('-character',''))}:{}),...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[code],graph)}:{}),...(c.demographics?.[code]?{demographics:validateDemographicInput(c.demographics[code],graph)}:{})},...metadata},c.timeout_seconds);
       return {exported,project:createProject({name:`${c.name} · ${code}`,files:{plan:exported.document,context:exported.context},operation:'validate-rplan',constraints:['plan-shape','population','contiguity'],result:null,lastOperation:null})};
     }finally{this.assets.delete(entry.graph_ref);this.exporting=false;}
   }

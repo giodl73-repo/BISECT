@@ -182,7 +182,7 @@ pub(crate) fn partisan_shares(g:&PreparedGraph,input:&PartisanInput)->Result<(Ve
     Ok((shares,format!("{:x}",h.finalize())))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Request {
     #[serde(default)]

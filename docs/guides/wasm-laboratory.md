@@ -2297,3 +2297,36 @@ Portable ChaCha12 and Wilson draws permit exact native/WASM replay while preserv
 Verification passed: 78 deterministic native/WASM comparisons and 32 matching invalid requests; 25 state/national project roundtrips, 37 maps, 25 native replays and 177 tamper rejections; 11 import workers created and terminated. The project matrix includes six real RI/IA/NC tract cases and explicitly synthetic fine-resolution fixtures, with nine balance misses and no disconnected plans. Browser runs and local-file Open were verified on RI; the fine-resolution browser fixture uses synthetic block groups, boundary lengths and duplicated tract geometry. Browser download arrival on disk remains unverified.
 
 Multiscale practitioner export, authentic block-group data preparation and additional weighting combinations remain pending. This phase does not complete the broader WASM capability goal.
+
+### Multiscale practitioner handoff (2026-10-04)
+
+Completed multiscale state results can now use **Prepare selected state for auditing**, including a selected state from a national run and a verified reopened project. The export retains explicit tract or block-group unit order, zero-based native district assignments, fine populations, adjacency, physical boundary weights, county IDs and hashed initialization/search inputs. Supplied edges use the native custom classification. Export does not rerun generation or assert a balance pass. Save the laboratory project separately to retain map geometry; geometry and original edge classifications are not included in the audit export.
+
+The shared native RPLAN/RCTX readers validate every export. The permanent gate passed 37 plans, 148 exact native/WASM export/validation/audit/certificate operations and 327 matching invalid-input rejections. All nine population misses failed the supplied native population profile. Existing plan export passed seven exact operations and ten rejections; multiscale generation remained green at 78 exact cases/32 rejections, project roundtrips at 25 projects/37 maps/177 tamper rejections, and input workers at 11 created/terminated.
+
+Actual browser Open of the explicitly synthetic RI 500-block-group fixture, audit preparation, local-file workbench Open, supplied 0.5% profile audit and certificate verification passed. Shape and contiguity passed; the 0.658% population deviation correctly failed. Browser proof: `target/wasm-multiscale-audit-browser.png`. Browser download arrival remains unverified. Authentic block-group preparation, additional weighting and the remaining engine/practitioner/archive/offline capabilities remain active work. These follow-up changes are local after PR #56.
+
+### Authentic block-group preparation (2026-10-04)
+
+`wasm-fine-input` prepares a browser multiscale bundle from an explicit prepared tract graph, local TIGER block-group shapefile and PL 94-171 geography/population files. It groups native block populations by twelve-digit block-group GEOID, requires exact TIGER/PL coverage and tract population sums, computes projected adjacency, and rejects an incompatible tract quotient. No counts or cross-tract edges are inserted to force agreement. The shapefile must declare geographic NAD83; display rings, coordinate ranges, graph size and the 25 MiB browser import limit are checked.
+
+Island bridging requires the explicit `--native-island-bridges` option. Parent tracts are connected before the state using the native nearest-component policy and median retained edge cost. These are derived graph costs, not measured shared boundaries. A discovered equal-size-component tie now uses deterministic input order rather than randomized HashMap order. A separate `.sources.json` report records seven source-byte hashes, exact bridge endpoints/costs, projection, simplification and bundle identity. Retain that report alongside the laboratory project; it is not embedded in the current project format and does not authenticate provenance.
+
+Example, from the repository root with locally obtained Census files:
+
+```powershell
+cargo run -p bisect-web --bin wasm-fine-input --release --locked --offline -- `
+  --state RI --year 2020 --tract-graph target/authentic-bg/RI/tract.json `
+  --shape target/authentic-bg/RI/tiger/tl_2020_44_bg.shp `
+  --geography data/2020/redistricting/rhode_island/rigeo2020.pl `
+  --population data/2020/redistricting/rhode_island/ri000012020.pl `
+  --output target/authentic-bg/RI/new-browser-input.json --native-island-bridges
+```
+
+The tract JSON must be the exact prepared input selected by the laboratory catalog. Import the output in Experiment options under Block-group graph and map JSON files. Choose block-group fine resolution and tract or county coarse resolution. Source geometry can be obtained from the [Census TIGER 2020 block-group archive](https://www2.census.gov/geo/tiger/TIGER2020/BG/); local PL inputs provide population counts. Preparation does not download files or overwrite an existing output/report.
+
+Verified RI 2020: 792 authentic block groups, six explicitly recorded derived bridges, full tract population/adjacency agreement, two byte-identical preparations, seven independently checked source hashes and seven CLI rejections. The exact native/WASM gate passed 64 generation/export/audit/certificate operations, 16 project/map roundtrips and 16 supplied-profile audits with no balance misses. Native TIGER tests passed 14 cases and bridge tests passed 19, including the repeated tie regression. The build script includes reader and bridge gates. Optional local source gates are `test_fine_input_cli.mjs` and `test_authentic_multiscale.mjs`; they require explicitly prepared local Census fixtures and perform no downloads.
+
+Actual browser worker import and adaptive block-group-to-tract execution with the visible max-u64 seed produced two graph-connected districts, 0.206% deviation against a requested 0.5%, about 82.7 km of supplied graph boundary weights and one split county. The stabilized bundle is byte-identical to the browser-tested bundle. Screenshot: `target/wasm-authentic-block-groups-browser.png`. Broader authentic state/year coverage, in-browser source preparation, embedded raw-source reports, verified disk download arrival and the remaining full WASM capability inventory are still incomplete. Changes remain local after PR #56.
+
+The authentic browser result also survived reload/Restore autosave with the exact seed, inputs, metrics and assignments, without generation. Result badges now distinguish supplied block-group inputs from prepared tract inputs. The complete native data library passed all 88 tests after the reader and bridge changes.
