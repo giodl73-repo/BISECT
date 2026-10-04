@@ -91,7 +91,7 @@ impl SmcResult {
         let log_weights: Vec<f64> = self
             .weights
             .iter()
-            .map(|&w| if w > 0.0 { w.ln() } else { f64::NEG_INFINITY })
+            .map(|&w| if w > 0.0 { libm::log(w) } else { f64::NEG_INFINITY })
             .collect();
 
         // Write particle lines

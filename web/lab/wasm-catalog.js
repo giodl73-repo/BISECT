@@ -1,5 +1,6 @@
 import {validateElectionInput} from './election-input.js';
 import {validatePartisanInput} from './partisan-input.js';
+import {validateCharacterInput,usesCharacterWeights} from './character-input.js';
 import {StaticCatalog,isSeed,effectiveConfig,engineOptions} from './static.js';
 import {validateLabConfig,validateLabProject} from './laboratory-project.js';
 import {validateDemographicInput} from './demographic-input.js';
@@ -51,7 +52,7 @@ export class WasmCatalog extends StaticCatalog {
     validateLabConfig(config);
     if(!config||!Array.isArray(config.states)||!config.states.length||config.states.length>50||new Set(config.states).size!==config.states.length)throw new Error('Invalid state selection.');
     if(!['state','national'].includes(config.mode)||!['congressional','house','senate'].includes(config.chamber))throw new Error('Invalid experiment mode or chamber.');
-    if(!this.manifest.catalog.search_compatibility[config.structure]?.includes(config.search)||!['geographic','unweighted','county','partisan'].includes(config.weights))throw new Error('Unsupported engine settings.');
+    if(!this.manifest.catalog.search_compatibility[config.structure]?.includes(config.search)||!['geographic','unweighted','county','partisan','economic-character','housing-character'].includes(config.weights))throw new Error('Unsupported engine settings.');
     if(!isSeed(config.seed)||!Number.isFinite(config.timeout_seconds)||config.timeout_seconds<1||config.timeout_seconds>86400)throw new Error('Invalid seed or timeout.');
     for(const code of config.states){
       if(!Object.hasOwn(this.manifest.graphs,`${code}:${config.year}`))throw new Error(`Prepared input unavailable for ${code} ${config.year}.`);
@@ -102,7 +103,7 @@ export class WasmCatalog extends StaticCatalog {
       await verifyAssignments(graph,state,assignments,job.config);
       const c=job.config,options=state.metrics.recorded_options;
       if(!options)throw new Error('Recorded native options are required for export.');
-      const exported=await this.execute({operation:'export-engine-plan',request:{graph,options,...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[code],graph)}:{}),...(c.demographics?.[code]?{demographics:validateDemographicInput(c.demographics[code],graph)}:{})},assignments,label:`${c.name} · ${code}`,chamber:c.chamber,created_at:new Date(job.created_unix*1000).toISOString()},c.timeout_seconds);
+      const exported=await this.execute({operation:'export-engine-plan',request:{graph,options,...(usesCharacterWeights(c.weights)?{character:validateCharacterInput(c.characters[code],graph,c.weights.replace('-character',''))}:{}),...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[code],graph)}:{}),...(c.demographics?.[code]?{demographics:validateDemographicInput(c.demographics[code],graph)}:{})},assignments,label:`${c.name} · ${code}`,chamber:c.chamber,created_at:new Date(job.created_unix*1000).toISOString()},c.timeout_seconds);
       return {exported,project:createProject({name:`${c.name} · ${code}`,files:{plan:exported.document,context:exported.context},operation:'validate-rplan',constraints:['plan-shape','population','contiguity'],result:null,lastOperation:null})};
     }finally{this.assets.delete(entry.graph_ref);this.exporting=false;}
   }
@@ -116,7 +117,7 @@ export class WasmCatalog extends StaticCatalog {
         if(job.status==='cancelled'){state.status='cancelled';continue;}
         if(graph.state!==state.code||graph.year!==job.config.year)throw new Error('Prepared graph identity mismatch.');
         const c=job.config,options={...engineOptions(c),structure:c.structure,weights:c.weights,search:c.search,districts:this.districtCount(state.code,c),seed:c.seed,seeds:c.seeds,steps:c.steps,percentile:c.percentile,alpha_county:c.alpha_county,balance_tolerance:c.balance_tolerance,area_swing:c.area_swing,iterations:c.iterations};
-        const result=await this.execute({graph,options,...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[state.code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[state.code],graph)}:{}),...((c.search==='vra-recom'||c.structure==='ratio-optimal-vra')?{demographics:validateDemographicInput(c.demographics[state.code],graph)}:{})},c.timeout_seconds);
+        const result=await this.execute({graph,options,...(usesCharacterWeights(c.weights)?{character:validateCharacterInput(c.characters[state.code],graph,c.weights.replace('-character',''))}:{}),...(['proportional-bisect','proportional-section'].includes(c.structure)?{elections:validateElectionInput(c.elections[state.code],graph)}:{}),...(c.weights==='partisan'?{partisan:validatePartisanInput(c.partisans[state.code],graph)}:{}),...((c.search==='vra-recom'||c.structure==='ratio-optimal-vra')?{demographics:validateDemographicInput(c.demographics[state.code],graph)}:{})},c.timeout_seconds);
         if(job.status==='cancelled'){state.status='cancelled';continue;}
         const m=result.metrics;
         state.metrics={...m,district_count:m.districts,districts:m.district_metrics,balance_passed:m.within_requested_tolerance,balance_tolerance_percent:c.balance_tolerance,graph_sha256:entry.native_graph_sha256,prepared_graph_sha256:this.manifest.assets[entry.graph_ref],engine_provenance:{backend:result.backend,runtime:'wasm-browser',wasm_sha256:this.manifest.wasm_sha256},requested_options:options,recorded_options:result.options,effective_config:effectiveConfig(c,options.districts),wasm_memory_bytes:this.lastMemoryBytes};

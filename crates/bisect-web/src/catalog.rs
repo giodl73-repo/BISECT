@@ -260,6 +260,7 @@ pub fn build(paths: &Paths, jobs: &[Job], out: &Path, max_bytes: u64) -> Result<
         include_str!("../../../web/lab/lab.css"),
     )?;
     std::fs::write(out.join("lab.js"), include_str!("../../../web/lab/lab.js"))?;
+    for (name,source) in crate::input_assets::INPUT_ASSETS {std::fs::write(out.join(name),source)?;}
     std::fs::write(
         out.join("static.js"),
         include_str!("../../../web/lab/static.js"),
@@ -268,7 +269,7 @@ pub fn build(paths: &Paths, jobs: &[Job], out: &Path, max_bytes: u64) -> Result<
     let bytes = serde_json::to_vec(&manifest)?;
     let total = std::fs::read_dir(out.join("assets"))?.try_fold(0u64, |sum, e| {
         Ok::<_, std::io::Error>(sum + e?.metadata()?.len())
-    })? + ["index.html", "lab.css", "lab.js", "static.js"]
+    })? + crate::input_assets::INPUT_ASSETS.iter().map(|(_,source)|source.len() as u64).sum::<u64>() + ["index.html", "lab.css", "lab.js", "static.js"]
         .iter()
         .try_fold(0u64, |sum, p| {
             Ok::<_, std::io::Error>(sum + std::fs::metadata(out.join(p))?.len())
@@ -317,6 +318,10 @@ mod tests {
         assert_eq!(manifest["assets"].as_object().unwrap().len(), 2);
         assert_eq!(manifest["geometries"].as_object().unwrap().len(), 1);
         assert!(!manifest.to_string().contains("secret"));
+        // Eager lab.js imports must be present in the published static bundle.
+        let mut sources=vec![std::fs::read_to_string(out.join("lab.js")).unwrap()];
+        for(name,_)in crate::input_assets::INPUT_ASSETS {sources.push(std::fs::read_to_string(out.join(name)).unwrap());}
+        for source in sources {for import in source.split("from './").skip(1) {let name=import.split('\'').next().unwrap();assert!(out.join(name).is_file(),"Missing input module {name}");}}
         for file in std::fs::read_dir(out.join("assets")).unwrap() {
             assert!(!std::fs::read_to_string(file.unwrap().path())
                 .unwrap()

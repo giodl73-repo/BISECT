@@ -154,7 +154,7 @@ pub fn propose_district<R: Rng>(
     new_partial.assign_district(&new_district_global, stage as u32);
 
     // Weight increment = log(|valid_cuts|)
-    let log_w = (valid_cuts.len() as f64).ln();
+    let log_w = libm::log(valid_cuts.len() as f64);
 
     Ok((new_partial, log_w))
 }

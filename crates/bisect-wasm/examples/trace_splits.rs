@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "requested_node_tolerance_percent":(ufactor-1.0)*100.0}));
         queue.push_back((format!("{path}0"),left_k,left));queue.push_back((format!("{path}1"),right_k,right));
     }
-    let result=execute(Request {demographics:None,graph,options:Options {metis_objective:None,metis_trials:None,w_vra:None,vra_threshold:None,structure:"standard-bisect".into(),weights:"geographic".into(),
+    let result=execute(Request {character:None,partisan:None,elections:None,demographics:None,graph,options:Options {character_alpha:None,dem_threshold:None,rep_threshold:None,proportional_eta:None,metis_objective:None,metis_trials:None,w_vra:None,vra_threshold:None,structure:"standard-bisect".into(),weights:"geographic".into(),
         search:"single".into(),districts,seed:42,seeds:1,steps:20,percentile:0.0,alpha_county:0.0,
         balance_tolerance:5.0,area_swing:1.1,iterations:10,sa_steps_per_tract:None,sa_t0_factor:None,sa_t_final:None,flow_repair:None,smc_particles:None,smc_resample_threshold:None,cvd_iters:None,cvd_metric:None,mka_orientations:None,mka_metric:None,compact_epsilon:None,area_init:None,burst_length:None,n_bursts:None,pt_replicas:None,pt_swap_interval:None,pt_cold_tol:None,pt_hot_tol:None}})?;
     println!("{}",serde_json::to_string(&json!({"splits":splits,"result":result}))?);

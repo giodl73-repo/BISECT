@@ -17,6 +17,7 @@ rayon.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+libm = "0.2.16"
 
 [dev-dependencies]
 # no extra dev deps needed

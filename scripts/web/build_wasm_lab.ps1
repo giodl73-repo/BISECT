@@ -4,6 +4,8 @@ $labRepo=(Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 Push-Location $labRepo
 try {
     if((Test-Path -LiteralPath $Output) -and (Get-ChildItem -LiteralPath $Output -Force | Select-Object -First 1)){throw 'Choose a new or empty output directory.'}
+    cargo test -p bisect-core --lib character --locked --offline
+    if($LASTEXITCODE -ne 0){throw 'Shared economic/housing character formula and zero-policy verification failed.'}
     cargo test -p bisect-runner --lib --no-default-features proportional --locked --offline
     if($LASTEXITCODE -ne 0){throw 'Proportional recursion, seat allocation and input validation failed.'}
     cargo build -p bisect-wasm --release --target wasm32-unknown-unknown --locked --offline
@@ -14,6 +16,8 @@ try {
     if($LASTEXITCODE -ne 0){throw 'WASM AreaSection verification failed.'}
     cargo build -p bisect-wasm --release --example execute_request --example execute_tool_request --locked --offline
     if($LASTEXITCODE -ne 0){throw 'Native engine reference build failed.'}
+    node scripts/web/test_character_csv.mjs
+    if($LASTEXITCODE -ne 0){throw 'Economic/housing character native/WASM CSV import validation failed.'}
     node scripts/web/test_cvd_wasm.mjs
     if($LASTEXITCODE -ne 0){throw 'CVD native/WASM parameter and portability verification failed.'}
     node scripts/web/test_mka_wasm.mjs
@@ -40,6 +44,12 @@ try {
     if($LASTEXITCODE -ne 0){throw 'VRASection native/WASM scoring and demographic verification failed.'}
     cargo run -p bisect-web --bin wasm-lab-assets --release --locked --offline -- --output $Output --states $States --year $Year
     if($LASTEXITCODE -ne 0){throw 'Static laboratory export failed.'}
+    node scripts/web/test_character_wasm.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Character weighting, native/WASM parity, project and export verification failed.'}
+    node scripts/web/test_character_national.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'National character inputs, saved projects and maps failed verification.'}
+    node scripts/web/test_character_csv_worker.mjs $Output
+    if($LASTEXITCODE -ne 0){throw 'Character CSV worker integrity, validation and cancellation failed.'}
     node scripts/web/test_proportional_wasm.mjs $Output
     if($LASTEXITCODE -ne 0){throw 'Proportional native/WASM, election evidence, project and export verification failed.'}
     node scripts/web/test_election_csv.mjs $Output

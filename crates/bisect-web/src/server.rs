@@ -56,7 +56,7 @@ fn route(request: &mut Request, lab: &Arc<Laboratory>) -> Result<(&'static str, 
             "/lab.css" => Some(("text/css; charset=utf-8", CSS)),
             "/lab.js" => Some(("text/javascript; charset=utf-8", JS)),
             "/static.js" => Some(("text/javascript; charset=utf-8", STATIC_JS)),
-            _ => None,
+            _ => crate::input_assets::INPUT_ASSETS.iter().find(|(name,_)|path==format!("/{name}")).map(|(_,source)|("text/javascript; charset=utf-8",*source)),
         };
         if let Some((mime, body)) = asset {
             return Ok((mime, body.as_bytes().to_vec()));

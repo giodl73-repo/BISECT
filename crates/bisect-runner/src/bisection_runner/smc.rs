@@ -131,7 +131,7 @@ pub fn run_smc_percentile_with_evidence(
         "method":"smc-percentile", "rng":"chacha12-u64-v1", "objective":"unweighted-edge-cut",
         "base_seed":base_seed.to_string(), "sampler_seed":smc_base_seed.to_string(),
         "particles":n_particles, "percentile":p, "resample_threshold":resample_threshold,
-        "sampler_tolerance":0.005, "tolerance_basis":"remaining-component-total",
+        "sampler_tolerance":0.005, "tolerance_basis":"remaining-component-total", "math":"libm-exp-log-v1",
         "selected_particle":selected_index, "selected_edge_cut":count_edge_cuts(&assignment, adjacency),
         "resample_count":result.resample_count, "resample_rounds":result.resample_rounds,
         "ess_trace":result.ess_trace,

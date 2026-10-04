@@ -67,14 +67,14 @@ fn main()->Result<()> {
     }
     let structures=["proportional-bisect","proportional-section","simulated-annealing","capacity-clustering","regionalization","flow-construction","spectral","prime-factor","standard-bisect","nway","bfs-growth","centroidal-voronoi","moving-knife","compact-polsby","ratio-optimal","ratio-optimal-area","ratio-optimal-vra"];
     let standard=["vra-recom","smc-percentile","convergence","single","multi","percentile","bisection-ensemble","short-burst","short-burst-forest","short-burst-merge-split","flip","forest-recom","merge-split","parallel-tempering"];
-    manifest["catalog"]["weights"]=json!(["geographic","unweighted","county","partisan"]);
+    manifest["catalog"]["weights"]=json!(["geographic","unweighted","county","partisan","economic-character","housing-character"]);
     manifest["catalog"]["structures"]=json!(structures);
     manifest["catalog"]["searches"]=json!(standard);
     manifest["catalog"]["search_compatibility"]=json!(structures.iter().map(|s|(*s,if *s=="standard-bisect"{standard.to_vec()}else if ["proportional-section","compact-polsby","ratio-optimal","ratio-optimal-area","ratio-optimal-vra"].contains(s){vec!["single","multi"]}else{vec!["single"]})).collect::<BTreeMap<_,_>>());
     manifest["catalog"]["engine_available"]=json!(true);manifest["catalog"]["execution"]=json!("browser-wasm");
     let wasm=fs::read(root.join("target/wasm32-unknown-unknown/release/bisect_wasm.wasm"))?;
     manifest["wasm_sha256"]=json!(digest(&wasm));fs::write(args.output.join("bisect_wasm.wasm"),wasm)?;
-    for file in ["lab.js","lab.css","static.js","wasm-catalog.js","wasm-engine.js","wasm-worker.js","laboratory-project.js","laboratory-project-worker.js","assignment-verification.js","assignment-verification-worker.js","project.js","package-files.js","demographic-input.js","partisan-input.js","partisan-tsv-worker.js","election-input.js","election-csv-worker.js","demographic-csv-worker.js","json-worker.js"]{fs::copy(root.join("web/lab").join(file),args.output.join(file))?;}
+    for file in ["lab.js","lab.css","static.js","wasm-catalog.js","wasm-engine.js","wasm-worker.js","laboratory-project.js","laboratory-project-worker.js","assignment-verification.js","assignment-verification-worker.js","project.js","package-files.js","demographic-input.js","partisan-input.js","partisan-tsv-worker.js","character-input.js","character-csv-worker.js","election-input.js","election-csv-worker.js","demographic-csv-worker.js","json-worker.js"]{fs::copy(root.join("web/lab").join(file),args.output.join(file))?;}
     let html=fs::read_to_string(root.join("web/lab/index.html"))?.replace("<body>","<body data-backend=\"wasm\">")
         .replace("<head>","<head><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'\">")
         .replace("Configurations and completed state results survive a server restart.","Published results remain available. Live runs remain in this tab; download their run records and maps before closing it.")

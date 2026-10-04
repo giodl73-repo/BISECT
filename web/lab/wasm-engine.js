@@ -1,5 +1,6 @@
 import {validateElectionInput} from './election-input.js';
 import {validatePartisanInput} from './partisan-input.js';
+import {validateCharacterInput,usesCharacterWeights} from './character-input.js';
 // Raw WASM ABI keeps the public site independent of a native process or bundler.
 export async function instantiateEngine(bytes) {
   const module = await WebAssembly.compile(bytes);
@@ -30,6 +31,9 @@ export async function instantiateEngine(bytes) {
       const engineRequest=request?.operation==='export-engine-plan'?request.request:request;
       if(engineRequest?.elections)validateElectionInput(engineRequest.elections,engineRequest.graph);
       if(engineRequest?.partisan)validatePartisanInput(engineRequest.partisan,engineRequest.graph);
+      if(engineRequest?.character)validateCharacterInput(engineRequest.character,engineRequest.graph,engineRequest.options?.weights?.replace('-character',''));
+      if(options&&usesCharacterWeights(options.weights)&&(!Number.isFinite(options.character_alpha)||options.character_alpha<0||options.character_alpha>1||Object.is(options.character_alpha,-0)))throw new Error('Character blend alpha must be finite in [0,1].');
+      if(request?.operation==='build-character-weights'){validateCharacterInput(request.input);if(!Number.isFinite(request.alpha)||request.alpha<0||request.alpha>1||Object.is(request.alpha,-0))throw new Error('Character blend alpha must be finite in [0,1].');}
       const data=new TextEncoder().encode(JSON.stringify(request));
       const input=api.bisect_alloc(data.length);
       try {

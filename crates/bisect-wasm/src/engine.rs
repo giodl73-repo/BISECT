@@ -51,6 +51,8 @@ mod seed_serde {
 #[serde(deny_unknown_fields)]
 pub struct Options {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub character_alpha: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub proportional_eta: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metis_objective: Option<String>,
@@ -184,6 +186,8 @@ pub(crate) fn partisan_shares(g:&PreparedGraph,input:&PartisanInput)->Result<(Ve
 #[serde(deny_unknown_fields)]
 pub struct Request {
     #[serde(default)]
+    pub character: Option<crate::character_input::CharacterInput>,
+    #[serde(default)]
     pub elections: Option<crate::election_input::ElectionInput>,
     #[serde(default)]
     pub partisan: Option<PartisanInput>,
@@ -194,6 +198,10 @@ pub struct Request {
 }
 
 pub(crate) fn validate(g: &PreparedGraph, o: &Options) -> Result<(), String> {
+    let character=["economic-character","housing-character"].contains(&o.weights.as_str());
+    if character {
+        if !o.character_alpha.is_some_and(|v|v.is_finite()&&!v.is_sign_negative()&&v<=1.) {return Err("Character weights require a finite blend alpha in [0,1].".into());}
+    } else if o.character_alpha.is_some() {return Err("Character blend alpha has no effect without character weights.".into());}
     if o.structure=="proportional-section" {
         if o.proportional_eta.is_some_and(|v|!v.is_finite()||!(1.0..=2.0).contains(&v)){return Err("ProportionalSection eta must be finite in [1,2].".into());}
     } else if o.proportional_eta.is_some(){return Err("Vote constraint eta applies only to ProportionalSection.".into());}
@@ -293,7 +301,7 @@ pub(crate) fn validate(g: &PreparedGraph, o: &Options) -> Result<(), String> {
     {
         return Err("Invalid engine option bounds.".into());
     }
-    if !["geographic", "unweighted", "county", "partisan"].contains(&o.weights.as_str())
+    if !["geographic", "unweighted", "county", "partisan", "economic-character", "housing-character"].contains(&o.weights.as_str())
         || (o.weights != "county" && o.alpha_county != 0.0)
     {
         return Err("Invalid boundary weights.".into());
@@ -407,6 +415,7 @@ pub fn execute(request: Request) -> Result<Value, String> {
         demographics,
         partisan,
         elections,
+        character,
     } = request;
     validate(&g, &o)?;
     let uses_elections=["proportional-bisect","proportional-section"].contains(&o.structure.as_str());
@@ -433,10 +442,22 @@ pub fn execute(request: Request) -> Result<Value, String> {
         _=>None,
     };
     let boosts=partisan_data.as_ref().map(|(shares,_)|bisect_core::build_partisan_weights(&g.edges.iter().map(|&(u,v,_)|(u,v)).collect::<Vec<_>>(),shares,o.dem_threshold.unwrap(),o.rep_threshold.unwrap()));
-    let weighting_evidence=partisan_data.as_ref().map(|(shares,digest)|{
+    let mut weighting_evidence=partisan_data.as_ref().map(|(shares,digest)|{
         let strong=shares.iter().filter(|&&v|v>=o.dem_threshold.unwrap()||v<=o.rep_threshold.unwrap()).count();
         json!({"method":"partisan-adaptive-boost","dem_threshold":o.dem_threshold,"rep_threshold":o.rep_threshold,"strong_tracts":strong,"tracts":shares.len(),"alpha":3.0_f64.max(10.0*(1.0-0.7*(strong as f64/shares.len() as f64))),"baseline":"unit-edge-weight","boost":"same-strong-lean","shares_sha256":digest,"scope":"edge-weighting"})
     });
+    let character_weights=match (["economic-character","housing-character"].contains(&o.weights.as_str()),character.as_ref()) {
+        (true,Some(input))=>{
+            if input.state!=g.state || input.year!=g.year {return Err("Character input scope must match the prepared graph.".into());}
+            let weights=crate::character_input::build_weights(input,&g.geoids,&g.edges,o.character_alpha.unwrap())?;
+            if format!("{}-character",weights.kind)!=o.weights {return Err("Character input kind must match the selected weights.".into());}
+            weighting_evidence=Some(json!({"method":"character-cosine-blend","kind":weights.kind,"alpha":weights.alpha,"character_sha256":weights.character_hash,"formula":weights.formula,"zero_policy":weights.zero_policy,"data_year":input.data_year,"baseline":"geographic-boundary-m","tracts":g.geoids.len(),"scope":"edge-weighting"}));
+            Some(weights.edges.into_iter().map(|(u,v,w)|((u,v),w)).collect::<HashMap<_,_>>())
+        },
+        (true,None)=>return Err("Character weights require explicit complete tract observations.".into()),
+        (false,Some(_))=>return Err("Character input has no effect without character weights.".into()),
+        _=>None,
+    };
     let a = &g.adjacency;
     let p = &g.population;
     let k = o.districts;
@@ -451,6 +472,7 @@ pub fn execute(request: Request) -> Result<Value, String> {
             let weight = match o.weights.as_str() {
                 "unweighted" => 1.0,
                 "partisan" => boosts.as_ref().unwrap().get(&(u,v)).copied().unwrap_or(1.0),
+                "economic-character" | "housing-character" => character_weights.as_ref().unwrap()[&(u,v)],
                 "county" if g.geoids[u][..5] == g.geoids[v][..5] => w * o.alpha_county.max(1.0),
                 _ => w,
             };
