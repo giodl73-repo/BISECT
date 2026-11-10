@@ -1,0 +1,374 @@
+{
+  "date": "2026-11-10",
+  "repository": "giodl73-repo/BISECT",
+  "purpose": "Source preservation before machine migration",
+  "branches": [
+    {
+      "ref": "refs/heads/agent/block-ensemble-expansion",
+      "commit": "db9d192f88a7c66cc4d97f052ad3b087d5e08b7e",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-successor-protocol",
+      "commit": "3f81a1eae3b1daf9d7706da771ae5cdf40e9025f",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v2-implementation",
+      "commit": "33c764059c4add246ed0e219d5c70f97acd3d462",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v2-readiness",
+      "commit": "7548b3d61fa35c1ed4cbc8492747bc132c8ee4cf",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v2-stage0",
+      "commit": "1802f22e3f64a655ee1d364537fff5b021177914",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-analysis",
+      "commit": "0ddd33d7d4f0252870d6bf6c7e6fb62afb729e4d",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-primary-ga-kruskal",
+      "commit": "967f33b3408b0868c003562466b0c52f14923642",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-primary-ga-wilson",
+      "commit": "c878a7f0315f28332df7f8faf7212685189d982d",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-primary-nh-kruskal",
+      "commit": "2ab2afa9ab20a288e4e9c2a477b1b566007b81a7",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-primary-nh-wilson",
+      "commit": "ea004edad59f46ae516441a066804811833e03ad",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-primary-nm-kruskal",
+      "commit": "d484d1bc639e5c73aaf942217e680cf1b84557be",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-primary-nm-wilson",
+      "commit": "1118938e4309d3296d667401dc346db8e4a20c7f",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-readiness",
+      "commit": "f7408622714ca0a56a46f463ef08a8c65b0d3e1d",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-replay-ga-kruskal",
+      "commit": "13a872c3b8710fd9fdbd7220253448fb3e420c2c",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-replay-ga-wilson",
+      "commit": "77c5c5dfd7af9da1ff8e292525a59fc295a35be4",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-replay-nh-kruskal",
+      "commit": "a9c25211864d53a297429d6a1eef7f120273d837",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-replay-nh-wilson",
+      "commit": "6d3ec44f5cb141a7cd28a7e9ed06503a91837884",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-replay-nm-kruskal",
+      "commit": "ed14045ac77e97605df8afe95629d7cca581b7bb",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-replay-nm-wilson",
+      "commit": "43f285a923290a6bed8d1f38d65265c46ac01a53",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/block-ensemble-v3-stage0",
+      "commit": "be6afc4e8650a552ac9b5c0497caa0e3fecacf32",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/ensemble-admitted-launch",
+      "commit": "d7be58e7d3cadd354ebaf5880c9c079b4be7e5b9",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/ensemble-capacity-admission",
+      "commit": "d2043ae154aef43bf58f614ec4303b1e91aadcf9",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/g0-expansion-consistency",
+      "commit": "b248ed38fb5fb2506a2a1e1de40b10a617908068",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/publish-national-algorithm-bakeoff",
+      "commit": "2b0477bedf64524f316c4770fe966ffb105caead",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/agent/v3-portable-readiness",
+      "commit": "6f8aef0b7d6e0478f3a8f43e33f0970833651727",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/archive/main-local-merge-2026-09-10",
+      "commit": "af7dc5f703070a621ae7f231610cce53b7e10f96",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/archive/replay-source-2026-09-09",
+      "commit": "c52b767db3522c0e4439cd3b9f01e9f556e80e8b",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/bisect/rename-phase2",
+      "commit": "113e1f00044e1e84d58008591981ce30aa59c0b7",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/ci/green-gates-check",
+      "commit": "4f52e1826be01f994eed75e22f3ebff0ff50dcee",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/ci/test-gates",
+      "commit": "67c724f9a136df43ae8d1b13fe2c5298fc42518a",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/clawpilot-health-repairs-20260517-1920",
+      "commit": "8ae84a9aa6ae0d6e0730863daadb49d05eae494f",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/codex/wasm-fine-input-audit-export",
+      "commit": "2bc6a4f758f08d0ccb7da2122194e23e121b0ba6",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/codex/wasm-imports-partisan-search",
+      "commit": "a336b2edfeac6f85df944c8cee1313dbe244c6b5",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/codex/wasm-laboratory",
+      "commit": "53f3e234e6a286561b18be9c7ccd468ce2cb1ac9",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/codex/wasm-multiscale-laboratory",
+      "commit": "bc0a94899a0de5e021c237fa55b47f2a8b802034",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/docs/papers-and-metis-engines",
+      "commit": "db78680e838f614526985712142e94ab5f9b3ca0",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/docs/readme-b-series-compositor",
+      "commit": "c715f721ceaacd53252c05a486dde352454dd6df",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/feat/bisect-rename-cleanup",
+      "commit": "b9b1212d868b71f3c241b80599999097fcfb620d",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/feat/ensemble-algorithms",
+      "commit": "6c06f35d9fd645531b070353853c3b29aa75ed66",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/feat/flip-shortburst-sa",
+      "commit": "bd7ebeb675665696a9c5fb3db0679296f508e2a7",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/feat/metis-engine-selection",
+      "commit": "c485ba516203f7a7f179b47cd353637fd10a6e71",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/feature/metis-core-integration",
+      "commit": "f79f421dcb74981a239fdfe2556b8d9e8a1019a2",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/feature/redist-metis-rust-port",
+      "commit": "b95363e1a296770e55cd2ddd2a5b6b2d2207184c",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/fix/portable-vault-role-review-2026-09-10",
+      "commit": "9c4131dfed77d68a4e601d1769526696a1b4b86f",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/fresh-start",
+      "commit": "7664f381d2f10ce084d31da3596b3d0e5875cdbf",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/integration/dependency-cleanup-2026-11-10",
+      "commit": "7589afd5a570eceebd5950f3f359b23c92cadf31",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/integration/districting-main-2026-09-10",
+      "commit": "7e66e42deb838d69d4e01d2f1473a35726751227",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/integration/repo-cleanup-2026-11-10",
+      "commit": "6d5ea8a4c40389e9120d3fbd3cac180278238c00",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/main",
+      "commit": "6186ed679f1489f90deda4b7e0afa4b2f1c32971",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/master",
+      "commit": "aefc3084c61c39499233d6236a50cc5a601cafd7",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-agent-a7ed680a4b3c877ed",
+      "commit": "d458eb1f414367c7e763c4b8753c57b30d1c922f",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-agent-a8184845df0b6ccf5",
+      "commit": "6b9d70524d622e00fe90ffe2ad5b55622773aa51",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-agent-ac745319368698278",
+      "commit": "ed01e5fba3564ebc5e8d3d156fc38824110968a8",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-agent-acab81981a880223e",
+      "commit": "8387f5250d12c394a76e1135a2db73737ccd215f",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-ci-gates-check",
+      "commit": "ad9ad7c94d043e6f1ce6b069e4604f515b0e4630",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-nrs-replay-worktree",
+      "commit": "e931adcf1379df602437ed096cd7cc50e87cde47",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-nrs-replay-worktree-r2",
+      "commit": "3c4914c5c1144bf7bb5d7baf5327d0c454a2a009",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/preserve/2026-11-10-stash-0",
+      "commit": "670ab9744d5327e1d9a60f225c7a41a52d19b714",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/readme-cleanup-and-research-showcase",
+      "commit": "612aa189c89e5819304fe48fc4b4da9232d4e523",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/research/districting-checkpoint-2026-09-10",
+      "commit": "af7dc5f703070a621ae7f231610cce53b7e10f96",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/research/h-series-r2-revisions",
+      "commit": "004725de2925b815f5e39671304d3948e6dbd123",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/research/paper-review-pipeline",
+      "commit": "7ce6b1e8216f1d2486d97bd7ced90168882a2965",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/revision-slice1-p1",
+      "commit": "568a3d97801ef84bc8b900201734fe3faae06b8d",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/worktree-agent-a7ed680a4b3c877ed",
+      "commit": "a86898bd8daed296ddfa9633d2a65a07be8855eb",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/worktree-agent-a8184845df0b6ccf5",
+      "commit": "d7f331123343cad0ade5f0240922d19814fa27c3",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/worktree-agent-ac745319368698278",
+      "commit": "179c884c1a031d08138a3e100ea35e36c1292f95",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/worktree-agent-acab81981a880223e",
+      "commit": "2b8665b1ba1efbc6a49012859d5fe1d923d154e5",
+      "remote_exact": true
+    },
+    {
+      "ref": "refs/heads/worktree-ci-gates-check",
+      "commit": "c9659e5ba01a5ac616fd372ec6bc14029149049d",
+      "remote_exact": true
+    }
+  ],
+  "workbench_checkpoint": "integration/repo-cleanup-2026-11-10",
+  "deferred": [
+    {
+      "ref": "integration/repo-cleanup-2026-11-10",
+      "reason": "Workspace all-target check fails for native, nway_ufactor_reference and trace_splits examples due to private engine module imports. test_project and test_lab_project passed; test_vra_project failed with Unsupported engine settings."
+    },
+    {
+      "pr": 64,
+      "reason": "zip major upgrade: six failed hosted checks"
+    },
+    {
+      "pr": 59,
+      "reason": "Tailwind 4 major upgrade: failed hosted check; retain Tailwind 3"
+    },
+    {
+      "pr": 44,
+      "reason": "Conflicting older Ferris branch; owner-validation adapter already matches current main"
+    }
+  ],
+  "exclusions": [
+    "Git-ignored local data, generated artifacts and caches are not part of this Git source backup"
+  ],
+  "validation": [
+    "npm ci --ignore-scripts: passed",
+    "npm run build: passed",
+    "npm lockfile audit: zero vulnerabilities"
+  ]
+}
