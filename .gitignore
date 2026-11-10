@@ -267,3 +267,6 @@ target/
 !data/location_policy.json
 !data/README.md
 .cargo/config.toml
+
+# Local Cloudflare emulator cache
+/.wrangler/
