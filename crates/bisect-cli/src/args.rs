@@ -3008,6 +3008,12 @@ pub enum DataType {
     /// Source: Census Bureau LEHD program, same as LODES WAC.
     #[value(name = "lodes-od")]
     LodesOd,
+    /// ACS 5-year housing character data (B25024, B25003, B25035).
+    /// Adds 4 columns: pct_single_family, pct_multifamily, pct_owner, housing_vintage.
+    /// Output: data/{year}/acs_housing/{state}_housing_{year}.csv
+    /// Source: Census Bureau ACS API, https://api.census.gov/data/{year}/acs/acs5
+    #[value(name = "acs-housing")]
+    AcsHousing,
     #[value(name = "all")]
     All,
 }
@@ -3024,7 +3030,7 @@ pub struct FetchArgs {
     pub states: Vec<String>,
 
     /// Data types: tiger, redistricting, adjacency, enacted, geography, elections,
-    /// lodes, lodes-od, school-districts, eia-861, all [default: all]
+    /// lodes, lodes-od, school-districts, eia-861, acs-housing, all [default: all]
     #[arg(long = "type", num_args = 0.., value_delimiter = ' ')]
     pub data_types: Vec<DataType>,
 
