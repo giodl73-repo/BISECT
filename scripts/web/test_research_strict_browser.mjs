@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createServer} from 'node:http';
+import {createRequire} from 'node:module';
+const packages=process.env.BISECT_PLAYWRIGHT_PACKAGES;assert(packages);
+const {chromium}=createRequire(path.join(packages,'package.json'))('playwright');
+const root=path.resolve('target/research-strict-browser');await fs.mkdir(root,{recursive:true});
+const source=path.resolve('web/lab'),wasm=path.resolve('target/wasm32-unknown-unknown/release/bisect_wasm.wasm');
+const server=createServer(async(req,res)=>{try{const name=new URL(req.url,'http://localhost').pathname,file=name==='/bisect_wasm.wasm'?wasm:path.resolve(source,'.'+(name==='/'?'/workbench.html':name));if(file!==wasm&&!file.startsWith(source+path.sep))throw new Error('Path refused');res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.wasm')?'application/wasm':file.endsWith('.css')?'text/css':'text/html');res.end(await fs.readFile(file));}catch{res.writeHead(404);res.end();}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;let context;
+try{
+ context=await chromium.launchPersistentContext(path.join(root,'profile-'+Date.now()),{headless:true,executablePath:process.env.BISECT_TEST_BROWSER||'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--no-first-run','--disable-background-networking','--disable-extensions']});await context.route('**/*',route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{window.runs=0;const W=Worker;window.Worker=class extends W{postMessage(v,...rest){if(v.type==='run')window.runs++;return super.postMessage(v,...rest);}};});
+ await page.addInitScript(()=>{const read=File.prototype.arrayBuffer;File.prototype.arrayBuffer=function(){const file=this;return window.holdChainRead?new Promise(resolve=>{window.releaseChainRead=()=>resolve(read.call(file));}):read.call(file);};});
+ await page.goto(origin+'/');await page.waitForFunction(()=>!document.querySelector('#execute').disabled);
+ const fixture=JSON.parse(await fs.readFile('target/research-strict/failed.bisect','utf8'));
+ const save=async name=>{const wait=page.waitForEvent('download');await page.locator('#save-project').click();const file=path.join(root,name);await(await wait).saveAs(file);return JSON.parse(await fs.readFile(file,'utf8'));};
+ const run=async()=>{await page.locator('#execute').click();await page.waitForFunction(()=>!document.querySelector('#download-research').disabled);};
+ await page.locator('#open-project').setInputFiles(path.resolve('target/research-strict/failed.bisect'));await page.waitForFunction(()=>document.querySelector('#operation').value==='validate-research-ensemble');assert.equal(await page.evaluate(()=>runs),0);assert(await page.locator('#research-strict').isChecked());assert(await page.locator('#download-research').isDisabled());
+ await run();let saved=await save('failed.bisect');assert.deepEqual(saved.result,fixture.result);assert((await page.locator('#result-tables').innerText()).includes('strict-failed'));
+ const wait=page.waitForEvent('download');await page.locator('#download-research').click();const report=path.join(root,'report.json');await(await wait).saveAs(report);assert.equal(await fs.readFile(report,'utf8'),fixture.result.report_json);
+ await page.locator('#research-strict').uncheck();assert(await page.locator('#download-research').isDisabled());await run();saved=await save('non-strict.bisect');assert.equal(saved.result.exit_code,0);assert.equal(saved.result.report.all_pass,false);assert.equal(saved.files.researchInputs.strict,false);
+ await page.locator('#research-ess').fill('1');await page.locator('#research-strict').check();assert(await page.locator('#download-research').isDisabled());await run();saved=await save('passed.bisect');assert.equal(saved.result.exit_code,0);assert.equal(saved.result.report.all_pass,true);assert.equal(saved.result.strict,true);
+ const before=await page.evaluate(()=>runs);await page.locator('#open-project').setInputFiles(path.join(root,'passed.bisect'));await page.waitForFunction(()=>document.querySelector('#result-status').textContent.startsWith('Imported result is unverified'));assert.equal(await page.evaluate(()=>runs),before);assert(await page.locator('#download-research').isDisabled());assert(await page.locator('#research-strict').isChecked());assert.deepEqual(errors,[]);
+ await page.evaluate(()=>window.holdChainRead=true);await page.locator('#research-chains').setInputFiles(path.resolve('target/research-strict/case-1/chain-0.jsonl'));await page.waitForFunction(()=>!!window.releaseChainRead);await page.locator('#research-ess').fill('2');await page.evaluate(()=>{window.holdChainRead=false;window.releaseChainRead();});await page.waitForFunction(()=>document.querySelector('#result-status').textContent.includes('Project changed while reading research inputs'));
+ saved=await save('stale-read.bisect');assert.equal(Object.keys(saved.files.researchInputs.chains).length,4);assert.equal(saved.files.researchInputs.ess_min,2);assert.deepEqual(errors,[]);
+ await fs.writeFile(path.join(root,'evidence.json'),JSON.stringify({strict_failure_visible_and_downloadable:true,native_report_bytes:true,setting_changes_retire_exports:true,strict_false_keeps_threshold_failures_in_report:true,strict_pass:true,save_open_retains_strict:true,open_is_inert:true,threshold_edit_retires_pending_source_read:true},null,2));
+ console.log('Research strict browser: actual failed/passing runs, visible native failure, exact report download, fresh settings and inert Save/Open passed.');
+}finally{await context?.close();await new Promise(resolve=>server.close(resolve));}

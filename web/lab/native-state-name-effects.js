@@ -1,0 +1,12 @@
+// A name-effect receipt is data. Fresh native reinspection owns execution checks.
+export function nativeStateNameComponent(value){return typeof value==='string'&&value.length>0&&value.length<=100&&value.trim()===value&&/^[A-Za-z0-9_ -]+$/.test(value)&&!/^(__proto__|constructor|prototype|con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(value);}
+const keys=(v,k)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join()===k.split(',').sort().join();
+const hash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(value)))),b=>b.toString(16).padStart(2,'0')).join('');
+export function validateNativeStateNameEffects(v){
+ if(!keys(v,'schema_version,preview,auxiliary_sha256')||v.schema_version!=='bisect-native-state-name-effects-v1'||v.auxiliary_sha256!==null&&!/^[a-f0-9]{64}$/.test(v.auxiliary_sha256))throw Error('Invalid native State name effects.');
+ const p=v.preview,i=p?.identity,t=p?.target;
+ if(p?.schema_version!=='bisect-native-state-identity-preview-v1'||p.error!==null||p.execution_authorized!==false||p.folder_presence_observed!==false||i?.schema_version!=='bisect-native-state-identity-v1'||i.native_year_valid!==true||i.path_authority_granted!==false||i.source_discovery_authorized!==false||!['state','labeled'].includes(i.layout)||typeof i.effective_state_name!=='string'||i.effective_state_name.length>4096||typeof i.effective_label!=='string'||!/^[A-Za-z0-9_-]{1,100}$/.test(i.effective_label)||!/^\d{4}$/.test(i.effective_year)||!nativeStateNameComponent(i.effective_state_name)||!nativeStateNameComponent(i.effective_label)||t?.schema_version!=='bisect-native-run-target-v1'||t.status!=='ready'||t.layout!==i.layout||JSON.stringify(t.identity)!==JSON.stringify(i)||typeof p.relative_target!=='string'||p.relative_target!==i.effective_year+'/'+(i.layout==='state'?'states/'+i.effective_state_name:'plans/'+i.effective_label))throw Error('Complete a fresh portable native name/label/output review before applying --state-name.');
+ return v;
+}
+export async function nativeStateNameEffects(preview,auxiliary){return structuredClone(validateNativeStateNameEffects({schema_version:'bisect-native-state-name-effects-v1',preview:structuredClone(preview),auxiliary_sha256:auxiliary?await hash(auxiliary):null}));}
+export function stateWorkflowExportLabel(binding){return binding?.name_effects?validateNativeStateNameEffects(binding.name_effects).preview.identity.effective_label:binding?.report_sources?.receipt?.identity?.effective_label??binding?.settings?.label??null;}

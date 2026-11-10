@@ -106,41 +106,23 @@ pub fn try_check_contiguity(
             continue;
         }
 
-        let (component_count, components) = bfs_component_count(&members, adjacency);
+        let (component_count, mut components) = bfs_component_count(&members, adjacency);
         let contiguous = component_count == 1;
         if !contiguous {
             all_contiguous = false;
         }
 
-        // Collect GEOIDs of tracts in non-primary components.
-        // Primary component = the largest one.
-        let primary_size = components.iter().map(|c| c.len()).max().unwrap_or(0);
-        let mut disconnected_tracts: Vec<String> = components
-            .iter()
-            .filter(|c| c.len() < primary_size || component_count == 1)
-            .flat_map(|c| {
-                if component_count <= 1 {
-                    vec![]
-                } else if c.len() < primary_size {
-                    c.iter()
-                        .filter_map(|&idx| geoids.get(idx).cloned())
-                        .collect()
-                } else {
-                    vec![]
-                }
+        // Keep the first largest component. BFS discovers components in
+        // context index order, and the stable size sort preserves that tie
+        // rule. Order members by context index, never by HashSet iteration.
+        components.sort_by_key(|c| std::cmp::Reverse(c.len()));
+        let disconnected_tracts: Vec<String> = components.into_iter().skip(1)
+            .flat_map(|component| {
+                let mut indices: Vec<_> = component.into_iter().collect();
+                indices.sort_unstable();
+                indices.into_iter().map(|index| geoids[index].clone())
             })
             .collect();
-
-        // If multiple components have the same size, include all non-primary ones.
-        // Recompute: all components except the first largest.
-        if component_count > 1 {
-            let mut sorted_components = components.clone();
-            sorted_components.sort_by_key(|c| std::cmp::Reverse(c.len()));
-            disconnected_tracts = sorted_components[1..]
-                .iter()
-                .flat_map(|c| c.iter().filter_map(|&idx| geoids.get(idx).cloned()))
-                .collect();
-        }
 
         // Build human-readable county context for each disconnected tract.
         let disconnected_tract_counties: Vec<String> = disconnected_tracts
@@ -380,6 +362,20 @@ mod tests {
         assert_eq!(d1.component_count, 2);
         // disconnected_tracts must list tract 3
         assert!(d1.disconnected_tracts.contains(&geoids[3]));
+    }
+
+    #[test]
+    fn disconnected_report_orders_members_and_keeps_first_largest_component() {
+        let adjacency = vec![
+            vec![2, 1], vec![0], vec![0], vec![5, 4], vec![3], vec![3], vec![7], vec![6],
+        ];
+        let geoids: Vec<_> = (0..8).map(|i| format!("53001000{:02}", 8 - i)).collect();
+        for _ in 0..32 {
+            let assignments = geoids.iter().rev().cloned().map(|id| (id, 1)).collect();
+            let report = try_check_contiguity(&assignments, &adjacency, &geoids, 1).unwrap();
+            assert_eq!(report.districts[0].component_count, 3);
+            assert_eq!(report.districts[0].disconnected_tracts, geoids[3..]);
+        }
     }
 
     #[test]

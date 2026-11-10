@@ -1,0 +1,162 @@
+{
+  "schema": "bisect-explicit-county-legacy-replies-v1",
+  "previous_wasm_sha256": "fbfdf7fb8c5b8a82a9981d21480e285de7b78ecc17a41a71f5764adcd1ec5418",
+  "plan_source": "crates/rplan-audit/fixtures/grid3x3-valid.rplan",
+  "plan_source_sha256": "354470c7a18e0407c6498a9eb6518f7369d241cdfc7754a520b968e4e7b00b27",
+  "custom_engine_run_sha256": "48bfadf579b67c22dbbea45f971bcfa8c4eeefa2b33db1c92d43a49c61ec17ac",
+  "cases": [
+    {
+      "geography_json": null,
+      "reply": {
+        "coverage": {
+          "matched_links": 0,
+          "municipal_links": 0,
+          "unmatched_links": 0
+        },
+        "geography_source_sha256": null,
+        "plan_source_sha256": "354470c7a18e0407c6498a9eb6518f7369d241cdfc7754a520b968e4e7b00b27",
+        "report": {
+          "analyzer": "splits",
+          "counties": {
+            "compliance_assessment": "1 splits present; no binding numerical limit under WMCA",
+            "disclaimer": "Legal compliance determination requires counsel",
+            "legal_standard": "WA Const. Art. II §43 — counties shall be preserved where possible",
+            "preservation_score": 0,
+            "split": 1,
+            "split_list": [
+              {
+                "county_fips": "53001",
+                "county_name": "Adams County",
+                "districts_containing": [
+                  1,
+                  2,
+                  3
+                ],
+                "split_severity": 3,
+                "tract_count": 9
+              }
+            ],
+            "subdivision_term": "county",
+            "subdivision_term_plural": "counties",
+            "total": 1
+          },
+          "municipalities": {
+            "available": false,
+            "preservation_score": 1,
+            "split": 0,
+            "split_list": [],
+            "total": 0
+          },
+          "state": "WA",
+          "year": "2020"
+        },
+        "report_json": "{\n  \"analyzer\": \"splits\",\n  \"counties\": {\n    \"compliance_assessment\": \"1 splits present; no binding numerical limit under WMCA\",\n    \"disclaimer\": \"Legal compliance determination requires counsel\",\n    \"legal_standard\": \"WA Const. Art. II §43 — counties shall be preserved where possible\",\n    \"preservation_score\": 0.0,\n    \"split\": 1,\n    \"split_list\": [\n      {\n        \"county_fips\": \"53001\",\n        \"county_name\": \"Adams County\",\n        \"districts_containing\": [\n          1,\n          2,\n          3\n        ],\n        \"split_severity\": 3,\n        \"tract_count\": 9\n      }\n    ],\n    \"subdivision_term\": \"county\",\n    \"subdivision_term_plural\": \"counties\",\n    \"total\": 1\n  },\n  \"municipalities\": {\n    \"available\": false,\n    \"preservation_score\": 1.0,\n    \"split\": 0,\n    \"split_list\": [],\n    \"total\": 0\n  },\n  \"state\": \"WA\",\n  \"year\": \"2020\"\n}",
+        "report_sha256": "9c41358060e58b86f1ddfe0652ef856c029046b3d8a6954f9ea22cc092ca9017",
+        "schema_version": "bisect-plan-splits-v1",
+        "scope": "Shared native CLI county and municipal splits report. County identity uses the first five digits of supplied Census unit IDs. Municipality membership and names are supplied claims; unmatched links are excluded from district membership, but native totals still count every supplied municipality. Overlapping municipalities are evaluated separately. Missing municipality lookup remains unavailable. Bundled state policy descriptions are recorded native context, not a current legal determination. No source authentication, geographic intersection, population weighting, contiguity or legal certification is performed."
+      }
+    },
+    {
+      "geography_json": "{}",
+      "reply": {
+        "coverage": {
+          "matched_links": 0,
+          "municipal_links": 0,
+          "unmatched_links": 0
+        },
+        "geography_source_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plan_source_sha256": "354470c7a18e0407c6498a9eb6518f7369d241cdfc7754a520b968e4e7b00b27",
+        "report": {
+          "analyzer": "splits",
+          "counties": {
+            "compliance_assessment": "1 splits present; no binding numerical limit under WMCA",
+            "disclaimer": "Legal compliance determination requires counsel",
+            "legal_standard": "WA Const. Art. II §43 — counties shall be preserved where possible",
+            "preservation_score": 0,
+            "split": 1,
+            "split_list": [
+              {
+                "county_fips": "53001",
+                "county_name": "Adams County",
+                "districts_containing": [
+                  1,
+                  2,
+                  3
+                ],
+                "split_severity": 3,
+                "tract_count": 9
+              }
+            ],
+            "subdivision_term": "county",
+            "subdivision_term_plural": "counties",
+            "total": 1
+          },
+          "municipalities": {
+            "available": false,
+            "preservation_score": 1,
+            "split": 0,
+            "split_list": [],
+            "total": 0
+          },
+          "state": "WA",
+          "year": "2020"
+        },
+        "report_json": "{\n  \"analyzer\": \"splits\",\n  \"counties\": {\n    \"compliance_assessment\": \"1 splits present; no binding numerical limit under WMCA\",\n    \"disclaimer\": \"Legal compliance determination requires counsel\",\n    \"legal_standard\": \"WA Const. Art. II §43 — counties shall be preserved where possible\",\n    \"preservation_score\": 0.0,\n    \"split\": 1,\n    \"split_list\": [\n      {\n        \"county_fips\": \"53001\",\n        \"county_name\": \"Adams County\",\n        \"districts_containing\": [\n          1,\n          2,\n          3\n        ],\n        \"split_severity\": 3,\n        \"tract_count\": 9\n      }\n    ],\n    \"subdivision_term\": \"county\",\n    \"subdivision_term_plural\": \"counties\",\n    \"total\": 1\n  },\n  \"municipalities\": {\n    \"available\": false,\n    \"preservation_score\": 1.0,\n    \"split\": 0,\n    \"split_list\": [],\n    \"total\": 0\n  },\n  \"state\": \"WA\",\n  \"year\": \"2020\"\n}",
+        "report_sha256": "9c41358060e58b86f1ddfe0652ef856c029046b3d8a6954f9ea22cc092ca9017",
+        "schema_version": "bisect-plan-splits-v1",
+        "scope": "Shared native CLI county and municipal splits report. County identity uses the first five digits of supplied Census unit IDs. Municipality membership and names are supplied claims; unmatched links are excluded from district membership, but native totals still count every supplied municipality. Overlapping municipalities are evaluated separately. Missing municipality lookup remains unavailable. Bundled state policy descriptions are recorded native context, not a current legal determination. No source authentication, geographic intersection, population weighting, contiguity or legal certification is performed."
+      }
+    },
+    {
+      "geography_json": "{\"county_names\":{\"44001\":\"Supplied legacy name\"}}",
+      "reply": {
+        "coverage": {
+          "matched_links": 0,
+          "municipal_links": 0,
+          "unmatched_links": 0
+        },
+        "geography_source_sha256": "06f1309835436fb4866d19d4fa8c0dd10b58b4d73e12b7c1fa17f94e05ef154f",
+        "plan_source_sha256": "354470c7a18e0407c6498a9eb6518f7369d241cdfc7754a520b968e4e7b00b27",
+        "report": {
+          "analyzer": "splits",
+          "counties": {
+            "compliance_assessment": "1 splits present; no binding numerical limit under WMCA",
+            "disclaimer": "Legal compliance determination requires counsel",
+            "legal_standard": "WA Const. Art. II §43 — counties shall be preserved where possible",
+            "preservation_score": 0,
+            "split": 1,
+            "split_list": [
+              {
+                "county_fips": "53001",
+                "county_name": "Adams County",
+                "districts_containing": [
+                  1,
+                  2,
+                  3
+                ],
+                "split_severity": 3,
+                "tract_count": 9
+              }
+            ],
+            "subdivision_term": "county",
+            "subdivision_term_plural": "counties",
+            "total": 1
+          },
+          "municipalities": {
+            "available": false,
+            "preservation_score": 1,
+            "split": 0,
+            "split_list": [],
+            "total": 0
+          },
+          "state": "WA",
+          "year": "2020"
+        },
+        "report_json": "{\n  \"analyzer\": \"splits\",\n  \"counties\": {\n    \"compliance_assessment\": \"1 splits present; no binding numerical limit under WMCA\",\n    \"disclaimer\": \"Legal compliance determination requires counsel\",\n    \"legal_standard\": \"WA Const. Art. II §43 — counties shall be preserved where possible\",\n    \"preservation_score\": 0.0,\n    \"split\": 1,\n    \"split_list\": [\n      {\n        \"county_fips\": \"53001\",\n        \"county_name\": \"Adams County\",\n        \"districts_containing\": [\n          1,\n          2,\n          3\n        ],\n        \"split_severity\": 3,\n        \"tract_count\": 9\n      }\n    ],\n    \"subdivision_term\": \"county\",\n    \"subdivision_term_plural\": \"counties\",\n    \"total\": 1\n  },\n  \"municipalities\": {\n    \"available\": false,\n    \"preservation_score\": 1.0,\n    \"split\": 0,\n    \"split_list\": [],\n    \"total\": 0\n  },\n  \"state\": \"WA\",\n  \"year\": \"2020\"\n}",
+        "report_sha256": "9c41358060e58b86f1ddfe0652ef856c029046b3d8a6954f9ea22cc092ca9017",
+        "schema_version": "bisect-plan-splits-v1",
+        "scope": "Shared native CLI county and municipal splits report. County identity uses the first five digits of supplied Census unit IDs. Municipality membership and names are supplied claims; unmatched links are excluded from district membership, but native totals still count every supplied municipality. Overlapping municipalities are evaluated separately. Missing municipality lookup remains unavailable. Bundled state policy descriptions are recorded native context, not a current legal determination. No source authentication, geographic intersection, population weighting, contiguity or legal certification is performed."
+      }
+    }
+  ]
+}

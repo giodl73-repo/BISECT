@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {zoneDocument,zoneWeights,zoneTemplate,zoneIdentity,verifyZoneSource,readZoneInput,zoneRequest} from '../../web/lab/zone-weighting.js';
+const graph={state:'GB',year:'2024',geoids:['A','B','C','D'],edges:[[0,1,10],[1,2,20],[2,3,0],[0,3,5]]};
+const document={schema_version:1,state:'GB',year:'2024',unit_ids:graph.geoids,zone_types:['school','utility','service'],assignments:[['north',null,''],['north','provider',''],['south'],[]]};
+const input={source_name:'Café-zones.json',assignments_json:JSON.stringify(document,null,2)+'\n',alpha:1};
+const computed=zoneWeights(graph,input),sha=await zoneIdentity(input),e=computed.evidence(sha,'edge-weighting');
+assert.deepEqual(graph.edges.map(([u,v])=>computed.weight(u,v)),[20,20,0,5]);
+assert.deepEqual([e.jointly_observed_edges,e.shared_edges,e.changed_edges],[2,1,1]);
+await verifyZoneSource(graph,input,e);assert.equal(e.zone_data_applied,true);
+assert.notEqual(await zoneIdentity({...input,assignments_json:input.assignments_json+' '}),sha,'Original source spelling stays bound');
+const zero=zoneWeights(graph,{...input,alpha:0});assert.deepEqual(graph.edges.map(([u,v])=>zero.weight(u,v)),[10,20,0,5]);
+assert.throws(()=>zoneWeights({...graph,edges:[[0,1,Number.MAX_VALUE]]},{...input,alpha:100}),/finite/);
+for(const edit of [d=>d.state='RI',d=>d.year='2020',d=>d.unit_ids.reverse(),d=>d.assignments.pop(),d=>d.zone_types.push('school'),d=>d.assignments[0].push('extra'),d=>d.assignments[0][0]=3,d=>d.extra=true]){const bad=structuredClone(document);edit(bad);assert.throws(()=>zoneDocument({...input,assignments_json:JSON.stringify(bad)},graph));}
+for(const alpha of [-0,-1,101,Infinity,NaN])assert.throws(()=>zoneDocument({...input,alpha}));
+await assert.rejects(verifyZoneSource(graph,{...input,assignments_json:input.assignments_json+' '},e),/hash/);
+const forged={...e,zone_data_applied:false};await assert.rejects(verifyZoneSource(graph,input,forged),/evidence/);
+const template=zoneTemplate(graph);assert.deepEqual(template.unit_ids,graph.geoids);assert(template.assignments.every(row=>row.every(v=>v===null)));assert.notEqual(template.unit_ids,graph.geoids);
+assert.deepEqual(zoneRequest({weights:'zone-membership',zones:{GB:input}},'GB',graph),{zone_membership:input});assert.deepEqual(zoneRequest({weights:'zone-membership'},'GB',graph),{});
+const data=Buffer.from(input.assignments_json),selected=await readZoneInput({name:input.source_name,size:data.length,arrayBuffer:async()=>data.buffer.slice(data.byteOffset,data.byteOffset+data.length)},1);assert.deepEqual(selected.input,input);
+await assert.rejects(readZoneInput({name:'changed.json',size:data.length+1,arrayBuffer:async()=>data.buffer.slice(data.byteOffset,data.byteOffset+data.length)}),/size changed/);
+console.log('PASS zone input: observed intersection, literal empty IDs, null/ragged rows, alpha, overflow, exact source hashes, scope/order guards and blank templates');

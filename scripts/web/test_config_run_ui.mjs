@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {preparedGraphScope,configRunRequest,readConfigRunSource,configuredRunMapDocument,validateConfigRunSettings} from '../../web/lab/config-run.js';
+import {createProject,parseProject,parseGeometryJson} from '../../web/lab/project.js';
+import {countResultTables} from '../../web/lab/count-results.js';
+import {planMapModel} from '../../web/lab/plan-map.js';
+const encode=(name,text)=>({name,base64:Buffer.from(text).toString('base64')});
+const graph=JSON.parse(await fs.readFile('target/optional-seed-wasm/case-0.json','utf8')).graph;
+const source=encode('run.yml','name: browser\nalgorithm:\n  structure: standard-bisect\n  engine: metis-core\n  search: single\n  seed: 18446744073709551615\n');
+const inputs={graph:encode('graph.json',JSON.stringify(graph))},settings={chamber:'house',districts:2};
+const request=configRunRequest(source,{profile:'open'},inputs,settings);
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const result=engine.execute(request),display=configuredRunMapDocument(result);
+assert.equal(result.engine_request.options.seed,'18446744073709551615');assert.equal(result.configuration.execution_tolerance_percent,5);
+assert.deepEqual(display.plan.assignment,graph.geoids.map(id=>result.result.assignments[id]-1));
+const geometry={type:'FeatureCollection',state:graph.state,year:graph.year,features:graph.geoids.map((id,i)=>{const [x,y]=graph.centroids[i],d=.003;return {type:'Feature',properties:{GEOID:id},geometry:{type:'Polygon',coordinates:[[[x,y],[x+d,y],[x+d,y+d],[x,y+d],[x,y]]]}};})};
+assert.equal(planMapModel(display,geometry).units,graph.geoids.length);
+const project=createProject({name:'Configured run',files:{configSource:source,configRunInputs:inputs,configRunSettings:settings,configSettings:{profile:'open'},planGeometry:encode('map.geojson',JSON.stringify(geometry))},operation:'run-algorithm-config',constraints:[],result,lastOperation:'run-algorithm-config'});
+const reopened=parseProject(JSON.stringify(project));assert.deepEqual(reopened.result,result);assert.deepEqual(reopened.files.configRunInputs,inputs);
+assert.equal(planMapModel(configuredRunMapDocument(reopened.result),parseGeometryJson(Buffer.from(reopened.files.planGeometry.base64,'base64').toString('utf8'))).units,36);
+const table=countResultTables(result)[0];assert.ok(table.rows.some(([k,v])=>k==='Seed'&&v==='18446744073709551615'));assert.ok(table.rows.some(([k,v])=>k==='Connected'&&v==='true'));
+for(const districts of [0,501,NaN,Infinity,1.5])assert.throws(()=>validateConfigRunSettings({chamber:'house',districts}));
+assert.throws(()=>validateConfigRunSettings({...settings,unknown:true}));
+assert.throws(()=>configRunRequest(source,{profile:'open'},{},settings));
+const bad=structuredClone(result);bad.result.assignments[graph.geoids[0]]=0;assert.throws(()=>configuredRunMapDocument(bad));
+let read=false;await assert.rejects(readConfigRunSource({name:'huge.json',size:8*1024*1024+1,arrayBuffer:()=>{read=true;}}));assert.equal(read,false);
+for(const text of ['{"a":1,"a":2}','{"__proto__":{}}','{"x":1e999}'])await assert.rejects(readConfigRunSource({name:'bad.json',size:Buffer.byteLength(text),arrayBuffer:async()=>new TextEncoder().encode(text).buffer}));
+await fs.writeFile('target/config-run-wasm/ui-roundtrip.bisect',JSON.stringify(project,null,2));
+console.log('Configured UI helpers: actual WASM run, exact-u64 tables, assignment/geometry join, source-preserving project roundtrip and invalid input boundaries passed.');
+
+assert.equal(preparedGraphScope(inputs.graph).state,graph.state);
+assert.equal(preparedGraphScope(inputs.graph).resolution,'tract');
+for(const [kind,resolution] of [['block-group','block_group'],['precinct','precinct'],['imported','imported']]){
+ const custom=encode('custom.json',JSON.stringify({...graph,unit_kind:kind,year:'2024'}));
+ const before=structuredClone(custom),scope=preparedGraphScope(custom);
+ assert.equal(scope.resolution,resolution);assert.equal(scope.year,'2024');assert.deepEqual(custom,before);
+ custom.base64=encode('changed.json',JSON.stringify({...graph,state:'AK',unit_kind:kind})).base64;
+ assert.equal(preparedGraphScope(custom).state,'AK');
+}
+for(const value of [undefined,encode('audit.rctx',JSON.stringify({rctx_version:'1',units:{unit_ids:graph.geoids}})),encode('map.json',JSON.stringify({type:'FeatureCollection',features:[]})),encode('bad.json',JSON.stringify({...graph,unit_kind:'unsupported'}))])assert.throws(()=>preparedGraphScope(value));
+console.log('Prepared graph scope: source-preserving Census/custom resolution, declared year, changed source cache and audit/map refusal passed.');

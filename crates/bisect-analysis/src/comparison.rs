@@ -2,7 +2,7 @@
 ///
 /// Legal note: Output MUST NOT use "Winner:" framing — use "Lower:" instead.
 /// The choice of "better" plan is a legal/political determination outside this tool.
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use thiserror::Error;
 
 // ---------------------------------------------------------------------------
@@ -63,6 +63,24 @@ pub enum ComparisonError {
     InvalidDistrictLabel { plan: &'static str, geoid: String },
 }
 
+/// Decode the native direct-file assignment object without passing district IDs
+/// through a floating-point or target-width-dependent intermediate.
+pub fn parse_direct_assignment_object<D: TryFrom<u64>>(
+    source: &str,
+    object: &serde_json::Map<String, serde_json::Value>,
+) -> Result<HashMap<String, D>, String> {
+    object.iter().map(|(geoid, value)| {
+        let invalid = || format!(
+            "[INPUT] assignment value for GEOID {geoid} in {source} must be a positive integer, got {value}"
+        );
+        let district = value.as_u64().filter(|d| *d > 0).ok_or_else(invalid)?;
+        let district = D::try_from(district).map_err(|_| format!(
+            "[INPUT] assignment value for GEOID {geoid} in {source} is too large: {district}"
+        ))?;
+        Ok((geoid.clone(), district))
+    }).collect()
+}
+
 // ---------------------------------------------------------------------------
 // Core functions
 // ---------------------------------------------------------------------------
@@ -70,7 +88,7 @@ pub enum ComparisonError {
 /// Compute Jaccard similarity between two assignment maps.
 ///
 /// Algorithm:
-/// 1. Invert both maps: district -> set of tract GEOIDs.
+/// 1. Count units per district and overlap for each observed district pair.
 /// 2. For each district in plan_a, find the district in plan_b that maximises
 ///    Jaccard (greedy matching).
 /// 3. Return the mean Jaccard across all matched pairs.
@@ -90,44 +108,42 @@ pub fn try_compare_plans(
     validate_assignment_labels("plan_a", assignments_a)?;
     validate_assignment_labels("plan_b", assignments_b)?;
 
-    // Invert: district -> tract set
-    let invert = |asgn: &HashMap<String, usize>| -> HashMap<usize, HashSet<String>> {
-        let mut m: HashMap<usize, HashSet<String>> = HashMap::new();
-        for (geoid, &d) in asgn {
-            m.entry(d).or_default().insert(geoid.clone());
-        }
-        m
-    };
-    let map_a = invert(assignments_a);
-    let map_b = invert(assignments_b);
-
+    let map_a = district_sizes(assignments_a);
+    let map_b = district_sizes(assignments_b);
     let num_districts_a = map_a.len();
     let num_districts_b = map_b.len();
 
-    // Compute mean Jaccard via greedy matching (per plan A district, pick best B district).
-    let mut total_jaccard = 0.0;
-    let mut matched = 0usize;
-    for (_da, tracts_a) in &map_a {
-        let best = map_b
-            .values()
-            .map(|tracts_b| jaccard(tracts_a, tracts_b))
-            .fold(f64::NEG_INFINITY, f64::max);
-        if best.is_finite() {
-            total_jaccard += best;
-            matched += 1;
+    // Only districts sharing a unit can have positive Jaccard similarity.
+    // Keep one count per observed pair instead of scanning all district pairs
+    // and rebuilding their set unions. Each common unit contributes once.
+    let mut shared = HashMap::<(usize, usize), usize>::new();
+    for (unit, &district_a) in assignments_a {
+        if let Some(&district_b) = assignments_b.get(unit) {
+            *shared.entry((district_a, district_b)).or_default() += 1;
         }
     }
-    // Handle the edge case of empty plans.
+    let mut best_for_a = HashMap::<usize, f64>::new();
+    for ((a, b), common) in shared {
+        let union = (map_a[&a] - common) + map_b[&b];
+        let similarity = common as f64 / union as f64;
+        let best = best_for_a.entry(a).or_default();
+        *best = best.max(similarity);
+    }
     let jaccard_similarity = if map_a.is_empty() && map_b.is_empty() {
         1.0
-    } else if matched == 0 {
+    } else if map_a.is_empty() || map_b.is_empty() {
         0.0
     } else {
-        total_jaccard / matched as f64
+        // The metric is directional. A district with no overlap contributes
+        // zero; B districts may be reused. Keep the original ascending A
+        // order for the floating-point sum and exact output bytes.
+        let total = map_a.keys().fold(0.0, |sum, a| {
+            sum + best_for_a.get(a).copied().unwrap_or(0.0)
+        });
+        total / num_districts_a as f64
     };
 
-    // Population comparison: use max-deviation proxy from district sizes.
-    // (Without actual population data we approximate via tract counts.)
+    // Without actual population data the native report uses unit counts.
     let pop_a = population_max_dev_proxy(&map_a);
     let pop_b = population_max_dev_proxy(&map_b);
     let pop_lower = if (pop_a - pop_b).abs() < 1e-9 {
@@ -198,22 +214,67 @@ pub fn jaccard(set_a: &HashSet<String>, set_b: &HashSet<String>) -> f64 {
     }
 }
 
-/// Proxy for population max-deviation based on district tract counts.
-/// Returns the coefficient of variation of district sizes (std/mean).
-fn population_max_dev_proxy(map: &HashMap<usize, HashSet<String>>) -> f64 {
+fn district_sizes(assignments: &HashMap<String, usize>) -> BTreeMap<usize, usize> {
+    let mut sizes = BTreeMap::new();
+    for &district in assignments.values() {
+        *sizes.entry(district).or_default() += 1;
+    }
+    sizes
+}
+
+/// Maximum absolute deviation divided by mean district unit count.
+fn population_max_dev_proxy(map: &BTreeMap<usize, usize>) -> f64 {
     if map.is_empty() {
         return 0.0;
     }
-    let sizes: Vec<f64> = map.values().map(|s| s.len() as f64).collect();
-    let mean = sizes.iter().sum::<f64>() / sizes.len() as f64;
-    if mean == 0.0 {
-        return 0.0;
+    let mean = map.values().map(|&size| size as f64).sum::<f64>() / map.len() as f64;
+    map.values()
+        .map(|&size| (size as f64 - mean).abs() / mean)
+        .fold(0.0, f64::max)
+}
+
+/// Label-sensitive differences on the common unit universe.
+/// District numbers are compared directly: a pure renumbering counts as change.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct AssignmentChanges<D = usize> {
+    pub common_units: usize,
+    pub changed_units: Vec<String>,
+    /// Sorted union of touched labels from both plans.
+    pub districts_with_changes: Vec<D>,
+}
+
+pub fn assignment_changes<'a>(
+    a: impl IntoIterator<Item = (&'a str, usize)>,
+    b: impl IntoIterator<Item = (&'a str, usize)>,
+) -> AssignmentChanges {
+    assignment_changes_typed(a, b)
+}
+
+/// Preserve the exact district representation of the caller, even on wasm32.
+pub fn assignment_changes_typed<'a, D: Copy + Ord>(
+    a: impl IntoIterator<Item = (&'a str, D)>,
+    b: impl IntoIterator<Item = (&'a str, D)>,
+) -> AssignmentChanges<D> {
+    let a: BTreeMap<_, _> = a.into_iter().collect();
+    let b: BTreeMap<_, _> = b.into_iter().collect();
+    let mut common_units = 0;
+    let mut changed_units = Vec::new();
+    let mut touched = std::collections::BTreeSet::new();
+    for (unit, district_a) in a {
+        if let Some(&district_b) = b.get(unit) {
+            common_units += 1;
+            if district_a != district_b {
+                changed_units.push(unit.to_owned());
+                touched.insert(district_a);
+                touched.insert(district_b);
+            }
+        }
     }
-    let max_dev = sizes
-        .iter()
-        .map(|&s| (s - mean).abs() / mean)
-        .fold(0.0f64, f64::max);
-    max_dev
+    AssignmentChanges {
+        common_units,
+        changed_units,
+        districts_with_changes: touched.into_iter().collect(),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -318,6 +379,30 @@ fn make_test_assignments(n: usize) -> HashMap<String, usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn assignment_changes_are_sorted_label_sensitive_and_use_common_units() {
+        let result = assignment_changes(
+            [("z", 1), ("a", 2), ("only_a", 3)],
+            [("z", 2), ("a", 1), ("only_b", 4)],
+        );
+        assert_eq!(result.common_units, 2);
+        assert_eq!(result.changed_units, ["a", "z"]);
+        assert_eq!(result.districts_with_changes, [1, 2]);
+        assert!(assignment_changes([("x", 1)], [("x", 1)]).changed_units.is_empty());
+        assert_eq!(assignment_changes([("x", 1)], [("y", 2)]).common_units, 0);
+    }
+
+    #[test]
+    fn district_accumulation_is_exact_across_insertion_orders() {
+        let a:HashMap<_,_>=(0..37).map(|i|(i.to_string(),1+i%7)).collect();
+        let b:HashMap<_,_>=(0..37).map(|i|(i.to_string(),1+i%5)).collect();
+        let expected=compare_plans(&a,&b).jaccard_similarity.to_bits();
+        for _ in 0..100 {
+            let reversed:HashMap<_,_>=(0..37).rev().map(|i|(i.to_string(),1+i%7)).collect();
+            assert_eq!(compare_plans(&reversed,&b).jaccard_similarity.to_bits(),expected);
+        }
+    }
 
     #[test]
     fn test_jaccard_identical_plans() {

@@ -21,8 +21,6 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use sha2::{Digest, Sha256};
-use shapefile::dbase::{FieldValue, Record};
 
 use crate::label::{state_runs_dir, validate_label_name, year_runs_dir};
 use crate::run_registry::Registry;
@@ -30,399 +28,12 @@ use crate::run_registry::Registry;
 // ── FIPS → state name lookup ──────────────────────────────────────────────────
 
 /// Return the lowercase underscore state name for a 2-digit FIPS prefix, or `None`.
-pub fn fips_to_state_name(fips: &str) -> Option<&'static str> {
-    match fips {
-        "01" => Some("alabama"),
-        "02" => Some("alaska"),
-        "04" => Some("arizona"),
-        "05" => Some("arkansas"),
-        "06" => Some("california"),
-        "08" => Some("colorado"),
-        "09" => Some("connecticut"),
-        "10" => Some("delaware"),
-        "11" => Some("district_of_columbia"),
-        "12" => Some("florida"),
-        "13" => Some("georgia"),
-        "15" => Some("hawaii"),
-        "16" => Some("idaho"),
-        "17" => Some("illinois"),
-        "18" => Some("indiana"),
-        "19" => Some("iowa"),
-        "20" => Some("kansas"),
-        "21" => Some("kentucky"),
-        "22" => Some("louisiana"),
-        "23" => Some("maine"),
-        "24" => Some("maryland"),
-        "25" => Some("massachusetts"),
-        "26" => Some("michigan"),
-        "27" => Some("minnesota"),
-        "28" => Some("mississippi"),
-        "29" => Some("missouri"),
-        "30" => Some("montana"),
-        "31" => Some("nebraska"),
-        "32" => Some("nevada"),
-        "33" => Some("new_hampshire"),
-        "34" => Some("new_jersey"),
-        "35" => Some("new_mexico"),
-        "36" => Some("new_york"),
-        "37" => Some("north_carolina"),
-        "38" => Some("north_dakota"),
-        "39" => Some("ohio"),
-        "40" => Some("oklahoma"),
-        "41" => Some("oregon"),
-        "42" => Some("pennsylvania"),
-        "44" => Some("rhode_island"),
-        "45" => Some("south_carolina"),
-        "46" => Some("south_dakota"),
-        "47" => Some("tennessee"),
-        "48" => Some("texas"),
-        "49" => Some("utah"),
-        "50" => Some("vermont"),
-        "51" => Some("virginia"),
-        "53" => Some("washington"),
-        "54" => Some("west_virginia"),
-        "55" => Some("wisconsin"),
-        "56" => Some("wyoming"),
-        _ => None,
-    }
-}
-
-// ── Format auto-detection ─────────────────────────────────────────────────────
-
-/// Auto-detect file format from extension.
-///
-/// Returns the canonical format string:
-/// - `.csv`              → `"csv"`
-/// - `.geojson` / `.json` → `"geojson"`
-/// - `.shp`              → `"shapefile"`
-/// - `.rplan`            → `"rplan"`
-/// - anything else       → `None` (caller must specify `--format`)
-pub fn detect_format(path: &Path) -> Option<&'static str> {
-    match path.extension().and_then(|e| e.to_str()) {
-        Some("csv") => Some("csv"),
-        Some("geojson") | Some("json") => Some("geojson"),
-        Some("shp") => Some("shapefile"),
-        Some("rplan") => Some("rplan"),
-        _ => None,
-    }
-}
-
-// ── CSV parsing ───────────────────────────────────────────────────────────────
-
-/// Parse a CSV file into a `GEOID → district` assignment map.
-///
-/// Accepts the standard two-column format:
-/// ```text
-/// GEOID,district
-/// 55001010100,1
-/// 55001010200,2
-/// ```
-///
-/// Column names are case-insensitive.  `geoid` / `GEOID` in column 0 and
-/// `district` / `DISTRICT` in column 1 (or reversed).
-pub fn parse_csv_assignments(csv_str: &str) -> Result<HashMap<String, usize>, String> {
-    let mut lines = csv_str.lines().peekable();
-    if lines.peek().is_none() {
-        return Err("[INPUT] CSV file is empty".to_string());
-    }
-
-    // Detect header row — first token must NOT be a pure digit string to be a header.
-    let first = *lines.peek().unwrap();
-    let first_tokens: Vec<&str> = first.splitn(2, ',').collect();
-    let is_header = first_tokens
-        .first()
-        .map(|t| !t.trim().chars().all(|c| c.is_ascii_digit()))
-        .unwrap_or(false);
-
-    // Determine column layout.
-    let (geoid_col, district_col) = if is_header {
-        let header = lines.next().unwrap(); // consume
-        let headers: Vec<&str> = header.split(',').collect();
-        let h0 = headers
-            .first()
-            .map(|h| h.trim().to_uppercase())
-            .unwrap_or_default();
-        let h1 = headers
-            .get(1)
-            .map(|h| h.trim().to_uppercase())
-            .unwrap_or_default();
-        if h0.contains("GEOID") || h0.contains("GEO_ID") {
-            (0usize, 1usize)
-        } else if h1.contains("GEOID") || h1.contains("GEO_ID") {
-            (1usize, 0usize)
-        } else if h0.contains("DISTRICT") || h0.contains("DIST") {
-            (1, 0) // reversed: DISTRICT, GEOID
-        } else {
-            (0, 1) // default
-        }
-    } else {
-        (0usize, 1usize)
-    };
-
-    let mut assignments: HashMap<String, usize> = HashMap::new();
-    for (lineno, line) in lines.enumerate() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').collect();
-        let geoid_raw = fields.get(geoid_col).map(|f| f.trim()).unwrap_or("");
-        let dist_raw = fields.get(district_col).map(|f| f.trim()).unwrap_or("");
-
-        // Auto-swap: if geoid_raw is small (<5 chars) and dist_raw looks like a GEOID
-        let (geoid, dist_str) = if geoid_raw.len() < 5
-            && dist_raw.len() >= 10
-            && dist_raw.chars().all(|c| c.is_ascii_digit())
-        {
-            (dist_raw, geoid_raw)
-        } else {
-            (geoid_raw, dist_raw)
-        };
-
-        let district: usize = dist_str.parse().map_err(|_| {
-            format!(
-                "[INPUT] CSV line {}: cannot parse district '{}' as integer",
-                lineno + 1,
-                dist_str
-            )
-        })?;
-        assignments.insert(geoid.to_string(), district);
-    }
-
-    if assignments.is_empty() {
-        return Err(
-            "[INPUT] CSV produced no GEOID→district assignments — check file format".to_string(),
-        );
-    }
-    Ok(assignments)
-}
-
-// ── RPLAN parsing ─────────────────────────────────────────────────────────────
-
-/// Parse an RPLAN document into a `GEOID -> district` assignment map.
-///
-/// RPLAN stores canonical district ids as zero-based integers.  BISECT run
-/// assignment files use one-based numeric district ids, so import normalizes
-/// `0..k` to `1..=k`.
-pub fn parse_rplan_assignments(rplan_str: &str) -> Result<HashMap<String, usize>, String> {
-    let document =
-        rplan_io::read_rplan_str(rplan_str).map_err(|e| format!("[INPUT] invalid RPLAN: {e}"))?;
-    let units = &document.plan.units.unit_ids;
-    let assignment = &document.plan.assignment;
-    if units.len() != assignment.len() {
-        return Err(format!(
-            "[INPUT] RPLAN assignment length {} does not match unit count {}",
-            assignment.len(),
-            units.len()
-        ));
-    }
-
-    let mut assignments = HashMap::with_capacity(units.len());
-    for (unit_id, district_id) in units.iter().zip(assignment.iter()) {
-        assignments.insert(unit_id.clone(), (*district_id as usize) + 1);
-    }
-
-    if assignments.is_empty() {
-        return Err("[INPUT] RPLAN contains no unit assignments".to_string());
-    }
-    Ok(assignments)
-}
-
-// ── GeoJSON parsing ───────────────────────────────────────────────────────────
-
-/// Parse a GeoJSON FeatureCollection into a `GEOID → district` assignment map.
-///
-/// Each feature must have a `district_id` (or `district`) property and a
-/// `GEOID` (or `geoid`) property in its `properties` object.
-pub fn parse_geojson_assignments(geojson_str: &str) -> Result<HashMap<String, usize>, String> {
-    let v: serde_json::Value =
-        serde_json::from_str(geojson_str).map_err(|e| format!("[INPUT] invalid JSON: {e}"))?;
-
-    let features = v["features"]
-        .as_array()
-        .ok_or_else(|| "[INPUT] GeoJSON missing 'features' array".to_string())?;
-
-    let mut assignments: HashMap<String, usize> = HashMap::new();
-    for feature in features {
-        let props = &feature["properties"];
-
-        // Resolve GEOID: try "GEOID" then "geoid"
-        let geoid = props["GEOID"].as_str().or_else(|| props["geoid"].as_str());
-
-        // Resolve district: try "district_id" then "district"
-        let district = props["district_id"]
-            .as_u64()
-            .or_else(|| props["district"].as_u64());
-
-        if let (Some(g), Some(d)) = (geoid, district) {
-            assignments.insert(g.to_string(), d as usize);
-        }
-    }
-
-    if assignments.is_empty() {
-        return Err(
-            "[INPUT] GeoJSON features have no GEOID+district_id properties; \
-             each feature must carry 'GEOID'/'geoid' and 'district_id'/'district'"
-                .to_string(),
-        );
-    }
-    Ok(assignments)
-}
-
-// ── Shapefile parsing ─────────────────────────────────────────────────────────
-
-const GEOID_FIELD_CANDIDATES: &[&str] = &["GEOID", "GEOID20", "GEOID10", "GEOID00", "GEO_ID"];
-const DISTRICT_FIELD_CANDIDATES: &[&str] = &[
-    "DISTRICT",
-    "DISTRICTID",
-    "DISTRICT_I",
-    "DISTRICT_",
-    "DIST_ID",
-    "DIST",
-    "DIST_NUM",
-    "CD",
-];
-
-/// Parse shapefile DBF attributes into a `GEOID -> district` assignment map.
-///
-/// The importer reads attributes from the `.dbf` sidecar through the shapefile
-/// reader and ignores geometry after the record can be read. Field names are
-/// detected case-insensitively from common plan-export names.
-pub fn parse_shapefile_assignments(path: &Path) -> Result<HashMap<String, usize>, String> {
-    if path
-        .extension()
-        .and_then(|e| e.to_str())
-        .map(|e| e.eq_ignore_ascii_case("shp"))
-        .unwrap_or(false)
-    {
-        let dbf_path = path.with_extension("dbf");
-        if !dbf_path.exists() {
-            return Err(format!(
-                "[INPUT] shapefile sidecar DBF is missing: '{}'",
-                dbf_path.display()
-            ));
-        }
-    }
-
-    let mut reader = shapefile::Reader::from_path(path)
-        .map_err(|e| format!("[INPUT] cannot read shapefile '{}': {e}", path.display()))?;
-
-    let mut assignments = HashMap::new();
-    let mut geoid_field: Option<String> = None;
-    let mut district_field: Option<String> = None;
-
-    for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
-        let (_shape, record) = shape_record.map_err(|e| {
-            format!(
-                "[INPUT] cannot read shapefile record {} from '{}': {e}",
-                idx + 1,
-                path.display()
-            )
-        })?;
-
-        if geoid_field.is_none() {
-            geoid_field = detect_dbf_field(&record, GEOID_FIELD_CANDIDATES);
-            district_field = detect_dbf_field(&record, DISTRICT_FIELD_CANDIDATES);
-            if geoid_field.is_none() || district_field.is_none() {
-                let fields = available_dbf_fields(&record);
-                return Err(format!(
-                    "[INPUT] shapefile attributes must include GEOID and district fields. \
-                     GEOID candidates: {}; district candidates: {}; available fields: {}",
-                    GEOID_FIELD_CANDIDATES.join(", "),
-                    DISTRICT_FIELD_CANDIDATES.join(", "),
-                    fields
-                ));
-            }
-        }
-
-        let geoid_name = geoid_field.as_deref().unwrap();
-        let district_name = district_field.as_deref().unwrap();
-        let geoid = parse_geoid_value(record.get(geoid_name)).ok_or_else(|| {
-            format!(
-                "[INPUT] shapefile record {} has empty or invalid GEOID field '{}'",
-                idx + 1,
-                geoid_name
-            )
-        })?;
-        let district = parse_district_value(record.get(district_name)).ok_or_else(|| {
-            format!(
-                "[INPUT] shapefile record {} has empty or non-integer district field '{}'",
-                idx + 1,
-                district_name
-            )
-        })?;
-
-        assignments.insert(geoid, district);
-    }
-
-    if assignments.is_empty() {
-        return Err(
-            "[INPUT] shapefile produced no GEOID->district assignments - check file attributes"
-                .to_string(),
-        );
-    }
-
-    Ok(assignments)
-}
-
-fn detect_dbf_field(record: &Record, candidates: &[&str]) -> Option<String> {
-    let fields = record.as_ref();
-    candidates.iter().find_map(|candidate| {
-        fields
-            .keys()
-            .find(|field| field.eq_ignore_ascii_case(candidate))
-            .cloned()
-    })
-}
-
-fn available_dbf_fields(record: &Record) -> String {
-    let mut fields: Vec<&str> = record.as_ref().keys().map(String::as_str).collect();
-    fields.sort_unstable();
-    if fields.is_empty() {
-        "<none>".to_string()
-    } else {
-        fields.join(", ")
-    }
-}
-
-fn parse_geoid_value(value: Option<&FieldValue>) -> Option<String> {
-    match value {
-        Some(FieldValue::Character(Some(s))) => {
-            let trimmed = s.trim();
-            if trimmed.is_empty() {
-                None
-            } else {
-                Some(trimmed.to_string())
-            }
-        }
-        Some(FieldValue::Numeric(Some(v))) if v.fract() == 0.0 => Some(format!("{v:.0}")),
-        Some(FieldValue::Integer(v)) => Some(v.to_string()),
-        _ => None,
-    }
-}
-
-fn parse_district_value(value: Option<&FieldValue>) -> Option<usize> {
-    match value {
-        Some(FieldValue::Character(Some(s))) => s.trim().parse::<usize>().ok(),
-        Some(FieldValue::Numeric(Some(v))) if *v >= 0.0 && v.fract() == 0.0 => Some(*v as usize),
-        Some(FieldValue::Integer(v)) if *v >= 0 => Some(*v as usize),
-        Some(FieldValue::Double(v)) if *v >= 0.0 && v.fract() == 0.0 => Some(*v as usize),
-        _ => None,
-    }
-}
-
-// ── SHA-256 helper ────────────────────────────────────────────────────────────
-
-/// Compute SHA-256 of `bytes` and return a 64-char lowercase hex string.
-pub fn sha256_hex(bytes: &[u8]) -> String {
-    let mut h = Sha256::new();
-    h.update(bytes);
-    let mut out = String::with_capacity(64);
-    for b in h.finalize() {
-        out.push_str(&format!("{:02x}", b));
-    }
-    out
-}
+pub use bisect_report::label_import::{fips_to_state_name,detect_format,sha256_hex};
+fn native_assignments(value:HashMap<String,u64>)->Result<HashMap<String,usize>,String>{value.into_iter().map(|(g,d)|usize::try_from(d).map(|v|(g,v)).map_err(|_|"[INPUT] district exceeds native integer range".into())).collect()}
+pub fn parse_csv_assignments(text:&str)->Result<HashMap<String,usize>,String>{native_assignments(bisect_report::label_import::parse_csv_assignments(text)?)}
+pub fn parse_rplan_assignments(text:&str)->Result<HashMap<String,usize>,String>{native_assignments(bisect_report::label_import::parse_rplan_assignments(text)?)}
+pub fn parse_geojson_assignments(text:&str)->Result<HashMap<String,usize>,String>{native_assignments(bisect_report::label_import::parse_geojson_assignments(text)?)}
+pub fn parse_shapefile_assignments(path:&Path)->Result<HashMap<String,usize>,String>{native_assignments(bisect_report::label_import::parse_shapefile_assignments(path)?)}
 
 // ── Core import function ──────────────────────────────────────────────────────
 
@@ -442,6 +53,9 @@ pub fn run_label_import(
     year: &str,
     format: Option<&str>,
 ) -> Result<(), String> {
+    run_label_import_at(label,from,year,format,&current_timestamp())
+}
+pub fn run_label_import_at(label:&str,from:&Path,year:&str,format:Option<&str>,created:&str)->Result<(),String>{
     // ── Step 1: Validate label ────────────────────────────────────────────────
     validate_label_name(label)?;
 
@@ -490,35 +104,7 @@ pub fn run_label_import(
         .map_err(|e| format!("[INPUT] cannot read '{}' for SHA-256: {e}", from.display()))?;
     let source_sha256 = sha256_hex(&source_bytes);
 
-    // ── Step 4: Group assignments by state FIPS ────────────────────────────────
-    // GEOID format: SS + up to 9 more digits. First 2 chars = state FIPS.
-    let mut by_state: HashMap<&'static str, HashMap<String, usize>> = HashMap::new();
-    let mut unknown_geoids: Vec<String> = Vec::new();
-
-    for (geoid, district) in &all_assignments {
-        if geoid.len() < 2 {
-            unknown_geoids.push(geoid.clone());
-            continue;
-        }
-        let fips = &geoid[..2];
-        if let Some(state_name) = fips_to_state_name(fips) {
-            by_state
-                .entry(state_name)
-                .or_default()
-                .insert(geoid.clone(), *district);
-        } else {
-            unknown_geoids.push(geoid.clone());
-        }
-    }
-
-    if !unknown_geoids.is_empty() && by_state.is_empty() {
-        return Err(format!(
-            "[INPUT] no GEOIDs could be mapped to a known state FIPS prefix. \
-             First unrecognised GEOID: '{}'. \
-             Ensure GEOIDs start with a valid 2-digit US state FIPS code.",
-            unknown_geoids[0]
-        ));
-    }
+    let (by_state,_unknown_geoids)=bisect_report::label_import::group(all_assignments.into_iter().map(|(g,d)|(g,d as u64)).collect())?;
 
     // ── Step 5: Write per-state assignments.json ───────────────────────────────
     for (state_name, assignments) in &by_state {
@@ -555,7 +141,7 @@ pub fn run_label_import(
         )
     })?;
 
-    let index = build_import_index(label, year, from, &format_str, &source_sha256, &by_state);
+    let index = bisect_report::label_import::build_index(label,year,&from.display().to_string(),&format_str,&source_sha256,&by_state,created);
     let index_path = year_dir.join("index.json");
     let index_json = serde_json::to_string_pretty(&index)
         .map_err(|e| format!("[INTERNAL] import: failed to serialize index.json: {e}"))?;
@@ -583,6 +169,7 @@ pub fn run_label_import(
 // ── Index construction ────────────────────────────────────────────────────────
 
 /// Build the `runs/{label}/{year}/index.json` document for an external import.
+#[cfg(test)]
 fn build_import_index(
     label: &str,
     year: &str,
@@ -591,48 +178,10 @@ fn build_import_index(
     source_sha256: &str,
     by_state: &HashMap<&'static str, HashMap<String, usize>>,
 ) -> serde_json::Value {
-    // Timestamp (RFC 3339, seconds precision) — same helper as build_cmd.
-    let created = {
-        use std::time::{SystemTime, UNIX_EPOCH};
-        let secs = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or(0);
-        format_rfc3339(secs)
-    };
-
-    let states: serde_json::Value = by_state
-        .iter()
-        .map(|(name, assignments)| {
-            (
-                name.to_string(),
-                serde_json::json!({
-                    "status": "ok",
-                    "tracts": assignments.len()
-                }),
-            )
-        })
-        .collect::<serde_json::Map<String, serde_json::Value>>()
-        .into();
-
-    serde_json::json!({
-        "label":           label,
-        "year":            year,
-        "created":         created,
-        "version":  env!("CARGO_PKG_VERSION"),
-        "algorithm": {
-            "structure": "external",
-            "source":    source_sha256,
-            "format":    format_str,
-            "source_file": source.display().to_string(),
-        },
-        "states": states,
-        "summary": {
-            "total": by_state.values().map(|m| m.len()).sum::<usize>(),
-            "states": by_state.len(),
-        }
-    })
+    let canonical=by_state.iter().map(|(state,a)|(state.to_string(),a.iter().map(|(g,d)|(g.clone(),*d as u64)).collect())).collect();
+    bisect_report::label_import::build_index(label,year,&source.display().to_string(),format_str,source_sha256,&canonical,&current_timestamp())
 }
+fn current_timestamp()->String{use std::time::{SystemTime,UNIX_EPOCH};format_rfc3339(SystemTime::now().duration_since(UNIX_EPOCH).map(|d|d.as_secs()).unwrap_or(0))}
 
 /// Format a Unix timestamp as RFC 3339 (`YYYY-MM-DDTHH:MM:SSZ`).
 fn format_rfc3339(secs: u64) -> String {
@@ -675,73 +224,13 @@ pub fn run_label_compare(
     json_output: bool,
     out: Option<&Path>,
 ) -> Result<(), String> {
-    // ── 1. Validate labels ────────────────────────────────────────────────────
-    validate_label_name(label_a)?;
-    validate_label_name(label_b)?;
+    bisect_report::label_compare::validate_labels(label_a,label_b)?;
+    let registry=Registry::load()?;
+    let entries=registry.labels.into_iter().collect();
+    bisect_report::label_compare::check(&entries,label_a,label_b,year)?;
+    let output=bisect_report::label_compare::render(label_a,label_b,year,json_output)?;
+    emit_output(&output,out)
 
-    // ── 2. Check both built ───────────────────────────────────────────────────
-    Registry::require_built(label_a, year).map_err(|e| {
-        format!("{e}\n  (label-compare requires both plans to be built for year {year})")
-    })?;
-    Registry::require_built(label_b, year).map_err(|e| {
-        format!("{e}\n  (label-compare requires both plans to be built for year {year})")
-    })?;
-
-    // ── 3. Check both analyzed ────────────────────────────────────────────────
-    Registry::require_analyzed(label_a, year).map_err(|e| {
-        format!("{e}\n  (label-compare requires both plans to be analyzed for year {year})")
-    })?;
-    Registry::require_analyzed(label_b, year).map_err(|e| {
-        format!("{e}\n  (label-compare requires both plans to be analyzed for year {year})")
-    })?;
-
-    // ── 4. Delegate to existing compare machinery ─────────────────────────────
-    // Resolve analysis directories.
-    let analysis_a = crate::label::year_analysis_dir(label_a, year);
-    let analysis_b = crate::label::year_analysis_dir(label_b, year);
-
-    // Emit header information.
-    let header = format!(
-        "label-compare: {label_a} vs {label_b} (year {year})\n\
-         analysis/{label_a}/{year}/ vs analysis/{label_b}/{year}/"
-    );
-
-    if json_output {
-        // Emit a structured JSON summary of what was compared.
-        let result = serde_json::json!({
-            "label_a":      label_a,
-            "label_b":      label_b,
-            "year":         year,
-            "analysis_a":   analysis_a.display().to_string(),
-            "analysis_b":   analysis_b.display().to_string(),
-            "status":       "delegated_to_compare",
-            "next_step":    format!(
-                "bisect compare --plan-a {label_a} --plan-b {label_b} \
-                 --year {year} --format json"
-            )
-        });
-        let json_str = serde_json::to_string_pretty(&result)
-            .map_err(|e| format!("[INTERNAL] label-compare: serialize failed: {e}"))?;
-        emit_output(&json_str, out)?;
-        return Ok(());
-    }
-
-    // Human-readable output.
-    let output = format!(
-        "{header}\n\
-         \n\
-         Both plans are built and analyzed for year {year}.\n\
-         \n\
-         To compare:  bisect compare --plan-a {label_a} --plan-b {label_b} \
-         --year {year}\n\
-         JSON output: bisect compare --plan-a {label_a} --plan-b {label_b} \
-         --year {year} --format json\n\
-         Narrative:   bisect compare --plan-a {label_a} --plan-b {label_b} \
-         --year {year} --format narrative"
-    );
-    emit_output(&output, out)?;
-
-    Ok(())
 }
 
 /// Write `text` to `out_path` if given; otherwise print to stdout.

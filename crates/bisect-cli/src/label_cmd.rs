@@ -8,12 +8,11 @@
 ///   BISECT verify X [--year Y]   Traverse SHA chain and report integrity
 ///
 /// All output is ASCII-only (no Unicode): Windows CP1252 safe, court-printable.
-use std::collections::HashMap;
+
 use std::fs;
 use std::path::PathBuf;
 
-use serde_json::Value;
-use sha2::{Digest, Sha256};
+
 
 use crate::label::{
     analysis_dir, analysis_index_path, build_index_path, report_index_path, reports_dir, runs_dir,
@@ -32,67 +31,9 @@ use crate::run_registry::Registry;
 /// senate_draft        built: 2020             analyzed: --      reported: --
 /// ```
 /// With `--json`: outputs the raw registry JSON (sorted by label name).
-pub fn run_ls(json: bool) -> Result<(), String> {
-    let labels = Registry::list_labels()?;
-
-    if json {
-        // Build a sorted map for deterministic output
-        let mut map = serde_json::Map::new();
-        for (name, entry) in &labels {
-            map.insert(
-                name.clone(),
-                serde_json::json!({
-                    "built":    entry.built,
-                    "analyzed": entry.analyzed,
-                    "reported": entry.reported,
-                }),
-            );
-        }
-        let out = serde_json::to_string_pretty(&Value::Object(map))
-            .map_err(|e| format!("failed to serialize registry: {e}"))?;
-        println!("{out}");
-        return Ok(());
-    }
-
-    // Human-readable table
-    if labels.is_empty() {
-        println!("(no labels in registry)");
-        return Ok(());
-    }
-
-    // Compute column width for alignment
-    let max_name_len = labels.iter().map(|(n, _)| n.len()).max().unwrap_or(0);
-    let col = max_name_len.max(8); // minimum 8 chars
-
-    // Header
-    println!(
-        "{:<col$}   {:<22}  {:<16}  {}",
-        "LABEL", "built", "analyzed", "reported"
-    );
-    println!("{}", "-".repeat(col + 3 + 22 + 2 + 16 + 2 + 10));
-
-    for (name, entry) in &labels {
-        let built = if entry.built.is_empty() {
-            "--".to_string()
-        } else {
-            entry.built.join(" ")
-        };
-        let analyzed = if entry.analyzed.is_empty() {
-            "--".to_string()
-        } else {
-            entry.analyzed.join(" ")
-        };
-        let reported = if entry.reported.is_empty() {
-            "--".to_string()
-        } else {
-            entry.reported.join(" ")
-        };
-        println!(
-            "{:<col$}   {:<22}  {:<16}  {}",
-            name, built, analyzed, reported
-        );
-    }
-
+pub fn run_ls(json:bool)->Result<(),String>{
+    let labels=Registry::list_labels()?;
+    print!("{}",bisect_report::label_registry::render_list(&labels,json)?);
     Ok(())
 }
 
@@ -112,85 +53,7 @@ pub fn run_show(label: &str, json: bool) -> Result<(), String> {
         )
     })?;
 
-    let runs_path = runs_dir(label);
-    let analysis_path = analysis_dir(label);
-    let reports_path = reports_dir(label);
-
-    // Collect all years mentioned across all three stages
-    let mut all_years: Vec<&str> = entry
-        .built
-        .iter()
-        .chain(entry.analyzed.iter())
-        .chain(entry.reported.iter())
-        .map(|s| s.as_str())
-        .collect();
-    all_years.sort_unstable();
-    all_years.dedup();
-
-    if json {
-        // Build per-year status
-        let year_status: HashMap<&str, serde_json::Value> = all_years
-            .iter()
-            .map(|y| {
-                let status = serde_json::json!({
-                    "built":    entry.built.contains(&y.to_string()),
-                    "analyzed": entry.analyzed.contains(&y.to_string()),
-                    "reported": entry.reported.contains(&y.to_string()),
-                });
-                (*y, status)
-            })
-            .collect();
-
-        let out = serde_json::json!({
-            "label": label,
-            "years": year_status,
-            "paths": {
-                "runs":     runs_path.to_string_lossy(),
-                "analysis": analysis_path.to_string_lossy(),
-                "reports":  reports_path.to_string_lossy(),
-            },
-        });
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&out)
-                .map_err(|e| format!("failed to serialize show output: {e}"))?
-        );
-        return Ok(());
-    }
-
-    // Human-readable output (ASCII-only)
-    println!("Label:    {label}");
-    println!();
-    println!("Paths:");
-    println!("  runs:     {}", runs_path.display());
-    println!("  analysis: {}", analysis_path.display());
-    println!("  reports:  {}", reports_path.display());
-    println!();
-
-    if all_years.is_empty() {
-        println!("Years:    (none)");
-    } else {
-        println!("Years:");
-        for year in &all_years {
-            let b = if entry.built.contains(&year.to_string()) {
-                "[built]"
-            } else {
-                "      "
-            };
-            let a = if entry.analyzed.contains(&year.to_string()) {
-                "[analyzed]"
-            } else {
-                "          "
-            };
-            let r = if entry.reported.contains(&year.to_string()) {
-                "[reported]"
-            } else {
-                "          "
-            };
-            println!("  {year}  {b}  {a}  {r}");
-        }
-    }
-
+    print!("{}",bisect_report::label_registry::render_show(label,&entry,json)?);
     Ok(())
 }
 
@@ -206,6 +69,7 @@ pub fn run_show(label: &str, json: bool) -> Result<(), String> {
 /// 7. Updates `.bisect` registry: removes X, inserts Y with the same LabelEntry
 /// 8. Prints confirmation
 pub fn run_mv(src: &str, dst: &str, force: bool) -> Result<(), String> {
+    bisect_report::label_rename::distinct_names(src, dst)?;
     // Step 1: validate destination label name
     validate_label_name(dst)?;
 
@@ -290,19 +154,8 @@ fn patch_label_field(path: &PathBuf, old: &str, new: &str) -> Result<(), String>
     let content = fs::read_to_string(path)
         .map_err(|e| format!("patch_label: failed to read '{}': {e}", path.display()))?;
 
-    let mut value: Value = serde_json::from_str(&content)
+    let updated = bisect_report::label_rename::patch_index(&content, old, new)
         .map_err(|e| format!("patch_label: failed to parse '{}': {e}", path.display()))?;
-
-    if let Some(obj) = value.as_object_mut() {
-        if let Some(label_val) = obj.get("label") {
-            if label_val.as_str() == Some(old) {
-                obj.insert("label".to_string(), Value::String(new.to_string()));
-            }
-        }
-    }
-
-    let updated = serde_json::to_string_pretty(&value)
-        .map_err(|e| format!("patch_label: failed to serialize '{}': {e}", path.display()))?;
 
     fs::write(path, updated)
         .map_err(|e| format!("patch_label: failed to write '{}': {e}", path.display()))?;
@@ -312,26 +165,7 @@ fn patch_label_field(path: &PathBuf, old: &str, new: &str) -> Result<(), String>
 
 // ── Verify ─────────────────────────────────────────────────────────────────────
 
-/// One link in the SHA chain verification result.
-#[derive(Debug)]
-struct ChainLink {
-    description: String,
-    /// The file that was hashed or the consumer index path.
-    /// Kept for debug output (`{link:?}`) and future diagnostic extension.
-    #[allow(dead_code)]
-    path: PathBuf,
-    sha_recorded: Option<String>,
-    sha_actual: Option<String>,
-    /// True if the path or the recorded SHA is absent (not an integrity failure,
-    /// but an incompleteness warning).
-    missing: bool,
-}
-
-impl ChainLink {
-    fn is_ok(&self) -> bool {
-        !self.missing && self.sha_recorded.is_some() && self.sha_recorded == self.sha_actual
-    }
-}
+use bisect_report::label_chain::ChainLink;
 
 /// `BISECT verify X [--year Y]`
 ///
@@ -424,197 +258,11 @@ pub fn run_verify(label: &str, year_filter: Option<&str>) -> Result<(), String> 
     Ok(())
 }
 
-/// Check that `runs/{label}/{year}/index.json` has a `config_sha256` field that
-/// matches the SHA-256 of the referenced config file.
-fn check_config_sha(label: &str, run_index_path: &PathBuf) -> ChainLink {
-    let description = "Config SHA".to_string();
-
-    // Build index must exist
-    if !run_index_path.exists() {
-        return ChainLink {
-            description,
-            path: run_index_path.clone(),
-            sha_recorded: None,
-            sha_actual: None,
-            missing: true,
-        };
-    }
-
-    // Parse the build index
-    let content = match fs::read_to_string(run_index_path) {
-        Ok(c) => c,
-        Err(_) => {
-            return ChainLink {
-                description,
-                path: run_index_path.clone(),
-                sha_recorded: None,
-                sha_actual: None,
-                missing: true,
-            }
-        }
-    };
-    let index: Value = match serde_json::from_str(&content) {
-        Ok(v) => v,
-        Err(_) => {
-            return ChainLink {
-                description,
-                path: run_index_path.clone(),
-                sha_recorded: None,
-                sha_actual: None,
-                missing: true,
-            }
-        }
-    };
-
-    // Extract recorded config_sha256
-    let recorded_sha = index
-        .get("config_sha256")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string());
-
-    if recorded_sha.is_none() {
-        return ChainLink {
-            description: format!("{description} (no config_sha256 in build index)"),
-            path: run_index_path.clone(),
-            sha_recorded: None,
-            sha_actual: None,
-            missing: true,
-        };
-    }
-
-    // Find the config file path: prefer "config_path" field, else fall back to
-    // the label-named config in configs/
-    let config_path = index
-        .get("config_path")
-        .and_then(|v| v.as_str())
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("configs").join(format!("{label}.yml")));
-
-    let actual_sha = sha256_of_file(&config_path);
-
-    ChainLink {
-        description: format!(
-            "{description} ({}) vs {}",
-            config_path.display(),
-            run_index_path.display()
-        ),
-        path: config_path,
-        sha_recorded: recorded_sha,
-        sha_actual: actual_sha,
-        missing: false,
-    }
-}
-
-/// Check that `consumer_index` has a field `recorded_field` whose value matches
-/// the SHA-256 of `producer_index`.
-fn check_cross_sha(
-    label: &str,
-    producer_path: &PathBuf,
-    consumer_path: &PathBuf,
-    recorded_field: &str,
-) -> ChainLink {
-    let description = format!("{label} SHA");
-
-    // Consumer index must exist (if it doesn't, the stage hasn't run — that's
-    // not a chain failure for stages that haven't been executed)
-    if !consumer_path.exists() {
-        return ChainLink {
-            description: format!("{description} (consumer not found)"),
-            path: consumer_path.clone(),
-            sha_recorded: None,
-            sha_actual: None,
-            missing: true,
-        };
-    }
-
-    // Parse consumer index
-    let content = match fs::read_to_string(consumer_path) {
-        Ok(c) => c,
-        Err(_) => {
-            return ChainLink {
-                description,
-                path: consumer_path.clone(),
-                sha_recorded: None,
-                sha_actual: None,
-                missing: true,
-            }
-        }
-    };
-    let consumer: Value = match serde_json::from_str(&content) {
-        Ok(v) => v,
-        Err(_) => {
-            return ChainLink {
-                description,
-                path: consumer_path.clone(),
-                sha_recorded: None,
-                sha_actual: None,
-                missing: true,
-            }
-        }
-    };
-
-    let recorded_sha = consumer
-        .get(recorded_field)
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string());
-
-    if recorded_sha.is_none() {
-        return ChainLink {
-            description: format!(
-                "{description} (no '{recorded_field}' in {})",
-                consumer_path.display()
-            ),
-            path: consumer_path.clone(),
-            sha_recorded: None,
-            sha_actual: None,
-            missing: true,
-        };
-    }
-
-    // Compute actual SHA of the producer index
-    let actual_sha = if producer_path.exists() {
-        sha256_of_file(producer_path)
-    } else {
-        None
-    };
-
-    ChainLink {
-        description: format!(
-            "{description} ({} -> {})",
-            producer_path.display(),
-            consumer_path.display()
-        ),
-        path: producer_path.clone(),
-        sha_recorded: recorded_sha,
-        sha_actual: actual_sha,
-        missing: false,
-    }
-}
-
-/// Compute the SHA-256 of a file, returning `None` if the file cannot be read.
-fn sha256_of_file(path: &PathBuf) -> Option<String> {
-    let bytes = fs::read(path).ok()?;
-    let digest = Sha256::digest(&bytes);
-    Some(format!("{digest:x}"))
-}
-
-/// Print one chain link in ASCII-only format.
-fn print_link(link: &ChainLink) {
-    if link.missing {
-        println!("  {}: [MISSING or INCOMPLETE]", link.description);
-    } else {
-        let recorded = link.sha_recorded.as_deref().unwrap_or("(none)");
-        let short = &recorded[..recorded.len().min(16)];
-        let status = if link.is_ok() { "MATCH" } else { "MISMATCH" };
-        println!("  {}: sha256={short}... {status}", link.description);
-        if !link.is_ok() {
-            let actual = link.sha_actual.as_deref().unwrap_or("(unreadable)");
-            let actual_short = &actual[..actual.len().min(16)];
-            println!("    recorded: {recorded}");
-            println!("    actual:   {actual_short}...");
-        }
-    }
-}
+fn check_config_sha(label:&str,path:&PathBuf)->ChainLink {bisect_report::label_chain::check_config_sha(label,path,&|p|p.exists(),&|p|fs::read(p).ok())}
+fn check_cross_sha(label:&str,producer:&PathBuf,consumer:&PathBuf,field:&str)->ChainLink {bisect_report::label_chain::check_cross_sha(label,producer,consumer,field,&|p|p.exists(),&|p|fs::read(p).ok())}
+#[cfg(test)]
+fn sha256_of_file(path:&PathBuf)->Option<String>{bisect_report::label_chain::sha256_of_file(path,&|p|fs::read(p).ok())}
+fn print_link(link:&ChainLink){print!("{}",bisect_report::label_chain::format_link(link));}
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
@@ -779,6 +427,42 @@ mod tests {
                 "beta must have alpha's year 2020"
             );
         });
+    }
+
+    #[test]
+    fn test_mv_forced_self_rename_preserves_source() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("alpha", "2020").unwrap();
+            fs::create_dir_all("runs/alpha").unwrap();
+            fs::write("runs/alpha/sentinel.bin", [0, 255]).unwrap();
+            let error = run_mv("alpha", "alpha", true).unwrap_err();
+            assert!(error.contains("must differ"));
+            assert_eq!(fs::read("runs/alpha/sentinel.bin").unwrap(), [0, 255]);
+            assert!(Registry::get("alpha").unwrap().is_some());
+        });
+    }
+
+    #[test]
+    fn test_mv_case_only_names_preserve_all_source_stages() {
+        for (source, destination) in [("alpha", "Alpha"), ("ALPHA", "alpha")] {
+            for force in [false, true] {
+                let _dir = with_tempdir(|| {
+                    Registry::mark_built(source, "2020").unwrap();
+                    let original_registry = fs::read(".bisect").unwrap();
+                    for stage in ["runs", "analysis", "reports"] {
+                        let directory = format!("{stage}/{source}");
+                        fs::create_dir_all(&directory).unwrap();
+                        fs::write(format!("{directory}/sentinel.bin"), [0, 255, 128]).unwrap();
+                    }
+                    let error = run_mv(source, destination, force).unwrap_err();
+                    assert!(error.contains("case-only"), "{error}");
+                    assert_eq!(fs::read(".bisect").unwrap(), original_registry);
+                    for stage in ["runs", "analysis", "reports"] {
+                        assert_eq!(fs::read(format!("{stage}/{source}/sentinel.bin")).unwrap(), [0, 255, 128]);
+                    }
+                });
+            }
+        }
     }
 
     // ── 9. mv nonexistent source -> [CONFIG] error ─────────────────────────────

@@ -1,0 +1,582 @@
+{
+  "schema_version": 2,
+  "scope": "Scoped runtime evidence for thirty-eight exposed partisan compositions, with row-specific artifacts; not full every-state/parameter/weight/command parity.",
+  "rows": [
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-candidate-weighting",
+      "evidence_group": "standard",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "multi",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-candidate-weighting",
+      "evidence_group": "standard",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "percentile",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-candidate-weighting",
+      "evidence_group": "standard",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "convergence",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-candidate-weighting",
+      "evidence_group": "standard",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "bisection-ensemble",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-candidate-weighting",
+      "evidence_group": "standard",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "ratio-optimal",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-ratio-candidate-weighting",
+      "evidence_group": "structure",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "955eed97eaebdff6c21fc49f43e038419aa897ebcc60331b0841f03f6a6bacb9"
+    },
+    {
+      "structure": "ratio-optimal",
+      "weights": "partisan",
+      "search": "multi",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-ratio-candidate-weighting",
+      "evidence_group": "structure",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "955eed97eaebdff6c21fc49f43e038419aa897ebcc60331b0841f03f6a6bacb9"
+    },
+    {
+      "structure": "compact-polsby",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-cut-slack-and-compactness-selection",
+      "evidence_group": "compact",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "compact-polsby",
+      "weights": "partisan",
+      "search": "multi",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-cut-slack-and-compactness-selection",
+      "evidence_group": "compact",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "nway",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-direct-partition-weighting",
+      "evidence_group": "nway",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "simulated-annealing",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "weighted-initialization-and-reporting; unweighted-annealing",
+      "evidence_group": "annealing",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "spectral",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only",
+      "evidence_group": "structure",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "955eed97eaebdff6c21fc49f43e038419aa897ebcc60331b0841f03f6a6bacb9"
+    },
+    {
+      "structure": "bfs-growth",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only",
+      "evidence_group": "geometry",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "centroidal-voronoi",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only",
+      "evidence_group": "geometry",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "moving-knife",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only",
+      "evidence_group": "geometry",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "capacity-clustering",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only",
+      "evidence_group": "capacity",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "regionalization",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only",
+      "evidence_group": "capacity",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "flow-construction",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only",
+      "evidence_group": "capacity",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "prime-factor",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-boost-prime-factor-partitioning; native-3-percent-final-limit",
+      "evidence_group": "prime",
+      "remaining": "Prepared inputs and bounded kernels only; acquisition, all parameter/state combinations, authenticated execution and legal/optimality certification are not established.",
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    {
+      "structure": "ilp",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-cost-only; native-unweighted-solver-and-fallback",
+      "evidence_group": "ilp",
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c",
+      "remaining": "Local bounded native ILP, declared time-limit/size/fallback semantics retained. No global/legal certificate, full capacity or every-state/parameter coverage."
+    },
+    {
+      "structure": "ratio-optimal-area",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-ratio-selection-with-population-and-half-area-root-constraints",
+      "evidence_group": "area",
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c",
+      "remaining": "Identical supplied geometry, bounded native kernels and stated control scopes; not native geometry acquisition/all-state feasibility/global or legal proof."
+    },
+    {
+      "structure": "ratio-optimal-area",
+      "weights": "partisan",
+      "search": "multi",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-ratio-selection-with-population-and-half-area-root-constraints",
+      "evidence_group": "area",
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c",
+      "remaining": "Identical supplied geometry, bounded native kernels and stated control scopes; not native geometry acquisition/all-state feasibility/global or legal proof."
+    },
+    {
+      "structure": "ratio-optimal-vra",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-cut-ratio-selection-with-root-minority-mass-proxy-score",
+      "evidence_group": "vra",
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c",
+      "remaining": "Selected source/parameter scope, explicit proxy rather than exact VAP, no global/legal certificate or full native workflow/capacity."
+    },
+    {
+      "structure": "ratio-optimal-vra",
+      "weights": "partisan",
+      "search": "multi",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-cut-ratio-selection-with-root-minority-mass-proxy-score",
+      "evidence_group": "vra",
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c",
+      "remaining": "Selected source/parameter scope, explicit proxy rather than exact VAP, no global/legal certificate or full native workflow/capacity."
+    },
+    {
+      "structure": "proportional-section",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-cut-selection; separate-vote-quota-and-root-population/vote-constraints",
+      "evidence_group": "proportional-section",
+      "verified_wasm_sha256": "977a1ed64f304a219d50e9413b02710738c8b066fb3dc4da85c7330faa34cd85",
+      "remaining": "Selected prepared/source/parameter scopes; native failures retained, not all-state feasibility/global/legal proof or full CLI discovery/orchestration."
+    },
+    {
+      "structure": "proportional-section",
+      "weights": "partisan",
+      "search": "multi",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-cut-selection; separate-vote-quota-and-root-population/vote-constraints",
+      "evidence_group": "proportional-section",
+      "verified_wasm_sha256": "977a1ed64f304a219d50e9413b02710738c8b066fb3dc4da85c7330faa34cd85",
+      "remaining": "Selected prepared/source/parameter scopes; native failures retained, not all-state feasibility/global/legal proof or full CLI discovery/orchestration."
+    },
+    {
+      "structure": "proportional-bisect",
+      "weights": "partisan",
+      "search": "single",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-sparse-cut-recursion; separate-votes-over-census-population-seat-schedule",
+      "evidence_group": "proportional-bisect",
+      "verified_wasm_sha256": "977a1ed64f304a219d50e9413b02710738c8b066fb3dc4da85c7330faa34cd85",
+      "remaining": "Native kernel API, not State preset; selected prepared/input/control scope, no full state/parameter feasibility/global/legal/workflow/capacity proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "flip",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-weighted-initialization; unweighted-chain-proposals-and-percentile-ranking",
+      "evidence_group": "full-plan-chains",
+      "verified_wasm_sha256": "68069348da90fb5a3af48a3208d0fce87c153851c3ea82bd26d77554f442c6ab",
+      "remaining": "Selected prepared/source/control scope; not full every-state/parameter feasibility, original execution authentication or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "forest-recom",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-weighted-initialization; unweighted-chain-proposals-and-percentile-ranking",
+      "evidence_group": "full-plan-chains",
+      "verified_wasm_sha256": "68069348da90fb5a3af48a3208d0fce87c153851c3ea82bd26d77554f442c6ab",
+      "remaining": "Selected prepared/source/control scope; not full every-state/parameter feasibility, original execution authentication or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "merge-split",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-weighted-initialization; unweighted-chain-proposals-and-percentile-ranking",
+      "evidence_group": "full-plan-chains",
+      "verified_wasm_sha256": "68069348da90fb5a3af48a3208d0fce87c153851c3ea82bd26d77554f442c6ab",
+      "remaining": "Selected prepared/source/control scope; not full every-state/parameter feasibility, original execution authentication or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "short-burst",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-weighted-initialization; unweighted-burst-endpoint-percentile-ranking",
+      "evidence_group": "short-bursts",
+      "verified_wasm_sha256": "10e66cc795753802097793e99092c00b1bac0f2d0eeffa3f1c01ef128bd84f38",
+      "remaining": "Selected prepared/source/control scope; not full every-state/parameter feasibility, original execution authentication or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "short-burst-forest",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-weighted-initialization; unweighted-burst-endpoint-percentile-ranking",
+      "evidence_group": "short-bursts",
+      "verified_wasm_sha256": "10e66cc795753802097793e99092c00b1bac0f2d0eeffa3f1c01ef128bd84f38",
+      "remaining": "Selected prepared/source/control scope; not full every-state/parameter feasibility, original execution authentication or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "short-burst-merge-split",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-weighted-initialization; unweighted-burst-endpoint-percentile-ranking",
+      "evidence_group": "short-bursts",
+      "verified_wasm_sha256": "10e66cc795753802097793e99092c00b1bac0f2d0eeffa3f1c01ef128bd84f38",
+      "remaining": "Selected prepared/source/control scope; not full every-state/parameter feasibility, original execution authentication or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "parallel-tempering",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-weighted-initialization; unweighted-replica-moves-swaps-and-cold-record-ranking",
+      "evidence_group": "parallel-tempering",
+      "verified_wasm_sha256": "22a77b8100abeb51ed8ac5939f53440e9cd33c2ff787d159ba9365bd942c13cd",
+      "remaining": "Selected prepared/source/control scope; not full every-state/parameter feasibility, original execution authentication or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "smc-percentile",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "reported-boundary-only; native-SMC-sampling-and-selection-weight-independent",
+      "evidence_group": "smc",
+      "verified_wasm_sha256": "98cac5775e085ad0822a764f99654721681f46d364f63f6361c183b85623af7c",
+      "remaining": "Selected input/control scope; not calibrated distribution, all-state feasibility, authenticated execution or global/legal proof."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "vra-recom",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "native-partisan-initialization; independent-unweighted-demographic-mean-preservation",
+      "evidence_group": "vra-recom",
+      "verified_wasm_sha256": "41131423b0905350198fd1ab0f4645d3728a4de3a6572d2b271324a43d061190",
+      "remaining": "Selected supplied source/control scope; native discovery/absence and full workflow/capacity/authentication/global/legal proof incomplete."
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "multiscale",
+      "verified_wasm_sha256": "d0b580624e45622b7a8719a0ba95020bd7885b426499056c81e6bccf6621d0df",
+      "evidence_group": "lab-multiscale-partisan",
+      "remaining": "Synthetic BG workflow plus actual prepared RI/IA tract scope; Native State acquisition/index-based reporting/full capacity/authentication/global/legal proof not claimed.",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "parent-tract-partisan-initialization-only; unweighted-sampling/ranking; fine-costs-physical"
+    },
+    {
+      "structure": "standard-bisect",
+      "weights": "partisan",
+      "search": "multiscale-adaptive",
+      "verified_wasm_sha256": "d0b580624e45622b7a8719a0ba95020bd7885b426499056c81e6bccf6621d0df",
+      "evidence_group": "lab-multiscale-partisan",
+      "remaining": "Synthetic BG workflow plus actual prepared RI/IA tract scope; Native State acquisition/index-based reporting/full capacity/authentication/global/legal proof not claimed.",
+      "review": "scoped-execution-evidence",
+      "weighting_effect": "parent-tract-partisan-initialization-only; unweighted-sampling/ranking; fine-costs-physical"
+    }
+  ],
+  "evidence_groups": {
+    "standard": {
+      "script": "scripts/web/test_partisan_wasm.mjs",
+      "receipt": "target/partisan-wasm-verification.json",
+      "log": "target/partisan-prime-standard-regression.log",
+      "cases_key": "exact_cases",
+      "expected": 900,
+      "receipt_sha256": "133c40df59bd149a973bdd74c29f69d31d165c8079b41d97106e3bf511342b84",
+      "receipt_records_artifact": false,
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    "structure": {
+      "script": "scripts/web/test_partisan_structure_dispatch.mjs",
+      "receipt": "target/partisan-structure-dispatch/evidence.json",
+      "log": "target/partisan-prime-structure-regression.log",
+      "cases_key": "native_state_conversion_tsv_and_dispatch_cases",
+      "expected": 108,
+      "receipt_sha256": "01f1d884838334d68c94500ee4620e7731a7aee2d8d532c20907537c35c1a23c",
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "955eed97eaebdff6c21fc49f43e038419aa897ebcc60331b0841f03f6a6bacb9"
+    },
+    "nway": {
+      "script": "scripts/web/test_partisan_nway.mjs",
+      "receipt": "target/partisan-nway/evidence.json",
+      "log": "target/partisan-prime-nway-regression.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 72,
+      "receipt_sha256": "83e4112198b909d56b7290224b706384312760110d4c04efea818f9ebbc7b72f",
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    "annealing": {
+      "script": "scripts/web/test_partisan_annealing.mjs",
+      "receipt": "target/partisan-annealing/evidence.json",
+      "log": "target/partisan-prime-annealing-regression.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 108,
+      "receipt_sha256": "e68c7a5301421272fa7295d1204c46a1d0e79d550f72e6e878c579b91ce6b962",
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    "compact": {
+      "script": "scripts/web/test_partisan_compact.mjs",
+      "receipt": "target/partisan-compact/evidence.json",
+      "log": "target/partisan-prime-compact-regression.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 72,
+      "receipt_sha256": "c0f72c7ffcb299d970c1937a2952f4024b7acdf88812586242f8995045d7d5d8",
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    "geometry": {
+      "script": "scripts/web/test_partisan_geometry.mjs",
+      "receipt": "target/partisan-geometry/evidence.json",
+      "log": "target/partisan-prime-geometry-regression.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 180,
+      "receipt_sha256": "44a354cc350139b985ed21f7e48363b5bf5ff19eb556048534bbae6b7e68746f",
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    "prime": {
+      "script": "scripts/web/test_partisan_prime_wasm.mjs",
+      "receipt": "target/partisan-prime-reference/wasm-evidence.json",
+      "log": "target/partisan-prime-wasm-test.log",
+      "cases_key": "native_wasm_cases",
+      "expected": 72,
+      "receipt_sha256": "ff30175dbfc8c21f5c77848795659e9800c50150a5a1e060fd479f814dd65735",
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    "capacity": {
+      "script": "scripts/web/test_partisan_capacity.mjs",
+      "receipt": "target/partisan-capacity/evidence.json",
+      "log": "target/partisan-prime-capacity-regression.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 108,
+      "receipt_sha256": "59cee0cccb9df64057275413a9fc6d64bd2e47b3b61769c08ac04bc33d79f314",
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "1c0e90685b9711c07391a35ef6d9661b95685d4381ae8e3e308e4177c1d08abf"
+    },
+    "ilp": {
+      "script": "scripts/web/test_partisan_ilp.mjs",
+      "receipt": "target/partisan-ilp/evidence.json",
+      "log": "target/partisan-ilp-test.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 216,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c"
+    },
+    "area": {
+      "script": "scripts/web/test_partisan_area.mjs",
+      "receipt": "target/partisan-area/evidence.json",
+      "log": "target/partisan-area-test.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 216,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c"
+    },
+    "vra": {
+      "script": "scripts/web/test_partisan_vra.mjs",
+      "receipt": "target/partisan-vra/evidence.json",
+      "log": "target/partisan-vra-test.log",
+      "cases_key": "native_state_tsv_and_demographic_csv_cases",
+      "expected": 288,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "143faa5307672e374f519728a8bcf71997d3c94043bc4140508646124158531c"
+    },
+    "proportional-section": {
+      "script": "scripts/web/test_partisan_proportional_section.mjs",
+      "receipt": "target/partisan-proportional-section/evidence.json",
+      "log": "target/partisan-proportional-test.log",
+      "cases_key": "native_state_tsv_and_vote_csv_cases",
+      "expected": 288,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "977a1ed64f304a219d50e9413b02710738c8b066fb3dc4da85c7330faa34cd85"
+    },
+    "proportional-bisect": {
+      "script": "scripts/web/test_partisan_proportional_bisect.mjs",
+      "receipt": "target/partisan-proportional-bisect/evidence.json",
+      "log": "target/partisan-proportional-bisect-test.log",
+      "cases_key": "native_kernel_tsv_and_vote_csv_cases",
+      "expected": 144,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "977a1ed64f304a219d50e9413b02710738c8b066fb3dc4da85c7330faa34cd85"
+    },
+    "full-plan-chains": {
+      "script": "scripts/web/test_partisan_chains.mjs",
+      "receipt": "target/partisan-chains/evidence.json",
+      "log": "target/partisan-chains-test.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 288,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "68069348da90fb5a3af48a3208d0fce87c153851c3ea82bd26d77554f442c6ab"
+    },
+    "short-bursts": {
+      "script": "scripts/web/test_partisan_bursts.mjs",
+      "receipt": "target/partisan-bursts/evidence.json",
+      "log": "target/partisan-bursts-test.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 576,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "10e66cc795753802097793e99092c00b1bac0f2d0eeffa3f1c01ef128bd84f38"
+    },
+    "parallel-tempering": {
+      "script": "scripts/web/test_partisan_pt.mjs",
+      "receipt": "target/partisan-pt/evidence.json",
+      "log": "target/partisan-pt-test.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 192,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "22a77b8100abeb51ed8ac5939f53440e9cd33c2ff787d159ba9365bd942c13cd"
+    },
+    "smc": {
+      "script": "scripts/web/test_partisan_smc.mjs",
+      "receipt": "target/partisan-smc/evidence.json",
+      "log": "target/partisan-smc-test.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 96,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "98cac5775e085ad0822a764f99654721681f46d364f63f6361c183b85623af7c"
+    },
+    "vra-recom": {
+      "script": "scripts/web/test_partisan_vra_recom.mjs",
+      "receipt": "target/partisan-vra-recom/evidence.json",
+      "log": "target/partisan-vra-recom-test.log",
+      "cases_key": "native_state_tsv_cases",
+      "expected": 192,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "41131423b0905350198fd1ab0f4645d3728a4de3a6572d2b271324a43d061190"
+    },
+    "multiscale-partisan-api": {
+      "script": "scripts/web/test_multiscale_partisan_api.mjs",
+      "receipt": "target/multiscale-partisan-api/evidence.json",
+      "log": "target/multiscale-partisan-api-test.log",
+      "cases_key": "native_kernel_tsv_cases",
+      "expected": 288,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "d0b580624e45622b7a8719a0ba95020bd7885b426499056c81e6bccf6621d0df"
+    },
+    "lab-multiscale-partisan": {
+      "script": "scripts/web/test_lab_multiscale_partisan.mjs",
+      "receipt": "target/lab-multiscale-partisan/evidence.json",
+      "log": "target/lab-multiscale-partisan-test.log",
+      "cases_key": "native_comparisons",
+      "expected": 192,
+      "receipt_records_artifact": true,
+      "verified_wasm_sha256": "d0b580624e45622b7a8719a0ba95020bd7885b426499056c81e6bccf6621d0df"
+    }
+  },
+  "remaining": [
+    "All other weighting/composition families require their existing individual evidence and further audit",
+    "Native source acquisition, complete command orchestration, provenance, capacity, publication and full parity remain incomplete"
+  ],
+  "latest_verified_wasm_sha256": "d0b580624e45622b7a8719a0ba95020bd7885b426499056c81e6bccf6621d0df",
+  "declaration_gate": "scripts/web/check_wasm_composition_coverage.mjs"
+}

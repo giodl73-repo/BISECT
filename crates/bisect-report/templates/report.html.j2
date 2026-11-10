@@ -81,7 +81,7 @@
 <!-- Section 2: Population Equality -->
 <div class="section" id="population">
 <h2>2. Population Equality</h2>
-{% if population_equality.status == "unavailable" %}
+{% if population_equality.status is defined and population_equality.status == "unavailable" %}
 <p class="unavailable">Population equality analysis unavailable.</p>
 {% else %}
 <p><strong>Status:</strong> Population equality metrics from analysis/population.json</p>
@@ -93,13 +93,13 @@
 <div class="section" id="geographic">
 <h2>3. Geographic Constraints</h2>
 <h3>Contiguity</h3>
-{% if geographic_constraints.contiguity.status == "unavailable" %}
+{% if geographic_constraints.contiguity.status is defined and geographic_constraints.contiguity.status == "unavailable" %}
 <p class="unavailable">Contiguity data unavailable.</p>
 {% else %}
 <pre>{{ geographic_constraints.contiguity | json_encode(pretty=true) }}</pre>
 {% endif %}
 <h3>Municipal Splits</h3>
-{% if geographic_constraints.splits.status == "unavailable" %}
+{% if geographic_constraints.splits.status is defined and geographic_constraints.splits.status == "unavailable" %}
 <p class="unavailable">Splits analysis unavailable.</p>
 {% else %}
 <pre>{{ geographic_constraints.splits | json_encode(pretty=true) }}</pre>
@@ -109,7 +109,7 @@
 <!-- Section 4: Partisan Fairness -->
 <div class="section" id="partisan">
 <h2>4. Partisan Fairness</h2>
-{% if partisan_fairness.status == "unavailable" %}
+{% if partisan_fairness.status is defined and partisan_fairness.status == "unavailable" %}
 <p class="unavailable">Partisan fairness analysis unavailable (election data may not be present for this year).</p>
 {% else %}
 <pre>{{ partisan_fairness | json_encode(pretty=true) }}</pre>
@@ -119,7 +119,7 @@
 <!-- Section 5: Minority Representation / VRA -->
 <div class="section" id="vra">
 <h2>5. Minority Representation / VRA</h2>
-{% if vra_compliance.status == "unavailable" %}
+{% if vra_compliance.status is defined and vra_compliance.status == "unavailable" %}
 <p class="unavailable">VRA analysis unavailable.</p>
 {% else %}
 <pre>{{ vra_compliance | json_encode(pretty=true) }}</pre>
@@ -129,7 +129,7 @@
 <!-- Section 6: Compactness -->
 <div class="section" id="compactness">
 <h2>6. Compactness</h2>
-{% if compactness.status == "unavailable" %}
+{% if compactness.status is defined and compactness.status == "unavailable" %}
 <p class="unavailable">Compactness analysis unavailable.</p>
 {% else %}
 <pre>{{ compactness | json_encode(pretty=true) }}</pre>
@@ -139,7 +139,7 @@
 <!-- Section 7: Comparison vs Enacted Plan -->
 <div class="section" id="comparison">
 <h2>7. Comparison vs Enacted Plan</h2>
-{% if comparison.status == "unavailable" %}
+{% if comparison.status is defined and comparison.status == "unavailable" %}
 <p class="unavailable">Comparison analysis unavailable (enacted plan data not provided).</p>
 {% else %}
 <pre>{{ comparison | json_encode(pretty=true) }}</pre>
@@ -149,7 +149,7 @@
 <!-- Section 8: Nesting Compliance -->
 <div class="section" id="nesting">
 <h2>8. Nesting Compliance</h2>
-{% if nesting.status == "unavailable" %}
+{% if nesting.status is defined and nesting.status == "unavailable" %}
 <p class="unavailable">Nesting compliance data unavailable.</p>
 {% else %}
 <pre>{{ nesting | json_encode(pretty=true) }}</pre>
@@ -188,7 +188,7 @@
 <!-- Section 10: Maps -->
 <div class="section" id="maps">
 <h2>10. Maps</h2>
-{% if maps.status == "unavailable" %}
+{% if maps.status is defined and maps.status == "unavailable" %}
 <p class="unavailable">District maps unavailable (run 'BISECT map' to generate).</p>
 {% else %}
   {% if maps.districts %}

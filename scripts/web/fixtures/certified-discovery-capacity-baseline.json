@@ -1,0 +1,31 @@
+{
+  "cli_sha256": "e4585b4055d6ec9ac0af56f5a132741a078afe2a976c65bd5e6913bff5411cd2",
+  "cases": [
+    {
+      "name": "grid100",
+      "districts": 2,
+      "refinement": "full",
+      "context": "docs/examples/rplan-benchmark-packages/U.20+audit-grid10-benchmark/context.rctx",
+      "context_sha256": "4ee6ae022547921df36a78a48db79daae9bb894c2ce099c3294b620883e1ffb8",
+      "exit_code": 0,
+      "error": null,
+      "files": {
+        "certified-discovery.json": "a35946507cf7f369a274b3f398aca9d34fec81af8bda1ba19301fd0fecfa87b3",
+        "certified-split-instance.json": "a36340f05b16def76464605ea04ea7db86e01c48ed27c4216ce7dd54e08de4a6"
+      }
+    },
+    {
+      "name": "path100",
+      "districts": 3,
+      "refinement": "nrs-v0-3",
+      "context": "docs/examples/rplan-benchmark-packages/T.17+flow-path100-benchmark/context.rctx",
+      "context_sha256": "e63c430400253148d1d55e0262be0c031e05bebb970b28fd1433069f5143a790",
+      "exit_code": 0,
+      "error": null,
+      "files": {
+        "certified-discovery.json": "1a6e6ccda2babe73932b14c144f2a8bf0c174317882a9a89c8ef0fd28ca84f43",
+        "certified-split-instance.json": "7373ef3b1b8b6cdb721f8720fc9e0cd6cedc6e3b11c65063e30002f0be0ac60f"
+      }
+    }
+  ]
+}

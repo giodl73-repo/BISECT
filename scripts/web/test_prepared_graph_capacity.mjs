@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {parsePreparedGraphJson,parseSafeJson,parseBuildArchiveJson,createProject,MAX_WORKBENCH_VALUES,MAX_WORKBENCH_ARCHIVE_BYTES,MAX_WORKBENCH_EXPANDED_BYTES} from '../../web/lab/project.js';
+import {createWorkbenchArchive,parseWorkbenchArchive} from '../../web/lab/workbench-archive.js';
+import {censusArchiveLimit} from '../../web/lab/census-archive.js';
+const dense='{"values":['+'0,'.repeat(600000)+'0]}';
+assert.throws(()=>parseSafeJson(dense),/complex/);assert.equal(parsePreparedGraphJson(dense).values.length,600001);
+for(const text of ['{"x":1,"x":2}','{"x":1,"\\u0078":2}','{"__proto__":{}}','{"n":9007199254740993}','{"n":1e999}','['.repeat(65)+'0'+']'.repeat(65)])assert.throws(()=>parsePreparedGraphJson(text));
+assert.throws(()=>parsePreparedGraphJson(' '.repeat(8*1024*1024+1)),/8 MiB/);
+assert.throws(()=>parsePreparedGraphJson('"'+'\u00e9'.repeat(4*1024*1024)+'"'),/8 MiB/);
+assert.throws(()=>parsePreparedGraphJson('['+'0,'.repeat(2000000)+'0]'),/complex/);
+const base=JSON.parse(await fs.readFile('target/census-preparation-wasm/2020-block/project.bisect','utf8')),result={schema_version:'unverified-dense-receipt',values:Array(600001).fill(0)};
+assert.throws(()=>createProject({...base,result}),/complex/);
+const archive=createWorkbenchArchive({...base,result});assert.equal(parseWorkbenchArchive(archive).result.values.length,600001);
+assert.equal(MAX_WORKBENCH_VALUES,8000000);assert.equal(MAX_WORKBENCH_ARCHIVE_BYTES,128*1024*1024);assert.equal(MAX_WORKBENCH_EXPANDED_BYTES,256*1024*1024);
+// The containing array counts as one value: 7,999,999 scalars are inclusive.
+assert.equal(parseBuildArchiveJson('['+'0,'.repeat(7999998)+'0]').length,7999999);
+assert.throws(()=>parseBuildArchiveJson('['+'0,'.repeat(7999999)+'0]'),/8,000,000 values/);
+assert.throws(()=>parseBuildArchiveJson(' '.repeat(128*1024*1024+1)),/128 MiB/);
+assert.equal(censusArchiveLimit({kind:'tiger',unit_kind:'counties'}),96*1024*1024);
+for(const settings of [{kind:'tiger'},{kind:'tiger',unit_kind:'blocks'},{kind:'pl94',unit_kind:'counties'}])assert.equal(censusArchiveLimit(settings),64*1024*1024);
+await fs.mkdir('target/prepared-graph-capacity',{recursive:true});await fs.writeFile('target/prepared-graph-capacity/evidence.json',JSON.stringify({status:'passed-node-parser-capacity',scope:'Node parser boundaries and archive roundtrip; not browser memory/host or statewide capacity acceptance',generic_value_cap:500000,prepared_graph_value_cap:2000000,prepared_graph_byte_cap:8*1024*1024,workbench_value_cap:8000000,inclusive_archive_scalar_values:7999999,first_over_limit_archive_scalar_values:8000000,workbench_byte_cap:128*1024*1024,compressed_expanded_byte_cap:256*1024*1024,ordinary_project_still_rejects_dense_receipt:true,large_archive_dense_receipt_roundtrip:true,full_parity:false},null,2));
+console.log('Prepared graph capacity: separate 8-MiB/two-million-value safe reader, unchanged generic cap, exact integer/prototype/duplicate/escaped-key/depth/UTF8/size/value guards; inclusive eight-million-value archives, 128-MiB archive bound and county-only ZIP size allowance passed.');

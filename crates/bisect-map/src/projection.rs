@@ -16,6 +16,7 @@ pub struct Projection {
     x_offset: f64,
     y_offset: f64,
     scale: f64,
+    wrap_positive_longitudes: bool,
 }
 
 impl Projection {
@@ -58,11 +59,21 @@ impl Projection {
             x_offset,
             y_offset,
             scale,
+            wrap_positive_longitudes: false,
         }
+    }
+
+    /// Display a geographic interval crossing +180/-180 on a continuous axis.
+    /// The fitted bounding box must already use positive longitudes minus 360.
+    /// Source coordinates and analytical geometry are never changed.
+    pub fn with_antimeridian_wrap(mut self) -> Self {
+        self.wrap_positive_longitudes = true;
+        self
     }
 
     /// Project (lon, lat) → (svg_x, svg_y). SVG y-axis is flipped.
     pub fn project(&self, lon: f64, lat: f64) -> (f64, f64) {
+        let lon = if self.wrap_positive_longitudes && lon > 0.0 { lon - 360.0 } else { lon };
         let x = lon * self.scale + self.x_offset;
         let y = self.y_offset - lat * self.scale;
         (x, y)
@@ -118,7 +129,10 @@ impl InsetProjection {
         let ak_w_px = (w * 0.28).round() as u32;
         let ak_h_px = (h * 0.25).round() as u32;
         let ak_y_offset = cont_h_px as f64;
-        let ak_proj = Projection::from_bbox(-180.0, 51.0, -130.0, 72.0, ak_w_px, ak_h_px, 0.02);
+        // The western Aleutians use positive geographic longitudes. Their
+        // equivalent display longitudes extend west of -180; retain them in
+        // the Alaska inset rather than sending them to the continental map.
+        let ak_proj = Projection::from_bbox(-190.0, 51.0, -129.0, 72.0, ak_w_px, ak_h_px, 0.02);
 
         // Hawaii inset: right of AK inset, 12% width × 10% height, vertically centred
         let hi_w_px = (w * 0.12).round() as u32;
@@ -141,8 +155,9 @@ impl InsetProjection {
     /// Classifies the coordinate into continental / Alaska / Hawaii by
     /// geographic bounds, then applies the appropriate sub-projection + offset.
     pub fn project(&self, lon: f64, lat: f64) -> (f64, f64) {
-        // Alaska: lon < -130 and lat > 51
-        if lon < -130.0 && lat > 51.0 {
+        let lon = if (170.0..=180.0).contains(&lon) && lat > 51.0 { lon - 360.0 } else { lon };
+        // Include the southeast boundary, which extends slightly east of -130.
+        if lon < -129.0 && lat > 51.0 {
             let (p, ox, oy) = &self.alaska;
             let (x, y) = p.project(lon, lat);
             return (x + ox, y + oy);
@@ -174,6 +189,35 @@ impl InsetProjection {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn antimeridian_display_keeps_neighboring_islands_close() {
+        let proj = Projection::from_bbox(-190.0, 51.0, -130.0, 72.0, 600, 210, 0.0)
+            .with_antimeridian_wrap();
+        assert_eq!(proj.project(179.0, 55.0), proj.project(-181.0, 55.0));
+        let (west, _) = proj.project(179.0, 55.0);
+        let (east, _) = proj.project(-179.0, 55.0);
+        assert!((east - west - 20.0).abs() < 1e-10);
+        assert_eq!(proj.project(-149.0, 61.0), Projection::from_bbox(-190.0, 51.0, -130.0, 72.0, 600, 210, 0.0).project(-149.0, 61.0));
+    }
+
+    #[test]
+    fn national_inset_retains_both_sides_of_aleutian_antimeridian() {
+        let proj = InsetProjection::us_national(2400, 1500);
+        for lon in [172.5, 179.5, -179.5, -150.0, -129.99] {
+            let (x, y) = proj.project(lon, 54.0);
+            assert!(x >= 0.0 && x <= 2400.0 * 0.28, "Aleutian x={x}");
+            assert!(y > proj.continental_height() && y < 1500.0, "Aleutian y={y}");
+            if lon > 0.0 { assert_eq!(proj.project(lon, 54.0), proj.project(lon - 360.0, 54.0)); }
+        }
+        // Hawaii and continental layouts retain their original projections.
+        let (p, ox, oy) = &proj.continental;
+        let (x, y) = p.project(-75.0, 40.0);
+        assert_eq!(proj.project(-75.0, 40.0), (x + ox, y + oy));
+        let (p, ox, oy) = &proj.hawaii;
+        let (x, y) = p.project(-157.0, 21.0);
+        assert_eq!(proj.project(-157.0, 21.0), (x + ox, y + oy));
+    }
 
     #[test]
     fn test_unit_bbox_maps_to_full_canvas() {

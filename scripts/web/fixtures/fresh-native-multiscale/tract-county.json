@@ -1,0 +1,127 @@
+{
+  "schema_version": "bisect-fresh-native-multiscale-fixture-v1",
+  "id": "tract-county",
+  "c_profile_required": false,
+  "reference_kind": "actual-native-completed-plan",
+  "input": {
+    "arguments": [
+      "--state",
+      "AL",
+      "--year",
+      "2020",
+      "--districts",
+      "2",
+      "--chamber",
+      "congressional",
+      "--resolution",
+      "tract",
+      "--seed",
+      "17",
+      "--metis-engine",
+      "metis-core",
+      "--search",
+      "multiscale",
+      "--multiscale-steps",
+      "64",
+      "--percentile",
+      "0.5",
+      "--multiscale-alpha",
+      "0.3",
+      "--multiscale-fine",
+      "tract",
+      "--multiscale-coarse",
+      "county",
+      "--balance-tolerance",
+      "7.125",
+      "--niter",
+      "100",
+      "--adjacency",
+      "C:\\src\\apportionment\\target\\fresh-native-fine-implementation-20261103\\tract-native-reference\\source\\graph.adj.bin"
+    ],
+    "source": {
+      "state": "AL",
+      "year": "2020",
+      "sources": {
+        "adjacency": {
+          "name": "graph.adj.bin",
+          "base64": "UkFESgMAAAAQAAAAGAAAAGQAAAAAAAAAZAAAAAAAAABkAAAAAAAAAGQAAAAAAAAAZAAAAAAAAABkAAAAAAAAAGQAAAAAAAAAZAAAAAAAAABkAAAAAAAAAGQAAAAAAAAAZAAAAAAAAABkAAAAAAAAAGQAAAAAAAAAZAAAAAAAAABkAAAAAAAAAGQAAAAAAAAAAgAAAAEAAAAEAAAAAwAAAAAAAAACAAAABQAAAAMAAAABAAAAAwAAAAYAAAACAAAAAgAAAAcAAAADAAAABQAAAAAAAAAIAAAABAAAAAQAAAAGAAAAAQAAAAkAAAAEAAAABQAAAAcAAAACAAAACgAAAAMAAAAGAAAAAwAAAAsAAAADAAAACQAAAAQAAAAMAAAABAAAAAgAAAAKAAAABQAAAA0AAAAEAAAACQAAAAsAAAAGAAAADgAAAAMAAAAKAAAABwAAAA8AAAACAAAADQAAAAgAAAADAAAADAAAAA4AAAAJAAAAAwAAAA0AAAAPAAAACgAAAAIAAAAOAAAACwAAABgAAAAAAAAAAQAAAAAAAAAAAPQ/AAAAAAQAAAAAAAAAAAAAQAEAAAACAAAAAAAAAAAA8D8BAAAABQAAAAAAAAAAAPw/AgAAAAMAAAAAAAAAAAAAQAIAAAAGAAAAAAAAAAAA+D8DAAAABwAAAAAAAAAAAPQ/BAAAAAUAAAAAAAAAAAD4PwQAAAAIAAAAAAAAAAAA8D8FAAAABgAAAAAAAAAAAPQ/BQAAAAkAAAAAAAAAAAAAQAYAAAAHAAAAAAAAAAAA8D8GAAAACgAAAAAAAAAAAPw/BwAAAAsAAAAAAAAAAAD4PwgAAAAJAAAAAAAAAAAA/D8IAAAADAAAAAAAAAAAAPQ/CQAAAAoAAAAAAAAAAAD4PwkAAAANAAAAAAAAAAAA8D8KAAAACwAAAAAAAAAAAPQ/CgAAAA4AAAAAAAAAAAAAQAsAAAAPAAAAAAAAAAAA/D8MAAAADQAAAAAAAAAAAABADQAAAA4AAAAAAAAAAAD8Pw4AAAAPAAAAAAAAAAAA+D8BAAAAAAAAAAAAIEAAAAAAAAAgQAAAAAAAACBAAAAAAAAAIEAAAAAAAAAgQAAAAAAAACBAAAAAAAAAIEAAAAAAAAAgQAAAAAAAACBAAAAAAAAAIEAAAAAAAAAgQAAAAAAAACBAAAAAAAAAIEAAAAAAAAAgQAAAAAAAACBAAAAAAAAAIEAAAAAAAADwPwAAAAAAAPA/AAAAAAAA8D8AAAAAAADwPwAAAAAAAPA/AAAAAAAA8D8AAAAAAADwPwAAAAAAAPA/AAAAAAAA8D8AAAAAAADwPwAAAAAAAPA/AAAAAAAA8D8AAAAAAADwPwAAAAAAAPA/AAAAAAAA8D8AAAAAAADwPw=="
+        },
+        "geoids": {
+          "name": "graph_geoids.json",
+          "base64": "eyIwIjogIjAxMDAxMDAwMDAwIiwgIjEiOiAiMDEwMDEwMDAwMDEiLCAiMiI6ICIwMTAwMTAwMDAwMiIsICIzIjogIjAxMDAxMDAwMDAzIiwgIjQiOiAiMDEwMDMwMDAwMDAiLCAiNSI6ICIwMTAwMzAwMDAwMSIsICI2IjogIjAxMDAzMDAwMDAyIiwgIjciOiAiMDEwMDMwMDAwMDMiLCAiOCI6ICIwMTAwNTAwMDAwMCIsICI5IjogIjAxMDA1MDAwMDAxIiwgIjEwIjogIjAxMDA1MDAwMDAyIiwgIjExIjogIjAxMDA1MDAwMDAzIiwgIjEyIjogIjAxMDA3MDAwMDAwIiwgIjEzIjogIjAxMDA3MDAwMDAxIiwgIjE0IjogIjAxMDA3MDAwMDAyIiwgIjE1IjogIjAxMDA3MDAwMDAzIn0="
+        },
+        "centroids": {
+          "name": "graph_centroids.json",
+          "base64": "eyJjZW50cm9pZHMiOiBbWy04Ni4wLCAzMi4wXSwgWy04NS45OTksIDMyLjBdLCBbLTg1Ljk5OCwgMzIuMF0sIFstODUuOTk3LCAzMi4wXSwgWy04Ni4wLCAzMi4wMDFdLCBbLTg1Ljk5OSwgMzIuMDAxXSwgWy04NS45OTgsIDMyLjAwMV0sIFstODUuOTk3LCAzMi4wMDFdLCBbLTg2LjAsIDMyLjAwMl0sIFstODUuOTk5LCAzMi4wMDJdLCBbLTg1Ljk5OCwgMzIuMDAyXSwgWy04NS45OTcsIDMyLjAwMl0sIFstODYuMCwgMzIuMDAzXSwgWy04NS45OTksIDMyLjAwM10sIFstODUuOTk4LCAzMi4wMDNdLCBbLTg1Ljk5NywgMzIuMDAzXV19"
+        }
+      }
+    },
+    "label": "Fresh native tract multiscale",
+    "chamber": "congressional",
+    "created_at": "2026-11-03T00:00:00Z",
+    "multiscale": {
+      "sampler": "rand-0.8.6-smallrng-native64-wilson",
+      "fine_source": null
+    }
+  },
+  "native_reference": {
+    "document_json": "{\n  \"rplan_version\": \"0.2\",\n  \"plan\": {\n    \"schema_version\": \"district-plan-v1\",\n    \"units\": {\n      \"unit_kind\": \"tract\",\n      \"state\": \"AL\",\n      \"year\": 2020,\n      \"canonical_order\": \"explicit-unit-ids\",\n      \"unit_ids\": [\n        \"01001000000\",\n        \"01001000001\",\n        \"01001000002\",\n        \"01001000003\",\n        \"01003000000\",\n        \"01003000001\",\n        \"01003000002\",\n        \"01003000003\",\n        \"01005000000\",\n        \"01005000001\",\n        \"01005000002\",\n        \"01005000003\",\n        \"01007000000\",\n        \"01007000001\",\n        \"01007000002\",\n        \"01007000003\"\n      ],\n      \"unit_universe_hash\": \"sha256:5e6578135b223a08a188d15d6054c10abf4a38acbaba528166828eff760d0c3e\",\n      \"source_id\": \"bisect-adjacency-AL-2020\"\n    },\n    \"assignment\": [\n      1,\n      1,\n      1,\n      0,\n      1,\n      1,\n      0,\n      0,\n      1,\n      1,\n      0,\n      0,\n      1,\n      0,\n      0,\n      0\n    ],\n    \"k\": 2,\n    \"display_labels\": [\n      \"1\",\n      \"2\"\n    ],\n    \"allow_empty_districts\": false\n  },\n  \"metadata\": {\n    \"label\": \"alabama_congressional_2020\",\n    \"jurisdiction\": \"AL\",\n    \"chamber\": \"congressional\",\n    \"created_at\": \"2026-11-03T08:31:07Z\",\n    \"description\": \"Final plan emitted by bisect runner for AL congressional 2020\"\n  },\n  \"provenance\": {\n    \"producer\": {\n      \"adjacency_file\": \"alabama_adjacency_2020.adj.bin\",\n      \"name\": \"bisect\",\n      \"tiger_source_url\": \"https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_01_tract.zip\",\n      \"version\": \"0.1.0\"\n    },\n    \"source_hashes\": {\n      \"adjacency\": \"sha256:7dda25e6d9fbf45bd404d225d8658b1bc34752e888141c4c5d35e5b159e950a6\",\n      \"native_replay_recipe\": \"sha256:3776df8a5ef4eefa406e060495dbf6cb462460d7d3b0b9527c17dc1bce6eae6b\"\n    },\n    \"conversion_lineage\": []\n  },\n  \"geometry\": null,\n  \"extensions\": {}\n}",
+    "context_json": "{\n  \"rctx_version\": \"0.1\",\n  \"context_hash\": \"sha256:76b7631453d56526eccef764d5935f507012b351cdc2600b8870616d2d957287\",\n  \"units\": {\n    \"unit_kind\": \"tract\",\n    \"state\": \"AL\",\n    \"year\": 2020,\n    \"canonical_order\": \"explicit-unit-ids\",\n    \"unit_ids\": [\n      \"01001000000\",\n      \"01001000001\",\n      \"01001000002\",\n      \"01001000003\",\n      \"01003000000\",\n      \"01003000001\",\n      \"01003000002\",\n      \"01003000003\",\n      \"01005000000\",\n      \"01005000001\",\n      \"01005000002\",\n      \"01005000003\",\n      \"01007000000\",\n      \"01007000001\",\n      \"01007000002\",\n      \"01007000003\"\n    ],\n    \"unit_universe_hash\": \"sha256:5e6578135b223a08a188d15d6054c10abf4a38acbaba528166828eff760d0c3e\",\n    \"source_id\": \"bisect-adjacency-AL-2020\"\n  },\n  \"graph\": {\n    \"edge_semantics\": \"undirected\",\n    \"adjacency\": [\n      [\n        {\n          \"to\": 1,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        },\n        {\n          \"to\": 4,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        }\n      ],\n      [\n        {\n          \"to\": 0,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        },\n        {\n          \"to\": 2,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        },\n        {\n          \"to\": 5,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        }\n      ],\n      [\n        {\n          \"to\": 1,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        },\n        {\n          \"to\": 3,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        },\n        {\n          \"to\": 6,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        }\n      ],\n      [\n        {\n          \"to\": 2,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        },\n        {\n          \"to\": 7,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        }\n      ],\n      [\n        {\n          \"to\": 5,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 0,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        },\n        {\n          \"to\": 8,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        }\n      ],\n      [\n        {\n          \"to\": 4,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 6,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        },\n        {\n          \"to\": 1,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        },\n        {\n          \"to\": 9,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        }\n      ],\n      [\n        {\n          \"to\": 5,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        },\n        {\n          \"to\": 7,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        },\n        {\n          \"to\": 2,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 10,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        }\n      ],\n      [\n        {\n          \"to\": 6,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        },\n        {\n          \"to\": 3,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        },\n        {\n          \"to\": 11,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        }\n      ],\n      [\n        {\n          \"to\": 9,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        },\n        {\n          \"to\": 4,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        },\n        {\n          \"to\": 12,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        }\n      ],\n      [\n        {\n          \"to\": 8,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        },\n        {\n          \"to\": 10,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 5,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        },\n        {\n          \"to\": 13,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        }\n      ],\n      [\n        {\n          \"to\": 9,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 11,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        },\n        {\n          \"to\": 6,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        },\n        {\n          \"to\": 14,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        }\n      ],\n      [\n        {\n          \"to\": 10,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        },\n        {\n          \"to\": 7,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 15,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        }\n      ],\n      [\n        {\n          \"to\": 13,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        },\n        {\n          \"to\": 8,\n          \"kind\": \"boundary\",\n          \"weight\": 1.25\n        }\n      ],\n      [\n        {\n          \"to\": 12,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        },\n        {\n          \"to\": 14,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        },\n        {\n          \"to\": 9,\n          \"kind\": \"boundary\",\n          \"weight\": 1.0\n        }\n      ],\n      [\n        {\n          \"to\": 13,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        },\n        {\n          \"to\": 15,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 10,\n          \"kind\": \"boundary\",\n          \"weight\": 2.0\n        }\n      ],\n      [\n        {\n          \"to\": 14,\n          \"kind\": \"boundary\",\n          \"weight\": 1.5\n        },\n        {\n          \"to\": 11,\n          \"kind\": \"boundary\",\n          \"weight\": 1.75\n        }\n      ]\n    ]\n  },\n  \"populations\": [\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100,\n    100\n  ],\n  \"subdivisions\": {\n    \"county_ids\": [\n      \"01001\",\n      \"01001\",\n      \"01001\",\n      \"01001\",\n      \"01003\",\n      \"01003\",\n      \"01003\",\n      \"01003\",\n      \"01005\",\n      \"01005\",\n      \"01005\",\n      \"01005\",\n      \"01007\",\n      \"01007\",\n      \"01007\",\n      \"01007\"\n    ]\n  },\n  \"source_hashes\": {\n    \"adjacency\": \"sha256:7dda25e6d9fbf45bd404d225d8658b1bc34752e888141c4c5d35e5b159e950a6\",\n    \"native_replay_recipe\": \"sha256:3776df8a5ef4eefa406e060495dbf6cb462460d7d3b0b9527c17dc1bce6eae6b\"\n  }\n}",
+    "producer_binary_sha256": "08ba4f3daeb045bbff087cf9129d4dcdccf275495b69b1e2f638bf0e4f289af6",
+    "source_manifest_json": "{\n  \"label\": \"alabama_congressional_2020\",\n  \"state_code\": \"AL\",\n  \"year\": \"2020\",\n  \"chamber\": \"congressional\",\n  \"num_districts\": 2,\n  \"population_source\": \"total\",\n  \"partition_mode\": \"edge-weighted\",\n  \"seed\": 17,\n  \"native_replay_recipe\": {\n    \"adjacency_path\": \"C:\\\\src\\\\apportionment\\\\target\\\\fresh-native-fine-implementation-20261103\\\\tract-native-reference\\\\source\\\\graph.adj.bin\",\n    \"execution\": {\n      \"accepted_seed\": \"17\",\n      \"balance_retry_attempt\": 0,\n      \"multiscale_sampler\": \"rand-0.8.6-smallrng-native64-wilson\"\n    },\n    \"original_working_directory\": \"C:\\\\src\\\\apportionment\\\\target\\\\fresh-native-fine-implementation-20261103\\\\tract-native-reference\\\\source\",\n    \"recursive_metis_backend\": \"metis-core\",\n    \"schema_version\": \"bisect-native-state-replay-recipe-v3\",\n    \"source_binding_scope\": \"Observed native binary graph/companions, explicit auxiliaries, configured character-discovery paths and selected geometry. Single-district configured character sources are observed but not consumed. Other implicit data discovery retains native behavior; no complete atomic filesystem snapshot or upstream authenticity claim.\",\n    \"source_graph_sha256\": \"sha256:6d9b0336ff50fdf3298d8e9c7e994595a0b283f9f031df6c2a7a4ce96b873f4c\",\n    \"sources\": [\n      {\n        \"path\": \"C:\\\\src\\\\apportionment\\\\target\\\\fresh-native-fine-implementation-20261103\\\\tract-native-reference\\\\source\\\\graph.adj.bin\",\n        \"role\": \"adjacency-request\",\n        \"sha256\": \"sha256:7dda25e6d9fbf45bd404d225d8658b1bc34752e888141c4c5d35e5b159e950a6\"\n      },\n      {\n        \"path\": \"C:\\\\src\\\\apportionment\\\\target\\\\fresh-native-fine-implementation-20261103\\\\tract-native-reference\\\\source\\\\graph.adj.bin\",\n        \"role\": \"adjacency-binary\",\n        \"sha256\": \"sha256:7dda25e6d9fbf45bd404d225d8658b1bc34752e888141c4c5d35e5b159e950a6\"\n      },\n      {\n        \"path\": \"C:\\\\src\\\\apportionment\\\\target\\\\fresh-native-fine-implementation-20261103\\\\tract-native-reference\\\\source\\\\graph_geoids.json\",\n        \"role\": \"geoid-companion\",\n        \"sha256\": \"sha256:835b2239df115b2856578c628884c6e9d07a3b2927a0a3fd6a4be17ae29debb5\"\n      },\n      {\n        \"path\": \"C:\\\\src\\\\apportionment\\\\target\\\\fresh-native-fine-implementation-20261103\\\\tract-native-reference\\\\source\\\\graph_centroids.json\",\n        \"role\": \"centroid-companion\",\n        \"sha256\": \"sha256:2a50e602a849e1935c143d9c9d9331957bfa03a760ad72fb9c75d15ce678ad75\"\n      }\n    ],\n    \"state\": {\n      \"algorithm\": {\n        \"metis\": {\n          \"engine\": \"RedistMetis\",\n          \"niter\": 100,\n          \"seed\": \"17\",\n          \"ufactor\": 5\n        },\n        \"mode_label\": null,\n        \"seeds\": {\n          \"MultiScale\": {\n            \"alpha\": 0.3,\n            \"p\": 0.5,\n            \"total_steps\": 64\n          }\n        },\n        \"split\": \"Bisect\",\n        \"vertex_constraints\": [\n          \"Population\"\n        ],\n        \"weights\": {\n          \"alpha_county\": 0.0,\n          \"alpha_mcd\": 0.0,\n          \"alpha_place\": 0.0,\n          \"alpha_vtd\": 0.0,\n          \"dem_threshold\": 0.55,\n          \"directional_lambda\": 0.0,\n          \"econ_alpha\": 0.5,\n          \"economic_character\": false,\n          \"geographic\": true,\n          \"housing_character\": false,\n          \"minority_weighting\": false,\n          \"partisan_shares\": null,\n          \"rep_threshold\": 0.45,\n          \"zone_alpha\": 1.0,\n          \"zone_membership\": false\n        }\n      },\n      \"balance_tolerance_fraction\": 0.07125,\n      \"chamber\": \"congressional\",\n      \"coi_weights\": null,\n      \"districts\": 2,\n      \"multiscale_coarse\": \"county\",\n      \"multiscale_fine\": \"tract\",\n      \"plan_resolution\": \"tract\",\n      \"population_source\": \"total\",\n      \"resolution\": \"tract\",\n      \"seats_per_district\": 1,\n      \"smc_resample_threshold\": 0.5,\n      \"state_code\": \"AL\",\n      \"state_name\": \"alabama\",\n      \"total_seats\": 2,\n      \"year\": \"2020\"\n    }\n  },\n  \"binary_version\": \"0.1.0\",\n  \"binary_sha256\": \"08ba4f3daeb045bbff087cf9129d4dcdccf275495b69b1e2f638bf0e4f289af6\",\n  \"binary_download_url\": \"https://github.com/owner/BISECT/releases/download/v0.1.0/BISECT\",\n  \"adjacency_file\": \"alabama_adjacency_2020.adj.bin\",\n  \"adjacency_sha256\": \"7dda25e6d9fbf45bd404d225d8658b1bc34752e888141c4c5d35e5b159e950a6\",\n  \"adjacency_build_command\": \"python scripts/data/generate_adj_bin.py --year 2020 --states alabama\",\n  \"adjacency_build_version\": \"0.1.0\",\n  \"tiger_source_url\": \"https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_01_tract.zip\",\n  \"tiger_sha256\": null,\n  \"created_at\": \"2026-11-03T08:31:07Z\",\n  \"balance_tolerance_pct\": 7.124999999999999,\n  \"population_balance_valid\": true,\n  \"seats_per_district\": 1,\n  \"total_seats\": 2,\n  \"electoral_system\": \"single_member\",\n  \"gpmetis_version\": \"metis-core (pure Rust workspace engine)\",\n  \"submission_type\": \"authoritative\",\n  \"submitted_by\": null,\n  \"submitted_at\": null,\n  \"source_tool\": null,\n  \"source_tool_version\": null,\n  \"source_format_fingerprint\": null,\n  \"import_compat_sha256\": null,\n  \"ufactor\": 5,\n  \"niter\": 100,\n  \"alpha_county\": 0.0,\n  \"split_seeds\": null,\n  \"split_epsilon\": null,\n  \"area_swing\": null,\n  \"directional_lambda\": 0.0,\n  \"edge_cut\": 9.25,\n  \"n_units\": 16,\n  \"multiscale_fine\": \"tract\",\n  \"multiscale_coarse\": \"county\",\n  \"fine_to_coarse_formula\": \"geoid_prefix[:5]\",\n  \"fine_to_coarse_comment\": \"first 5 chars of 11-char tract GEOID = parent county FIPS\",\n  \"index_to_geoid_file\": \"alabama_adjacency_2020_geoids.json\",\n  \"rplan_path\": \"plan.rplan\",\n  \"rctx_path\": \"context.rctx\",\n  \"audit_certificate_path\": \"audit-certificate.json\",\n  \"audit_certificate_sha256\": \"de2fdb324d6ce9ef4de0a980f44f516935648bfb5306a72c06653cd5987722bf\",\n  \"audit_certificate_content_hash\": \"sha256:1b020aed6ab0ce81631d1245cec40327bca9b8e2a261d8460ea4bc8890f40c11\",\n  \"audit_result\": \"pass\",\n  \"legal_profile_id\": \"BISECT_RUNNER_PROFILE_V1\",\n  \"context_hash\": \"sha256:76b7631453d56526eccef764d5935f507012b351cdc2600b8870616d2d957287\"\n}",
+    "source_manifest_kind": "actual-native-produced-manifest",
+    "producer_declaration": {
+      "status": "predeclared-additional-actual-native-tract-multiscale-case",
+      "cli_sha256": "08ba4f3daeb045bbff087cf9129d4dcdccf275495b69b1e2f638bf0e4f289af6",
+      "host_sha256": "8bc14410644d885c68ec64c1478ba31d8c9e3411e651a92ad049cd0633c8ef45",
+      "arguments": [
+        "--state",
+        "AL",
+        "--year",
+        "2020",
+        "--districts",
+        "2",
+        "--chamber",
+        "congressional",
+        "--resolution",
+        "tract",
+        "--seed",
+        "17",
+        "--metis-engine",
+        "metis-core",
+        "--search",
+        "multiscale",
+        "--multiscale-steps",
+        "64",
+        "--percentile",
+        "0.5",
+        "--multiscale-alpha",
+        "0.3",
+        "--multiscale-fine",
+        "tract",
+        "--multiscale-coarse",
+        "county",
+        "--balance-tolerance",
+        "7.125",
+        "--niter",
+        "100",
+        "--adjacency",
+        "C:\\src\\apportionment\\target\\fresh-native-fine-implementation-20261103\\tract-native-reference\\source\\graph.adj.bin"
+      ],
+      "scope": "Additional actual 16-tract/county-coarse reference using the complete original coarse source.64steps,seed17,percentile0.5,alpha0.3,tolerance7.125%,niter100. Does not replace the two original32-BG references. Fresh request receives no plan/context/recipe."
+    },
+    "producer_stdout_base64": "U1RBVFVTOjE6QUw6IGxvYWRpbmcgYWRqYWNlbmN5ClNUQVRVUzoxOkFMOiBtdWx0aXNjYWxlKHRyYWN0LT5jb3VudHkpIHA9MC41MCA2NCBzdGVwcyBhbHBoYT0wLjMwIGludG8gMiBkaXN0cmljdHMKU1RBVFVTOjE6QUw6IGJhbGFuY2UgT0ssIHdyaXRpbmcgb3V0cHV0cwpTVEFUVVM6MTpBTDogY29tcGxldGUgKDJELCAwbXMpCg==",
+    "producer_stderr_base64": "W09LXSBBTCBpbiAxMDU4bXMK",
+    "document_sha256": "c954e365e9e20b310739d5df6fd14fa0c6fbf16d9e84ee1b33636c06bead3206",
+    "context_sha256": "f79d8a8148a6698dfe7e33d1afa311b21a3ac80392117178c53bbaaa8c74f4c6"
+  },
+  "workload": {
+    "steps": 64,
+    "seed": "17",
+    "tolerance_percent": "7.125",
+    "percentile": "0.5",
+    "niter": 100,
+    "native_sampler": "rand-0.8.6-smallrng-native64-wilson"
+  },
+  "scope": "Exact original32-BG source/reference or additional actual native16-tract/16-tract-adaptive source/reference. Source hashes and expected outputs are test evidence, not engine input authority. No counts/seeds/tolerances/budgets reduced."
+}

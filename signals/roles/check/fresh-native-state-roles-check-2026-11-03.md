@@ -1,0 +1,39 @@
+---
+skill: roles-check
+topic: fresh-native-state
+date: 2026-11-03
+roles_used: [meridian, benchmark, covenant, ledger, survey, vault]
+p1_count: 0
+verdict: APPROVED-WITH-CONDITIONS
+---
+
+# Fresh native State implementation and panel review
+
+Artifact: candidate-r2 shared native plan/context factory, fresh raw-source State operations, browser panel, tests and builder/catalog registration. All sixteen installed role files were inventoried through .roles/ROLE.md. Six applicable lenses were read and applied by one agent; these are not six independent reviewers. MERIDIAN checks graph/weight semantics; BENCHMARK checks actual native/WASM/browser evidence; COVENANT checks provenance boundaries; LEDGER checks interchange; SURVEY checks use/save/open; VAULT checks inert imports and identity boundaries. Constitutional/election-certification, ballot-accounting and statistical-effect claims are outside this change; their original acceptance requirements remain open.
+
+| # | Role / finding | Severity | Section | Recommendation / disposition |
+|---|---|---|---|---|
+| 1 | MERIDIAN: fresh ordinary outputs must use original native unit IDs, physical Boundary edges and present-index county conventions. | P2 | native_plan_context.rs, fresh_native_state.rs | Resolved for the twelve declared cases: four shared component tests, 24 actual old/new CLI comparisons, and both actual WASM profiles reproduce the native plan and physical context. No global context-byte equality claim. |
+| 2 | MERIDIAN: fine/multiscale raw-source preparation remains explicitly refused. | P2 | fresh_native_state::compile | Open original-plan work. This ordinary path must not close the State or resolution parent. Existing multiscale workflows remain separately scoped. |
+| 3 | MERIDIAN: optional native report/demographic/geometry observations are not supplied to the new factory. | P2 | export | Open original-plan work. Preserve the explicit absence of supplied observations; display polygons must not become native report geometry. |
+| 4 | BENCHMARK: builder coverage would otherwise omit the new operations and panel lifecycle. | P2 | build_wasm.ps1, build_cffi_preview.ps1 | Resolved in source: both register the maintained twelve-case/fifteen-refusal runtime gate and optional real-browser gate. The complete amended builders have not yet passed. |
+| 5 | BENCHMARK: a stand-alone panel test does not prove insertion into the real workbench. | P2 | test_fresh_native_state_browser.mjs | Resolved for both packages: actual index.html loads exactly one panel without fresh execution, in addition to the complete component workflows. |
+| 6 | BENCHMARK: all twelve fixed reference graphs have four units. | P3 | fixture corpus | Keep this evidence scoped. It does not replace independent state, national, capacity, failure or backend matrix obligations. |
+| 7 | COVENANT: selected-source hashes do not establish upstream authenticity or native-original recipe identity. | P2 | source hashes / binding | Resolved boundary: actual raw adjacency digest and versioned browser request roles; original_context_loaded=false; no invented native_replay_recipe hash. Source authenticity remains open. |
+| 8 | COVENANT: a saved record must name the bytes actually hashed. | P3 | run-record download | Resolved: input_json_sha256 hashes JSON.stringify(input), separately from Rust input_sha256. Selected display geometry has its own exact-text hash. Neither is called a signature or attestation. |
+| 9 | COVENANT: the full-build failure cannot be made green by a focused recheck. | P2 | R18 evidence | Resolved reporting boundary: R18 remains failed; original missing timestamped executable and raw failure retained. Both unchanged-test/explicit-CLI and corrected-default rechecks pass seven cases and 22 recovery boundaries. |
+| 10 | LEDGER: saved inputs originally lost the supplied display polygons. | P2 | Save/Open | Resolved: bounded display_geometry_json is retained and revalidated as data; all twelve reopened runs redraw four exact-ID map units in both profiles. Older inputs without that optional field remain accepted. |
+| 11 | LEDGER: the panel inputs format is separate from the existing complete .bisect project/archive format. | P2 | input wrapper | Open original-plan integration work. UI calls it Save inputs; it does not claim to be the complete workbench project or trusted execution receipt. |
+| 12 | LEDGER: RPLAN/RCTX format compatibility must be demonstrated separately from browser display. | P3 | export | Resolved for scope: shared Rust readers round-trip each export, native plan/context projections match references, and the earlier Unicode correction is accepted by the original native verifier. Broader interchange acceptance remains open. |
+| 13 | SURVEY: Review and Open must never partition. | P2 | panel actions | Resolved: both browser profiles record only preparation on Review and no worker operations on Open; each partition requires a separate Run click. |
+| 14 | SURVEY: users need the full seed and recoverable outputs even when display geometry fails. | P2 | seed / downloads / map | Resolved design: full decimal requested/accepted seeds are visible, and map rendering is caught separately after completed plan/context/result retention. No claim that every export failure has been exercised in this new panel. |
+| 15 | SURVEY: native JSON arguments are an advanced interface, not the final dimensions-first laboratory experience. | P3 | panel form | Keep the existing laboratory/settings routes. This panel exposes the new source boundary; further integration and clearer shared controls remain original-plan work. |
+| 16 | VAULT: imported plan/context/receipt fields must not grant run authority or execute markup. | P2 | savedInput / Rust Input | Resolved for tested boundaries: strict known-field import, fifteen host/WASM refusal cases, and actual browser imported-context refusal without script or partition execution. Source names/labels are rendered through textContent. |
+| 17 | VAULT: stale worker messages and edits must retire the reviewed engine/input binding. | P2 | initialize / retire / Run | Resolved: revision and selected-worker identity checks, termination on edits/cancel, result input hash and engine digest matching; real-browser edit and cancellation checks pass in both profiles. |
+| 18 | VAULT: saved input data contains original source bytes, not encrypted storage. | P3 | local downloads | Local explicit downloads only, no external requests observed. Bounded parsers remain enforced. No ballot data or coercion/inclusion proof is introduced, and no encryption or malware-resistance claim is made. |
+
+Roles reviewed: 6. P1 blockers: 0. P2 findings: 13 (ten resolved scoped findings, three original-plan gaps remain open: fine/report binding and complete project integration). P3 notes: 5. Verdict: APPROVED-WITH-CONDITIONS for scoped source integration only, conditional on current inventory/ledger validation and preserved preimages. This is not approval of a release or full desktop parity.
+
+Top finding: fresh native source preparation is now demonstrated for ordinary selected-source cases, but the original State/workflow contracts remain substantially broader. MERIDIAN, BENCHMARK, COVENANT and LEDGER agree that the new path must not promote those parents.
+
+Amendments: (1) retain display polygons across inert Save/Open and verify the reopened map; implemented and tested. (2) register exact runtime/browser gates in both builders and pin new source files without rewriting historical evidence or parent states; implementation added, current validation required. (3) preserve explicit ordinary-only, raw-source/authenticity and separate-input-format boundaries while completing the full original plan; gaps remain tracked and must not be represented as delivered.

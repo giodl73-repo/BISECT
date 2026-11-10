@@ -1,0 +1,33 @@
+[package]
+name = "veripb-parser"
+version = "0.1.2"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "VeriPB parsing library for OPB, WCNF, and DIMACS CNF formats."
+categories = ["parsing"]
+
+
+[dependencies]
+ahash = { version = "0.8.12", default-features = false, features = ["std", "no-rng"] }
+log = "0.4"
+logos = "0.16.1"
+colored = "3.1.1"
+malachite-base = "0.10.0"
+malachite-bigint = "0.10.0"
+malachite-nz = "0.10.0"
+num-traits = "0.2.19"
+spire_enum = "1.0.0"
+thiserror = "2.0.20"
+
+[dependencies.veripb-formula]
+version = "0.1.2"
+path = "../veripb-formula"
+
+[dependencies.veripb-rules]
+version = "0.1.0"
+path = "../veripb-rules"
+

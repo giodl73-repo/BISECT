@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Supported GEOID format: exactly 11 numeric characters (Census tract GEOIDs).
 use std::collections::HashMap;
+#[cfg(feature = "filesystem")]
 use std::path::Path;
 use thiserror::Error;
 
@@ -36,22 +37,32 @@ pub enum RplanError {
 /// Top-level RPLAN file structure.
 /// `rplan_version` MUST be at root level — never duplicated inside `metadata`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RplanFile {
+pub struct RplanFileWithIds<D> {
     pub rplan_version: String,
-    pub metadata: RplanMetadata,
-    pub assignments: HashMap<String, usize>,
+    pub metadata: RplanMetadataWithCount<D>,
+    #[serde(serialize_with = "serialize_sorted_assignments")]
+    pub assignments: HashMap<String, D>,
     pub geometry: Option<serde_json::Value>,
+}
+
+pub type RplanFile = RplanFileWithIds<usize>;
+/// Export-only legacy RPLAN. IDs and counts are copied, never used as allocation sizes.
+pub type PortableExportRplan = RplanFileWithIds<u64>;
+
+fn serialize_sorted_assignments<D:Serialize,S:serde::Serializer>(assignments:&HashMap<String,D>,serializer:S)->Result<S::Ok,S::Error>{
+    let sorted:std::collections::BTreeMap<_,_>=assignments.iter().collect();
+    sorted.serialize(serializer)
 }
 
 /// Plan metadata. Does NOT include `rplan_version` — that lives at root.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct RplanMetadata {
+pub struct RplanMetadataWithCount<D> {
     pub label: String,
     pub state_fips: String,
     pub state_code: String,
     pub year: String,
     pub chamber: String,
-    pub num_districts: usize,
+    pub num_districts: D,
     pub population_source: String,
     pub balance_tolerance_pct: f64,
     pub created_at: String,
@@ -64,6 +75,8 @@ pub struct RplanMetadata {
     pub source_manifest: Option<serde_json::Value>,
     // NOTE: rplan_version is intentionally absent from metadata — it lives at root only
 }
+
+pub type RplanMetadata = RplanMetadataWithCount<usize>;
 
 /// Validation result containing warnings (non-fatal) and errors (fatal).
 #[derive(Debug)]
@@ -190,7 +203,8 @@ pub fn validate_rplan(rplan: &RplanFile) -> Result<ValidationResult, RplanError>
     }
 
     // 3. GEOID format + district range validation
-    for (geoid, &district) in &rplan.assignments {
+    let ordered: std::collections::BTreeMap<_,_> = rplan.assignments.iter().collect();
+    for (geoid, &district) in ordered {
         if let Err(e) = validate_geoid_format(geoid) {
             errors.push(format!("GEOID validation failed: {}", e));
         }
@@ -281,6 +295,7 @@ pub fn to_rplan_v02_document(rplan: &RplanFile) -> Result<rplan_io::RplanDocumen
 }
 
 /// Write an RplanFile to disk at `path` (serialized as JSON).
+#[cfg(feature = "filesystem")]
 pub fn write_rplan(
     path: &Path,
     metadata: &RplanMetadata,
@@ -378,6 +393,15 @@ pub(crate) fn make_rplan_with_bad_district(num_districts: usize, bad_district: u
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn legacy_assignment_serialization_is_sorted(){
+        let a=HashMap::from([("53001000200".to_string(),2usize),("53001000100".to_string(),1usize)]);
+        let b=HashMap::from([("53001000100".to_string(),1usize),("53001000200".to_string(),2usize)]);
+        let mut first=make_test_rplan(a);let second=make_test_rplan(b);
+        assert_eq!(serde_json::to_string_pretty(&first).unwrap(),serde_json::to_string_pretty(&second).unwrap());
+        first.assignments=second.assignments;let text=serde_json::to_string_pretty(&first).unwrap();
+        assert!(text.find("53001000100").unwrap()<text.find("53001000200").unwrap());
+    }
     use super::*;
 
     // --- Task 1: RPLAN structure tests ---
@@ -582,6 +606,7 @@ mod tests {
     // --- write_rplan integration ---
 
     #[test]
+    #[cfg(feature = "filesystem")]
     fn test_write_rplan_produces_valid_file() {
         let tmp = tempfile::TempDir::new().unwrap();
         let mut assignments = HashMap::new();

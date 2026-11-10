@@ -1,0 +1,9 @@
+[workspace]
+resolver = "3"
+members = ["veripb-checker", "veripb-formula", "veripb-rules", "veripb-parser", "veripb-propagator"]
+[workspace.package]
+authors = ["Andy Oertel <andy.oertel@cs.lth.se>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.92.0"
+repository = "https://gitlab.com/MIAOresearch/software/VeriPB"

@@ -101,12 +101,9 @@ pub(crate) fn select_compact_split(
 /// Return the METIS version string.
 /// libmetis is vendored at compile time via the metis-rs crate; no external binary needed.
 pub fn detect_gpmetis_version() -> String {
-    #[cfg(feature = "c-ffi-engine")]
-    {
+    if use_c_metis() {
         "METIS 5.1.0 (vendored C FFI via metis-rs 0.2)".to_string()
-    }
-    #[cfg(not(feature = "c-ffi-engine"))]
-    {
+    } else {
         "metis-core (pure Rust workspace engine)".to_string()
     }
 }
@@ -124,6 +121,21 @@ pub(crate) fn is_connected_subset(adjacency: &[Vec<usize>], vertices: &HashSet<u
     }
     let nodes: Vec<usize> = vertices.iter().copied().collect();
     rgraph_core::node_subset_connected(adjacency, &nodes)
+        .expect("validated bisection-runner adjacency and subset")
+}
+
+// Reuse validated immutable topology within one scalar population-repair call.
+// Keep preparation lazy: the existing singleton bypass and no-repair paths
+// still perform no connectivity validation/allocation.
+fn is_connected_subset_prepared(
+    adjacency: &[Vec<usize>], vertices: &HashSet<usize>,
+    prepared: &mut Option<rgraph_core::PreparedSubsetConnectivity>,
+) -> bool {
+    if vertices.len() <= 1 { return true; }
+    let nodes: Vec<usize> = vertices.iter().copied().collect();
+    prepared.get_or_insert_with(|| rgraph_core::PreparedSubsetConnectivity::new(adjacency)
+        .expect("validated bisection-runner adjacency and subset"))
+        .node_subset_connected(&nodes)
         .expect("validated bisection-runner adjacency and subset")
 }
 
@@ -277,8 +289,7 @@ fn split_subgraph_profile(
     objective:&str, trials:u32,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
     if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials) {return Err("Invalid recursive METIS objective or trials.".into());}
-    #[cfg(feature="c-ffi-engine")]
-    if objective!="cut" || trials!=1 {return Err("Advanced recursive METIS controls require the pure Rust engine.".into());}
+    if use_c_metis() && (objective!="cut" || trials!=1) {return Err("Advanced recursive METIS controls require the pure Rust engine.".into());}
     if tract_indices.len() <= 1 {
         return Ok((tract_indices.clone(), HashSet::new()));
     }
@@ -364,8 +375,8 @@ fn split_subgraph_profile(
 
     // ── Bisect via the selected METIS backend ────────────────────────────────
     let part: Vec<i32> = {
-        #[cfg(feature = "c-ffi-engine")]
-        {
+        #[cfg(any(feature="c-ffi-engine",feature="wasm-c-ffi"))]
+        let c_part = if use_c_metis() {
             let mut part = vec![0i32; n];
             let graph = metis::Graph::new(ncon as i32, 2, &xadj, &adjncy)
                 .map_err(|e| format!("METIS graph init: {e}"))?
@@ -420,10 +431,11 @@ fn split_subgraph_profile(
                     .part_recursive(&mut part)
                     .map_err(|e| format!("METIS bisection failed: {e}"))?;
             }
-            part
-        }
-        #[cfg(not(feature = "c-ffi-engine"))]
-        {
+            Some(part)
+        } else {None};
+        #[cfg(not(any(feature="c-ffi-engine",feature="wasm-c-ffi")))]
+        let c_part: Option<Vec<i32>> = None;
+        if let Some(part)=c_part {part} else {
             // Rust refinement preserves both population and AreaSection's
             // equal-area target, with an independent tolerance for each.
             if ncon == 2
@@ -515,6 +527,7 @@ fn split_subgraph_profile(
         .unwrap_or(total_pop / 2);
     let tolerance_pop = ((ufactor - 1.0).max(0.0) * left_target.max(1) as f64) as i64 + 1;
 
+    let mut prepared_connectivity = None;
     for _ in 0..200 {
         let left_pop: i64 = left
             .iter()
@@ -543,12 +556,12 @@ fn split_subgraph_profile(
             if has_light_nb {
                 let mut heavy_after = heavy_global.clone();
                 heavy_after.remove(&g);
-                if !is_connected_subset(adjacency, &heavy_after) {
+                if !is_connected_subset_prepared(adjacency, &heavy_after, &mut prepared_connectivity) {
                     continue;
                 }
                 let mut light_after = light_global.clone();
                 light_after.insert(g);
-                if !is_connected_subset(adjacency, &light_after) {
+                if !is_connected_subset_prepared(adjacency, &light_after, &mut prepared_connectivity) {
                     continue;
                 }
                 let pop = local_vwgt[lg * ncon] as i64;

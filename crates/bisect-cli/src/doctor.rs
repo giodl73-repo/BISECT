@@ -209,91 +209,17 @@ fn run_all_plans_doctor(version: &str, year: &str, output_base: &str) {
         version,
         year
     );
-    println!(
-        "{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
-        "Label", "Districts", "Balance", "PP", "Splits", "Missing"
-    );
-    println!("{}", "-".repeat(75));
-
-    for label in &labels {
-        match crate::plan_context::PlanContext::from_label(
-            std::path::Path::new(output_base),
-            version,
-            year,
-            label,
-        ) {
-            Err(_) => println!("{:<30} [no manifest]", label),
-            Ok(ctx) => {
-                let n = ctx.num_districts();
-                let balance = if ctx.analysis_file_exists("summary.json") {
-                    let path = ctx.analysis_file("summary.json");
-                    std::fs::read_to_string(&path)
-                        .ok()
-                        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-                        .and_then(|v| v["population_balance_valid"].as_bool())
-                        .map(|ok| if ok { "OK" } else { "FAIL" })
-                        .unwrap_or("?")
-                } else {
-                    "-"
-                };
-                let pp = if ctx.analysis_file_exists("compactness.json") {
-                    let path = ctx.analysis_file("compactness.json");
-                    std::fs::read_to_string(&path)
-                        .ok()
-                        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-                        .and_then(|v| {
-                            v["districts"].as_array().and_then(|d| {
-                                let vals: Vec<f64> = d
-                                    .iter()
-                                    .filter_map(|x| x["polsby_popper"].as_f64())
-                                    .collect();
-                                if vals.is_empty() {
-                                    None
-                                } else {
-                                    Some(vals.iter().sum::<f64>() / vals.len() as f64)
-                                }
-                            })
-                        })
-                        .map(|pp_val| format!("{:.3}", pp_val))
-                        .unwrap_or_else(|| "-".to_string())
-                } else {
-                    "-".to_string()
-                };
-                let splits = if ctx.analysis_file_exists("splits.json") {
-                    let path = ctx.analysis_file("splits.json");
-                    std::fs::read_to_string(&path)
-                        .ok()
-                        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-                        .and_then(|v| v["counties"]["split"].as_u64())
-                        .map(|n| n.to_string())
-                        .unwrap_or_else(|| "-".to_string())
-                } else {
-                    "-".to_string()
-                };
-                let required = ["summary.json", "compactness.json", "contiguity.json"];
-                let missing_count = required
-                    .iter()
-                    .filter(|&&f| !ctx.analysis_file_exists(f))
-                    .count();
-                let missing_str = if missing_count == 0 {
-                    "none".to_string()
-                } else {
-                    format!("{} required", missing_count)
-                };
-
-                println!(
-                    "{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
-                    &label[..label.len().min(29)],
-                    n,
-                    balance,
-                    pp,
-                    splits,
-                    missing_str
-                );
+    let rows:Vec<_>=labels.iter().map(|label| {
+        let detail=crate::plan_context::PlanContext::from_label(std::path::Path::new(output_base),version,year,label).ok().map(|ctx| {
+            let mut files=std::collections::BTreeMap::new();
+            for name in bisect_report::plan_doctor::REQUIRED.iter().chain(bisect_report::plan_doctor::OPTIONAL.iter()) {
+                if ctx.analysis_file_exists(name) { files.insert((*name).to_owned(),std::fs::read_to_string(ctx.analysis_file(name)).ok()); }
             }
-        }
-    }
-    println!("\nRun 'bisect doctor --label <label>' for detailed diagnosis.");
+            (ctx.num_districts().to_string(),bisect_report::plan_doctor::scan_metrics(&files))
+        });
+        (label.clone(),detail)
+    }).collect();
+    print!("{}",bisect_report::plan_doctor::all_plans_table(&rows));
 }
 
 // ---------------------------------------------------------------------------
@@ -330,15 +256,8 @@ fn run_plan_doctor(label: &str, version: &str, year: &str, output_base: &str) {
     // ── Analysis files ────────────────────────────────────────────────────────
     println!("── Analysis files ─────────────────────────────────────────────");
 
-    let required_analysis = ["summary.json", "compactness.json", "contiguity.json"];
-    let optional_analysis = [
-        "splits.json",
-        "demographic.json",
-        "partisan.json",
-        "vra_analysis.json",
-        "comparison.json",
-        "nesting.json",
-    ];
+    let required_analysis = bisect_report::plan_doctor::REQUIRED;
+    let optional_analysis = bisect_report::plan_doctor::OPTIONAL;
 
     let mut missing_required: Vec<&str> = vec![];
     let mut missing_optional: Vec<&str> = vec![];
@@ -466,68 +385,9 @@ fn run_plan_doctor(label: &str, version: &str, year: &str, output_base: &str) {
 }
 
 fn read_analysis_summary(ctx: &crate::plan_context::PlanContext, name: &str) -> String {
-    let path = ctx.analysis_file(name);
-    let Ok(content) = std::fs::read_to_string(&path) else {
-        return String::new();
-    };
-    let Ok(v): Result<serde_json::Value, _> = serde_json::from_str(&content) else {
-        return String::new();
-    };
-
-    match name {
-        "summary.json" => {
-            let valid = v["population_balance_valid"].as_bool().unwrap_or(false);
-            let n = v["districts"].as_array().map(|a| a.len()).unwrap_or(0);
-            let balance_context = if valid && n > 1 {
-                " (within tolerance ✓)"
-            } else if !valid {
-                " (⚠ EXCEEDS TOLERANCE)"
-            } else {
-                ""
-            };
-            format!(
-                "({} districts, balance {}{})",
-                n,
-                if valid { "valid" } else { "FAILED" },
-                balance_context
-            )
-        }
-        "compactness.json" => {
-            let districts = v["districts"].as_array();
-            if let Some(d) = districts {
-                let pp_vals: Vec<f64> = d
-                    .iter()
-                    .filter_map(|x| x["polsby_popper"].as_f64())
-                    .collect();
-                if !pp_vals.is_empty() {
-                    let mean = pp_vals.iter().sum::<f64>() / pp_vals.len() as f64;
-                    let context = if mean < 0.15 {
-                        " (low — may face legal challenge)"
-                    } else if mean < 0.25 {
-                        " (moderate)"
-                    } else if mean < 0.35 {
-                        " (good)"
-                    } else {
-                        " (well-compact)"
-                    };
-                    return format!("(mean PP: {:.3}{})", mean, context);
-                }
-            }
-            String::new()
-        }
-        "contiguity.json" => {
-            let all = v["all_contiguous"].as_bool().unwrap_or(false);
-            format!(
-                "({})",
-                if all {
-                    "all contiguous"
-                } else {
-                    "NON-CONTIGUOUS districts found"
-                }
-            )
-        }
-        _ => String::new(),
-    }
+    std::fs::read_to_string(ctx.analysis_file(name)).ok()
+        .map(|content| bisect_report::plan_doctor::analysis_summary(name, &content))
+        .unwrap_or_default()
 }
 
 fn analysis_fetch_hint(name: &str, state_code: &str, year: &str) -> Option<String> {
@@ -668,38 +528,7 @@ pub fn run_verify_manifest(manifest_path: &str) -> i32 {
 /// `schema_version: "tutorial-checksums v1"`. Onboarding plan Task 1.3 produces
 /// this file. The doctor command validates that locally-fetched inputs and
 /// locally-generated outputs still match the pinned hashes.
-#[derive(Debug, serde::Deserialize)]
-struct TutorialChecksums {
-    schema_version: String,
-    #[serde(default)]
-    tutorial: String,
-    #[serde(default)]
-    pinned_inputs: Vec<PinnedInput>,
-    #[serde(default)]
-    expected_outputs: Vec<ExpectedOutput>,
-    #[serde(default)]
-    build_commit: String,
-    #[serde(default)]
-    pinned_at: String,
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct PinnedInput {
-    name: String,
-    #[serde(default)]
-    source_url: String,
-    local_path: String,
-    sha256: String,
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct ExpectedOutput {
-    path: String,
-    sha256: String,
-    /// Optional informational tract count for `final_assignments.json`-style outputs.
-    #[serde(default)]
-    tract_count: Option<usize>,
-}
+use bisect_analysis::tutorial_checksums::TutorialChecksums;
 
 /// Hash a file's bytes as SHA-256 hex. Returns Err on read failure.
 fn sha256_file(path: &std::path::Path) -> std::io::Result<String> {
@@ -884,7 +713,7 @@ fn check_one(path: &std::path::Path, expected_sha256: &str) -> CheckResult {
     }
     match sha256_file(path) {
         Ok(got) => {
-            if got.eq_ignore_ascii_case(expected_sha256) {
+            if bisect_analysis::tutorial_checksums::hash_matches(&got, expected_sha256) {
                 CheckResult::Pass
             } else {
                 CheckResult::Fail { got }

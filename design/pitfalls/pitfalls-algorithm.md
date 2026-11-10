@@ -199,3 +199,35 @@ smaller decisions.
 **Proved by:** RoundingSat, Exact, Kissat, and CaDiCaL all returned timeout or
 unknown on the Rhode Island unrestricted boundary decision.
 **Test:** `docs/experiments/scalable-certified/solver-frontier.json`
+
+---
+
+## AP-12: Candidate checks repeatedly rebuild immutable graph topology
+
+**Pattern:** A correct one-shot graph predicate can dominate an enclosing search
+when every candidate invokes graph-wide validation, undirected normalization,
+sorting and allocation. Candidate counts multiply this preparation cost even
+though the topology does not change. A resulting long run can be mistaken for
+target-specific failure or used to justify reducing the search budget.
+
+**Structural approach:** Separate a validated, owned topology snapshot from
+per-query membership and traversal scratch. Reuse it within one immutable graph
+operation; reset scratch before nonempty queries, including after errors. Keep
+the original singleton bypass, connectivity meaning, candidate order, scores,
+seed and iteration limit. Do not share a mutable checker between workers or
+reuse it after changing the source graph.
+
+**Status:** MITIGATED for the scalar population-repair caller. An isolated
+prepared checker passes 593,110 checks on each of native and WASM against an
+independent weak-connectivity reference and the original function. Caller
+comparison passes 104 small cases and exact native/WASM replay of the retained
+CA VRA result, including its balance miss. The two tested Rust files are now
+integrated; three maintained independent-reference/snapshot/query-history tests
+pass and are registered in normal and C legacy builds. Other one-shot callers
+and fresh whole standard/C/package acceptance remain outside this delivery.
+Kernel timings do not establish end-to-end or typical-host speedup.
+
+**Evidence:** `target/connectivity-reuse-experiment-20261029/evidence.json`;
+`target/connectivity-caller-experiment-20261030/experiment.json`.
+**Maintained test:** `crates/rgraph-core/tests/prepared_connectivity.rs`.
+**Review:** `signals/roles/check/wasm-connectivity-reuse-roles-check-2026-10-30.md`.

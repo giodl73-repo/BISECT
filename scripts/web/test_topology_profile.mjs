@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {gzipSync,gunzipSync} from 'node:zlib';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {censusPreparationRequest} from '../../web/lab/tract-input-files.js';
+import {parseGeometryJson} from '../../web/lab/project.js';
+import {stateWorkflowOptions} from '../../web/lab/state-workflow-files.js';
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm')),job=JSON.parse(await fs.readFile('target/state-source-acquisition/job.json','utf8')),source=job.source_preparation;
+const files={tigerInputs:source.tiger,pl94Inputs:source.pl94,tractPreparationSettings:{state:source.state,projection:source.projection}};
+const legacy=engine.execute(censusPreparationRequest(files)),request=censusPreparationRequest({...files,tractPreparationSettings:{...files.tractPreparationSettings,geometry_profile:'display-topology'}}),topology=engine.execute(request);
+assert.equal(topology.geometry_profile,'display-topology');assert.equal(topology.graph_json,legacy.graph_json);assert.deepEqual(topology.sources,legacy.sources);assert.equal(topology.population,legacy.population);const geometry=parseGeometryJson(topology.geometry_json);assert.equal(geometry.geometry_profile,'display-topology');assert.equal(geometry.display_simplification_method,'shared-boundary-conservative-v1');assert(!topology.scope.includes('Exact-coordinate geometry'));
+await fs.mkdir('target/topology-profile',{recursive:true});await fs.writeFile('target/topology-profile/request.json',JSON.stringify(request));const native=JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',['target/topology-profile/request.json'],{encoding:'utf8',maxBuffer:32*1024*1024}));assert.equal(native.geometry_json,topology.geometry_json);assert.deepEqual(JSON.parse(native.graph_json).population,JSON.parse(topology.graph_json).population);
+const options=stateWorkflowOptions({planGeometry:{name:'topology.json',base64:Buffer.from(topology.geometry_json).toString('base64')}},{analysis:true,map:true,report:true,dpi:'72',dissolve_method:'batch'},job.created_at);assert.equal(options.analysis.compactness.coordinate_basis,'nad83-degrees');assert.equal(options.analysis.compactness.crs_label,'EPSG:4269');
+assert.throws(()=>parseGeometryJson(JSON.stringify({metadata:{geometry_profile:'display-topology'},padding:'x'.repeat(17*1024*1024)})),/root/);
+const corrupt=structuredClone(request);let shp=Buffer.from(corrupt.input.tiger.shp.base64,'base64');if(shp[0]===31&&shp[1]===139)shp=gunzipSync(shp);const start=108,points=start+44+4*shp.readUInt32LE(start+36),first=Buffer.from(shp.subarray(points+16,points+32)),second=Buffer.from(shp.subarray(points+32,points+48));second.copy(shp,points+16);first.copy(shp,points+32);corrupt.input.tiger.shp={name:'crossing-source.shp.gz',base64:gzipSync(shp).toString('base64')};assert.throws(()=>engine.execute(corrupt),/crossing boundaries/);
+console.log('Topology profile: explicit native/WASM geometry equality, unchanged legacy graph/source hashes/population, declared approximation, NAD83 follow-up and nested large-profile rejection passed.');

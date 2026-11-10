@@ -5,7 +5,7 @@
 /// Dispatch rules:
 /// - No label, no flags: launch BISECT-tui with no arguments (label picker mode)
 /// - `--label X`:        launch BISECT-tui with `--label X` (pre-scoped to that label)
-/// - `--configure`:      launch BISECT-tui with `--configure` (opens compositor wizard)
+/// - `--configure`:      launch BISECT-tui with `--configure` (currently retained as a startup flag)
 /// - `--config PATH`:    also pass `--config PATH` when launching the TUI
 ///
 /// Registry JSON is injected via `BISECT_REGISTRY_JSON` env var so the TUI can
@@ -54,82 +54,15 @@ fn registry_json() -> String {
 ///
 /// Mirrors the output of `BISECT ls` but printed inline so the user can see
 /// what labels exist and which stages are complete.
-fn print_ls_fallback() {
-    let pairs = Registry::list_labels().unwrap_or_default();
-    if pairs.is_empty() {
-        println!("[INFO] No labels found in .bisect registry.");
-        println!("       Run: bisect build <LABEL> --year 2020");
-        return;
-    }
-    println!("[INFO] bisect-tui not available. Label registry:");
-    println!(
-        "  {:<30} {:<20} {:<20} {:<20}",
-        "LABEL", "BUILT", "ANALYZED", "REPORTED"
-    );
-    println!("  {}", "-".repeat(92));
-    for (name, entry) in &pairs {
-        println!(
-            "  {:<30} {:<20} {:<20} {:<20}",
-            name,
-            entry.built.join(", "),
-            entry.analyzed.join(", "),
-            entry.reported.join(", ")
-        );
-    }
+fn registry_snapshot()->Result<std::collections::BTreeMap<String,bisect_report::label_registry::LabelEntry>,String>{
+    Registry::load().map(|registry|registry.labels.into_iter().collect())
 }
-
-/// Print a summary for a specific label when BISECT-tui is absent.
-///
-/// Mirrors the output of `BISECT show X` so the user still gets useful info.
-fn print_show_fallback(label: &str) {
-    match Registry::get(label) {
-        Ok(Some(entry)) => {
-            println!("[INFO] bisect-tui not available. Showing label: {label}");
-            println!(
-                "  Built:    {}",
-                if entry.built.is_empty() {
-                    "(none)".to_string()
-                } else {
-                    entry.built.join(", ")
-                }
-            );
-            println!(
-                "  Analyzed: {}",
-                if entry.analyzed.is_empty() {
-                    "(none)".to_string()
-                } else {
-                    entry.analyzed.join(", ")
-                }
-            );
-            println!(
-                "  Reported: {}",
-                if entry.reported.is_empty() {
-                    "(none)".to_string()
-                } else {
-                    entry.reported.join(", ")
-                }
-            );
-        }
-        Ok(None) => {
-            println!("[INFO] Label '{label}' not found in .bisect registry.");
-            println!("       Run: bisect build {label} --year 2020");
-        }
-        Err(e) => {
-            println!("[INFO] Could not read registry: {e}");
-        }
-    }
-}
-
-/// Print configure guidance when BISECT-tui is absent and --configure was passed.
-fn print_configure_fallback(label: Option<&str>) {
-    println!("[INFO] bisect-tui not available. To edit algorithm config:");
-    if let Some(lbl) = label {
-        println!("       bisect config validate configs/{lbl}.yml");
-        println!("       bisect config new --name {lbl} --dry-run");
-    } else {
-        println!("       bisect config new --name <LABEL> --dry-run");
-        println!("       bisect config validate configs/<LABEL>.yml");
-    }
+fn print_ls_fallback(){print!("{}",bisect_report::plan_hub::fallback(None,false,&registry_snapshot()));}
+fn print_show_fallback(label:&str){print!("{}",bisect_report::plan_hub::fallback(Some(label),false,&registry_snapshot()));}
+fn print_configure_fallback(label:Option<&str>){print!("{}",bisect_report::plan_hub::fallback(label,true,&Ok(Default::default())));}
+/// Explicit fallback reference; no desktop process is launched.
+pub fn render_fallback(args:&PlanArgs)->String {
+    format!("{}{}",bisect_report::plan_hub::MISSING_NOTICE,bisect_report::plan_hub::fallback(args.label.as_deref(),args.configure,&registry_snapshot()))
 }
 
 // ── Entry point ────────────────────────────────────────────────────────────────
@@ -162,20 +95,7 @@ pub fn run_plan(args: PlanArgs) -> Result<(), String> {
     // Inject registry state as env var so TUI avoids file I/O races.
     cmd.env("BISECT_REGISTRY_JSON", registry_json());
 
-    // Forward label.
-    if let Some(ref lbl) = args.label {
-        cmd.arg("--label").arg(lbl);
-    }
-
-    // Forward --configure.
-    if args.configure {
-        cmd.arg("--configure");
-    }
-
-    // Forward --config PATH.
-    if let Some(ref cfg_path) = args.config {
-        cmd.arg("--config").arg(cfg_path);
-    }
+    cmd.args(bisect_report::plan_hub::launch_arguments(args.label.as_deref(),args.configure,args.config.as_deref().map(std::path::Path::as_os_str)));
 
     match cmd.status() {
         Ok(status) => std::process::exit(status.code().unwrap_or(1)),

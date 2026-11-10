@@ -32,13 +32,7 @@ use serde::{Deserialize, Serialize};
 
 // ── Data structures ────────────────────────────────────────────────────────────
 
-/// Per-label stage completion state.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct LabelEntry {
-    pub built: Vec<String>,
-    pub analyzed: Vec<String>,
-    pub reported: Vec<String>,
-}
+pub use bisect_report::label_registry::LabelEntry;
 
 /// The full `.bisect` registry — maps label name → stage completion.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -76,7 +70,7 @@ fn load_unlocked() -> Result<Registry, String> {
     if content.trim().is_empty() {
         return Ok(Registry::default());
     }
-    serde_json::from_str::<Registry>(&content).map_err(|e| format!("failed to parse .bisect: {e}"))
+    bisect_report::label_registry::parse(&content).map(|labels| Registry {labels:labels.into_iter().collect()})
 }
 
 /// Save the registry to `.bisect` atomically (write `.bisect.tmp` → rename).
@@ -154,9 +148,7 @@ impl Registry {
     pub fn mark_built(label: &str, year: &str) -> Result<(), String> {
         Self::with_lock(|reg| {
             let entry = reg.labels.entry(label.to_string()).or_default();
-            if !entry.built.contains(&year.to_string()) {
-                entry.built.push(year.to_string());
-            }
+            bisect_report::label_registry::mark_built(entry,year);
             Ok(())
         })
     }
@@ -167,16 +159,7 @@ impl Registry {
     pub fn mark_analyzed(label: &str, year: &str) -> Result<(), String> {
         Self::with_lock(|reg| {
             let entry = reg.labels.entry(label.to_string()).or_default();
-            if !entry.built.contains(&year.to_string()) {
-                return Err(format!(
-                    "[CONFIG] analyze: '{label}' has not been built for year {year}.\n\
-                     Run: bisect build {label} --year {year}"
-                ));
-            }
-            if !entry.analyzed.contains(&year.to_string()) {
-                entry.analyzed.push(year.to_string());
-            }
-            Ok(())
+            bisect_report::label_registry::mark_analyzed(entry, label, year)
         })
     }
 
@@ -186,16 +169,7 @@ impl Registry {
     pub fn mark_reported(label: &str, year: &str) -> Result<(), String> {
         Self::with_lock(|reg| {
             let entry = reg.labels.entry(label.to_string()).or_default();
-            if !entry.analyzed.contains(&year.to_string()) {
-                return Err(format!(
-                    "[CONFIG] report: '{label}' has not been analyzed for year {year}.\n\
-                     Run: bisect analyze {label} --year {year}"
-                ));
-            }
-            if !entry.reported.contains(&year.to_string()) {
-                entry.reported.push(year.to_string());
-            }
-            Ok(())
+            bisect_report::label_registry::mark_reported(entry, label, year)
         })
     }
 

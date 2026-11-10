@@ -1,0 +1,8 @@
+{
+  "schema_version": "bisect-fine-unit-map-regression-v1",
+  "corpus_sha256": "655688b3dd6718d6a4da7dd19506a067bd25622d2e7c17c12dedbc02a82e4c04",
+  "native_binary_sha256": "a1ffef7f7c64b1b619935bf5d7b33477895dcd763b5de4c7a9cb8c4c68a8a920",
+  "strict_native_binary_sha256": "45bd8bf5e1e417069ea0a621d9a9b60bd287ffd80f70ef646149fc0457142f18",
+  "original_tract_wasm_sha256": "43c859007adf475711081df0a7819c00a27ecd3e02cda4fac7da496d6bd60c2b",
+  "scope": "Frozen actual corrected native PNG references over explicitly synthetic geometry and original literal native assignments. This is not a fresh partition, Census geometry authentication, all-state capacity or full parity acceptance."
+}

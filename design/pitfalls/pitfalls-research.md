@@ -31,3 +31,12 @@ Structural vulnerabilities in how findings are generated, stated, and maintained
 
 **Status:** MITIGATED — `/review-papers` skill exists; not all claims have automated tests yet
 **Test:** Partial — VRA state counts checked in `test_vra_compliance.py`
+
+Capability-inventory follow-up: current source pins did not by themselves catch
+a stale Aggregate operation mapping or a browser map adapter classified as a
+native CLI kernel. `wasm_practitioner_inventory.validate_source_boundaries` now
+rejects both original mismatches; in-memory negative outcomes are retained under
+`target/capability-source-reconciliation/boundary-negative.json`. Canonical source
+reconciliation preserves historical runtime receipts and leaves actual workflow
+acceptance not-run. RP-02 remains mitigated; these guards do not verify every
+semantic claim or replace executable native/browser comparisons.

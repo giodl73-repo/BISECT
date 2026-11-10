@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';import fs from 'node:fs/promises';
+import {createWorkbenchArchive,parseWorkbenchArchive,SHARED_WORKBENCH_ARCHIVE_SCHEMA} from '../../web/lab/workbench-archive.js';
+import {MAX_WORKBENCH_ARCHIVE_BYTES,MAX_WORKBENCH_EXPANDED_BYTES,parseProject} from '../../web/lab/project.js';
+const root='target/shared-workbench-archive';await fs.mkdir(root,{recursive:true});
+const original=JSON.parse(await fs.readFile('target/tract-preparation-wasm/2020.bisect','utf8'));
+const payload='source bytes, not executable code\n'.repeat(Math.ceil(26*1024*1024/33)).slice(0,26*1024*1024),result={schema_version:'unverified-source-payload',retained_run:original.result,repeated:Array(6).fill(payload)};
+const text=createWorkbenchArchive({...original,result}),encoded=JSON.parse(text),project=parseWorkbenchArchive(text);
+assert.equal(encoded.schema_version,SHARED_WORKBENCH_ARCHIVE_SCHEMA);assert(Buffer.byteLength(text)<32*1024*1024);assert.deepEqual(project.files,original.files);assert.deepEqual(project.result,result);assert.equal(project.schema_version,'bisect-workbench-archive-v1');assert.throws(()=>parseProject(text),/25 MB/);
+await fs.writeFile(root+'/shared.bisect-workbench',text);
+const legacy=createWorkbenchArchive(original);assert.equal(JSON.parse(legacy).schema_version,'bisect-workbench-archive-v1');assert.deepEqual(parseWorkbenchArchive(legacy).result,original.result);
+const mutate=change=>{const value=structuredClone(encoded);change(value);assert.throws(()=>parseWorkbenchArchive(JSON.stringify(value)));};
+mutate(v=>v.extra=true);mutate(v=>v.shared_strings[0]={text:payload});mutate(v=>v.shared_strings.push('unused'));
+mutate(v=>v.shared_string_refs[0].string_index=-1);mutate(v=>v.shared_string_refs[0].string_index=0.5);mutate(v=>v.shared_string_refs[0].string_index=999999);mutate(v=>v.shared_string_refs[0].extra='ignored');
+mutate(v=>v.shared_string_refs.push(v.shared_string_refs[0]));mutate(v=>v.shared_string_refs[0].path=['result','repeated','0']);mutate(v=>v.shared_string_refs[0].path=['result','missing']);mutate(v=>v.shared_string_refs[0].path=['files','__proto__','pwned']);mutate(v=>v.shared_string_refs[0].path=['result','constructor']);mutate(v=>v.shared_string_refs[0].path=['name']);
+// A small shared table must never amplify beyond the decoded string budget.
+mutate(v=>{v.result.repeated=Array(11).fill(null);v.shared_string_refs=Array.from({length:11},(_,i)=>({path:['result','repeated',i],string_index:0}));});
+assert.equal({}.pwned,undefined);
+assert.throws(()=>createWorkbenchArchive({...original,result:{payload:'x'.repeat(MAX_WORKBENCH_ARCHIVE_BYTES+1)}}),/128 MiB/);
+assert.throws(()=>createWorkbenchArchive({...original,result:{repeated:Array(11).fill(payload)}}),/configured import limit/);
+assert.throws(()=>parseWorkbenchArchive(' '.repeat(MAX_WORKBENCH_ARCHIVE_BYTES+1)),/128 MiB/);
+assert.throws(()=>parseWorkbenchArchive(text.replace('"string_index":0','"string_index":9007199254740993')),/exact JavaScript/);
+assert.throws(()=>parseWorkbenchArchive(text.replace('"string_index":0','"string_index":-0')),/reference/);
+assert.throws(()=>parseWorkbenchArchive('{"schema_version":"bisect-workbench-archive-v2","shared_strings":[],"shared_strings":[]}'),/Duplicate/);
+assert.throws(()=>parseWorkbenchArchive(text.replace('bisect-workbench-archive-v2','bisect-workbench-archive-v3')),/project fields|format/);
+assert.throws(()=>createWorkbenchArchive({...original,result:{get bad(){throw new Error('Accessor must not execute');}}}),/accessor/);
+console.log(JSON.stringify({legacy_v1_unchanged:true,shared_saved_bytes:Buffer.byteLength(text),decoded_repeated_bytes:payload.length*6,expanded_string_budget:MAX_WORKBENCH_EXPANDED_BYTES,exact_sources_and_results:true,closed_schema_paths_null_targets_integer_refs_fanout_utf8_and_legacy_bounds:true}));

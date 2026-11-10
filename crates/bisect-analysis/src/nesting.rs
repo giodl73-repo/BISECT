@@ -6,6 +6,12 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, Error, PartialEq, Eq)]
 pub enum NestingError {
+    #[error("[INPUT] nesting requires nonempty House and Senate assignments")]
+    EmptyAssignments,
+    #[error("[INPUT] nesting ratio must be positive")]
+    ZeroRatio,
+    #[error("[INPUT] House and Senate assignment unit sets do not match")]
+    UnitSetMismatch,
     #[error(
         "[INPUT] tract_ids length {tract_ids} does not match tract_adjacency length {adjacency}"
     )]
@@ -241,7 +247,29 @@ pub struct NestingViolation {
 pub struct NestingValidation {
     pub valid: bool,
     pub violations: Vec<NestingViolation>,
+    #[serde(serialize_with = "sorted_nesting_map")]
     pub senate_to_house_map: HashMap<usize, Vec<usize>>,
+}
+
+fn sorted_nesting_map<S:serde::Serializer>(map:&HashMap<usize,Vec<usize>>,serializer:S)->Result<S::Ok,S::Error>{
+    use serde::Serialize;
+    map.iter().collect::<std::collections::BTreeMap<_,_>>().serialize(serializer)
+}
+
+#[derive(Debug, Serialize)]
+pub struct SuiteValidateResult {
+    pub suite_name:String,
+    pub valid:bool,
+    pub nesting:NestingValidation,
+}
+
+/// Shared native suite check. The default ratio preserves the CLI's maximum-label inference.
+pub fn validate_suite_assignments(name:&str,house:&HashMap<String,usize>,senate:&HashMap<String,usize>,required_ratio:Option<usize>)->Result<SuiteValidateResult,NestingError>{
+    let num_house=house.values().copied().max().unwrap_or(0);
+    let num_senate=senate.values().copied().max().unwrap_or(0);
+    let ratio=required_ratio.unwrap_or_else(||if num_senate>0{num_house/num_senate}else{2});
+    let nesting=try_validate_nesting(house,senate,ratio)?;
+    Ok(SuiteValidateResult{suite_name:name.into(),valid:nesting.valid,nesting})
 }
 
 /// Validate that every senate district contains exactly `required_ratio` whole
@@ -261,6 +289,9 @@ pub fn try_validate_nesting(
     required_ratio: usize,
 ) -> Result<NestingValidation, NestingError> {
     validate_nesting_inputs(house_assignments, senate_assignments)?;
+    if house_assignments.is_empty() || senate_assignments.is_empty() { return Err(NestingError::EmptyAssignments); }
+    if required_ratio == 0 { return Err(NestingError::ZeroRatio); }
+    if house_assignments.len()!=senate_assignments.len() || house_assignments.keys().any(|key|!senate_assignments.contains_key(key)) { return Err(NestingError::UnitSetMismatch); }
 
     // Build senate_district → set of house districts
     let mut senate_to_house: HashMap<usize, HashSet<usize>> = HashMap::new();
@@ -397,6 +428,29 @@ pub fn nesting_exit_code(nesting_violation: bool) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn nesting_rejects_incomplete_or_empty_unit_sets_and_zero_ratio() {
+        let house=HashMap::from([("u1".into(),1),("u2".into(),2)]);
+        let senate=HashMap::from([("u1".into(),1),("u2".into(),1)]);
+        assert!(matches!(try_validate_nesting(&HashMap::new(),&HashMap::new(),2),Err(NestingError::EmptyAssignments)));
+        assert!(matches!(try_validate_nesting(&house,&senate,0),Err(NestingError::ZeroRatio)));
+        let missing=HashMap::from([("u1".into(),1)]);
+        assert!(matches!(try_validate_nesting(&house,&missing,2),Err(NestingError::UnitSetMismatch)));
+        let replaced=HashMap::from([("u1".into(),1),("other".into(),1)]);
+        assert!(matches!(try_validate_nesting(&house,&replaced,2),Err(NestingError::UnitSetMismatch)));
+    }
+
+    #[test]
+    fn suite_report_infers_ratio_and_serializes_district_map_in_order() {
+        let house=HashMap::from([("u1".into(),1),("u2".into(),2),("u3".into(),3),("u4".into(),4)]);
+        let senate=HashMap::from([("u1".into(),1),("u2".into(),1),("u3".into(),2),("u4".into(),2)]);
+        let report=validate_suite_assignments("fixture",&house,&senate,None).unwrap();
+        assert!(report.valid);assert_eq!(report.nesting.senate_to_house_map[&1],vec![1,2]);
+        assert_eq!(serde_json::to_string(&report.nesting.senate_to_house_map.iter().collect::<std::collections::BTreeMap<_,_>>()).unwrap(),"{\"1\":[1,2],\"2\":[3,4]}");
+        for _ in 0..10 { assert_eq!(serde_json::to_string(&validate_suite_assignments("fixture",&house,&senate,None).unwrap()).unwrap(),serde_json::to_string(&report).unwrap()); }
+        assert!(!validate_suite_assignments("fixture",&house,&senate,Some(1)).unwrap().valid);
+    }
 
     #[test]
     fn test_build_chamber_adjacency_simple() {

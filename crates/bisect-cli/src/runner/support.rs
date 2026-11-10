@@ -35,6 +35,7 @@ pub(crate) fn count_ilp_solve_reports(intermediate_dir: &std::path::Path) -> usi
 
 #[derive(Debug, Clone)]
 pub(crate) struct RunnerAuditSidecars {
+    pub(crate) native_replay_recipe: Option<serde_json::Value>,
     pub(crate) rplan_path: String,
     pub(crate) rctx_path: String,
     pub(crate) audit_certificate_path: String,
@@ -47,7 +48,7 @@ pub(crate) struct RunnerAuditSidecars {
 }
 
 pub(crate) fn runner_tiger_sha256(cfg: &StateConfig) -> Result<Option<String>, String> {
-    let Some(path) = rplan_tiger_tract_path(&cfg.state_code, &cfg.year) else {
+    let Some(path) = rplan_tiger_tract_path_at_root(cfg.replay_auxiliary_root.as_deref(), &cfg.state_code, &cfg.year) else {
         return Ok(None);
     };
     let hash = bisect_report::sha256_file(&path)
@@ -67,6 +68,30 @@ pub(crate) fn write_rplan_audit_sidecars(
     balance_tolerance: f64,
     generated_at_utc: &str,
 ) -> Result<RunnerAuditSidecars, String> {
+    write_rplan_audit_sidecars_with_inputs(plan_root,cfg,label,graph,assignments,adjacency_file,adjacency_path,tiger_source_url,balance_tolerance,generated_at_utc,ReplayInputs{cfg,graph,adjacency:adjacency_path,secondary:None,execution:None})
+}
+
+pub(crate) struct ReplayInputs<'a>{
+    pub cfg:&'a StateConfig,
+    pub graph:&'a crate::adjacency_loader::LoadedGraph,
+    pub adjacency:&'a std::path::Path,
+    pub secondary:Option<&'a std::path::Path>,
+    pub execution:Option<bisect_runner::native_replay_recipe::NativeExecution>,
+}
+
+pub(crate) fn write_rplan_audit_sidecars_with_inputs(
+    plan_root: &std::path::Path,
+    cfg: &StateConfig,
+    label: &str,
+    graph: &crate::adjacency_loader::LoadedGraph,
+    assignments: &HashMap<usize, usize>,
+    adjacency_file: &str,
+    adjacency_path: &std::path::Path,
+    tiger_source_url: &str,
+    balance_tolerance: f64,
+    generated_at_utc: &str,
+    replay:ReplayInputs<'_>,
+) -> Result<RunnerAuditSidecars, String> {
     let units = build_rplan_units(cfg, graph)?;
     let assignment =
         build_rplan_assignment(assignments, graph.n_vertices, cfg.effective_num_districts())?;
@@ -82,26 +107,29 @@ pub(crate) fn write_rplan_audit_sidecars(
     };
 
     let geometry = build_rplan_geometry(cfg, graph);
-    let tiger_geometry_path = if geometry.is_some() {
-        rplan_tiger_tract_path(&cfg.state_code, &cfg.year)
+    // Raw source identity remains meaningful when geometry decoding/alignment fails.
+    // Fine BG output must not inherit its tract seed geometry source.
+    let tiger_geometry_path = if !matches!(cfg.plan_resolution.as_str(),"bg"|"block_group"|"block-group") {
+        rplan_tiger_tract_path_at_root(cfg.replay_auxiliary_root.as_deref(), &cfg.state_code, &cfg.year)
     } else {
         None
     };
-    let source_hashes = build_rplan_source_hashes(adjacency_path, tiger_geometry_path.as_deref())?;
-    let mut context = rplan_core::RplanContext {
-        rctx_version: rplan_core::RCTX_VERSION.to_string(),
-        context_hash: String::new(),
-        units: units.clone(),
-        graph: Some(build_rplan_graph(graph)),
-        populations: Some(graph.vertex_weights.clone()),
-        subdivisions: build_rplan_subdivisions(graph),
-        demographics: build_rplan_demographics(cfg, graph)?,
-        geometry,
-        source_hashes: source_hashes.clone(),
+    let native_replay_recipe = match crate::native_replay::capture_with_secondary(replay.cfg, replay.graph, replay.adjacency, tiger_geometry_path.as_deref(), balance_tolerance, replay.secondary, replay.execution) {
+        Ok(recipe) => recipe,
+        Err(error) => {
+            // Optional recipe evidence must not erase a completed native plan.
+            eprintln!("WARNING: resolved replay recipe not recorded: {error}");
+            None
+        }
     };
-    context.context_hash = context
-        .compute_context_hash()
-        .map_err(|e| format!("context hash failed: {e}"))?;
+    let mut source_hashes = build_rplan_source_hashes(adjacency_path, tiger_geometry_path.as_deref())?;
+    if let Some(recipe) = &native_replay_recipe {
+        source_hashes.entries.insert("native_replay_recipe".into(), crate::native_replay::recipe_digest(recipe.clone())?);
+    }
+    let context = bisect_runner::native_plan_context::context(
+        units.clone(), graph, source_hashes.clone(),
+        build_rplan_demographics(cfg, graph)?, geometry,
+    )?;
 
     let document = rplan_io::RplanDocument {
         rplan_version: rplan_io::RPLAN_V02.to_string(),
@@ -202,6 +230,7 @@ pub(crate) fn write_rplan_audit_sidecars(
         .is_some_and(|check| check.status == rplan_audit::CheckStatus::Pass);
 
     Ok(RunnerAuditSidecars {
+        native_replay_recipe,
         rplan_path: rplan_rel,
         rctx_path: rctx_rel,
         audit_certificate_path: audit_rel,
@@ -214,128 +243,29 @@ pub(crate) fn write_rplan_audit_sidecars(
     })
 }
 
-pub(crate) fn build_rplan_units(
-    cfg: &StateConfig,
-    graph: &crate::adjacency_loader::LoadedGraph,
-) -> Result<rplan_core::PlanUnitIndex, String> {
-    let unit_kind = match cfg.plan_resolution.as_str() {
-        "bg" => rplan_core::UnitKind::BlockGroup,
-        "county" => rplan_core::UnitKind::County,
-        _ => rplan_core::UnitKind::Tract,
-    };
-    let mut unit_ids = Vec::with_capacity(graph.n_vertices);
-    for idx in 0..graph.n_vertices {
-        unit_ids.push(
-            graph
-                .index_to_geoid
-                .get(&idx)
-                .cloned()
-                .unwrap_or_else(|| idx.to_string()),
-        );
-    }
-    let mut units = rplan_core::PlanUnitIndex {
-        unit_kind,
-        state: Some(cfg.state_code.clone()),
-        year: cfg.year.parse().ok(),
-        canonical_order: rplan_core::CanonicalOrder::ExplicitUnitIds,
-        unit_ids,
-        unit_universe_hash: String::new(),
-        source_id: Some(format!("bisect-adjacency-{}-{}", cfg.state_code, cfg.year)),
-    };
-    if units.validate().is_err() {
-        units.unit_kind = rplan_core::UnitKind::Imported;
-    }
-    units.unit_universe_hash = units
-        .compute_unit_universe_hash()
-        .map_err(|e| format!("unit universe hash failed: {e}"))?;
-    units
-        .validate()
-        .map_err(|e| format!("RPLAN unit validation failed: {e}"))?;
-    Ok(units)
+pub(crate) fn build_rplan_units(cfg: &StateConfig, graph: &crate::adjacency_loader::LoadedGraph) -> Result<rplan_core::PlanUnitIndex, String> {
+    bisect_runner::native_plan_context::unit_index(&cfg.state_code, &cfg.year, &cfg.plan_resolution, graph)
 }
 
-pub(crate) fn build_rplan_assignment(
-    assignments: &HashMap<usize, usize>,
-    n_vertices: usize,
-    k: usize,
-) -> Result<Vec<u32>, String> {
-    let mut out = Vec::with_capacity(n_vertices);
-    for idx in 0..n_vertices {
-        let one_based = assignments
-            .get(&idx)
-            .copied()
-            .ok_or_else(|| format!("missing final assignment for unit index {idx}"))?;
-        if one_based == 0 || one_based > k {
-            return Err(format!(
-                "final assignment for unit index {idx} has district {one_based}, expected 1..={k}"
-            ));
-        }
-        out.push((one_based - 1) as u32);
-    }
-    Ok(out)
+pub(crate) fn build_rplan_assignment(assignments: &HashMap<usize, usize>, n_vertices: usize, k: usize) -> Result<Vec<u32>, String> {
+    bisect_runner::native_plan_context::assignment(assignments, n_vertices, k)
 }
 
-pub(crate) fn build_rplan_graph(
-    graph: &crate::adjacency_loader::LoadedGraph,
-) -> rplan_core::UnitGraph {
-    let adjacency = graph
-        .adjacency
-        .iter()
-        .enumerate()
-        .map(|(from, neighbors)| {
-            neighbors
-                .iter()
-                .copied()
-                .map(|to| {
-                    let key = if from < to { (from, to) } else { (to, from) };
-                    rplan_core::UnitEdge {
-                        to: to as u32,
-                        kind: rplan_core::EdgeKind::Boundary,
-                        weight: graph.edge_weights.get(&key).copied(),
-                    }
-                })
-                .collect()
-        })
-        .collect();
-    rplan_core::UnitGraph {
-        edge_semantics: rplan_core::EdgeSemantics::Undirected,
-        adjacency,
-    }
+pub(crate) fn build_rplan_graph(graph: &crate::adjacency_loader::LoadedGraph) -> rplan_core::UnitGraph {
+    bisect_runner::native_plan_context::physical_graph(graph)
 }
 
-pub(crate) fn build_rplan_subdivisions(
-    graph: &crate::adjacency_loader::LoadedGraph,
-) -> Option<rplan_core::SubdivisionContext> {
-    let mut county_ids = Vec::with_capacity(graph.n_vertices);
-    for idx in 0..graph.n_vertices {
-        let county_id = graph.index_to_geoid.get(&idx).and_then(|geoid| {
-            (geoid.len() >= 5 && geoid[..5].bytes().all(|byte| byte.is_ascii_digit()))
-                .then(|| geoid[..5].to_string())
-        });
-        county_ids.push(county_id);
-    }
-
-    county_ids
-        .iter()
-        .any(Option::is_some)
-        .then_some(rplan_core::SubdivisionContext {
-            county_ids: Some(county_ids),
-            municipal_ids: None,
-        })
+pub(crate) fn build_rplan_subdivisions(graph: &crate::adjacency_loader::LoadedGraph) -> Option<rplan_core::SubdivisionContext> {
+    bisect_runner::native_plan_context::subdivisions(graph)
 }
 
 pub(crate) fn build_rplan_demographics(
     cfg: &StateConfig,
     graph: &crate::adjacency_loader::LoadedGraph,
 ) -> Result<Option<rplan_core::DemographicContext>, String> {
-    let state_name = cfg.state_name.to_lowercase().replace(' ', "_");
-    let state_code = cfg.state_code.to_lowercase();
-    let candidates = [
-        format!("{state_name}_vap_{}.csv", cfg.year),
-        format!("{state_code}_vap_{}.csv", cfg.year),
-        format!("{state_name}_cvap_{}.csv", cfg.year),
-        format!("{state_code}_cvap_{}.csv", cfg.year),
-    ];
+    let candidates = bisect_core::native_input_paths::report_demographic_basenames(
+        &cfg.state_name, &cfg.state_code, &cfg.year,
+    );
     let demo_dir = std::path::Path::new("data")
         .join(&cfg.year)
         .join("demographics");
@@ -377,7 +307,7 @@ pub(crate) fn build_rplan_geometry(
     cfg: &StateConfig,
     graph: &crate::adjacency_loader::LoadedGraph,
 ) -> Option<rplan_core::GeometryContext> {
-    let tiger_path = rplan_tiger_tract_path(&cfg.state_code, &cfg.year)?;
+    let tiger_path = rplan_tiger_tract_path_at_root(cfg.replay_auxiliary_root.as_deref(), &cfg.state_code, &cfg.year)?;
     let records = bisect_data::read_tiger_tracts(&tiger_path).ok()?;
     let geoid_to_hash: HashMap<String, String> = records
         .iter()
@@ -402,6 +332,10 @@ pub(crate) fn build_rplan_geometry(
 }
 
 pub(crate) fn rplan_tiger_tract_path(state_code: &str, year: &str) -> Option<std::path::PathBuf> {
+    rplan_tiger_tract_path_at_root(None,state_code,year)
+}
+
+fn rplan_tiger_tract_path_at_root(root:Option<&std::path::Path>,state_code:&str,year:&str)->Option<std::path::PathBuf>{
     let fips = state_code_to_fips(&state_code.to_uppercase())?;
     let yy = year.get(2..4).unwrap_or(year);
     let candidates = [
@@ -416,6 +350,7 @@ pub(crate) fn rplan_tiger_tract_path(state_code: &str, year: &str) -> Option<std
             .join("tracts")
             .join(&stem)
             .join(format!("{stem}.shp"));
+        let path=root.map_or(path.clone(),|r|r.join(path));
         if path.exists() {
             return Some(path);
         }
@@ -713,16 +648,18 @@ pub fn state_already_complete(
     year: &str,
     reprocess: bool,
 ) -> bool {
-    if reprocess {
-        return false;
-    }
-    let data_dir = output_dir
-        .join(year)
-        .join("states")
-        .join(state_code.to_lowercase())
-        .join("data");
-    data_dir.join("final_assignments.json").exists()
-        || data_dir.join("final_assignments.pkl").exists()
+    if reprocess {return false;}
+    let name=crate::fetch::load_manifest().ok().and_then(|m|m.states.get(&state_code.to_uppercase()).map(|s|s.name.to_lowercase().replace(' ',"_")));
+    // An unavailable catalog cannot establish a completed canonical target.
+    name.is_some_and(|name|state_already_complete_named(output_dir,state_code,&name,year,false))
+}
+
+/// Use the resolved config name, including selected manifest overrides.
+pub fn state_already_complete_named(
+ output_dir:&PathBuf,state_code:&str,state_name:&str,year:&str,reprocess:bool,
+)->bool {
+ bisect_core::state_catalog::state_completion(state_code,state_name,year,reprocess,|p|output_dir.join(p).exists())
+  .is_ok_and(|decision|decision.complete)
 }
 
 /// Filter configs to only those needing processing.
@@ -730,7 +667,7 @@ pub fn filter_incomplete(configs: Vec<StateConfig>) -> Vec<StateConfig> {
     configs
         .into_iter()
         .filter(|cfg| {
-            !state_already_complete(&cfg.output_dir, &cfg.state_code, &cfg.year, cfg.reprocess)
+            !state_already_complete_named(&cfg.output_dir, &cfg.state_code, &cfg.state_name, &cfg.year, cfg.reprocess)
         })
         .collect()
 }
@@ -752,25 +689,11 @@ pub(crate) fn build_edge_weights(
     year: &str,
     _output_dir: &std::path::PathBuf,
     position: i32,
+    auxiliary_root: &std::path::Path,
 ) -> Result<HashMap<(usize, usize), f64>, String> {
-    use crate::edge_weights::{
-        ComposedWeighter, GeographicWeighter, MinorityOverrideWeighter, PartisanOverrideWeighter,
-        SubdivisionWeighter,
-    };
+    use bisect_runner::native_weighting::LoadedSignals;
 
-    let edges: Vec<(usize, usize)> = graph
-        .adjacency
-        .iter()
-        .enumerate()
-        .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
-        .collect();
-
-    let mut composer = ComposedWeighter::new();
-
-    // Step 1: Geographic base weights (TIGER boundary lengths).
-    if spec.geographic {
-        composer = composer.push(GeographicWeighter::from_map(graph.edge_weights.clone()));
-    }
+    let mut loaded=LoadedSignals::default();
 
     // Step 2: Minority / VRA — override variant (from scratch, historic behaviour).
     if spec.minority_weighting {
@@ -778,7 +701,7 @@ pub(crate) fn build_edge_weights(
             position,
             &format!("{state_code}: VRA mode — loading demographics"),
         );
-        let demo_path = std::path::Path::new("data")
+        let demo_path = auxiliary_root.join("data")
             .join(year)
             .join("demographics")
             .join(format!("{state_name}_demographics_{year}.csv"));
@@ -786,11 +709,7 @@ pub(crate) fn build_edge_weights(
             load_demographics(&demo_path).map_err(|e| format!("demographics load failed: {e}"))?;
         let minority_fracs =
             align_demographics_to_adjacency(&demo, &graph.index_to_geoid, graph.n_vertices);
-        composer = composer.push(MinorityOverrideWeighter::new(
-            edges.clone(),
-            minority_fracs,
-            0.40,
-        ));
+        loaded.minority_fractions=Some(minority_fracs);
     }
 
     // Step 3: Partisan signal — override variant (from scratch, historic behaviour).
@@ -806,38 +725,22 @@ pub(crate) fn build_edge_weights(
             let dem_shares =
                 load_partisan_shares(partisan_path, &graph.index_to_geoid, graph.n_vertices)
                     .map_err(|e| format!("partisan shares load failed: {e}"))?;
-            composer = composer.push(PartisanOverrideWeighter::new(
-                edges.clone(),
-                dem_shares,
-                spec.dem_threshold,
-                spec.rep_threshold,
-            ));
+            loaded.partisan_shares=Some(dem_shares);
         }
-    }
-
-    // Step 4: Subdivision stickiness (T.3) — augment on whatever base is set.
-    if spec.alpha_county > 1e-10 {
-        composer = composer.push(SubdivisionWeighter::county_only(
-            &graph.index_to_geoid,
-            graph.n_vertices,
-            spec.alpha_county,
-        ));
     }
 
     // Step 5: Economic character similarity (M.9/M.1).
     if spec.economic_character {
-        use crate::edge_weights::EconomicCharacterWeighter;
-        use crate::lodes::{align_lodes_to_adjacency, load_lodes_wac_tract};
+        use crate::lodes::{align_lodes_to_adjacency};
         status(
             position,
             &format!("{state_code}: economic-character -- loading LODES WAC"),
         );
-        match load_lodes_wac_tract(state_name, year) {
+        match crate::lodes::load_lodes_wac_tract_at(auxiliary_root,state_name, year) {
             Ok(lodes_chars) if !lodes_chars.is_empty() => {
                 let node_chars =
                     align_lodes_to_adjacency(&lodes_chars, &graph.index_to_geoid, graph.n_vertices);
-                composer =
-                    composer.push(EconomicCharacterWeighter::new(node_chars, spec.econ_alpha));
+                loaded.economic=Some(node_chars);
             }
             Ok(_) => {
                 eprintln!(
@@ -855,21 +758,19 @@ pub(crate) fn build_edge_weights(
 
     // Step 5b: Housing character similarity (M.3).
     if spec.housing_character {
-        use crate::edge_weights::HousingCharacterWeighter;
-        use crate::housing::{align_housing_to_adjacency, load_acs_housing_tract};
+        use crate::housing::{align_housing_to_adjacency};
         status(
             position,
             &format!("{state_code}: housing-character -- loading ACS housing"),
         );
-        match load_acs_housing_tract(state_name, year) {
+        match crate::housing::load_acs_housing_tract_at(auxiliary_root,state_name, year) {
             Ok(housing_chars) if !housing_chars.is_empty() => {
                 let node_chars = align_housing_to_adjacency(
                     &housing_chars,
                     &graph.index_to_geoid,
                     graph.n_vertices,
                 );
-                composer =
-                    composer.push(HousingCharacterWeighter::new(node_chars, spec.econ_alpha));
+                loaded.housing=Some(node_chars);
             }
             Ok(_) => {
                 eprintln!(
@@ -895,12 +796,7 @@ pub(crate) fn build_edge_weights(
         );
     }
 
-    // If nothing was added to the composer, fall back to geographic weights
-    if composer.is_empty() {
-        return Ok(graph.edge_weights.clone());
-    }
-
-    Ok(composer.apply())
+    bisect_runner::native_weighting::compose(spec,&graph.adjacency,&graph.edge_weights,&graph.index_to_geoid,loaded)
 }
 
 /// Apply COI (Communities of Interest) weights to edge weights.
@@ -912,32 +808,14 @@ pub(crate) fn build_edge_weights(
 /// The geometric mean ensures that if both endpoints of an edge are in the same
 /// community (high weight), the edge is strengthened and METIS will avoid cutting it.
 pub fn apply_coi_weights(
-    mut edge_weights: HashMap<(usize, usize), f64>,
+    edge_weights: HashMap<(usize, usize), f64>,
     coi_path: &std::path::Path,
     index_to_geoid: &HashMap<usize, String>,
 ) -> Result<HashMap<(usize, usize), f64>, String> {
     let content = std::fs::read_to_string(coi_path)
         .map_err(|e| format!("cannot read COI weights file {}: {e}", coi_path.display()))?;
-    let coi_map: HashMap<String, f64> = serde_json::from_str(&content)
-        .map_err(|e| format!("cannot parse COI weights JSON: {e}"))?;
-
-    // Build a geoid -> weight lookup by index
-    let get_weight = |idx: usize| -> f64 {
-        index_to_geoid
-            .get(&idx)
-            .and_then(|geoid| coi_map.get(geoid))
-            .copied()
-            .unwrap_or(1.0)
-    };
-
-    for (&(u, v), weight) in edge_weights.iter_mut() {
-        let w_u = get_weight(u);
-        let w_v = get_weight(v);
-        let factor = (w_u * w_v).sqrt();
-        *weight *= factor;
-    }
-
-    Ok(edge_weights)
+    let weights=bisect_runner::coi_weights::parse(&content)?;
+    bisect_runner::coi_weights::apply(edge_weights,&weights,index_to_geoid)
 }
 
 /// Load per-tract area (m²) and external perimeter (m) from TIGER shapefiles.
@@ -957,22 +835,21 @@ pub fn load_tiger_geometry(
     adjacency: &[Vec<usize>],
     edge_weights: &std::collections::HashMap<(usize, usize), f64>,
 ) -> (Vec<f64>, Vec<f64>) {
-    let state_fips = state_code_to_fips(&state_code.to_uppercase()).map(|s| s.to_string());
+    load_tiger_geometry_at_root(None,state_code,year,index_to_geoid,adjacency,edge_weights)
+}
 
-    // Try TIGER path: data/{year}/tiger/tracts/tl_{year}_{fips}_tract/
-    let tiger_path = state_fips.as_deref().and_then(|fips| {
-        let p = std::path::PathBuf::from("data")
-            .join(year)
-            .join("tiger")
-            .join("tracts")
-            .join(format!("tl_{year}_{fips}_tract"))
-            .join(format!("tl_{year}_{fips}_tract.shp"));
-        if p.exists() {
-            Some(p)
-        } else {
-            None
-        }
-    });
+pub fn load_tiger_geometry_at_root(
+    root:Option<&std::path::Path>,
+    state_code: &str,
+    year: &str,
+    index_to_geoid: &std::collections::HashMap<usize, String>,
+    adjacency: &[Vec<usize>],
+    edge_weights: &std::collections::HashMap<(usize, usize), f64>,
+) -> (Vec<f64>, Vec<f64>) {
+    // Native computational geometry uses exactly one candidate, unlike report geometry.
+    let tiger_path=bisect_runner::native_tiger_geometry::relative_path(state_code,year)
+        .map(std::path::PathBuf::from)
+        .map(|p|root.map_or(p.clone(),|r|r.join(p))).filter(|p|p.exists());
 
     let tiger_path = match tiger_path {
         Some(p) => p,
@@ -991,40 +868,5 @@ pub fn load_tiger_geometry(
         }
     };
 
-    let geoid_to_aland: std::collections::HashMap<String, f64> = records
-        .iter()
-        .map(|r| (r.geoid.clone(), r.aland as f64))
-        .collect();
-
-    let n = adjacency.len();
-    let mut vertex_areas = vec![0.0f64; n];
-    let mut vertex_ext_perimeters = vec![0.0f64; n];
-
-    for (&idx, geoid) in index_to_geoid {
-        if idx >= n {
-            continue;
-        }
-        let aland = *geoid_to_aland.get(geoid).unwrap_or(&0.0);
-        vertex_areas[idx] = aland;
-
-        // Circular approximation of total perimeter: 2√(π·A)
-        let total_perim_approx = if aland > 0.0 {
-            2.0 * (std::f64::consts::PI * aland).sqrt()
-        } else {
-            0.0
-        };
-
-        // Subtract shared boundaries (in metres from adjacency edge weights)
-        let shared: f64 = adjacency[idx]
-            .iter()
-            .map(|&j| {
-                let key = (idx.min(j), idx.max(j));
-                edge_weights.get(&key).copied().unwrap_or(0.0)
-            })
-            .sum();
-
-        vertex_ext_perimeters[idx] = (total_perim_approx - shared).max(0.0);
-    }
-
-    (vertex_areas, vertex_ext_perimeters)
+    bisect_runner::native_tiger_geometry::align(&records,index_to_geoid,adjacency,edge_weights)
 }

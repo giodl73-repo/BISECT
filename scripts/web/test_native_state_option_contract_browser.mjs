@@ -1,0 +1,24 @@
+import {openWorkbenchProject} from './workbench_project_open.mjs';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createServer} from 'node:http';
+import {createRequire} from 'node:module';
+const {chromium}=createRequire(path.join(process.env.BISECT_PLAYWRIGHT_PACKAGES,'package.json'))('playwright');
+const root=path.resolve('target/native-state-option-contract-browser'),staticRoot=path.resolve('web/lab'),wasm=path.resolve('target/wasm32-unknown-unknown/release/bisect_wasm.wasm');await fs.mkdir(root,{recursive:true});
+const server=createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost'),file=url.pathname==='/bisect_wasm.wasm'?wasm:path.resolve(staticRoot,'.'+decodeURIComponent(url.pathname==='/'?'/workbench.html':url.pathname));if(file!==wasm&&!file.startsWith(staticRoot+path.sep))throw Error('Path rejected');res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.wasm')?'application/wasm':file.endsWith('.css')?'text/css':'text/html');res.end(await fs.readFile(file));}catch{res.writeHead(404);res.end();}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const origin='http://127.0.0.1:'+server.address().port;let context;
+try{
+ context=await chromium.launchPersistentContext(path.join(root,'profile-'+Date.now()),{headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--no-first-run','--disable-background-networking','--disable-extensions']});
+ await context.route('**/*',route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{Object.defineProperty(navigator,'hardwareConcurrency',{get:()=>2});window.requests=[];const Original=Worker;window.Worker=class extends Original{postMessage(message,...rest){if(message?.type==='run')requests.push(message.request.operation);return super.postMessage(message,...rest);}};});
+ const open=async name=>{await openWorkbenchProject(page,name,{ready:({argument:__bisectOpenArgument2097,openedStatus:__bisectOpenedStatus2097})=>(name=>__bisectOpenedStatus2097==='Opened '+name)(__bisectOpenArgument2097),readyArg:path.basename(name)});};
+ const save=async name=>{const pending=page.waitForEvent('download');await page.locator('#save-project').click();await(await pending).saveAs(path.join(root,name));return JSON.parse(await fs.readFile(path.join(root,name),'utf8'));};
+ await page.goto(origin);await open(path.resolve('target/native-state-option-contract/browser.bisect'));assert.equal(await page.evaluate(()=>requests.length),0);assert(await page.locator('#state-command-output').isHidden());
+ await page.locator('#execute').click();await page.waitForFunction(()=>document.querySelector('#state-command-output').textContent.includes('Selected graph/template preparation refuses'));const review=await page.locator('#state-command-output').textContent();assert(review.includes('--reset'));assert(review.includes('--output-dir'));assert(review.includes('Other flags still require matching selected sources'));const inspected=await save('inspected.bisect');assert.equal(inspected.result.execution_performed,false);
+ const count=await page.evaluate(()=>requests.length);await open(path.join(root,'inspected.bisect'));assert.equal(await page.evaluate(()=>requests.length),count);assert(await page.locator('#state-command-output').isHidden());
+ await page.locator('#state-command-arguments').fill(JSON.stringify(['--state','RI','--metis-engine','metis-core']));await page.locator('#execute').click();await page.waitForFunction(()=>document.querySelector('#state-command-output').textContent.includes('Native State command review')&&!document.querySelector('#state-command-output').hidden);assert(!(await page.locator('#state-command-output').textContent()).includes('preparation refuses'));assert.deepEqual(await page.evaluate(()=>requests),['inspect-native-state-command','inspect-native-state-command']);
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);
+ await fs.writeFile(root+'/evidence.json',JSON.stringify({inert_open:true,actual_inspection_only:true,explicit_refusal_flags_visible:true,default_values_not_flagged:true,source_edits_retire_notice:true,inert_import_retired:true,no_compilation_or_partition:true,mobile_width:390,page_errors:errors,published:false},null,2));console.log('PASS native State preparation boundary browser: actual native flag sources, visible explicit refusals, defaults unflagged, inert Open, fresh inspection and no partition');
+}finally{await context?.close();await new Promise(resolve=>server.close(resolve));}

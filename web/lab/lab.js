@@ -1,24 +1,42 @@
-import {isMultiscale} from './multiscale-input.js';
+import {validateNativeStateVra} from './native-state-vra.js';
+import {nativeStatePreset} from './native-state-presets.js';
+import {nativeRoundProgressText} from './native-round-progress.js';
+import {zoneDocument,readZoneInput,zoneTemplate} from './zone-weighting.js';
+let zoneSources=Object.create(null),zoneReading=false,zoneSequence=0,zoneError='';
+import {validateWorkerFailure,verifyWorkerFailure,workerFailureSeeds} from './worker-failure.js';
+let renderedLabFailureKey;
+import {readCharacterSelections,applyCharacterSelections,alignCharacterSelections} from './character-selection.js';
+import {characterFallbackToken,nativeCharacterFallbackInfo,verifyNativeCharacterFallback} from './character-fallback-source.js';
+let characterFallbackSources=Object.create(null),nativeCharacterSources=Object.create(null);
+import {characterHandoffToken,preparedCharacterInput,verifyCharacterPreparation} from './character-handoff.js';
+import {readCoiInput} from './coi-input.js';
+let ordinaryCoi=null,ordinaryCoiSequence=0,ordinaryCoiLoading=false,ordinaryCoiError='';
+import {laboratorySnapshot,laboratorySnapshotGeoJSON,laboratorySnapshotDistrict} from './laboratory-round-capture.js';
+let ilpAuditPreparing=false;
+import {ilpReportAuditProject} from './ilp-report-handoff.js';
+import {queueProjectHandoff,takeProjectHandoff} from './project-handoff.js';
+import {isMultiscale} from './multiscale-input.js?v=multiscale-build-v1';
 import {mountMultiscaleUi} from './multiscale-ui.js';
 let multiscaleUi;
 const fineUnitLabel=()=>isMultiscale(job?.config)&&job.config.multiscale.fine_level==='bg'?'block groups':'tracts';
 import {readElectionFile} from './election-input.js';
 import {readPartisanFile} from './partisan-input.js';
-import {readCharacterFile,validateCharacterInput,usesCharacterWeights} from './character-input.js';
+import {validateCharacterInput,usesCharacterWeights} from './character-input.js';
 import {loadStaticCatalog,parseSeed} from './static.js';
 import {readDemographicFile,districtCountShares} from './demographic-input.js';
-import {MAX_PROJECT_BYTES} from './project.js';
+import {MAX_PROJECT_BYTES,readProjectFile} from './project.js';
 let demographicInputs=Object.create(null),demographicSequence=0,demographicLoading=false;
 let electionInputs=Object.create(null),electionSequence=0,electionLoading=false;
 let partisanInputs=Object.create(null),partisanSequence=0,partisanLoading=false;
+let characterPreparations=Object.create(null);
 let characterInputs=Object.create(null),characterSequence=0,characterLoading=false;
 
 const $ = id => document.getElementById(id);
 
 const browserWasm = document.body.dataset.backend === 'wasm';
-const usesRunSeed = structure => !['proportional-section','spectral','flow-construction','capacity-clustering','regionalization','compact-polsby'].includes(structure);
+const usesRunSeed = structure => !['ilp','proportional-section','spectral','flow-construction','capacity-clustering','regionalization','compact-polsby'].includes(structure);
 if(browserWasm){
-  const seed=$('seed');seed.type='text';seed.inputMode='numeric';seed.pattern='(0|[1-9][0-9]{0,19})';seed.maxLength=20;
+  const seed=$('seed');seed.type='text';seed.required=false;seed.placeholder='Native default';seed.inputMode='numeric';seed.pattern='(0|[1-9][0-9]{0,19})';seed.maxLength=20;
   seed.removeAttribute('min');seed.removeAttribute('max');seed.title='Unsigned seed: 0 through 18446744073709551615';
 }
 
@@ -39,9 +57,9 @@ const time = value => value == null ? '—' : value < 60 ? `${value.toFixed(1)} 
 
 const palette = ['#6c9e83','#9386ad','#d6a668','#729ba8','#c4878b','#b4b577','#71999a','#b18f74','#7e91b8','#b194b4','#89b29b','#c3ab78'];
 
-const structureNames = {'proportional-bisect':'Proportional bisection · votes/population','proportional-section':'ProportionalSection · two-party root','ratio-optimal-vra':'VRASection · minority mass alignment','simulated-annealing':'Simulated annealing','capacity-clustering':'Capacity clustering','regionalization':'Regionalization','flow-construction':'Flow construction','standard-bisect':'Standard bisection','nway':'Direct n-way partition','ratio-optimal':'GeoSection · ratio scan','ratio-optimal-area':'AreaSection · population + area','prime-factor':'ApportionRegions · prime-factor tree','compact-polsby':'CompactBisect · perimeter scoring','bfs-growth':'BFS region growing','centroidal-voronoi':'Centroidal Voronoi','moving-knife':'Moving-knife sweep','spectral':'Spectral-style smoothing'};
+const structureNames = {'ilp':'Native ILP dispatch','proportional-bisect':'Proportional bisection · votes/population','proportional-section':'ProportionalSection · two-party root','ratio-optimal-vra':'VRASection · minority mass alignment','simulated-annealing':'Simulated annealing','capacity-clustering':'Capacity clustering','regionalization':'Regionalization','flow-construction':'Flow construction','standard-bisect':'Standard bisection','nway':'Direct n-way partition','ratio-optimal':'GeoSection · ratio scan','ratio-optimal-area':'AreaSection · population + area','prime-factor':'ApportionRegions · prime-factor tree','compact-polsby':'CompactBisect · perimeter scoring','bfs-growth':'BFS region growing','centroidal-voronoi':'Centroidal Voronoi','moving-knife':'Moving-knife sweep','spectral':'Spectral-style smoothing'};
 
-const structureDescriptions = {'proportional-bisect':'At each node, choose child seat counts from Democratic votes divided by census population. This legacy heuristic uses census population as its denominator, not two-party votes. Children follow the chosen counts. It does not guarantee partisan seat outcomes.','proportional-section':'Round the statewide two-party Democratic quota at the geometric mean threshold. Both root children get at least one seat. Apply population and Democratic vote constraints at the root; descendants use population-only GeoSection. Outcomes are heuristic.','ratio-optimal-vra':'Choose a root seat ratio with an alignment bonus based on minority mass concentration. Mass is tract minority fraction times total tract population. Descendants use plain ratio scans. This is a geographic proxy, not a district preservation rule or legal VRA certification.','simulated-annealing':'Refine each prescribed recursive split with boundary flips and geometric cooling. Population targets follow the floor/ceil seat ratio. Initial METIS partitions use boundary weights; annealing minimizes unweighted edge cuts. Initial refinement is fixed at 100 iterations.','capacity-clustering':'Deterministic farthest-point graph centers and nearest-center capacity assignment, with exhaustive repair on small graphs. Boundary weights affect reported costs, not construction.','regionalization':'Deterministic adjacent-region agglomeration with a population-capacity preference. Preserves the native merge history; small-graph repair may change the final plan. Boundary weights affect reported costs, not merges.','flow-construction':'Deterministic farthest-point graph seeds and population-capacity frontier growth, with optional native BFS repair. Uses unweighted adjacency; boundary weights affect reported costs. Random seeds and METIS iterations do not affect construction. Invalid plans are reported as failures.','standard-bisect':'Split floor(k/2) : ceiling(k/2) recursively. A heuristic implementation of the fixed schedule.','nway':'Assign all districts in a direct partition rather than a recursive tree.','ratio-optimal':'Explore different seat ratios. This changes the schedule from standard bisection.','ratio-optimal-area':'Explore root seat ratios with population and half-area targets. Root population multiplier: 1.001. Descendants use population-only cuts.','prime-factor':'Use the existing ApportionRegions schedule: largest prime factor first, with floor/ceil bisection for primes above 3. Single seed. Native research limit: 3% population deviation.','compact-polsby':'Choose recursive candidates using the engine’s geometric scoring.','bfs-growth':'Construct districts by graph growth. Uses its own search; select Single.','centroidal-voronoi':'Construct graph-distance regions around moving centers. Uses its own search.','moving-knife':'Sweep geographic orientations using the engine’s compactness proxy. Uses its own search.','spectral':'Deterministic spectral-style smoothing of unweighted adjacency, followed by a population-balanced sweep at each recursive split. Boundary weights affect reported costs, not smoothing or cut selection. Random seeds and METIS refinement iterations do not affect this method.'};
+const structureDescriptions = {'ilp':'Use the native ILP node solver, including bounded branch-and-cut. Larger/unsolved nodes follow the selected METIS fallback or fail. Fallback uses unweighted edges, backend-default seeds and 10 refinement iterations; requested boundary weights affect reported cost. Optional capture retains native node LPs and solve reports. A global optimization certificate is not supplied.','proportional-bisect':'At each node, choose child seat counts from Democratic votes divided by census population. This legacy heuristic uses census population as its denominator, not two-party votes. Children follow the chosen counts. It does not guarantee partisan seat outcomes.','proportional-section':'Round the statewide two-party Democratic quota at the geometric mean threshold. Both root children get at least one seat. Apply population and Democratic vote constraints at the root; descendants use population-only GeoSection. Outcomes are heuristic.','ratio-optimal-vra':'Choose a root seat ratio with an alignment bonus based on minority mass concentration. Mass is tract minority fraction times total tract population. Descendants use plain ratio scans. This is a geographic proxy, not a district preservation rule or legal VRA certification.','simulated-annealing':'Refine each prescribed recursive split with boundary flips and geometric cooling. Population targets follow the floor/ceil seat ratio. Initial METIS partitions use boundary weights; annealing minimizes unweighted edge cuts. Initial refinement is fixed at 100 iterations.','capacity-clustering':'Deterministic farthest-point graph centers and nearest-center capacity assignment, with exhaustive repair on small graphs. Boundary weights affect reported costs, not construction.','regionalization':'Deterministic adjacent-region agglomeration with a population-capacity preference. Preserves the native merge history; small-graph repair may change the final plan. Boundary weights affect reported costs, not merges.','flow-construction':'Deterministic farthest-point graph seeds and population-capacity frontier growth, with optional native BFS repair. Uses unweighted adjacency; boundary weights affect reported costs. Random seeds and METIS iterations do not affect construction. Invalid plans are reported as failures.','standard-bisect':'Split floor(k/2) : ceiling(k/2) recursively. A heuristic implementation of the fixed schedule.','nway':'Assign all districts in a direct partition rather than a recursive tree.','ratio-optimal':'Explore different seat ratios. This changes the schedule from standard bisection.','ratio-optimal-area':'Explore root seat ratios with population and half-area targets. Root population multiplier: 1.001. Descendants use population-only cuts.','prime-factor':'Use the existing ApportionRegions schedule: largest prime factor first, with floor/ceil bisection for primes above 3. Single seed. Native research limit: 3% population deviation.','compact-polsby':'Choose recursive candidates using the engine’s geometric scoring.','bfs-growth':'Construct districts by graph growth. Uses its own search; select Single. Boundary weights affect reported costs only.','centroidal-voronoi':'Construct geographic or graph-distance regions around moving centers. Uses its own search. Boundary weights affect reported costs only.','moving-knife':'Sweep geographic orientations using the engine’s compactness proxy. Uses its own search. Boundary weights affect reported costs only.','spectral':'Deterministic spectral-style smoothing of unweighted adjacency, followed by a population-balanced sweep at each recursive split. Boundary weights affect reported costs, not smoothing or cut selection. Random seeds and METIS refinement iterations do not affect this method.'};
 
 const searchNames = {'multiscale':'Multiscale ReCom','multiscale-adaptive':'Adaptive multiscale ReCom','vra-recom':'VRA ReCom · minority preservation','smc-percentile':'SMC · weighted percentile','single':'Single seed','multi':'Multiple seeds · best candidate','convergence':'No-improvement seed sweep','percentile':'Seed distribution · percentile','bisection-ensemble':'Local bisection ensemble','short-burst':'Short-burst ReCom','short-burst-forest':'Short-burst forest ReCom','short-burst-merge-split':'Short-burst merge-split','flip':'Boundary flip chain','forest-recom':'Forest ReCom chain','merge-split':'Merge-split chain','parallel-tempering':'Parallel tempering'};
 
@@ -52,6 +70,27 @@ let catalog, mode = 'state', selectedStates = new Set(['RI','IA','NC']);
 let job = null, history = [], selectedCode = 'RI', activeTab = 'districts', view = 'district';
 
 let geometryRequest = 0, comparisonRequest = 0, polling = false;
+let snapshotOwner=null,snapshotView=null;
+const snapshotKey=()=>`${job?.id}:${selectedCode}`;
+const activeSnapshot=()=>view==='district'&&snapshotOwner===snapshotKey()?snapshotView:null;
+const displayedDistrict=feature=>activeSnapshot()?laboratorySnapshotDistrict(activeSnapshot(),feature.properties.geoid):feature.properties.district;
+function renderSnapshotPicker(capture){
+ const picker=$('captured-snapshot'),field=$('captured-snapshot-field');if(!picker)return;
+ const owner=snapshotKey();
+ if(owner!==snapshotOwner||picker.options.length!==1+(capture?.events?.length??0)){snapshotOwner=owner;snapshotView=null;picker.replaceChildren(new Option('Returned final assignment',''));for(const event of capture?.events??[])picker.add(new Option(`${event.sequence+1}: ${event.name} · ${event.complete_universe?'complete':'partial'} · ${event.units} units`,String(event.sequence)));}
+ field.hidden=!capture?.events?.length||view!=='district';
+ if(view!=='district'){snapshotView=null;picker.value='';}
+ $('download-snapshot-map').disabled=!activeSnapshot()||mapGeoJSON?.state!==selectedCode;
+}
+function renderSnapshotMap(){
+ const snapshot=activeSnapshot();$('color-by').disabled=!!snapshot;$('snapshot-metrics-note').hidden=!snapshot;
+ $('download-map').textContent=snapshot?'Final GeoJSON ↓':'GeoJSON ↓';
+ $('download-snapshot-map').disabled=!snapshot||mapGeoJSON?.state!==selectedCode;
+ if(snapshot)$('map-caption').textContent=`Snapshot ${snapshot.event.sequence+1}: ${snapshot.event.name} · ${snapshot.unit_universe?'Tract initialization snapshot; '+(snapshot.unit_universe.returned_unit_kind==='bg'?'projected to block groups; ':''):''}${snapshot.event.complete_universe?'Complete coverage':'Partial coverage; unassigned units neutral'} · Metrics describe returned final plan`;
+ else if(mapGeoJSON)$('map-caption').textContent=`${job?.config.year??$('year').value} TIGER tracts · ${job?'Returned engine assignments':'Input preview'} · Display geometry simplified`;
+ renderLegend();drawMap();
+}
+
 
 let labProjectTools, projectRevision=0, projectSequence=0, projectImport, projectSaveSequence=0, projectSaveQueue=Promise.resolve();
 
@@ -94,7 +133,7 @@ function populate() {
 
   $('structure').innerHTML = catalog.structures.map(value => `<option value="${esc(value)}">${esc(structureNames[value] || value)}</option>`).join('');
 
-  $('weights').innerHTML = catalog.weights.map(value => `<option value="${value}">${{geographic:'Physical boundary length',unweighted:'Uniform · cut edge count',county:'Boundary length + county preference',partisan:'Partisan clusters · adaptive unit weights','economic-character':'Economic character · LODES similarity','housing-character':'Housing character · ACS similarity'}[value]}</option>`).join('');
+  $('weights').innerHTML = catalog.weights.map(value => `<option value="${value}">${{geographic:'Physical boundary length',unweighted:'Uniform · cut edge count',county:'Boundary length + county preference',partisan:'Partisan clusters · adaptive unit weights','vra-aligned':'Minority clusters · native adaptive unit weights','economic-character':'Economic character · LODES similarity','housing-character':'Housing character · ACS similarity','zone-membership':'Zones · supplied data or native geographic fallback'}[value]}</option>`).join('');
 
   $('search').innerHTML = catalog.searches.map(value => `<option value="${value}">${esc(searchNames[value] || value)}</option>`).join('');
 
@@ -139,7 +178,7 @@ function populate() {
 
   }
 
-  const vraFields=document.createElement('section');vraFields.id='vra-fields';vraFields.hidden=true;
+  const vraFields=document.createElement('section');vraFields.id='vra-fields';vraFields.hidden=true;const fallbackLabel=document.createElement('label');fallbackLabel.id='vra-absence-field';fallbackLabel.textContent='No demographic file: use native plain GeoSection fallback';const fallbackInput=document.createElement('input');fallbackInput.id='vra-absence';fallbackInput.type='checkbox';fallbackLabel.append(fallbackInput);vraFields.append(fallbackLabel);fallbackInput.oninput=updateControls;
   const thresholdLabel=document.createElement('label');thresholdLabel.id='vra-threshold-field';thresholdLabel.textContent='Minority preservation threshold (%)';
   const threshold=document.createElement('input');threshold.id='vra-threshold';threshold.type='number';threshold.min=0;threshold.max=100;threshold.step='any';threshold.value=50;threshold.required=true;thresholdLabel.append(threshold);vraFields.append(thresholdLabel);
   const weightLabel=document.createElement('label');weightLabel.id='vra-weight-field';weightLabel.textContent='Minority alignment weight (%)';const weight=document.createElement('input');weight.id='vra-weight';weight.type='number';weight.min=0;weight.max=100;weight.step='any';weight.value=40;weight.required=true;weightLabel.append(weight);vraFields.append(weightLabel);
@@ -169,7 +208,7 @@ function populate() {
     finally{if(sequence===demographicSequence){demographicLoading=false;demographicFiles.value='';}}
   };
   $('search-description').after(vraFields);renderDemographicInputs();
-  if(browserWasm){for(const [value,label]of [['minority','Minority tract fraction'],['root','Root split side']]){const option=document.createElement('option');option.value=value;option.textContent=label;$('color-by').append(option);}}
+  if(browserWasm){for(const [value,label]of [['minority','Minority tract fraction'],['minority-district','Native minority district share'],['root','Root split side']]){const option=document.createElement('option');option.value=value;option.textContent=label;$('color-by').append(option);}}
   const electionFields=document.createElement('div');electionFields.id='election-fields';electionFields.className='fields';
   const etaLabel=document.createElement('label');etaLabel.id='proportional-eta-field';etaLabel.textContent='Root vote tolerance multiplier';const etaInput=document.createElement('input');etaInput.id='proportional-eta';etaInput.type='number';etaInput.min=1;etaInput.max=2;etaInput.step='any';etaInput.value=1.1;etaInput.required=true;etaLabel.append(etaInput);electionFields.append(etaLabel);
   const electionCsvStateLabel=document.createElement('label');electionCsvStateLabel.textContent='Election CSV state';const electionCsvState=document.createElement('select');electionCsvState.id='election-csv-state';
@@ -206,19 +245,35 @@ function populate() {
   const blendLabel=document.createElement('label');blendLabel.textContent='Geographic blend alpha';const blend=document.createElement('input');blend.id='character-alpha';blend.type='number';blend.min='0';blend.max='1';blend.step='0.01';blend.value='0.5';blend.required=true;blendLabel.append(blend);characterFields.append(blendLabel);
   const characterStateLabel=document.createElement('label');characterStateLabel.textContent='Character CSV state';const characterState=document.createElement('select');characterState.id='character-csv-state';for(const state of [...catalog.states].sort((a,b)=>a.name.localeCompare(b.name))){const option=document.createElement('option');option.value=state.code;option.textContent=state.name;characterState.append(option);}characterState.value=$('state').value;characterStateLabel.append(characterState);characterFields.append(characterStateLabel);
   const characterYearLabel=document.createElement('label');characterYearLabel.textContent='Observation year';const characterYear=document.createElement('input');characterYear.id='character-data-year';characterYear.type='text';characterYear.inputMode='numeric';characterYear.pattern='[0-9]{4}';characterYear.maxLength=4;characterYear.value=$('year').value;characterYearLabel.append(characterYear);characterFields.append(characterYearLabel);
-  const characterFileLabel=document.createElement('label');characterFileLabel.textContent='Character CSV or JSON files';const characterFiles=document.createElement('input');characterFiles.id='character-files';characterFiles.type='file';characterFiles.accept='.json,.csv';characterFiles.multiple=true;characterFileLabel.append(characterFiles);characterFields.append(characterFileLabel);
+  const characterFileLabel=document.createElement('label');characterFileLabel.textContent='Character CSV, JSON or saved preparation projects';const characterFiles=document.createElement('input');characterFiles.id='character-files';characterFiles.type='file';characterFiles.accept='.json,.csv,.bisect';characterFiles.multiple=true;characterFileLabel.append(characterFiles);characterFields.append(characterFileLabel);const nativeLabel=document.createElement('label'),nativeFiles=document.createElement('input');nativeFiles.id='character-native-files';nativeFiles.type='checkbox';nativeLabel.append(nativeFiles,document.createTextNode(' Retain original native CSVs; parse and align only when Run is selected'));characterFields.append(nativeLabel);
   const characterHelp=document.createElement('p');characterHelp.className='help';characterHelp.id='character-help';characterFields.append(characterHelp);
+  const absentLabel=document.createElement('label'),absentCharacter=document.createElement('input');absentCharacter.type='checkbox';absentCharacter.id='character-absence';absentLabel.append(absentCharacter,document.createTextNode(' Allow native geographic fallback for states without usable character observations'));characterFields.append(absentLabel);
   const characterStatus=document.createElement('p');characterStatus.id='character-status';characterStatus.setAttribute('role','status');characterFields.append(characterStatus);
-  const clearCharacters=document.createElement('button');clearCharacters.type='button';clearCharacters.textContent='Clear character inputs';clearCharacters.onclick=()=>{characterSequence++;characterLoading=false;characterInputs=Object.create(null);characterFiles.value='';renderCharacterInputs();};characterFields.append(clearCharacters);
+  const clearCharacters=document.createElement('button');clearCharacters.type='button';clearCharacters.textContent='Clear character inputs';clearCharacters.onclick=()=>{characterSequence++;characterLoading=false;characterInputs=Object.create(null);characterPreparations=Object.create(null);characterFallbackSources=Object.create(null);nativeCharacterSources=Object.create(null);characterFiles.value='';renderCharacterInputs();};characterFields.append(clearCharacters);
+  const alignCharacters=document.createElement('button');alignCharacters.id='character-align';alignCharacters.type='button';alignCharacters.textContent='Align to selected tract graphs using native defaults';characterFields.append(alignCharacters);
+  const alignmentHelp=document.createElement('p');alignmentHelp.className='help';alignmentHelp.textContent='Explicitly fill missing economic tracts with zero vectors or housing tracts with neutral 0.5 vectors. Original observations and missing/ignored tract IDs stay in the project. These defaults are not observations. Empty sources require a separate fallback policy.';characterFields.append(alignmentHelp);
+  alignCharacters.onclick=async()=>{
+    if(characterLoading||staticCatalog?.active)return;
+    const sequence=++characterSequence,revision=projectRevision,year=$('year').value,weights=$('weights').value,states=mode==='state'?[$('state').value]:[...selectedStates],snapshot=structuredClone(characterInputs),allowFallback=$('character-absence').checked;
+    characterLoading=true;characterStatus.textContent='Aligning selected parent tract observations…';alignCharacters.disabled=true;
+    try{
+      if(!staticCatalog||!usesCharacterWeights(weights)||!states.length)throw new Error('Select character weights and states with prepared tract graphs.');
+      const result=await alignCharacterSelections(snapshot,{states,kind:weights.replace('-character',''),year,allowFallback,nativeSources:structuredClone(nativeCharacterSources),graphFor:async code=>{const entry=staticCatalog.manifest.graphs[code+':'+year];if(!entry)throw new Error('No prepared tract graph for '+code+'/'+year);return staticCatalog.asset(entry.graph_ref);}});
+      const current=mode==='state'?[$('state').value]:[...selectedStates];if(sequence!==characterSequence||revision!==projectRevision||year!==$('year').value||weights!==$('weights').value||allowFallback!==$('character-absence').checked||JSON.stringify(current)!==JSON.stringify(states))throw new Error('Project changed during alignment. Original observations retained.');
+      characterInputs=result.characters;renderCharacterInputs();if(!result.aligned)characterStatus.textContent+=Object.keys(nativeCharacterSources).length?' Original native CSVs will be parsed and aligned on explicit Run.':' No observations selected for alignment; geographic fallback is unchanged.';
+    }catch(error){if(sequence===characterSequence)characterStatus.textContent=error.message;}
+    finally{if(sequence===characterSequence)characterLoading=false;alignCharacters.disabled=false;}
+  };
   characterFiles.onchange=async()=>{
     const files=[...characterFiles.files],sequence=++characterSequence,revision=projectRevision;if(!files.length)return;characterLoading=true;characterStatus.textContent='Reading character observations…';
     const csvScope={state:characterState.value,year:$('year').value,data_year:characterYear.value,kind:$('weights').value.replace('-character','')};
-    try{if(files.length>50||files.reduce((sum,file)=>sum+file.size,0)>MAX_PROJECT_BYTES)throw new Error('Select at most fifty character files totaling at most 25 MiB.');const next=Object.create(null);for(const file of files){const input=validateCharacterInput(await readCharacterFile(file,{csvMetadata:{...csvScope,source_label:file.name},wasmSha256:staticCatalog?.manifest.wasm_sha256}),null,csvScope.kind);if(Object.hasOwn(next,input.state))throw new Error('Select one character file per state.');next[input.state]=input;}if(sequence!==characterSequence||revision!==projectRevision)throw new Error('The project changed while reading observations.');characterInputs={...characterInputs,...next};renderCharacterInputs();}
+    const allowFallback=$('character-absence').checked,nativeSourceMode=nativeFiles.checked;
+    try{const selections=await readCharacterSelections(files,{kind:csvScope.kind,year:csvScope.year,allowFallback,nativeSourceMode,csvMetadata:csvScope,wasmSha256:staticCatalog?.manifest.wasm_sha256});if(sequence!==characterSequence||revision!==projectRevision||csvScope.state!==characterState.value||csvScope.data_year!==characterYear.value||csvScope.year!==$('year').value||csvScope.kind!==$('weights').value.replace('-character','')||allowFallback!==$('character-absence').checked||nativeSourceMode!==nativeFiles.checked)throw new Error('The project changed while reading character selections. Existing inputs retained.');const next=applyCharacterSelections({characters:characterInputs,preparations:characterPreparations,fallbacks:characterFallbackSources,native:nativeCharacterSources},selections);characterInputs=next.characters;characterPreparations=next.preparations;characterFallbackSources=next.fallbacks;nativeCharacterSources=next.native??Object.create(null);renderCharacterInputs();}
     catch(error){if(sequence===characterSequence)characterStatus.textContent=error.message;}
     finally{if(sequence===characterSequence){characterLoading=false;characterFiles.value='';}}
   };
   partisanFields.after(characterFields);renderCharacterInputs();
-  multiscaleUi=mountMultiscaleUi({after:characterFields,scope:()=>({states:mode==='state'?[$('state').value]:[...selectedStates]}),revision:()=>projectRevision});
+  multiscaleUi=mountMultiscaleUi({after:characterFields,scope:()=>({states:mode==='state'?[$('state').value]:[...selectedStates]}),revision:()=>projectRevision,busy:()=>Boolean(staticCatalog?.active)});
   const saFields=document.createElement('div');saFields.id='sa-fields';saFields.className='fields two';
 
   for(const [id,text,min,max,value,step]of [['sa-steps','Annealing steps per tract',0,10000,10,1],['sa-factor','Initial temperature factor',0,1000,0.01,'any'],['sa-final','Final temperature',1e-15,1e6,0.0001,'any']]){
@@ -246,6 +301,9 @@ function populate() {
   const nwayFields=document.createElement('div');nwayFields.id='nway-fields';nwayFields.className='fields';
   const objectiveLabel=document.createElement('label');objectiveLabel.textContent='METIS refinement objective';const objective=document.createElement('select');objective.id='metis-objective';for(const [value,label]of [['cut','Edge cut'],['volume','Communication volume']]){const option=document.createElement('option');option.value=value;option.textContent=label;objective.append(option);}objectiveLabel.append(objective);nwayFields.append(objectiveLabel);
   const trialsLabel=document.createElement('label');trialsLabel.textContent='METIS internal trials';const trials=document.createElement('input');trials.id='metis-trials';trials.type='number';trials.min=1;trials.max=100;trials.step=1;trials.value=1;trials.required=true;trialsLabel.append(trials);nwayFields.append(trialsLabel);
+  const factorLabel=document.createElement('label');factorLabel.id='metis-ufactor-field';factorLabel.textContent='N-way METIS imbalance factor (optional)';const factor=document.createElement('input');factor.id='metis-ufactor';factor.type='number';factor.min=0;factor.max=4294967295;factor.step=1;factor.placeholder='Follow selected tolerance';factorLabel.append(factor);const factorHelp=document.createElement('small');factorHelp.textContent='Native State defaults to 5 (0.5%). Leave blank to follow the selected population tolerance. Native METIS clamps the factor to 1–1000; accepted-plan population tolerance is checked separately.';factorLabel.append(factorHelp);nwayFields.append(factorLabel);
+  const nativeFactor=document.createElement('button');nativeFactor.id='metis-native-factor';nativeFactor.type='button';nativeFactor.textContent='Use native State factor (5)';
+  nativeFactor.addEventListener('click',()=>{if(factor.disabled||staticCatalog.active||staticCatalog.exporting)return;factor.value='5';factor.dispatchEvent(new Event('input',{bubbles:true}));});nwayFields.append(nativeFactor);
   const nwayHelp=document.createElement('p');nwayHelp.className='help';nwayHelp.textContent='Volume changes refinement. Internal trials rank population imbalance, then edge cut. In recursive Multi, the separate seed budget selects the least weighted cut among balanced contiguous candidates at each tree node. GeoSection retains the least original weighted cut per ratio, then ranks ratios by cut divided by the square root of the smaller seat count. Refinement iterations apply to each trial.';nwayFields.append(nwayHelp);smcFields.after(nwayFields);
   const cvdFields=document.createElement('div');cvdFields.id='cvd-fields';cvdFields.className='fields two';
 
@@ -259,14 +317,33 @@ function populate() {
 
   const metricLabel=document.createElement('label');metricLabel.textContent='Sweep score';const metric=document.createElement('select');metric.id='mka-metric';for(const [value,text]of [['reock','Reock'],['polsby','Polsby request · currently scores Reock']]){const option=document.createElement('option');option.value=value;option.textContent=text;metric.append(option);}metricLabel.append(metric);mkaFields.append(metricLabel);cvdFields.after(mkaFields);
 
-  const compactField=document.createElement('label');compactField.id='compact-field';compactField.textContent='Edge-cut slack (%)';const compactSlack=document.createElement('input');compactSlack.id='compact-slack';compactSlack.type='number';compactSlack.min=0;compactSlack.max=100;compactSlack.step='any';compactSlack.value=5;compactSlack.required=true;compactField.append(compactSlack);mkaFields.after(compactField);
-  const areaInitField=document.createElement('label');areaInitField.id='area-init-field';areaInitField.textContent='AreaSection initialization';const areaInit=document.createElement('select');areaInit.id='area-init';for(const [value,label]of [['ratio-optimal','Ratio scan'],['moving-knife','Moving-knife direction · 180 orientations']]){const option=document.createElement('option');option.value=value;option.textContent=label;areaInit.append(option);}areaInitField.append(areaInit);compactField.after(areaInitField);
+  const compactField=document.createElement('div');compactField.id='compact-field';const compactSlackLabel=document.createElement('label');compactSlackLabel.textContent='Edge-cut slack (%)';const compactSlack=document.createElement('input');compactSlack.id='compact-slack';compactSlack.type='number';compactSlack.min=0;compactSlack.max=100;compactSlack.step='any';compactSlack.value=5;compactSlack.required=true;compactSlackLabel.append(compactSlack);compactField.append(compactSlackLabel);mkaFields.after(compactField);
+  const compactGeometryLabel=document.createElement('label');compactGeometryLabel.textContent='Selection geometry';const compactGeometry=document.createElement('select');compactGeometry.id='compact-geometry';for(const [value,text]of [['prepared','Prepared graph perimeters'],['native-state-circular','Native State circular estimate']]){const option=document.createElement('option');option.value=value;option.textContent=text;compactGeometry.append(option);}compactGeometryLabel.append(compactGeometry);const compactGeometryHelp=document.createElement('small');compactGeometryHelp.textContent='Native State estimates exterior perimeter as 2√(π × land area) minus resolved neighboring edge weights, clamped at zero. Select this to reproduce that CLI input policy. Graph perimeters and reported physical metrics stay retained; this estimate does not add map geometry.';compactGeometryLabel.append(compactGeometryHelp);compactField.append(compactGeometryLabel);
+  const splitDefaults=document.createElement('div');splitDefaults.id='native-split-defaults';
+  const splitDefaultsButton=document.createElement('button');splitDefaultsButton.id='native-split-defaults-apply';splitDefaultsButton.type='button';splitDefaultsButton.textContent='Use native State split defaults';
+  splitDefaultsButton.onclick=()=>{if(splitDefaultsButton.disabled||staticCatalog.active||staticCatalog.exporting)return;$('search').value='multi';$('seeds').value='1';$('seed').value='';if($('structure').value==='compact-polsby')$('compact-slack').value='5';if($('structure').value==='ratio-optimal-area'){$('area-swing').value='1.1';$('area-init').value='ratio-optimal';}$('search').dispatchEvent(new Event('input',{bubbles:true}));};splitDefaults.append(splitDefaultsButton);
+  const statesSplitDefaultsButton=document.createElement('button');statesSplitDefaultsButton.id='native-states-split-defaults-apply';statesSplitDefaultsButton.type='button';statesSplitDefaultsButton.textContent='Use native States split defaults (50)';
+  statesSplitDefaultsButton.onclick=()=>{if(statesSplitDefaultsButton.disabled||staticCatalog.active||staticCatalog.exporting)return;$('search').value='multi';$('seeds').value='50';$('seed').value='';$('iterations').value='100';if($('structure').value==='compact-polsby')$('compact-slack').value='5';if($('structure').value==='ratio-optimal-area'){$('area-swing').value='1.1';$('area-init').value='ratio-optimal';}$('search').dispatchEvent(new Event('input',{bubbles:true}));};splitDefaults.append(statesSplitDefaultsButton);
+  const splitDefaultsHelp=document.createElement('p');splitDefaultsHelp.className='help';splitDefaultsHelp.textContent='CompactBisect, GeoSection and AreaSection State presets use one candidate per split/ratio when their CLI budget is omitted or zero, and clear the supplied starting seed. The native States command instead defaults to 50 candidates and 100 refinement iterations for all three presets. CompactBisect uses 5% edge-cut slack. AreaSection selects area swing 1.1 and ratio-optimal initialization. These buttons select their defaults without running. Seed budget sets a custom candidate count; an explicit native --search multi instead defaults to at least 50 candidates.';splitDefaults.append(splitDefaultsHelp);compactField.after(splitDefaults);
+  const areaInitField=document.createElement('label');areaInitField.id='area-init-field';areaInitField.textContent='AreaSection initialization';const areaInit=document.createElement('select');areaInit.id='area-init';for(const [value,label]of [['ratio-optimal','Ratio scan'],['moving-knife','Moving-knife direction · 180 orientations']]){const option=document.createElement('option');option.value=value;option.textContent=label;areaInit.append(option);}areaInitField.append(areaInit);const areaHelp=document.createElement('small');areaHelp.id='area-init-help';areaHelp.textContent='Moving-knife biases the root direction. This laboratory uses the visible starting seed. To reproduce the legacy CLI areasection preset, use seed 1.';areaInitField.append(areaHelp);compactField.after(areaInitField);
   const burstFields=document.createElement('div');burstFields.id='burst-fields';burstFields.className='fields two';for(const [id,text,max,value]of [['burst-length','Steps per burst',100000,20],['n-bursts','Number of bursts',10000,50]]){const label=document.createElement('label');label.textContent=text;const input=document.createElement('input');input.id=id;input.type='number';input.min=0;input.max=max;input.step=1;input.value=value;input.required=true;label.append(input);burstFields.append(label);}areaInitField.after(burstFields);
-  const ptFields=document.createElement('div');ptFields.id='pt-fields';ptFields.className='fields two';for(const [id,text,min,max,value,step]of [['pt-replicas','Tempering replicas',1,32,4,1],['pt-swap','Swap every steps',1,100000,10,1],['pt-hot','Hot population tolerance (%)',0.01,100,5,'any']]){const label=document.createElement('label');label.textContent=text;const input=document.createElement('input');input.id=id;input.type='number';input.min=min;input.max=max;input.step=step;input.value=value;input.required=true;label.append(input);ptFields.append(label);}burstFields.after(ptFields);
+  const ptFields=document.createElement('div');ptFields.id='pt-fields';ptFields.className='fields two';for(const [id,text,min,max,value,step]of [['pt-replicas','Tempering replicas',1,32,4,1],['pt-swap','Swap every steps',1,100000,10,1],['pt-cold','Cold population tolerance (%)',0.01,100,0.5,'any'],['pt-hot','Hot population tolerance (%)',0.01,100,5,'any']]){const label=document.createElement('label');label.textContent=text;const input=document.createElement('input');input.id=id;input.type='number';input.min=min;input.max=max;input.step=step;input.value=value;input.required=true;label.append(input);ptFields.append(label);}burstFields.after(ptFields);
   if(browserWasm){
     const options=document.createElement('details');options.id='experiment-options';options.className='advanced';
     const summary=document.createElement('summary');summary.textContent='Experiment options';options.append(summary);
     const first=document.querySelector('#experiment-form .dimension'),last=document.querySelector('#experiment-form details.advanced');
+    const retryLabel=document.createElement('label');const retry=document.createElement('input');retry.type='checkbox';retry.id='native-build';retryLabel.append(retry,document.createTextNode(' Use native population-balance retries (up to 51 attempts)'));$('timeout').closest('label').after(retryLabel);
+    const captureLabel=document.createElement('label'),capture=document.createElement('input');capture.type='checkbox';capture.id='capture-rounds';captureLabel.append(capture,document.createTextNode(' Capture native intermediate rounds'));const help=document.createElement('small');help.textContent='Retain snapshots emitted by this method. Some methods emit none. Multiscale snapshots describe tract initialization, projected to block groups when needed. Saved projects remain limited to 25 MiB.';captureLabel.append(help);retryLabel.after(captureLabel);
+    const captureButton=document.createElement('button');captureButton.id='download-round-capture';captureButton.disabled=true;captureButton.textContent='Native rounds ↓';$('download-config').after(captureButton);captureButton.addEventListener('click',()=>{const trace=job?.states.find(s=>s.code===selectedCode)?.metrics?.round_capture;if(trace)download(trace,`${job.id}_${selectedCode}_round_capture.json`);});
+    const captureStatus=document.createElement('p');captureStatus.id='round-capture-status';captureStatus.className='help';captureStatus.hidden=true;$('results-districts').prepend(captureStatus);
+    const snapshotField=document.createElement('label');snapshotField.id='captured-snapshot-field';snapshotField.hidden=true;snapshotField.className='snapshot-control';snapshotField.textContent='Map assignment ';const snapshotPicker=document.createElement('select');snapshotPicker.id='captured-snapshot';snapshotField.append(snapshotPicker);$('map-container').before(snapshotField);const metricNote=document.createElement('p');metricNote.id='snapshot-metrics-note';metricNote.className='help';metricNote.hidden=true;metricNote.textContent='Metrics describe the returned final plan. The map shows a captured snapshot.';$('metric-districts').closest('.metric-strip').before(metricNote);
+    const snapshotDownload=document.createElement('button');snapshotDownload.id='download-snapshot-map';snapshotDownload.disabled=true;snapshotDownload.textContent='Snapshot GeoJSON ↓';captureButton.after(snapshotDownload);snapshotDownload.addEventListener('click',()=>{const selected=activeSnapshot();if(selected&&mapGeoJSON?.state===selectedCode)download(laboratorySnapshotGeoJSON(mapGeoJSON,selected),`${job.id}_${selectedCode}_snapshot_${selected.event.sequence}.geojson`);});
+    snapshotPicker.addEventListener('change',()=>{const capture=job?.states.find(s=>s.code===selectedCode)?.metrics?.round_capture;snapshotView=snapshotPicker.value===''?null:laboratorySnapshot(capture,Number(snapshotPicker.value));selectedDistrict=null;$('map-tooltip').hidden=true;renderSnapshotMap();});
+
+    const ilpFields=document.createElement('fieldset');ilpFields.id='ilp-fields';const ilpLegend=document.createElement('legend');ilpLegend.textContent='Native ILP dispatch';ilpFields.append(ilpLegend);for(const [id,title,values]of [['ilp-method','Method',['formulation-only','branch-and-cut','iterative-separation']],['ilp-fallback','When no solver plan exists',['metis','error']]]){const label=document.createElement('label');label.textContent=title;const input=document.createElement('select');input.id=id;for(const v of values)input.add(new Option(v,v));label.append(input);ilpFields.append(label);}for(const [id,title,value,type,max]of [['ilp-time','Declared native time limit (s)',300,'text',null],['ilp-gap','Native target gap',.01,'number',null],['ilp-max','Maximum units for an ILP node',500,'number',1000000]]){const label=document.createElement('label');label.textContent=title;const input=document.createElement('input');Object.assign(input,{id,type,value,required:true});if(type==='number'){input.min=0;input.step=id==='ilp-gap'?'any':1;if(max!==null)input.max=max;}label.append(input);ilpFields.append(label);}const note=document.createElement('p');note.className='help';note.textContent='The native declared time limit is retained; this solver does not use it as a wall-clock cutoff. The separate run timeout still applies.';ilpFields.append(note);const reportsLabel=document.createElement('label'),reports=document.createElement('input');reports.id='capture-ilp-reports';reports.type='checkbox';reportsLabel.append(reports,document.createTextNode(' Retain native node LP models and solve reports'));const reportsHelp=document.createElement('small');reportsHelp.textContent='Includes the accepted population attempt only. Local solver status does not certify the whole plan. Request limit: 8 MiB; report/model text: 16 MiB. Saved projects remain limited to 25 MiB.';reportsLabel.append(reportsHelp);ilpFields.append(reportsLabel);retryLabel.after(ilpFields);
+    const reportsButton=document.createElement('button');reportsButton.id='download-ilp-reports';reportsButton.disabled=true;reportsButton.textContent='ILP reports ↓';$('download-config').after(reportsButton);reportsButton.addEventListener('click',()=>{const packet=job?.states.find(s=>s.code===selectedCode)?.metrics?.ilp_report_capture;if(packet)download(packet,`${job.id}_${selectedCode}_ilp_reports.json`);});const reportsAudit=document.createElement('button');reportsAudit.id='audit-ilp-reports';reportsAudit.type='button';reportsAudit.disabled=true;reportsAudit.textContent='Audit ILP reports';reportsButton.after(reportsAudit);reportsAudit.addEventListener('click',async()=>{const expectedJob=job?.id,expectedCode=selectedCode,packet=job?.states.find(s=>s.code===selectedCode)?.metrics?.ilp_report_capture;if(ilpAuditPreparing)return;ilpAuditPreparing=true;reportsAudit.disabled=true;try{if(!packet||job.restored_from_project||staticCatalog.active)throw new Error('Finish a fresh captured ILP run first.');const project=await ilpReportAuditProject(packet,`${job.config.name} · ${expectedCode} ILP artifact audit`);if(job?.id!==expectedJob||selectedCode!==expectedCode||staticCatalog.active)throw new Error('Selected run changed during audit preparation.');const token=await queueProjectHandoff(project);if(job?.id!==expectedJob||selectedCode!==expectedCode||staticCatalog.active)throw new Error('Selected run changed during audit transfer.');location.href=`./toolkit/#project=${token}`;}catch(error){$('ilp-reports-status').textContent=error.message;}finally{ilpAuditPreparing=false;reportsAudit.disabled=!packet||!Object.keys(packet.files).length||job?.id!==expectedJob||selectedCode!==expectedCode||job.restored_from_project||!!staticCatalog.active;}});const reportsStatus=document.createElement('p');reportsStatus.id='ilp-reports-status';reportsStatus.className='help';reportsStatus.hidden=true;$('results-districts').prepend(reportsStatus);
+    const electoralFields=document.createElement('fieldset');electoralFields.id='lab-electoral-fields';const electoralLegend=document.createElement('legend');electoralLegend.textContent='District seat settings';electoralFields.append(electoralLegend);const electoralLabel=document.createElement('label'),electoralEnabled=document.createElement('input');electoralEnabled.id='lab-electoral-enabled';electoralEnabled.type='checkbox';electoralLabel.append(electoralEnabled,document.createTextNode(' Record electoral settings'));electoralFields.append(electoralLabel);for(const [id,title,value]of [['lab-seats-per-district','Requested seats per district','1'],['lab-total-seats','Total seats per selected state (optional)','']]){const label=document.createElement('label');label.textContent=title;const input=document.createElement('input');Object.assign(input,{id,type:'number',min:0,max:4294967295,step:1,value,disabled:true});input.required=id==='lab-seats-per-district';label.append(input);electoralFields.append(label);}const electoralHelp=document.createElement('p');electoralHelp.className='help';electoralHelp.textContent='Leave total blank to use requested seats per district × each state’s district count. These settings record native electoral metadata; generation still targets equal district populations. They do not implement variable district magnitudes or certify an electoral outcome.';electoralFields.append(electoralHelp);electoralEnabled.oninput=()=>{for(const id of ['lab-seats-per-district','lab-total-seats'])$(id).disabled=!electoralEnabled.checked;};ilpFields.after(electoralFields);const electoralStatus=document.createElement('p');electoralStatus.id='lab-electoral-status';electoralStatus.className='help';electoralStatus.hidden=true;$('results-districts').prepend(electoralStatus);
+    const coiFields=document.createElement('fieldset');coiFields.id='lab-coi-fields';const coiLegend=document.createElement('legend');coiLegend.textContent='Community-of-interest weights';coiFields.append(coiLegend);const coiLabel=document.createElement('label');coiLabel.textContent='Unit weights JSON (optional, up to 3 MiB)';const coiFile=document.createElement('input');Object.assign(coiFile,{id:'lab-coi-file',type:'file',accept:'.json'});coiLabel.append(coiFile);coiFields.append(coiLabel);const coiStatus=document.createElement('p');coiStatus.id='lab-coi-source-status';coiStatus.setAttribute('role','status');coiStatus.textContent='No COI source selected.';coiFields.append(coiStatus);const coiHelp=document.createElement('p');coiHelp.className='help';coiHelp.textContent='A JSON object maps unit IDs to nonnegative factors. Native post-weighting multiplies computed edge weights by the geometric mean of endpoint factors. Missing IDs use one; unknown IDs are ignored. National runs use the same source in each state. Unweighted mode has no effect; methods constructing from unweighted objectives retain that behavior.';coiFields.append(coiHelp);const coiClear=document.createElement('button');Object.assign(coiClear,{id:'lab-coi-clear',type:'button',textContent:'Clear COI source'});coiFields.append(coiClear);electoralFields.after(coiFields);const coiResult=document.createElement('p');coiResult.id='lab-coi-result-status';coiResult.className='help';coiResult.hidden=true;$('results-districts').prepend(coiResult);coiClear.onclick=()=>{ordinaryCoiSequence++;ordinaryCoiLoading=false;ordinaryCoiError='';ordinaryCoi=null;coiFile.value='';coiStatus.textContent='No COI source selected.';};coiFile.onchange=async()=>{const file=coiFile.files[0];if(!file)return;const sequence=++ordinaryCoiSequence,expected=projectRevision;ordinaryCoiLoading=true;ordinaryCoiError='';coiStatus.textContent='Reading COI weights…';try{const source=await readCoiInput(file);if(sequence!==ordinaryCoiSequence||expected!==projectRevision)return;ordinaryCoi=source;coiStatus.textContent=`${source.source_name} · original source retained`; }catch(error){if(sequence===ordinaryCoiSequence&&expected===projectRevision){ordinaryCoi=null;ordinaryCoiError=error.message;coiStatus.textContent=`${error.message} Clear or select a valid source before running.`;}}finally{if(sequence===ordinaryCoiSequence){ordinaryCoiLoading=false;coiFile.value='';if(expected!==projectRevision)coiStatus.textContent=ordinaryCoi?`${ordinaryCoi.source_name} · selection changed; new read discarded`:'Selection changed; source read discarded.';}}};
     const seedLabel=$('seed').closest('label');seedLabel.id='run-seed-field';seedLabel.firstChild.textContent='Run seed';
     first.before(seedLabel,options);
     let node=first;
@@ -287,7 +364,7 @@ function updateControls() {
 
   const structure = $('structure').value;
 
-  const supported = browserWasm&&structure==='standard-bisect'&&$('weights').value==='partisan'?['single','multi','percentile','convergence','bisection-ensemble']:catalog.search_compatibility[structure];
+  const supported = browserWasm&&structure==='standard-bisect'&&$('weights').value==='partisan'?['single','multi','percentile','convergence','bisection-ensemble','flip','forest-recom','merge-split','short-burst','short-burst-forest','short-burst-merge-split','parallel-tempering','smc-percentile','vra-recom','multiscale','multiscale-adaptive']:catalog.search_compatibility[structure];
 
   for (const option of $('search').options) option.disabled = !supported.includes(option.value);
 
@@ -296,10 +373,12 @@ function updateControls() {
   const search = $('search').value;
   const electionMethod=browserWasm&&['proportional-bisect','proportional-section'].includes(structure);$('election-fields').hidden=!electionMethod;$('election-files').disabled=!electionMethod;$('proportional-eta-field').hidden=structure!=='proportional-section';$('proportional-eta').disabled=structure!=='proportional-section';
 
+  if(browserWasm)$('lab-coi-fields').hidden=isMultiscale(search);
+  if(browserWasm){$('ilp-fields').hidden=structure!=='ilp';for(const id of ['ilp-method','ilp-fallback','ilp-time','ilp-gap','ilp-max','capture-ilp-reports'])$(id).disabled=structure!=='ilp';}
   const standaloneChain=['vra-recom','forest-recom','merge-split','flip','bisection-ensemble'].includes(search);$('steps').min=standaloneChain?0:1;
-  const vra=browserWasm&&search==='vra-recom',vraSection=browserWasm&&structure==='ratio-optimal-vra';$('vra-fields').hidden=!vra&&!vraSection;$('vra-threshold-field').hidden=!vra;$('vra-threshold').disabled=!vra;$('vra-weight-field').hidden=!vraSection;$('vra-weight').disabled=!vraSection;$('demographic-files').disabled=!vra&&!vraSection;
-  $('demographic-help').textContent=vraSection?'Complete total-population fractions are required. Mass is fraction × tract population; the bonus uses the left share of total mass, compared with 50%. Unequal population halves can receive a bonus even with uniform fractions. Source labels are user supplied; projects retain all inputs.':'Complete fractions, state, year, population basis and source label are required. Source labels are user supplied. The sampler uses an unweighted tract mean; projects retain all inputs.';
-  const pt=search==='parallel-tempering';$('seeds').min=pt?0:1;$('pt-fields').hidden=!pt;for(const id of ['pt-replicas','pt-swap','pt-hot'])$(id).disabled=!pt;
+  const vra=browserWasm&&search==='vra-recom',vraSection=browserWasm&&structure==='ratio-optimal-vra',minority=browserWasm&&$('weights').value==='vra-aligned';$('vra-fields').hidden=!vra&&!vraSection&&!minority;$('vra-threshold-field').hidden=!vra;$('vra-threshold').disabled=!vra;$('vra-weight-field').hidden=!vraSection;$('vra-weight').disabled=!vraSection;if(minority)$('vra-absence').checked=false;const fallback=(vraSection||vra)&&$('vra-absence').checked;$('vra-absence-field').hidden=!vraSection&&!vra;$('vra-absence-field').firstChild.textContent=vra?'No demographic file: use native zero fractions':'No demographic file: use native plain GeoSection fallback';$('vra-absence').disabled=(!vraSection&&!vra)||minority;$('vra-weight').disabled=!vraSection||fallback;$('demographic-files').disabled=fallback||(!vra&&!vraSection&&!minority);
+  $('demographic-help').textContent=minority?'Native minority boundary weights require complete total-population fractions. The 40% threshold is fixed; only edges with both endpoints at or above it receive the adaptive unit-weight boost. Geographic lengths do not enter this score.':vraSection?'Complete total-population fractions are required. Mass is fraction × tract population; the bonus uses the left share of total mass, compared with 50%. Unequal population halves can receive a bonus even with uniform fractions. Source labels are user supplied; projects retain all inputs.':'Complete fractions, state, year, population basis and source label are required. Source labels are user supplied. The sampler uses an unweighted tract mean; projects retain all inputs.';
+  const pt=search==='parallel-tempering';$('seeds').min=pt?0:1;$('pt-fields').hidden=!pt;for(const id of ['pt-replicas','pt-swap','pt-cold','pt-hot'])$(id).disabled=!pt;
   const burst=search.startsWith('short-burst');$('burst-fields').hidden=!burst;for(const id of ['burst-length','n-bursts'])$(id).disabled=!burst;
   const smc=search==='smc-percentile';$('smc-fields').hidden=!smc;for(const id of ['smc-particles','smc-resample'])$(id).disabled=!smc;
 
@@ -310,10 +389,11 @@ function updateControls() {
   $('search-description').textContent = (searchDescriptions[search] || '') + ' Only searches executed by this structure are enabled.';
 
   $('area-init-field').hidden=structure!=='ratio-optimal-area';$('area-init').disabled=structure!=='ratio-optimal-area';
+  const nativeSplit=browserWasm&&['compact-polsby','ratio-optimal','ratio-optimal-area'].includes(structure);$('native-split-defaults').hidden=!nativeSplit;$('native-split-defaults-apply').disabled=!nativeSplit;$('native-states-split-defaults-apply').disabled=!nativeSplit;
   const compact=structure==='compact-polsby';$('compact-field').hidden=!compact;$('compact-slack').disabled=!compact;
   const mka=structure==='moving-knife';$('mka-fields').hidden=!mka;for(const id of ['mka-orientations','mka-metric'])$(id).disabled=!mka;
 
-  const nway=browserWasm&&(structure==='nway'||(['ratio-optimal','ratio-optimal-area','ratio-optimal-vra'].includes(structure)&&['single','multi'].includes(search))||(structure==='standard-bisect'&&['single','multi','percentile','convergence','bisection-ensemble'].includes(search)));$('nway-fields').hidden=!nway;for(const id of ['metis-objective','metis-trials'])$(id).disabled=!nway;
+  const nway=browserWasm&&(structure==='nway'||(['ratio-optimal','ratio-optimal-area','ratio-optimal-vra'].includes(structure)&&['single','multi'].includes(search))||(structure==='standard-bisect'&&['single','multi','percentile','convergence','bisection-ensemble'].includes(search)));$('metis-ufactor-field').hidden=$('structure').value!=='nway';$('metis-ufactor').disabled=!browserWasm||structure!=='nway';$('metis-native-factor').disabled=$('metis-ufactor').disabled;$('nway-fields').hidden=!nway;for(const id of ['metis-objective','metis-trials'])$(id).disabled=!nway;
   const cvd=structure==='centroidal-voronoi';$('cvd-fields').hidden=!cvd;for(const id of ['cvd-iters','cvd-metric'])$(id).disabled=!cvd;
 
   const annealing=structure==='simulated-annealing';
@@ -322,16 +402,16 @@ function updateControls() {
 
   $('sa-fields').hidden=!annealing;for(const id of ['sa-steps','sa-factor','sa-final'])$(id).disabled=!annealing;
 
-  const partisanAllowed=browserWasm&&structure==='standard-bisect'&&['single','multi','percentile','convergence','bisection-ensemble'].includes(search);
+  const partisanAllowed=browserWasm&&(structure==='standard-bisect'&&['single','multi','percentile','convergence','bisection-ensemble','flip','forest-recom','merge-split','short-burst','short-burst-forest','short-burst-merge-split','parallel-tempering','smc-percentile','vra-recom','multiscale','multiscale-adaptive'].includes(search)||['ratio-optimal','ratio-optimal-area','ratio-optimal-vra','compact-polsby','proportional-section'].includes(structure)&&['single','multi'].includes(search)||['spectral','nway','simulated-annealing','bfs-growth','centroidal-voronoi','moving-knife','capacity-clustering','regionalization','flow-construction','prime-factor','ilp','proportional-bisect'].includes(structure)&&search==='single');
   const partisanOption=[...$('weights').options].find(option=>option.value==='partisan');if(partisanOption)partisanOption.disabled=!partisanAllowed;
   if($('weights').value==='partisan'&&!partisanAllowed)$('weights').value='geographic';
   const partisan=browserWasm&&$('weights').value==='partisan';$('partisan-fields').hidden=!partisan;for(const id of ['dem-threshold','rep-threshold','partisan-files'])$(id).disabled=!partisan;
   const character=browserWasm&&usesCharacterWeights($('weights').value);$('character-fields').hidden=!character;for(const id of ['character-alpha','character-csv-state','character-data-year','character-files'])$(id).disabled=!character;
-  $('character-help').textContent=($('weights').value==='economic-character'?'Economic CSV: geoid, c000, cns01, cns02, cns05, cns07, cns08, cns09, cns10, cns11. Jobs proxy is c000 / 10,000, capped at one.':'Housing CSV: geoid, pct_single_family, pct_multifamily, pct_owner, housing_vintage. These are derived native ACS housing values in [0,1].')+' All tracts are required. Select CSV state and observation year; the selected Census year identifies geometry. Load one CSV state at a time for national runs. Boundary weight = geographic length × (alpha + (1 − alpha) × cosine similarity). Alpha 1 retains geographic weights.';
+  $('character-help').textContent=($('weights').value==='economic-character'?'Economic CSV: geoid, c000, cns01, cns02, cns05, cns07, cns08, cns09, cns10, cns11. Jobs proxy is c000 / 10,000, capped at one.':'Housing CSV: geoid, pct_single_family, pct_multifamily, pct_owner, housing_vintage. These are derived native ACS housing values in [0,1].')+' Select CSV state and observation year; the selected Census year identifies geometry. Load up to fifty JSON inputs or saved preparation projects together, one per state. CSV uses the selected state. Original preparation sources stay attached; alignment and Run remain explicit. Select native CSV mode to retain original files, including legacy values; native parsing/alignment then happens on Run. Existing selections retain their stored source type. Empty/error projects require the geographic fallback checkbox. Missing observations require explicit alignment or geographic fallback. Boundary weight = geographic length × (alpha + (1 − alpha) × cosine similarity). Alpha 1 retains geographic weights. Native State uses alpha 0.5; other values are laboratory settings supported by the native weighter.';
   const spectral=structure==='spectral', flow=['flow-construction','capacity-clustering','regionalization'].includes(structure);
 
   if(standaloneChain)$('search-description').textContent='Run the chosen number of proposals using portable forward and reverse random streams. Retain the initial plan and accepted states; select by unweighted cut percentile. Zero steps return the initial plan.';
-  if(pt)$('search-description').textContent='Run replicas on a geometric population tolerance ladder. The cold tolerance is the balance tolerance in run settings; the hot tolerance must be at least as large. Exchange only plans satisfying both receiving tolerances. Select a cold-chain record by unweighted cut percentile.';
+  if(pt)$('search-description').textContent='Run replicas on a geometric population tolerance ladder. Cold and hot tolerances control the replica ladder; hot must be at least cold. The separate run balance tolerance checks the selected plan. Exchange only plans satisfying both receiving tolerances. Select a cold-chain record by unweighted cut percentile.';
   if(burst)$('search-description').textContent='Run the chosen number of bursts, restarting each chain from its preceding endpoint. Select an endpoint by unweighted cut percentile. Zero bursts return the initial plan; zero steps retain it. Total proposals are limited to 100,000.';
   if(structure==='proportional-section')$('search-description').textContent='Test seeds 1 through the seed budget at the root (one for Single). Keep the least weighted root cut. Descendants use population-only ratio scans with up to fifty seeds per ratio; the fixed seed schedule is recorded with the result.';
   if(compact)$('search-description').textContent='At each split, test seeds 1 through the seed budget (one candidate for single search). Among candidates within the cut slack, select by compactness. The starting seed does not apply.';
@@ -340,29 +420,43 @@ function updateControls() {
   if(spectral){$('search-description').textContent='Deterministic smoothing and sweep. This method does not sample random seeds.';}
 
   if(browserWasm)$('run-seed-field').hidden=!usesRunSeed(structure);
-  $('weights').disabled=false;$('seed').disabled=structure==='proportional-section'||spectral||flow||compact;$('iterations').disabled=spectral||flow||annealing||smc||cvd||mka||search==='flip';if(search==='flip')$('iterations').value=100;
+  $('weights').disabled=false;$('seed').disabled=structure==='ilp'||structure==='proportional-section'||spectral||flow||compact;$('iterations').disabled=structure==='ilp'||spectral||flow||annealing||smc||cvd||mka||search==='flip';if(search==='flip')$('iterations').value=100;
 
-  $('tolerance').disabled=smc||vra;if(smc||vra)$('tolerance').value=0.5;
+  $('tolerance').disabled=false;
 
   if(search==='bisection-ensemble')$('search-description').textContent='At each recursive split, propose local ReCom cuts with portable Wilson trees. Preserve the prescribed seat ratio, including unequal splits. Rank the initial cut and accepted cuts by unweighted boundary percentile. Regions of at most four tracts use one METIS split. Zero proposals return initialization.';
   if(partisan&&search==='bisection-ensemble')$('search-description').textContent+=' Partisan boosts apply to METIS initialization; Wilson sampling and percentile ranking use unweighted adjacency.';
   if(partisan&&search==='percentile')$('search-description').textContent+=' Partisan boosts apply to each seeded construction; complete candidates are ranked by unweighted edge cuts.';
   if(character)$('search-description').textContent+=' Character blends apply wherever this method uses boundary weights. Unweighted sampling and ranking retain their existing rules.';
   if(search==='flip')$('search-description').textContent='Propose boundary-tract moves with portable random draws. Retain the initial plan and accepted moves; rank by unweighted cut percentile. Moves must preserve nonempty connected districts and the requested tolerance relative to ideal district population. Initialization uses 100 refinement iterations. Zero steps return the initial plan.';
-  if(smc)$('search-description').textContent='Weighted SMC sample ranked by unweighted edge cuts. Native proposal tolerance is 0.5% of remaining component population, so final district balance can miss 0.5%; actual checks remain visible. Boundary weights affect reported costs. No optimality or distribution certification is claimed.';
+  if(partisan&&['flip','forest-recom','merge-split'].includes(search))$('search-description').textContent+=' Partisan boosts apply to METIS initialization; chain proposals and percentile ranking use unweighted adjacency. Flip initialization uses 100 refinement iterations; the other chains use the requested iterations.';
+  if(partisan&&search.startsWith('short-burst'))$('search-description').textContent+=' Partisan boosts apply to METIS initialization. Bursts restart from the preceding endpoint; endpoints are ranked by unweighted cuts. Zero bursts return initialization; zero-length bursts repeat the current endpoint.';
+  if(partisan&&search==='parallel-tempering')$('search-description').textContent+=' Partisan boosts apply to initialization at the cold tolerance. Replica moves, swaps and cold-record percentile ranking retain unweighted adjacency and cuts; final run balance is checked separately.';
+  if(smc)$('search-description').textContent='Weighted SMC sample ranked by unweighted edge cuts. Native proposal tolerance is 0.5% of remaining component population, while the separate run balance tolerance checks the selected plan; actual checks remain visible. Boundary weights affect reported costs. No optimality or distribution certification is claimed.';
+  if(partisan&&smc)$('search-description').textContent+=' Partisan weights affect reported boundary cost; native SMC proposals, particle weighting and percentile selection do not use them.';
 
-  if(vraSection)$('search-description').textContent='At each root ratio, keep the seed with minimum weighted cut. Then select the ratio using its normalized cut minus an alignment bonus. Weight zero removes the bonus. Descendants have no demographic bonus. Supply total-population fractions; this does not preserve protected districts.';
-  if(vra)$('search-description').textContent='Preserve districts whose initial unweighted mean of tract minority fractions reaches the threshold. Complete demographic inputs are required for every selected state. Population tolerance is fixed at 0.5%. This heuristic does not establish legal VRA compliance.';
+  if(vraSection)$('search-description').textContent='At each root ratio, keep the seed with minimum weighted cut. Then select the ratio using its normalized cut minus an alignment bonus. Weight zero removes the bonus. Descendants have no demographic bonus. Supply total-population fractions; this does not preserve protected districts. Native --w-vra uses a fraction (40% here = 0.4). Legacy --partition-mode vra-section starts at seed 1; explicit --structure ratio-optimal-vra keeps the chosen seed.';
+  if(vra)$('search-description').textContent='Preserve districts whose initial unweighted mean of tract minority fractions reaches the threshold. Complete demographic inputs are required for every selected state. Proposal tolerance is fixed at 0.5%; run balance tolerance independently checks the selected plan. This heuristic does not establish legal VRA compliance.';
+  if(partisan&&vra)$('search-description').textContent+=' Partisan weights apply to initialization and reported boundary cost. Preservation uses the separate demographic fractions; proposals and percentile ranking use unweighted adjacency and cuts.';
+  if(fallback)$('demographic-help').textContent=vra?'No demographic file is declared. Native VRA ReCom receives zero fractions; threshold zero still marks every initial district protected. No demographic observations are supplied.':'No demographic file is declared. Native plain GeoSection is used; no demographic input or alignment bonus is supplied.';
+  if(fallback&&vraSection)$('search-description').textContent='Explicit native absent-file fallback: run plain population-only GeoSection. No demographic fractions or alignment bonus are used; the requested VRA weight is retained as inactive. The visible starting seed is used. This declaration does not establish that a file is absent on another device.';
   if(smc)$('structure-description').textContent='SMC constructs complete plans through sequential district proposals; this compositor supplies the selected plan.';
 
+  const unlimitedConvergence=browserWasm&&structure==='standard-bisect'&&search==='convergence';
+  $('convergence-unlimited-field').hidden=!unlimitedConvergence;$('convergence-unlimited').disabled=!unlimitedConvergence;
+  $('steps').disabled=unlimitedConvergence&&$('convergence-unlimited').checked;
+  if(unlimitedConvergence&&$('convergence-unlimited').checked)$('search-description').textContent='Search complete feasible plans until the no-improvement threshold is reached, with no maximum seed count. The run timeout and Cancel still apply. Rank by recursively normalized weighted cut; this does not prove global optimality.';
+  if(unlimitedConvergence)$('search-description').textContent+=' The no-improvement threshold corresponds to native State --convergence-threshold. Native State has no seed cap; the optional maximum here is a laboratory setting.';
   $('steps-field').firstChild.textContent=spectral?'Spectral smoothing iterations':search==='convergence'?'Maximum seeds tried':search==='bisection-ensemble'?'Proposals per split':'Step budget';
 
   $('county-field').hidden = $('weights').value !== 'county';
+  $('zone-weight-help').hidden=$('weights').value!=='zone-membership';renderZoneInputs();renderCountyAugmentationControls();
 
   $('seeds-field').hidden = ['single','vra-recom','bisection-ensemble','flip','forest-recom','merge-split','short-burst','short-burst-forest','short-burst-merge-split'].includes($('search').value);
 
   $('steps-field').hidden = !spectral && ['single','multi','percentile','parallel-tempering'].includes($('search').value);
 
+  if(unlimitedConvergence&&$('convergence-unlimited').checked)$('steps-field').hidden=true;
   if(burst)$('steps-field').hidden=true;
   if(smc){$('steps-field').hidden=true;$('seeds-field').hidden=true;}
 
@@ -375,9 +469,15 @@ function updateControls() {
   $('percentile-output').textContent = Number($('percentile').value) === 0 ? 'Minimum · 0%' : `${$('percentile').value}%`;
 
   multiscaleUi?.refresh();
+  // Native requests still bound inactive budget fields. Do not let a valid
+  // zero-work run strand a hidden field below the next method's minimum.
+  for(const id of ['seeds','steps'])if($(id+'-field').hidden&&$(id).value==='0'&&Number($(id).min)>0)$(id).value=$(id).min;
 }
 
 function updateAvailability() {
+  renderZoneInputs();
+
+  multiscaleUi?.refresh();
 
   if($('save-lab-project'))$('save-lab-project').disabled=!job||(!job.id.startsWith('wasm-')&&!job.restored_from_project);
 
@@ -399,7 +499,7 @@ function updateAvailability() {
 
   $('data-status').textContent = mode === 'state' ? (ready.length ? `${yearInfo(codes[0]).cached ? 'Graph ready' : 'Local Census inputs ready · graph prepared on first run'}` : 'Inputs or chamber allocation unavailable for this state/year.') : `${ready.length} of ${codes.length} selected states ready for this chamber and year.`;
 
-  $('run').disabled = (!precomputed && !catalog.engine_available) || !codes.length || ready.length !== codes.length || (browserWasm && !!staticCatalog.active);
+  $('run').disabled = (!precomputed && !catalog.engine_available) || !codes.length || ready.length !== codes.length || (browserWasm && !!staticCatalog.active) || (browserWasm&&$('weights').value==='zone-membership'&&(zoneReading||!!zoneError));
 
   if(precomputed) {const count=staticCatalog.coverage(config());$('data-status').textContent=`${count}/${codes.length} selected states have this exact saved configuration. No live computation.`;$('data-status').classList.toggle('warning',count!==codes.length);}
 
@@ -439,20 +539,69 @@ function setMode(next) {
 
 function renderElectionInputs(){if(!$('election-status'))return;$('election-status').textContent=Object.values(electionInputs).map(input=>`${input.state} ${input.year} Census · ${input.election_year} election · ${Object.keys(input.counts).length.toLocaleString()} tracts · ${input.source_label}`).join('; ')||'No election inputs loaded.';}
 function renderPartisanInputs(){if(!$('partisan-status'))return;$('partisan-status').textContent=Object.values(partisanInputs).map(input=>`${input.state} ${input.year} · ${Object.keys(input.dem_shares).length.toLocaleString()} tracts · ${input.source_label}`).join('; ')||'No partisan inputs loaded.';}
-function renderCharacterInputs(){if(!$('character-status'))return;$('character-status').textContent=Object.values(characterInputs).map(input=>`${input.state} ${input.year} Census · ${input.data_year} observations · ${input.data.kind} · ${Object.keys(input.data.characters).length.toLocaleString()} tracts · ${input.source_label}`).join('; ')||'No character inputs loaded.';}
+function renderCharacterInputs(){if(!$('character-status'))return;$('character-status').textContent=Object.values(characterInputs).map(input=>`${input.state} ${input.year} Census · ${input.data_year} observations · ${input.data.kind} · ${Object.keys(input.data.characters).length.toLocaleString()} tracts · ${input.source_label}${input.alignment?` · native alignment: ${input.alignment.matched_tracts} observed, ${input.alignment.missing_tract_ids.length} defaulted, ${input.alignment.ignored_tract_ids.length} ignored`:''}`).join('; ')||(Object.keys(nativeCharacterSources).length||Object.keys(characterFallbackSources).length?'':'No character inputs loaded.');if(Object.keys(characterFallbackSources).length)$('character-status').textContent+='; '+Object.entries(characterFallbackSources).map(([code,p])=>code+' · '+p.result.source_name+' · recorded native '+p.result.native_status+' · geographic fallback; no character observations').join('; ');if(Object.keys(nativeCharacterSources).length)$('character-status').textContent+='; '+Object.entries(nativeCharacterSources).map(([code,input])=>code+' · '+input.source.name+' · original native '+input.settings.kind+' CSV retained; '+input.settings.data_year+' observations; parse/alignment on Run').join('; ');$('character-status').textContent=$('character-status').textContent.replace(/^; /,'');}
 
 function renderDemographicInputs(){
   const status=$('demographic-status');if(!status)return;
   status.textContent=Object.values(demographicInputs).map(input=>`${input.state} ${input.year} · ${input.basis} · ${Object.keys(input.minority_fractions).length.toLocaleString()} tracts${input.counts?' · counts retained':''} · ${input.source_label}`).join('; ')||'No demographic inputs loaded.';
 }
 
+function renderCountyAugmentationControls(){
+ renderNativeSignalPreset();
+ const active=browserWasm&&$('weights').value!=='county';$('county-augmentation-fields').hidden=!active;$('county-augmentation-enabled').disabled=!active;$('county-augmentation-alpha').disabled=!active||!$('county-augmentation-enabled').checked;$('county-augmentation-alpha').required=active&&$('county-augmentation-enabled').checked;
+}
+$('county-augmentation-enabled').oninput=renderCountyAugmentationControls;
+function renderNativeSignalPreset(){
+ const kind=$('weights').value,visible=browserWasm&&['partisan','vra-aligned'].includes(kind);$('native-signal-preset').hidden=!visible;
+ $('native-signal-preset-apply').disabled=!visible||!!staticCatalog?.active||!!staticCatalog?.exporting||partisanLoading||demographicLoading;
+ $('native-signal-preset-apply').textContent=kind==='partisan'?'Use native State partisan-weighted preset':'Use native State METIS-VRA preset';
+ $('native-signal-preset-help').textContent=kind==='partisan'?'Select recursive Multi with 50 candidates, 100 refinement iterations, no starting seed, 55%/45% share thresholds, and county strength zero.':'Select direct n-way with native imbalance factor 5, 100 refinement iterations, no starting seed, and county strength zero. The native preset ignores its recursive candidate budget.';
+ $('native-signal-preset-help').textContent+=' Uses metis-core in this browser. Keeps selected sources, district allocation, population tolerance and run filter; clears optional COI weighting. Review settings and select Run explicitly.';
+}
+$('native-signal-preset-apply').onclick=()=>{
+ if($('native-signal-preset-apply').disabled||staticCatalog?.active||staticCatalog?.exporting||partisanLoading||demographicLoading)return;
+ const preset=nativeStatePreset($('weights').value==='partisan'?'partisan-weighted':'metis-vra');
+ $('structure').value=preset.structure;updateControls();$('search').value=preset.search;$('seeds').value=preset.seeds;$('seed').value='';$('iterations').value=preset.iterations;$('metis-objective').value=preset.metis_objective;$('metis-trials').value=preset.metis_trials;$('metis-ufactor').value=preset.metis_ufactor??'';
+ $('county-augmentation-enabled').checked=false;$('county-augmentation-alpha').value='0';$('alpha').value='0';
+ if(preset.weights==='partisan'){$('dem-threshold').value=percentageInput(preset.dem_threshold);$('rep-threshold').value=percentageInput(preset.rep_threshold);}
+ ordinaryCoi=null;ordinaryCoiError='';ordinaryCoiSequence++;ordinaryCoiLoading=false;$('lab-coi-file').value='';$('lab-coi-source-status').textContent='No COI source selected.';
+ $('search').dispatchEvent(new Event('input',{bubbles:true}));toast('Native State preset selected. Review settings, then Run.');
+};
+function renderZoneInputs(){
+ const active=browserWasm&&$('weights').value==='zone-membership',locked=!!staticCatalog?.active||!!staticCatalog?.exporting||zoneReading;
+ $('zone-fields').hidden=!active;for(const id of ['zone-files','zone-alpha','zone-clear','zone-template'])$(id).disabled=!active||locked;
+ $('zone-clear').disabled=!active||locked||!Object.keys(zoneSources).length&&!zoneError;
+ $('zone-source-status').textContent=zoneReading?'Checking zone sources…':zoneError||Object.entries(zoneSources).map(([code,input])=>`${code}: ${input.source_name} · α ${input.alpha}`).join('; ')||'No zone sources selected; native geographic fallback.';
+}
+function zoneConfig(){
+ if(!browserWasm||$('weights').value!=='zone-membership')return {};
+ const selected=mode==='state'?[$('state').value]:[...selectedStates],entries=selected.filter(code=>zoneSources[code]).map(code=>[code,structuredClone(zoneSources[code])]);return entries.length?{zones:Object.fromEntries(entries)}:{};
+}
+$('zone-files').onchange=async event=>{
+ if(staticCatalog?.active||staticCatalog?.exporting)return;const files=[...event.target.files];if(!files.length)return;const sequence=++zoneSequence;
+ if(document.activeElement===$('zone-alpha'))$('zone-alpha').blur();
+ zoneReading=true;zoneError='';renderZoneInputs();updateAvailability();
+ // Locking a focused edited number field commits its change event. Snapshot
+ // after that synchronous transition, then reject subsequent project changes.
+ const expected=projectRevision;try{
+  const alpha=$('zone-alpha').value.trim()===''?NaN:Number($('zone-alpha').value),next={...zoneSources},seen=new Set();
+  for(const file of files){const {input,document}=await readZoneInput(file,alpha);if(seen.has(document.state))throw new Error('Choose one zone source per state.');seen.add(document.state);const entry=staticCatalog?.manifest.graphs[document.state+':'+document.year];if(!entry)throw new Error('No prepared laboratory graph for this zone scope. Use a full prepared engine request for other units.');const graph=await staticCatalog.asset(entry.graph_ref);zoneDocument(input,graph);next[document.state]=input;}
+  if(sequence!==zoneSequence||expected!==projectRevision||staticCatalog.active||staticCatalog.exporting)throw new Error('Project changed while loading zones. Select them again.');zoneSources=next;
+ }catch(error){if(sequence===zoneSequence)zoneError=error.message;}finally{if(sequence===zoneSequence){zoneReading=false;event.target.value='';renderZoneInputs();updateAvailability();}}
+};
+$('zone-alpha').oninput=()=>{if(staticCatalog?.active||staticCatalog?.exporting)return;const raw=$('zone-alpha').value,alpha=raw.trim()===''?NaN:Number(raw);if(!Number.isFinite(alpha)||alpha<0||alpha>100||Object.is(alpha,-0)){zoneError='Choose a finite zone alpha in [0,100].';}else{zoneError='';zoneSources=Object.fromEntries(Object.entries(zoneSources).map(([code,input])=>[code,{...input,alpha}]));}renderZoneInputs();updateAvailability();};
+$('zone-clear').onclick=()=>{if(staticCatalog?.active||staticCatalog?.exporting)return;zoneSequence++;zoneReading=false;zoneSources=Object.create(null);zoneError='';$('zone-files').value='';renderZoneInputs();updateAvailability();};
+$('zone-template').onclick=async()=>{const expected=projectRevision,code=mode==='national'?selectedCode:$('state').value,year=$('year').value;try{if(staticCatalog?.active||staticCatalog?.exporting)throw new Error('Finish the current run first.');const entry=staticCatalog?.manifest.graphs[code+':'+year];if(!entry)throw new Error('Select a state/year with a prepared graph.');const graph=await staticCatalog.asset(entry.graph_ref);if(expected!==projectRevision||staticCatalog.active||staticCatalog.exporting)throw new Error('Selection changed during template preparation. Try again.');download(zoneTemplate(graph),code+'-'+year+'-zone-template.json');}catch(error){zoneError=error.message;renderZoneInputs();}};
+
 function config() {
+  if(browserWasm&&$('weights').value==='zone-membership'&&(zoneReading||zoneError))throw new Error(zoneReading?'Wait for zone sources to finish loading.':zoneError);
+  if(browserWasm&&!isMultiscale($('search').value)&&(ordinaryCoiLoading||ordinaryCoiError))throw new Error(ordinaryCoiLoading?'Wait for COI weights to finish loading.':'Clear or select a valid COI source before running.');
   if(electionLoading&&['proportional-bisect','proportional-section'].includes($('structure').value))throw new Error('Wait for election count files to finish loading.');
   if(partisanLoading&&$('weights').value==='partisan')throw new Error('Wait for partisan share files to finish loading.');
   if(characterLoading&&usesCharacterWeights($('weights').value))throw new Error('Wait for character files to finish loading.');
-  if(demographicLoading&&($('search').value==='vra-recom'||$('structure').value==='ratio-optimal-vra'))throw new Error('Wait for demographic files to finish loading.');
+  if(demographicLoading&&($('search').value==='vra-recom'||$('structure').value==='ratio-optimal-vra'||$('weights').value==='vra-aligned'))throw new Error('Wait for demographic files to finish loading.');
 
-  return {...(browserWasm&&isMultiscale($('search').value)?{multiscale:multiscaleUi.config()}:{}),...(browserWasm&&usesCharacterWeights($('weights').value)?{character_alpha:Number($('character-alpha').value),characters:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,characterInputs[code]]))}:{}),...(browserWasm&&['proportional-bisect','proportional-section'].includes($('structure').value)?{elections:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,electionInputs[code]])),...($('structure').value==='proportional-section'?{proportional_eta:Number($('proportional-eta').value)}:{})}:{}),...(browserWasm&&$('weights').value==='partisan'?{dem_threshold:Number($('dem-threshold').value)/100,rep_threshold:Number($('rep-threshold').value)/100,partisans:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,partisanInputs[code]]))}:{}),...(browserWasm&&($('structure').value==='nway'||(['ratio-optimal','ratio-optimal-area','ratio-optimal-vra'].includes($('structure').value)&&['single','multi'].includes($('search').value))||($('structure').value==='standard-bisect'&&['single','multi','percentile','convergence','bisection-ensemble'].includes($('search').value)))?{metis_objective:$('metis-objective').value,metis_trials:Number($('metis-trials').value)}:{}),...($('structure').value==='ratio-optimal-vra'?{w_vra:Number($('vra-weight').value)/100,demographics:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,demographicInputs[code]]))}:{}),...($('search').value==='vra-recom'?{vra_threshold:Number($('vra-threshold').value)/100,demographics:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,demographicInputs[code]]))}:{}),...($('search').value==='parallel-tempering'?{pt_replicas:Number($('pt-replicas').value),pt_swap_interval:Number($('pt-swap').value),pt_cold_tol:Number($('tolerance').value)/100,pt_hot_tol:Number($('pt-hot').value)/100}:{}),...($('search').value.startsWith('short-burst')?{burst_length:Number($('burst-length').value),n_bursts:Number($('n-bursts').value)}:{}),...($('structure').value==='ratio-optimal-area'?{area_init:$('area-init').value}:{}),...($('structure').value==='compact-polsby'?{compact_epsilon:Number($('compact-slack').value)/100}:{}),...($('structure').value==='moving-knife'?{mka_orientations:Number($('mka-orientations').value),mka_metric:$('mka-metric').value}:{}),...($('structure').value==='centroidal-voronoi'?{cvd_iters:Number($('cvd-iters').value),cvd_metric:$('cvd-metric').value}:{}),...($('search').value==='smc-percentile'?{smc_particles:Number($('smc-particles').value),smc_resample_threshold:Number($('smc-resample').value)}:{}),...($('structure').value==='flow-construction'?{flow_repair:$('flow-repair').value}:{}),...($('structure').value==='simulated-annealing'?{sa_steps_per_tract:Number($('sa-steps').value),sa_t0_factor:Number($('sa-factor').value),sa_t_final:Number($('sa-final').value)}:{}),name:$('name').value.trim(),mode,states:mode === 'state' ? [$('state').value] : [...selectedStates].sort(),year:$('year').value,chamber:$('chamber').value,districts:mode === 'state' && $('districts').value ? Number($('districts').value) : null,structure:$('structure').value,weights:$('weights').value,search:$('search').value,seed:browserWasm?parseSeed($('seed').value):Number($('seed').value),seeds:Number($('seeds').value),steps:Number($('steps').value),percentile:Number($('percentile').value)/100,alpha_county:$('weights').value === 'county' ? Number($('alpha').value) : 0,balance_tolerance:Number($('tolerance').value),area_swing:Number($('area-swing').value),iterations:Number($('iterations').value),timeout_seconds:Number($('timeout').value)};
+  return {...(browserWasm&&$('weights').value!=='county'&&$('county-augmentation-enabled').checked?{county_augmentation:Number($('county-augmentation-alpha').value)}:{}),...zoneConfig(),...(browserWasm&&$('run-profile').value==='court'?{profile:'court'}:{}),...(browserWasm&&!isMultiscale($('search').value)&&ordinaryCoi?{coi:structuredClone(ordinaryCoi)}:{}),...(browserWasm&&$('lab-electoral-enabled').checked?{electoral:{seats_per_district:Number($('lab-seats-per-district').value),...($('lab-total-seats').value!==''?{total_seats:Number($('lab-total-seats').value)}:{})}}:{}),...(browserWasm&&$('structure').value==='ilp'?{ilp_method:$('ilp-method').value,ilp_fallback:$('ilp-fallback').value,ilp_time_limit:parseSeed($('ilp-time').value),ilp_gap:Number($('ilp-gap').value),ilp_max_tracts:Number($('ilp-max').value),...($('capture-ilp-reports').checked?{capture_ilp_reports:true}:{})}:{}),...(browserWasm&&$('capture-rounds').checked?{capture_rounds:true}:{}),...(browserWasm&&$('structure').value==='standard-bisect'&&$('search').value==='convergence'&&$('convergence-unlimited').checked?{convergence_unlimited:true}:{}),...(browserWasm&&$('structure').value==='nway'&&$('metis-ufactor').value!==''?{metis_ufactor:Number($('metis-ufactor').value)}:{}),...(browserWasm&&$('native-build').checked?{native_build:true}:{}),...(browserWasm&&$('weights').value==='vra-aligned'?{demographics:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,demographicInputs[code]]))}:{}),...(browserWasm&&isMultiscale($('search').value)?{multiscale:multiscaleUi.config()}:{}),...(browserWasm&&usesCharacterWeights($('weights').value)&&Object.keys(nativeCharacterSources).some(code=>(mode==='state'?[$('state').value]:[...selectedStates]).includes(code))?{native_character_sources:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).filter(code=>nativeCharacterSources[code]).map(code=>[code,nativeCharacterSources[code]]))}:{}),...(browserWasm&&usesCharacterWeights($('weights').value)&&Object.keys(characterFallbackSources).some(code=>(mode==='state'?[$('state').value]:[...selectedStates]).includes(code))?{character_fallback_sources:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).filter(code=>characterFallbackSources[code]).map(code=>[code,characterFallbackSources[code]]))}:{}),...(browserWasm&&usesCharacterWeights($('weights').value)&&Object.keys(characterPreparations).some(code=>(mode==='state'?[$('state').value]:[...selectedStates]).includes(code))?{character_preparations:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).filter(code=>characterPreparations[code]).map(code=>[code,characterPreparations[code]]))}:{}),...(browserWasm&&usesCharacterWeights($('weights').value)?{...($('character-absence').checked?{character_absent_file_fallback:true}:{}),character_alpha:Number($('character-alpha').value),characters:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,characterInputs[code]]))}:{}),...(browserWasm&&['proportional-bisect','proportional-section'].includes($('structure').value)?{elections:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,electionInputs[code]])),...($('structure').value==='proportional-section'?{proportional_eta:Number($('proportional-eta').value)}:{})}:{}),...(browserWasm&&$('weights').value==='partisan'?{dem_threshold:Number($('dem-threshold').value)/100,rep_threshold:Number($('rep-threshold').value)/100,partisans:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,partisanInputs[code]]))}:{}),...(browserWasm&&($('structure').value==='nway'||(['ratio-optimal','ratio-optimal-area','ratio-optimal-vra'].includes($('structure').value)&&['single','multi'].includes($('search').value))||($('structure').value==='standard-bisect'&&['single','multi','percentile','convergence','bisection-ensemble'].includes($('search').value)))?{metis_objective:$('metis-objective').value,metis_trials:Number($('metis-trials').value)}:{}),...($('structure').value==='ratio-optimal-vra'&&!$('vra-absence').checked?{w_vra:Number($('vra-weight').value)/100,demographics:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,demographicInputs[code]]))}:{}),...($('search').value==='vra-recom'?{vra_threshold:Number($('vra-threshold').value)/100,...($('vra-absence').checked?{vra_absent_file_fallback:true}:{demographics:Object.fromEntries((mode==='state'?[$('state').value]:[...selectedStates]).map(code=>[code,demographicInputs[code]]))})}:{}),...($('search').value==='parallel-tempering'?{pt_replicas:Number($('pt-replicas').value),pt_swap_interval:Number($('pt-swap').value),pt_cold_tol:Number($('pt-cold').value)/100,pt_hot_tol:Number($('pt-hot').value)/100}:{}),...($('search').value.startsWith('short-burst')?{burst_length:Number($('burst-length').value),n_bursts:Number($('n-bursts').value)}:{}),...($('structure').value==='ratio-optimal-area'?{area_init:$('area-init').value}:{}),...($('structure').value==='compact-polsby'?{compact_epsilon:Number($('compact-slack').value)/100}:{}),...($('structure').value==='compact-polsby'&&$('compact-geometry').value!=='prepared'?{compact_geometry:$('compact-geometry').value}:{}),...($('structure').value==='moving-knife'?{mka_orientations:Number($('mka-orientations').value),mka_metric:$('mka-metric').value}:{}),...($('structure').value==='centroidal-voronoi'?{cvd_iters:Number($('cvd-iters').value),cvd_metric:$('cvd-metric').value}:{}),...($('search').value==='smc-percentile'?{smc_particles:Number($('smc-particles').value),smc_resample_threshold:Number($('smc-resample').value)}:{}),...($('structure').value==='flow-construction'?{flow_repair:$('flow-repair').value}:{}),...($('structure').value==='simulated-annealing'?{sa_steps_per_tract:Number($('sa-steps').value),sa_t0_factor:Number($('sa-factor').value),sa_t_final:Number($('sa-final').value)}:{}),...($('structure').value==='ratio-optimal-vra'&&$('vra-absence').checked?{w_vra:Number($('vra-weight').value)/100,vra_absent_file_fallback:true}:{}),name:$('name').value.trim(),mode,states:mode === 'state' ? [$('state').value] : [...selectedStates].sort(),year:$('year').value,chamber:$('chamber').value,districts:mode === 'state' && $('districts').value ? Number($('districts').value) : null,structure:$('structure').value,weights:$('weights').value,search:$('search').value,seed:browserWasm?($('seed').value===''?null:parseSeed($('seed').value)):Number($('seed').value),seeds:Number($('seeds').value),steps:Number($('steps').value),percentile:Number($('percentile').value)/100,alpha_county:$('weights').value === 'county' ? Number($('alpha').value) : 0,balance_tolerance:Number($('tolerance').value),area_swing:Number($('area-swing').value),iterations:Number($('iterations').value),timeout_seconds:Number($('timeout').value)};
 
 }
 
@@ -491,8 +640,9 @@ function renderHeader() {
   if(browserWasm&&configuration&&usesRunSeed(configuration.structure)){
     const stateResult=job.states.find(state=>state.code===selectedCode);
     const evidence=stateResult?.metrics?.structure_evidence;
-    const selected=evidence?.method==='convergence'?evidence.selected_seed:null;
-    $('map-subtitle').textContent+=` · Run seed ${configuration.seed}${selected!=null?` · Selected seed ${selected}`:''}`;
+    const selected=!view.startsWith('national')&&evidence?.method==='convergence'?evidence.selected_seed:null;
+    $('map-subtitle').textContent+=` · Run seed ${configuration.seed??'native default'}${selected!=null?` · Selected seed ${selected}`:''}`;
+    const build=stateResult?.metrics?.balance_build;if(build)$('map-subtitle').textContent+=view.startsWith('national')?' · Accepted seeds recorded per state':` · ${configuration.structure==='ilp'?'Accepted attempt '+build.accepted_attempt:'Accepted seed '+(stateResult.metrics.recorded_options.seed??'native default')} · ${build.attempts.length} population ${build.attempts.length===1?'trial':'trials'}`;
   }
 
   if(browserWasm&&configuration?.structure==='proportional-section'&&job.states.find(state=>state.code===selectedCode)?.metrics?.district_count>1){const budget=configuration.search==='multi'?configuration.seeds:1;$('map-subtitle').textContent+=budget===1?' · Seed 1':` · Seeds 1–${budget}`;}
@@ -507,6 +657,7 @@ function renderHeader() {
 }
 
 function clearResult() {
+  $('county-augmentation-result').hidden=true;$('native-state-vra-panel').hidden=true;if($('download-native-state-data'))$('download-native-state-data').disabled=true;
 
   if($('root-constraint-detail'))$('root-constraint-detail').hidden=true;
 
@@ -516,7 +667,7 @@ function clearResult() {
 
   $('district-table').hidden = true; $('district-empty').hidden = false; $('batch-results').hidden = true;
 
-  $('download-config').disabled = !job; $('download-map').disabled = true; $('legend').innerHTML = '';
+  $('download-config').disabled = !job; $('download-map').disabled = true;if(browserWasm&&$('download-round-capture')){$('lab-coi-result-status').hidden=true;$('lab-electoral-status').hidden=true;$('audit-ilp-reports').disabled=true;$('download-ilp-reports').disabled=true;$('ilp-reports-status').hidden=true;$('download-round-capture').disabled=true;$('round-capture-status').hidden=true;snapshotView=null;snapshotOwner=null;$('captured-snapshot-field').hidden=true;$('download-snapshot-map').disabled=true;$('color-by').disabled=false;$('snapshot-metrics-note').hidden=true;} $('legend').innerHTML = '';
 
   $('compare-run').value = ''; $('comparison').textContent = 'Compare the same state across configurations to see the tradeoffs.';
 
@@ -528,11 +679,18 @@ function clearResult() {
 
 }
 
+function renderLiveRoundProgress(){
+ const element=$('native-round-progress'),live=staticCatalog?.liveRoundProgress;
+ element.hidden=!browserWasm||!live||job?.id!==live.jobId||staticCatalog.active?.id!==job?.id||!['queued','running'].includes(job?.status);
+ if(!element.hidden)element.textContent=live.state+' · '+nativeRoundProgressText(live.progress);
+}
 function renderJob() {
+  renderLiveRoundProgress();
+  const countyEvidence=job?.states.find(s=>s.code===selectedCode)?.metrics?.county_augmentation_evidence??job?.states.find(s=>s.code===selectedCode)?.metrics?.multiscale_evidence?.county_augmentation;$('county-augmentation-result').hidden=!countyEvidence;if(countyEvidence)$('county-augmentation-result').textContent=`County composition α ${countyEvidence.alpha}: ${countyEvidence.changed_edges}/${countyEvidence.map_entries} computed edge weights changed · ${countyEvidence.status}. ${countyEvidence.scope==='parent-tract-initialization-only'?'Parent-tract initialization only. ':''}Physical boundaries remain unchanged; implicit weights are not filled.`;
 
   $('root-constraint-detail').hidden=true;
 
-  if($('merge-history'))$('merge-history').hidden=true;if($('smc-diagnostics'))$('smc-diagnostics').hidden=true;
+  if($('merge-history'))$('merge-history').hidden=true;if($('smc-diagnostics'))$('smc-diagnostics').hidden=true;if($('burst-ledger'))$('burst-ledger').hidden=true;
 
   if($('save-lab-project'))$('save-lab-project').disabled=!job.id.startsWith('wasm-')&&!job.restored_from_project;
 
@@ -542,15 +700,21 @@ function renderJob() {
 
   const missingConvergenceEvidence=job.config.search==='convergence'&&job.states.some(state=>state.metrics?.district_count>1&&state.metrics.structure_evidence?.method!=='convergence');
 
-  $('execution-warning').hidden = !ignored && !missingConvergenceEvidence && !job.restored_from_project;
+  const missingSpectralEvidence=job.config.structure==='spectral'&&job.states.some(state=>state.metrics?.district_count===1&&state.metrics.structure_evidence==null);
+  const missingNativeVra=job.config.structure==='nway'&&job.config.weights==='vra-aligned'&&job.states.some(state=>state.metrics?.district_count>1&&!state.metrics.native_state_vra);
+  $('execution-warning').hidden = !ignored && !missingConvergenceEvidence && !missingSpectralEvidence && !missingNativeVra && !job.restored_from_project;
 
-  $('execution-warning').textContent = [job.restored_from_project ? 'Imported project: assignments and metrics checked against hashed inputs. Recorded engine provenance is unverified. No engine was executed when opening this project.' : '',missingConvergenceEvidence?'Recorded convergence settings lack stopping evidence. Do not interpret the seed budget as verified execution.':'',ignored ? 'Historical run: the requested search is not executed by this structure in the current engine. Do not interpret its requested search budget as executed sampling.' : ''].filter(Boolean).join(' ');
+  $('execution-warning').textContent = [job.restored_from_project ? 'Imported project: assignments and metrics checked against hashed inputs. Recorded engine provenance is unverified. No engine was executed when opening this project.' : '',missingNativeVra?'Historical result has no native State minority summary. Run again to retain it.':'',missingSpectralEvidence?'Historical single-district spectral result has no native method summary. Run again to retain it.':'',missingConvergenceEvidence?'Recorded convergence settings lack stopping evidence. Do not interpret the seed budget as verified execution.':'',ignored ? 'Historical run: the requested search is not executed by this structure in the current engine. Do not interpret its requested search budget as executed sampling.' : ''].filter(Boolean).join(' ');
 
   $('log').textContent = job.logs.join('\n') || 'Waiting for the engine…';
 
   if (activeTab === 'log') $('log').scrollTop = $('log').scrollHeight;
 
   const result = job.states.find(state => state.code === selectedCode), metrics = result?.metrics;
+  renderNativeStateVra(metrics?.native_state_vra);updateNativeStateDataControl();
+  if(browserWasm)renderLabWorkerFailure(result);
+  if(browserWasm){const coi=metrics?.coi_weighting_evidence;$('zone-weight-result').hidden=job.config.weights!=='zone-membership';const zoneEvidence=metrics?.weighting_evidence??metrics?.multiscale_evidence?.zone_initialization;$('zone-weight-result').textContent=zoneEvidence?.zone_data_applied?`Supplied zone assignments applied: ${zoneEvidence.source_name} · α ${zoneEvidence.alpha} · ${zoneEvidence.changed_edges} changed edges. Only observations available at both endpoints enter the score. ${isMultiscale(job.config)?'Parent-tract initialization only; sampling/ranking remain unweighted. ':''}No spatial join or source authentication occurred.`:'Zone data was not applied. Native zone membership falls back to physical geographic boundary weights because its spatial join is unfinished. Multiscale uses this fallback for parent-tract initialization; sampling/ranking remain unweighted.';$('lab-coi-result-status').hidden=!coi;$('lab-coi-result-status').textContent=coi?`COI source: ${coi.source_name} · ${coi.matched_units} matched units · ${coi.defaulted_units} defaulted · ${coi.ignored_units} ignored · ${coi.changed_edges}/${coi.applied_edges} computed edge weights changed · ${coi.status}. Source SHA-256: ${coi.source_sha256}. Physical boundaries and census populations remain unchanged.`:'';const e=metrics?.electoral_evidence;$('lab-electoral-status').hidden=!e;$('lab-electoral-status').textContent=e?`Recorded electoral settings: ${number(e.seats_per_district)} effective seats per district (requested ${number(e.requested_seats_per_district)}) · ${number(e.total_seats)} total seats · ideal population per seat ${new Intl.NumberFormat(undefined,{maximumSignificantDigits:8}).format(e.ideal_population_per_seat)}. Equal district population targets remain in use.${e.uniform_total_consistent?'':' Recorded total differs from district count × effective seats per district.'}${e.total_seats===0?' A zero total uses denominator 1 for the native per-seat calculation.':''}${isMultiscale(job.config.search)?' Per-seat population uses the prepared tract input; validated fine inputs preserve its total population.':''}`:'';const reports=metrics?.ilp_report_capture;$('download-ilp-reports').disabled=!reports||job.restored_from_project===true;$('audit-ilp-reports').disabled=ilpAuditPreparing||!reports||job.restored_from_project===true||!Object.keys(reports.files).length||!!staticCatalog.active;$('ilp-reports-status').hidden=!reports;$('ilp-reports-status').textContent=reports?`${reports.nodes.length} native ILP node records retained${reports.accepted_attempt===null?'':` from accepted attempt ${reports.accepted_attempt}`}.${!Object.keys(reports.files).length?(reports.nodes.length?` All ${reports.nodes.length} nodes skipped solving because of the size limit. No solver artifacts were produced; artifact auditing is unavailable.`:' No ILP split nodes were needed; no solver artifacts were produced.'):''} Local solver claims do not certify the whole plan.${job.restored_from_project?' Imported reports were checked for consistency; run again to enable a fresh download.':''}`:'';const capture=metrics?.round_capture;renderSnapshotPicker(capture);$('download-round-capture').disabled=!capture;$('round-capture-status').hidden=!capture;$('round-capture-status').textContent=capture?(capture.events.length?`${capture.events.length} native snapshots retained. ${capture.terminal_matches_returned_assignment?'Last snapshot matches the returned assignment.':'Snapshots may be candidates or partial regions; the last snapshot differs from the returned assignment.'} Download Native rounds to inspect the exact trace.`:'This execution emitted no native round snapshots. An empty capture does not establish a complete history.') : '';}
+
 
   if (metrics) renderMetrics(metrics, result.elapsed_seconds); else {
 
@@ -588,15 +752,30 @@ function renderJob() {
 
 }
 
+function renderLabWorkerFailure(state){
+ const receipt=state?.failure_receipt;$('lab-worker-failure').hidden=!receipt;
+ for(const id of ['download-lab-failure','download-lab-failure-request'])$(id).disabled=!!staticCatalog.active||!!staticCatalog.exporting||!receipt;
+ if(!receipt){renderedLabFailureKey=undefined;return;}
+ $('download-lab-failure-request').disabled=!!staticCatalog.active||!!staticCatalog.exporting||receipt.request_json===null;
+ const key=[job.id,state.code,receipt.recorded_at,receipt.request_sha256].join(':');
+ if(key!==renderedLabFailureKey){validateWorkerFailure(receipt);renderedLabFailureKey=key;$('lab-worker-failure-status').textContent=job.restored_from_project?'Imported failure claim for '+state.code+(receipt.request_sha256?'. Request digest/input consistency checked; execution remains unverified.':'. Request bytes unavailable; original local sources are required.'):'Failed '+state.code+' request recorded in this browser.';
+ $('lab-worker-failure-summary').textContent=['State: '+state.code,'Error: '+receipt.error,'Recorded loaded WASM SHA-256: '+(receipt.runtime_artifact?.sha256||'unavailable'),'Request SHA-256: '+(receipt.request_sha256||'unavailable'),'Retention: '+receipt.request_retention,'Seed declaration text (not resolved): '+(workerFailureSeeds(receipt).join(' · ')||'see original request')].join('\n');}
+}
+function selectedLabFailure(){const receipt=job?.states.find(state=>state.code===selectedCode)?.failure_receipt;if(staticCatalog.active||staticCatalog.exporting||!receipt)throw new Error('Select a recorded failed state after the current operation finishes.');return {id:job.id,code:selectedCode,receipt:validateWorkerFailure(receipt)};}
+async function downloadLabFailureRequest(){
+ const expected=selectedLabFailure();if(!await verifyWorkerFailure(expected.receipt))throw new Error('Failure request hash mismatch.');const current=selectedLabFailure();if(current.id!==expected.id||current.code!==expected.code||current.receipt.request_json!==expected.receipt.request_json||current.receipt.request_sha256!==expected.receipt.request_sha256)return;
+ const url=URL.createObjectURL(new Blob([expected.receipt.request_json],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download=expected.code+'-failed-request.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 function renderMetrics(metrics, elapsed) {
 
-  const root=metrics.root_split, evidence=metrics.structure_evidence;
+  const root=metrics.root_split, evidence=metrics.structure_evidence;let nativeCost=$('native-character-cost');if(!nativeCost){nativeCost=document.createElement('p');nativeCost.id='native-character-cost';nativeCost.className='help';$('root-constraint-detail').after(nativeCost);}const nativeEvidence=metrics.weighting_evidence?.method==='native-character-file-v1'?metrics.weighting_evidence:metrics.multiscale_evidence?.character_initialization?.method==='native-character-file-v1'?metrics.multiscale_evidence.character_initialization:null;nativeCost.hidden=!nativeEvidence;if(nativeEvidence){const r=nativeEvidence.evaluation;nativeCost.textContent='Original native CSV: '+r.source_name+' · '+r.native_status+' · '+r.matched_tracts+' matched / '+r.missing_tract_ids.length+' defaulted / '+r.ignored_source_ids.length+' ignored'+(metrics.multiscale_evidence?' · parent initialization only; map costs use physical fine boundaries.':' · weighted boundary '+(metrics.weighted_boundary===null?metrics.weighted_boundary_class:Number(metrics.weighted_boundary).toLocaleString())+'.')+' Recorded source transformation is not replayed on Open.';}
 
   $('root-constraint-detail').hidden=metrics.district_count!==1&&!root&&!(evidence&&(['proportional-bisect','proportional-section','nway-metis','recursive-metis','percentile-metis'].includes(evidence.method)||job.config.structure==='prime-factor'||job.config.structure==='spectral'||['simulated-annealing','flow-construction','capacity-clustering','regionalization'].includes(job.config.structure)||['convergence','smc-percentile','short-burst','short-burst-forest','short-burst-merge-split','vra-recom','parallel-tempering','forest-recom','merge-split','flip','bisection-ensemble'].includes(job.config.search)));
 
   if(metrics.district_count===1)$('root-constraint-detail').textContent='One district: all tracts are assigned together. No split or search was needed. Population and graph connectivity are checked below.';
   if(root)$('root-constraint-detail').textContent=`Root split ${root.left_districts}:${root.right_districts} · ${percent(root.area_fraction_left==null?null:root.area_fraction_left*100)} of land on left${root.area_constraint_active?` · area swing ${root.area_swing} ${root.area_within_requested_swing?'satisfied':'missed'} · root population multiplier ${root.population_multiplier}`:''} · ${root.seeds_per_ratio} seed${root.seeds_per_ratio===1?'':'s'} per ratio, starting at ${root.base_seed}. ${root.area_constraint_active?'Area constraints apply only at the root. ':''}District population and connectivity checks are shown below.${metrics.structure_evidence?.method==='areasection-initialization'?` Initialization: ${metrics.structure_evidence.initialization}${metrics.structure_evidence.direction_radians==null?'':` at ${(metrics.structure_evidence.direction_radians*180/Math.PI).toFixed(1)} degrees (180 orientations, directional bias 1)`}.`:''}`;
 
+  if(root&&Object.hasOwn(root,'native_candidate_cut'))$('root-constraint-detail').textContent+=` Native candidate-selection cut ${new Intl.NumberFormat(undefined,{maximumSignificantDigits:8}).format(root.native_candidate_cut)} counts only explicit sparse partisan weights. Reported root boundary cost ${new Intl.NumberFormat(undefined,{maximumSignificantDigits:8}).format(root.reported_weighted_boundary??root.weighted_boundary)} includes implicit unit weights.`;
   if(root&&evidence?.metis_refinement)$('root-constraint-detail').textContent+=` Ratio search uses ${evidence.metis_refinement.objective} refinement with ${evidence.metis_refinement.internal_trials} internal trials per candidate at each recursive ratio node. Internal trials rank population excess then edge cut; root area or demographic selection rules remain as recorded.`;
   if(root&&evidence?.method==='geosection-metis')$('root-constraint-detail').textContent+=` GeoSection uses ${evidence.refinement_objective} refinement with ${evidence.internal_trials_per_candidate} internal trials at each recursive ratio search. Internal trials rank population excess then edge cut; ratio candidates retain minimum original weighted cut and ratios rank by cut divided by the square root of the smaller seat count.`;
   if(!root&&evidence?.method==='percentile-metis')$('root-constraint-detail').textContent=`Percentile sweep · ${evidence.seed_count} complete plans ranked by unweighted edge cut · selected rank ${evidence.rank+1}/${evidence.seed_count}, seed index ${evidence.selected_seed_index}, ${evidence.selected_edge_cut} cut edges · ${evidence.refinement_objective} refinement with ${evidence.internal_trials_per_candidate} internal trials per recursive split. Ties use seed index. This describes the sampled bisection family, not all valid plans.`;
@@ -605,8 +784,9 @@ function renderMetrics(metrics, elapsed) {
   if(!root&&evidence?.method==='local-bisection-ensemble')$('root-constraint-detail').textContent=`Local bisection ensemble · ${evidence.steps_per_split} proposals per recursive split · initial and accepted cuts ranked by unweighted percentile ${percent(evidence.percentile*100)} · portable Wilson trees · prescribed floor/ceil seat targets. ${evidence.metis_initialization?`${evidence.metis_initialization.objective} initialization with ${evidence.metis_initialization.internal_trials} internal trials. `:""}Regions of at most four tracts use one METIS split. Optimality and sampling distribution unproved.`;
   if(!root&&evidence?.method==='boundary-flip')$('root-constraint-detail').textContent=`Boundary flip · ${evidence.steps} proposals · ${evidence.record_count} retained records · selected rank ${evidence.selected_rank} · initial refinement 100 iterations · portable ChaCha12 draws. Accepted moves check population against ideal district size and retain nonempty connected districts. Optimality and sampling distribution unproved.`;
   if(!root&&['forest-recom','merge-split'].includes(evidence?.method))$('root-constraint-detail').textContent=`${evidence.method} · ${evidence.steps} proposals · retain initial and accepted states · unweighted cut percentile ${percent(evidence.percentile*100)} · portable ChaCha12 random draws. Boundary weights affect initialization. Optimality and sampling distribution unproved.`;
+  if(root&&evidence?.method==='vra-section-absent-file-fallback')$('root-constraint-detail').textContent+=' Explicit native absent-file fallback: plain GeoSection, no demographic input or alignment bonus. Requested alignment weight is inactive.';
   if(root&&evidence?.method==='vra-section')$('root-constraint-detail').textContent+=` Minority mass proxy on left: ${percent(evidence.minority_share_left==null?null:evidence.minority_share_left*100)} · alignment ${percent(evidence.alignment*100)} · alignment weight ${percent(evidence.w_vra*100)} · selected normalized cut ${number(evidence.normalised_cut)} and adjusted score ${number(evidence.selection_score)}. Bonus applies only at the root. Source: ${job.config.demographics[selectedCode].source_label}. No minority-preservation threshold is enforced.`;
-  if(!root&&evidence?.method==='vra-recom')$('root-constraint-detail').textContent=`Minority preservation · ${evidence.run.protected_districts.length} protected districts · threshold ${percent(evidence.threshold*100)} · unweighted tract mean (${evidence.basis}). ${evidence.run.accepted_moves} accepted of ${evidence.run.proposals} proposals; ${evidence.run.minority_rejections} minority-rule rejections. Source: ${job.config.demographics[selectedCode].source_label}. Demographic identity and final preservation checked on Open; recorded execution provenance is unverified.`;
+  if(!root&&evidence?.method==='vra-recom')$('root-constraint-detail').textContent=`Minority preservation · ${evidence.run.protected_districts.length} protected districts · threshold ${percent(evidence.threshold*100)} · unweighted tract mean (${evidence.basis}). ${evidence.run.accepted_moves} accepted of ${evidence.run.proposals} proposals; ${evidence.run.minority_rejections} minority-rule rejections. Source: ${job.config.vra_absent_file_fallback?'explicit native absent-file zero fractions':job.config.demographics[selectedCode].source_label}. Demographic identity and final preservation checked on Open; recorded execution provenance is unverified.`;
   if(!root&&evidence?.method==='parallel-tempering')$('root-constraint-detail').textContent=`Parallel tempering · ${evidence.replicas} replicas · ${evidence.steps} steps each · swap interval ${evidence.swap_interval} · population ladder ${percent(evidence.cold_tolerance*100)} to ${percent(evidence.hot_tolerance*100)} · exchanges require both receiving tolerances. Cold records selected by unweighted cut percentile; optimality unproved.`;
   if(!root&&evidence?.method==='short-burst')$('root-constraint-detail').textContent=`${evidence.chain} · ${evidence.n_bursts} bursts × ${evidence.burst_length} proposals · endpoints selected by unweighted cut percentile · portable ChaCha12 random draws. Initialization uses the selected boundary weights. Optimality unproved.`;
   if(!root&&job.config.structure==='prime-factor'&&evidence?.method==='apportion-regions')$('root-constraint-detail').textContent=`ApportionRegions · factors ${evidence.factor_sequence.join(' × ')} · tree depth ${evidence.tree_depth} · per-level population tolerance ${percent(evidence.per_level_tolerance*100)} · native research limit ${evidence.research_balance_limit_percent}% · seed ${evidence.seed}. Largest prime first; primes above 3 use floor/ceil bisection.`;
@@ -623,15 +803,15 @@ function renderMetrics(metrics, elapsed) {
 
   if(!root&&job.config.structure==='spectral'&&evidence?.method==='spectral')$('root-constraint-detail').textContent=`Spectral smoothing · ${evidence.max_iters} maximum iterations per split · ${evidence.nodes.length} split node${evidence.nodes.length===1?'':'s'} · ${evidence.nodes.filter(node=>node.converged).length} converged · unweighted edge cut ${evidence.edge_cut}. Smoothing convergence does not certify an optimal cut; global population and connectivity checks remain separate.`;
 
-  if(!root&&job.config.search==='convergence'&&evidence?.method==='convergence')$('root-constraint-detail').textContent=`Convergence search · ${evidence.attempted} seeds tried, ${evidence.rejected} rejected · selected seed ${evidence.selected_seed} · normalized cut ${Number(evidence.best_normalized_cut).toFixed(3)} · ${evidence.consecutive_non_improving}/${evidence.threshold} non-improving seeds · ${evidence.halt==='threshold'?'threshold reached':'seed limit reached before convergence'}. ${evidence.metis_refinement?`${evidence.metis_refinement.objective} refinement with ${evidence.metis_refinement.internal_trials_per_candidate} internal trials per split. `:""}This is a best-observed full-plan search, not an optimality certificate.`;
+  if(!root&&job.config.search==='convergence'&&evidence?.method==='convergence')$('root-constraint-detail').textContent=`Convergence search · ${evidence.attempted} seeds tried, ${evidence.rejected} rejected · selected seed ${evidence.selected_seed} · normalized cut ${Number(evidence.best_normalized_cut).toFixed(3)} · ${evidence.seed_limit===null?"no maximum seed count":`maximum ${evidence.seed_limit} seeds`} · ${evidence.consecutive_non_improving}/${evidence.threshold} non-improving seeds · ${evidence.halt==='threshold'?'threshold reached':'seed limit reached before convergence'}. ${evidence.metis_refinement?`${evidence.metis_refinement.objective} refinement with ${evidence.metis_refinement.internal_trials_per_candidate} internal trials per split. `:""}This is a best-observed full-plan search, not an optimality certificate.`;
 
-  if(evidence?.method==='proportional-bisect')$('root-constraint-detail').textContent=`Proportional recursion · ${evidence.splits.length} chosen splits · Democratic votes divided by census population · rounded child seat counts · run seed ${evidence.seed}. Input: ${job.config.elections[selectedCode].source_label}. No partisan outcome guarantee.`;
+  if(evidence?.method==='proportional-bisect')$('root-constraint-detail').textContent=`Proportional recursion · ${evidence.splits.length} chosen splits · Democratic votes divided by census population · rounded child seat counts · run seed ${Object.hasOwn(evidence,'requested_seed')?(evidence.requested_seed??'backend default'):evidence.seed}. Input: ${job.config.elections[selectedCode].source_label}. No partisan outcome guarantee.`;
   if(evidence?.method==='proportional-section')$('root-constraint-detail').textContent=`ProportionalSection · root ${evidence.left_seats}:${evidence.right_seats} · statewide two-party Democratic share ${percent(evidence.statewide_democratic_share*100)} · vote tolerance ${evidence.eta} · seeds 1–${evidence.seeds_per_root} · root population ${evidence.root_population_within_requested_multiplier?'meets':'misses'} requested 1.001 multiplier; supplied vote counts ${evidence.root_democratic_within_requested_multiplier?'meet':'miss'} the requested vote multiplier · descendants use population-only GeoSection. Input: ${job.config.elections[selectedCode].source_label}. No partisan outcome guarantee.`;
-  if(metrics.weighting_evidence){const w=metrics.weighting_evidence;if($('root-constraint-detail').hidden)$('root-constraint-detail').textContent='';$('root-constraint-detail').hidden=false;$('root-constraint-detail').textContent+=w.method==='character-cosine-blend'?` ${w.kind==='economic'?'Economic':'Housing'} character weighting · geographic blend alpha ${w.alpha} · ${w.data_year} observations · ${w.tracts} tracts. Input: ${job.config.characters[selectedCode].source_label}. Character observations, blend and input hash are retained in saved projects.`:` Partisan weighting: ${w.strong_tracts}/${w.tracts} strong tracts, adaptive boost ${w.alpha.toFixed(3)} on same-lean edges; baseline unit weights. Input: ${job.config.partisans[selectedCode].source_label}. Shares and thresholds are retained in saved projects.`;}
-  if(browserWasm)$('run-details').hidden=$('root-constraint-detail').hidden;
+  if(metrics.weighting_evidence){const w=metrics.weighting_evidence;if($('root-constraint-detail').hidden)$('root-constraint-detail').textContent='';$('root-constraint-detail').hidden=false;$('root-constraint-detail').textContent+=w.method==='native-minority-override-v1'?` Minority boundary weighting: ${w.high_tracts}/${w.tracts} tracts reach 40%; adaptive unit boost ${w.alpha.toFixed(3)} applies only when both endpoints reach the threshold. Input: ${job.config.demographics[selectedCode].source_label}.`:w.method==='native-county-additive-v1'?` County boundary weighting: same-county multiplier ${w.within_county_multiplier}; county alpha ${w.alpha}.`:w.method==='native-zone-membership-fallback-v1'?` Zone observations were not applied; physical geographic weights were used because the native spatial join is unfinished.`:w.method==='native-zone-membership-v1'?` Supplied zone weighting: ${w.source_name}; alpha ${w.alpha}; ${w.changed_edges} changed edges. Only jointly observed slots enter the co-membership score.`:w.method==='native-character-absent-geographic-v1'?` Character source absent: explicitly allowed native geographic fallback. No character observations or observation year are inferred.`:w.method==='native-character-file-v1'?` Original native ${w.evaluation.kind} CSV: ${w.evaluation.source_name}; ${w.evaluation.data_year} observations; geographic blend alpha ${w.evaluation.alpha}. Source bytes and numeric classes are retained in the project.`:w.method==='character-cosine-blend'?` ${w.kind==='economic'?'Economic':'Housing'} character weighting · geographic blend alpha ${w.alpha} · ${w.data_year} observations · ${w.tracts} tracts. Input: ${job.config.characters[selectedCode].source_label}. Character observations, blend and input hash are retained in saved projects.`:` Partisan weighting: ${w.strong_tracts}/${w.tracts} strong tracts, adaptive boost ${w.alpha.toFixed(3)} on same-lean edges; baseline unit weights. Input: ${job.config.partisans[selectedCode].source_label}. Shares and thresholds are retained in saved projects.`;}
   renderMergeHistory(evidence);
 
   renderSmcDiagnostics(evidence);
+  renderBurstLedger(evidence);
 
   $('metric-districts').textContent = number(metrics.district_count); $('metric-deviation').textContent = percent(metrics.max_deviation_percent);
 
@@ -647,13 +827,31 @@ function renderMetrics(metrics, elapsed) {
   $('input-resolution').textContent=fineUnitLabel()==='block groups'?'BLOCK GROUPS':'TRACTS';
   $('input-source').textContent=fineUnitLabel()==='block groups'?'SUPPLIED FINE INPUTS':'REAL CENSUS INPUTS';
   $('map').setAttribute('aria-label',fineUnitLabel()==='block groups'?'Interactive block-group result map':'Interactive Census tract map');
-  if(isMultiscale(job.config)){const m=job.config.multiscale,e=metrics.multiscale_evidence;$('root-constraint-detail').hidden=false;$('root-constraint-detail').textContent=`${m.fine_level==='bg'?'Block-group':'Tract'} → ${m.coarse_level} multiscale search · ${m.total_steps} steps · initial coarse probability ${m.alpha} · percentile ${m.percentile*100}%. ${e?.diagnostics?`Final alpha ${e.diagnostics.final_alpha.toFixed(3)}; ${e.diagnostics.alpha_trace.length} adaptation rounds. `:''}${m.fine_level==='bg'?`User-supplied fine graph/map: ${m.inputs[selectedCode].source_label}. `:''}Inputs and exact seed are retained in the project. Population and connectivity are checked from assignments; execution provenance remains a recorded claim.`;}
+  if(isMultiscale(job.config)){const m=job.config.multiscale,e=metrics.multiscale_evidence;$('root-constraint-detail').hidden=false;$('root-constraint-detail').textContent=`${m.fine_level==='bg'?'Block-group':'Tract'} → ${m.coarse_level} multiscale search · ${m.total_steps} steps · initial coarse probability ${m.alpha} · percentile ${m.percentile*100}%. ${e?.diagnostics?`Final alpha ${e.diagnostics.final_alpha.toFixed(3)}; ${e.diagnostics.alpha_trace.length} adaptation rounds. `:''}${m.fine_level==='bg'?`User-supplied fine graph/map: ${m.inputs[selectedCode].source_label}. `:''}${e?.coi_weighting?`COI ${e.coi_weighting.source_name}: ${e.coi_weighting.matched_units} matched tract IDs, ${e.coi_weighting.ignored_units} ignored IDs, ${e.coi_weighting.changed_edges} changed seed edges; SHA-256 ${e.coi_weighting.source_sha256}. Tract initialization only; sampling/ranking unweighted. `:''}${job.config.weights==='partisan'?`Partisan parent-tract initialization: ${job.config.partisans[selectedCode].source_label}. Fine map costs use physical boundaries; tract shares are not block-group observations. `:''}${job.config.weights==='vra-aligned'?`Minority parent-tract initialization: ${job.config.demographics[selectedCode].source_label}. No preservation rule or fine-unit observations are inferred. `:''}${usesCharacterWeights(job.config.weights)?(job.config.native_character_sources?.[selectedCode]?`Original native CSV parent-tract initialization: ${job.config.native_character_sources[selectedCode].source.name}; observation year ${job.config.native_character_sources[selectedCode].settings.data_year}; blend alpha ${job.config.character_alpha}. `:job.config.characters[selectedCode]?`Parent-tract character initialization: ${job.config.characters[selectedCode].source_label}. Observation year ${job.config.characters[selectedCode].data_year}; blend alpha ${job.config.character_alpha}. `:'Character source absent: explicitly allowed native geographic tract initialization; no character observations inferred. '):''}Fine map costs use physical boundaries. Inputs and exact seed are retained in the project. Population and connectivity are checked from assignments; execution provenance remains a recorded claim.`;}
+  if(browserWasm)$('run-details').hidden=$('root-constraint-detail').hidden;
   $('unit-count').textContent = `${selectedCode} · ${number(metrics.units)} assigned ${fineUnitLabel()} · ${metrics.contiguous ? 'Graph connectivity checked' : 'Disconnected districts detected'} · Optimality unproved`;
 
   $('metric-time').title = `Total includes preparation and output processing. Engine: ${metrics.engine_seconds == null ? 'not separately recorded' : time(metrics.engine_seconds)}; preparation: ${metrics.preparation_seconds == null ? 'not separately recorded' : time(metrics.preparation_seconds)}.`;
 
   renderLegend();
 
+}
+
+function updateNativeStateDataControl(){const button=$('download-native-state-data');if(button)button.disabled=!job?.states.some(s=>s.code===selectedCode&&s.status==='completed')||!!staticCatalog?.active||!!staticCatalog?.exporting;}
+function renderNativeStateVra(value){
+ const panel=$('native-state-vra-panel');panel.hidden=!value;panel.replaceChildren();if(!value)return;validateNativeStateVra(value);
+ const expectedJob=job.id,code=selectedCode,title=document.createElement('h3');title.textContent=`Native State minority summary · ${code}`;panel.append(title);
+ const text=document.createElement('p');text.className='help';text.textContent=`${value.analysis.mm_count} of ${value.analysis.districts.length} districts have minority population strictly greater than 50%. Shares weight the selected total-population fractions by prepared unit population. Black and Hispanic fields in the JSON are native zero placeholders.`;panel.append(text);
+ const wrap=document.createElement('div');wrap.className='table-scroll';const table=document.createElement('table'),head=document.createElement('thead'),row=document.createElement('tr');for(const name of ['District','Minority share','Above 50%']){const th=document.createElement('th');th.textContent=name;row.append(th);}head.append(row);table.append(head);const body=document.createElement('tbody');for(const d of value.analysis.districts){const tr=document.createElement('tr');for(const label of [d.district,`${(d.pct_minority*100).toFixed(2)}%`,d.is_mm?'Yes':'No']){const td=document.createElement('td');td.textContent=label;tr.append(td);}body.append(tr);}table.append(body);wrap.append(table);panel.append(wrap);
+ const button=document.createElement('button');button.id='download-native-state-vra';button.type='button';button.textContent='Download vra_analysis.json';button.disabled=!!staticCatalog?.active||!!staticCatalog?.exporting;button.onclick=()=>{if(staticCatalog?.active||staticCatalog?.exporting||job?.id!==expectedJob||selectedCode!==code||job.states.find(s=>s.code===code)?.metrics?.native_state_vra!==value)return;const url=URL.createObjectURL(new Blob([value.analysis_json],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download=`${code}-vra_analysis.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};panel.append(button);
+}
+function renderBurstLedger(evidence){
+  let panel=$('burst-ledger');const ledger=evidence?.native_burst_ledger;
+  if(!ledger){if(panel)panel.hidden=true;return;}
+  if(!panel){panel=document.createElement('details');panel.id='burst-ledger';panel.className='table-scroll';$('root-constraint-detail').after(panel);}
+  panel.hidden=false;panel.replaceChildren();const summary=document.createElement('summary');
+  summary.textContent=ledger.burst_seeds.length?`Native burst seeds · selected burst ${ledger.selected_burst_index} (zero based)`:'Native burst seeds · no bursts; initialization returned';
+  const body=document.createElement('pre');body.textContent=ledger.burst_seeds.map((seed,i)=>`${i}: ${seed}${i===ledger.selected_burst_index?' · selected':''}`).join('\n')||'No derived burst seeds.';panel.append(summary,body);
 }
 
 function renderSmcDiagnostics(evidence){
@@ -720,7 +918,7 @@ function renderCohortMetrics(){
 
   $('root-constraint-detail').hidden=true;
 
-  if($('merge-history'))$('merge-history').hidden=true;if($('smc-diagnostics'))$('smc-diagnostics').hidden=true;
+  if($('merge-history'))$('merge-history').hidden=true;if($('smc-diagnostics'))$('smc-diagnostics').hidden=true;if($('burst-ledger'))$('burst-ledger').hidden=true;
 
   const completed=job.states.filter(state=>state.metrics);
 
@@ -738,13 +936,15 @@ function renderCohortMetrics(){
 
   $('metric-time').textContent=time(completed.reduce((total,state)=>total+state.elapsed_seconds,0));
 
-  $('metric-deviation').classList.toggle('deviation-bad',completed.some(state=>!state.metrics.balance_passed));
+  const balanceMisses=completed.filter(state=>state.metrics.balance_passed===false).length;
+
+  $('metric-deviation').classList.toggle('deviation-bad',balanceMisses>0);
 
   $('metric-time').title='Sum of completed state elapsed times, including graph preparation and output processing.';
 
   $('unit-count').textContent=`${completed.length}/${job.states.length} state results · ${number(sum('units'))} assigned ${fineUnitLabel()} · Optimality unproved`;
 
-  $('map-subtitle').textContent+=` · Summary of ${completed.length} completed states`;
+  $('map-subtitle').textContent+=` · Summary of ${completed.length} completed states${balanceMisses?` · ${balanceMisses} missed the population target`:''}`;
 
 }
 
@@ -752,11 +952,24 @@ function renderNationalGrid() {
 
   const states = job?.config.mode === 'national' ? job.states : [...selectedStates].sort().map(code => ({code,status:'planned'}));
 
-  $('state-tiles').innerHTML = states.map(state => `<button class="state-tile ${esc(state.status)}" data-result-state="${state.code}"><strong>${state.code}</strong><small>${esc(stateInfo(state.code)?.name)}</small><small>${state.metrics ? `${percent(state.metrics.max_deviation_percent)} deviation` : esc(state.status)}</small><small>${state.metrics ? `${state.metrics.split_counties} county splits` : `${seatCount(state.code) ?? '—'} target districts`}</small></button>`).join('');
+  $('state-tiles').innerHTML = states.map(state => `<button class="state-tile ${esc(state.status)}${state.metrics?.balance_passed===false?' balance-missed':''}" data-result-state="${state.code}"><strong>${state.code}</strong><small>${esc(stateInfo(state.code)?.name)}</small><small${state.metrics?.balance_passed===false?' class="deviation-bad"':''}>${state.metrics ? `${percent(state.metrics.max_deviation_percent)} deviation${state.metrics.balance_passed===false?' · Missed population target':''}` : esc(state.status)}</small><small>${state.metrics ? `${state.metrics.split_counties} county splits` : `${seatCount(state.code) ?? '—'} target districts`}</small></button>`).join('');
 
 }
 
+function releaseNationalMap() {
+  if(mapGeoJSON?.state!=='US')return;
+  // The accepted job and assignments live in the catalog. The displayed map
+  // is derived and can be rebuilt after a view change or an import refusal.
+  mapGeoJSON=null;mapFeatures=[];base=null;selectedDistrict=null;
+}
+
 function setView(next) {
+
+  if(view==='national-map'&&next!=='national-map'){
+    geometryRequest++;
+    $('map-loading').hidden=true;
+    releaseNationalMap();
+  }
 
   view = next; $('national-grid').hidden = view !== 'national'; $('map-container').hidden = view === 'national';
 
@@ -764,7 +977,7 @@ function setView(next) {
 
   $('national-map-view').classList.toggle('active', view === 'national-map');
 
-  renderHeader(); if(job)renderJob(); if (view === 'national') renderNationalGrid(); else if (view === 'national-map') loadNationalGeometry(); else { if(mapGeoJSON?.state !== selectedCode)loadGeometry(selectedCode,job?.config.year || $('year').value); resizeMap(); }
+  renderHeader(); if(job)renderJob();if(browserWasm)renderSnapshotMap(); if (view === 'national') renderNationalGrid(); else if (view === 'national-map') loadNationalGeometry(); else { if(mapGeoJSON?.state !== selectedCode)loadGeometry(selectedCode,job?.config.year || $('year').value); resizeMap(); }
 
 }
 
@@ -797,24 +1010,27 @@ async function openHistory(id) {
     const saved = await api(`/api/runs/${id}`), configuration = saved.config;
     if(browserWasm)$('experiment-options').open=true;
 
-    for (const key of ['name','year','chamber','structure','weights','search','seed','seeds','steps','iterations']) $(key).value = configuration[key];
+    for (const key of ['name','year','chamber','structure','weights','search','seed','seeds','steps','iterations']) $(key).value = configuration[key]??'';
+    $('run-profile').value=['court','bulletproof'].includes(configuration.profile)?'court':'open';$('county-augmentation-enabled').checked=Object.hasOwn(configuration,'county_augmentation');$('county-augmentation-alpha').value=configuration.county_augmentation??2;renderCountyAugmentationControls();
 
     $('sa-steps').value=configuration.sa_steps_per_tract??10;$('sa-factor').value=configuration.sa_t0_factor??0.01;$('sa-final').value=configuration.sa_t_final??0.0001;
 
-    $('flow-repair').value=configuration.flow_repair??'bfs';
+    $('flow-repair').value=configuration.flow_repair??'bfs';if(browserWasm){$('ilp-method').value=configuration.ilp_method??'formulation-only';$('ilp-fallback').value=configuration.ilp_fallback??'metis';$('ilp-time').value=configuration.ilp_time_limit??300;$('ilp-gap').value=configuration.ilp_gap??.01;$('ilp-max').value=configuration.ilp_max_tracts??500;$('capture-ilp-reports').checked=configuration.capture_ilp_reports===true;}
 
     electionSequence++;electionLoading=false;electionInputs=structuredClone(configuration.elections??Object.create(null));$('proportional-eta').value=configuration.proportional_eta??1.1;renderElectionInputs();
     $('election-csv-state').value=configuration.states[0];$('election-csv-year').value=electionInputs[configuration.states[0]]?.election_year??'';
     partisanSequence++;partisanLoading=false;partisanInputs=structuredClone(configuration.partisans??Object.create(null));$('dem-threshold').value=percentageInput(configuration.dem_threshold??.55);$('rep-threshold').value=percentageInput(configuration.rep_threshold??.45);renderPartisanInputs();
     $('partisan-tsv-state').value=configuration.states[0];
     multiscaleUi?.restore(configuration);
-    characterSequence++;characterLoading=false;characterInputs=structuredClone(configuration.characters??Object.create(null));$('character-alpha').value=configuration.character_alpha??.5;$('character-csv-state').value=configuration.states[0];$('character-data-year').value=configuration.characters?.[configuration.states[0]]?.data_year??configuration.year;renderCharacterInputs();
-    demographicInputs=structuredClone(configuration.demographics??Object.create(null));$('vra-threshold').value=(configuration.vra_threshold??0.5)*100;$('vra-weight').value=(configuration.w_vra??0.4)*100;$('demographic-csv-state').value=configuration.states[0];$('demographic-csv-basis').value=demographicInputs[configuration.states[0]]?.basis??'total-population';renderDemographicInputs();
-    $('pt-replicas').value=configuration.pt_replicas??4;$('pt-swap').value=configuration.pt_swap_interval??10;$('pt-hot').value=(configuration.pt_hot_tol??configuration.balance_tolerance/100*4)*100;
+    if(browserWasm){ordinaryCoiSequence++;ordinaryCoiLoading=false;ordinaryCoiError='';ordinaryCoi=configuration.coi?structuredClone(configuration.coi):null;$('lab-coi-file').value='';$('lab-coi-source-status').textContent=ordinaryCoi?`${ordinaryCoi.source_name} · original source retained`:'No COI source selected.';}
+    zoneSequence++;zoneReading=false;zoneError='';zoneSources=structuredClone(configuration.zones??Object.create(null));$('zone-files').value='';const zoneAlphas=[...new Set(Object.values(zoneSources).map(source=>source.alpha))];$('zone-alpha').value=zoneAlphas.length>1?'':zoneAlphas[0]??1;renderZoneInputs();
+    characterSequence++;characterLoading=false;characterInputs=structuredClone(configuration.characters??Object.create(null));characterPreparations=structuredClone(configuration.character_preparations??Object.create(null));characterFallbackSources=structuredClone(configuration.character_fallback_sources??Object.create(null));nativeCharacterSources=structuredClone(configuration.native_character_sources??Object.create(null));$('character-native-files').checked=Object.keys(nativeCharacterSources).length>0;$('character-alpha').value=configuration.character_alpha??.5;$('character-absence').checked=configuration.character_absent_file_fallback===true;$('character-csv-state').value=configuration.states[0];$('character-data-year').value=configuration.native_character_sources?.[configuration.states[0]]?.settings.data_year??configuration.characters?.[configuration.states[0]]?.data_year??configuration.character_fallback_sources?.[configuration.states[0]]?.result.data_year??configuration.year;renderCharacterInputs();
+    demographicInputs=structuredClone(configuration.demographics??Object.create(null));$('vra-threshold').value=(configuration.vra_threshold??0.5)*100;$('vra-absence').checked=configuration.vra_absent_file_fallback===true;$('vra-weight').value=(configuration.w_vra??0.4)*100;$('demographic-csv-state').value=configuration.states[0];$('demographic-csv-basis').value=demographicInputs[configuration.states[0]]?.basis??'total-population';renderDemographicInputs();
+    $('pt-replicas').value=configuration.pt_replicas??4;$('pt-swap').value=configuration.pt_swap_interval??10;$('pt-cold').value=(configuration.pt_cold_tol??configuration.balance_tolerance/100)*100;$('pt-hot').value=(configuration.pt_hot_tol??configuration.balance_tolerance/100*4)*100;
     $('burst-length').value=configuration.burst_length??20;$('n-bursts').value=configuration.n_bursts??Math.ceil(configuration.steps/20);
-    $('metis-objective').value=configuration.metis_objective??'cut';$('metis-trials').value=configuration.metis_trials??1;
+    $('convergence-unlimited').checked=configuration.convergence_unlimited===true;    $('metis-ufactor').value=configuration.metis_ufactor??'';$('metis-objective').value=configuration.metis_objective??'cut';$('metis-trials').value=configuration.metis_trials??1;
     $('area-init').value=configuration.area_init??'ratio-optimal';
-    $('compact-slack').value=(configuration.compact_epsilon??0.05)*100;
+    $('compact-slack').value=(configuration.compact_epsilon??0.05)*100;$('compact-geometry').value=configuration.compact_geometry??'prepared';
     $('mka-orientations').value=configuration.mka_orientations??36;$('mka-metric').value=configuration.mka_metric??'reock';
 
     $('cvd-iters').value=configuration.cvd_iters??50;$('cvd-metric').value=configuration.cvd_metric??'geographic';
@@ -825,7 +1041,7 @@ async function openHistory(id) {
 
     $('percentile').value = configuration.percentile * 100; $('alpha').value = configuration.alpha_county;
 
-    $('tolerance').value = configuration.balance_tolerance; $('area-swing').value = configuration.area_swing; $('timeout').value = configuration.timeout_seconds;
+    if(browserWasm){$('lab-electoral-enabled').checked=Object.hasOwn(configuration,'electoral');$('lab-seats-per-district').value=configuration.electoral?.seats_per_district??1;$('lab-total-seats').value=configuration.electoral?.total_seats??'';for(const id of ['lab-seats-per-district','lab-total-seats'])$(id).disabled=!$('lab-electoral-enabled').checked;$('native-build').checked=configuration.native_build===true;$('capture-rounds').checked=configuration.capture_rounds===true;} $('tolerance').value = configuration.balance_tolerance; $('area-swing').value = configuration.area_swing; $('timeout').value = configuration.timeout_seconds;
 
     selectedStates = new Set(configuration.states); updateControls(); setMode(configuration.mode);
 
@@ -888,7 +1104,8 @@ function districtColor(district) { return district ? palette[(district-1)%palett
 
 function featureColor(feature) {
 
-  const district = feature.properties.district;
+  const district = displayedDistrict(feature);
+  if(activeSnapshot())return districtColor(district);
   if($('color-by').value==='root'){
     const root=job?.states.find(state=>state.code===(feature.properties.state??selectedCode))?.metrics?.root_split;
     return root&&district?(district<=root.left_districts?'#608f82':'#9386ad'):'#d0dfd3';
@@ -896,6 +1113,11 @@ function featureColor(feature) {
   if($('color-by').value==='minority'){
     const value=job?.config.demographics?.[feature.properties.state??selectedCode]?.minority_fractions[feature.properties.geoid];
     return Number.isFinite(value)?`hsl(270 38% ${95-value*60}%)`:'#d0dfd3';
+  }
+  if($('color-by').value==='minority-district'){
+    const summary=job?.states.find(state=>state.code===(feature.properties.state??selectedCode))?.metrics?.native_state_vra;
+    const share=summary?.analysis.districts.find(d=>d.district===district)?.pct_minority;
+    return Number.isFinite(share)?`hsl(270 38% ${95-share*60}%)`:'#d0dfd3';
   }
 
   if ($('color-by').value === 'county') { const code = Number(feature.properties.county.slice(2)); return palette[Math.floor(code/2)%palette.length]; }
@@ -914,9 +1136,11 @@ function featureColor(feature) {
 
 function renderLegend() {
 
+  if(activeSnapshot()){$('minority-details')?.setAttribute('hidden','');const snapshot=activeSnapshot(),regions=[...new Set(snapshot.assignments.values())].sort((a,b)=>a-b);$('legend').replaceChildren();const note=document.createElement('span');note.textContent='Snapshot regions · Unassigned units neutral · Metrics describe returned final plan';$('legend').append(note);for(const region of regions.slice(0,50)){const button=document.createElement('button');button.dataset.district=String(region);button.textContent=`Region ${region}`;button.style.borderBottom=`3px solid ${districtColor(region)}`;$('legend').append(button);}if(regions.length>50){const note=document.createElement('span');note.textContent=`${regions.length-50} more regions; inspect them on the map or export the snapshot.`;$('legend').append(note);}return;}
   renderMinorityDetails();
   if($('color-by').value==='root'){$('legend').textContent='Root split · green: left district labels · purple: right district labels · no root split: neutral.';return;}
   if($('color-by').value==='minority'){$('legend').textContent='Minority fraction per tract · pale 0% → purple 100% · missing data neutral. Fractions use the declared population basis.';return;}
+  if($('color-by').value==='minority-district'){$('legend').textContent='Native State district minority share · population weighted · pale 0% → purple 100% · unavailable summaries neutral.';return;}
 
   if(view==='national-map'){$('legend').innerHTML='<span>Assigned districts are colored. States without completed results remain neutral. Click a state to inspect it.</span>';return;}
 
@@ -935,7 +1159,7 @@ function renderMinorityDetails(){
   if(!panel){panel=document.createElement('details');panel.id='minority-details';panel.className='demographic-details';$('root-constraint-detail').after(panel);}
   const input=job?.config.demographics?.[selectedCode],state=job?.states.find(s=>s.code===selectedCode),e=state?.metrics?.structure_evidence;
   const recom=job?.config.search==='vra-recom';
-  panel.replaceChildren();panel.hidden=(!recom&&!input?.counts)||!input||!state?.metrics||!mapGeoJSON||mapGeoJSON.state!==selectedCode||mapGeoJSON.year!==job.config.year;if(panel.hidden)return;
+  panel.replaceChildren();panel.hidden=isMultiscale(job?.config)||(!recom&&!input?.counts)||!input||!state?.metrics||!mapGeoJSON||mapGeoJSON.state!==selectedCode||mapGeoJSON.year!==job.config.year;if(panel.hidden)return;
   function appendTable(table){const wrapper=document.createElement('div');wrapper.className='table-scroll';wrapper.append(table);panel.append(wrapper);}
   if(recom){
   const title=document.createElement('summary');title.textContent='District minority fractions · unweighted tract means';panel.append(title);
@@ -980,7 +1204,7 @@ async function loadGeometry(code, year) {
 
     if (!ready) $('unit-count').textContent = `${number(geojson.features.length)} Census tracts · No plan assigned`;
 
-    $('download-map').disabled = !ready; renderLegend(); resizeMap();
+    $('download-map').disabled = !ready; renderLegend(); resizeMap();if(browserWasm)renderSnapshotMap();
 
   } catch (error) {
 
@@ -996,11 +1220,17 @@ async function loadGeometry(code, year) {
 
 function buildPaths(geojson,code) {
 
-  const coordinates = geojson.features.flatMap(feature => feature.geometry.coordinates.flatMap(polygon => polygon.flat()));
-
-  const centerLat = coordinates.reduce((sum,c) => sum+c[1],0)/coordinates.length;
-
-  const cos = Math.cos(centerLat*Math.PI/180);
+  const polygons = feature => feature.geometry.type === 'Polygon' ? [feature.geometry.coordinates] : feature.geometry.coordinates;
+  // Albers does not use a mean latitude. For state maps, calculate it without
+  // building a second array of all coordinate references.
+  let latitudeSum = 0, coordinateCount = 0;
+  if (code !== 'US') for (const feature of geojson.features) {
+    for (const polygon of polygons(feature)) for (const ring of polygon) for (const coordinate of ring) {
+      latitudeSum += coordinate[1];
+      coordinateCount++;
+    }
+  }
+  const cos = code === 'US' ? 1 : Math.cos(latitudeSum/coordinateCount*Math.PI/180);
 
   const albers = coordinate => {
 
@@ -1032,7 +1262,7 @@ function buildPaths(geojson,code) {
 
     const path = new Path2D();
 
-    for (const polygon of feature.geometry.coordinates) for (const ring of polygon) {
+    for (const polygon of polygons(feature)) for (const ring of polygon) {
 
       ring.forEach((coordinate,index) => { const [x,y] = project(coordinate,feature.properties.state); if(index===0) path.moveTo(x,y); else path.lineTo(x,y); bounds=[Math.min(bounds[0],x),Math.min(bounds[1],y),Math.max(bounds[2],x),Math.max(bounds[3],y)]; }); path.closePath();
 
@@ -1080,11 +1310,11 @@ function drawMap() {
 
   for (const feature of mapFeatures) {
 
-    ctx.globalAlpha=selectedDistrict && feature.properties.district !== selectedDistrict ? .3 : .96;
+    ctx.globalAlpha=selectedDistrict && displayedDistrict(feature) !== selectedDistrict ? .3 : .96;
 
     ctx.fillStyle=featureColor(feature);ctx.fill(feature.path,'evenodd');
 
-    ctx.strokeStyle=selectedDistrict === feature.properties.district ? '#2f5b47' : '#ffffffa0';ctx.lineWidth=.35/t.s;ctx.stroke(feature.path);
+    ctx.strokeStyle=selectedDistrict === displayedDistrict(feature) ? '#2f5b47' : '#ffffffa0';ctx.lineWidth=.35/t.s;ctx.stroke(feature.path);
 
   }
 
@@ -1106,9 +1336,10 @@ function showTooltip(event) {
 
   const feature=hit(event), tooltip=$('map-tooltip');tooltip.hidden=!feature;if(!feature)return;
 
-  const d=job?.states.find(state=>state.code===feature.properties.state)?.metrics?.districts.find(d=>d.district===feature.properties.district);
+  const district=displayedDistrict(feature),snapshot=activeSnapshot();
+  const d=snapshot?null:job?.states.find(state=>state.code===feature.properties.state)?.metrics?.districts.find(d=>d.district===district);
 
-  tooltip.innerHTML=`<strong>${esc(feature.properties.state)} · ${feature.properties.district ? `District ${feature.properties.district}` : 'Unassigned Census tract'}</strong>GEOID ${esc(feature.properties.geoid)}<br>County FIPS ${esc(feature.properties.county)}${d ? `<br>${number(d.population)} district population<br>${percent(d.deviation_percent)} deviation` : ''}`;
+  tooltip.innerHTML=`<strong>${esc(feature.properties.state)} · ${district ? `${snapshot?'Snapshot region':'District'} ${district}` : 'Unassigned Census tract'}</strong>GEOID ${esc(feature.properties.geoid)}<br>County FIPS ${esc(feature.properties.county)}${d ? `<br>${number(d.population)} district population<br>${percent(d.deviation_percent)} deviation` : ''}`;
 
   const rect=canvas.getBoundingClientRect();tooltip.style.left=`${Math.min(event.clientX-rect.left+13,rect.width-235)}px`;tooltip.style.top=`${Math.max(8,Math.min(event.clientY-rect.top+13,rect.height-110))}px`;
 
@@ -1118,7 +1349,20 @@ function highlightDistrict(district) {selectedDistrict=selectedDistrict===distri
 
 function zoomMap(factor) {zoom=Math.min(12,Math.max(.7,zoom*factor));drawMap();}
 
-function download(value,name) {const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function downloadBlob(blob,name) {const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function download(value,name,space=2) {downloadBlob(new Blob([JSON.stringify(value,null,space)],{type:'application/json'}),name);}
+function nationalMapBlob({features,...metadata}) {
+  // A complete map can approach the engine's maximum JS string length.
+  // Retain the existing pretty JSON bytes using small, immutable Blob parts.
+  const parts=[];
+  let text=JSON.stringify(metadata,null,2).slice(0,-2)+',\n  "features": [';
+  for (const [i,feature] of features.entries()) {
+    text+=(i===0?'\n':',\n')+'    '+JSON.stringify(feature,null,2).replaceAll('\n','\n    ');
+    if (text.length>=1024*1024) {parts.push(new Blob([text]));text='';}
+  }
+  parts.push(new Blob([text+(features.length?'\n  ':'')+']\n}']));
+  return new Blob(parts,{type:'application/json'});
+}
 
 
 
@@ -1126,7 +1370,7 @@ $('experiment-form').addEventListener('submit',submit);
 
 document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.mode)));
 
-for (const id of ['structure','weights','search','percentile']) $(id).addEventListener('input',()=>{updateControls();if(precomputed)updateAvailability();});
+for (const id of ['structure','weights','search','percentile','convergence-unlimited']) $(id).addEventListener('input',()=>{updateControls();if(precomputed)updateAvailability();});
 
 if(precomputed)$('experiment-form').addEventListener('input',updateAvailability);
 
@@ -1156,7 +1400,7 @@ canvas.addEventListener('pointerdown',event=>{drag={x:event.clientX,y:event.clie
 
 canvas.addEventListener('pointermove',event=>{if(drag){const dx=event.clientX-drag.x,dy=event.clientY-drag.y;drag.moved ||= Math.abs(dx)+Math.abs(dy)>4;pan=[drag.pan[0]+dx,drag.pan[1]+dy];drawMap();}else showTooltip(event);});
 
-canvas.addEventListener('pointerup',event=>{const moved=drag?.moved;drag=null;if(!moved){const feature=hit(event);if(view==='national-map'&&feature){selectResult(feature.properties.state);return;}if(feature?.properties.district)highlightDistrict(feature.properties.district);showTooltip(event);}});
+canvas.addEventListener('pointerup',event=>{const moved=drag?.moved;drag=null;if(!moved){const feature=hit(event);if(view==='national-map'&&feature){selectResult(feature.properties.state);return;}if(feature&&displayedDistrict(feature))highlightDistrict(displayedDistrict(feature));showTooltip(event);}});
 
 canvas.addEventListener('pointercancel',()=>drag=null);canvas.addEventListener('pointerleave',()=>$('map-tooltip').hidden=true);
 
@@ -1170,7 +1414,15 @@ document.querySelectorAll('[data-result-tab]').forEach(button=>button.addEventLi
 
 $('compare-run').addEventListener('change',updateComparison);
 
-$('download-config').addEventListener('click',()=>{if(job)download(job,`${job.id}_record.json`);});$('download-map').addEventListener('click',()=>{if(mapGeoJSON&&job)download(mapGeoJSON,`${job.id}_${mapGeoJSON.state || selectedCode}.geojson`);});
+$('download-config').addEventListener('click',()=>{if(job)download(job,`${job.id}_record.json`);});
+$('download-map').addEventListener('click',()=>{
+  if(!mapGeoJSON||!job)return;
+  const name=`${job.id}_${mapGeoJSON.state || selectedCode}.geojson`;
+  if(view==='national-map') {
+    if(!$('map-loading').hidden||mapGeoJSON.state!=='US')return;
+    downloadBlob(nationalMapBlob(mapGeoJSON),name);
+  } else download(mapGeoJSON,name);
+});
 
 new ResizeObserver(resizeMap).observe($('map-container'));
 
@@ -1200,9 +1452,23 @@ async function poll() {
 
 }
 
+async function receiveCharacterHandoff(){
+ const fallbackToken=characterFallbackToken(location.hash),token=characterHandoffToken(location.hash)??fallbackToken;if(!token)return;const expected=projectRevision;
+ try{
+  const blob=await takeProjectHandoff(token);if(!blob)throw new Error('Character transfer expired or was already opened. Prepare a new transfer or select the downloaded character file.');
+  const project=await readProjectFile(blob),input=fallbackToken?nativeCharacterFallbackInfo(project):preparedCharacterInput(project),entry=staticCatalog.manifest.graphs[input.state+':'+input.year];
+  if(fallbackToken)await verifyNativeCharacterFallback(project);else await verifyCharacterPreparation(project,input);
+  if(!entry||!catalog.weights.includes((fallbackToken?input.kind:input.data.kind)+'-character'))throw new Error('Prepared character scope has no available laboratory tract graph. Existing inputs kept.');
+  if(expected!==projectRevision||staticCatalog.active)throw new Error('Laboratory changed during character transfer. Existing inputs kept.');
+  $('experiment-options').open=true;
+  projectRevision++;characterSequence++;characterLoading=false;if(fallbackToken){delete characterInputs[input.state];delete characterPreparations[input.state];characterFallbackSources={...characterFallbackSources,[input.state]:project};$('character-absence').checked=true;}else{characterInputs={...characterInputs,[input.state]:input};characterPreparations={...characterPreparations,[input.state]:project};delete characterFallbackSources[input.state];}$('state').value=input.state;$('year').value=input.year;$('weights').value=(fallbackToken?input.kind:input.data.kind)+'-character';$('structure').value='standard-bisect';$('search').value='single';$('character-csv-state').value=input.state;$('character-data-year').value=input.data_year;delete nativeCharacterSources[input.state];selectedCode=input.state;updateControls();setMode('state');renderCharacterInputs();$('character-status').textContent+=(fallbackToken?' · recorded native source '+input.native_status+'; geographic fallback explicitly selected':' · transferred preparation input;')+(fallbackToken?' Review fallback and Run explicitly; no observations are available to align.':' review coverage or align explicitly before Run');toast(fallbackToken?'Recorded native empty/error source retained with explicit geographic fallback. No plan run performed.':'Prepared character input selected. No alignment or plan run performed.');
+ }catch(error){toast(error.message);if($('character-status'))$('character-status').textContent=error.message;}
+ finally{if((characterHandoffToken(location.hash)??characterFallbackToken(location.hash))===token)globalThis.history.replaceState(null,'',location.pathname+location.search);}
+}
+
 async function start() {
 
-  try {if(precomputed)staticCatalog=await loadStaticCatalog();if(browserWasm)staticCatalog=await (await import('./wasm-catalog.js')).loadWasmCatalog();catalog=await api('/api/catalog');populate();if(browserWasm)await setupLabProjects();await refreshHistory();renderHeader();loadGeometry(selectedCode,$('year').value);if(!precomputed)setInterval(poll,1500);}
+  try {if(precomputed)staticCatalog=await loadStaticCatalog();if(browserWasm)staticCatalog=await (await import('./wasm-catalog.js?v=multiscale-build-v1')).loadWasmCatalog();if(browserWasm)staticCatalog.onRoundProgress=renderLiveRoundProgress;catalog=await api('/api/catalog');populate();if(browserWasm){await setupLabProjects();await receiveCharacterHandoff();}await refreshHistory();renderHeader();loadGeometry(selectedCode,$('year').value);if(!precomputed)setInterval(poll,1500);}
 
   catch(error){$('connection').textContent='Connection unavailable';$('form-error').textContent=error.message;$('form-error').hidden=false;$('run').disabled=true;}
 
@@ -1213,8 +1479,11 @@ start();
 
 
 async function setupLabProjects(){
+  $('download-lab-failure').onclick=()=>{try{const selected=selectedLabFailure();download(selected.receipt,selected.code+'-failure.json');}catch(error){$('lab-worker-failure-status').textContent=error.message;}};
+  $('download-lab-failure-request').onclick=()=>downloadLabFailureRequest().catch(error=>{$('lab-worker-failure-status').textContent=error.message;});
+  $('run-profile-field').hidden=!browserWasm;$('run-profile-help').hidden=!browserWasm;
 
-  labProjectTools=await import('./laboratory-project.js');
+  labProjectTools=await import('./laboratory-project.js?v=multiscale-build-v1');
 
   const section=document.createElement('section');section.className='lab-project-controls';
 
@@ -1236,33 +1505,63 @@ async function setupLabProjects(){
 
   for(const type of ['input','change','click'])document.addEventListener(type,()=>projectRevision++,{capture:true});
 
-  save.onclick=async()=>{try{const project=await labProjectTools.createLabProject(staticCatalog,job?.id);download(project,(project.experiment.config.name.replace(/[^a-z0-9_-]+/gi,'-')||'experiment')+'.bisect');status.textContent='Project download requested. Keep the file as a portable backup.';}catch(error){status.textContent=error.message;}};
+  save.onclick=async()=>{try{const project=await labProjectTools.createLabProject(staticCatalog,job?.id);download(project,(project.experiment.config.name.replace(/[^a-z0-9_-]+/gi,'-')||'experiment')+'.bisect',0);status.textContent='Project download requested. Keep the file as a portable backup.';}catch(error){status.textContent=error.message;}};
 
   if(browserWasm){
     let preparedAudit;
+    const nativeData=document.createElement('button');nativeData.id='download-native-state-data';nativeData.type='button';nativeData.disabled=true;nativeData.textContent='Download selected State data ZIP';section.append(nativeData);
+    const nativeDataHelp=document.createElement('p');nativeDataHelp.className='help';nativeDataHelp.textContent='Includes indexed assignments, matching unit IDs, engine settings and any native minority summary. Save the project to retain its inputs and full run record.';section.append(nativeDataHelp);
+    nativeData.onclick=async()=>{
+      if(nativeData.disabled||staticCatalog.active||staticCatalog.exporting)return;const expectedJob=job?.id,code=selectedCode;nativeData.disabled=true;
+      try{const bytes=await staticCatalog.exportNativeStateData(expectedJob,code);if(job?.id!==expectedJob||selectedCode!==code)throw new Error('Selection changed during export. Select the state again.');const url=URL.createObjectURL(new Blob([bytes],{type:'application/zip'})),link=document.createElement('a');link.href=url;link.download=code+'-native-state-data.zip';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent=`${code} State data ZIP prepared. The unit index binds the native assignments to their geographic unit IDs.`;}catch(error){status.textContent=error.message;}finally{updateNativeStateDataControl();}
+    };
     const exportButton=document.createElement('button');exportButton.id='export-audit-project';exportButton.type='button';exportButton.textContent='Prepare selected state for auditing';section.append(exportButton);
     const auditDownload=document.createElement('button');auditDownload.id='download-audit-project';auditDownload.type='button';auditDownload.textContent='Download audit project';auditDownload.disabled=true;section.append(auditDownload);
+    const auditOpen=document.createElement('button');auditOpen.id='open-audit-project';auditOpen.type='button';auditOpen.textContent='Open this plan in workbench';auditOpen.disabled=true;
     const workbenchLink=document.createElement('a');workbenchLink.href='./toolkit/';workbenchLink.textContent='Open practitioner workbench';section.append(workbenchLink);
-    const help=document.createElement('p');help.textContent='Select a completed state on the map, export its plan and context, then open the downloaded project in the workbench. Load an explicit legal profile before auditing. National runs export one selected state at a time.';section.append(help);
+    const help=document.createElement('p');help.textContent='Select a completed state on the map, export its plan, context and matching unit geometry, then open it directly in the workbench or download a portable project. Run validation there to display the map. Load an explicit legal profile before auditing. National runs export one selected state at a time.';section.append(help);
     const practitioner=document.createElement('details');practitioner.id='practitioner-tools';practitioner.className='advanced';const title=document.createElement('summary');title.textContent='Practitioner tools';practitioner.append(title);section.append(practitioner);
-    for(const element of [exportButton,auditDownload,workbenchLink,help])practitioner.append(element);
+    for(const element of [exportButton,auditDownload,auditOpen,workbenchLink,help])practitioner.append(element);
     exportButton.onclick=async()=>{
       exportButton.disabled=true;
-      preparedAudit=null;auditDownload.disabled=true;
+      preparedAudit=null;auditDownload.disabled=true;auditOpen.disabled=true;
       const expectedJob=job?.id,expectedCode=selectedCode;
       try{
         status.textContent=`Checking ${expectedCode} assignments and preparing native audit files…`;
-        const {project}=await staticCatalog.exportPractitionerProject(expectedJob,expectedCode);
+        const {project,archive}=await staticCatalog.exportPractitionerProject(expectedJob,expectedCode);
         if(job?.id!==expectedJob||selectedCode!==expectedCode)throw new Error('Selection changed during export. Select the state and export again.');
-        preparedAudit={project,jobId:expectedJob,code:expectedCode};auditDownload.disabled=false;
-        status.textContent=`${expectedCode} audit project ready. Download it, then open it in the practitioner workbench and supply a legal profile. Generation provenance remains unverified.`;
+        const metrics=job?.states.find(state=>state.code===expectedCode)?.metrics;
+        const observations=[];
+        if(metrics?.balance_passed===false)observations.push('The plan missed this run’s population tolerance.');
+        if(metrics?.contiguous===false)observations.push('The run detected disconnected districts.');
+        const finding=observations.length?' '+observations.join(' '):'';
+        preparedAudit={project,archive,jobId:expectedJob,code:expectedCode,finding};auditDownload.disabled=false;auditOpen.disabled=archive!==undefined;
+        auditDownload.textContent=archive!==undefined?'Download audit archive':'Download audit project';
+        status.textContent=(archive!==undefined?`${expectedCode} audit archive ready. Download it, then use Open workbench archive in the practitioner workbench. Supply a legal profile before auditing; generation provenance remains unverified.`:`${expectedCode} audit project ready. Open it in the practitioner workbench or download it, then supply a legal profile. Generation provenance remains unverified.`)+finding;
       }catch(error){status.textContent=error.message;}
       finally{exportButton.disabled=false;}
     };
+    auditOpen.onclick=async()=>{
+      const expected=preparedAudit;
+      if(!expected||job?.id!==expected.jobId||selectedCode!==expected.code){status.textContent='Selection changed. Prepare the selected state again.';auditOpen.disabled=true;return;}
+      if(expected.archive!==undefined){status.textContent='Download the audit archive, then use Open workbench archive in the practitioner workbench.';auditOpen.disabled=true;return;}
+      auditOpen.disabled=true;
+      try{
+        const token=await queueProjectHandoff(expected.project);
+        if(preparedAudit!==expected||job?.id!==expected.jobId||selectedCode!==expected.code)throw new Error('Selection changed during transfer. Prepare the selected state again.');
+        location.assign('./toolkit/#project='+token);
+      }catch(error){status.textContent=error.message+' The download option remains available.';auditOpen.disabled=false;}
+    };
     auditDownload.onclick=()=>{
       if(!preparedAudit||job?.id!==preparedAudit.jobId||selectedCode!==preparedAudit.code){preparedAudit=null;auditDownload.disabled=true;status.textContent='Selection changed. Prepare the selected state again.';return;}
-      download(preparedAudit.project,`${preparedAudit.jobId}_${preparedAudit.code}_audit.bisect`);
-      status.textContent=`Audit project download requested for ${preparedAudit.code}. Open it in the practitioner workbench.`;
+      if(preparedAudit.archive!==undefined){
+        const content=preparedAudit.archive,url=URL.createObjectURL(new Blob([content],{type:typeof content==='string'?'application/json':'application/gzip'})),a=document.createElement('a');
+        a.href=url;a.download=`${preparedAudit.jobId}_${preparedAudit.code}_audit.bisect-workbench`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+        status.textContent=`Audit archive download requested for ${preparedAudit.code}. Use Open workbench archive in the practitioner workbench.`+preparedAudit.finding;
+      }else{
+        download(preparedAudit.project,`${preparedAudit.jobId}_${preparedAudit.code}_audit.bisect`);
+        status.textContent=`Audit project download requested for ${preparedAudit.code}. Open it in the practitioner workbench.`+preparedAudit.finding;
+      }
     };
   }
 
@@ -1278,6 +1577,14 @@ async function setupLabProjects(){
 
       status.textContent='Validating project and assignment evidence…';
 
+      if(view==='national-map'){
+        // Retire the large derived map before starting the project parser.
+        // This leaves the current plan available even if validation refuses.
+        setView('national');
+        await new Promise(resolve=>setTimeout(resolve,0));
+        if(signal.aborted||sequence!==projectSequence)return;
+        if(revision!==projectRevision)throw new Error('Current project changed during import. Open the file again.');
+      }
       const project=await read(signal);if(!project)throw new Error('No autosaved experiment found.');
 
       const restored=await staticCatalog.restoreProject(project,{signal,isCurrent:()=>sequence===projectSequence&&revision===projectRevision});
@@ -1327,10 +1634,12 @@ function autosaveLabProject(){
 async function loadNationalGeometry() {
 
   const revision=++geometryRequest, currentId=job?.id, year=job?.config.year || $('year').value;
+  releaseNationalMap();
 
   const codes=job?.config.mode==='national'?job.config.states:[...selectedStates].sort();
 
   $('map-loading').hidden=false;selectedDistrict=null;
+  $('download-map').disabled=true;
 
   const features=[],failures=[];
 
@@ -1342,7 +1651,19 @@ async function loadNationalGeometry() {
 
     const ready=job?.states.find(state=>state.code===code)?.metrics;
 
-    try{const collection=await api(currentId&&ready?`/api/runs/${currentId}/${code}/map`:`/api/geometry?state=${code}&year=${year}`);features.push(...collection.features);}catch(error){failures.push(code);}
+    const geometryRef=browserWasm?staticCatalog.manifest.geometries[`${code}:${year}`]:null;
+    try{
+      const collection=await api(currentId&&ready?`/api/runs/${currentId}/${code}/map`:`/api/geometry?state=${code}&year=${year}`);
+      if(revision!==geometryRequest||view!=='national-map')return;
+      features.push(...collection.features);
+    }catch(error){
+      failures.push(code);
+      console.warn(`National map geometry unavailable for ${code}: ${error.message}`);
+    }finally{
+      // The joined collection owns its coordinates. Avoid keeping the original
+      // parsed geometry of every state in the catalog cache as well.
+      if(geometryRef)staticCatalog.assets.delete(geometryRef);
+    }
 
   }
 

@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {configRunRequest,validateConfigRunSettings,configuredRunExportRequest} from '../../web/lab/config-run.js';
+import {tuiRunRequest} from '../../web/lab/tui-run-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const root='target/custom-chamber';await fs.mkdir(root,{recursive:true});const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm')),base=JSON.parse(await fs.readFile('target/tui-run-wasm/run.bisect','utf8')),files=base.files;
+const source=(name,text)=>({name,base64:Buffer.from(text).toString('base64')}),yaml=Buffer.from(files.configSource.base64,'base64').toString(),withoutTolerance=yaml.replace(/^\s*balance_tolerance:.*\r?\n/gm,'');let matches=0;
+async function nativeMatch(request,actual){await fs.writeFile(root+'/request.json',JSON.stringify(request));assert.deepEqual(actual,JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[path.resolve(root+'/request.json')],{encoding:'utf8',maxBuffer:64*1024*1024})));matches++;}
+for(const chamber of ['congressional','house','senate','lower','assembly','upper','custom','Dáil Éireann'])for(const explicit of [false,true]){
+ const settings={chamber,districts:2},configSource=source('chamber.yml',explicit?yaml:withoutTolerance),request=configRunRequest(configSource,files.configSettings,{graph:files.configRunInputs.graph},settings),out=engine.execute(request);await nativeMatch(request,out);
+ if(!explicit){const graph=JSON.parse(Buffer.from(files.configRunInputs.graph.base64,'base64'));await fs.writeFile(root+'/oracle.json',JSON.stringify({state:graph.state,chamber}));const expected=JSON.parse(execFileSync('target/debug/examples/chamber_tolerance_reference.exe',[path.resolve(root+'/oracle.json')],{encoding:'utf8'}));assert.equal(out.configuration.execution_tolerance_percent,expected.percent);}
+ const exportRequest=configuredRunExportRequest(out,{label:'custom_test',created_at:'2026-10-13T00:00:00Z'}),exported=engine.execute(exportRequest);await nativeMatch(exportRequest,exported);assert.equal(exported.document.metadata.chamber,chamber);
+}
+const graph=JSON.parse(Buffer.from(files.configRunInputs.graph.base64,'base64'));graph.unit_kind='imported';graph.state='MT';graph.year='2021';graph.county_ids=graph.geoids.map(()=> 'Region-A');graph.geoids=graph.geoids.map((_,i)=>'MT-AREA-'+i);graph.population=graph.population.map(()=>100);
+const internationalFiles={...files,configSource:source('named-chamber.yml',withoutTolerance),configRunInputs:{graph:source('synthetic-mt-imported.json',JSON.stringify(graph))},configRunSettings:{chamber:'Dáil Éireann',districts:2}};delete internationalFiles.planGeometry;delete internationalFiles.tuiRunWorkflowSettings;
+internationalFiles.tuiRunSettings={form:{...files.tuiRunSettings.form,location:'MT',year:'2021',resolution:'imported',chamber:'Dáil Éireann',label:'synthetic_named_chamber',balance_tol:''},created_at:'2026-10-13T00:00:00Z'};
+const request=tuiRunRequest(internationalFiles.tuiRunSettings,internationalFiles.configSource,internationalFiles.configSettings,internationalFiles.configRunInputs,internationalFiles.configRunSettings),out=engine.execute(request);await nativeMatch(request,out);assert.equal(out.practitioner_export.document.metadata.chamber,'Dáil Éireann');assert.equal(out.practitioner_export.document.plan.units.unit_kind,'imported');assert.deepEqual(out.practitioner_export.document.plan.units.unit_ids,graph.geoids);assert.equal(out.configured_run.configuration.execution_tolerance_percent,5);
+const project=createProject({name:'Synthetic named chamber on imported units',files:internationalFiles,operation:'run-tui-configured',constraints:[],result:out,lastOperation:'run-tui-configured'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/named-chamber.bisect',JSON.stringify(project));
+for(const chamber of ['',null,3,'bad\nname','é'.repeat(101)])assert.throws(()=>validateConfigRunSettings({chamber,districts:2}));
+await fs.writeFile(root+'/evidence.json',JSON.stringify({whole_native_wasm_matches:matches,native_policy_fallback_oracle:true,known_chambers_and_aliases:true,explicit_yaml_tolerance_retained:true,unicode_named_chamber:true,imported_non_census_scope_retained:true,inert_project_roundtrip:true,invalid_chamber_metadata_refused:true},null,2));console.log('Chambers: native/WASM Run/export equality, independent native tolerance oracle, aliases/named Unicode chambers and imported 2021 scope retention passed.');

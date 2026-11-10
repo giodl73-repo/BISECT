@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+import {manifestReplayRequest} from '../../web/lab/engine-replay-files.js';
+const root='target/replay-bindings-wasm';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const replayProject=JSON.parse(await fs.readFile('target/engine-replay-wasm/engine-18446744073709551615.bisect','utf8'));
+const replayInputs=replayProject.files.engineReplayInputs,artifact=JSON.parse(Buffer.from(replayInputs.run.base64,'base64').toString()),original=JSON.parse(Buffer.from(replayInputs.original.base64,'base64').toString());
+const exported=engine.execute({operation:'export-engine-plan',request:artifact.request,assignments:original,label:'bound-run',chamber:'congressional',created_at:'2026-10-08T00:00:00Z'});
+const reported=engine.execute({operation:'prepare-plan-report-manifest',document_json:exported.document_json,context_json:exported.context_json});
+const source=(name,text)=>({name,base64:Buffer.from(text).toString('base64')});
+const base={packageVerificationInputs:{manifest:source('manifest.json',reported.manifest_json),files:{'plan.rplan':source('plan.rplan',exported.document_json),'context.rctx':source('context.rctx',exported.context_json)}},engineReplayInputs:replayInputs};
+let count=0;const evidence=[];
+async function check(name,mutate,status='binding-failed',binding='failed'){
+ const files=structuredClone(base);if(mutate)mutate(files);const request=manifestReplayRequest(files.packageVerificationInputs,files.engineReplayInputs),result=engine.execute(request);
+ await fs.writeFile(root+'/request.json',JSON.stringify(request));const native=JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[root+'/request.json'],{encoding:'utf8',maxBuffer:32*1024*1024}));assert.deepEqual(result,native);count++;
+ assert.equal(result.status,status,result.error);assert.equal(result.manifest_to_run_binding,binding);if(status==='binding-failed'){assert.equal(result.replay,null);assert.equal(result.execution_performed,false);}
+ const project=createProject({name:'Replay correspondence '+name,files,operation:'verify-manifest-replay',constraints:[],result,lastOperation:'verify-manifest-replay'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/'+name+'.bisect',JSON.stringify(project));await fs.writeFile(root+'/'+name+'-result.json',JSON.stringify(result));evidence.push({name,status,binding});return result;
+}
+const change=(source,fn)=>{const text=Buffer.from(source.base64,'base64').toString(),exact=text.match(/"engine_seed"\s*:\s*(\d+)/)?.[1],value=JSON.parse(text);fn(value);let output=JSON.stringify(value);if(exact&&value.engine_seed===Number(exact))output=output.replace(/"engine_seed":\d+/, '"engine_seed":'+exact);source.base64=Buffer.from(output).toString('base64');};
+const manifest=(files,fn)=>change(files.packageVerificationInputs.manifest,fn);
+const run=(files,fn)=>change(files.engineReplayInputs.run,fn);
+const assignments=(files,fn)=>change(files.engineReplayInputs.original,fn);
+const good=await check('bound',null,'match','verified');assert.equal(good.binding.prepared_graph,'verified');assert.equal(good.binding.engine_options,'verified');assert.equal(good.binding.original_plan,'verified');assert.equal(good.binding.seed,'18446744073709551615');
+for(const [key,value]of [['state_code','RI'],['year','2010'],['num_districts',3],['engine_seed',42],['balance_tolerance_pct',1]])await check('manifest-'+key,f=>manifest(f,m=>m[key]=value));
+await check('run-options',f=>run(f,a=>a.request.options.iterations++));
+await check('run-graph',f=>run(f,a=>a.request.graph.population[0]++));
+await check('original-plan',f=>assignments(f,a=>{const id=Object.keys(a)[0];a[id]=a[id]===1?2:1;}));
+await check('original-universe',f=>assignments(f,a=>{a.extra=1;}));
+await check('original-range',f=>assignments(f,a=>{a[Object.keys(a)[0]]=0;}));
+await check('missing-plan',f=>delete f.packageVerificationInputs.files['plan.rplan']);
+await check('missing-context',f=>delete f.packageVerificationInputs.files['context.rctx']);
+await check('no-recorded-options',f=>change(f.packageVerificationInputs.files['plan.rplan'],p=>delete p.provenance.producer.engine_options),'match','partial');
+await check('no-recorded-paths',f=>manifest(f,m=>{m.rplan_path=null;m.rctx_path=null;}),'match','partial');
+await check('threshold-different',f=>f.engineReplayInputs.minSimilarity=1.1,'different','verified');
+await check('empty-original',f=>f.engineReplayInputs.original=source('empty.json','{}'),'unavailable','unavailable');
+await check('nested',f=>{f.packageVerificationInputs.manifest.name='nested/manifest.json';f.packageVerificationInputs.files=Object.fromEntries(Object.entries(f.packageVerificationInputs.files).map(([p,s])=>['nested/'+p,s]));},'match','verified');
+await fs.writeFile(root+'/evidence.json',JSON.stringify({native_wasm_cases:count,cases:evidence,source_authentication:false,auxiliary_inputs_complete:false},null,2));console.log(`Replay bindings: ${count} native/WASM comparisons; exact u64 identity, bound original plan/options/prepared graph, pre-execution mismatch stops, absent evidence, nested paths, empty originals and projects passed.`);

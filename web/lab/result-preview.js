@@ -2,6 +2,9 @@
 export const MAX_PREVIEW_CHARS = 100000;
 export function resultPreview(value, limit = MAX_PREVIEW_CHARS) {
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PREVIEW_CHARS) throw new Error('Invalid preview limit.');
+  if (value?.schema_version === "bisect-native-district-map-v1") {
+    value = Object.fromEntries(Object.entries(value).filter(([key]) => !["png_base64", "svg_text"].includes(key)));
+  }
   const parts = [];
   let remaining = limit;
   function* tokens(item, depth) {

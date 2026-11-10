@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readPolicyFallbackSource,validatePolicyFallback} from '../../web/lab/policy-fallback.js';
+import {policyRequest,validatePolicyInputs} from '../../web/lab/policy-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const raw=Uint8Array.from([0xef,0xbb,0xbf,0xff]);
+const primary=await readPolicyFallbackSource({name:'primary.json',size:raw.length,arrayBuffer:async()=>raw.buffer});
+assert.deepEqual(Uint8Array.from(atob(primary.base64),c=>c.charCodeAt(0)),raw);
+const empty=await readPolicyFallbackSource({name:'empty.json',size:0,arrayBuffer:async()=>new ArrayBuffer(0)});assert.equal(empty.base64,'');
+const missing=await readPolicyFallbackSource({name:'unreadable.json',size:5,arrayBuffer:async()=>{throw Error('Read failed');}});assert.deepEqual(missing,{status:'unavailable',name:'unreadable.json'});
+let read=false;await assert.rejects(readPolicyFallbackSource({name:'large.json',size:512*1024+1,arrayBuffer:async()=>{read=true;}}));assert.equal(read,false);
+await assert.rejects(readPolicyFallbackSource({name:'changed.json',size:1,arrayBuffer:async()=>new ArrayBuffer(2)}));
+for(const value of [{primary,alias:null,root:{}},{primary:{...primary,path:'C:/outside'},alias:null},{primary:{status:'unavailable',name:'x',verified:true},alias:null},{primary:{...primary,base64:'not base64'},alias:null},{primary:{status:'file',name:'',base64:''},alias:null}])assert.throws(()=>validatePolicyFallback(value));
+const inputs={query:'RI',source:null,fallback:{primary,alias:empty}},request=policyRequest(inputs);
+assert.deepEqual(request.fallback,inputs.fallback);request.fallback.primary.name='changed';assert.equal(inputs.fallback.primary.name,'primary.json');
+assert.throws(()=>validatePolicyInputs({...inputs,source:{name:'strict.json',base64:'e30='}}));
+const project=createProject({name:'Fallback recipe',operation:'inspect-location-policy',files:{policyInputs:inputs},constraints:[],result:null,lastOperation:null});assert.deepEqual(parseProject(JSON.stringify(project)).files.policyInputs,inputs);
+console.log('PASS policy fallback inputs: raw/empty/unreadable sources, pre-read limits, closed recipe, detached request and inert data-only project roundtrip.');

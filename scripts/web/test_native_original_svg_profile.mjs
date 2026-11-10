@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';import {createHash} from 'node:crypto';import {nativeMapDownload} from '../../web/lab/map-export-files.js';
+const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><!--'+'x'.repeat(16*1024*1024)+'--></svg>',result={schema_version:'bisect-native-district-map-v1',status:'rendered',execution_performed:false,dpi:72,svg_text:svg,svg_sha256:createHash('sha256').update(svg).digest('hex')};
+for(const tags of [{},{output_profile:'native-original'},{output_profile:'native-original',map_scope:'national'},{output_profile:'native-original',source_delivery:'state-stream'}])await assert.rejects(()=>nativeMapDownload({...result,...tags},'svg'),/bounds/);
+const exported=await nativeMapDownload({...result,output_profile:'native-original',map_scope:'national',source_delivery:'state-stream'},'svg');assert.equal(exported.bytes.length,Buffer.byteLength(svg));assert.equal(Buffer.from(exported.bytes).toString(),svg);
+await assert.rejects(()=>nativeMapDownload({...result,output_profile:'native-original',map_scope:'national',source_delivery:'state-stream',svg_sha256:'0'.repeat(64)},'svg'),/changed/);
+console.log('Original native SVG profile: explicit national stream tags admit byte-exact >16 MiB SVG; ordinary/state/unmarked outputs stay bounded and tampering is rejected.');

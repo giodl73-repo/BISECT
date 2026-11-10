@@ -50,6 +50,39 @@ pub fn render_comparison_html(
     cfg: &NarrativeConfig,
     ctx: &HtmlComparisonContext,
 ) -> String {
+    render_comparison_html_inner(report, cfg, ctx, None, None)
+}
+
+/// Imported analysis rendering keeps all absent metrics explicit. The caller
+/// supplies a draft narrative; approval is never inferred from imported metadata.
+pub fn render_imported_comparison_html(
+    report: &ComparisonReport,
+    cfg: &NarrativeConfig,
+    ctx: &HtmlComparisonContext,
+    a: crate::comparison::ReportAvailability,
+    b: crate::comparison::ReportAvailability,
+) -> String {
+    let draft = NarrativeConfig { approved_by: None, ..cfg.clone() };
+    render_comparison_html_inner(report, &draft, ctx, Some((a,b)),None)
+}
+
+/// Imported report plus independently computed plan/context measurements.
+pub fn render_imported_comparison_html_with_evidence(
+    report:&ComparisonReport,cfg:&NarrativeConfig,ctx:&HtmlComparisonContext,
+    a:crate::comparison::ReportAvailability,b:crate::comparison::ReportAvailability,
+    evidence:Option<&crate::comparison::ReportPlanEvidence>,
+)->String {
+    let draft=NarrativeConfig {approved_by:None,..cfg.clone()};
+    render_comparison_html_inner(report,&draft,ctx,Some((a,b)),evidence)
+}
+
+fn render_comparison_html_inner(
+    report: &ComparisonReport,
+    cfg: &NarrativeConfig,
+    ctx: &HtmlComparisonContext,
+    imported: Option<(crate::comparison::ReportAvailability, crate::comparison::ReportAvailability)>,
+    evidence:Option<&crate::comparison::ReportPlanEvidence>,
+) -> String {
     let mut s = String::with_capacity(8192);
     s.push_str("<!DOCTYPE html>\n");
     s.push_str("<html lang=\"en\">\n");
@@ -74,10 +107,14 @@ pub fn render_comparison_html(
     s.push_str(&render_header(report, cfg));
 
     // 3. Side-by-side metrics.
-    s.push_str(&render_metrics_table(report, cfg));
+    s.push_str(&render_metrics_table(report, cfg, imported,evidence));
 
     // 4. Diff scope.
-    s.push_str(&render_diff_scope(report));
+    if let Some(evidence)=evidence {
+        s.push_str(&format!("<section class=\"diff\"><h2>Assignment differences</h2><p>{}</p></section>\n",escape_html(&evidence.narrative())));
+    } else if imported.is_some() {
+        s.push_str("<section class=\"diff\"><h2>Assignment differences</h2><p>Unavailable: this comparison reads imported analysis, not plan assignments or population inputs.</p></section>\n");
+    } else { s.push_str(&render_diff_scope(report)); }
 
     // 5. Inline narrative.
     s.push_str("<section class=\"narrative\">\n");
@@ -86,7 +123,22 @@ pub fn render_comparison_html(
     s.push_str("</section>\n");
 
     // 6. Chain-of-custody footer.
-    s.push_str(&render_provenance_footer(report, ctx));
+    if imported.is_some() {
+        s.push_str("<footer class=\"provenance\"><h2>Imported byte integrity</h2><p>Imported analysis is not recomputed or authenticated. These hashes identify supplied bytes, not source truth or execution provenance.</p><dl>\n");
+        for (label,side) in [("Plan A", &report.plan_a),("Plan B", &report.plan_b)] {
+            s.push_str(&format!("<dt>{label} manifest SHA-256</dt><dd><code>{}</code></dd>\n",escape_html(&side.manifest_sha256)));
+            for (name,hash) in &side.analysis_sha256 {
+                s.push_str(&format!("<dt>{label} analysis/{}</dt><dd><code>{}</code></dd>\n",escape_html(name),escape_html(hash)));
+            }
+        }
+        if let Some(evidence)=evidence {
+            for (label,hash) in [("Supplied Plan A hash",Some(&evidence.plan_a_hash)),("Supplied Plan B hash",Some(&evidence.plan_b_hash)),("Supplied context hash",evidence.context_hash.as_ref())] {
+                s.push_str(&format!("<dt>{}</dt><dd><code>{}</code></dd>\n",label,escape_html(hash.map(String::as_str).unwrap_or("Unavailable"))));
+            }
+            s.push_str("<dt>Measurement boundary</dt><dd>Assignment/population measurements use separately supplied plans and context. Matching district counts do not authenticate imported analysis to those plans.</dd>\n");
+        }
+        s.push_str(&format!("<dt>Generated at (supplied)</dt><dd>{}</dd></dl></footer>\n",escape_html(&ctx.approved_at)));
+    } else { s.push_str(&render_provenance_footer(report, ctx)); }
 
     s.push_str("</main>\n</body>\n</html>\n");
     s
@@ -98,17 +150,9 @@ pub fn render_comparison_html(
 
 fn render_civic_banner(report: &ComparisonReport) -> String {
     // Identify which side is the civic proposal.
-    let civic_side: &PlanSide = if report
-        .plan_b
-        .submission_type
-        .as_deref()
-        .map(|s| s == "civic_counter_proposal")
-        .unwrap_or(false)
-    {
-        &report.plan_b
-    } else {
+    let civic_side: &PlanSide = if report.plan_a.submission_type.as_deref()==Some("civic_counter_proposal") {
         &report.plan_a
-    };
+    } else { &report.plan_b };
     let submitter = civic_side
         .submitted_by
         .as_deref()
@@ -151,7 +195,10 @@ fn render_header(report: &ComparisonReport, cfg: &NarrativeConfig) -> String {
     )
 }
 
-fn render_metrics_table(report: &ComparisonReport, cfg: &NarrativeConfig) -> String {
+fn render_metrics_table(report: &ComparisonReport, cfg: &NarrativeConfig, imported: Option<(crate::comparison::ReportAvailability,crate::comparison::ReportAvailability)>,evidence:Option<&crate::comparison::ReportPlanEvidence>) -> String {
+    let full = crate::comparison::ReportAvailability { partisan:true, demographic:true,compactness:true };
+    let (a,b) = imported.unwrap_or((full,full));
+    let available = |flag:bool,value:String| if flag { value } else { "Unavailable or incomplete".into() };
     let mut s = String::new();
     s.push_str("<section class=\"metrics\">\n");
     s.push_str(&format!(
@@ -177,20 +224,25 @@ fn render_metrics_table(report: &ComparisonReport, cfg: &NarrativeConfig) -> Str
     ));
     s.push_str(&row(
         "Democratic-leaning seats",
-        &report.plan_a.leaning_seats.to_string(),
-        &report.plan_b.leaning_seats.to_string(),
+        &available(a.partisan,report.plan_a.leaning_seats.to_string()),
+        &available(b.partisan,report.plan_b.leaning_seats.to_string()),
     ));
     s.push_str(&row(
         "Majority-minority districts",
-        &report.plan_a.mm_count.to_string(),
-        &report.plan_b.mm_count.to_string(),
+        &available(a.demographic,report.plan_a.mm_count.to_string()),
+        &available(b.demographic,report.plan_b.mm_count.to_string()),
     ));
     s.push_str(&row(
         "Mean Polsby-Popper",
-        &fmt_pp(report.plan_a.mean_pp),
-        &fmt_pp(report.plan_b.mean_pp),
+        &available(a.compactness,fmt_pp(report.plan_a.mean_pp)),
+        &available(b.compactness,fmt_pp(report.plan_b.mean_pp)),
     ));
-    if report.plan_a.total_population > 0 || report.plan_b.total_population > 0 {
+    if let Some(evidence)=evidence {
+        let population=|value:Option<u64>|value.map(fmt_int).unwrap_or_else(||"Unavailable".into());
+        s.push_str(&row("Total population",&population(evidence.total_population_a),&population(evidence.total_population_b)));
+    } else if imported.is_some() {
+        s.push_str(&row("Total population", "Unavailable", "Unavailable"));
+    } else if report.plan_a.total_population > 0 || report.plan_b.total_population > 0 {
         s.push_str(&row(
             "Total population",
             &fmt_int(report.plan_a.total_population),
@@ -458,6 +510,18 @@ mod tests {
             html.contains("not the state's official map"),
             "civic disclaimer must appear in banner"
         );
+    }
+
+    #[test]
+    fn two_civic_sides_use_same_submitter_in_banner_and_narrative() {
+        let mut report=fixture_report();
+        report.plan_a.submission_type=Some("civic_counter_proposal".into());
+        report.plan_a.submitted_by=Some("First submitter".into());
+        let cfg=NarrativeConfig::default();
+        let banner=render_civic_banner(&report);
+        let narrative=crate::narrative::render_narrative(&report,&cfg);
+        assert!(banner.contains("First submitter"));
+        assert!(narrative.contains("submitted by First submitter"));
     }
 
     #[test]

@@ -108,6 +108,8 @@ pub struct CertifiedSplitCertificate {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum CertifiedSplitError {
+    #[error("both derived split children must be connected")]
+    DisconnectedChildren,
     #[error("unsupported certified split instance schema: {0}")]
     InstanceSchema(String),
     #[error("unsupported certified split model: {0}")]

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 /// build_cmd.rs — `bisect build X` implementation (Spec 7 Phase 2).
 ///
 /// Orchestrates a label-based multi-year redistricting run.
@@ -13,8 +12,9 @@ use std::collections::HashMap;
 /// reports/{label}/{year}/          ← cascade-invalidated on --force
 /// ```
 use std::path::{Path, PathBuf};
+use std::collections::HashMap;
 
-use crate::algo_config::AlgoYaml;
+use crate::algo_config::{AlgoYaml, NativeAlgorithmConfig};
 use crate::label::{
     state_runs_dir, validate_label_name, year_analysis_dir, year_reports_dir, year_runs_dir,
 };
@@ -122,44 +122,7 @@ impl BuildCliArgs {
 // Build index types
 // ---------------------------------------------------------------------------
 
-/// Per-state entry in the build index.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct StateIndexEntry {
-    pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub districts: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
-}
-
-/// Summary counts in the build index.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct BuildSummary {
-    pub total: usize,
-    pub succeeded: usize,
-    pub failed: usize,
-}
-
-/// `runs/{label}/{year}/index.json` — build provenance record.
-///
-/// Written after every successful (or partial) build so that downstream
-/// commands (`bisect analyze`, `BISECT report`) can verify provenance.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct BuildIndex {
-    pub label: String,
-    pub year: String,
-    pub created: String,
-    pub version: String,
-    pub config_path: String,
-    pub config_sha256: String,
-    pub command: String,
-    pub output_dir: String,
-    pub metis_engine: String,
-    /// Snapshot of the `algorithm:` block from the YAML config.
-    pub algorithm: serde_json::Value,
-    pub states: HashMap<String, StateIndexEntry>,
-    pub summary: BuildSummary,
-}
+pub use bisect_runner::build_index::{BuildIndex,BuildSummary,StateIndexEntry};
 
 // ---------------------------------------------------------------------------
 // run_build
@@ -219,7 +182,7 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
         }
 
         // ── 4b: --force invalidation ───────────────────────────────────────────
-        if already_built && args.force {
+        if already_built && args.force && !args.dry_run {
             eprintln!("[build] --force: invalidating '{label}/{year}' ...");
             Registry::invalidate_year(label, year)?;
 
@@ -262,6 +225,7 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
 
         // ── 4d: Build StateConfig list ─────────────────────────────────────────
         let algo: AlgorithmConfig = yaml.to_algorithm_config()?;
+        let balance_tolerance = yaml.run_balance_tolerance()?;
         let workers = args.workers.unwrap_or_else(|| yaml.resolved_workers());
 
         // Load all 50 states for this year.
@@ -288,7 +252,7 @@ pub fn run_build(args: BuildArgs) -> Result<(), String> {
                     output_dir,
                     (i + 2) as i32,
                 );
-                cfg.algo = algo.clone();
+                apply_build_algorithm(&mut cfg, &algo, balance_tolerance);
                 cfg
             })
             .collect();
@@ -451,56 +415,6 @@ pub fn build_build_index(
     configs: &[StateConfig],
     results: &[crate::runner::StateResult],
 ) -> Result<BuildIndex, String> {
-    // Build a lookup from state_code → StateResult.
-    let result_map: HashMap<String, &crate::runner::StateResult> =
-        results.iter().map(|r| (r.state_code.clone(), r)).collect();
-
-    // Build per-state entries using state_name (lowercase) as the key.
-    let mut state_entries: HashMap<String, StateIndexEntry> = HashMap::new();
-    for cfg in configs {
-        let key = cfg.state_name.clone();
-        match result_map.get(&cfg.state_code) {
-            Some(r) if r.success => {
-                state_entries.insert(
-                    key,
-                    StateIndexEntry {
-                        status: "ok".to_string(),
-                        districts: Some(cfg.num_districts),
-                        error: None,
-                    },
-                );
-            }
-            Some(r) => {
-                state_entries.insert(
-                    key,
-                    StateIndexEntry {
-                        status: "failed".to_string(),
-                        districts: Some(cfg.num_districts),
-                        error: r.error.clone(),
-                    },
-                );
-            }
-            None => {
-                // State was in the config list but produced no result (shouldn't happen).
-                state_entries.insert(
-                    key,
-                    StateIndexEntry {
-                        status: "missing".to_string(),
-                        districts: Some(cfg.num_districts),
-                        error: Some("no result returned from runner".to_string()),
-                    },
-                );
-            }
-        }
-    }
-
-    let total = results.len();
-    let succeeded = results.iter().filter(|r| r.success).count();
-    let failed = total - succeeded;
-
-    // Snapshot the algorithm section as a JSON value for the index.
-    let algo_section = algorithm_section_to_json(yaml);
-
     // Timestamp (RFC 3339, seconds precision).
     let created = {
         use std::time::{SystemTime, UNIX_EPOCH};
@@ -513,76 +427,19 @@ pub fn build_build_index(
         format!("{y:04}-{mo:02}-{d:02}T{h:02}:{mi:02}:{s:02}Z")
     };
 
-    Ok(BuildIndex {
-        label: label.to_string(),
-        year: year.to_string(),
-        created,
-        version: env!("CARGO_PKG_VERSION").to_string(),
-        config_path: config_path.to_string_lossy().to_string(),
-        config_sha256: config_sha256.to_string(),
-        command: command.to_string(),
-        output_dir: output_dir.to_string_lossy().to_string(),
-        metis_engine: yaml
-            .algorithm
-            .engine
-            .clone()
-            .unwrap_or_else(|| "c-ffi".to_string()),
-        algorithm: algo_section,
-        states: state_entries,
-        summary: BuildSummary {
-            total,
-            succeeded,
-            failed,
-        },
-    })
+    let configs:Vec<_>=configs.iter().map(|c|bisect_runner::build_index::ConfigRow{state_code:c.state_code.clone(),state_name:c.state_name.clone(),num_districts:c.num_districts}).collect();
+    let results:Vec<_>=results.iter().map(|r|bisect_runner::build_index::ResultRow{state_code:r.state_code.clone(),success:r.success,error:r.error.clone()}).collect();
+    bisect_runner::build_index::build_build_index(label,year,&config_path.to_string_lossy(),config_sha256,command,&output_dir.to_string_lossy(),yaml,&configs,&results,created,env!("CARGO_PKG_VERSION").into())
 }
 
 /// Convert the `AlgorithmSection` to a `serde_json::Value` for the index.
-fn algorithm_section_to_json(yaml: &AlgoYaml) -> serde_json::Value {
-    let sec = &yaml.algorithm;
-    let mut map = serde_json::Map::new();
-    map.insert(
-        "structure".to_string(),
-        serde_json::Value::String(sec.structure.clone()),
-    );
-    if let Some(w) = &sec.weights {
-        map.insert("weights".to_string(), serde_json::Value::String(w.clone()));
-    }
-    if let Some(a) = sec.alpha_county {
-        map.insert("alpha_county".to_string(), serde_json::json!(a));
-    }
-    if let Some(s) = &sec.search {
-        map.insert("search".to_string(), serde_json::Value::String(s.clone()));
-    }
-    if let Some(t) = sec.convergence_threshold {
-        map.insert("convergence_threshold".to_string(), serde_json::json!(t));
-    }
-    if let Some(seeds) = sec.seeds {
-        map.insert("seeds".to_string(), serde_json::json!(seeds));
-    }
-    if let Some(seed) = sec.seed {
-        map.insert("seed".to_string(), serde_json::json!(seed));
-    }
-    if let Some(tol) = sec.balance_tolerance {
-        map.insert("balance_tolerance".to_string(), serde_json::json!(tol));
-    }
-    if let Some(swing) = sec.area_swing {
-        map.insert("area_swing".to_string(), serde_json::json!(swing));
-    }
-    if let Some(w) = sec.w_vra {
-        map.insert("w_vra".to_string(), serde_json::json!(w));
-    }
-    if let Some(bl) = sec.burst_length {
-        map.insert("burst_length".to_string(), serde_json::json!(bl));
-    }
-    if let Some(nb) = sec.n_bursts {
-        map.insert("n_bursts".to_string(), serde_json::json!(nb));
-    }
-    if let Some(pct) = sec.percentile {
-        map.insert("percentile".to_string(), serde_json::json!(pct));
-    }
-    serde_json::Value::Object(map)
+fn apply_build_algorithm(cfg: &mut StateConfig, algo: &AlgorithmConfig, tolerance: Option<f64>) {
+    cfg.algo = algo.clone();
+    cfg.balance_tolerance = tolerance;
 }
+
+#[cfg(test)]
+fn algorithm_section_to_json(yaml:&AlgoYaml)->serde_json::Value {bisect_runner::build_index::algorithm_section_to_json(yaml)}
 
 /// Minimal Unix timestamp → (year, month, day, hour, minute, second) conversion.
 ///
@@ -622,6 +479,24 @@ fn days_to_ymd(days: u64) -> (u64, u64, u64) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn yaml_build_tolerance_preserves_units_and_policy() {
+        for (declaration, expected) in [("", None), ("  balance_tolerance: 0.5\n", Some(0.005)), ("  balance_tolerance: 2\n", Some(0.02)), ("  balance_tolerance: 50\n", Some(0.5)), ("  balance_tolerance: 0.01\n", Some(0.0001))] {
+            let yaml = super::AlgoYaml::from_text(&format!("name: test\nalgorithm:\n  structure: standard-bisect\n{declaration}")).unwrap();
+            let algo = yaml.to_algorithm_config().unwrap();
+            let tolerance = yaml.run_balance_tolerance().unwrap();
+            let mut cfg = super::StateConfig::new_bulk("VT".into(), "vermont".into(), 1, "2020".into(), "test".into(), "target/test".into(), 2);
+            super::apply_build_algorithm(&mut cfg, &algo, tolerance);
+            assert_eq!(cfg.balance_tolerance, expected);
+            assert_eq!(cfg.effective_balance_tolerance(), expected.unwrap_or(0.005));
+            cfg.chamber = "house".into();
+            assert_eq!(cfg.effective_balance_tolerance(), expected.unwrap_or(0.05));
+        }
+        for bad in ["0", "-1", "0.009", "50.01", ".nan", ".inf"] {
+            let yaml = super::AlgoYaml::from_text(&format!("name: test\nalgorithm:\n  structure: standard-bisect\n  balance_tolerance: {bad}\n")).unwrap();
+            assert!(yaml.run_balance_tolerance().is_err(), "{bad}");
+        }
+    }
     use super::*;
     use std::io::Write;
     use tempfile::{tempdir, NamedTempFile};

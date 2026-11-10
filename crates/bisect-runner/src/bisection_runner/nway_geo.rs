@@ -30,8 +30,7 @@ pub fn run_nway_partition_tuned(
     num_districts:usize, ufactor:f64, niter:u32, seed:Option<u64>, objective:&str, trials:u32,
 ) -> Result<HashMap<usize,usize>,String> {
     if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials) {return Err("Invalid n-way objective or internal trial count.".into());}
-    #[cfg(feature="c-ffi-engine")]
-    if objective!="cut" || trials!=1 {return Err("Advanced n-way controls require the pure Rust engine.".into());}
+    if use_c_metis() && (objective!="cut" || trials!=1) {return Err("Advanced n-way controls require the pure Rust engine.".into());}
     let n = adjacency.len();
     if num_districts == 1 {
         return Ok((0..n).map(|i| (i, 1)).collect());
@@ -60,8 +59,8 @@ pub fn run_nway_partition_tuned(
 
     // ── k-way partition via the selected METIS backend ───────────────────────
     let part: Vec<i32> = {
-        #[cfg(feature = "c-ffi-engine")]
-        {
+        #[cfg(any(feature="c-ffi-engine",feature="wasm-c-ffi"))]
+        let c_part = if use_c_metis() {
             let mut part = vec![0i32; n];
             let graph = metis::Graph::new(1, num_districts as i32, &xadj, &adjncy)
                 .map_err(|e| format!("METIS n-way graph init: {e}"))?
@@ -85,10 +84,11 @@ pub fn run_nway_partition_tuned(
             graph
                 .part_kway(&mut part)
                 .map_err(|e| format!("METIS n-way partition failed: {e}"))?;
-            part
-        }
-        #[cfg(not(feature = "c-ffi-engine"))]
-        {
+            Some(part)
+        } else {None};
+        #[cfg(not(any(feature="c-ffi-engine",feature="wasm-c-ffi")))]
+        let c_part: Option<Vec<i32>> = None;
+        if let Some(part)=c_part {part} else {
             use metis_core::{
                 CsrGraph as RustNwayCsr, MetisParams as RustNwayParams,
                 MetisPartitioner as RustNwayPartitioner, Partitioner as RustNwayTrait,
@@ -291,8 +291,7 @@ pub fn run_proportional_section(
         best_ec / 1000.0
     );
 
-    if let Some(dir) = intermediate_dir {
-        let _ = std::fs::create_dir_all(dir.join("depth_01"));
+    if round_output_enabled(intermediate_dir) {
         let mut d1 = std::collections::HashMap::new();
         for &v in &best_left {
             d1.insert(v, 1);
@@ -300,7 +299,7 @@ pub fn run_proportional_section(
         for &v in &best_right {
             d1.insert(v, 2);
         }
-        let _ = write_intermediate_round(&dir.join("depth_01"), &d1);
+        let _ = emit_intermediate_round(intermediate_dir,"depth_01", &d1);
     }
 
     // Recurse with ncon=1 standard bisection
@@ -454,10 +453,10 @@ pub fn run_geosection_seeded_tuned(
     objective: &str,
     trials: u32,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
-    #[cfg(feature="c-ffi-engine")]
-    if objective!="cut" || trials!=1 {return Err("Advanced GeoSection METIS controls require the pure Rust engine.".into());}
+    if use_c_metis() && (objective!="cut" || trials!=1) {return Err("Advanced GeoSection METIS controls require the pure Rust engine.".into());}
     let n = adjacency.len();
     if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials)
+        || (vertex_areas_m2.is_some() && (!area_swing.is_finite() || !(1.0..=2.0).contains(&area_swing)))
         || vertex_weights.len() != n
         || seeds_per_ratio == 0
         || num_districts == 0
@@ -490,24 +489,14 @@ pub fn run_geosection_seeded_tuned(
             intermediate_dir,
         )? } else { run_all_splits_tuned(adjacency,vertex_weights,edge_weights,2,balance_tolerance,niter,Some(base_seed),None,objective,trials)? };
         if objective!="cut" || trials!=1 {
-            if let Some(dir)=intermediate_dir {
-                let round=dir.join("depth_01");
-                let _=std::fs::create_dir_all(&round);
-                let _=write_intermediate_round(&round,&asgn);
+            if round_output_enabled(intermediate_dir) {
+                let round = "depth_01";
+                let _=emit_intermediate_round(intermediate_dir,&round,&asgn);
             }
         }
-        let ec: f64 = edge_weights
-            .iter()
-            .map(
-                |(&(u, v), &w)| {
-                    if asgn.get(&u) != asgn.get(&v) {
-                        w
-                    } else {
-                        0.0
-                    }
-                },
-            )
-            .sum();
+        // Canonical accumulation keeps reported root evidence identical across targets.
+        let left: HashSet<usize> = asgn.iter().filter(|(_,district)| **district==1).map(|(&unit,_)|unit).collect();
+        let ec = weighted_edge_cut(edge_weights,&left);
         return Ok((asgn, 1, 1, ec));
     }
 
@@ -824,9 +813,8 @@ pub fn run_geosection_seeded_tuned(
     }
 
     // Write depth_01 intermediate
-    if let Some(dir) = intermediate_dir {
-        let round_dir = dir.join("depth_01");
-        let _ = std::fs::create_dir_all(&round_dir);
+    if round_output_enabled(intermediate_dir) {
+        let round_dir = "depth_01";
         let mut d1: HashMap<usize, usize> = HashMap::new();
         for &v in &best_left_set {
             d1.insert(v, 1);
@@ -834,7 +822,7 @@ pub fn run_geosection_seeded_tuned(
         for &v in &best_right_set {
             d1.insert(v, 2);
         }
-        let _ = write_intermediate_round(&round_dir, &d1);
+        let _ = emit_intermediate_round(intermediate_dir,&round_dir, &d1);
     }
 
     // Recurse: each half finds its own natural ratio with its own orientation.

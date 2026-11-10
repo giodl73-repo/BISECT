@@ -1,12 +1,17 @@
 # Documentation Directory
 
-**Last Updated**: August 13, 2026
+**Last Updated**: October 22, 2026
 
 This directory contains **human-friendly** documentation for users, researchers, and developers. If you're new to the project, start here!
 
 ## For Different Audiences
 
 ### I'm New to This Project
+
+For browser-based computation, start with the
+[WebAssembly workbench quickstart and support summary](../README.md#webassembly-workbench).
+The [practitioner workflow guide](specs/wasm-practitioner-flow.md) explains
+required inputs, explicit Run, maps, local Save/Open and failure recovery.
 
 **Start here**:
 1. [GETTING_STARTED.md](GETTING_STARTED.md) - Complete setup and first-run tutorial (30 minutes)

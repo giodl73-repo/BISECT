@@ -1,76 +1,4 @@
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Session {
-    #[serde(default = "default_location")]
-    pub location: String,
-    #[serde(default = "default_chamber")]
-    pub chamber: String,
-    #[serde(default = "default_year")]
-    pub year: String,
-    #[serde(default = "default_version")]
-    pub version: String,
-    #[serde(default = "default_output_base")]
-    pub output_base: String,
-    #[serde(default = "default_resolution")]
-    pub resolution: String,
-    #[serde(default = "default_sort_column")]
-    pub sort_column: String,
-    #[serde(default = "default_sort_dir")]
-    pub sort_direction: String,
-    #[serde(default)]
-    pub show_metric_glossary: bool,
-    #[serde(default)]
-    pub adjacency_override: String,
-    #[serde(default = "default_seats")]
-    pub seats_per_district: usize,
-}
-
-fn default_location() -> String {
-    "VT".into()
-}
-fn default_chamber() -> String {
-    "congressional".into()
-}
-fn default_year() -> String {
-    "2020".into()
-}
-fn default_version() -> String {
-    "v1".into()
-}
-fn default_output_base() -> String {
-    "outputs".into()
-}
-fn default_resolution() -> String {
-    "tract".into()
-}
-fn default_sort_column() -> String {
-    "label".into()
-}
-fn default_sort_dir() -> String {
-    "asc".into()
-}
-fn default_seats() -> usize {
-    1
-}
-
-impl Default for Session {
-    fn default() -> Self {
-        Self {
-            location: default_location(),
-            chamber: default_chamber(),
-            year: default_year(),
-            version: default_version(),
-            output_base: default_output_base(),
-            resolution: default_resolution(),
-            sort_column: default_sort_column(),
-            sort_direction: default_sort_dir(),
-            show_metric_glossary: false,
-            adjacency_override: String::new(),
-            seats_per_district: 1,
-        }
-    }
-}
+pub use bisect_report::tui_session::Session;
 
 /// Path to session config file: ~/.config/BISECT/tui.toml
 pub fn config_path() -> Option<std::path::PathBuf> {
@@ -91,7 +19,7 @@ pub fn load_session() -> Session {
     let Ok(content) = std::fs::read_to_string(&path) else {
         return Session::default();
     };
-    toml::from_str(&content).unwrap_or_default()
+    bisect_report::tui_session::read(Some(&content)).session
 }
 
 /// Save session to disk. Silently ignores errors (config is best-effort).
@@ -100,7 +28,7 @@ pub fn save_session(session: &Session) {
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    if let Ok(content) = toml::to_string_pretty(session) {
+    if let Ok(content) = bisect_report::tui_session::write(session) {
         let _ = std::fs::write(&path, content);
     }
 }

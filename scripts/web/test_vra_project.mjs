@@ -48,6 +48,6 @@ for(const variant of variants){
  ]){const bad=structuredClone(project);mutate(bad);await assert.rejects(restorer.restoreProject(bad),/VRA|demographic|Demographic/);assert.equal(restorer.jobs.size,jobs);assert.equal(restorer.outputs.size,outputs);tampered++;}
  if(section)await fs.writeFile('target/vra-section-ui-project-fixture.bisect',JSON.stringify(project));else if(config.steps===20)await fs.writeFile('target/vra-ui-project-fixture.bisect',JSON.stringify(project));
 }
-for(const change of [{vra_threshold:1.1},{balance_tolerance:5},{demographics:{}},{structure:'nway'}])assert.throws(()=>validateLabConfig({...base,...change}));
+for(const change of [{vra_threshold:1.1},{balance_tolerance:0},{demographics:{}},{structure:'nway'}])assert.throws(()=>validateLabConfig({...base,...change}));
 await fs.writeFile('target/vra-ui-project-verification.json',JSON.stringify({real_graphs_synthetic_demographics:true,states,exact_native_wasm_cases:exact,recom_cases:recomCases,vra_section_cases:sectionCases,atomic_tamper_rejections:tampered,real_verifier_workers:true,engine_execution_on_open:false},null,2));
 console.log(`VRA projects (ReCom ${recomCases}, VRASection ${sectionCases}): ${exact} real-graph native/WASM and Save/Open/map cases with explicitly synthetic fractions; ${tampered} atomic tamper rejections, real verification Workers, complete demographic persistence, no engine execution on Open.`);

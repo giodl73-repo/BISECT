@@ -20,6 +20,8 @@
 use crate::graph::SubGraph;
 use std::collections::HashMap;
 use thiserror::Error;
+#[cfg(all(feature="wasm-c-ffi",not(feature="c-ffi")))]
+use metis_sidecar as metis;
 
 use metis_core::{
     CsrGraph, MetisParams, MetisPartitioner as RustMetisPartitioner, Partitioner as RustPartitioner,
@@ -34,7 +36,7 @@ use metis_core::{
 /// The default depends on which Cargo features are enabled:
 /// - With `c-ffi` feature (the crate default): `CFfi`
 /// - Without `c-ffi` (pure-Rust build, `--no-default-features`): `RedistMetis`
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum MetisEngine {
     /// **C METIS FFI** — the `metis` Rust crate with bundled C source (`vendored`).
     /// A C compiler is required at build time; the resulting binary is standalone
@@ -189,7 +191,7 @@ impl MetisPartitioner {
     // Only compiled when the "c-ffi" Cargo feature is enabled.
 
     /// Equal-weight k-way split via the `metis` Rust FFI crate → bundled C METIS.
-    #[cfg(feature = "c-ffi")]
+    #[cfg(any(feature = "c-ffi", feature = "wasm-c-ffi"))]
     fn split_c_ffi(
         &self,
         region: &SubGraph,
@@ -231,7 +233,7 @@ impl MetisPartitioner {
     }
 
     /// Asymmetric-weight k-way split via the `metis` Rust FFI crate → bundled C METIS.
-    #[cfg(feature = "c-ffi")]
+    #[cfg(any(feature = "c-ffi", feature = "wasm-c-ffi"))]
     fn split_c_ffi_weighted(
         &self,
         region: &SubGraph,
@@ -279,6 +281,9 @@ impl MetisPartitioner {
         seed: Option<u64>,
     ) -> Result<Vec<u32>, SplitError> {
         let mut params = MetisParams::kway()
+            // Match the C backend's Contig(true): recursive children must
+            // remain connected before their next strict CSR conversion.
+            .with_contiguity(true)
             .with_ufactor(self.ufactor())
             .with_niter(self.niter as u32)
             .with_coarsen_to(20);
@@ -301,6 +306,7 @@ impl MetisPartitioner {
         seed: Option<u64>,
     ) -> Result<Vec<u32>, SplitError> {
         let mut params = MetisParams::kway()
+            .with_contiguity(true)
             .with_ufactor(self.ufactor())
             .with_niter(self.niter as u32)
             .with_coarsen_to(20);
@@ -334,13 +340,13 @@ impl Partitioner for MetisPartitioner {
 
         match self.engine {
             MetisEngine::CFfi => {
-                #[cfg(not(feature = "c-ffi"))]
+                #[cfg(not(any(feature = "c-ffi", feature = "wasm-c-ffi")))]
                 return Err(SplitError::Metis(
                     "bisect-apportion was compiled without the c-ffi feature; \
                      rebuild with --features c-ffi or use --metis-engine metis-core"
                         .into(),
                 ));
-                #[cfg(feature = "c-ffi")]
+                #[cfg(any(feature = "c-ffi", feature = "wasm-c-ffi"))]
                 {
                     let assignment = self.split_c_ffi(region, k, seed)?;
 
@@ -400,13 +406,13 @@ impl Partitioner for MetisPartitioner {
 
         match self.engine {
             MetisEngine::CFfi => {
-                #[cfg(not(feature = "c-ffi"))]
+                #[cfg(not(any(feature = "c-ffi", feature = "wasm-c-ffi")))]
                 return Err(SplitError::Metis(
                     "bisect-apportion was compiled without the c-ffi feature; \
                      rebuild with --features c-ffi or use --metis-engine metis-core"
                         .into(),
                 ));
-                #[cfg(feature = "c-ffi")]
+                #[cfg(any(feature = "c-ffi", feature = "wasm-c-ffi"))]
                 {
                     let assignment = self.split_c_ffi_weighted(region, target_fracs, seed)?;
 
@@ -473,4 +479,45 @@ pub fn split_region(
     let region = SubGraph::build(vertices, adjacency, vertex_weights, edge_weights)?;
     let assignment = strategy.split(&region, k, seed)?;
     Ok((region, assignment))
+}
+
+#[cfg(test)]
+mod contiguity_tests {
+    use super::*;
+
+    #[test]
+    fn rust_recursive_children_satisfy_strict_connected_graph_contract() {
+        let side = 12;
+        let n = side * side;
+        let mut adjacency = vec![Vec::new(); n];
+        let mut edges = HashMap::new();
+        for v in 0..n {
+            for u in [
+                (v % side + 1 < side).then_some(v + 1),
+                (v + side < n).then_some(v + side),
+            ].into_iter().flatten() {
+                adjacency[v].push(u);
+                adjacency[u].push(v);
+                edges.insert((v, u), 1.0);
+            }
+        }
+        let weights = vec![100; n];
+        let vertices: Vec<_> = (0..n).collect();
+        let region = SubGraph::build(&vertices, &adjacency, &weights, &edges).unwrap();
+        let splitter = MetisPartitioner::with_engine(MetisEngine::RedistMetis);
+        for seed in [0, 42, 73] {
+            for (k, assignment) in [
+                (7, splitter.split(&region, 7, Some(seed)).unwrap()),
+                (3, splitter.split_weighted(&region, &[0.2, 0.3, 0.5], Some(seed)).unwrap()),
+            ] {
+                for part in 0..k {
+                    let child: Vec<_> = vertices.iter().copied()
+                        .filter(|&v| assignment[v] == part).collect();
+                    assert!(!child.is_empty());
+                    SubGraph::build(&child, &adjacency, &weights, &edges).unwrap()
+                        .to_metis_core_graph().expect("recursive child must remain connected");
+                }
+            }
+        }
+    }
 }

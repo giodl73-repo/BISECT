@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+import {preparedEngineRequest,preparedEngineDownload,PREPARED_ENGINE_DEFAULTS} from '../../web/lab/prepared-engine-files.js';
+import {configRunRequest} from '../../web/lab/config-run.js';
+const root='target/prepared-engine';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const n=16,w=4,adjacency=Array.from({length:n},(_,i)=>[i%w?i-1:-1,i%w<w-1?i+1:-1,i>=w?i-w:-1,i<n-w?i+w:-1].filter(v=>v>=0)),g={schema_version:1,state:'RI',year:'2020',geoids:Array.from({length:n},(_,i)=>'44001'+String(i+1).padStart(6,'0')),adjacency,population:Array(n).fill(100),edges:adjacency.flatMap((ns,u)=>ns.filter(v=>v>u).map(v=>[u,v,100+(u%3)])),areas:Array(n).fill(1000),exterior_perimeters:Array(n).fill(100),centroids:Array.from({length:n},(_,i)=>[-71+(i%w)*.001,41+Math.floor(i/w)*.001])};
+const base={structure:'standard-bisect',weights:'geographic',search:'single',districts:2,seed:'18446744073709551615',seeds:3,steps:5,percentile:0,alpha_county:0,balance_tolerance:25,area_swing:1.1,iterations:10};
+const cases=[{search:'convergence',convergence_unlimited:true},{structure:'flow-construction',flow_repair:'bfs'},{search:'vra-recom',vra_threshold:.5,vra_absent_file_fallback:true},...['single','multi','percentile','convergence','bisection-ensemble','flip','forest-recom','merge-split'].map(search=>({search})),...['short-burst','short-burst-forest','short-burst-merge-split'].map(search=>({search,burst_length:2,n_bursts:2})),{search:'parallel-tempering',pt_replicas:2,pt_swap_interval:1,pt_cold_tol:.05,pt_hot_tol:.2},{search:'smc-percentile',smc_particles:4,smc_resample_threshold:.5},{search:'vra-recom',vra_threshold:.5},...['ratio-optimal','ratio-optimal-area','compact-polsby','nway','spectral','bfs-growth','centroidal-voronoi','moving-knife','capacity-clustering','regionalization','flow-construction','prime-factor','ilp','simulated-annealing','proportional-bisect','proportional-section','ratio-optimal-vra'].map(structure=>({structure})),{structure:'ratio-optimal',search:'multi',metis_objective:'volume',metis_trials:2},{structure:'ratio-optimal-area',search:'multi',area_init:'moving-knife'},{structure:'compact-polsby',search:'multi',compact_epsilon:.02},{structure:'nway',metis_objective:'volume',metis_trials:2,metis_ufactor:30},{capture_rounds:true},{with_coi:true,with_electoral:true},{search:'multi',metis_objective:'cut',metis_trials:2},{county_augmentation:.25,profile:'open',metis_engine:'metis-core'},{structure:'compact-polsby',compact_geometry:'native-state-circular'}];
+
+// Exact native fractional tolerance must survive preparation without a percent
+// roundtrip. This fraction differs after multiplication and division by100.
+const exactFraction=1/3;assert.notEqual((exactFraction*100)/100,exactFraction);
+cases.push({balance_tolerance_fraction:exactFraction,balance_tolerance:exactFraction*100});
+
+const settings={...PREPARED_ENGINE_DEFAULTS,label:'SYNTHETIC prepared request',created_at:'2026-10-17T00:00:00Z',inspect_only:false};
+let matches=0,successes=0,failures=0,ordinary=0,reviews=0,exports=0;const outcomes=[],seen=new Set();
+const hash=text=>createHash('sha256').update(text).digest('hex');
+async function native(request){await fs.writeFile(root+'/request.json',JSON.stringify(request));return JSON.parse(execFileSync(path.resolve('target/release/examples/'+(request.operation?'execute_tool_request':'execute_request')+'.exe'),[path.resolve(root+'/request.json')],{encoding:'utf8',maxBuffer:96*1024*1024,stdio:['ignore','pipe','pipe']}));}
+async function parity(request,name){let result,expected,error,nativeError;try{result=engine.execute(request);}catch(e){if(e instanceof WebAssembly.RuntimeError)throw e;error=e.message;}try{expected=await native(request);}catch(e){nativeError=String(e.stderr??e.message);}assert.equal(!!error,!!nativeError,name+': '+error+' '+nativeError);matches++;if(error){const lines=nativeError.trim().split(/\r?\n/).filter(line=>line.startsWith('Error: '));assert.equal(lines.length,1,name+': one native CLI error envelope');const nativeMessage=JSON.parse(lines[0].slice(7));assert.equal(nativeMessage,error,name+': exact native failure message');failures++;outcomes.push({name,error,native_stderr:nativeError});return null;}assert.deepEqual(result,expected,name);successes++;return result;}
+for(const weights of ['unweighted','geographic','county','partisan','vra-aligned','economic-character','housing-character'])for(const [index,change]of cases.entries()){
+ const o={...base,weights,...change};delete o.with_coi;delete o.with_electoral;
+ if(weights==='county')o.alpha_county=1.5;
+ if(weights==='partisan')Object.assign(o,{dem_threshold:.6,rep_threshold:.6});
+ if(weights.endsWith('-character'))Object.assign(o,{character_alpha:.5,character_absent_file_fallback:true});
+ if(o.structure==='simulated-annealing')Object.assign(o,{sa_steps_per_tract:2,sa_t0_factor:1,sa_t_final:.1});
+ if(o.structure==='centroidal-voronoi')Object.assign(o,{cvd_iters:2,cvd_metric:'geographic'});
+ if(o.structure==='moving-knife')Object.assign(o,{mka_orientations:4,mka_metric:'polsby'});
+ if(o.structure==='ilp')Object.assign(o,{ilp_method:'formulation-only',ilp_fallback:'metis',ilp_max_tracts:8,ilp_time_limit:'300',ilp_gap:.01,capture_ilp_reports:true});
+ if(o.structure==='proportional-section')o.proportional_eta=1.1;if(o.structure==='ratio-optimal-vra')o.w_vra=.4;
+ const extra={};
+ if(change.with_coi)extra.coi={source_name:'synthetic-coi.json',weights_json:JSON.stringify({[g.geoids[0]]:4,[g.geoids.at(-1)]:0,unknown:2})};
+ if(change.with_electoral)extra.electoral={seats_per_district:3,total_seats:6};
+ if(o.structure.startsWith('proportional-'))extra.elections={schema_version:'bisect-election-counts-v1',state:g.state,year:g.year,election_year:'2016',source_label:'SYNTHETIC election counts',counts:Object.fromEntries(g.geoids.map(id=>[id,{democratic:50,two_party:100}]))};
+ if(weights==='vra-aligned'||o.structure==='ratio-optimal-vra'||o.search==='vra-recom'&&!o.vra_absent_file_fallback)extra.demographics={schema_version:'bisect-demographic-fractions-v1',state:g.state,year:g.year,basis:'total-population',source_label:'SYNTHETIC fractions',minority_fractions:Object.fromEntries(g.geoids.map((id,i)=>[id,i%2?.2:.8]))};
+ if(weights==='partisan')extra.partisan={schema_version:'bisect-partisan-shares-v1',state:g.state,year:g.year,source_label:'SYNTHETIC partisan shares',dem_shares:Object.fromEntries(g.geoids.map((id,i)=>[id,i%2?.2:.8]))};
+ if(weights.endsWith('-character')){
+  const kind=weights.replace('-character',''),text=(kind==='economic'?'geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n':'geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n')+g.geoids.map((id,i)=>kind==='economic'?id+',1000,10,20,30,100,200,100,50,50':id+','+(i%2?'.2':'.8')+',.1,.6,.2').join('\n')+'\n';
+  extra.character=engine.execute({operation:'prepare-native-character-source',input:{state:g.state,year:g.year,data_year:'2019',kind,source_label:'SYNTHETIC prepared source',source_name:'fixture.csv',source_base64:Buffer.from(text).toString('base64')}}).character_input;
+ }
+ if(weights.endsWith('-character')&&index===3)delete extra.character;
+ const request={graph:g,options:o,...extra},name=weights+'/'+index,inputs={source:{name:'request.json',text:JSON.stringify(request)},settings},tool=preparedEngineRequest(inputs);let baseline,error;try{baseline=engine.execute(request);}catch(e){error=e.message;}
+ const result=await parity(tool,name);assert.equal(result===null,!!error,name+' direct/wrapper validity');ordinary++;
+ if(result){if(change.balance_tolerance_fraction!==undefined){assert.equal(result.executed_request.options.balance_tolerance_fraction,exactFraction);assert.equal(result.executed_request.options.balance_tolerance,exactFraction*100);}assert.deepEqual(result.result,baseline);assert.deepEqual(result.executed_request.graph,request.graph);for(const key of Object.keys(o))seen.add(key);if(result.export){exports++;assert.equal(preparedEngineDownload(result,'plan').text,result.export.document_json);assert.equal(preparedEngineDownload(result,'context').text,result.export.context_json);}
+  const project=createProject({name:'Prepared '+name,files:{preparedEngineInputs:inputs},operation:tool.operation,constraints:[],result,lastOperation:tool.operation});assert.deepEqual(parseProject(JSON.stringify(project)),project);
+  if(index===3||weights==='partisan'&&change.with_coi||weights==='geographic'&&o.structure==='ilp')await fs.writeFile(root+'/'+weights+'-'+index+'.bisect',JSON.stringify(project));
+ }
+ if(index===3){const review=await parity(preparedEngineRequest({...inputs,settings:{...settings,inspect_only:true}}),name+'/review');assert(review);assert.equal(review.execution_performed,false);assert.equal(review.csv_loading_performed,false);assert.equal(review.engine_request.options.seed,'18446744073709551615');reviews++;}
+}
+const embedded=JSON.parse(await fs.readFile('target/native-character-engine/housing-nan.bisect','utf8')),embeddedRequest=JSON.parse(embedded.files.nativeCharacterEngineInputs.source.text);embeddedRequest.native_character_source={...embedded.files.nativeCharacterInputs.settings,source_name:embedded.files.nativeCharacterInputs.source.name,source_base64:embedded.files.nativeCharacterInputs.source.base64};const embeddedBundle=await parity(preparedEngineRequest({source:{name:'embedded-native.csv-request.json',text:JSON.stringify(embeddedRequest)},settings:{...embedded.files.nativeCharacterEngineInputs.settings,inspect_only:false}}),'embedded-native-csv');assert.deepEqual(embeddedBundle.result,embedded.result.result);assert.deepEqual(embeddedBundle.export,embedded.result.export);
+// The C runtime field is intentionally refused with the Rust backend here.
+// Positive C execution belongs to test_cffi_engine.mjs and its optional module.
+const runtimeRefusal=preparedEngineRequest({source:{name:'invalid-runtime.json',text:JSON.stringify({graph:g,options:{...base,metis_engine:'metis-core',metis_runtime:'msvcrt-v1'}})},settings});
+assert.equal(await parity(runtimeRefusal,'C runtime with Rust backend'),null);
+await assert.rejects(native(runtimeRefusal),/Select metis-core without a runtime/);
+const refusedFields=new Set(['metis_runtime']);
+const optionSource=await fs.readFile('crates/bisect-wasm/src/engine.rs','utf8'),optionBody=optionSource.slice(optionSource.indexOf('pub struct Options')).split('\n}')[0],optionFields=[...optionBody.matchAll(/pub (\w+):/g)].map(m=>m[1]);assert.deepEqual([...seen,...refusedFields].sort(),optionFields.sort());
+// Native later-attempt population build retains the accepted request and seed.
+const fixture=JSON.parse(await fs.readFile('target/config-build-wasm/browser-retry.bisect','utf8')).files,configured=engine.execute(configRunRequest(fixture.configSource,fixture.configSettings,fixture.configRunInputs,fixture.configRunSettings)),retry=structuredClone(configured.engine_request);retry.options.seed=configured.configuration.seed;
+const buildInputs={source:{name:'build.json',text:JSON.stringify({operation:'run-engine-build',request:retry})},settings},built=await parity(preparedEngineRequest(buildInputs),'later-build');assert(built);assert.equal(built.result.build_report.accepted_attempt,4);assert.deepEqual(built.result.assignments,configured.result.assignments);assert.equal(String(built.executed_request.options.seed),built.result.build_report.attempts.at(-1).seed);const replay=structuredClone(built.result);delete replay.build_report;assert.deepEqual(engine.execute(built.executed_request),replay);await fs.writeFile(root+'/later-build.bisect',JSON.stringify(createProject({name:'Prepared later accepted build',files:{preparedEngineInputs:buildInputs},operation:'run-prepared-engine',constraints:[],result:built,lastOperation:'run-prepared-engine'})));
+const numeric=buildInputs.source.text.replace(/"seed":"42"/,'"seed":18446744073709551615'),reviewInput={request_json:numeric,label:'Review',chamber:'congressional',created_at:''},review=await parity({operation:'run-prepared-engine',input:reviewInput},'default-review-numeric-u64');assert.equal(review.engine_request.options.seed,'18446744073709551615');assert.equal(review.execution_performed,false);assert.equal(review.request_sha256,hash(numeric));
+await fs.writeFile(root+'/evidence.json',JSON.stringify({ordinary_cases:ordinary,full_native_host_comparisons:matches,successful_comparisons:successes,matching_native_failures:failures,nonexecuting_reviews:reviews+1,physical_exports:exports,later_build_attempt:built.result.build_report.accepted_attempt,accepted_seed_replay:true,numeric_u64_raw_json_preserved:true,default_review_does_not_execute:true,seen_successful_engine_option_fields:[...seen].sort(),seen_refused_engine_option_fields:[...refusedFields],all_option_fields_have_explicit_contract:true,embedded_native_csv_and_nan_preserved:true,source_project_roundtrips:true,wasm_sha256:engine.artifactIdentity.sha256,outcomes},null,2));
+console.log(`Prepared engine: ${ordinary} ordinary cases, ${matches} full Native comparisons, ${exports} physical exports, ${reviews+1} nonexecuting reviews and exact accepted-attempt/max-u64 preservation passed (${failures} matching Native failures).`);

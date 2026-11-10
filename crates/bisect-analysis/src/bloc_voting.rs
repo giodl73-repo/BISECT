@@ -70,8 +70,8 @@ pub struct Coef {
     /// Standardized β = β · sd(predictor) / sd(response). Effect-size measure
     /// independent of predictor scale.
     pub standardized_beta: f64,
-    /// Raw two-tailed p-value from the t-statistic |β̂| / SE_HC3 against
-    /// Student's t with (n - p) degrees of freedom.
+    /// Raw two-tailed p-value from |β̂| / SE_HC3 using the native normal-CDF
+    /// approximation. This is not an exact finite-sample Student t calculation.
     pub p_value_raw: f64,
     /// Holm-Bonferroni step-down corrected p-value, computed by the
     /// orchestrator (Task 3) which knows the family. Initialized to NaN until
@@ -250,7 +250,7 @@ pub fn fit_wls(
     let yhat = mat_mul_vec(&x, &beta)?;
     let residuals: Vec<f64> = (0..n).map(|i| y[i] - yhat[i]).collect();
 
-    let y_mean: f64 = weighted_mean(&y, &w).expect("bloc voting weights and responses are finite");
+    let y_mean: f64 = weighted_mean(&y, &w)?;
     let ss_tot: f64 = w
         .iter()
         .zip(y.iter())
@@ -490,6 +490,8 @@ pub fn compute_vif(
 /// naive (precinct-level) bootstrap.
 #[derive(Debug, Clone)]
 pub struct ClusterCi {
+    pub successful_cluster_fits: usize,
+    pub successful_naive_fits: usize,
     /// Per-coefficient (low, high) percentile CIs at the configured level.
     pub cluster_ci: HashMap<String, (f64, f64)>,
     /// Per-coefficient (low, high) percentile CIs from the naive bootstrap.
@@ -524,7 +526,7 @@ pub fn cluster_bootstrap(
     seed: u64,
     ci_level: f64,
 ) -> Result<ClusterCi, BlocVotingError> {
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
     use rand::{Rng, SeedableRng};
 
     if !(0.0 < ci_level && ci_level < 1.0) {
@@ -563,7 +565,7 @@ pub fn cluster_bootstrap(
         )));
     }
 
-    let mut rng = SmallRng::seed_from_u64(seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(seed);
     let names_with_intercept: Vec<String> = std::iter::once("intercept".to_string())
         .chain(predictor_names.iter().cloned())
         .collect();
@@ -577,19 +579,23 @@ pub fn cluster_bootstrap(
     }
 
     let n_precincts = precincts.len();
+    let mut successful_cluster_fits=0;
+    let mut successful_naive_fits=0;
+    #[cfg(not(target_arch="wasm32"))]
     let start = std::time::Instant::now();
 
     for _ in 0..n_samples {
         // ----- Cluster resample: draw n_clusters with replacement, expand. -----
         let mut sample: Vec<Precinct> = Vec::with_capacity(n_precincts);
         for _ in 0..n_clusters {
-            let pick = rng.gen_range(0..n_clusters);
+            let pick = rng.gen_range(0u64..n_clusters as u64) as usize;
             let key = &cluster_keys[pick];
             for &idx in &clusters[key] {
                 sample.push(precincts[idx].clone());
             }
         }
         if let Ok(fit) = fit_wls(&sample, predictor_names) {
+            successful_cluster_fits+=1;
             for n in &names_with_intercept {
                 if let Some(c) = fit.coefficients.get(n) {
                     cluster_betas.get_mut(n).unwrap().push(c.estimate);
@@ -600,9 +606,10 @@ pub fn cluster_bootstrap(
         // ----- Naive resample: draw n_precincts with replacement. -----
         let mut naive_sample: Vec<Precinct> = Vec::with_capacity(n_precincts);
         for _ in 0..n_precincts {
-            naive_sample.push(precincts[rng.gen_range(0..n_precincts)].clone());
+            naive_sample.push(precincts[rng.gen_range(0u64..n_precincts as u64) as usize].clone());
         }
         if let Ok(fit) = fit_wls(&naive_sample, predictor_names) {
+            successful_naive_fits+=1;
             for n in &names_with_intercept {
                 if let Some(c) = fit.coefficients.get(n) {
                     naive_betas.get_mut(n).unwrap().push(c.estimate);
@@ -613,6 +620,8 @@ pub fn cluster_bootstrap(
 
     // Performance gate: spec Task 2.4. We assume ~60s budget; surface a warning
     // (not error) if the actual run exceeds 1.5x that on the way back.
+    #[cfg(not(target_arch="wasm32"))]
+    {
     let elapsed = start.elapsed();
     if elapsed.as_secs_f64() > 90.0 {
         eprintln!(
@@ -621,6 +630,7 @@ pub fn cluster_bootstrap(
         );
     }
 
+    }
     let alpha = (1.0 - ci_level) / 2.0;
     let lo_q = alpha;
     let hi_q = 1.0 - alpha;
@@ -641,6 +651,8 @@ pub fn cluster_bootstrap(
     }
 
     Ok(ClusterCi {
+        successful_cluster_fits,
+        successful_naive_fits,
         cluster_ci,
         naive_ci,
         naive_vs_cluster_diverged: diverged,
@@ -752,6 +764,9 @@ pub struct RobustnessCheck {
 /// [DRAFT] interpretation string with the appropriate caveats injected.
 #[derive(Debug, Clone)]
 pub struct BlocVotingFamilyResult {
+    pub bootstrap_seed: u64,
+    pub bootstrap_samples: usize,
+    pub ci_level: f64,
     pub results: Vec<BlocVotingTestResult>,
     pub robustness: HashMap<String, RobustnessCheck>,
     /// Total tests in the joint Holm family. m = sum over all candidates of
@@ -783,10 +798,20 @@ pub fn run_bloc_voting_family(
     tests: &[BlocVotingTest],
     cfg: &BlocVotingConfig,
 ) -> Result<BlocVotingFamilyResult, BlocVotingError> {
+    if !cfg.alpha.is_finite() || !(0.0<cfg.alpha&&cfg.alpha<1.0) || cfg.bootstrap_samples==0 {
+        return Err(BlocVotingError::Numeric("alpha must be strictly between zero and one; bootstrap samples must be positive".into()));
+    }
     if tests.is_empty() {
         return Err(BlocVotingError::Numeric(
             "run_bloc_voting_family: empty test set".into(),
         ));
+    }
+
+    let mut keys=std::collections::BTreeSet::new();
+    for t in tests {
+        if t.candidate.contains("::")||t.variant.contains("::")||!keys.insert((t.candidate.as_str(),t.variant.as_str())) {
+            return Err(BlocVotingError::Numeric("duplicate or ambiguous candidate/variant Holm family key".into()));
+        }
     }
 
     let mut results: Vec<BlocVotingTestResult> = Vec::with_capacity(tests.len());
@@ -910,12 +935,15 @@ pub fn run_bloc_voting_family(
         .filter(|r| r.race_coefficient_significant_under_all)
         .count();
     interp.push_str(&format!(
-        "{}/{} candidates show race-coefficient significance under ALL tested baselines + LOO variants.",
+        "{}/{} candidates show race-coefficient significance under all supplied variants. Unsupplied alternative baselines and leave-one-out variants were not evaluated.",
         n_robust,
         robustness.len()
     ));
 
     Ok(BlocVotingFamilyResult {
+        bootstrap_seed: cfg.bootstrap_seed,
+        bootstrap_samples: cfg.bootstrap_samples,
+        ci_level: cfg.ci_level,
         results,
         robustness,
         holm_family_size: m,

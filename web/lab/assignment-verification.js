@@ -1,3 +1,7 @@
+import {verifyLaboratoryCoiSource} from './laboratory-coi.js';
+import {verifyLaboratoryElectoral} from './laboratory-electoral.js';
+import {verifyLaboratoryIlpReports} from './laboratory-ilp-reports.js';
+import {verifyLaboratoryCapture} from './laboratory-round-capture.js';
 import {verifyLabAssignments,verifyDemographicEvidence} from './laboratory-project.js';
 
 // Evidence replay can be expensive. Keep imported histories off the UI thread
@@ -7,7 +11,7 @@ export function verifyAssignments(graph,state,assignments,config,{signal,workerF
   if(!workerFactory && typeof Worker==='undefined') {
     // Node integration tests have no browser Worker; never fall back in the UI.
     if(typeof window!=='undefined')return Promise.reject(new Error('Project verification requires browser Worker support.'));
-    return Promise.resolve().then(async()=>{verifyLabAssignments(graph,state,assignments,config);await verifyDemographicEvidence(graph,state,config,assignments);});
+    return Promise.resolve().then(async()=>{verifyLabAssignments(graph,state,assignments,config);await verifyDemographicEvidence(graph,state,config,assignments);await verifyLaboratoryCapture(graph,state,assignments,config);await verifyLaboratoryIlpReports(graph,state,assignments,config);await verifyLaboratoryElectoral(graph,state,config);await verifyLaboratoryCoiSource(state,config);});
   }
   return new Promise((resolve,reject)=>{
     const worker=workerFactory ? workerFactory() : new Worker(new URL('./assignment-verification-worker.js',import.meta.url),{type:'module'});

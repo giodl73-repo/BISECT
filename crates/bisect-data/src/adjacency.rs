@@ -1,8 +1,9 @@
 use geo::{
     line_intersection::{line_intersection, LineIntersection},
-    BoundingRect, EuclideanLength, Intersects,
+    BoundingRect, Intersects,
 };
 use geo_types::{Coord, Line, MultiPolygon, Polygon, Rect};
+#[cfg(not(target_arch="wasm32"))]
 use rayon::prelude::*;
 use rstar::{RTree, RTreeObject, AABB};
 /// Parallel spatial adjacency builder.
@@ -18,6 +19,14 @@ use rstar::{RTree, RTreeObject, AABB};
 /// 4. Return adjacency list + edge weights (boundary lengths in metres)
 use std::collections::HashMap;
 use thiserror::Error;
+
+pub const BOUNDARY_LENGTH_MATH: &str = "libm-hypot-f64-v1";
+fn boundary_line_length(line: Line<f64>) -> f64 {
+    libm::hypot(line.dx(), line.dy())
+}
+fn boundary_ring_length(ring: &geo_types::LineString<f64>) -> f64 {
+    ring.lines().map(boundary_line_length).sum()
+}
 
 #[derive(Clone)]
 struct IndexedBounds {
@@ -84,16 +93,20 @@ impl AdjacencyGraph {
             return None;
         }
 
-        let area: f64 = vertices.iter().map(|&v| self.vertex_areas[v]).sum();
+        // Candidate ranking must not depend on the HashSet's random iteration
+        // order: rounded sums can otherwise break ties differently per process.
+        let mut ordered: Vec<usize> = vertices.iter().copied().collect();
+        ordered.sort_unstable();
+        let area: f64 = ordered.iter().map(|&v| self.vertex_areas[v]).sum();
 
         // External perimeter contribution from each tract's non-shared boundary
-        let ext: f64 = vertices
+        let ext: f64 = ordered
             .iter()
             .map(|&v| self.vertex_ext_perimeters[v])
             .sum();
 
         // Internal boundary: edges where one endpoint is in S and the other is not
-        let boundary: f64 = vertices
+        let boundary: f64 = ordered
             .iter()
             .flat_map(|&v| {
                 self.adjacency[v]
@@ -214,6 +227,7 @@ pub fn build_adjacency_graph(
         })
         .collect();
     let tree = RTree::bulk_load(indexed.clone());
+    #[cfg(not(target_arch="wasm32"))]
     let candidate_pairs: Vec<(usize, usize)> = indexed
         .par_iter()
         .flat_map_iter(|item| {
@@ -224,11 +238,22 @@ pub fn build_adjacency_graph(
         })
         .collect();
 
+    #[cfg(target_arch="wasm32")]
+    let candidate_pairs: Vec<(usize, usize)> = indexed.iter().flat_map(|item| {
+        tree.locate_in_envelope_intersecting(&item.envelope)
+            .filter_map(move |other| (item.index < other.index).then_some((item.index,other.index)))
+    }).collect();
+
     // Parallel intersection computation — the O(E) Shapely bottleneck
+    #[cfg(not(target_arch="wasm32"))]
     let edge_results: Vec<Option<((usize, usize), EdgeType)>> = candidate_pairs
         .par_iter()
         .map(|&(i, j)| classify_edge(&polygons[i], &polygons[j], i, j))
         .collect();
+
+    #[cfg(target_arch="wasm32")]
+    let edge_results: Vec<Option<((usize, usize), EdgeType)>> = candidate_pairs.iter()
+        .map(|&(i,j)|classify_edge(&polygons[i],&polygons[j],i,j)).collect();
 
     // Build adjacency and edge_weights, applying min_boundary_length filter
     let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); n];
@@ -271,11 +296,11 @@ pub fn build_adjacency_graph(
                     .0
                     .iter()
                     .map(|polygon| {
-                        polygon.exterior().euclidean_length()
+                        boundary_ring_length(polygon.exterior())
                             + polygon
                                 .interiors()
                                 .iter()
-                                .map(|ring| ring.euclidean_length())
+                                .map(boundary_ring_length)
                                 .sum::<f64>()
                     })
                     .sum()
@@ -318,7 +343,7 @@ pub fn parse_wkb_polygon_pub(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, Adj
     parse_wkb_polygon(wkb, idx)
 }
 
-fn parse_wkb_multipolygon(wkb: &[u8], idx: usize) -> Result<MultiPolygon<f64>, AdjacencyError> {
+pub(crate) fn parse_wkb_multipolygon(wkb: &[u8], idx: usize) -> Result<MultiPolygon<f64>, AdjacencyError> {
     if wkb.len() < 5 {
         return Err(AdjacencyError::WkbParseError(idx, "WKB too short".into()));
     }
@@ -460,7 +485,7 @@ fn shared_boundary_length(left: &MultiPolygon<f64>, right: &MultiPolygon<f64>) -
             right_lines.iter().filter_map(move |right_line| {
                 match line_intersection(left_line, *right_line) {
                     Some(LineIntersection::Collinear { intersection }) => {
-                        Some(intersection.euclidean_length())
+                        Some(boundary_line_length(intersection))
                     }
                     _ => None,
                 }
@@ -488,6 +513,43 @@ fn classify_edge(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn portable_boundary_lengths_preserve_geometry_and_scale() {
+        let line = |x, y| Line::new(Coord { x: 0.0, y: 0.0 }, Coord { x, y });
+        assert_eq!(boundary_line_length(line(3.0, 4.0)), 5.0);
+        assert_eq!(boundary_line_length(line(0.0, 0.0)), 0.0);
+        let huge = boundary_line_length(line(1e200, 1e200));
+        assert!(huge.is_finite());
+        assert!((huge / 1e200 - std::f64::consts::SQRT_2).abs() < 1e-15);
+        let tiny = boundary_line_length(line(f64::MIN_POSITIVE, f64::MIN_POSITIVE));
+        assert!(tiny > 0.0);
+        assert!((tiny / f64::MIN_POSITIVE - std::f64::consts::SQRT_2).abs() < 1e-15);
+    }
+
+    #[test]
+    fn compactness_sums_are_independent_of_hash_set_order() {
+        use std::collections::{HashMap, HashSet};
+        let graph = AdjacencyGraph {
+            adjacency: vec![vec![4], vec![4], vec![4], vec![4], vec![0,1,2,3]],
+            vertex_weights: vec![100;5],
+            edge_weights: HashMap::from([((0,4),1e16),((1,4),1.0),((2,4),1.0),((3,4),1.0)]),
+            n_vertices: 5, n_edges: 4,
+            vertex_areas: vec![1e16,1.0,1.0,1.0,1e16],
+            vertex_ext_perimeters: vec![1e16,1.0,1.0,1.0,1e16],
+        };
+        // Explicit index-order arithmetic is the reference, including rounding.
+        let area: f64 = [1e16,1.0,1.0,1.0].into_iter().sum();
+        let ext: f64 = [1e16,1.0,1.0,1.0].into_iter().sum();
+        let boundary: f64 = [1e16,1.0,1.0,1.0].into_iter().sum();
+        let expected = 4.0 * std::f64::consts::PI * area / ((ext+boundary)*(ext+boundary));
+        let right = HashSet::from([4]);
+        for i in 0..64 {
+            let left: HashSet<_> = (0..4).map(|v|(v+i)%4).collect();
+            assert_eq!(graph.subgraph_pp(&left).unwrap().to_bits(),expected.to_bits());
+            assert_eq!(graph.geometric_mean_pp(&left,&right).unwrap().to_bits(),
+                       graph.geometric_mean_pp(&right,&left).unwrap().to_bits());
+        }
+    }
     use geo_types::LineString;
 
     fn square_polygon(x0: f64, y0: f64, size: f64) -> Polygon<f64> {

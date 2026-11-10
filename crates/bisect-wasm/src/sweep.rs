@@ -1,0 +1,6 @@
+use serde_json::{json,Value};
+pub(crate) fn plan(settings:bisect_runner::sweep::Settings)->Result<Value,String>{
+    if settings.seeds>1000 || [&settings.state,&settings.year,&settings.chamber,&settings.version,&settings.output_base].iter().any(|s|s.is_empty()||s.len()>240||!s.bytes().all(|b|b.is_ascii_alphanumeric()||b"._:/\\-+".contains(&b))){return Err("Select at most 1000 plans and nonempty bounded command tokens without shell metacharacters or whitespace.".into());}
+    let plan=bisect_runner::sweep::plan(&settings)?;
+    Ok(json!({"schema_version":"bisect-sweep-plan-v1","status":"planned","settings":settings,"plan":plan,"execution_performed":false,"ranking_performed":false,"run_flag_reserved":settings.run,"scope":"Shared native Sweep v1 command planner. Generates labels and exact native state/analyze command text; comparison uses the first keep_top labels, not an optimized ranking. Native --run is reserved and does not execute. Commands are display/download text only. No plan is generated, scored, installed or certified. Browser inputs are limited to 1000 rows and bounded command tokens; seed values remain exact decimal strings. Native CLI and WASM reject u64 range overflow and support a range ending at u64::MAX."}))
+}

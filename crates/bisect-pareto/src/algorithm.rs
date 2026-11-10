@@ -5,6 +5,7 @@
 //!
 //! Per spec §3.
 
+#[cfg(not(target_arch="wasm32"))]
 use std::time::Instant;
 use thiserror::Error;
 
@@ -15,7 +16,7 @@ use crate::objectives::{evaluate, Objectives};
 use crate::output::{ParetoEntry, ParetoResult};
 use crate::seeds::{cross_seed, init_seed, mut_seed};
 
-use rand::rngs::SmallRng;
+use rand_chacha::ChaCha12Rng;
 use rand::Rng;
 use rand::SeedableRng;
 
@@ -73,7 +74,9 @@ pub fn run_nsga2(
     protected_districts: &[u32],
     config: ParetoConfig,
 ) -> Result<ParetoResult, ParetoError> {
+    #[cfg(not(target_arch="wasm32"))]
     let start = Instant::now();
+    validate_inputs(adjacency, vertex_weights, k, d_votes, minority_vap, &config)?;
     let n_pop = config.n_population;
     let n_gen = config.n_generations;
 
@@ -238,7 +241,10 @@ pub fn run_nsga2(
         final_fronts[0].clone()
     };
 
+    #[cfg(not(target_arch="wasm32"))]
     let runtime_secs = start.elapsed().as_secs_f64();
+    #[cfg(target_arch="wasm32")]
+    let runtime_secs = 0.0;
 
     let frontier: Vec<ParetoEntry> = front_0
         .iter()
@@ -247,7 +253,7 @@ pub fn run_nsga2(
             objectives: final_obj[i].clone(),
             dominated: false,
             generation_found: generation_found[i],
-            validity_status: Some("valid".to_string()),
+            validity_status: Some(if plan_is_valid(&population[i], adjacency, vertex_weights, k, config.balance_tolerance) {"valid"} else {"invalid"}.into()),
             audit_certificate_path: None,
             audit_certificate_sha256: None,
             audit_certificate_content_hash: None,
@@ -258,8 +264,31 @@ pub fn run_nsga2(
         frontier,
         config,
         runtime_secs,
-        pareto_version: "1.0".into(),
+        pareto_version: "2.0-chacha12-u64-v1".into(),
     })
+}
+
+// Check final algorithm constraints instead of inferring validity from front rank.
+fn plan_is_valid(plan:&[u32],adj:&[Vec<usize>],pop:&[i64],k:usize,tolerance:f64)->bool{
+    let total: i64=pop.iter().sum();let ideal=total as f64/k as f64;
+    for d in 1..=k as u32{
+        let units:Vec<usize>=(0..plan.len()).filter(|&u|plan[u]==d).collect();if units.is_empty(){return false;}
+        let district:i64=units.iter().map(|&u|pop[u]).sum();if (district as f64-ideal).abs()/ideal>tolerance{return false;}
+        let mut seen=vec![false;plan.len()];let mut stack=vec![units[0]];seen[units[0]]=true;let mut count=0;
+        while let Some(u)=stack.pop(){count+=1;for &v in &adj[u]{if plan[v]==d&&!seen[v]{seen[v]=true;stack.push(v);}}}if count!=units.len(){return false;}
+    }true
+}
+
+fn validate_inputs(adjacency:&[Vec<usize>],pop:&[i64],k:usize,d:Option<&[f64]>,m:Option<&[f64]>,config:&ParetoConfig)->Result<(),ParetoError>{
+    let invalid=|msg:&str|ParetoError::InvalidConfig{msg:msg.into()};
+    let n=adjacency.len();
+    if n==0||pop.len()!=n||k==0||k>n||config.n_population<2||!config.balance_tolerance.is_finite()||!(0.0..=1.0).contains(&config.balance_tolerance){return Err(invalid("Nonempty aligned inputs, k in 1..=n, at least two plans and finite tolerance in [0,1] are required."));}
+    let total=pop.iter().try_fold(0i64,|s,&p|if p<0{None}else{s.checked_add(p)}).ok_or_else(||invalid("Populations must be nonnegative and their sum fit i64."))?;
+    if total==0{return Err(invalid("Total population must be positive."));}
+    for shares in [d,m].into_iter().flatten(){if shares.len()!=n||shares.iter().any(|x|!x.is_finite()||!(0.0..=1.0).contains(x)){return Err(invalid("Objective shares must align with units and lie in [0,1]."));}}
+    for (u,ns) in adjacency.iter().enumerate(){let mut seen=std::collections::BTreeSet::new();for &v in ns{if v>=n||v==u||!seen.insert(v)||!adjacency[v].contains(&u){return Err(invalid("Graph must be symmetric without self loops, duplicate or out-of-range arcs."));}}}
+    let mut seen=vec![false;n];let mut stack=vec![0];seen[0]=true;while let Some(u)=stack.pop(){for &v in &adjacency[u]{if !seen[v]{seen[v]=true;stack.push(v);}}}
+    if seen.iter().any(|x|!*x){return Err(invalid("Graph must be connected."));}Ok(())
 }
 
 /// Tournament selection: draw n_pop parents via binary tournament.
@@ -273,12 +302,12 @@ fn tournament_select(
 ) -> Vec<usize> {
     // Derive a tournament seed deterministically
     let tseed = crate::seeds::cross_seed(base_seed, gen, u32::MAX);
-    let mut rng = SmallRng::seed_from_u64(tseed);
+    let mut rng = ChaCha12Rng::seed_from_u64(tseed);
     let mut parents = Vec::with_capacity(n_pop * 2);
 
     for _ in 0..n_pop * 2 {
-        let a = rng.gen_range(0..n_pop);
-        let b = rng.gen_range(0..n_pop);
+        let a = rng.gen_range(0..n_pop as u64) as usize;
+        let b = rng.gen_range(0..n_pop as u64) as usize;
         let winner = if rank[a] < rank[b] {
             a
         } else if rank[b] < rank[a] {
@@ -341,7 +370,7 @@ fn initialise_plan(
 
     // Use Wilson's spanning tree + sequential bisection for plan initialisation.
     // Build a spanning tree over the full graph, then partition by even population splits.
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
     use rand::SeedableRng;
 
     let total_pop: i64 = pop.iter().sum();
@@ -353,7 +382,7 @@ fn initialise_plan(
         .map(|nb| nb.iter().map(|&u| u as u32).collect())
         .collect();
 
-    let mut rng = SmallRng::seed_from_u64(seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(seed);
 
     // Try to produce a valid plan by greedy seed+BFS growth
     // Seeds: pick k evenly-spaced nodes as district seeds
@@ -362,7 +391,7 @@ fn initialise_plan(
         .map(|i| {
             // Add some randomness to seed selection
             let base = i * step;
-            let offset = rng.gen_range(0..step.max(1));
+            let offset = rng.gen_range(0..step.max(1) as u64) as usize;
             (base + offset) % n
         })
         .collect();

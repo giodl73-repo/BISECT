@@ -3,9 +3,12 @@
 use crate::formulation::IlpFormulation;
 use crate::result::{IlpResult, SolverStatus};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "filesystem")]
 use sha2::{Digest, Sha256};
+#[cfg(feature = "filesystem")]
 use std::io::Read;
-use std::path::{Component, Path, PathBuf};
+use std::path::PathBuf;
+use std::path::{Component, Path};
 
 pub const ILP_SOLVE_REPORT_SCHEMA_VERSION: &str = "ilp-solve-report-v1";
 
@@ -163,6 +166,7 @@ pub fn solve_report_json_with_model_artifact(
     IlpSolveReport::with_model_artifact(formulation, result, model_artifact).to_json_string()
 }
 
+#[cfg(feature = "filesystem")]
 pub fn verify_model_artifact_for_report<P: AsRef<Path>>(
     report_path: P,
 ) -> Result<VerifiedModelArtifact, ModelArtifactVerificationError> {
@@ -179,26 +183,35 @@ pub fn verify_model_artifact_for_report<P: AsRef<Path>>(
             source,
         }
     })?;
-    let artifact = report.model_artifact.ok_or_else(|| {
+    verify_model_artifact_with_digest(report_path, &report, sha256_file)
+}
+
+/// Shared verification with a host-provided digest reader. Does not inspect model semantics.
+pub fn verify_model_artifact_with_digest(
+    report_path: &Path,
+    report: &IlpSolveReport,
+    digest: impl FnOnce(&Path) -> std::io::Result<String>,
+) -> Result<VerifiedModelArtifact, ModelArtifactVerificationError> {
+    let artifact = report.model_artifact.as_ref().ok_or_else(|| {
         ModelArtifactVerificationError::MissingModelArtifact {
             path: report_path.to_path_buf(),
         }
     })?;
     let model_path = resolve_relative_model_path(report_path, &artifact.path)?;
     let actual =
-        sha256_file(&model_path).map_err(|source| ModelArtifactVerificationError::ReadModel {
+        digest(&model_path).map_err(|source| ModelArtifactVerificationError::ReadModel {
             path: model_path.clone(),
             source,
         })?;
     if actual != artifact.sha256 {
         return Err(ModelArtifactVerificationError::HashMismatch {
             path: model_path,
-            expected: artifact.sha256,
+            expected: artifact.sha256.clone(),
             actual,
         });
     }
     Ok(VerifiedModelArtifact {
-        format: artifact.format,
+        format: artifact.format.clone(),
         path: model_path,
         sha256: actual,
     })
@@ -228,6 +241,7 @@ fn resolve_relative_model_path(
     Ok(parent.join(path))
 }
 
+#[cfg(feature = "filesystem")]
 fn sha256_file(path: &Path) -> std::io::Result<String> {
     let mut file = std::fs::File::open(path)?;
     let mut hasher = Sha256::new();
@@ -242,7 +256,7 @@ fn sha256_file(path: &Path) -> std::io::Result<String> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "filesystem"))]
 mod tests {
     use super::*;
     use crate::certificates::BranchAndCutMode;

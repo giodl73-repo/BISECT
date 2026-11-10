@@ -39,7 +39,7 @@ for(const metis_objective of ['cut','volume'])for(const metis_trials of [1,3])fo
  count++;cases.push({metis_objective,metis_trials,size,steps,seed,percentile,small_region_fallback:true});
 }
 let failures=0;for(const bad of [{steps:-1},{steps:100001},{metis_trials:0},{metis_trials:101},{metis_objective:'bad'},{search:'flip',metis_objective:'volume'}]){const request={graph,options:{...base,...bad}};assert.throws(()=>engine.execute(request));const file=`target/ensemble-tuning-invalid-${failures++}.json`;await fs.writeFile(file,JSON.stringify(request));assert.notEqual(spawnSync('target/release/examples/execute_request.exe',[file],{encoding:'utf8'}).status,0);}
-let projects=0;
+let projects=0,realMisses=0,realDisconnected=0,oneDistrictProjects=0,splitProjects=0;
 if(process.argv[2]){
  const root=process.argv[2],manifest=JSON.parse(await fs.readFile(pathModule.join(root,'catalog.json'),'utf8'));
  const fetcher=async name=>{const b=await fs.readFile(pathModule.join(root,name));return{ok:true,arrayBuffer:async()=>b.buffer.slice(b.byteOffset,b.byteOffset+b.length)};};
@@ -50,9 +50,17 @@ if(process.argv[2]){
    const job=lab.submit({...config,states:[code],year,districts:null,steps:20,percentile:0,balance_tolerance:10});while(lab.active)await new Promise(r=>setTimeout(r,5));assert.equal(lab.jobs.get(job.id).status,'completed');
    const saved=await createLabProject(lab,job.id),restore=new WasmCatalog(manifest,fetcher,()=>{throw new Error('Opening must not generate.');});const reopened=await restore.restoreProject(JSON.parse(JSON.stringify(saved)));assert.equal(restore.worker,null);
    assert.deepEqual(await restore.api(`/api/runs/${reopened.id}/${code}/assignments`),saved.assignments[code]);
-   const bad=structuredClone(saved);bad.experiment.states[0].metrics.structure_evidence.metis_initialization.internal_trials++;await assert.rejects(restore.restoreProject(bad),/local-bisection evidence/);
-   await fs.writeFile(`target/ensemble-volume-${code}.bisect`,JSON.stringify(saved));projects++;
+   const bad=structuredClone(saved),metrics=bad.experiment.states[0].metrics;
+   if(metrics.district_count===1){
+     assert.equal(metrics.structure_evidence,null);assert.equal(metrics.root_split,null);
+     metrics.structure_evidence={method:'forged-split'};
+     await assert.rejects(restore.restoreProject(bad),/One-district project must not claim split or search evidence/);oneDistrictProjects++;
+   }else{
+     metrics.structure_evidence.metis_initialization.internal_trials++;await assert.rejects(restore.restoreProject(bad),/local-bisection evidence/);splitProjects++;
+   }
+   await fs.writeFile(`target/ensemble-volume-${code}.bisect`,JSON.stringify(saved));const realMetrics=saved.experiment.states[0].metrics;assert.equal(typeof realMetrics.balance_passed,'boolean');assert.equal(typeof realMetrics.contiguous,'boolean');realMisses+=!realMetrics.balance_passed;realDisconnected+=!realMetrics.contiguous;projects++;
  }
+ assert.ok(oneDistrictProjects>0,'No one-district project tested');assert.ok(splitProjects>0,'No multi-district project tested');
 }
-await fs.writeFile('target/ensemble-tuning-native-wasm-parity.json',JSON.stringify({cases:count,exact_matches:count,real_state_projects:projects,matching_rejections:failures,balance_misses:misses,disconnected_plans:disconnected,rng:'chacha12-u64-v1',results:cases},null,2));
-console.log(`Tuned local bisection ensemble: ${count} exact native/WASM cases, ${failures} matching rejections, ${projects} real-state projects, evidence tamper and zero-step checks; ${misses} balance misses, ${disconnected} disconnected plans.`);
+await fs.writeFile('target/ensemble-tuning-native-wasm-parity.json',JSON.stringify({cases:count,exact_matches:count,real_state_projects:projects,one_district_projects:oneDistrictProjects,split_projects:splitProjects,matching_rejections:failures,balance_misses:misses+realMisses,synthetic_balance_misses:misses,real_state_balance_misses:realMisses,real_state_disconnected:realDisconnected,disconnected_plans:disconnected+realDisconnected,synthetic_disconnected:disconnected,rng:'chacha12-u64-v1',results:cases},null,2));
+console.log(`Tuned local bisection ensemble: ${count} exact native/WASM cases, ${failures} matching rejections, ${projects} real-state projects, evidence tamper and zero-step checks; ${misses+realMisses} balance misses (${misses} synthetic / ${realMisses} real-state), ${disconnected+realDisconnected} disconnected plans.`);

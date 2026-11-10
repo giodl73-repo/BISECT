@@ -1,0 +1,22 @@
+[package]
+name = "veripb-formula"
+version = "0.1.2"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "VeriPB library to handle pseudo-Boolean constraints, formulas, and more data structures."
+categories = ["data-structures"]
+
+
+[dependencies]
+ahash = { version = "0.8.12", default-features = false, features = ["std", "no-rng"] }
+malachite-bigint = "0.10.0"
+num-integer = "0.1.46"
+num-traits = "0.2.19"
+smartstring = "1.0.1"
+spire_enum = "1.0.0"
+
+

@@ -129,32 +129,7 @@ pub fn spawn_bisect_state(
         })
         .unwrap_or_else(|_| std::path::PathBuf::from("bisect"));
 
-    let mut args = vec![
-        "state".to_string(),
-        "--state".to_string(),
-        form.location.clone(),
-        "--chamber".to_string(),
-        form.chamber.clone(),
-        "--year".to_string(),
-        form.year.clone(),
-        "--resolution".to_string(),
-        form.resolution.clone(),
-        "--version".to_string(),
-        form.version.clone(),
-        "--force".to_string(),
-    ];
-    if !form.seed.is_empty() {
-        args.push("--seed".to_string());
-        args.push(form.seed.clone());
-    }
-    if !form.label.is_empty() {
-        args.push("--label".to_string());
-        args.push(form.label.clone());
-    }
-    if !form.balance_tol.is_empty() {
-        args.push("--balance-tolerance".to_string());
-        args.push(form.balance_tol.clone());
-    }
+    let args=bisect_report::tui_run::state_arguments(&bisect_report::tui_run::Form{location:form.location.clone(),chamber:form.chamber.clone(),year:form.year.clone(),resolution:form.resolution.clone(),seed:form.seed.clone(),label:form.label.clone(),version:form.version.clone(),balance_tol:form.balance_tol.clone()});
 
     std::thread::spawn(move || {
         use std::io::BufRead;
@@ -217,36 +192,8 @@ pub fn run_verify_subprocess(manifest_path: &str) -> crate::app::VerifyResult {
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let combined = format!("{stdout}{stderr}");
 
-            vr.passed = combined.contains("PASS") && !combined.contains("FAIL");
-
-            // Parse Jaccard score: "Jaccard similarity: 0.9987"
-            for line in combined.lines() {
-                if line.contains("Jaccard similarity") || line.contains("Jaccard:") {
-                    if let Some(val) = line
-                        .split_whitespace()
-                        .last()
-                        .and_then(|s| s.parse::<f64>().ok())
-                    {
-                        vr.jaccard = val;
-                    }
-                }
-                if line.contains("FAIL") && !line.contains("PASS") {
-                    vr.passed = false;
-                    vr.fail_reason = Some(line.trim().to_string());
-                }
-            }
-
-            if !vr.passed && vr.fail_reason.is_none() {
-                vr.fail_reason =
-                    Some("Verification failed — check manifest path and binary".to_string());
-                vr.likely_causes = vec![
-                    "METIS version differs from manifest".to_string(),
-                    "Different adjacency file (check sha256)".to_string(),
-                    "Run without --seed (add seed to reproduce)".to_string(),
-                ];
-            }
+            vr=bisect_report::tui_verify::parse_output(manifest_path,&stdout,&stderr);
         }
     }
     vr

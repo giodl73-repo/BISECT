@@ -2,7 +2,7 @@
 ///
 /// Supports plan-a vs plan-b (both labels) or plan-a vs enacted districts.
 /// Output formats: table (default), json, csv, narrative, both.
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::args::{CompareArgs, CompareFormat};
@@ -13,62 +13,18 @@ use bisect_analysis::{
 use bisect_report::comparison::{
     diff_from_assignments, load_plan_side_from_dir, AssembleError, ComparisonReport,
 };
-use bisect_report::html_comparison::{render_comparison_html, HtmlComparisonContext};
-use bisect_report::narrative::{render_narrative, NarrativeConfig};
-use bisect_report::narrative_manifest::{
-    build_narrative_manifest_with_clock, parse_source_date_epoch_env, serialize_manifest,
-    NarrativeManifestInputs,
-};
-use sha2::{Digest, Sha256};
-
-/// SHA-256 of the embedded narrative renderer source. Anchors `template_sha256`
-/// in `narrative_manifest.json` to the exact Rust code that produced the
-/// markdown — equivalent to a Tera template SHA, but for the pure-Rust renderer.
-const NARRATIVE_RENDERER_SRC: &[u8] = include_bytes!("../../bisect-report/src/narrative.rs");
-const NARRATIVE_TEMPLATE_PATH_REL: &str = "crates/bisect-report/src/narrative.rs";
-
-fn sha256_hex(bytes: &[u8]) -> String {
-    let mut h = Sha256::new();
-    h.update(bytes);
-    let mut s = String::with_capacity(64);
-    for b in h.finalize() {
-        s.push_str(&format!("{:02x}", b));
-    }
-    s
-}
+use bisect_report::comparison_delivery::{render_native_comparison, ComparisonProducer};
+#[cfg(test)]
+use bisect_report::comparison_delivery::{pick_civic_attribution, sha256_hex};
+use bisect_report::narrative::NarrativeConfig;
+use bisect_report::narrative_manifest::parse_source_date_epoch_env;
 
 fn parse_direct_assignment_object(
     source: &str,
     obj: &serde_json::Map<String, serde_json::Value>,
 ) -> anyhow::Result<HashMap<String, usize>> {
-    obj.iter()
-        .map(|(geoid, val)| {
-            let district = val.as_u64().ok_or_else(|| {
-                anyhow::anyhow!(
-                    "[INPUT] assignment value for GEOID {} in {} must be a positive integer, got {}",
-                    geoid,
-                    source,
-                    val
-                )
-            })?;
-            if district == 0 {
-                anyhow::bail!(
-                    "[INPUT] assignment value for GEOID {} in {} must be a positive integer, got 0",
-                    geoid,
-                    source
-                );
-            }
-            let district = usize::try_from(district).map_err(|_| {
-                anyhow::anyhow!(
-                    "[INPUT] assignment value for GEOID {} in {} is too large: {}",
-                    geoid,
-                    source,
-                    district
-                )
-            })?;
-            Ok((geoid.clone(), district))
-        })
-        .collect()
+    bisect_analysis::comparison::parse_direct_assignment_object(source, obj)
+        .map_err(anyhow::Error::msg)
 }
 
 fn parse_assignment_file(path: &Path) -> anyhow::Result<HashMap<String, usize>> {
@@ -317,59 +273,17 @@ pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
         std::path::PathBuf::from(&args.output_base).join(version)
     };
 
-    struct PlanRow {
-        label: String,
-        mean_pp: Option<f64>,
-        max_dev_pct: Option<f64>,
-        county_splits: Option<u64>,
-        contiguous: Option<bool>,
-        balance_tol: Option<f64>,
-    }
+    use bisect_analysis::multi_plan_summary::{project, render, PlanRow};
 
     let mut rows: Vec<PlanRow> = Vec::new();
 
     for label in &args.labels {
         let plan_base = base.join(&args.year).join("plans").join(label);
 
-        // summary.json → population deviation
         let summary = load_analysis_json(&plan_base, "summary.json");
-        let max_dev_pct = summary.as_ref().and_then(|v| {
-            v.get("max_deviation_pct")
-                .and_then(|d| d.as_f64())
-                .or_else(|| {
-                    v.get("population_max_deviation_pct")
-                        .and_then(|d| d.as_f64())
-                })
-        });
-
-        // compactness.json → mean polsby_popper
         let compactness = load_analysis_json(&plan_base, "compactness.json");
-        let mean_pp = compactness.as_ref().and_then(|v| {
-            v.get("districts").and_then(|d| d.as_array()).map(|arr| {
-                let vals: Vec<f64> = arr
-                    .iter()
-                    .filter_map(|d| d.get("polsby_popper").and_then(|p| p.as_f64()))
-                    .collect();
-                if vals.is_empty() {
-                    return f64::NAN;
-                }
-                vals.iter().sum::<f64>() / vals.len() as f64
-            })
-        });
-
-        // splits.json → total splits count
         let splits = load_analysis_json(&plan_base, "splits.json");
-        let county_splits = splits.as_ref().and_then(|v| {
-            v.get("counties")
-                .and_then(|c| c.get("split"))
-                .and_then(|s| s.as_u64())
-        });
-
-        // contiguity.json → all_contiguous
         let contiguity = load_analysis_json(&plan_base, "contiguity.json");
-        let contiguous = contiguity
-            .as_ref()
-            .and_then(|v| v.get("all_contiguous").and_then(|c| c.as_bool()));
 
         // balance_tolerance_pct → from PlanContext manifest
         let balance_tol = crate::plan_context::PlanContext::from_label(
@@ -381,93 +295,12 @@ pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
         .ok()
         .map(|ctx| ctx.manifest.balance_tolerance_pct);
 
-        rows.push(PlanRow {
-            label: label.clone(),
-            mean_pp,
-            max_dev_pct,
-            county_splits,
-            contiguous,
-            balance_tol,
-        });
+        rows.push(project(label, summary.as_ref(), compactness.as_ref(), splits.as_ref(), contiguity.as_ref(), balance_tol));
     }
 
     let is_csv = matches!(args.format, crate::args::CompareFormat::Csv);
 
-    if is_csv {
-        println!("Label,Mean PP,Max Dev%,County Splits,Bal Tol%,Contiguous");
-        for row in &rows {
-            let pp: String = row
-                .mean_pp
-                .map_or_else(|| "N/A".to_string(), |v| format!("{:.3}", v));
-            let dev: String = row
-                .max_dev_pct
-                .map_or_else(|| "N/A".to_string(), |v| format!("{:.1}%", v));
-            let splits: String = row
-                .county_splits
-                .map_or_else(|| "N/A".to_string(), |v| v.to_string());
-            let tol: String = row
-                .balance_tol
-                .map_or_else(|| "-".to_string(), |v| format!("{:.1}%", v));
-            let cont: String = row.contiguous.map_or_else(
-                || "N/A".to_string(),
-                |v| {
-                    if v {
-                        "Yes".to_string()
-                    } else {
-                        "No".to_string()
-                    }
-                },
-            );
-            println!("{},{},{},{},{},{}", row.label, pp, dev, splits, tol, cont);
-        }
-    } else {
-        // Table format
-        let col1 = rows
-            .iter()
-            .map(|r| r.label.len())
-            .max()
-            .unwrap_or(5)
-            .max(23);
-        println!(
-            "{:<col1$} | Mean PP | Max Dev% | Splits | Bal Tol% | Contiguous",
-            "Label",
-            col1 = col1
-        );
-        println!(
-            "{:-<col1$}-+---------+----------+--------+----------+------------",
-            "",
-            col1 = col1
-        );
-        for row in &rows {
-            let pp: String = row
-                .mean_pp
-                .map_or_else(|| " N/A ".to_string(), |v| format!(" {:.3} ", v));
-            let dev: String = row
-                .max_dev_pct
-                .map_or_else(|| "  N/A  ".to_string(), |v| format!("  {:.1}% ", v));
-            let splits: String = row
-                .county_splits
-                .map_or_else(|| "  N/A ".to_string(), |v| format!("  {:3}  ", v));
-            let tol: String = row
-                .balance_tol
-                .map_or_else(|| "   -    ".to_string(), |v| format!("  {:.1}%  ", v));
-            let cont: String = row.contiguous.map_or_else(
-                || "  N/A ".to_string(),
-                |v| {
-                    if v {
-                        "  Yes ".to_string()
-                    } else {
-                        "  No  ".to_string()
-                    }
-                },
-            );
-            println!(
-                "{:<col1$} |{pp}|{dev}|{splits}|{tol}|{cont}",
-                row.label,
-                col1 = col1
-            );
-        }
-    }
+    print!("{}", render(&rows, is_csv));
 
     Ok(())
 }
@@ -711,23 +544,9 @@ fn run_narrative_dispatch(
     let diff = diff_from_assignments(&plan_a_dir, &plan_b_dir)
         .map_err(|e: AssembleError| anyhow::anyhow!("diff: {e}"))?;
 
-    // Snapshot SHAs we need for the manifest BEFORE moving sides into the report.
     let plan_a_label = side_a.label.clone();
-    let plan_a_manifest_sha = side_a.manifest_sha256.clone();
-    let plan_a_analysis_sha = side_a.analysis_sha256.clone();
-    let plan_a_submission_type = side_a.submission_type.clone();
-    let plan_a_submitted_by = side_a.submitted_by.clone();
-    let plan_a_submitted_at = side_a.submitted_at.clone();
     let plan_b_label_resolved = side_b.label.clone();
-    let plan_b_manifest_sha = side_b.manifest_sha256.clone();
-    let plan_b_analysis_sha = side_b.analysis_sha256.clone();
-    let plan_b_submission_type = side_b.submission_type.clone();
-    let plan_b_submitted_by = side_b.submitted_by.clone();
-    let plan_b_submitted_at = side_b.submitted_at.clone();
-
-    let report = ComparisonReport::from_loaded(side_a, side_b, /*baseline=*/ None, diff);
-
-    // Render the markdown.
+    let report = ComparisonReport::from_loaded(side_a, side_b, None, diff);
     let cfg = NarrativeConfig {
         leaning_threshold: args.leaning_threshold,
         close_call_band: args.close_call_band,
@@ -736,55 +555,13 @@ fn run_narrative_dispatch(
         mm_count_ci: None,
         mean_pp_ci: None,
     };
-    let markdown = render_narrative(&report, &cfg);
-
-    // Build provenance manifest.
-    let mut analysis_sha256: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
-    analysis_sha256.insert("plan_a".into(), plan_a_analysis_sha);
-    analysis_sha256.insert("plan_b".into(), plan_b_analysis_sha);
-
     let prov = Provenance::current();
-    let template_sha = sha256_hex(NARRATIVE_RENDERER_SRC);
-
-    // Civic-counter-proposal attribution: prefer plan B (the typical
-    // civic-side submission) but fall back to plan A if only A is tagged.
-    let (submission_type, civic_attribution) = pick_civic_attribution(
-        plan_a_submission_type.as_deref(),
-        &plan_a_label,
-        plan_a_submitted_by.as_deref(),
-        plan_a_submitted_at.as_deref(),
-        plan_b_submission_type.as_deref(),
-        &plan_b_label_resolved,
-        plan_b_submitted_by.as_deref(),
-        plan_b_submitted_at.as_deref(),
-    );
-
-    let inputs = NarrativeManifestInputs {
-        template_path_rel: NARRATIVE_TEMPLATE_PATH_REL.to_string(),
-        template_sha256: template_sha,
-        leaning_threshold: args.leaning_threshold,
-        close_call_band: args.close_call_band,
-        moe_inputs: BTreeMap::new(),
-        plan_a_label: plan_a_label.clone(),
-        plan_a_manifest_sha256: plan_a_manifest_sha,
-        plan_b_label: plan_b_label_resolved.clone(),
-        plan_b_manifest_sha256: plan_b_manifest_sha,
-        baseline_label: None,
-        baseline_manifest_sha256: None,
-        analysis_sha256,
-        approved_by: args.approved_by.clone(),
+    let producer = ComparisonProducer {
         version: prov.version,
         build_commit: prov.build_commit,
         rustc_version: prov.rustc_version,
-        submission_type,
-        civic_counter_proposal_attribution: civic_attribution,
-        comments_label: None,
-        comments_overlay_sha256: None,
     };
-
-    let source_date_epoch = parse_source_date_epoch_env()?;
-    let manifest = build_narrative_manifest_with_clock(inputs, source_date_epoch);
-    let manifest_json = serialize_manifest(&manifest)
+    let artifacts = render_native_comparison(&report, &cfg, producer, parse_source_date_epoch_env()?, also_html)
         .map_err(|e| anyhow::anyhow!("[INTERNAL] manifest serialize failed: {e}"))?;
 
     // Choose output directory.
@@ -801,21 +578,13 @@ fn run_narrative_dispatch(
 
     let narrative_path = report_dir.join("narrative.md");
     let manifest_path = report_dir.join("narrative_manifest.json");
-    std::fs::write(&narrative_path, &markdown)?;
-    std::fs::write(&manifest_path, &manifest_json)?;
+    std::fs::write(&narrative_path, &artifacts.markdown)?;
+    std::fs::write(&manifest_path, &artifacts.manifest_json)?;
 
     eprintln!("[OK] narrative -> {}", narrative_path.display());
     eprintln!("[OK] manifest  -> {}", manifest_path.display());
 
-    if also_html {
-        let ctx = HtmlComparisonContext {
-            narrative_markdown: markdown.clone(),
-            template_sha256: manifest.template_sha256.clone(),
-            build_commit_short: manifest.build_commit_short.clone(),
-            version: manifest.version.clone(),
-            approved_at: manifest.approved_at.clone(),
-        };
-        let html = render_comparison_html(&report, &cfg, &ctx);
+    if let Some(html) = artifacts.html {
         let html_path = report_dir.join("comparison.html");
         std::fs::write(&html_path, &html)?;
         eprintln!("[OK] html      -> {}", html_path.display());
@@ -828,39 +597,6 @@ fn run_narrative_dispatch(
     }
 
     Ok(())
-}
-
-#[allow(clippy::too_many_arguments)]
-fn pick_civic_attribution(
-    a_type: Option<&str>,
-    a_label: &str,
-    a_by: Option<&str>,
-    a_at: Option<&str>,
-    b_type: Option<&str>,
-    b_label: &str,
-    b_by: Option<&str>,
-    b_at: Option<&str>,
-) -> (
-    Option<String>,
-    Option<bisect_report::narrative_manifest::CivicCounterProposalAttribution>,
-) {
-    let civic = "civic_counter_proposal";
-    let make = |label: &str, by: Option<&str>, at: Option<&str>| {
-        Some(
-            bisect_report::narrative_manifest::CivicCounterProposalAttribution {
-                plan_label: label.to_string(),
-                submitted_by: by.unwrap_or("").to_string(),
-                submitted_at: at.unwrap_or("").to_string(),
-            },
-        )
-    };
-    if b_type == Some(civic) {
-        return (Some(civic.to_string()), make(b_label, b_by, b_at));
-    }
-    if a_type == Some(civic) {
-        return (Some(civic.to_string()), make(a_label, a_by, a_at));
-    }
-    (None, None)
 }
 
 #[cfg(test)]

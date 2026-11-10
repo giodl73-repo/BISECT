@@ -319,36 +319,27 @@ pub(crate) fn articulation_dfs(
     time: &mut usize,
     is_articulation: &mut [bool],
 ) {
-    discovery[node] = Some(*time);
-    low[node] = *time;
-    *time += 1;
-    let mut child_count = 0usize;
-
-    for &neighbor in &adjacency[node] {
-        if discovery[neighbor].is_none() {
-            child_count += 1;
-            parent[neighbor] = Some(node);
-            articulation_dfs(
-                neighbor,
-                adjacency,
-                discovery,
-                low,
-                parent,
-                time,
-                is_articulation,
-            );
-            low[node] = low[node].min(low[neighbor]);
-
-            if parent[node].is_none() && child_count > 1 {
-                is_articulation[node] = true;
+    // Heap-backed DFS frames retain recursive traversal order without a native
+    // thread stack. Discovery/refinement can now use this same kernel in WASM.
+    discovery[node]=Some(*time);low[node]=*time;*time+=1;
+    let mut stack=vec![(node,0usize,0usize)];
+    while let Some(&(current,next,children))=stack.last() {
+        if next<adjacency[current].len() {
+            let neighbor=adjacency[current][next];
+            let frame=stack.last_mut().expect("nonempty DFS stack");frame.1+=1;
+            if discovery[neighbor].is_none() {
+                frame.2+=1;parent[neighbor]=Some(current);
+                discovery[neighbor]=Some(*time);low[neighbor]=*time;*time+=1;
+                stack.push((neighbor,0,0));
+            } else if parent[current]!=Some(neighbor) {
+                low[current]=low[current].min(discovery[neighbor].expect("visited neighbor"));
             }
-            if parent[node].is_some()
-                && low[neighbor] >= discovery[node].expect("visited node has discovery time")
-            {
-                is_articulation[node] = true;
-            }
-        } else if parent[node] != Some(neighbor) {
-            low[node] = low[node].min(discovery[neighbor].expect("visited neighbor"));
+        } else {
+            stack.pop();
+            if let Some(ancestor)=parent[current] {
+                low[ancestor]=low[ancestor].min(low[current]);
+                if parent[ancestor].is_some() && low[current]>=discovery[ancestor].expect("visited ancestor") {is_articulation[ancestor]=true;}
+            } else if children>1 {is_articulation[current]=true;}
         }
     }
 }

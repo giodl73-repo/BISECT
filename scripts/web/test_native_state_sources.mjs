@@ -1,0 +1,62 @@
+import {createNativeCommandComparator} from './native_command_comparison.mjs';
+let strictComparator,strictComparisonPairs=0;
+function compareNative(request,actual,expected){strictComparator??=createNativeCommandComparator(root,'target/wasm32-unknown-unknown/release/bisect_wasm.wasm');strictComparator.compare(request,actual,expected);strictComparisonPairs++;}
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {createNativeStateSourceJob} from '../../web/lab/native-state-sources.js';
+import {executeNativeStateJob,validateNativeStateJob} from '../../web/lab/native-state-job.js';
+import {acquireStateSourceJob} from '../../web/lab/state-source-acquisition.js';
+import {streamStateSourceBatch} from '../../web/lab/stream-state-source-batch.js';
+import {createLocalStateOutput} from '../../web/lab/local-state-output.js';
+import {extractCensusZip} from '../../web/lab/census-archive.js';
+import {parseWorkbenchArchiveBytes} from '../../web/lab/workbench-archive.js';
+import {stateRunBatchZip} from '../../web/lab/state-run-batch.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const coreOnly=process.argv.includes('--core-only'),withFollowup=process.argv.includes('--followup');
+const root=path.resolve('target/native-state-sources'+(withFollowup?'-followup':'')+(coreOnly?'-core':''));await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const controls={nativeStateSourceSettings:{enabled:true},stateCommandInputs:{arguments_json:JSON.stringify(['--state','IA','--year','2000','--resolution','block_group','--chamber','house','--districts','99','--metis-engine','metis-core','--search','single','--seed','18446744073709551615','--niter','10','--balance-tolerance','5','--weights-override','county','--alpha-county','2'])},stateGraphInputs:{graph:null,auxiliary:null,settings:{label:'Native source experiment',chamber:'congressional',created_at:'2026-10-20T00:00:00Z',inspect_only:true}}};
+if(withFollowup)controls.tuiRunWorkflowSettings={analysis:true,map:true,report:false,dpi:'72'};
+let nativeCalls=0,preparedSources=0,partitions=0;const outputs=[];
+const counted={execute(request,options){if(request.operation.startsWith('prepare-')&&!request.operation.startsWith('prepare-native-state'))preparedSources++;if(request.operation==='run-prepared-engine'&&request.input.inspect_only===false)partitions++;return engine.execute(request,options);}};
+const portable=JSON.parse(await fs.readFile('scripts/web/fixtures/native-state-source.json','utf8')),portableJob=await createNativeStateSourceJob({...portable,...controls},'native');portableJob.scope.districts=2;const portableOutput=await executeNativeStateJob(counted,portableJob);assert.equal(portableOutput.result.scope.districts,2);outputs.push({job:portableJob,output:portableOutput});
+const portablePackets=[],portableWasmReplies=[];await executeNativeStateJob({execute(r,o){portablePackets.push(structuredClone(r));const reply=engine.execute(r,o);portableWasmReplies.push(structuredClone(reply));return reply;}},portableJob);for(let i=0;i<portablePackets.length;i++)await fs.writeFile(root+'/portable-native-'+i+'.json',JSON.stringify(portablePackets[i]));let portableIndex=0;const portableHost=await executeNativeStateJob({execute(r){const i=portableIndex++;assert.deepEqual(r,portablePackets[i]);const p=spawnSync(path.resolve('target/release/examples/execute_tool_request.exe'),[root+'/portable-native-'+i+'.json'],{encoding:'utf8',windowsHide:true,timeout:180000,maxBuffer:32*1024*1024});assert.equal(p.status,0,p.stderr);nativeCalls++;const reply=JSON.parse(p.stdout);compareNative(r,portableWasmReplies[i],reply);return reply;}},portableJob);compareNative({operation:'compare-source-native-state-job',input:portableJob},portableOutput,portableHost);
+
+if(!coreOnly){
+for(const kind of ['tract','block-group','block','ri']){
+ const original=JSON.parse(await fs.readFile('target/native-engine-input-wasm/'+kind+'-prepared.bisect','utf8')),files={...original.files,...controls};const before=partitions,job=await createNativeStateSourceJob(files,'native');assert.equal(partitions,before);assert.equal(job.scope.districts,null);assert.equal(job.request_sha256,null);validateNativeStateJob(job);job.scope.districts=kind==='ri'?2:1;
+ const packets=[],wasmReplies=[],output=await executeNativeStateJob({execute(r,o){packets.push(structuredClone(r));const reply=counted.execute(r,o);wasmReplies.push(structuredClone(reply));return reply;}},job);assert.equal(output.result.scope.districts,job.scope.districts);assert.equal(output.result.native_state.scope_binding.algorithm_unchanged,true);assert.equal(output.result.prepared.executed_request.options.county_augmentation,2);assert.equal(output.result.prepared.executed_request.options.seed,'18446744073709551615');if(kind==='ri')assert.equal(output.result.prepared.result.metrics.population,1097379);
+ let index=0;for(const packet of packets)await fs.writeFile(root+'/native-'+(nativeCalls+index++)+'.json',JSON.stringify(packet));index=0;
+ const host={execute(r){assert.deepEqual(r,packets[index++]);const p=spawnSync(path.resolve('target/release/examples/execute_tool_request.exe'),[root+'/native-'+nativeCalls+'.json'],{encoding:'utf8',windowsHide:true,timeout:180000,maxBuffer:96*1024*1024});assert.equal(p.status,0,p.stderr);nativeCalls++;const reply=JSON.parse(p.stdout);compareNative(r,wasmReplies[index-1],reply);return reply;}};
+ const reference=await executeNativeStateJob(host,job);compareNative({operation:'compare-source-native-state-job',input:job},output,reference);outputs.push({job,output});
+ if(kind==='tract'){const project=createProject({name:'Original source flags',files,operation:'prepare-native-engine-input',constraints:[],result:null,lastOperation:null});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/browser.bisect',JSON.stringify(project));}
+}
+for(const year of ['2000','2010','2020'])for(const kind of ['tract','block-group','block']){
+ const p=JSON.parse(await fs.readFile('target/census-preparation-wasm/'+year+'-'+kind+'/project.bisect','utf8')),job=await createNativeStateSourceJob({...p.files,...controls},'census');job.scope.districts=1;const output=await executeNativeStateJob(counted,job);assert.equal(output.source_preparation.year,year);assert.equal(output.result.native_state.scope_binding.scope.resolution,kind==='block-group'?'block_group':kind);assert(output.result.geometry);outputs.push({job,output});
+}
+}
+const altered=structuredClone(outputs[0].job);altered.native_state.command.arguments_json+=' ';const beforeBad=preparedSources,beforeBadRuns=partitions;await assert.rejects(executeNativeStateJob(counted,altered),/sources changed/);assert.equal(preparedSources,beforeBad);assert.equal(partitions,beforeBadRuns);
+const unresolved=structuredClone(outputs[0].job);unresolved.scope.districts=null;await assert.rejects(executeNativeStateJob(counted,unresolved),/Resolve native congressional allocation/);
+if(!coreOnly){
+const plan=engine.execute({operation:'plan-fetch-sources',input:{manifest_json:null,states:['RI','VT'],year:'2020',data_types:[],selected_paths:[]}}),archiveReader=async(file,settings)=>extractCensusZip(new Uint8Array(await file.arrayBuffer()),settings),fetcher=async url=>{const item=plan.items.find(i=>i.url===url);return new Response(await fs.readFile('target/state-source-acquisition/synthetic-states/'+item.state_code+'-'+(item.kind==='tiger'?'tiger':'pl94')+'.zip'));};
+const acquired=await acquireStateSourceJob(plan,{state:'RI',year:'2020'},controls,null,null,null,{archiveReader,fetcher,inspectNativeCommand:r=>engine.execute(r)});assert(acquired.native_state.source_inputs);assert(acquired.acquisition.archives.length===2);acquired.scope.districts=1;const acquiredOutput=await executeNativeStateJob(counted,acquired);outputs.push({job:acquired,output:acquiredOutput});
+class Directory{
+ constructor(dir){this.directory=dir;this.kind='directory';}
+ async getDirectoryHandle(name,{create=false}={}){const dir=path.join(this.directory,name);try{if(!(await fs.stat(dir)).isDirectory())throw Error('Not directory');}catch(e){if(e.code!=='ENOENT')throw e;if(!create)throw Object.assign(Error('Missing'),{name:'NotFoundError'});await fs.mkdir(dir);}return new Directory(dir);}
+ async getFileHandle(name){const file=path.join(this.directory,name);return {async createWritable(){let bytes;return {async write(v){bytes=v;},async close(){await fs.writeFile(file,bytes);},async abort(){bytes=null;}};},async getFile(){const bytes=await fs.readFile(file);return {async arrayBuffer(){return Uint8Array.from(bytes).buffer;}};}};}
+}
+let alive=0,peak=0;
+class Worker extends EventTarget{
+ constructor(){super();this.closed=false;alive++;peak=Math.max(peak,alive);}
+ postMessage(m){setTimeout(async()=>{if(this.closed)return;try{if(m.type==='initialize'){this.dispatchEvent(new MessageEvent('message',{data:{type:'ready',runtimeArtifact:engine.artifactIdentity}}));return;}const result=m.request.operation==='run-native-state-job'?await executeNativeStateJob(counted,m.request.input):engine.execute(m.request);this.dispatchEvent(new MessageEvent('message',{data:{type:'result',id:m.id,result}}));}catch(e){this.dispatchEvent(new MessageEvent('message',{data:{type:'error',id:m.id,error:e.message}}));}},1);}
+ terminate(){if(!this.closed){this.closed=true;alive--;}}
+}
+const manifest=JSON.parse(await fs.readFile('data/manifest.json','utf8'));for(const v of Object.values(manifest.states))v.districts['2020']=1;
+const sink=await createLocalStateOutput(new Directory(root)),stream=await streamStateSourceBatch(plan,'2020',{year:'2020',states:['RI','VT'],manifest:{name:'synthetic-one-seat.json',base64:Buffer.from(JSON.stringify(manifest)).toString('base64')}},controls,null,null,null,sink,{createWorker:()=>new Worker(),wasmUrl:'local',fetcher,archiveReader});assert.equal(stream.summary.succeeded,2,JSON.stringify(stream.states));assert.equal(alive,0);assert.equal(peak,1);assert(JSON.stringify(stream).length<100000);assert(!JSON.stringify(stream).includes('graph_json'));
+for(const state of ['RI','VT']){const dir=root+'/'+sink.name+'/'+state,marker=JSON.parse(await fs.readFile(dir+'/completed.json','utf8'));assert.equal(marker.effective_seed,'18446744073709551615');const restore=await parseWorkbenchArchiveBytes(new Uint8Array(await fs.readFile(dir+'/source-project.bisect-workbench')));assert.equal(restore.files.nativeStateSourceSettings.enabled,true);assert.equal(restore.files.stateCommandInputs.arguments_json,controls.stateCommandInputs.arguments_json);assert(restore.files.tigerInputs);if(withFollowup){assert.deepEqual(restore.files.tuiRunWorkflowSettings,controls.tuiRunWorkflowSettings);assert(['completed','partial','failed'].includes(marker.followup?.status));assert.deepEqual(marker.followup,stream.states.find(r=>r.state===state).followup);}}
+await fs.writeFile(root+'/stream.json',JSON.stringify(stream));await fs.writeFile(root+'/outputs.json',JSON.stringify(outputs));await fs.writeFile(root+'/native.zip',await stateRunBatchZip({schema_version:'bisect-state-run-batch-v1',status:'completed',states:[{state_code:'RI',status:'ok',...outputs[0].output}].map(r=>({...r,result:r.result}))}));
+}
+await fs.writeFile(root+'/evidence.json',JSON.stringify({strict_comparison_pairs:strictComparisonPairs,wasm:engine.artifactIdentity,native_child_matches:nativeCalls,native_and_census_source_cases:outputs.length,three_native_resolutions_and_vintages:!coreOnly,real_ri_population:coreOnly?null:1097379,core_only:coreOnly,automatic_followup_requested:withFollowup,scope_rebound_without_algorithm_change:true,original_bytes_and_max_u64_seed_retained:true,source_changes_rejected_before_preparation:true,pinned_acquisition_and_native_flags:!coreOnly,streamed_saved_states:coreOnly?0:2,peak_workers:coreOnly?0:1,compact_disk_receipt:!coreOnly,readback_verified_source_workbench_and_completion_markers:!coreOnly,published:false},null,2)+'\n');console.log(coreOnly?`PASS portable native State source: ${nativeCalls} native child matches, original recipe, scope and pre-preparation source guards`:`PASS native State sources: ${outputs.length} source cases, ${nativeCalls} native child matches, pinned acquisition, two streamed/readback-verified outputs and original sources/flags`);

@@ -94,10 +94,19 @@ pub fn run_all_splits_ensemble_tuned(
     adjacency:&[Vec<usize>],population:&[i64],edges:&HashMap<(usize,usize),f64>,
     k:usize,tolerance:f64,niter:u32,seed:u64,steps:usize,percentile:f64,objective:&str,trials:u32,
 ) -> Result<HashMap<usize,usize>,String> {
+    run_all_splits_ensemble_optional_seed_tuned(adjacency,population,edges,k,tolerance,niter,Some(seed),steps,percentile,objective,trials)
+}
+
+/// Preserve the native optional seed for ensemble initialization and its RNG.
+#[allow(clippy::too_many_arguments)]
+pub fn run_all_splits_ensemble_optional_seed_tuned(
+    adjacency:&[Vec<usize>],population:&[i64],edges:&HashMap<(usize,usize),f64>,
+    k:usize,tolerance:f64,niter:u32,seed:Option<u64>,steps:usize,percentile:f64,objective:&str,trials:u32,
+) -> Result<HashMap<usize,usize>,String> {
     if !["cut","volume"].contains(&objective) || !(1..=100).contains(&trials) || !percentile.is_finite() || !(0.0..=1.0).contains(&percentile) {
         return Err("Invalid local ensemble refinement or percentile.".into());
     }
-    run_all_splits_search(adjacency,population,edges,k,tolerance,niter,Some(seed),None,Some((percentile,steps)),None,objective,trials)
+    run_all_splits_search(adjacency,population,edges,k,tolerance,niter,seed,None,Some((percentile,steps)),None,objective,trials)
 }
 
 fn run_all_splits_search(
@@ -118,11 +127,10 @@ fn run_all_splits_search(
     // Single-district: all tracts to district 1, no METIS call
     if num_districts == 1 {
         // Write depth-00 as the trivial single-region state
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join("depth_00");
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = "depth_00";
             let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
-            let _ = write_intermediate_round(&round_dir, &asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &asgn);
         }
         return Ok((0..n).map(|i| (i, 1)).collect());
     }
@@ -234,9 +242,8 @@ fn run_all_splits_search(
         }
 
         // Write intermediate round: current node_tracts state as tract→region_id
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = format!("depth_{:02}", depth + 1);
             // Sort nodes for deterministic region numbering
             let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
             nodes.sort_by_key(|(path, _)| (path.len(), *path));
@@ -246,7 +253,7 @@ fn run_all_splits_search(
                     round_asgn.insert(tract, region_id + 1);
                 }
             }
-            let _ = write_intermediate_round(&round_dir, &round_asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &round_asgn);
         }
     }
 
@@ -308,11 +315,10 @@ pub fn run_all_splits_compact(
     };
 
     if num_districts == 1 {
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join("depth_00");
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = "depth_00";
             let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
-            let _ = write_intermediate_round(&round_dir, &asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &asgn);
         }
         return Ok((0..n).map(|i| (i, 1)).collect());
     }
@@ -384,9 +390,8 @@ pub fn run_all_splits_compact(
             node_tracts.insert(format!("{path}1"), right);
         }
 
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = format!("depth_{:02}", depth + 1);
             let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
             nodes.sort_by_key(|(path, _)| (path.len(), *path));
             let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
@@ -395,7 +400,7 @@ pub fn run_all_splits_compact(
                     round_asgn.insert(tract, region_id + 1);
                 }
             }
-            let _ = write_intermediate_round(&round_dir, &round_asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &round_asgn);
         }
     }
 
@@ -469,14 +474,13 @@ pub fn run_all_splits_proportional_recorded(
     let mut depth = 0;
     let mut splits = Vec::new();
     loop {
-        if let Some(dir) = intermediate_dir {
+        if round_output_enabled(intermediate_dir) {
             let mut regions: Vec<_> = frontier.iter().collect();
             regions.sort_by_key(|(path,_,_)| (path.len(),path.clone()));
             let round_asgn: HashMap<usize,usize> = regions.iter().enumerate()
                 .flat_map(|(id,(_,_,tracts))| tracts.iter().map(move |&v| (v,id+1))).collect();
-            let round_dir = dir.join(format!("depth_{depth:02}"));
-            let _ = std::fs::create_dir_all(&round_dir);
-            let _ = write_intermediate_round(&round_dir,&round_asgn);
+            let round_dir = format!("depth_{depth:02}");
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir,&round_asgn);
         }
         if frontier.iter().all(|(_,k,_)| *k == 1) {break;}
         frontier.sort_by_key(|(path,_,_)| path.clone());
@@ -601,6 +605,13 @@ pub fn repair_bisection_contiguity(
     let (left2, right2) = repair_side(left, right);
     let (right3, left3) = repair_side(right2, left2);
     (left3, right3)
+}
+
+/// Emit the same native event to an optional in-memory observer and/or native directory.
+pub(crate) fn emit_intermediate_round(directory:Option<&Path>,name:&str,assignments:&HashMap<usize,usize>)->Result<(),String>{
+    observe_round(name,assignments)?;
+    if let Some(directory)=directory {let round=directory.join(name);std::fs::create_dir_all(&round).map_err(|e|format!("create round directory: {e}"))?;write_intermediate_round(&round,assignments)?;}
+    Ok(())
 }
 
 /// Write one intermediate round's assignments to `{round_dir}/assignments.json`.

@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {labelReportFromAnalysis,labelReportRequest,labelReportZip,readLabelReportSource} from '../../web/lab/label-report-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+import {countResultTables} from '../../web/lab/count-results.js';
+const root='target/label-report-wasm';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const analysis=JSON.parse(await fs.readFile('target/label-analysis-wasm/result.json','utf8'));
+const sha=t=>createHash('sha256').update(t).digest('hex');
+const input={analysis_index_json:analysis.index_json,files:analysis.files,file_sha256:analysis.file_sha256,generated_at:'2026-10-07T01:00:00Z',format:'json',audit_with_report:true};
+const request={operation:'run-label-report',input};
+const out=engine.execute(request),index=JSON.parse(out.index_json);
+assert.equal(out.status,'partial');assert.equal(out.registry_promoted,false);assert.equal(index.analysis_index_sha256,sha(analysis.index_json));assert.equal(index.format,'json');
+assert.equal(out.states.find(s=>s.state_name==='washington').status,'generated');assert.equal(out.states.find(s=>s.state_name==='rhode_island').status,'unavailable');assert.equal(out.states.find(s=>s.state_name==='iowa').status,'skipped');
+const selected={};for(const name of ['manifest.json','plan.rplan','context.rctx','summary.json','contiguity.json','compactness.json','partisan.json','splits.json']){const text=analysis.files['analysis/analysis_fixture/2020/washington/'+name];if(text!==undefined)selected[['summary.json','contiguity.json','compactness.json','partisan.json','splits.json'].includes(name)?'analysis/'+name:name]=Array.from(Buffer.from(text));}
+const direct=engine.execute({operation:'assemble-commission-report',files:selected,generated_at:input.generated_at,delivery:{label:analysis.label,formats:['json'],audit_with_report:true}});
+for(const [name,text]of Object.entries(direct.report_files))assert.equal(out.files['reports/analysis_fixture/2020/washington/'+name],text);
+assert.match(out.files['reports/analysis_fixture/2020/washington/analysis_fixture_report.json'],/Native consistency warning/);
+for(const [path,text]of Object.entries(out.files))assert.equal(out.file_sha256[path],sha(text));
+assert.deepEqual(index.files.slice().sort(),Object.keys(out.files).filter(p=>p!==out.index_path).map(p=>p.replace('reports/analysis_fixture/2020/','')).sort());
+const htmlReq={...request,input:{...input,format:'html',audit_with_report:false}},html=engine.execute(htmlReq);
+const directHtml=engine.execute({operation:'assemble-commission-report',files:selected,generated_at:input.generated_at,delivery:{label:analysis.label,formats:['html'],audit_with_report:false}});
+assert.equal(html.files['reports/analysis_fixture/2020/washington/analysis_fixture_report.html'],directHtml.report_html);assert.equal(html.files['reports/analysis_fixture/2020/washington/audit.json'],undefined);
+const missingFiles={...input.files};delete missingFiles['analysis/analysis_fixture/2020/washington/compactness.json'];const missingHashes={...input.file_sha256};delete missingHashes['analysis/analysis_fixture/2020/washington/compactness.json'];const missing=engine.execute({...request,input:{...input,files:missingFiles,file_sha256:missingHashes}});assert.equal(missing.states.find(s=>s.state_name==='washington').status,'unavailable');assert.equal(Object.keys(missing.files).length,2);
+const manifestPath='analysis/analysis_fixture/2020/washington/manifest.json',changed=JSON.parse(input.files[manifestPath]);changed.state_code='RI';const changedText=JSON.stringify(changed);const wrongReq={...request,input:{...input,files:{...input.files,[manifestPath]:changedText},file_sha256:{...input.file_sha256,[manifestPath]:sha(changedText)}}},wrong=engine.execute(wrongReq);assert.equal(wrong.states.find(s=>s.state_name==='washington').status,'failed');assert.match(wrong.states.find(s=>s.state_name==='washington').error,/state\/year/);
+// Fully supplied second synthetic jurisdiction exercises successful multi-state delivery.
+const base=JSON.parse(await fs.readFile('target/analysis-package-wasm/request.json','utf8')).input;
+const riPlan=JSON.parse(analysis.files['analysis/analysis_fixture/2020/rhode_island/plan.rplan']);
+const context=JSON.parse(base.context_json);context.units=riPlan.plan.units;
+const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
+const projection={units:context.units,graph:context.graph,populations:context.populations,source_hashes:context.source_hashes};for(const k of ['subdivisions','demographics','geometry'])if(context[k]!=null)projection[k]=context[k];context.context_hash='sha256:'+sha(canonical(projection));
+const riInput={...base,document_json:JSON.stringify(riPlan),context_json:JSON.stringify(context),demographic_csv:base.demographic_csv?.replaceAll('53001','44001')??null,election_csv:base.election_csv?.replaceAll('53001','44001')??null,compactness:{...base.compactness,unit_geometry_json:base.compactness.unit_geometry_json.replaceAll('53001','44001')}};
+const riPackage=engine.execute({operation:'analyze-plan-package',input:riInput});assert.equal(riPackage.report_ready,true);
+const completeIndex=JSON.parse(input.analysis_index_json);completeIndex.states.rhode_island={...completeIndex.states.washington};const completeIndexText=JSON.stringify(completeIndex);
+const completeFiles={...input.files,[analysis.index_path]:completeIndexText};for(const [name,text]of Object.entries(riPackage.files))completeFiles['analysis/analysis_fixture/2020/rhode_island/'+name]=text;
+const completeReq={...request,input:{...input,analysis_index_json:completeIndexText,files:completeFiles,file_sha256:Object.fromEntries(Object.entries(completeFiles).map(([p,t])=>[p,sha(t)]))}};
+const complete=engine.execute(completeReq);assert.equal(complete.status,'generated');assert.equal(complete.states.filter(s=>s.status==='generated').length,2);assert.equal(Object.keys(complete.files).length,6);
+const planPath='analysis/analysis_fixture/2020/washington/plan.rplan',badPlanText=JSON.stringify(riPlan);const badPlanReq={...request,input:{...input,files:{...input.files,[planPath]:badPlanText},file_sha256:{...input.file_sha256,[planPath]:sha(badPlanText)}}};const badPlan=engine.execute(badPlanReq);assert.equal(badPlan.states.find(s=>s.state_name==='washington').status,'failed');assert.match(badPlan.states.find(s=>s.state_name==='washington').error,/plan state/);
+let rejections=0;for(const patch of [{format:'pdf'},{files:{...input.files,[manifestPath]:'{}'}},{file_sha256:{}},{files:{...input.files,'analysis/analysis_fixture/2020/washington/../escape':'{}'},file_sha256:{...input.file_sha256,'analysis/analysis_fixture/2020/washington/../escape':sha('{}')}},{analysis_index_json:input.analysis_index_json+' '}]){assert.throws(()=>engine.execute({...request,input:{...input,...patch}}));rejections++;}
+for(const [i,[req,result]]of [[request,out],[htmlReq,html],[wrongReq,wrong],[completeReq,complete],[badPlanReq,badPlan]].entries()){const path=`${root}/native-request-${i}.json`;await fs.writeFile(path,JSON.stringify(req));const native=JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[path],{encoding:'utf8',maxBuffer:16*1024*1024}));assert.deepEqual(native,result);}
+await fs.writeFile(root+'/request.json',JSON.stringify(request));await fs.writeFile(root+'/result.json',JSON.stringify(out));await fs.writeFile(root+'/evidence.json',JSON.stringify({native_wasm_parity_cases:5,complete_two_state_delivery:true,exact_native_json_html_audit:true,raw_analysis_index_hash:true,missing_required_sources:true,manifest_mismatch_failure:true,rejections},null,2));
+const handoff=await labelReportFromAnalysis(analysis);assert.equal(handoff.settings.generated_at,'');const settings={generated_at:input.generated_at,format:'json',audit_with_report:true},reportInputs={...handoff,settings};assert.deepEqual(labelReportRequest(reportInputs),request);
+const project=createProject({name:'Native state batch reports',files:{labelReportInputs:reportInputs},operation:'run-label-report',constraints:[],result:out,lastOperation:'run-label-report'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/project.bisect',JSON.stringify(project));await fs.writeFile(root+'/reports.zip',await labelReportZip(out));await fs.writeFile(root+'/html-result.json',JSON.stringify(html));await fs.writeFile(root+'/html-reports.zip',await labelReportZip(html));assert.ok(countResultTables(out).some(t=>t.title==='State report outcomes'));
+await assert.rejects(labelReportZip({...out,files:{...out.files,[out.index_path]:'{}'}}),/index/);
+const reportPath='reports/analysis_fixture/2020/washington/analysis_fixture_report.json';await assert.rejects(labelReportZip({...out,files:{...out.files,[reportPath]:'{}'}}),/hash/);
+await assert.rejects(labelReportZip({...out,files:{...out.files,'../escape':'{}'}}),/count/);
+await assert.rejects(labelReportFromAnalysis({...analysis,files:{...analysis.files,[analysis.index_path]:'{}'}}),/index/);
+let oversizeRead=false;await assert.rejects(readLabelReportSource({size:25*1024*1024+1,arrayBuffer:()=>{oversizeRead=true;}}));assert.equal(oversizeRead,false);
+console.log(`Label reports: exact native JSON/HTML/audit, shared report index, unavailable/skipped/failure outcomes, ${rejections} rejections and five native/WASM cases passed.`);

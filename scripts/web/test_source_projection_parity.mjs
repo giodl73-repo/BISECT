@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+const root=path.resolve('target/source-projection-parity');await fs.mkdir(root,{recursive:true});
+const request=JSON.parse(await fs.readFile(path.join(root,'before/request.json'),'utf8')),beforeNative=JSON.parse(await fs.readFile(path.join(root,'before/native.json'),'utf8')),beforeWasm=JSON.parse(await fs.readFile(path.join(root,'before/wasm.json'),'utf8'));
+assert.notEqual(beforeNative.graph_sha256,beforeWasm.graph_sha256);assert.equal(beforeNative.geometry_json,beforeWasm.geometry_json);
+const wasm=await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'),engine=await instantiateEngine(wasm),actual=engine.execute(request),exe=path.resolve('target/release/examples/execute_tool_request.exe');
+const native=spawnSync(exe,[path.join(root,'before/request.json')],{encoding:'utf8',timeout:180000,maxBuffer:96*1024*1024});assert.equal(native.status,0,native.stderr);const expected=JSON.parse(native.stdout);await fs.writeFile(path.join(root,'after-native.json'),native.stdout);await fs.writeFile(path.join(root,'after-wasm.json'),JSON.stringify(actual));
+assert.deepEqual(Object.keys(actual).sort(),Object.keys(expected).sort());
+const different=Object.keys(expected).filter(key=>JSON.stringify(expected[key])!==JSON.stringify(actual[key]));assert.deepEqual(different,[],'Preparation must match byte-exactly, without numeric tolerance.');assert.equal(actual.projection_math,'libm-f64-v1');assert.equal(actual.boundary_length_math,'libm-hypot-f64-v1');assert.equal(actual.geometry_json,beforeNative.geometry_json);
+const old=JSON.parse(beforeNative.graph_json),current=JSON.parse(actual.graph_json);for(const key of ['geoids','adjacency','population','areas','centroids'])assert.deepEqual(current[key],old[key]);
+const sha=b=>createHash('sha256').update(b).digest('hex');await fs.writeFile(path.join(root,'evidence.json'),JSON.stringify({wasm_sha256:sha(wasm),native_reference_sha256:sha(await fs.readFile(exe)),projection_math:actual.projection_math,boundary_length_math:actual.boundary_length_math,before_native_graph_sha256:beforeNative.graph_sha256,before_wasm_graph_sha256:beforeWasm.graph_sha256,current_identical_graph_sha256:actual.graph_sha256,original_geographic_coordinates_byte_identical:true,ri_topology_ids_population_land_area_centroids_unchanged:true,whole_native_source_preparation_exact:true,comparison_uses_no_numeric_tolerance:true,source_units:actual.units,scope:'Retained actual live RI2020 TIGER/PL94 sources. Preserves the old native/WASM mismatch; current complete preparation and graph bytes must match exactly. Does not prove every geography/platform or deployed Cloudflare behavior.'},null,2)+'\n');console.log('Source projection: preserved RI native/WASM mismatch now has identical complete preparation/graph bytes; original geography and RI topology/population remain unchanged.');

@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {labelAnalysisZip} from '../../web/lab/label-analysis-files.js';
+import {labelReportFromAnalysis,labelReportRequest,labelReportZip} from '../../web/lab/label-report-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const root='target/label-stage-wasm';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const sha=t=>createHash('sha256').update(t).digest('hex');
+const request=JSON.parse(await fs.readFile('target/label-analysis-wasm/native-request-0.json','utf8'));
+const config='fixture configuration bytes';const build=JSON.parse(request.input.build_index_json);build.config_sha256=sha(config);request.input.build_index_json=JSON.stringify(build);
+const original={analysis_fixture:{built:['2010','2020','2020'],analyzed:['2010'],reported:['2010']},unrelated:{built:['2000'],analyzed:[],reported:[]}};
+request.input.registry_json=JSON.stringify(original,null,2)+'\n';
+const analysis=engine.execute(request),analyzed=JSON.parse(analysis.registry_json);
+assert.equal(analysis.registry_promoted,true);assert.equal(analysis.registry_source_sha256,sha(request.input.registry_json));assert.equal(analysis.files['.bisect'],analysis.registry_json);assert.equal(analysis.file_sha256['.bisect'],sha(analysis.registry_json));assert.deepEqual(analyzed.analysis_fixture.built,original.analysis_fixture.built);assert.deepEqual(analyzed.analysis_fixture.analyzed,['2010','2020']);assert.deepEqual(analyzed.unrelated,original.unrelated);assert.equal(JSON.parse(analysis.index_json).states.rhode_island.status,'unavailable');
+const repeat=engine.execute({...request,input:{...request.input,registry_json:analysis.registry_json}});assert.equal(repeat.registry_json,analysis.registry_json);
+const handoff=await labelReportFromAnalysis(analysis),reportInputs={...handoff,settings:{generated_at:'2026-10-07T01:00:00Z',format:'json',audit_with_report:true}},reportRequest=labelReportRequest(reportInputs),report=engine.execute(reportRequest),reported=JSON.parse(report.registry_json);
+assert.equal(report.status,'partial');assert.equal(report.registry_promoted,true);assert.deepEqual(reported.analysis_fixture.reported,['2010','2020']);assert.deepEqual(reported.unrelated,original.unrelated);assert.equal(report.registry_source_sha256,sha(analysis.registry_json));assert.equal(report.files['.bisect'],report.registry_json);
+const reportRepeat=engine.execute({...reportRequest,input:{...reportRequest.input,registry_json:report.registry_json,files:{...reportRequest.input.files,'.bisect':report.registry_json},file_sha256:{...reportRequest.input.file_sha256,'.bisect':sha(report.registry_json)}}});assert.equal(reportRepeat.registry_json,report.registry_json);
+const chainFiles={...analysis.files,...report.files,[build.config_path]:config,[`runs/${build.label}/${build.year}/index.json`]:request.input.build_index_json};
+const chain=engine.execute({operation:'verify-label-chain',registry_json:report.registry_json,files_base64:Object.fromEntries(Object.entries(chainFiles).map(([p,t])=>[p,Buffer.from(t).toString('base64')])),label:build.label,year_filter:build.year});assert.equal(chain.status,'verified');
+let rejects=0;for(const registry of ['{}',JSON.stringify({analysis_fixture:{built:['2010'],analyzed:[],reported:[]}}),JSON.stringify({analysis_fixture:{built:['2020'],analyzed:Array(100).fill('2010'),reported:[]}})]){assert.throws(()=>engine.execute({...request,input:{...request.input,registry_json:registry}}));rejects++;}
+assert.throws(()=>engine.execute({...reportRequest,input:{...reportRequest.input,registry_json:JSON.stringify(original)}}),/not been analyzed/);rejects++;
+assert.throws(()=>engine.execute({...reportRequest,input:{...reportRequest.input,registry_json:report.registry_json}}),/differs/);rejects++;
+const noRegistry=engine.execute({...request,input:{...request.input,registry_json:null}});assert.equal(noRegistry.registry_promoted,false);assert.equal(noRegistry.files['.bisect'],undefined);
+for(const [i,[req,out]]of [[request,analysis],[reportRequest,report]].entries()){const path=`${root}/native-request-${i}.json`;await fs.writeFile(path,JSON.stringify(req));assert.deepEqual(JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[path],{encoding:'utf8',maxBuffer:16*1024*1024})),out);}
+await fs.writeFile(root+'/analysis.json',JSON.stringify(analysis));await fs.writeFile(root+'/report.json',JSON.stringify(report));await fs.writeFile(root+'/analysis.zip',await labelAnalysisZip(analysis));await fs.writeFile(root+'/reports.zip',await labelReportZip(report));
+const source={name:'registry-analysis-batch.json',base64:Buffer.from(JSON.stringify(request.input)).toString('base64')};
+const project=createProject({name:'Native registry stages',files:{labelAnalysisInputs:{source,created:request.input.created}},operation:'run-label-analysis',constraints:[],result:analysis,lastOperation:'run-label-analysis'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/project.bisect',JSON.stringify(project));
+const reportProject=createProject({name:'Native reported stage',files:{labelReportInputs:reportInputs},operation:'run-label-report',constraints:[],result:report,lastOperation:'run-label-report'});assert.deepEqual(parseProject(JSON.stringify(reportProject)),reportProject);await fs.writeFile(root+'/report-project.bisect',JSON.stringify(reportProject));
+await fs.writeFile(root+'/evidence.json',JSON.stringify({native_wasm_cases:2,chain_verified:true,partial_stage_semantics:true,idempotence:true,order_duplicates_and_unrelated_preserved:true,registry_zip_and_project:true,rejects},null,2));
+console.log('Registry stages: native prerequisites, partial completion flags, preserved order/duplicates/unrelated labels, idempotence, verified three-link chain, projects/ZIPs and two native/WASM cases passed.');

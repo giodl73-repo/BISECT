@@ -57,3 +57,5 @@ pub mod sweep;
 pub mod validate;
 pub mod verify;
 pub mod vertex_weights;
+
+pub mod native_replay;

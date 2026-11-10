@@ -3,6 +3,24 @@ use bisect_map::{canvas_size_from_dpi, default_font_db};
 use fontdb::Database as FontDb;
 use std::path::PathBuf;
 
+/// Final assignment geometry follows recorded plan metadata, never GEOID-prefix
+/// inference. Historical folders without a manifest keep their tract default.
+fn final_map_resolution(plan_dir: &std::path::Path) -> anyhow::Result<String> {
+    let path = plan_dir.join("manifest.json");
+    let bytes = match std::fs::read(&path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok("tract".into()),
+        Err(error) => return Err(error.into()),
+    };
+    let manifest: serde_json::Value = serde_json::from_slice(&bytes)?;
+    let Some(value) = manifest.get("plan_resolution") else { return Ok("tract".into()); };
+    match value.as_str() {
+        Some("tract") => Ok("tract".into()),
+        Some("bg" | "block-group" | "block_group") => Ok("block-group".into()),
+        _ => anyhow::bail!("Recorded final map resolution is not supported: {value}"),
+    }
+}
+
 pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
     // Dispatch to national renderer if --scope national
     if args.scope == MapScope::National {
@@ -30,7 +48,7 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
     // Resolve plan directory: prefer --label (PlanContext) over legacy --state path
     let (plan_dir, maps_dir, assignments_path) = if let Some(ref label) = args.label {
         let ctx = crate::plan_context::PlanContext::from_label(
-            &PathBuf::from(&args.output_base).join(&args.version),
+            &PathBuf::from(&args.output_base),
             &args.version,
             &year,
             label,
@@ -190,11 +208,6 @@ fn render_districts_map(
     font_db: &FontDb,
 ) -> anyhow::Result<Vec<u8>> {
     use crate::geometry::load_district_geometries;
-    use bisect_map::colorscheme::{graph_color, CategoricalScheme};
-    use bisect_map::labeler::LabelSpec;
-    use bisect_map::{build_svg, Projection};
-    use geo::BoundingRect;
-    use geo_types::MultiPolygon;
 
     // state_dir here is actually state_data_dir (contains final_assignments.json)
     let assignments: std::collections::HashMap<String, usize> = serde_json::from_str(
@@ -208,57 +221,11 @@ fn render_districts_map(
         version,
         &assignments,
         std::path::Path::new("data"),
-        "tract",
+        &final_map_resolution(state_dir.parent().unwrap_or(state_dir))?,
     )?;
 
-    let all_mp: MultiPolygon<f64> =
-        MultiPolygon(districts.values().flat_map(|mp| mp.0.clone()).collect());
-    let bbox = all_mp
-        .bounding_rect()
-        .ok_or_else(|| anyhow::anyhow!("empty geometry"))?;
-    let lon_span = bbox.max().x - bbox.min().x;
-    let lat_span = bbox.max().y - bbox.min().y;
-    let aspect = if lat_span > 1e-9 {
-        lon_span / lat_span
-    } else {
-        1.5
-    };
-    let (w, h) = canvas_size_from_dpi(dpi, 8.0, aspect);
-    let proj = Projection::from_bbox(
-        bbox.min().x,
-        bbox.min().y,
-        bbox.max().x,
-        bbox.max().y,
-        w,
-        h,
-        0.05,
-    );
-
-    // Adjacency-based graph coloring (use district adjacency from dissolved polygons)
-    let num_districts = assignments.values().copied().max().unwrap_or(1);
-    let adjacency: Vec<Vec<usize>> = (0..num_districts).map(|_| vec![]).collect();
-    let scheme = CategoricalScheme::default();
-    let colors = graph_color(&adjacency, &scheme);
-
-    let mut district_list: Vec<(usize, MultiPolygon<f64>, (u8, u8, u8), LabelSpec)> = districts
-        .into_iter()
-        .map(|(id, mp)| {
-            let color = colors
-                .get(id.saturating_sub(1))
-                .copied()
-                .unwrap_or((200, 200, 200));
-            let label = LabelSpec {
-                main: id.to_string(),
-                annotation: None,
-                stat: None,
-                lineage_superscript: None,
-            };
-            (id, mp, color, label)
-        })
-        .collect();
-    district_list.sort_by_key(|(id, _, _, _)| *id);
-
-    let svg = build_svg(&district_list, &proj, w, h);
+    let num_districts=assignments.values().copied().max().unwrap_or(1);
+    let (svg,_,_)=bisect_map::renderer::district_map_svg(districts,num_districts,dpi)?;
     bisect_map::svg_to_png(&svg, font_db)
 }
 
@@ -274,12 +241,6 @@ fn render_rounds_maps(
     force: bool,
 ) -> anyhow::Result<()> {
     use crate::geometry::load_district_geometries;
-    use bisect_map::colorscheme::CategoricalScheme;
-    use bisect_map::labeler::{round_label, LabelSpec};
-    use bisect_map::{build_svg, Projection};
-    use geo::BoundingRect;
-    use geo_types::MultiPolygon;
-
     let rounds_dir = maps_dir.join("rounds");
     std::fs::create_dir_all(&rounds_dir)?;
 
@@ -301,8 +262,6 @@ fn render_rounds_maps(
         eprintln!("[skip] rounds maps — no round directories in intermediate/");
         return Ok(());
     }
-
-    let scheme = CategoricalScheme::default();
 
     for (i, dir) in round_dirs.iter().enumerate() {
         let out = rounds_dir.join(format!("round_{:02}.png", i));
@@ -339,46 +298,8 @@ fn render_rounds_maps(
             }
         };
 
-        let all_mp: MultiPolygon<f64> =
-            MultiPolygon(districts.values().flat_map(|mp| mp.0.clone()).collect());
-        let bbox = match all_mp.bounding_rect() {
-            Some(b) => b,
-            None => {
-                eprintln!("[skip] round {i} — empty geometry");
-                continue;
-            }
-        };
-        let lon_span = bbox.max().x - bbox.min().x;
-        let lat_span = bbox.max().y - bbox.min().y;
-        let aspect = if lat_span > 1e-9 {
-            lon_span / lat_span
-        } else {
-            1.5
-        };
-        let (w, h) = bisect_map::canvas_size_from_dpi(dpi, 8.0, aspect);
-        let proj = Projection::from_bbox(
-            bbox.min().x,
-            bbox.min().y,
-            bbox.max().x,
-            bbox.max().y,
-            w,
-            h,
-            0.05,
-        );
-
-        let total_districts = districts.len();
-        let mut district_list: Vec<(usize, MultiPolygon<f64>, (u8, u8, u8), LabelSpec)> = districts
-            .into_iter()
-            .map(|(id, mp)| {
-                let color = scheme.color(id.saturating_sub(1));
-                // annotation shows how many districts this region will become
-                let label = round_label(id, total_districts, total_districts);
-                (id, mp, color, label)
-            })
-            .collect();
-        district_list.sort_by_key(|(id, _, _, _)| *id);
-
-        let svg = build_svg(&district_list, &proj, w, h);
+        let total_districts=districts.len();
+        let (svg,_,_)=bisect_map::renderer::state_map_svg(districts,total_districts,dpi,"rounds",&serde_json::Value::Null)?;
         let png = bisect_map::svg_to_png(&svg, font_db)?;
         std::fs::write(&out, &png)?;
         eprintln!(
@@ -401,12 +322,6 @@ fn render_choropleth_map(
     font_db: &FontDb,
 ) -> anyhow::Result<Vec<u8>> {
     use crate::geometry::load_district_geometries;
-    use bisect_map::colorscheme::{CompactnessScheme, DemographicScheme, PoliticalScheme};
-    use bisect_map::labeler::{compactness_label, demographic_label, political_label, LabelSpec};
-    use bisect_map::{build_svg, Projection};
-    use geo::BoundingRect;
-    use geo_types::MultiPolygon;
-
     // Check if analysis output exists
     let analysis_file = state_data_dir
         .parent()
@@ -429,28 +344,6 @@ fn render_choropleth_map(
     let analysis_json: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(&analysis_file)?)?;
 
-    // Build district_stat map: district_id → stat value (dem_pct or pct_minority)
-    let mut district_stats: std::collections::HashMap<usize, f64> =
-        std::collections::HashMap::new();
-    if let Some(districts) = analysis_json.get("districts").and_then(|d| d.as_array()) {
-        for d in districts {
-            let id = d.get("district").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-            let stat = match analysis_type {
-                "political" => d.get("dem_pct").and_then(|v| v.as_f64()).unwrap_or(0.5),
-                "demographic" => d
-                    .get("pct_minority")
-                    .and_then(|v| v.as_f64())
-                    .unwrap_or(0.0),
-                "compactness" => d
-                    .get("polsby_popper")
-                    .and_then(|v| v.as_f64())
-                    .unwrap_or(0.3),
-                _ => 0.0,
-            };
-            district_stats.insert(id, stat);
-        }
-    }
-
     // Load dissolved district geometries
     let districts = load_district_geometries(
         state_name,
@@ -459,68 +352,11 @@ fn render_choropleth_map(
         version,
         &assignments,
         std::path::Path::new("data"),
-        "tract",
+        &final_map_resolution(state_data_dir.parent().unwrap_or(state_data_dir))?,
     )?;
 
-    // Build bbox from all district polygons
-    let all_mp: MultiPolygon<f64> =
-        MultiPolygon(districts.values().flat_map(|mp| mp.0.clone()).collect());
-    let bbox = all_mp
-        .bounding_rect()
-        .ok_or_else(|| anyhow::anyhow!("empty geometry for {state_name}"))?;
-    let lon_span = bbox.max().x - bbox.min().x;
-    let lat_span = bbox.max().y - bbox.min().y;
-    let aspect = if lat_span > 1e-9 {
-        lon_span / lat_span
-    } else {
-        1.5
-    };
-    let (w, h) = bisect_map::canvas_size_from_dpi(dpi, 8.0, aspect);
-    let proj = Projection::from_bbox(
-        bbox.min().x,
-        bbox.min().y,
-        bbox.max().x,
-        bbox.max().y,
-        w,
-        h,
-        0.05,
-    );
-
-    // Build district list with choropleth colors and stat labels
-    let gray = (200u8, 200u8, 200u8);
-    let mut district_list: Vec<(usize, MultiPolygon<f64>, (u8, u8, u8), LabelSpec)> = districts
-        .into_iter()
-        .map(|(id, mp)| {
-            let stat = district_stats.get(&id).copied();
-            let (color, label): ((u8, u8, u8), LabelSpec) = match analysis_type {
-                "political" => {
-                    let frac = stat.unwrap_or(0.5);
-                    (PoliticalScheme.color(frac), political_label(id, frac))
-                }
-                "demographic" => {
-                    let frac = stat.unwrap_or(0.0);
-                    (DemographicScheme.color(frac), demographic_label(id, frac))
-                }
-                "compactness" => {
-                    let pp = stat.unwrap_or(0.3);
-                    (CompactnessScheme.color(pp), compactness_label(id, pp))
-                }
-                _ => (
-                    gray,
-                    LabelSpec {
-                        main: id.to_string(),
-                        annotation: None,
-                        stat: None,
-                        lineage_superscript: None,
-                    },
-                ),
-            };
-            (id, mp, color, label)
-        })
-        .collect();
-    district_list.sort_by_key(|(id, _, _, _)| *id);
-
-    let svg = build_svg(&district_list, &proj, w, h);
+    let num_districts=assignments.values().copied().max().unwrap_or(1);
+    let (svg,_,_)=bisect_map::renderer::state_map_svg(districts,num_districts,dpi,analysis_type,&analysis_json)?;
     bisect_map::svg_to_png(&svg, font_db)
 }
 
@@ -665,13 +501,10 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
         graph_color, CategoricalScheme, CompactnessScheme, DemographicScheme, PoliticalScheme,
     };
     use bisect_map::labeler::{
-        adaptive_font_size, compactness_label, demographic_label, halo_text_svg, label_fits,
-        largest_component, political_label, LabelSpec,
+        compactness_label, demographic_label, political_label, LabelSpec,
     };
     use bisect_map::{svg_to_png, InsetProjection};
     use geo_types::MultiPolygon;
-    use polylabel::polylabel;
-
     let dpi: u32 = args.dpi.parse().unwrap_or(150);
     let (w, h) = canvas_size_from_dpi(dpi, 16.0, 1.6);
     let proj = InsetProjection::us_national(w, h);
@@ -756,15 +589,15 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
                     .flatten()
             };
 
-            let geoms = match load_district_geometries(
+            let geoms = match final_map_resolution(&entry.path()).and_then(|resolution| load_district_geometries(
                 &state_name,
                 state_code,
                 &year,
                 &args.version,
                 &raw,
                 std::path::Path::new("data"),
-                "tract",
-            ) {
+                &resolution,
+            )) {
                 Ok(g) => g,
                 Err(e) => {
                     skipped.push(format!("{state_name} ({e})"));
@@ -796,6 +629,8 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
             let adj: Vec<Vec<usize>> = (0..num_d).map(|_| vec![]).collect();
             let colors = graph_color(&adj, &scheme);
 
+            let mut geoms:Vec<_>=geoms.into_iter().collect();
+            geoms.sort_by_key(|(id,_)|*id);
             for (district_id, mp) in geoms {
                 let stat = stat_map.get(&district_id).copied();
                 let (color, label) = match type_name {
@@ -852,45 +687,7 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
             all_districts.len()
         );
 
-        // Build SVG with InsetProjection
-        let mut svg = format!(
-            "<svg width=\"{w}\" height=\"{h}\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"{w}\" height=\"{h}\" fill=\"white\"/>"
-        );
-        for (_, mp, color, _) in &all_districts {
-            let (r, g, b) = color;
-            for poly in &mp.0 {
-                let d: String = {
-                    let mut path = String::new();
-                    for (i, c) in poly.exterior().coords().enumerate() {
-                        let (x, y) = proj.project(c.x, c.y);
-                        if i == 0 {
-                            path.push_str(&format!("M {x:.1} {y:.1}"));
-                        } else {
-                            path.push_str(&format!(" L {x:.1} {y:.1}"));
-                        }
-                    }
-                    path.push('Z');
-                    path
-                };
-                svg.push_str(&format!(
-                    "<path d=\"{d}\" fill=\"rgb({r},{g},{b})\" opacity=\"0.85\" stroke=\"#555\" stroke-width=\"0.3\"/>"
-                ));
-            }
-        }
-        // Labels (very small on national scale — skip tiny districts)
-        let label_radius = proj.continental_height() * 0.008;
-        for (_, mp, _, label) in &all_districts {
-            if let Some(poly) = largest_component(mp) {
-                if let Ok(center) = polylabel(poly, &1.0) {
-                    let (cx, cy) = proj.project(center.x(), center.y());
-                    let font_px = adaptive_font_size(label_radius).min(7.0);
-                    if label_fits(&label.main, font_px, label_radius) && font_px >= 4.0 {
-                        svg.push_str(&halo_text_svg(cx, cy, &label.main, "", font_px));
-                    }
-                }
-            }
-        }
-        svg.push_str("</svg>");
+        let svg = bisect_map::renderer::build_national_svg(&all_districts,&proj,w,h);
 
         let png = svg_to_png(&svg, font_db)?;
         std::fs::write(&out, &png)?;

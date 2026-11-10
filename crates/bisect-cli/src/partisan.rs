@@ -1,5 +1,5 @@
 use anyhow::Context;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 /// Partisan analyzer runner — load election CSV, aggregate, compute metrics,
 /// write analysis/partisan.json.
 /// Spec 4 — board amendments R3 applied.
@@ -24,52 +24,7 @@ pub struct ElectionRecord {
 // Output schema
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Serialize)]
-pub struct PartisanDistrictOutput {
-    pub district: usize,
-    pub dem_votes: f64,
-    pub rep_votes: f64,
-    pub dem_pct: f64,
-    pub margin: f64,
-    pub is_competitive: bool,
-    pub is_uncontested: bool,
-}
-
-#[derive(Debug, Serialize)]
-pub struct PartisanJsonOutput {
-    pub analyzer: &'static str,
-    pub available: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub unavailable_reason: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub required_file: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub election: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub election_file: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub methodology_warning: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub statewide: Option<StatewideStats>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metrics: Option<MetricsBlock>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub districts: Option<Vec<PartisanDistrictOutput>>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct StatewideStats {
-    pub dem_vote_share: f64,
-    pub dem_seat_share: f64,
-    pub total_votes: f64,
-}
-
-#[derive(Debug, Serialize)]
-pub struct MetricsBlock {
-    pub efficiency_gap: bisect_analysis::MetricWithCI,
-    pub mean_median: bisect_analysis::MetricWithCI,
-    pub partisan_bias: bisect_analysis::MetricWithCI,
-}
+pub use bisect_analysis::partisan_report::{PartisanDistrictOutput,PartisanJsonOutput,StatewideStats,MetricsBlock};
 
 // ---------------------------------------------------------------------------
 // CSV parsing
@@ -202,6 +157,7 @@ pub fn run_partisan(args: &PartisanArgs<'_>) -> anyhow::Result<()> {
     // Handle missing election file
     if !election_path.exists() {
         let output = PartisanJsonOutput {
+            bootstrap:None,
             analyzer: "partisan",
             available: false,
             unavailable_reason: Some(format!(
@@ -250,45 +206,7 @@ pub fn run_partisan(args: &PartisanArgs<'_>) -> anyhow::Result<()> {
         )
     };
 
-    let total_votes: f64 = districts_vec.iter().map(|d| d.total()).sum();
-
-    let district_outputs: Vec<PartisanDistrictOutput> = districts_vec
-        .iter()
-        .map(|d| {
-            let dem_pct = d.dem_pct();
-            let margin = (d.dem_votes - d.rep_votes).abs() / d.total().max(1.0);
-            PartisanDistrictOutput {
-                district: d.district,
-                dem_votes: d.dem_votes,
-                rep_votes: d.rep_votes,
-                dem_pct,
-                margin,
-                is_competitive: margin < 0.05,
-                is_uncontested: d.dem_votes == 0.0 || d.rep_votes == 0.0,
-            }
-        })
-        .collect();
-
-    let output = PartisanJsonOutput {
-        analyzer: "partisan",
-        available: true,
-        unavailable_reason: None,
-        required_file: None,
-        election: Some("2020_presidential".into()),
-        election_file: Some(election_path.to_string_lossy().into_owned()),
-        methodology_warning,
-        statewide: Some(StatewideStats {
-            dem_vote_share: metrics.statewide_dem_vote_share,
-            dem_seat_share: metrics.statewide_dem_seat_share,
-            total_votes,
-        }),
-        metrics: Some(MetricsBlock {
-            efficiency_gap: metrics.efficiency_gap,
-            mean_median: metrics.mean_median,
-            partisan_bias: metrics.partisan_bias,
-        }),
-        districts: Some(district_outputs),
-    };
+    let output=bisect_analysis::partisan_report::assemble_partisan_report(&districts_vec,&metrics,"2020_presidential".into(),election_path.to_string_lossy().into_owned(),methodology_warning);
 
     write_json_atomic(&out_path, &output)?;
     eprintln!("[OK] partisan -> {}", out_path.display());
@@ -655,5 +573,20 @@ mod tests {
         assert!((s.dem_vote_share - 0.52).abs() < 1e-12);
         assert!((s.dem_seat_share - 0.60).abs() < 1e-12);
         assert!((s.total_votes - 1_000_000.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn native_runner_records_portable_bootstrap_and_core_intervals(){
+        let root=tempfile::tempdir().unwrap();let csv_path=root.path().join("election.csv");
+        let mut text=String::from("geoid,dem_votes,rep_votes\n");let mut assignments=HashMap::new();
+        for i in 0..10{let id=format!("unit-{i}");assignments.insert(id.clone(),i+1);text.push_str(&format!("{id},{},{}\n",100+13*i,190-7*i));}
+        std::fs::write(&csv_path,&text).unwrap();
+        run_partisan(&PartisanArgs{assignments:&assignments,state_code:"ZZ",state_name:"fixture",year:"2020",version:"v1",election_file:Some(&csv_path),bootstrap_samples:64,analysis_dir:root.path(),force:true,chamber:"congressional"}).unwrap();
+        let output:serde_json::Value=serde_json::from_slice(&std::fs::read(root.path().join("partisan.json")).unwrap()).unwrap();
+        assert_eq!(output["bootstrap"]["protocol"],"chacha12-u64-index-v1");assert_eq!(output["bootstrap"]["seed"],"42");assert_eq!(output["bootstrap"]["replicates"],64);
+        let records=parse_election_csv(text.as_bytes()).unwrap();let mut districts=aggregate_election_to_districts(&records,&assignments).unwrap().into_values().collect::<Vec<_>>();districts.sort_by_key(|d|d.district);
+        let metrics=try_compute_partisan_metrics(&districts,None,64).unwrap();assert!(metrics.efficiency_gap.ci_available);
+        assert_eq!(output["metrics"]["efficiency_gap"],serde_json::to_value(metrics.efficiency_gap).unwrap());
+        assert_eq!(output["metrics"]["mean_median"],serde_json::to_value(metrics.mean_median).unwrap());assert_eq!(output["metrics"]["partisan_bias"],serde_json::to_value(metrics.partisan_bias).unwrap());
     }
 }

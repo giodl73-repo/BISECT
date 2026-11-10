@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+const root='target/label-reconcile-wasm';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const sha=t=>createHash('sha256').update(t).digest('hex');
+const analysis=JSON.parse(await fs.readFile('target/label-stage-wasm/analysis.json','utf8')),report=JSON.parse(await fs.readFile('target/label-stage-wasm/report.json','utf8'));
+const analysisRequest=JSON.parse(await fs.readFile('target/label-stage-wasm/native-request-0.json','utf8'));
+const source=JSON.parse(analysisRequest.input.registry_json),current=structuredClone(source);
+current.new_label={built:['2000'],analyzed:[],reported:[]};current.analysis_fixture.built.push('2000');current.analysis_fixture.analyzed.push('2000');current.analysis_fixture.reported.push('2000');
+const a={operation:'reconcile-label-registry',input:{stage:'analyzed',source_registry_json:analysisRequest.input.registry_json,source_registry_sha256:analysis.registry_source_sha256,current_registry_json:JSON.stringify(current),proposed_registry_json:analysis.registry_json,upstream_index_json:analysisRequest.input.build_index_json,generated_index_json:analysis.index_json}};
+const aOut=engine.execute(a),aMerged=JSON.parse(aOut.registry_json);assert.deepEqual(aMerged.analysis_fixture.built,current.analysis_fixture.built);assert.deepEqual(aMerged.analysis_fixture.analyzed,['2010','2000','2020']);assert.deepEqual(aMerged.analysis_fixture.reported,current.analysis_fixture.reported);assert.deepEqual(aMerged.new_label,current.new_label);assert.deepEqual(aMerged.unrelated,current.unrelated);assert.equal(aOut.current_registry_sha256,sha(a.input.current_registry_json));assert.equal(aOut.registry_sha256,sha(aOut.registry_json));
+const r={operation:'reconcile-label-registry',input:{stage:'reported',source_registry_json:analysis.registry_json,source_registry_sha256:report.registry_source_sha256,current_registry_json:aOut.registry_json,proposed_registry_json:report.registry_json,upstream_index_json:analysis.index_json,generated_index_json:report.index_json}};
+const rOut=engine.execute(r),rMerged=JSON.parse(rOut.registry_json);assert.deepEqual(rMerged.analysis_fixture.reported,['2010','2000','2020']);assert.deepEqual(rMerged.analysis_fixture.analyzed,aMerged.analysis_fixture.analyzed);assert.deepEqual(rMerged.new_label,current.new_label);assert.equal(rOut.files['.bisect'],rOut.registry_json);
+const repeatReq={...r,input:{...r.input,current_registry_json:rOut.registry_json}},repeat=engine.execute(repeatReq);assert.equal(repeat.registry_json,rOut.registry_json);
+let rejects=0;
+const otherEdit=JSON.parse(a.input.proposed_registry_json);otherEdit.new_label=current.new_label;
+const missingBuilt=structuredClone(current);missingBuilt.analysis_fixture.built=missingBuilt.analysis_fixture.built.filter(y=>y!=='2020');
+for(const patch of [{source_registry_sha256:'0'.repeat(64)},{upstream_index_json:a.input.upstream_index_json+' '},{proposed_registry_json:JSON.stringify(otherEdit)},{current_registry_json:JSON.stringify(missingBuilt)},{generated_index_json:JSON.stringify({...JSON.parse(a.input.generated_index_json),label:'different'})},{stage:'built'},{current_registry_json:' '.repeat(1024*1024+1)}]){assert.throws(()=>engine.execute({...a,input:{...a.input,...patch}}));rejects++;}
+const invalidated=JSON.parse(r.input.current_registry_json);invalidated.analysis_fixture.analyzed=invalidated.analysis_fixture.analyzed.filter(y=>y!=='2020');assert.throws(()=>engine.execute({...r,input:{...r.input,current_registry_json:JSON.stringify(invalidated)}}),/not been analyzed/);rejects++;
+assert.throws(()=>engine.execute({...r,input:{...r.input,upstream_index_json:r.input.upstream_index_json+'\n'}}),/changed/);rejects++;
+for(const [i,[req,out]]of [[a,aOut],[r,rOut],[repeatReq,repeat]].entries()){const path=`${root}/native-request-${i}.json`;await fs.writeFile(path,JSON.stringify(req));assert.deepEqual(JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[path],{encoding:'utf8',maxBuffer:8*1024*1024})),out);}
+await fs.writeFile(root+'/analysis-result.json',JSON.stringify(aOut));await fs.writeFile(root+'/report-result.json',JSON.stringify(rOut));await fs.writeFile(root+'/evidence.json',JSON.stringify({native_wasm_parity_cases:3,preserved_concurrent_labels_years_and_order:true,changed_upstream_rejected:true,nonstage_proposal_rejected:true,current_prerequisites_enforced:true,idempotence:true,rejects},null,2));
+console.log(`Registry reconciliation: concurrent labels/years/order preserved, upstream byte conflicts, proposal edits and invalidated stages rejected, idempotent apply, ${rejects} rejections and three native/WASM cases passed.`);
+const tools=await import('../../web/lab/label-reconcile-files.js');
+const {createProject,parseProject}=await import('../../web/lab/project.js');
+const analysisProject=parseProject(await fs.readFile('target/label-stage-wasm/project.bisect','utf8'));
+const reportProject=parseProject(await fs.readFile('target/label-stage-wasm/report-project.bisect','utf8'));
+const src=(name,text)=>({name,base64:Buffer.from(text).toString('base64')});
+const sources=await tools.labelReconcileFromStage(analysis,analysisProject.files);
+assert.equal(sources.currentRegistry,null);assert.equal(sources.upstreamIndex,null);
+sources.currentRegistry=src('.bisect',a.input.current_registry_json);sources.upstreamIndex=src('index.json',a.input.upstream_index_json);
+assert.deepEqual(tools.labelReconcileRequest(sources),a);
+const reportSources=await tools.labelReconcileFromStage(report,reportProject.files);
+reportSources.currentRegistry=src('.bisect',r.input.current_registry_json);reportSources.upstreamIndex=src('index.json',r.input.upstream_index_json);
+assert.deepEqual(tools.labelReconcileRequest(reportSources),r);
+assert.equal(Buffer.from(await tools.reconciledRegistryBytes(rOut)).toString(),rOut.registry_json);
+await assert.rejects(()=>tools.reconciledRegistryBytes({...rOut,registry_sha256:'0'.repeat(64)}));
+await assert.rejects(()=>tools.labelReconcileFromStage({...analysis,registry_source_sha256:'0'.repeat(64)},analysisProject.files));
+let read=false;await assert.rejects(()=>tools.readLabelReconcileSource({size:1024*1024+1,arrayBuffer:async()=>{read=true;}},'currentRegistry'));assert.equal(read,false);
+const duplicate='{"same":1,"same":2}';await assert.rejects(()=>tools.readLabelReconcileSource({name:'bad.json',size:duplicate.length,arrayBuffer:async()=>Buffer.from(duplicate)},'currentRegistry'),/Duplicate/);
+// Keep raw u64 index bytes through validation and request construction.
+const u64Sources={...sources,upstreamIndex:src('index.json','{"seed":18446744073709551615}')};assert.equal(tools.labelReconcileRequest(u64Sources).input.upstream_index_json,'{"seed":18446744073709551615}');
+const project=createProject({name:'Reconcile concurrent registry',files:{labelReconcileInputs:sources},operation:'reconcile-label-registry',constraints:[],result:aOut,lastOperation:'reconcile-label-registry'});
+assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/project.bisect',JSON.stringify(project));
+console.log('Reconciliation helpers: exact analysis/report drafts and requests, retained u64 bytes, guarded exports, source rejection and project roundtrip passed.');

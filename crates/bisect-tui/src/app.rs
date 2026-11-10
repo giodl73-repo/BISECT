@@ -75,19 +75,7 @@ pub struct CompareState {
     pub result: Option<CompareResult>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct CompareResult {
-    pub jaccard: f64,
-    pub mean_pp_a: f64,
-    pub mean_pp_b: f64,
-    pub max_dev_a: f64,
-    pub max_dev_b: f64,
-    pub splits_a: usize,
-    pub splits_b: usize,
-    pub contiguous_a: bool,
-    pub contiguous_b: bool,
-    pub most_changed: Vec<(usize, f64)>, // (district_id, pct_moved)
-}
+pub use bisect_report::tui_compare::CompareResult;
 
 // ── Verify screen state ───────────────────────────────────────────────────────
 
@@ -98,22 +86,7 @@ pub struct VerifyState {
     pub running: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct VerifyResult {
-    pub passed: bool,
-    pub jaccard: f64,
-    pub label: String,
-    pub state_code: String,
-    pub year: String,
-    pub binary_match: bool,
-    pub metis_version: String,
-    pub adjacency_match: bool,
-    pub tiger_match: bool,
-    pub seed_recorded: bool,
-    pub fail_reason: Option<String>,
-    pub likely_causes: Vec<String>,
-    pub manifest_path_used: String,
-}
+pub use bisect_report::tui_verify::VerifyResult;
 
 // ── Doctor screen state ───────────────────────────────────────────────────────
 
@@ -125,20 +98,7 @@ pub struct DoctorState {
     pub checks: Vec<DoctorCheck>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DoctorCheck {
-    pub status: CheckStatus,
-    pub message: String,
-    pub hint: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum CheckStatus {
-    Pass,
-    Warn,
-    Fail,
-    Info,
-}
+pub use bisect_report::tui_doctor::{DoctorCheck,CheckStatus};
 
 // ── Supporting types ──────────────────────────────────────────────────────────
 
@@ -157,20 +117,10 @@ pub struct PlanSummary {
     pub plan_dir: std::path::PathBuf,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-pub enum SortColumn {
-    #[default]
-    Label,
-    Splits,
-    Pp,
-    Deviation,
-}
-
-#[derive(Debug, Clone, PartialEq, Default)]
-pub enum SortDir {
-    #[default]
-    Asc,
-    Desc,
+pub use bisect_report::tui_library::{SortColumn,SortDir};
+impl bisect_report::tui_library::PlanOrdering for PlanSummary {
+ fn label(&self)->&str{&self.label}fn state_code(&self)->&str{&self.state_code}fn chamber(&self)->&str{&self.chamber}
+ fn mean_pp(&self)->Option<f64>{self.mean_pp}fn max_deviation_pct(&self)->Option<f64>{self.max_deviation_pct}fn county_splits(&self)->Option<u64>{self.county_splits.map(|n|n as u64)}
 }
 
 #[derive(Debug, Clone)]
@@ -269,51 +219,7 @@ impl App {
 
     /// Filtered + sorted plans for display.
     pub fn visible_plans(&self) -> Vec<&PlanSummary> {
-        let mut plans: Vec<&PlanSummary> = self
-            .plans
-            .iter()
-            .filter(|p| {
-                if self.filter.is_empty() {
-                    return true;
-                }
-                let f = self.filter.to_lowercase();
-                p.label.to_lowercase().contains(&f)
-                    || p.state_code.to_lowercase().contains(&f)
-                    || p.chamber.to_lowercase().contains(&f)
-            })
-            .collect();
-
-        match (&self.sort, &self.sort_dir) {
-            (SortColumn::Label, SortDir::Asc) => plans.sort_by(|a, b| a.label.cmp(&b.label)),
-            (SortColumn::Label, SortDir::Desc) => plans.sort_by(|a, b| b.label.cmp(&a.label)),
-            (SortColumn::Splits, SortDir::Asc) => {
-                plans.sort_by_key(|p| p.county_splits.unwrap_or(usize::MAX))
-            }
-            (SortColumn::Splits, SortDir::Desc) => {
-                plans.sort_by_key(|p| std::cmp::Reverse(p.county_splits.unwrap_or(0)))
-            }
-            (SortColumn::Pp, SortDir::Asc) => plans.sort_by(|a, b| {
-                a.mean_pp
-                    .partial_cmp(&b.mean_pp)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            }),
-            (SortColumn::Pp, SortDir::Desc) => plans.sort_by(|a, b| {
-                b.mean_pp
-                    .partial_cmp(&a.mean_pp)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            }),
-            (SortColumn::Deviation, SortDir::Asc) => plans.sort_by(|a, b| {
-                a.max_deviation_pct
-                    .partial_cmp(&b.max_deviation_pct)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            }),
-            (SortColumn::Deviation, SortDir::Desc) => plans.sort_by(|a, b| {
-                b.max_deviation_pct
-                    .partial_cmp(&a.max_deviation_pct)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            }),
-        }
-        plans
+        bisect_report::tui_library::visible_plans(&self.plans,&self.filter,&self.sort,&self.sort_dir)
     }
 
     /// Cycle to next sort column/direction.

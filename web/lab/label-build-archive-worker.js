@@ -1,0 +1,2 @@
+import {createBuildArchive,parseBuildArchive,readBuildArchiveText} from './label-build-archive.js?v=label-build-archive-v2';
+self.onmessage=async({data:file})=>{try{if(file?.type==='save-build-archive')self.postMessage({ok:true,text:createBuildArchive(file.data)});else self.postMessage({ok:true,project:parseBuildArchive(await readBuildArchiveText(file))});}catch(error){self.postMessage({ok:false,error:error.message||'Invalid build archive.'});}};

@@ -1,0 +1,22 @@
+{
+  "nativeAdjacencyInputs": {
+    "geometry": null,
+    "adjacency": {
+      "name": "v3.adj.bin",
+      "base64": "UkFESgMAAAAEAAAAAwAAAAoAAAAAAAAACgAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAQAAAAEAAAACAAAAAAAAAAIAAAACAAAAAQAAAAMAAAABAAAAAgAAAAMAAAAAAAAAAQAAAAAAAAAAAFlAAQAAAAIAAAAAAAAAAABZQAIAAAADAAAAAAAAAAAAWUABAAAAAAAAAADAckAAAAAAAABpQAAAAAAAAGlAAAAAAADAckAAAAAAAIjDQAAAAAAAiMNAAAAAAACIw0AAAAAAAIjDQA=="
+    },
+    "geoids": {
+      "name": "tract_geoids.json",
+      "base64": "eyIwIjoiNDQwMDEwMDAxMDAiLCIxIjoiNDQwMDEwMDAyMDAiLCIyIjoiNDQwMDEwMDAzMDAiLCIzIjoiNDQwMDEwMDA0MDAifQ=="
+    },
+    "centroids": {
+      "name": "v3_centroids.json",
+      "base64": "eyJjZW50cm9pZHMiOiBbWy03MS41LCA0MS41XSwgWy03MS40OSwgNDEuNV0sIFstNzEuNDgsIDQxLjVdLCBbLTcxLjQ3LCA0MS41XV19"
+    }
+  },
+  "nativeAdjacencySettings": {
+    "state": "RI",
+    "year": "2020",
+    "unit_kind": "tract"
+  }
+}

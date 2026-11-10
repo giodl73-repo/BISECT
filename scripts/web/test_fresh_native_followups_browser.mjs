@@ -1,0 +1,136 @@
+import {execFileSync} from 'node:child_process';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {createRequire} from 'node:module';
+import {loadFreshNativeMultiscaleCorpus} from './fixtures/fresh-native-multiscale.mjs';
+import {openWorkbenchProject} from './workbench_project_open.mjs';
+import {parseProject} from '../../web/lab/project.js';
+import {parseWorkbenchArchiveBytes} from '../../web/lab/workbench-archive.js';
+const argv=process.argv.slice(2),arg=name=>{const i=argv.indexOf(name);assert(i>=0,'Supply '+name);return path.resolve(argv[i+1]);};
+const host=arg('--host');
+const site=arg('--site'),parent=arg('--output');await fs.mkdir(parent,{recursive:true});const root=await fs.mkdtemp(path.join(parent,'fresh-project-browser-'));
+const require=createRequire(path.join(process.env.BISECT_PLAYWRIGHT_PACKAGES??process.cwd(),'package.json')),{chromium}=require('playwright');
+const mode=argv.includes('--c-profile')?'c':'core';
+const rows=(await loadFreshNativeMultiscaleCorpus()).filter(row=>mode==='c'||!row.c_profile_required);
+const lastUnits=JSON.parse(rows.at(-1).document_json).plan.units.unit_ids.length;
+const errors=[],external=[];
+let holdEngine=false,engineGate=null,engineRequested=null;
+const server=createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost'),name=decodeURIComponent(url.pathname),file=path.resolve(site,'.'+(name==='/'?'/index.html':name));if(!file.startsWith(site+path.sep)){res.writeHead(403);res.end();return;}const bytes=await fs.readFile(file);if(holdEngine&&name==='/bisect_wasm.wasm'&&!url.search){engineRequested?.();await engineGate;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.wasm')?'application/wasm':file.endsWith('.css')?'text/css':'text/html');res.end(bytes);}catch{res.writeHead(404);res.end();}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
+const evidence={status:'running',cases:[],scope:'Actual full workbench, project and archive buttons, fresh WASM worker. Complete original32-BG and additional16-tract/native-adaptive cases at64steps/seed17/7.125%; no source/sampler/budget changes. Raw-source native cases, exact saved sources/retained result and display maps. Opening and viewing are inert and cannot grant current exports. No full-state capacity, C-sidecar or full release claim.'};
+const save=()=>fs.writeFile(path.join(root,'evidence.json'),JSON.stringify(evidence,null,2));await save();
+let browser,context;
+try{
+ browser=await chromium.launch({headless:true,executablePath:process.env.BISECT_CHROME_PATH??'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+ context=await browser.newContext({acceptDownloads:true});
+ await context.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){external.push(route.request().url());return route.abort();}return route.continue();});
+ await context.addInitScript(()=>{const Native=window.Worker;window.freshOperations=[];window.allOperations=[];window.Worker=class extends Native{postMessage(value,...options){if(value?.type==='run')window.allOperations.push(value.request);if(value?.request?.operation?.includes('fresh-native-state'))window.freshOperations.push(value.request.operation);return super.postMessage(value,...options);}};});
+ const page=await context.newPage(),sdkRequests=[];page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/c-metis/'))sdkRequests.push(request.url());});
+ const get=name=>page.locator('#fresh-native-state [data-fresh="'+name+'"]');
+ async function download(locator,file){const pending=page.waitForEvent('download');await locator.click();const value=await pending;await value.saveAs(file);return fs.readFile(file);}
+ for(const row of rows){
+  const folder=path.join(root,row.name);await fs.mkdir(folder);await page.goto(origin+'/index.html');
+  await page.waitForFunction(()=>document.querySelector('#runtime-artifact')?.textContent.includes('Loaded WASM SHA-256:'));
+  await page.locator('#fresh-native-state summary').click();
+  const input=row.input,wrapper={schema_version:'bisect-fresh-native-state-inputs-v1',input,load_c_metis:row.name==='c-native64-bg'},sdkBefore=sdkRequests.length;
+  await get('open').setInputFiles({name:'inputs.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(wrapper))});
+  await page.waitForFunction(()=>document.querySelector('[data-fresh="status"]').textContent.startsWith('Inputs opened.'));
+  const ids=JSON.parse(row.document_json).plan.units.unit_ids;
+  const geometry={type:'FeatureCollection',features:ids.map((id,i)=>{const x=-71.5+i/16,y=41.5,w=1/32;return {type:'Feature',properties:{GEOID:id},geometry:{type:'Polygon',coordinates:[[[x,y],[x+w,y],[x+w,y+w],[x,y+w],[x,y]]]}};})};
+  await get('geometry').setInputFiles({name:'display.geojson',mimeType:'application/geo+json',buffer:Buffer.from(JSON.stringify(geometry))});await page.waitForFunction(()=>!document.querySelector('[data-fresh="review"]').disabled);
+  assert.deepEqual(await page.evaluate(()=>window.freshOperations),[]);
+  await get('review').click();await page.waitForFunction(()=>!document.querySelector('[data-fresh="run"]').disabled);
+  assert.equal(sdkRequests.length,sdkBefore,'Open/Review must not load a C SDK');
+  assert.deepEqual(await page.evaluate(()=>window.freshOperations),['prepare-fresh-native-state-run']);
+  await get('run').click();await page.waitForFunction(()=>!document.querySelector('[data-fresh="plan"]').disabled);
+  const livePlan=JSON.parse((await download(get('plan'),path.join(folder,'live.rplan'))).toString());assert.deepEqual(livePlan.plan,JSON.parse(row.document_json).plan);
+  const contextText=(await download(get('context'),path.join(folder,'live.rctx'))).toString(),actualContext=JSON.parse(contextText),nativeContext=JSON.parse(row.context_json);
+  for(const key of ['units','graph','populations','subdivisions','demographics','geometry'])assert.deepEqual(actualContext[key],nativeContext[key],row.name+':'+key);
+  assert.equal(actualContext.source_hashes.adjacency,nativeContext.source_hashes.adjacency);
+  if(row.c_profile_required)assert(sdkRequests.length>sdkBefore,'Explicit C Run must load the selected SDK');else assert.equal(sdkRequests.length,sdkBefore);
+  // Audit requires the practitioner's explicit profile; the handoff never invents one.
+  const profile=structuredClone(JSON.parse(await fs.readFile('crates/rplan-audit/fixtures/grid3x3-valid-certificate.json','utf8')).legal_profile);
+  profile.profile_id='SYNTHETIC_FRESH_HANDOFF';profile.jurisdiction=input.source.state;profile.contiguity_required=true;profile.nesting_rule={type:'not-evaluated'};delete profile.legal_disclaimer;
+  await page.locator('#auditProfileText-file').setInputFiles({name:'synthetic-profile.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(profile))});
+  await page.waitForFunction(()=>document.querySelector('#auditProfileText-name').textContent==='synthetic-profile.json');
+  for(const [action,operation]of [['audit','audit-rplan-text'],['analyze','analyze-plan-package'],['improve','improve-rplan-text']]){
+   assert(!await get(action).isDisabled());
+   const before=await page.evaluate(()=>window.allOperations.length);
+   await get(action).click();assert.equal(await page.locator('#operation').inputValue(),operation);
+   assert.equal(await page.evaluate(()=>window.allOperations.length),before,'Handoff must not compute');
+   const selected=JSON.parse((await download(page.locator('#save-project'),path.join(folder,action+'-selected.bisect'))).toString());
+   assert.deepEqual(JSON.parse(Buffer.from(selected.files.auditPlanText.base64,'base64').toString()),livePlan);assert.equal(Buffer.from(selected.files.auditPlanText.base64,'base64').toString(),await fs.readFile(path.join(folder,'live.rplan'),'utf8'));
+   assert.equal(Buffer.from(selected.files.auditContextText.base64,'base64').toString(),contextText);
+   assert.equal(selected.files.auditCertificateText,undefined);assert.equal(selected.files.auditLineageText,undefined);
+   await page.locator('#execute').click();await page.waitForFunction(n=>window.allOperations.length>n||document.querySelector('#result-status').classList.contains('error'),before);assert(await page.evaluate(n=>window.allOperations.length>n,before),await page.locator('#result-status').textContent());
+   await page.waitForFunction(()=>document.querySelector('#result-status').textContent.startsWith('Operation finished')||document.querySelector('#result-status').classList.contains('error'));assert.match(await page.locator('#result-status').textContent(),/^Operation finished/);
+   const completed=JSON.parse((await download(page.locator('#save-project'),path.join(folder,action+'-completed.bisect'))).toString());
+   const request=await page.evaluate(()=>window.allOperations.at(-1));assert.equal(request.operation,operation);
+   const requestPath=path.join(folder,action+'.request.json');await fs.writeFile(requestPath,JSON.stringify(request));
+   const native=JSON.parse(execFileSync(host,[requestPath],{encoding:'utf8',maxBuffer:96*1024*1024}));
+   assert.deepEqual(completed.result,native,'Complete follow-up host/WASM reply');
+  }
+  const projectBytes=await download(page.locator('#save-project'),path.join(folder,'saved.bisect'));
+  const project=parseProject(projectBytes.toString()),session=project.files.freshNativeStateSession;
+  assert(session.retained_run);assert.equal(session.multiscale_sampler,'rand-0.8.6-smallrng-native64-wilson');assert.equal(session.display_geometry_json,JSON.stringify(geometry));assert.equal(session.fields.state,'AL');
+  assert.equal(session.load_c_metis===true,row.c_profile_required);
+  const retained=JSON.parse(Buffer.from(session.retained_run.base64,'base64').toString());assert.deepEqual(retained.export.document.plan,livePlan.plan);
+  assert.equal(retained.export.context_json,contextText);
+  const archiveBytes=await download(page.locator('#save-workbench-archive'),path.join(folder,'saved.bisect-workbench'));
+  const archived=await parseWorkbenchArchiveBytes(archiveBytes);assert.deepEqual(archived.files.freshNativeStateSession,session);
+  await page.waitForFunction(()=>!document.querySelector('[data-fresh="review"]').disabled);
+  await get('label').fill('Changed after saving');assert(await get('plan').isDisabled());assert(await get('view-retained').isDisabled());for(const action of ['audit','analyze','improve'])assert(await get(action).isDisabled());
+  const before=await page.evaluate(()=>window.freshOperations.length);
+  await openWorkbenchProject(page,path.join(folder,'saved.bisect'));
+  assert.equal(await page.evaluate(()=>window.freshOperations.length),before);assert(await get('run').isDisabled());assert(await get('plan').isDisabled());for(const action of ['audit','analyze','improve'])assert(await get(action).isDisabled());
+  assert(!await get('view-retained').isDisabled());assert.match(await get('status').textContent(),/without execution/);
+  await get('view-retained').click();assert.equal(await get('map').locator('svg path').count(),ids.length);assert.match(await get('seed').textContent(),/Saved, unverified seed: 17/);
+  assert.equal(await page.evaluate(()=>window.freshOperations.length),before);assert(await get('plan').isDisabled());
+  const copied=JSON.parse((await download(get('download-retained'),path.join(folder,'retained.json'))).toString());assert.deepEqual(copied,retained);
+  await get('label').fill('Clear retained again');
+  await page.locator('#open-workbench-archive').setInputFiles(path.join(folder,'saved.bisect-workbench'));
+  await page.waitForFunction(()=>document.querySelector('[data-fresh="status"]').textContent.includes('Project inputs restored without execution.'));
+  assert.equal(await page.evaluate(()=>window.freshOperations.length),before);assert(await get('run').isDisabled());
+  await get('view-retained').click();assert.equal(await get('map').locator('svg path').count(),ids.length);
+  await get('review').click();await page.waitForFunction(()=>!document.querySelector('[data-fresh="run"]').disabled);
+  await get('run').click();await page.waitForFunction(()=>!document.querySelector('[data-fresh="plan"]').disabled);
+  const rerun=JSON.parse((await download(get('plan'),path.join(folder,'rerun.rplan'))).toString());assert.deepEqual(rerun.plan,livePlan.plan);
+  evidence.cases.push({name:row.name,status:'passed',project_sources_and_result_exact:true,archive_exact:true,open_and_retained_view_inert:true,retained_map_units:ids.length,current_exports_require_rerun:true,explicit_runs:2});await save();
+ }
+ // Restore the actual persisted autosave after reload, without executing.
+ await page.waitForFunction(()=>document.querySelector('#project-status').textContent.startsWith('Autosaved on this browser.'));
+ await page.reload();await page.waitForFunction(()=>!document.querySelector('#restore-project').disabled);
+ await page.locator('#restore-project').click();await page.waitForFunction(()=>!document.querySelector('[data-fresh="view-retained"]').disabled);
+ await page.locator('#fresh-native-state summary').click();await get('view-retained').click();assert.equal(await get('map').locator('svg path').count(),lastUnits);
+ assert.deepEqual(await page.evaluate(()=>window.freshOperations),[]);assert(await get('plan').isDisabled());assert(await get('run').isDisabled());
+ evidence.autosave_restore_inert_with_retained_map=true;
+ // Hold a real worker's engine download to inspect the busy Open/save boundary.
+ let release;engineGate=new Promise(resolve=>release=resolve);const requested=new Promise(resolve=>engineRequested=resolve);holdEngine=true;
+ const projectName=await page.locator('#project-name').inputValue(),beforeHeld=await page.evaluate(()=>window.freshOperations.length);
+ await get('review').click();await requested;
+ for(const id of ['save-project','save-workbench-archive','open-project','open-workbench-archive','execute'])assert(await page.locator('#'+id).isDisabled(),id);
+ await page.locator('#open-project').setInputFiles(path.join(root,rows[0].name,'saved.bisect'));
+ await page.waitForFunction(()=>document.querySelector('#project-status').textContent.includes('Finish or cancel'));
+ assert.equal(await page.locator('#project-name').inputValue(),projectName);
+ await get('cancel').click();holdEngine=false;release();assert(await get('run').isDisabled());assert(!await get('review').isDisabled());
+ assert.equal(await page.evaluate(()=>window.freshOperations.length),beforeHeld);
+ await get('review').click();await page.waitForFunction(()=>!document.querySelector('[data-fresh="run"]').disabled);
+ await get('run').click();await page.waitForFunction(()=>!document.querySelector('[data-fresh="plan"]').disabled);
+ const recovered=JSON.parse((await download(get('plan'),path.join(root,'cancel-recovery.rplan'))).toString());assert.deepEqual(recovered.plan,JSON.parse(rows.at(-1).document_json).plan);
+ evidence.delayed_worker_open_refused_and_cancel_recovered=true;evidence.additional_recovery_runs=1;
+ // Hostile saved run bytes remain inert through Open and the safe viewer.
+ const row=evidence.cases[0],projectFile=path.join(root,row.name,'saved.bisect'),project=JSON.parse(await fs.readFile(projectFile,'utf8'));
+ project.files.freshNativeStateSession.retained_run={name:'saved.json',base64:Buffer.from('<script>window.freshProjectExecuted=true</script>').toString('base64')};
+ const hostile=path.join(root,'hostile-retained.bisect');await fs.writeFile(hostile,JSON.stringify(project));const before=await page.evaluate(()=>window.freshOperations.length);await openWorkbenchProject(page,hostile);await get('view-retained').click();
+ assert.match(await get('status').textContent(),/Saved run view:/);assert.equal(await page.evaluate(()=>window.freshProjectExecuted),undefined);assert.equal(await page.evaluate(()=>window.freshOperations.length),before);assert(await get('run').isDisabled());assert(await get('plan').isDisabled());for(const action of ['audit','analyze','improve'])assert(await get(action).isDisabled());
+ // Malformed session structure refuses atomically before replacing the project.
+ const bad=structuredClone(project);bad.name='must-not-open';bad.files.freshNativeStateSession.sources.adjacency.base64='AB==';
+ await page.locator('#open-project').setInputFiles({name:'bad.bisect',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(bad))});
+ await page.waitForFunction(()=>document.querySelector('#project-status').textContent.includes('canonical base64'));
+ assert.notEqual(await page.locator('#project-name').inputValue(),'must-not-open');assert.equal(await page.evaluate(()=>window.freshOperations.length),before);
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);evidence.hostile_saved_record_inert=true;evidence.malformed_session_refused_atomically=true;evidence.browser=browser.version();evidence.explicit_followups_per_case=3;evidence.exact_native_followup_replies=evidence.cases.length*3;evidence.audit_profile='explicit synthetic fixture, original numerical limits retained';evidence.status='passed-fresh-native-followup-browser-workflows';
+}catch(error){evidence.status='failed';evidence.error={message:error.message,stack:error.stack};process.exitCode=1;}
+finally{await save();await context?.close();await browser?.close();await new Promise(resolve=>server.close(resolve));}
+console.log(JSON.stringify({root,status:evidence.status,cases:evidence.cases.length,error:evidence.error}));

@@ -1,0 +1,26 @@
+{
+  "schema_version": "bisect-fresh-native-multiscale-corpus-v1",
+  "cases": [
+    {
+      "id": "core-native64-bg",
+      "file": "core-native64-bg.json",
+      "sha256": "7d21204077b00e9b59211c35695e9c18601f13fb846cb53be91c2cb6574661f1"
+    },
+    {
+      "id": "c-native64-bg",
+      "file": "c-native64-bg.json",
+      "sha256": "eb6c22853d71f699be47330ec1533f7691b9ffc50cca5b4b5899f709ea5bd0ce"
+    },
+    {
+      "id": "tract-county",
+      "file": "tract-county.json",
+      "sha256": "af37ea81a1826acc24b987def8da5604d0e8d66e667eee1b4591d44cef7fd636"
+    },
+    {
+      "id": "tract-adaptive",
+      "file": "tract-adaptive.json",
+      "sha256": "461f3f47e4aa74f604033442591419e65c60ca4f102d6e75996260bf8f8d0a20"
+    }
+  ],
+  "scope": "Four exact native references; three core-profile cases and an additional unchanged c-ffi-flag case requiring the C-enabled profile. No original plan/context/recipe enters fresh requests. C bridge use must be observed separately."
+}

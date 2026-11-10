@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
-use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -44,17 +43,31 @@ pub enum ParetoAuditError {
     PlanFailedAudit,
 }
 
+/// Exact native UTF-8 files, built and audited before any filesystem mutation.
+#[derive(Debug, Clone)]
+pub struct SelectedFrontierFiles {
+    pub package: SelectedFrontierPackage,
+    pub files: BTreeMap<String, String>,
+}
+
 #[allow(clippy::too_many_arguments)]
-pub fn write_selected_frontier_package(
+pub fn write_selected_frontier_package(result:&ParetoResult,selected_frontier_index:usize,context:&rplan_core::RplanContext,k:usize,out_dir:&Path,label:&str,tolerance_percent:f64,generated_at:&str)->Result<SelectedFrontierPackage,ParetoAuditError>{
+    let built=build_selected_frontier_package(result,selected_frontier_index,context,k,label,tolerance_percent,generated_at)?;
+    std::fs::create_dir_all(out_dir)?;
+    for (name,text) in &built.files { std::fs::write(out_dir.join(name), text)?; }
+    Ok(built.package)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn build_selected_frontier_package(
     result: &ParetoResult,
     selected_frontier_index: usize,
     context: &rplan_core::RplanContext,
     k: usize,
-    out_dir: &Path,
     label: &str,
     tolerance_percent: f64,
     generated_at: &str,
-) -> Result<SelectedFrontierPackage, ParetoAuditError> {
+) -> Result<SelectedFrontierFiles, ParetoAuditError> {
     let entry =
         result
             .frontier
@@ -64,7 +77,6 @@ pub fn write_selected_frontier_package(
                 frontier_size: result.frontier.len(),
             })?;
     let assignment = zero_based_assignment(entry, k)?;
-    std::fs::create_dir_all(out_dir)?;
 
     let jurisdiction = context
         .units
@@ -93,6 +105,7 @@ pub fn write_selected_frontier_package(
                 ("name".to_string(), serde_json::json!("bisect pareto")),
                 ("crate".to_string(), serde_json::json!("bisect-pareto")),
                 ("method".to_string(), serde_json::json!("nsga2")),
+                ("pareto_protocol".to_string(), serde_json::json!(result.pareto_version)),
             ]),
             source_hashes: context.source_hashes.entries.clone(),
             conversion_lineage: Vec::new(),
@@ -135,17 +148,11 @@ pub fn write_selected_frontier_package(
         return Err(ParetoAuditError::PlanFailedAudit);
     }
 
-    let rplan_path = out_dir.join("selected-frontier.rplan");
-    let rctx_path = out_dir.join("selected-frontier.rctx");
-    let certificate_path = out_dir.join("audit-certificate.json");
-    let manifest_path = out_dir.join("manifest.json");
-    std::fs::write(&rplan_path, rplan_io::write_rplan_string(&document)?)?;
-    std::fs::write(&rctx_path, rplan_io::write_rctx_string(context)?)?;
-    std::fs::write(
-        &certificate_path,
-        serde_json::to_string_pretty(&certificate)?,
-    )?;
-    let certificate_sha256 = sha256_file(&certificate_path)?;
+    rplan_audit::verify_audit_certificate(&certificate, Some(&document.plan), Some(context))?;
+    let rplan_text = rplan_io::write_rplan_string(&document)?;
+    let rctx_text = rplan_io::write_rctx_string(context)?;
+    let certificate_text = serde_json::to_string_pretty(&certificate)?;
+    let certificate_sha256 = format!("{:x}", Sha256::digest(certificate_text.as_bytes()));
     let package = SelectedFrontierPackage {
         schema_version: SELECTED_FRONTIER_PACKAGE_SCHEMA_VERSION.to_string(),
         selected_frontier_index,
@@ -166,6 +173,7 @@ pub fn write_selected_frontier_package(
         "population_source": "rctx",
         "partition_mode": "nsga2-selected-frontier",
         "seed": i64::try_from(result.config.base_seed).ok(),
+        "base_seed": result.config.base_seed.to_string(),
         "binary_version": env!("CARGO_PKG_VERSION"),
         "binary_sha256": "",
         "binary_download_url": "",
@@ -195,8 +203,13 @@ pub fn write_selected_frontier_package(
         },
         "validity_status": entry.validity_status,
     });
-    std::fs::write(&manifest_path, serde_json::to_string_pretty(&manifest)?)?;
-    Ok(package)
+    let files = BTreeMap::from([
+        ("selected-frontier.rplan".into(), rplan_text),
+        ("selected-frontier.rctx".into(), rctx_text),
+        ("audit-certificate.json".into(), certificate_text),
+        ("manifest.json".into(), serde_json::to_string_pretty(&manifest)?),
+    ]);
+    Ok(SelectedFrontierFiles {package, files})
 }
 
 fn zero_based_assignment(entry: &ParetoEntry, k: usize) -> Result<Vec<u32>, ParetoAuditError> {
@@ -221,6 +234,7 @@ fn selected_frontier_lineage_extra(
     serde_json::json!({
         "lineage_schema_version": SELECTED_FRONTIER_PACKAGE_SCHEMA_VERSION,
         "method": "nsga2",
+        "pareto_protocol": result.pareto_version,
         "selected_frontier_index": selected_frontier_index,
         "frontier_size": result.frontier.len(),
         "n_population": result.config.n_population,
@@ -270,18 +284,4 @@ fn rplan_audit_result_label(result: &rplan_audit::AuditResult) -> &'static str {
         rplan_audit::AuditResult::Fail => "fail",
         rplan_audit::AuditResult::PassWithWarnings => "pass-with-warnings",
     }
-}
-
-fn sha256_file(path: &Path) -> Result<String, std::io::Error> {
-    let mut file = std::fs::File::open(PathBuf::from(path))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        let n = file.read(&mut buffer)?;
-        if n == 0 {
-            break;
-        }
-        hasher.update(&buffer[..n]);
-    }
-    Ok(format!("{:x}", hasher.finalize()))
 }

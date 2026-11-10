@@ -1,0 +1,9 @@
+import {validateSourceFile,encodeBytes} from './package-files.js';
+export const TUI_DOCTOR_DEFAULTS={location:'VT',chamber:'congressional',year:'2020'};
+const text=s=>new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(Uint8Array.from(atob(s.base64),c=>c.charCodeAt(0)));
+export function validateTuiDoctorInputs(v){
+ if(!v||Object.keys(v).sort().join()!=='manifest,policy,settings'||!v.settings||Object.keys(v.settings).sort().join()!=='chamber,location,year'||Object.values(v.settings).some(s=>typeof s!=='string'||new TextEncoder().encode(s).length>200||/[\u0000-\u001f\u007f-\u009f]/.test(s)))throw new Error('Native TUI Doctor needs location, chamber and year text up to 200 UTF-8 bytes each.');
+ for(const s of [v.policy,v.manifest]){if(s===null)continue;if(s?.base64===''){if(Object.keys(s).sort().join()!=='base64,name'||typeof s.name!=='string'||!s.name||new TextEncoder().encode(s.name).length>200)throw new Error('Invalid empty native Doctor source.');}else validateSourceFile(s,{maxBytes:512*1024});if(new TextEncoder().encode(s.name).length>200)throw new Error('Native Doctor source names support 200 UTF-8 bytes.');text(s);}return v;
+}
+export function tuiDoctorRequest(v){validateTuiDoctorInputs(v);return {operation:'diagnose-tui-location',input:{...v.settings,policy_name:v.policy?.name??null,policy_json:v.policy?text(v.policy):null,manifest_name:v.manifest?.name??null,manifest_json:v.manifest?text(v.manifest):null}};}
+export async function readTuiDoctorSource(file){if(!file||!Number.isSafeInteger(file.size)||file.size<0||file.size>512*1024)throw new Error('Select native JSON up to 512 KiB.');const b=new Uint8Array(await file.arrayBuffer());if(b.length!==file.size)throw new Error('Doctor source changed while reading.');const s={name:file.name,base64:encodeBytes(b)};validateTuiDoctorInputs({settings:TUI_DOCTOR_DEFAULTS,manifest:s,policy:null});return s;}

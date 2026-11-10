@@ -31,11 +31,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use serde::{Deserialize, Serialize};
 
-use bisect_analysis::ensemble_diagnostics::{
-    ess_records, gelman_rubin_rhat, EssRecord, RhatRecord,
-};
 
 #[derive(Debug, clap::Subcommand)]
 pub enum ResearchSubcommand {
@@ -81,39 +77,9 @@ pub struct ValidateEnsembleArgs {
 // Input record: one line of the per-chain JSONL.
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Clone, Deserialize)]
-struct EnsembleStep {
-    #[allow(dead_code)]
-    step: Option<u64>,
-    metrics: BTreeMap<String, f64>,
-}
-
-// ---------------------------------------------------------------------------
-// Output report shape.
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Serialize)]
-pub struct ValidateEnsembleReport {
-    pub schema_version: String,
-    pub n_chains: usize,
-    pub n_per_chain: usize,
-    pub metrics: Vec<MetricReport>,
-    /// True iff every metric passes both R-hat and ESS thresholds.
-    pub all_pass: bool,
-}
-
-#[derive(Debug, Serialize)]
-pub struct MetricReport {
-    pub metric: String,
-    pub rhat: RhatRecord,
-    pub ess: EssRecord,
-    pub passes_thresholds: bool,
-    /// Present only when `--enacted` was supplied. Fraction of ensemble
-    /// samples (across all chains) whose value is `<=` the enacted value.
-    /// 0.0 means the enacted plan is more extreme than every sample below;
-    /// 1.0 means more extreme above.
-    pub enacted_percentile_rank: Option<f64>,
-}
+pub use bisect_analysis::research_ensemble::{EnsembleStep,MetricReport,ValidateEnsembleReport};
+#[cfg(test)]
+use bisect_analysis::research_ensemble::percentile_rank;
 
 // ---------------------------------------------------------------------------
 // Entry point
@@ -135,127 +101,11 @@ pub fn run_validate_ensemble(args: &ValidateEnsembleArgs) -> anyhow::Result<()> 
 
     // Load every *.jsonl file as one chain (chain_id = filename stem).
     let chains = load_chains_from_dir(&args.ensemble_dir)?;
-    if chains.len() < 4 {
-        anyhow::bail!(
-            "[INPUT] S-03 requires >=4 parallel chains for Gelman-Rubin R-hat; \
-             found {} JSONL file(s) in {}",
-            chains.len(),
-            args.ensemble_dir.display()
-        );
-    }
-
-    // Determine the metric universe (union across chains) + chain length
-    // (must be equal across chains per the standard Gelman-Rubin formulation).
-    let chain_lens: Vec<usize> = chains.iter().map(|c| c.len()).collect();
-    let n_per_chain = chain_lens
-        .first()
-        .copied()
-        .ok_or_else(|| anyhow::anyhow!("[INPUT] no chains loaded"))?;
-    if chain_lens.iter().any(|&n| n != n_per_chain) {
-        anyhow::bail!(
-            "[INPUT] chains have differing lengths: {:?}. Trim to the shortest after burn-in cuts before passing to validate-ensemble.",
-            chain_lens
-        );
-    }
-    if n_per_chain == 0 {
-        anyhow::bail!("[INPUT] every chain is empty");
-    }
-
-    let metric_names: std::collections::BTreeSet<String> = chains
-        .iter()
-        .flat_map(|chain| chain.iter().flat_map(|step| step.metrics.keys().cloned()))
-        .collect();
-
-    // Optional enacted metrics.
-    let enacted_metrics: Option<BTreeMap<String, f64>> = if let Some(path) = &args.enacted {
-        let bytes = std::fs::read(path).map_err(|e| {
-            anyhow::anyhow!("[INPUT] cannot read --enacted at {}: {}", path.display(), e)
-        })?;
-        let m: BTreeMap<String, f64> = serde_json::from_slice(&bytes).map_err(|e| {
-            anyhow::anyhow!(
-                "[INPUT] cannot parse --enacted as {{metric: value}} JSON object at {}: {}",
-                path.display(),
-                e
-            )
-        })?;
-        Some(m)
-    } else {
-        None
-    };
-
-    // Compute diagnostics per metric.
-    let mut metric_reports: Vec<MetricReport> = Vec::with_capacity(metric_names.len());
-    for metric_name in &metric_names {
-        // Project this metric out of every chain. Steps that don't carry
-        // this metric are skipped — but if any chain has fewer values than
-        // n_per_chain after projection, we surface an [INPUT] error.
-        let per_chain_values: Vec<Vec<f64>> = chains
-            .iter()
-            .map(|chain| {
-                chain
-                    .iter()
-                    .filter_map(|step| step.metrics.get(metric_name).copied())
-                    .collect()
-            })
-            .collect();
-        if per_chain_values.iter().any(|v| v.len() != n_per_chain) {
-            anyhow::bail!(
-                "[INPUT] metric '{}' appears in some chain steps but not others. \
-                 Every step in every chain must record every metric.",
-                metric_name
-            );
-        }
-
-        // R-hat.
-        let chain_slices: Vec<&[f64]> = per_chain_values.iter().map(|v| v.as_slice()).collect();
-        let rhat_value = gelman_rubin_rhat(&chain_slices)
-            .map_err(|e| anyhow::anyhow!("rhat({}): {}", metric_name, e))?;
-        let rhat = RhatRecord {
-            metric: metric_name.clone(),
-            r_hat: rhat_value,
-            n_chains: chain_slices.len(),
-            n_per_chain,
-            above_threshold: rhat_value >= args.rhat_threshold,
-            threshold: args.rhat_threshold,
-        };
-
-        // ESS — pool across chains by concatenation. (Per-chain ESS would
-        // also be defensible; pooled is the more common reporting.)
-        let pooled: Vec<f64> = per_chain_values.iter().flatten().copied().collect();
-        let ess_records_vec = ess_records(&[(metric_name.clone(), pooled.as_slice())])
-            .map_err(|e| anyhow::anyhow!("ess({}): {}", metric_name, e))?;
-        let ess = ess_records_vec
-            .into_iter()
-            .next()
-            .ok_or_else(|| anyhow::anyhow!("[INTERNAL] ess_records returned empty for metric"))?;
-
-        // Threshold pass: R-hat below threshold AND ESS at or above ess_min.
-        let passes_thresholds = !rhat.above_threshold && ess.ess >= args.ess_min;
-
-        // Optional enacted percentile-rank.
-        let enacted_pr = enacted_metrics
-            .as_ref()
-            .and_then(|m| m.get(metric_name))
-            .map(|&enacted_value| percentile_rank(&pooled, enacted_value));
-
-        metric_reports.push(MetricReport {
-            metric: metric_name.clone(),
-            rhat,
-            ess,
-            passes_thresholds,
-            enacted_percentile_rank: enacted_pr,
-        });
-    }
-
-    let all_pass = metric_reports.iter().all(|r| r.passes_thresholds);
-
-    let report = ValidateEnsembleReport {
-        schema_version: "validate-ensemble v1".into(),
-        n_chains: chains.len(),
-        n_per_chain,
-        metrics: metric_reports,
-        all_pass,
-    };
+    let enacted_metrics: Option<BTreeMap<String, f64>> = args.enacted.as_ref().map(|path| {
+        let text=std::fs::read_to_string(path)?;
+        bisect_analysis::research_ensemble::parse_enacted_metrics(&text)
+    }).transpose()?;
+    let report=bisect_analysis::research_ensemble::validate_ensemble(&chains,enacted_metrics.as_ref(),args.rhat_threshold,args.ess_min)?;
 
     let report_json = serde_json::to_string_pretty(&report)?;
     if let Some(out_path) = &args.output {
@@ -268,19 +118,8 @@ pub fn run_validate_ensemble(args: &ValidateEnsembleArgs) -> anyhow::Result<()> 
         println!("{report_json}");
     }
 
-    if args.strict && !all_pass {
-        let failures: Vec<&str> = report
-            .metrics
-            .iter()
-            .filter(|m| !m.passes_thresholds)
-            .map(|m| m.metric.as_str())
-            .collect();
-        anyhow::bail!(
-            "[INPUT] --strict: {}/{} metrics failed convergence thresholds: {}",
-            failures.len(),
-            report.metrics.len(),
-            failures.join(", ")
-        );
+    if let Some(error)=bisect_analysis::research_ensemble::strict_failure(&report,args.strict) {
+        anyhow::bail!("{error}");
     }
 
     Ok(())
@@ -304,34 +143,10 @@ fn load_chains_from_dir(dir: &Path) -> anyhow::Result<Vec<Vec<EnsembleStep>>> {
     for path in &paths {
         let text = std::fs::read_to_string(path)
             .map_err(|e| anyhow::anyhow!("[INPUT] cannot read chain {}: {}", path.display(), e))?;
-        let mut steps = Vec::new();
-        for (i, line) in text.lines().enumerate() {
-            let line = line.trim();
-            if line.is_empty() {
-                continue;
-            }
-            let step: EnsembleStep = serde_json::from_str(line).map_err(|e| {
-                anyhow::anyhow!(
-                    "[INPUT] cannot parse line {} of {}: {}",
-                    i + 1,
-                    path.display(),
-                    e
-                )
-            })?;
-            steps.push(step);
-        }
+        let steps = bisect_analysis::research_ensemble::parse_chain(&text)?;
         chains.push(steps);
     }
     Ok(chains)
-}
-
-/// Fraction of `samples` that are `<= value`. Empty samples returns NaN.
-fn percentile_rank(samples: &[f64], value: f64) -> f64 {
-    if samples.is_empty() {
-        return f64::NAN;
-    }
-    let count = samples.iter().filter(|&&s| s <= value).count();
-    (count as f64) / (samples.len() as f64)
 }
 
 // ---------------------------------------------------------------------------

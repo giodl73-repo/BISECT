@@ -1,5 +1,56 @@
 use super::*;
 
+// Explicit rand-0.8 native64 SmallRng algorithm for reproducible MEC shuffling.
+// Xoshiro256++ transition adapted from rand (Copyright 2018 Developers of
+// the Rand project), under MIT / Apache-2.0; original algorithm by
+// David Blackman and Sebastiano Vigna. SeedableRng's default u64 seeding
+// deliberately matches SmallRng's PCG expansion, not Xoshiro's SplitMix seed.
+struct MecRng([u64; 4]);
+impl rand::SeedableRng for MecRng {
+    type Seed = [u8; 32];
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut state = [0; 4];
+        for (word, bytes) in state.iter_mut().zip(seed.chunks_exact(8)) {
+            *word = u64::from_le_bytes(bytes.try_into().unwrap());
+        }
+        if state == [0; 4] { return Self::seed_from_u64(0); }
+        Self(state)
+    }
+}
+impl rand::RngCore for MecRng {
+    fn next_u32(&mut self) -> u32 { (self.next_u64() >> 32) as u32 }
+    fn next_u64(&mut self) -> u64 {
+        let s = &mut self.0;
+        let result = s[0].wrapping_add(s[3]).rotate_left(23).wrapping_add(s[0]);
+        let t = s[1] << 17;
+        s[2] ^= s[0]; s[3] ^= s[1]; s[1] ^= s[2]; s[0] ^= s[3];
+        s[2] ^= t; s[3] = s[3].rotate_left(45);
+        result
+    }
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        for bytes in dest.chunks_mut(8) {
+            bytes.copy_from_slice(&self.next_u64().to_le_bytes()[..bytes.len()]);
+        }
+    }
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand::Error> {
+        self.fill_bytes(dest); Ok(())
+    }
+}
+
+#[cfg(all(test, target_pointer_width = "64"))]
+#[test]
+fn mec_rng_preserves_native64_small_rng_sequence() {
+    use rand::{RngCore, SeedableRng};
+    use rand::seq::SliceRandom;
+    for seed in [0, 42, 0xDEAD_BEEF_1234_5678, u64::MAX] {
+        let mut portable = MecRng::seed_from_u64(seed);
+        let mut native = rand::rngs::SmallRng::seed_from_u64(seed);
+        for _ in 0..1000 { assert_eq!(portable.next_u64(), native.next_u64()); }
+        let mut a: Vec<_> = (0..896).collect(); let mut b = a.clone();
+        a.shuffle(&mut portable); b.shuffle(&mut native); assert_eq!(a, b);
+    }
+}
+
 // ── Moving-Knife Algorithm (T.13) ────────────────────────────────────────────
 
 /// Compactness metric used by the Moving-Knife Algorithm.
@@ -86,7 +137,7 @@ pub fn welzl_mec(points: &[(f64, f64)]) -> (f64, f64, f64) {
     // The seed is fixed (not caller-provided) because MKA determinism comes
     // from the orientation sweep, not from the MEC itself.
     use rand::SeedableRng;
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(0xDEAD_BEEF_1234_5678);
+    let mut rng = MecRng::seed_from_u64(0xDEAD_BEEF_1234_5678);
     let mut pts: Vec<(f64, f64)> = points.to_vec();
     use rand::seq::SliceRandom;
     pts.shuffle(&mut rng);
@@ -496,11 +547,10 @@ pub fn run_all_splits_mka(
     let n = adjacency.len();
 
     if num_districts == 1 {
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join("depth_00");
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = "depth_00";
             let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
-            let _ = write_intermediate_round(&round_dir, &asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &asgn);
         }
         return Ok((0..n).map(|i| (i, 1)).collect());
     }
@@ -544,9 +594,8 @@ pub fn run_all_splits_mka(
             node_tracts.insert(format!("{path}1"), right);
         }
 
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = format!("depth_{:02}", depth + 1);
             let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
             nodes.sort_by_key(|(path, _)| (path.len(), *path));
             let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
@@ -555,7 +604,7 @@ pub fn run_all_splits_mka(
                     round_asgn.insert(tract, region_id + 1);
                 }
             }
-            let _ = write_intermediate_round(&round_dir, &round_asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &round_asgn);
         }
     }
 

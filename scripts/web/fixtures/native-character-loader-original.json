@@ -1,0 +1,452 @@
+[
+  {
+    "kind": "economic",
+    "name": "valid",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n44001000100,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "44001000100",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "empty",
+    "text": "",
+    "expected": {
+      "native_status": "empty",
+      "records": [],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "header-only",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n",
+    "expected": {
+      "native_status": "empty",
+      "records": [],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "missing-column",
+    "text": "geoid,x\n44001000100,1\n",
+    "expected": {
+      "native_error": "LODES WAC: column 'c000' not found in fixture.csv",
+      "native_status": "error"
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "short",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n44001000100,1\n",
+    "expected": {
+      "native_error": "LODES WAC fixture.csv: row 2 has too few columns",
+      "native_status": "error"
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "bad-number",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n4400bad100,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "4400bad100",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "bom",
+    "text": "﻿geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n44001000100,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_error": "LODES WAC: column 'geoid' not found in fixture.csv",
+      "native_status": "error"
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "duplicate-row",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n44001000100,1000,10,20,30,100,200,100,50,50\n44002000100,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "44001000100",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        },
+        {
+          "finite": true,
+          "geoid": "44002000100",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "foreign",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n19001000100,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "19001000100",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "quoted-geoid",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n\"44001000100\",1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "\"44001000100\"",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "unsafe-key",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n__proto__,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "__proto__",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "negative",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n4400-1100,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "4400-1100",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "economic",
+    "name": "nonfinite",
+    "text": "geoid,c000,cns01,cns02,cns05,cns07,cns08,cns09,cns10,cns11\n4400NaN100,1000,10,20,30,100,200,100,50,50\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "4400NaN100",
+          "values": [
+            0.3,
+            0.26,
+            0.1
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "valid",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n44001000100,.8,.1,.6,.2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "44001000100",
+          "values": [
+            0.8,
+            0.1,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "empty",
+    "text": "",
+    "expected": {
+      "native_status": "empty",
+      "records": [],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "header-only",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n",
+    "expected": {
+      "native_status": "empty",
+      "records": [],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "missing-column",
+    "text": "geoid,x\n44001000100,1\n",
+    "expected": {
+      "native_error": "ACS housing: column 'pct_sf' not found in fixture.csv",
+      "native_status": "error"
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "short",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n44001000100,1\n",
+    "expected": {
+      "native_error": "ACS housing fixture.csv: row 2 has too few columns",
+      "native_status": "error"
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "bad-number",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n4400bad100,bad,.1,.6,.2\n",
+    "expected": {
+      "native_error": "ACS housing fixture.csv: row 2 column 1 parse error: invalid float literal",
+      "native_status": "error"
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "bom",
+    "text": "﻿geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n44001000100,.8,.1,.6,.2\n",
+    "expected": {
+      "native_error": "ACS housing: column 'geoid' not found in fixture.csv",
+      "native_status": "error"
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "duplicate-row",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n44001000100,.8,.1,.6,.2\n44002000100,.2,.1,.6,.2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "44001000100",
+          "values": [
+            0.8,
+            0.1,
+            0.6,
+            0.2
+          ]
+        },
+        {
+          "finite": true,
+          "geoid": "44002000100",
+          "values": [
+            0.2,
+            0.1,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "foreign",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n19001000100,.8,.1,.6,.2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "19001000100",
+          "values": [
+            0.8,
+            0.1,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "quoted-geoid",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n\"44001000100\",.8,.1,.6,.2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "\"44001000100\"",
+          "values": [
+            0.8,
+            0.1,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "unsafe-key",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n__proto__,.8,.1,.6,.2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "__proto__",
+          "values": [
+            0.8,
+            0.1,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "negative",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n4400-1100,-2,.1,.6,.2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "4400-1100",
+          "values": [
+            0.0,
+            0.1,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "nonfinite",
+    "text": "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n4400NaN100,NaN,.1,.6,.2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": false,
+          "geoid": "4400NaN100",
+          "values": [
+            null,
+            0.1,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  },
+  {
+    "kind": "housing",
+    "name": "aliases-precedence",
+    "text": "geoid,pct_sf,pct_single_family,pct_mf,pct_multifamily,pct_owner,housing_vintage\n44001000100,.1,.8,.2,.7,.9,2\n",
+    "expected": {
+      "native_status": "loaded",
+      "records": [
+        {
+          "finite": true,
+          "geoid": "44001000100",
+          "values": [
+            0.8,
+            0.7,
+            0.9,
+            1.0
+          ]
+        }
+      ],
+      "native_error": null
+    }
+  }
+]

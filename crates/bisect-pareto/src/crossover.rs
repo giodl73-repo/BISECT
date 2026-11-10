@@ -6,11 +6,11 @@
 //!
 //! Per spec §4.
 
-use rand::rngs::SmallRng;
+use rand_chacha::ChaCha12Rng;
 use rand::Rng;
 use rand::SeedableRng;
 
-use bisect_ensemble::spanning::random_spanning_tree;
+use bisect_ensemble::spanning::random_spanning_tree_portable;
 
 /// Crossover: merge two adjacent districts from parent_a, regrow using a
 /// spanning tree, find a balanced cut.
@@ -38,7 +38,7 @@ pub fn crossover(
     let target_pop = total_pop as f64 / k as f64;
     let tol_abs = balance_tolerance * target_pop;
 
-    let mut rng = SmallRng::seed_from_u64(seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(seed);
 
     // Collect adjacent district pairs from parent_a
     let mut adj_pairs: Vec<(u32, u32)> = Vec::new();
@@ -61,7 +61,7 @@ pub fn crossover(
     }
 
     // Pick a random adjacent pair (d1, d2)
-    let pair_idx = rng.gen_range(0..adj_pairs.len());
+    let pair_idx = rng.gen_range(0..adj_pairs.len() as u64) as usize;
     let (d1, d2) = adj_pairs[pair_idx];
 
     // Collect tracts in the merged region (d1 union d2)
@@ -94,8 +94,8 @@ pub fn crossover(
     // Try up to 5 spanning trees to find a balanced cut
     for attempt in 0..5u32 {
         let attempt_seed = seed.wrapping_add((attempt as u64).wrapping_mul(0x9e3779b97f4a7c15));
-        let mut tree_rng = SmallRng::seed_from_u64(attempt_seed);
-        let tree = random_spanning_tree(&local_adj, &mut tree_rng);
+        let mut tree_rng = ChaCha12Rng::seed_from_u64(attempt_seed);
+        let tree = random_spanning_tree_portable(&local_adj, &mut tree_rng);
 
         // Try all tree edges as potential cuts
         let mut best_cut: Option<(u32, u32)> = None;

@@ -8,7 +8,7 @@
 /// BOUNDARY invariant: both files are written together or neither is.
 /// This eliminates the vra_mode premature-clear class of bugs where
 /// vra_analysis.pkl was not written.
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -76,11 +76,7 @@ pub fn write_state_outputs(
     }
 
     // Write assignments to temp file
-    let canonical_assignments: BTreeMap<String, usize> = assignments
-        .iter()
-        .map(|(&unit, &district)| (unit.to_string(), district))
-        .collect();
-    let assignments_json = serde_json::to_string_pretty(&canonical_assignments)
+    let assignments_json = bisect_report::assignment_output::serialize_native_assignments(assignments.iter().map(|(&unit,&district)|(unit,district)))
         .map_err(|e| OutputError::Json(e.to_string()))?;
     fs::write(&tmp_assignments, &assignments_json).map_err(|e| OutputError::Io {
         path: tmp_assignments.clone(),

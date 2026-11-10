@@ -1,0 +1,16 @@
+{
+  "label": "summary_fixture",
+  "year": "2020",
+  "states": {
+    "washington": {
+      "status": "ok"
+    },
+    "rhode_island": {
+      "status": "failed",
+      "error": "Missing data"
+    },
+    "iowa": {
+      "status": "skipped"
+    }
+  }
+}

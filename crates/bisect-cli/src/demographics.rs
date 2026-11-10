@@ -9,133 +9,24 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct VapDemographicRecord {
-    pub total_vap: f64,
-    pub minority_vap: f64,
-}
+pub use bisect_data::native_demographics::VapDemographicRecord;
 
-/// Load minority fraction per GEOID from a demographics CSV.
-/// Returns HashMap<GEOID (11-char), pct_minority>.
+/// Read a historical native demographics file with its original defaults.
 pub fn load_demographics(csv_path: &Path) -> Result<HashMap<String, f64>, String> {
     let content = std::fs::read_to_string(csv_path)
         .map_err(|e| format!("cannot read {}: {e}", csv_path.display()))?;
-
-    let mut lines = content.lines();
-    let header = lines.next().ok_or("empty demographics file")?;
-    let cols: Vec<&str> = header.split(',').collect();
-
-    let col = |name: &str| -> Result<usize, String> {
-        cols.iter()
-            .position(|&c| c.trim() == name)
-            .ok_or_else(|| format!("column '{name}' not found in header: {}", header))
-    };
-
-    let i_geoid = col("GEOID")?;
-    let i_total = col("total_pop")?;
-    let i_white = col("white_non_hispanic")?;
-
-    let mut result = HashMap::new();
-    for line in lines {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').collect();
-
-        let geoid = format!("{:0>11}", fields.get(i_geoid).unwrap_or(&"").trim());
-        let total: f64 = fields
-            .get(i_total)
-            .and_then(|f| f.trim().parse().ok())
-            .unwrap_or(0.0);
-        let white: f64 = fields
-            .get(i_white)
-            .and_then(|f| f.trim().parse().ok())
-            .unwrap_or(0.0);
-
-        if total <= 0.0 {
-            result.insert(geoid, 0.0);
-            continue;
-        }
-
-        let minority_frac = ((total - white) / total).clamp(0.0, 1.0);
-        result.insert(geoid, minority_frac);
-    }
-
-    Ok(result)
+    bisect_data::native_demographics::parse_native_demographics(&content)
 }
 
-/// Load true VAP/CVAP demographics from a CSV keyed by GEOID.
-///
-/// Required columns:
-/// - `GEOID` or `geoid`
-/// - `minority_vap`
-/// - one of `total_vap`, `vap`, or `cvap`
-pub fn load_vap_demographics(
-    csv_path: &Path,
-) -> Result<HashMap<String, VapDemographicRecord>, String> {
+/// Read true VAP/CVAP using the historical native parser.
+pub fn load_vap_demographics(csv_path: &Path) -> Result<HashMap<String, VapDemographicRecord>, String> {
     let content = std::fs::read_to_string(csv_path)
         .map_err(|e| format!("cannot read {}: {e}", csv_path.display()))?;
     load_vap_demographics_from_str(&content)
 }
 
-pub fn load_vap_demographics_from_str(
-    content: &str,
-) -> Result<HashMap<String, VapDemographicRecord>, String> {
-    let mut lines = content.lines();
-    let header = lines.next().ok_or("empty VAP demographics file")?;
-    let cols: Vec<&str> = header.split(',').map(str::trim).collect();
-
-    let col = |names: &[&str]| -> Result<usize, String> {
-        names
-            .iter()
-            .find_map(|name| cols.iter().position(|&c| c == *name))
-            .ok_or_else(|| {
-                format!(
-                    "VAP demographics missing required column; expected one of {:?} in header: {}",
-                    names, header
-                )
-            })
-    };
-
-    let i_geoid = col(&["GEOID", "geoid"])?;
-    let i_total_vap = col(&["total_vap", "vap", "cvap"])?;
-    let i_minority_vap = col(&["minority_vap"])?;
-
-    let mut result = HashMap::new();
-    for line in lines {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').collect();
-        let geoid = format!("{:0>11}", fields.get(i_geoid).unwrap_or(&"").trim());
-        let total_vap: f64 = fields
-            .get(i_total_vap)
-            .and_then(|field| field.trim().parse().ok())
-            .unwrap_or(0.0);
-        let minority_vap: f64 = fields
-            .get(i_minority_vap)
-            .and_then(|field| field.trim().parse().ok())
-            .unwrap_or(0.0);
-        if !total_vap.is_finite()
-            || !minority_vap.is_finite()
-            || total_vap < 0.0
-            || minority_vap < 0.0
-            || minority_vap > total_vap
-        {
-            return Err(format!(
-                "invalid VAP demographics for GEOID {geoid}: total_vap={total_vap}, minority_vap={minority_vap}"
-            ));
-        }
-        result.insert(
-            geoid,
-            VapDemographicRecord {
-                total_vap,
-                minority_vap,
-            },
-        );
-    }
-
-    Ok(result)
+pub fn load_vap_demographics_from_str(content: &str) -> Result<HashMap<String, VapDemographicRecord>, String> {
+    bisect_data::native_demographics::parse_native_vap_demographics(content)
 }
 
 /// Align per-GEOID demographics to adjacency vertex index order.

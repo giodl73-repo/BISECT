@@ -9,7 +9,6 @@
 ///
 /// Incremental by default: checks for existing files before downloading.
 /// Use --force to re-download even if present.
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -20,31 +19,9 @@ const BUILTIN_MANIFEST: &str = include_str!("../../../data/manifest.json");
 // Manifest types
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct Manifest {
-    pub version: String,
-    pub github_repo: String,
-    pub releases: Releases,
-    pub local_data_dir: String,
-    pub local_outputs_dir: String,
-    pub states: HashMap<String, StateManifest>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct Releases {
-    pub data_inputs: String,
-    pub outputs_v3: String,
-    pub outputs_v4: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct StateManifest {
-    pub name: String,
-    pub fips: String,
-    pub districts: HashMap<String, usize>,
-    pub tiger: HashMap<String, String>,
-    pub pl94171: HashMap<String, String>,
-}
+pub use bisect_core::fetch_plan::{Manifest,Releases,StateManifest};
+#[cfg(test)]
+use bisect_core::fetch_plan::pl94171_url;
 
 // ---------------------------------------------------------------------------
 // Fetch item: one file to download
@@ -105,276 +82,24 @@ fn dirs_next_home() -> Option<PathBuf> {
 // ---------------------------------------------------------------------------
 
 /// Build list of items to fetch for given states and year.
-pub fn build_fetch_list(
-    manifest: &Manifest,
-    states: &[String],
-    year: &str,
-    data_types: &[crate::args::DataType],
-) -> Vec<FetchItem> {
-    use crate::args::DataType;
-    let all_types = data_types.is_empty() || data_types.iter().any(|t| matches!(t, DataType::All));
-    let want_tiger = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
-    let want_pl = all_types
-        || data_types
-            .iter()
-            .any(|t| matches!(t, DataType::Redistricting));
-    let want_adj = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
-    let want_lodes = data_types.iter().any(|t| matches!(t, DataType::Lodes));
-    let want_lodes_od = data_types.iter().any(|t| matches!(t, DataType::LodesOd));
-    let want_school = data_types
-        .iter()
-        .any(|t| matches!(t, DataType::SchoolDistricts));
-    let want_eia = data_types.iter().any(|t| matches!(t, DataType::Eia861));
-    let want_acs_housing = data_types.iter().any(|t| matches!(t, DataType::AcsHousing));
-
-    // Data types that exist as CLI flags but are not yet downloaded by `bisect fetch`.
-    let want_elections = !all_types && data_types.iter().any(|t| matches!(t, DataType::Elections));
-    if want_elections {
-        eprintln!(
-            "WARNING: --type elections is not implemented in `bisect fetch` yet. \
-             Use the Python downloader instead:\n  \
-             python scripts/data/elections/download_election_data.py --year {year}"
-        );
-    }
-
-    let mut items = Vec::new();
-    let data_dir = PathBuf::from(&manifest.local_data_dir);
-    let outputs_dir = PathBuf::from(&manifest.local_outputs_dir);
-
-    // Filter states
-    let state_codes: Vec<&String> = if states.is_empty() {
-        manifest.states.keys().collect()
-    } else {
-        states
-            .iter()
-            .filter(|s| manifest.states.contains_key(s.as_str()))
-            .collect()
-    };
-
-    for code in state_codes {
-        let state = match manifest.states.get(code.as_str()) {
-            Some(s) => s,
-            None => continue,
-        };
-        let state_lower = state.name.to_lowercase().replace(' ', "_");
-
-        // TIGER tract shapefile
-        if want_tiger {
-            if let Some(url) = state.tiger.get(year) {
-                // Strip query params from URL before extracting filename (Critical 1)
-                let raw = url.split('/').last().unwrap_or("tract.zip");
-                let filename = raw.split('?').next().unwrap_or(raw);
-                let local_path = data_dir
-                    .join(year)
-                    .join("tiger")
-                    .join("tracts")
-                    .join(filename.replace(".zip", ""))
-                    .join(filename.replace(".zip", ".shp"));
-                let done_marker = local_path.with_extension("done");
-                items.push(FetchItem {
-                    state_code: code.clone(),
-                    year: year.to_string(),
-                    kind: "tiger".to_string(),
-                    url: Some(url.clone()),
-                    available_locally: local_path.exists(),
-                    local_path,
-                    done_marker,
-                });
-            }
-        }
-
-        // PL 94-171 redistricting file
-        if want_pl {
-            if let Some(manifest_url) = state.pl94171.get(year) {
-                let url = pl94171_url(code, &state.name, year, manifest_url);
-                let raw = url.split('/').last().unwrap_or("data.zip");
-                let filename = raw.split('?').next().unwrap_or(raw);
-                let local_path = data_dir
-                    .join(year)
-                    .join("redistricting")
-                    .join(&state_lower)
-                    .join(filename);
-                let done_marker = local_path.with_extension("done");
-                items.push(FetchItem {
-                    state_code: code.clone(),
-                    year: year.to_string(),
-                    kind: "pl94171".to_string(),
-                    url: Some(url),
-                    available_locally: local_path.exists(),
-                    local_path,
-                    done_marker,
-                });
-            }
-        }
-
-        // Adjacency pkl (from GitHub Release or local)
-        if want_adj {
-            let adj_filename = format!("{}_adjacency_{year}.pkl", code.to_lowercase());
-            let local_path = outputs_dir
-                .join("V3")
-                .join("data")
-                .join(year)
-                .join("adjacency")
-                .join(&adj_filename);
-            let done_marker = local_path.with_extension("done");
-            items.push(FetchItem {
-                state_code: code.clone(),
-                year: year.to_string(),
-                kind: "adjacency".to_string(),
-                url: None,
-                available_locally: local_path.exists(),
-                local_path,
-                done_marker,
-            });
-        }
-
-        // LODES WAC (Workplace Area Characteristics) — one CSV.gz per state per year.
-        // URL: https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/wac/{abbr}_wac_S000_JT00_{year}.csv.gz
-        // Aggregated block→tract CSV saved to data/{year}/lodes/{state}_wac_tract.csv
-        if want_lodes {
-            let abbr = code.to_lowercase();
-            let lodes_year = year; // LODES available 2002–2021; use year as-is
-            let url = format!(
-                "https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/wac/{abbr}_wac_S000_JT00_{lodes_year}.csv.gz"
-            );
-            let local_path = data_dir
-                .join(year)
-                .join("lodes")
-                .join(format!("{}_wac_tract.csv", state_lower));
-            let done_marker = data_dir
-                .join(year)
-                .join("lodes")
-                .join(format!("{}_wac_tract.done", state_lower));
-            items.push(FetchItem {
-                state_code: code.clone(),
-                year: year.to_string(),
-                kind: "lodes-wac".to_string(),
-                url: Some(url),
-                available_locally: local_path.exists(),
-                local_path,
-                done_marker,
-            });
-        }
-
-        // LODES OD (Origin-Destination) — one CSV.gz per state per year.
-        // URL: https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/od/{abbr}_od_main_JT00_{year}.csv.gz
-        // Aggregated block-pair->tract-pair CSV saved to data/{year}/lodes/{state}_od_tract.csv
-        if want_lodes_od {
-            let abbr = code.to_lowercase();
-            let url = format!(
-                "https://lehd.ces.census.gov/data/lodes/LODES8/{abbr}/od/{abbr}_od_main_JT00_{year}.csv.gz"
-            );
-            let local_path = data_dir
-                .join(year)
-                .join("lodes")
-                .join(format!("{}_od_tract.csv", state_lower));
-            let done_marker = data_dir
-                .join(year)
-                .join("lodes")
-                .join(format!("{}_od_tract.done", state_lower));
-            items.push(FetchItem {
-                state_code: code.clone(),
-                year: year.to_string(),
-                kind: "lodes-od".to_string(),
-                url: Some(url),
-                available_locally: local_path.exists(),
-                local_path,
-                done_marker,
-            });
-        }
-
-        // TIGER/Line School District shapefiles — one ZIP per state per year.
-        // URL pattern: https://www2.census.gov/geo/tiger/TIGER{year}/UNSD/tl_{year}_{fips}_unsd.zip
-        // where fips = 2-digit state FIPS code (from manifest)
-        if want_school {
-            {
-                let fips = &state.fips;
-                let url = format!(
-                    "https://www2.census.gov/geo/tiger/TIGER{year}/UNSD/tl_{year}_{fips}_unsd.zip"
-                );
-                let local_path = data_dir
-                    .join(year)
-                    .join("tiger")
-                    .join("school_districts")
-                    .join(format!("tl_{year}_{fips}_unsd"))
-                    .join(format!("tl_{year}_{fips}_unsd.shp"));
-                let done_marker = local_path.with_extension("done");
-                items.push(FetchItem {
-                    state_code: code.clone(),
-                    year: year.to_string(),
-                    kind: "school-districts".to_string(),
-                    url: Some(url),
-                    available_locally: local_path.exists(),
-                    local_path,
-                    done_marker,
-                });
-            }
-        }
-
-        // ACS 5-year housing character — one JSON per state per year from Census ACS API.
-        // Tables: B25024 (units in structure), B25003 (tenure), B25035 (median year built).
-        // Output: data/{year}/acs_housing/{state_lower}_housing_{year}.csv
-        // No API key required for <=50 variables per request.
-        if want_acs_housing {
-            let fips = &state.fips;
-            let url = format!(
-                "https://api.census.gov/data/{year}/acs/acs5?get=B25024_001E,B25024_002E,B25024_003E,\
-B25024_007E,B25024_008E,B25024_009E,B25003_001E,B25003_002E,\
-B25035_001E,NAME&for=tract:*&in=state:{fips}"
-            );
-            let local_path = data_dir
-                .join(year)
-                .join("acs_housing")
-                .join(format!("{state_lower}_housing_{year}.csv"));
-            let done_marker = data_dir
-                .join(year)
-                .join("acs_housing")
-                .join(format!("{state_lower}_housing_{year}.done"));
-            items.push(FetchItem {
-                state_code: code.clone(),
-                year: year.to_string(),
-                kind: "acs-housing".to_string(),
-                url: Some(url),
-                available_locally: local_path.exists(),
-                local_path,
-                done_marker,
-            });
-        }
-    }
-
-    // EIA Form 861 — one national ZIP per year (not per state).
-    // URL: https://www.eia.gov/electricity/data/eia861/zip/f8612020.zip (year-specific)
-    if want_eia {
-        let eia_year = year;
-        let url = format!("https://www.eia.gov/electricity/data/eia861/zip/f861{eia_year}.zip");
-        let local_path = data_dir
-            .join(year)
-            .join("eia861")
-            .join("service_territories.shp");
-        let done_marker = data_dir.join(year).join("eia861").join("eia861.done");
-        items.push(FetchItem {
-            state_code: "US".to_string(),
-            year: year.to_string(),
-            kind: "eia-861".to_string(),
-            url: Some(url),
-            available_locally: local_path.exists(),
-            local_path,
-            done_marker,
-        });
-    }
-
-    items
-}
-
-fn pl94171_url(code: &str, state_name: &str, year: &str, manifest_url: &str) -> String {
-    if year == "2020" {
-        let census_dir = state_name.replace(' ', "_");
-        return format!(
-            "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/{census_dir}/{}2020.pl.zip",
-            code.to_lowercase()
-        );
-    }
-    manifest_url.to_string()
+pub fn build_fetch_list(manifest:&Manifest,states:&[String],year:&str,data_types:&[crate::args::DataType])->Vec<FetchItem>{
+    use bisect_core::fetch_plan::DataType as Portable;
+    let types:Vec<_>=data_types.iter().map(|t|match t {
+        crate::args::DataType::Tiger=>Portable::Tiger,
+        crate::args::DataType::Redistricting=>Portable::Redistricting,
+        crate::args::DataType::Adjacency=>Portable::Adjacency,
+        crate::args::DataType::Enacted=>Portable::Enacted,
+        crate::args::DataType::Geography=>Portable::Geography,
+        crate::args::DataType::Elections=>Portable::Elections,
+        crate::args::DataType::Lodes=>Portable::Lodes,
+        crate::args::DataType::SchoolDistricts=>Portable::SchoolDistricts,
+        crate::args::DataType::Eia861=>Portable::Eia861,
+        crate::args::DataType::LodesOd=>Portable::LodesOd,
+        crate::args::DataType::AcsHousing=>Portable::AcsHousing,
+        crate::args::DataType::All=>Portable::All,
+    }).collect();
+    bisect_core::fetch_plan::build_fetch_list(manifest,states,year,&types,|path|path.exists(),|message|eprintln!("{message}"))
+        .into_iter().map(|item|FetchItem {state_code:item.state_code,year:item.year,kind:item.kind,url:item.url,local_path:item.local_path,done_marker:item.done_marker,available_locally:item.available_locally}).collect()
 }
 
 // ---------------------------------------------------------------------------
@@ -606,7 +331,7 @@ pub fn download_items(
             }
         }
 
-        std::fs::write(&item.done_marker, b"done")
+        std::fs::write(&item.done_marker, bisect_core::fetch_plan::DONE_MARKER_BYTES)
             .map_err(|e| format!("done marker write failed: {e}"))?;
         downloaded_count += 1;
     }
@@ -651,97 +376,10 @@ pub fn aggregate_lodes_wac_gzip_file(path: &Path, dest_path: &Path) -> Result<()
     aggregate_lodes_wac_reader(BufReader::new(gz), dest_path)
 }
 
-fn aggregate_lodes_wac_reader<R: std::io::BufRead>(
-    reader: R,
-    dest_path: &Path,
-) -> Result<(), String> {
-    use std::collections::HashMap;
-    // Aggregate block rows to tracts
-    // tract_geoid (11 chars) → [c000, cns07, cns09, cns10, cns11, cns01, cns02, cns05, cns08]
-    let mut tracts: HashMap<String, [f64; 9]> = HashMap::new();
-
-    let mut lines = reader.lines();
-    let header = match lines.next() {
-        Some(Ok(h)) => h,
-        _ => return Err("LODES WAC: empty or unreadable file".to_string()),
-    };
-
-    // Find column indices from header
-    let cols: Vec<&str> = header.split(',').collect();
-    let idx = |name: &str| -> Result<usize, String> {
-        cols.iter()
-            .position(|c| c.trim_matches('"') == name)
-            .ok_or_else(|| format!("LODES WAC: column '{name}' not found in header"))
-    };
-    let i_geo = idx("w_geocode")?;
-    let i_c000 = idx("C000")?;
-    let i_c07 = idx("CNS07")?;
-    let i_c09 = idx("CNS09")?;
-    let i_c10 = idx("CNS10")?;
-    let i_c11 = idx("CNS11")?;
-    let i_c01 = idx("CNS01")?;
-    let i_c02 = idx("CNS02")?;
-    let i_c05 = idx("CNS05")?;
-    let i_c08 = idx("CNS08")?;
-
-    for line in lines {
-        let line = line.map_err(|e| format!("LODES read: {e}"))?;
-        if line.trim().is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').collect();
-        if fields.len() <= i_c08 {
-            continue;
-        }
-
-        let block_geoid = fields[i_geo].trim_matches('"');
-        if block_geoid.len() < 11 {
-            continue;
-        }
-        let tract_geoid = &block_geoid[..11];
-
-        let parse = |i: usize| -> f64 { fields[i].trim_matches('"').parse::<f64>().unwrap_or(0.0) };
-
-        let entry = tracts.entry(tract_geoid.to_string()).or_insert([0.0; 9]);
-        entry[0] += parse(i_c000);
-        entry[1] += parse(i_c07);
-        entry[2] += parse(i_c09);
-        entry[3] += parse(i_c10);
-        entry[4] += parse(i_c11);
-        entry[5] += parse(i_c01);
-        entry[6] += parse(i_c02);
-        entry[7] += parse(i_c05);
-        entry[8] += parse(i_c08);
-    }
-
-    // Write output CSV
-    let mut out = std::fs::File::create(dest_path)
-        .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
-    use std::io::Write as IoWrite;
-    writeln!(
-        out,
-        "geoid,c000,cns07,cns09,cns10,cns11,cns01,cns02,cns05,cns08"
-    )
-    .map_err(|e| e.to_string())?;
-    let mut sorted: Vec<_> = tracts.into_iter().collect();
-    sorted.sort_by(|a, b| a.0.cmp(&b.0));
-    for (geoid, v) in sorted {
-        writeln!(
-            out,
-            "{geoid},{},{},{},{},{},{},{},{},{}",
-            v[0] as u64,
-            v[1] as u64,
-            v[2] as u64,
-            v[3] as u64,
-            v[4] as u64,
-            v[5] as u64,
-            v[6] as u64,
-            v[7] as u64,
-            v[8] as u64
-        )
-        .map_err(|e| e.to_string())?;
-    }
-    println!("[OK] LODES WAC aggregated to {}", dest_path.display());
+pub fn aggregate_lodes_wac_reader<R: std::io::BufRead>(reader:R,dest_path:&Path)->Result<(),String>{
+    let report=bisect_core::lodes_import::wac(reader)?;
+    std::fs::write(dest_path,report.csv_text).map_err(|e|format!("write {}: {e}",dest_path.display()))?;
+    println!("[OK] LODES WAC aggregated to {}",dest_path.display());
     Ok(())
 }
 
@@ -784,66 +422,10 @@ pub fn aggregate_lodes_od_gzip_file(path: &Path, dest_path: &Path) -> Result<(),
     aggregate_lodes_od_reader(BufReader::new(gz), dest_path)
 }
 
-fn aggregate_lodes_od_reader<R: std::io::BufRead>(
-    reader: R,
-    dest_path: &Path,
-) -> Result<(), String> {
-    use std::collections::HashMap;
-    // Aggregate block-pair rows to tract-pair level
-    // (home_tract, work_tract) -> total S000 jobs
-    let mut od_pairs: HashMap<(String, String), u64> = HashMap::new();
-
-    let mut lines = reader.lines();
-    let header = match lines.next() {
-        Some(Ok(h)) => h,
-        _ => return Err("LODES OD: empty or unreadable file".to_string()),
-    };
-
-    // Find column indices from header
-    let cols: Vec<&str> = header.split(',').collect();
-    let idx = |name: &str| -> Result<usize, String> {
-        cols.iter()
-            .position(|c| c.trim_matches('"') == name)
-            .ok_or_else(|| format!("LODES OD: column '{name}' not found in header"))
-    };
-    let i_home = idx("h_geocode")?;
-    let i_work = idx("w_geocode")?;
-    let i_s000 = idx("S000")?;
-
-    for line in lines {
-        let line = line.map_err(|e| format!("LODES OD read: {e}"))?;
-        if line.trim().is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').collect();
-        if fields.len() <= i_s000 {
-            continue;
-        }
-
-        let home_block = fields[i_home].trim_matches('"');
-        let work_block = fields[i_work].trim_matches('"');
-        if home_block.len() < 11 || work_block.len() < 11 {
-            continue;
-        }
-
-        let home_tract = home_block[..11].to_string();
-        let work_tract = work_block[..11].to_string();
-        let jobs: u64 = fields[i_s000].trim_matches('"').parse::<u64>().unwrap_or(0);
-
-        *od_pairs.entry((home_tract, work_tract)).or_insert(0) += jobs;
-    }
-
-    // Write output CSV: sorted by home_geoid then work_geoid
-    let mut out = std::fs::File::create(dest_path)
-        .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
-    use std::io::Write as IoWrite;
-    writeln!(out, "home_geoid,work_geoid,s000").map_err(|e| e.to_string())?;
-    let mut sorted: Vec<_> = od_pairs.into_iter().collect();
-    sorted.sort_by(|a, b| a.0.cmp(&b.0));
-    for ((home, work), jobs) in sorted {
-        writeln!(out, "{home},{work},{jobs}").map_err(|e| e.to_string())?;
-    }
-    println!("[OK] LODES OD aggregated to {}", dest_path.display());
+pub fn aggregate_lodes_od_reader<R: std::io::BufRead>(reader:R,dest_path:&Path)->Result<(),String>{
+    let report=bisect_core::lodes_import::od(reader)?;
+    std::fs::write(dest_path,report.csv_text).map_err(|e|format!("write {}: {e}",dest_path.display()))?;
+    println!("[OK] LODES OD aggregated to {}",dest_path.display());
     Ok(())
 }
 
@@ -900,109 +482,10 @@ pub fn download_acs_housing(url: &str, dest_path: &Path) -> Result<(), String> {
 }
 
 pub fn write_acs_housing_body(body: &str, dest_path: &Path) -> Result<(), String> {
-    // ACS API returns a JSON array-of-arrays: first row is header, rest are data.
-    let rows: Vec<Vec<serde_json::Value>> =
-        serde_json::from_str(body).map_err(|e| format!("ACS JSON parse: {e}"))?;
-
-    if rows.is_empty() {
-        std::fs::write(
-            dest_path,
-            "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage\n",
-        )
-        .map_err(|e| format!("write empty acs-housing: {e}"))?;
-        return Ok(());
-    }
-
-    // Build column index from header row.
-    let header_row: Vec<String> = rows[0]
-        .iter()
-        .map(|v| v.as_str().unwrap_or("").to_string())
-        .collect();
-    let find_col = |name: &str| -> Result<usize, String> {
-        header_row
-            .iter()
-            .position(|c| c == name)
-            .ok_or_else(|| format!("ACS housing: column '{name}' not found in response header"))
-    };
-
-    let i_total_units = find_col("B25024_001E")?;
-    let i_sf_det = find_col("B25024_002E")?;
-    let i_sf_att = find_col("B25024_003E")?;
-    let i_mf_1019 = find_col("B25024_007E")?;
-    let i_mf_2049 = find_col("B25024_008E")?;
-    let i_mf_50p = find_col("B25024_009E")?;
-    let i_occ_tot = find_col("B25003_001E")?;
-    let i_occ_own = find_col("B25003_002E")?;
-    let i_vintage = find_col("B25035_001E")?;
-    let i_state = find_col("state")?;
-    let i_county = find_col("county")?;
-    let i_tract = find_col("tract")?;
-
-    // Helper: parse a JSON value as f64, returning 0.0 on null/error.
-    let parse_f64 = |v: &serde_json::Value| -> f64 {
-        match v {
-            serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
-            serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0),
-            _ => 0.0,
-        }
-    };
-
-    let mut out = std::fs::File::create(dest_path)
-        .map_err(|e| format!("create {}: {e}", dest_path.display()))?;
-    use std::io::Write as IoWrite;
-    writeln!(
-        out,
-        "geoid,pct_single_family,pct_multifamily,pct_owner,housing_vintage"
-    )
-    .map_err(|e| e.to_string())?;
-
-    let mut row_count = 0usize;
-    for row in rows.iter().skip(1) {
-        if row.len() <= i_tract {
-            continue;
-        }
-
-        // Build 11-char GEOID: state(2) + county(3) + tract(6)
-        let state_fips = row[i_state].as_str().unwrap_or("");
-        let county_fips = row[i_county].as_str().unwrap_or("");
-        let tract_code = row[i_tract].as_str().unwrap_or("");
-        if state_fips.len() != 2 || county_fips.len() != 3 || tract_code.len() != 6 {
-            eprintln!(
-                "[WARN] ACS housing: skipping row with malformed FIPS \
-                ({state_fips}/{county_fips}/{tract_code})"
-            );
-            continue;
-        }
-        let geoid = format!("{state_fips}{county_fips}{tract_code}");
-
-        let housing = crate::housing::derive_housing_character(crate::housing::AcsHousingRaw {
-            total_units: parse_f64(&row[i_total_units]),
-            single_family_detached: parse_f64(&row[i_sf_det]),
-            single_family_attached: parse_f64(&row[i_sf_att]),
-            multifamily_10_19: parse_f64(&row[i_mf_1019]),
-            multifamily_20_49: parse_f64(&row[i_mf_2049]),
-            multifamily_50_plus: parse_f64(&row[i_mf_50p]),
-            occupied_total: parse_f64(&row[i_occ_tot]),
-            owner_occupied: parse_f64(&row[i_occ_own]),
-            median_year_built: parse_f64(&row[i_vintage]),
-        });
-
-        writeln!(
-            out,
-            "{geoid},{:.6},{:.6},{:.6},{:.6}",
-            housing.pct_single_family,
-            housing.pct_multifamily,
-            housing.pct_owner,
-            housing.housing_vintage
-        )
-        .map_err(|e| e.to_string())?;
-        row_count += 1;
-    }
-
-    println!(
-        "[OK] ACS housing: {row_count} tracts written to {}",
-        dest_path.display()
-    );
+    let report=bisect_core::acs_housing_import::convert(body)?;
+    for warning in &report.malformed_fips { eprintln!("{warning}"); }
+    std::fs::write(dest_path,&report.csv_text).map_err(|e|format!("write ACS housing {}: {e}",dest_path.display()))?;
+    if !report.empty_response { println!("[OK] ACS housing: {} tracts written to {}",report.written_rows,dest_path.display()); }
     Ok(())
 }
 

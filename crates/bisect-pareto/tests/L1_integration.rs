@@ -206,7 +206,7 @@ fn ndjson_roundtrip() {
     assert_eq!(meta["n_population"], 5, "n_population must match config");
     assert_eq!(meta["n_generations"], 2, "n_generations must match config");
     assert_eq!(meta["base_seed"], 42, "base_seed must match config");
-    assert_eq!(meta["pareto_version"], "1.0", "pareto_version must be 1.0");
+    assert_eq!(meta["pareto_version"], "2.0-chacha12-u64-v1", "portable protocol version");
     assert_eq!(
         meta["pareto_front_size"].as_u64().unwrap() as usize,
         result.frontier.len(),
@@ -409,6 +409,9 @@ fn selected_frontier_package_writes_verifiable_audit_sidecars() {
     )
     .unwrap();
 
+    let built=bisect_pareto::build_selected_frontier_package(&result,0,&context,2,"pareto-selected",50.0,"2026-05-11T00:00:00Z").unwrap();
+    assert_eq!(built.package,package);
+    for (name,text) in &built.files {assert_eq!(std::fs::read(tmp.path().join(name)).unwrap(),text.as_bytes());}
     assert_eq!(package.rplan_path, "selected-frontier.rplan");
     assert_eq!(package.audit_certificate_path, "audit-certificate.json");
     let rplan_text = std::fs::read_to_string(tmp.path().join("selected-frontier.rplan")).unwrap();
@@ -471,4 +474,11 @@ fn edge(to: u32) -> rplan_core::UnitEdge {
         kind: rplan_core::EdgeKind::Boundary,
         weight: None,
     }
+}
+
+#[test]
+fn failed_selected_frontier_does_not_create_output_directory(){
+ let result=run_nsga2(&path_adj(4),&[100;4],3,None,None,&[],ParetoConfig{n_population:2,n_generations:0,balance_tolerance:0.0,..Default::default()}).unwrap();
+ let tmp=tempfile::TempDir::new().unwrap();let destination=tmp.path().join("should-not-exist");
+ assert!(bisect_pareto::write_selected_frontier_package(&result,0,&path4_context(),3,&destination,"failed",0.0,"2026-10-06T00:00:00Z").is_err());assert!(!destination.exists());
 }

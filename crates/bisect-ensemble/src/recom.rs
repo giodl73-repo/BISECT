@@ -59,6 +59,14 @@ pub struct RecomChain {
     total_edges: usize,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RecomDraws {
+    Host,
+    Portable,
+    Native32,
+    Native64,
+}
+
 impl RecomChain {
     pub fn new(
         adj: Vec<Vec<u32>>,
@@ -137,18 +145,40 @@ impl RecomChain {
 
     /// Run one ReCom step. Returns a `StepRecord` with outcome metrics.
     pub fn step<R: Rng>(&mut self, rng: &mut R) -> StepRecord {
-        self.step_impl(rng, false)
+        self.step_impl(rng, RecomDraws::Host)
     }
 
     /// Uses fixed-width random draws with the Wilson tree sampler.
     pub fn step_portable<R: Rng>(&mut self, rng: &mut R) -> StepRecord {
-        self.step_impl(rng, true)
+        self.step_impl(rng, RecomDraws::Portable)
     }
 
-    fn step_impl<R: Rng>(&mut self, rng: &mut R, portable: bool) -> StepRecord {
+    /// Native rand-0.8.6 64-bit Wilson behavior on either pointer width.
+    /// SliceRandom retains its native u32 small-index draws; Wilson's usize
+    /// draws are explicitly u64. Other tree samplers are not this profile.
+    pub fn step_native64<R: Rng>(&mut self,rng:&mut R)->Result<StepRecord,String>{
+        if self.tree_sampler!=TreeSampler::Wilson{return Err("Native64 compatibility currently requires the native Wilson sampler.".into());}
+        Ok(self.step_impl(rng, RecomDraws::Native64))
+    }
+
+    /// Native rand-0.8.6 32-bit Wilson behavior on either pointer width.
+    /// Native shuffle/cut choices keep their original SliceRandom ordering.
+    pub fn step_native32<R: Rng>(&mut self, rng: &mut R) -> Result<StepRecord, String> {
+        if self.tree_sampler != TreeSampler::Wilson {
+            return Err("Native32 compatibility currently requires the native Wilson sampler.".into());
+        }
+        // total_edges = floor(adjacency_entries/2). These bounds cover the
+        // root, every neighbour list and all possible district-pair indices.
+        if self.adj.len() > u32::MAX as usize || self.total_edges > (u32::MAX / 2) as usize {
+            return Err("Native32 compatibility cannot represent this graph's index bounds.".into());
+        }
+        Ok(self.step_impl(rng, RecomDraws::Native32))
+    }
+
+    fn step_impl<R: Rng>(&mut self, rng: &mut R, draws: RecomDraws) -> StepRecord {
         self.steps_taken += 1;
 
-        let accepted = self.try_step(rng, portable);
+        let accepted = self.try_step(rng, draws);
 
         let cut = self.count_cut_edges();
         let max_dev = self.max_pop_deviation();
@@ -164,7 +194,8 @@ impl RecomChain {
 
     /// Attempt a ReCom step with pair reselection on persistent balance failure.
     /// Returns true if the assignment was updated.
-    fn try_step<R: Rng>(&mut self, rng: &mut R, portable: bool) -> bool {
+    fn try_step<R: Rng>(&mut self, rng: &mut R, draws: RecomDraws) -> bool {
+        let portable = draws == RecomDraws::Portable;
         let mut pairs = self.adjacent_pairs();
         if portable { pairs.sort_unstable(); }
         if pairs.is_empty() {
@@ -208,10 +239,30 @@ impl RecomChain {
                 })
                 .collect();
 
+            // Coarsening can make a district's image disconnected. Wilson's
+            // walk cannot reach its tree from another component, so this pair
+            // has no spanning-tree proposal. Reject it without drawing RNG.
+            let mut seen = vec![false; local_adj.len()];
+            let mut todo = vec![0usize];
+            seen[0] = true;
+            while let Some(i) = todo.pop() {
+                for &j in &local_adj[i] {
+                    if !seen[j as usize] {
+                        seen[j as usize] = true;
+                        todo.push(j as usize);
+                    }
+                }
+            }
+            if seen.contains(&false) { continue; }
+
             // Try up to MAX_TREE_RESAMPLES spanning trees.
             for _ in 0..MAX_TREE_RESAMPLES {
                 let tree = match self.tree_sampler {
-                    TreeSampler::Wilson => if portable { crate::spanning::random_spanning_tree_portable(&local_adj, rng) } else { random_spanning_tree(&local_adj, rng) },
+                    TreeSampler::Wilson => match draws {
+                        RecomDraws::Host => random_spanning_tree(&local_adj, rng),
+                        RecomDraws::Native32 => crate::spanning::random_spanning_tree_native32(&local_adj, rng),
+                        RecomDraws::Portable | RecomDraws::Native64 => crate::spanning::random_spanning_tree_portable(&local_adj, rng),
+                    },
                     TreeSampler::GerryChainKruskal => random_kruskal_spanning_tree(&local_adj, rng),
                 };
 
@@ -643,6 +694,21 @@ mod tests {
                 "cut_fraction {} out of range",
                 rec.cut_fraction
             );
+        }
+    }
+
+    #[test]
+    fn disconnected_pair_region_is_rejected_before_tree_sampling() {
+        // A connected path whose two selected labels induce disconnected
+        // regions, as can happen after projecting a fine plan to coarse units.
+        let adj=vec![vec![1],vec![0,2],vec![1,3],vec![2,4],vec![3]];
+        for portable in [false,true] {
+            let mut chain=RecomChain::new(adj.clone(),vec![100;5],vec![1,2,3,1,2],3,0.01);
+            let mut rng=SmallRng::seed_from_u64(42);
+            let before=chain.assignment.clone();
+            let record=if portable {chain.step_portable(&mut rng)} else {chain.step(&mut rng)};
+            assert!(!record.accepted);
+            assert_eq!(chain.assignment,before);
         }
     }
 }

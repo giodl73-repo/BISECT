@@ -1,12 +1,15 @@
 pub mod adjacency;
 pub mod bridge;
 pub mod demographics;
+pub mod native_demographics;
 pub mod enacted;
 pub mod fiedler;
 pub mod pl94;
 pub mod projection;
 pub mod serialize;
 pub mod tiger;
+pub mod tract_preparation;
+pub mod topology_simplify;
 
 pub use adjacency::{build_adjacency_graph, AdjacencyError, AdjacencyGraph};
 pub use bridge::{connect_island_components, county_from_geoid};

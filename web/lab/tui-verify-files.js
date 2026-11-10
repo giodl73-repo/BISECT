@@ -1,0 +1,6 @@
+import {packageVerificationRequest} from './package-verification-files.js';
+import {manifestReplayRequest} from './engine-replay-files.js';
+import {parseSafeJson} from './project.js';
+export function validateTuiVerifySettings(v){if(!v||Object.keys(v).join()!=='mode'||!['prechecks','replay'].includes(v.mode))throw new Error('Choose native prechecks or explicit engine replay.');return v;}
+export function tuiVerifyRequest(settings,packageInputs,replayInputs){validateTuiVerifySettings(settings);const combined=settings.mode==='replay'?manifestReplayRequest(packageInputs,replayInputs):{input:{prechecks:packageVerificationRequest(packageInputs,'verify-manifest-prechecks').input,replay:null}};return {operation:'verify-tui-manifest',input:{mode:settings.mode,...combined.input}};}
+export function tuiVerifyReceiptBytes(result){if(result?.schema_version!=='bisect-tui-verification-v1'||!['prechecks','replay'].includes(result.mode)||typeof result.execution_performed!=='boolean'||typeof result.execution_completed!=='boolean'||!result.view||result.mode==='prechecks'&&(result.execution_performed||result.execution_completed||result.view.replay_matched))throw new Error('Run fresh native TUI verification first.');const text=JSON.stringify(result,null,2)+'\n';parseSafeJson(text);return new TextEncoder().encode(text);}

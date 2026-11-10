@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {acquireFetchSource,validateFetchAcquisition} from '../../web/lab/fetch-acquisition.js';
+import {extractCensusZip,censusArchiveLimit} from '../../web/lab/census-archive.js';
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm')),plan=engine.execute({operation:'plan-fetch-sources',input:{manifest_json:null,states:['RI'],year:'2020',data_types:[],selected_paths:[]}}),index=plan.items.findIndex(item=>item.kind==='pl94171'),bytes=await fs.readFile('target/census-archive-tests/pl2020.zip');
+const reader=async(file,settings)=>extractCensusZip(new Uint8Array(await file.arrayBuffer()),settings);let calls=0,saved;
+const fetcher=async()=>{calls++;return new Response(bytes,{headers:{'Content-Length':String(80*1024*1024)}});};
+await assert.rejects(()=>acquireFetchSource(plan,index,{fetcher,archiveReader:reader}),/64 MiB/);
+const acquired=await acquireFetchSource(plan,index,{fetcher,archiveReader:reader,archiveProfile:'large-state',retainRawArchive:false,onArchive:archive=>{saved=archive;}});
+assert.equal(acquired.receipt.archive_profile,'large-state');assert.equal(acquired.receipt.byte_length,bytes.length);assert.equal(acquired.raw_archive_source,undefined);assert.deepEqual(saved.bytes,new Uint8Array(bytes));assert.equal(saved.receipt.source_sha256,acquired.receipt.source_sha256);assert.equal(acquired.inputs.archive.kind,'pl94');
+assert.equal(censusArchiveLimit({kind:'pl94',archive_profile:'large-state'}),128*1024*1024);assert.equal(censusArchiveLimit({kind:'pl94'}),64*1024*1024);assert.equal(censusArchiveLimit({kind:'tiger',archive_profile:'large-state'}),64*1024*1024);
+const before=calls;await assert.rejects(()=>acquireFetchSource(plan,index,{fetcher,archiveReader:reader,archiveProfile:'invalid'}));await assert.rejects(()=>acquireFetchSource(plan,index,{fetcher,archiveReader:reader,retainRawArchive:false}));assert.equal(calls,before);
+await assert.rejects(()=>acquireFetchSource(plan,index,{archiveProfile:'large-state',retainRawArchive:false,onArchive:()=>{},fetcher:async()=>new Response(bytes,{headers:{'Content-Length':String(128*1024*1024+1)}})}),/128 MiB/);
+for(const profile of ['invalid',null,undefined])assert.throws(()=>validateFetchAcquisition({...acquired.receipt,archive_profile:profile}));assert.throws(()=>validateFetchAcquisition({...acquired.receipt,byte_length:128*1024*1024+1}));
+console.log('Large-state PL94 acquisition: explicit 128 MiB profile, unchanged default/TIGER limits, actual ZIP/source/hash external retention, observed bytes rather than header claims, option/preflight/header/receipt bound guards passed.');

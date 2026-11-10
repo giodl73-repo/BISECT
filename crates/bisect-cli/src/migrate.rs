@@ -1,4 +1,4 @@
-use bisect_report::{check_plan_collision, create_plan_dir, write_manifest_atomic, PlanManifest};
+use bisect_report::{check_plan_collision, create_plan_dir, write_manifest_atomic};
 /// `BISECT migrate` — copy a legacy state plan into the plans/{label}/ tree.
 ///
 /// Source: `{base}/states/{state_name}/`
@@ -28,25 +28,10 @@ pub fn run_migrate(
 
     // Try to find the state directory: first try the lowercase identifier directly,
     // then try to resolve the 2-letter code to full state name via manifest.
-    let source_dir = if source_dir_direct.exists() {
-        source_dir_direct
-    } else {
-        // Try to resolve via manifest (for 2-letter codes like "WA" → "washington")
-        let resolved =
-            try_resolve_state_name(state_identifier).map(|name| base.join("states").join(&name));
-
-        match resolved {
-            Some(dir) if dir.exists() => dir,
-            _ => {
-                anyhow::bail!(
-                    "legacy state directory not found: '{}'. \
-                     Run 'bisect state --state {}' first to generate it.",
-                    source_dir_direct.display(),
-                    state_identifier.to_uppercase()
-                );
-            }
-        }
-    };
+    let source_dir=bisect_report::legacy_migration::select_source(state_identifier,
+        |path|base.join(path).exists(),||try_resolve_state_name(state_identifier))
+        .map(|path|base.join(path)).ok_or_else(||anyhow::anyhow!(
+            "legacy state directory not found: '{}'. Run 'bisect state --state {}' first to generate it.",source_dir_direct.display(),state_identifier.to_uppercase()))?;
 
     // Check for collision before creating the target directory
     let plan_dir_candidate = base.join("plans").join(label);
@@ -63,36 +48,10 @@ pub fn run_migrate(
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| candidate_lower.clone());
-    // Count districts from final_assignments.json to determine num_districts
-    let assignments_path = plan_dir.join("final_assignments.json");
-    let num_districts: usize = if assignments_path.exists() {
-        let content = std::fs::read_to_string(&assignments_path).unwrap_or_default();
-        let asgn: std::collections::HashMap<String, usize> =
-            serde_json::from_str(&content).unwrap_or_default();
-        // Count distinct district IDs
-        let distinct: std::collections::HashSet<usize> = asgn.values().copied().collect();
-        distinct.len().max(1)
-    } else {
-        1
-    };
-
-    let manifest = PlanManifest {
-        label: label.to_string(),
-        state_code: state_identifier.to_uppercase(),
-        chamber: "congressional".to_string(),
-        num_districts,
-        population_source: "total".to_string(),
-        partition_mode: "edge-weighted".to_string(),
-        binary_download_url: "https://github.com/owner/BISECT/releases".to_string(),
-        adjacency_file: format!("{}_adjacency.adj.bin", state_dir_name),
-        tiger_source_url: "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/".to_string(),
-        created_at: chrono_now(),
-        // Legacy US plans are always single-member; set explicitly so manifest is unambiguous.
-        seats_per_district: 1,
-        total_seats: num_districts, // one seat per district for single-member systems
-        electoral_system: "single_member".to_string(),
-        ..Default::default()
-    };
+    let assignments = std::fs::read(plan_dir.join("final_assignments.json")).ok();
+    let manifest = bisect_report::legacy_migration::build_manifest(
+        label, state_identifier, &state_dir_name, assignments.as_deref(), chrono_now(),
+    );
     write_manifest_atomic(&plan_dir, &manifest)?;
 
     Ok(())

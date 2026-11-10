@@ -34,6 +34,7 @@ pub struct BlocVotingJson {
     pub method: String,
     pub minority_group: String,
     pub alpha: f64,
+    pub bootstrap: BootstrapRecord,
     pub ecology: EcologyBlock,
     pub candidates: Vec<CandidateBlock>,
     pub race_of_candidate_provenance: RaceOfCandidateProvenance,
@@ -45,6 +46,14 @@ pub struct BlocVotingJson {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct BootstrapRecord {
+    pub protocol: String,
+    pub seed: String,
+    pub replicates: usize,
+    pub confidence_level: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct EcologyBlock {
     pub n_precincts: usize,
     pub n_clusters: usize,
@@ -53,6 +62,7 @@ pub struct EcologyBlock {
 #[derive(Debug, Clone, Serialize)]
 pub struct CandidateBlock {
     pub candidate: String,
+    pub headline_variant: String,
     pub regression: RegressionBlock,
     pub robustness_check: RobustnessCheck,
     pub ecology_caveat: String,
@@ -61,6 +71,7 @@ pub struct CandidateBlock {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct RegressionBlock {
+    pub p_value_method: String,
     pub model: String,
     pub specification: String,
     pub diagnostics: DiagnosticsBlock,
@@ -73,6 +84,8 @@ pub struct RegressionBlock {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct DiagnosticsBlock {
+    pub successful_cluster_fits: usize,
+    pub successful_naive_fits: usize,
     pub vif_pct_minority_vs_baseline: f64,
     pub vif_underpowered_flag: bool,
     pub ci_naive_vs_cluster_diverged: bool,
@@ -97,7 +110,7 @@ pub struct ProvenanceBlock {
     pub args: Option<serde_json::Value>,
 }
 
-/// Verbatim ecology caveat per spec line 110. Distinguishes per-precinct
+/// Shared ecology caveat. Distinguishes per-precinct
 /// association from individual-voter behavior; required in every output by the
 /// SCALE-block-lifting bargain.
 pub const ECOLOGY_CAVEAT: &str =
@@ -105,7 +118,7 @@ pub const ECOLOGY_CAVEAT: &str =
      and candidate share. They do NOT imply individual-voter behavior; that is \
      the ecological inference fallacy. The numbers should be interpreted \
      alongside the cluster-bootstrap CI, the VIF diagnostic, and the robustness \
-     check across the three alternative baselines.";
+     checks across the supplied variants. Unsupplied alternative baselines and leave-one-out variants were not evaluated.";
 
 /// Build the verbatim regression specification string (Task 6.1 / spec).
 pub fn regression_specification_string(bootstrap_samples: usize) -> String {
@@ -174,6 +187,7 @@ pub fn build_bloc_voting_json(
 
         candidates_block.push(CandidateBlock {
             candidate: cand.clone(),
+            headline_variant: primary.variant.clone(),
             regression: regression_block(primary, ctx.bootstrap_samples),
             robustness_check: robustness,
             ecology_caveat: ECOLOGY_CAVEAT.to_string(),
@@ -203,6 +217,7 @@ pub fn build_bloc_voting_json(
         method: ctx.method.to_string(),
         minority_group: ctx.minority_group.to_string(),
         alpha: ctx.alpha,
+        bootstrap: BootstrapRecord {protocol:"county-cluster-and-naive-chacha12-u64-v1".into(),seed:family.bootstrap_seed.to_string(),replicates:family.bootstrap_samples,confidence_level:family.ci_level},
         ecology: EcologyBlock {
             n_precincts,
             n_clusters,
@@ -220,9 +235,12 @@ fn regression_block(r: &BlocVotingTestResult, bootstrap_samples: usize) -> Regre
         coefficients.insert(name.clone(), coef.clone());
     }
     RegressionBlock {
+        p_value_method: "normal-cdf-approximation-hc3-statistic".into(),
         model: "WLS".to_string(),
         specification: regression_specification_string(bootstrap_samples),
         diagnostics: DiagnosticsBlock {
+            successful_cluster_fits: r.cluster.successful_cluster_fits,
+            successful_naive_fits: r.cluster.successful_naive_fits,
             vif_pct_minority_vs_baseline: r.fit.vif_pct_minority_vs_baseline,
             vif_underpowered_flag: r.fit.vif_underpowered_flag,
             ci_naive_vs_cluster_diverged: r.cluster.naive_vs_cluster_diverged,
@@ -278,6 +296,7 @@ pub fn render_summary_md(json: &BlocVotingJson) -> String {
         json.schema_version, json.provenance.version, json.provenance.build_commit
     ));
 
+    s.push_str(&format!("Bootstrap protocol: `{}` | seed: `{}` | requested replicates: {} | configured confidence: {}\n\n",json.bootstrap.protocol,json.bootstrap.seed,json.bootstrap.replicates,json.bootstrap.confidence_level));
     s.push_str("## Ecology\n\n");
     s.push_str(&format!(
         "- precincts analyzed: {}\n- distinct clusters (counties): {}\n\n",
@@ -340,14 +359,15 @@ pub fn render_summary_md(json: &BlocVotingJson) -> String {
             c.regression.diagnostics.ci_naive_vs_cluster_diverged
         ));
         s.push_str(&format!(
-            "- **race coefficient**: estimate {:.4}, SE_HC3 {:.4}, 95% cluster CI [{:.4}, {:.4}], standardized beta {:.4}, p_raw {:.4}, p_holm {:.4}\n",
-            race.estimate, race.stderr_hc3, race.ci_95_cluster.0, race.ci_95_cluster.1,
+            "- **race coefficient**: estimate {:.4}, SE_HC3 {:.4}, configured {:.1}% cluster CI [{:.4}, {:.4}], standardized beta {:.4}, p_raw {:.4}, p_holm {:.4}\n",
+            race.estimate, race.stderr_hc3, json.bootstrap.confidence_level*100.0, race.ci_95_cluster.0, race.ci_95_cluster.1,
             race.standardized_beta, race.p_value_raw, race.p_value_holm
         ));
         s.push_str(&format!(
             "- **partisan baseline coefficient**: estimate {:.4}, SE_HC3 {:.4}, p_raw {:.4}\n",
             baseline.estimate, baseline.stderr_hc3, baseline.p_value_raw
         ));
+        s.push_str(&format!("- **successful bootstrap fits**: cluster {} / {}, naive {} / {} (singular resamples are omitted from percentile intervals)\n",c.regression.diagnostics.successful_cluster_fits,json.bootstrap.replicates,c.regression.diagnostics.successful_naive_fits,json.bootstrap.replicates));
         s.push_str("\n");
         s.push_str("#### Robustness check\n\n");
         s.push_str(&format!(

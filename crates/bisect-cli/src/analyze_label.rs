@@ -85,48 +85,50 @@ fn days_to_ymd(days: u64) -> (u64, u64, u64) {
 
 // ── AnalysisIndex ─────────────────────────────────────────────────────────────
 
-/// Serialised form of `analysis/{label}/{year}/index.json`.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct AnalysisIndex {
-    pub label: String,
-    pub year: String,
-    /// The label name again (mirrors the build index `label` field for clarity).
-    pub run: String,
-    /// SHA-256 of `runs/{label}/{year}/index.json`.
-    pub run_index_sha256: String,
-    /// Analysis types that were requested (may be empty if types came from `all`).
-    pub types: Vec<String>,
-    pub created: String,
-    /// Per-state status map.  Key = state_name (lowercase), value = status object.
-    pub states: HashMap<String, StateAnalysisStatus>,
+pub use bisect_report::label_indexes::{AnalysisIndex,StateAnalysisStatus,ReportIndex};
+
+#[derive(Clone, Copy)]
+enum AnalysisInput {
+    Built,
+    Imported { tracts: u64 },
 }
 
-/// Per-state entry inside the analysis index.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct StateAnalysisStatus {
-    /// Overall status: `"ok"` or `"failed"` or `"skipped"`.
-    pub status: String,
-    /// Populated when status is `"failed"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
-    /// One entry per analysis type, e.g. `{"proportionality": "ok", ...}`.
-    #[serde(flatten)]
-    pub type_statuses: HashMap<String, String>,
+impl AnalysisInput {
+    fn filename(self) -> &'static str {
+        match self {
+            Self::Built => "final_assignments.json",
+            Self::Imported { .. } => "assignments.json",
+        }
+    }
 }
 
-// ── ReportIndex ───────────────────────────────────────────────────────────────
-
-/// Serialised form of `reports/{label}/{year}/index.json`.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ReportIndex {
-    pub label: String,
-    pub year: String,
-    /// SHA-256 of `analysis/{label}/{year}/index.json`.
-    pub analysis_index_sha256: String,
-    pub format: String,
-    pub created: String,
-    /// Names of files written to `reports/{label}/{year}/`.
-    pub files: Vec<String>,
+/// An import can share a label/year with an older build. Only the current
+/// import index can select its states and file layout; file presence cannot.
+fn imported_analysis_states(
+    index: &[u8],
+    label: &str,
+    year: &str,
+) -> Result<Option<Vec<(String, AnalysisInput)>>, String> {
+    let Ok(index) = serde_json::from_slice::<serde_json::Value>(index) else {
+        // Preserve legacy build-index behavior; the caller still hashes its bytes.
+        return Ok(None);
+    };
+    if index["algorithm"]["structure"] != "external" {
+        return Ok(None);
+    }
+    let states = index["states"].as_object().filter(|s| !s.is_empty() && s.len() <= 51)
+        .ok_or("[INPUT] external import index must name 1–51 states")?;
+    if index["label"] != label || index["year"] != year {
+        return Err("[INPUT] external import index label/year does not match analysis request".into());
+    }
+    states.iter().map(|(name, status)| {
+        let tracts = status["tracts"].as_u64().filter(|n| *n > 0)
+            .ok_or("[INPUT] external import state must declare a positive tract count")?;
+        if state_name_to_code(name).is_none() || status["status"] != "ok" {
+            return Err("[INPUT] external import index contains an invalid state entry".into());
+        }
+        Ok((name.clone(), AnalysisInput::Imported { tracts }))
+    }).collect::<Result<Vec<_>, _>>().map(Some)
 }
 
 // ── run_label_analyze ─────────────────────────────────────────────────────────
@@ -152,6 +154,7 @@ pub fn run_label_analyze(
 ) -> Result<(), String> {
     // 1. Validate label.
     validate_label_name(label)?;
+    bisect_report::label_indexes::validate_analysis_types(types)?;
 
     // 2. Get registry entry.
     let entry = Registry::get(label)?.ok_or_else(|| {
@@ -179,24 +182,30 @@ pub fn run_label_analyze(
         // 4a. Guard: year must be built.
         Registry::require_built(label, y)?;
 
-        // 4b. Enumerate states present in runs/{label}/{year}/
+        // 4b. Select states from the active import index or build directory.
         let year_dir = year_runs_dir(label, y);
-        let state_names = enumerate_states_in_dir(&year_dir)?;
+        let build_index_path = year_dir.join("index.json");
+        let build_index = match std::fs::read(&build_index_path) {
+            Ok(bytes) => Some(bytes),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+            Err(e) => return Err(format!("[INTERNAL] analyze: cannot read '{}': {e}", build_index_path.display())),
+        };
+        let indexed_states = build_index.as_deref().map(|index| imported_analysis_states(index, label, y))
+            .transpose()?.flatten();
+        let mut state_inputs = match indexed_states {
+            Some(states) => states,
+            None => enumerate_states_in_dir(&year_dir)?.into_iter()
+                .map(|name| (name, AnalysisInput::Built)).collect(),
+        };
+        state_inputs.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
 
         // Apply --states filter (case-insensitive; filter is state_names, not codes).
         let filter: std::collections::HashSet<String> =
             states.iter().map(|s| s.to_lowercase()).collect();
 
-        let target_states: Vec<String> = if filter.is_empty() {
-            state_names
-        } else {
-            state_names
-                .into_iter()
-                .filter(|n| filter.contains(n))
-                .collect()
-        };
+        state_inputs.retain(|(name, _)| filter.is_empty() || filter.contains(name));
 
-        if target_states.is_empty() {
+        if state_inputs.is_empty() {
             eprintln!(
                 "[analyze] WARNING: no states found in {} — skipping year {y}",
                 year_dir.display()
@@ -205,9 +214,8 @@ pub fn run_label_analyze(
         }
 
         // Locate runs/{label}/{year}/index.json for SHA chain.
-        let build_index_path = year_dir.join("index.json");
-        let run_index_sha256 = if build_index_path.exists() {
-            sha256_file(&build_index_path)?
+        let run_index_sha256 = if let Some(bytes) = build_index {
+            bisect_report::label_import::sha256_hex(&bytes)
         } else {
             eprintln!(
                 "[analyze] WARNING: runs/{label}/{y}/index.json not found; \
@@ -228,7 +236,7 @@ pub fn run_label_analyze(
         // 4c. Analyse each state.
         let mut state_statuses: HashMap<String, StateAnalysisStatus> = HashMap::new();
 
-        for state_name in &target_states {
+        for (state_name, input) in &state_inputs {
             eprintln!("[analyze] {label}/{y}/{state_name}");
 
             let state_analysis_out = state_analysis_dir(label, y, state_name);
@@ -239,7 +247,7 @@ pub fn run_label_analyze(
                 )
             })?;
 
-            let result = run_analyze_state(label, y, state_name, types, &state_analysis_out);
+            let result = run_analyze_state(label, y, state_name, types, &state_analysis_out, *input);
 
             match result {
                 Ok(type_map) => {
@@ -294,6 +302,108 @@ pub fn run_label_analyze(
 
 // ── run_label_report ──────────────────────────────────────────────────────────
 
+fn read_portable_source(path: &Path, limit: usize) -> Result<String, String> {
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)
+        .and_then(|file| file.take((limit + 1) as u64).read_to_end(&mut bytes))
+        .map_err(|e| format!("[INPUT] cannot read '{}': {e}", path.display()))?;
+    if bytes.len() > limit {
+        return Err(format!("[INPUT] '{}' exceeds {limit} bytes", path.display()));
+    }
+    String::from_utf8(bytes).map_err(|e| format!("[INPUT] '{}' is not UTF-8: {e}", path.display()))
+}
+
+/// Compute actual native graph contiguity for an active external label.
+/// The context and numbering basis are explicit and all inputs are checked
+/// before the analysis index or registry is changed.
+pub fn run_imported_label_contiguity(
+    label: &str,
+    types: &[String],
+    year: Option<&str>,
+    states: &[String],
+    context_path: &Path,
+    basis: Option<&str>,
+) -> Result<(), String> {
+    use bisect_report::label_import::{align_context, sha256_hex};
+    validate_label_name(label)?;
+    if types != ["contiguity"] || states.len() != 1 {
+        return Err("[INPUT] --context requires --types contiguity and one --states name".into());
+    }
+    let year = year.filter(|s| s.len() == 4 && s.bytes().all(|b| b.is_ascii_digit()))
+        .ok_or("[INPUT] --context requires an explicit four-digit --year")?;
+    let basis = basis.filter(|s| matches!(*s, "zero-based" | "one-based"))
+        .ok_or("[INPUT] --context requires explicit district numbering")?;
+    let state = states[0].to_ascii_lowercase();
+    Registry::require_built(label, year)?;
+
+    let run_index = read_portable_source(&year_runs_dir(label, year).join("index.json"), 1024 * 1024)?;
+    let imported = imported_analysis_states(run_index.as_bytes(), label, year)?
+        .ok_or("[INPUT] context analysis requires an active external import index")?;
+    let Some((_, AnalysisInput::Imported { tracts })) = imported.iter().find(|(name, _)| name == &state) else {
+        return Err("[INPUT] selected state is absent from the active external import".into());
+    };
+    let assignments_path = crate::label::state_runs_dir(label, year, &state).join("assignments.json");
+    let assignments_text = read_portable_source(&assignments_path, 16 * 1024 * 1024)?;
+    let assignments: std::collections::BTreeMap<String, u64> = serde_json::from_str(&assignments_text)
+        .map_err(|e| format!("[INPUT] invalid imported assignments: {e}"))?;
+    if assignments.len() as u64 != *tracts {
+        return Err("[INPUT] imported assignment count differs from the active index".into());
+    }
+    let context_text = read_portable_source(context_path, 8 * 1024 * 1024)?;
+    let context = rplan_io::read_rctx_str(&context_text).map_err(|e| e.to_string())?;
+    let graph = context.graph.as_ref().ok_or("RCTX graph is unavailable; contiguity was not evaluated.")?;
+    if graph.adjacency.iter().map(Vec::len).sum::<usize>() > 2_000_000 {
+        return Err("[INPUT] context exceeds the portable graph limit".into());
+    }
+    let index_sha = sha256_hex(run_index.as_bytes());
+    let created = now_rfc3339();
+    let document = align_context(&assignments, &context, &state, label, year, &created, basis,
+        serde_json::json!({
+            "index_sha256": &index_sha,
+            "assignments_sha256": sha256_hex(assignments_text.as_bytes()),
+            "context_sha256": sha256_hex(context_text.as_bytes()),
+        }))?;
+    let plan = document.plan;
+    rplan_audit::measurements::measure_plan(&plan, Some(&context))?;
+    let adjacency = graph.adjacency.iter().map(|row| {
+        row.iter().map(|edge| edge.to as usize).collect::<Vec<_>>()
+    }).collect::<Vec<_>>();
+    let ordered = plan.units.unit_ids.iter().cloned()
+        .zip(plan.assignment.iter().map(|d| *d as usize + 1)).collect();
+    let report = bisect_analysis::contiguity::try_check_contiguity(
+        &ordered, &adjacency, &plan.units.unit_ids, plan.k,
+    ).map_err(|e| e.to_string())?;
+    let report_json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    let statuses = imported.into_iter().map(|(name, _)| {
+        let selected = name == state;
+        (name, StateAnalysisStatus {
+            status: if selected { "ok" } else { "skipped" }.to_string(),
+            error: None,
+            type_statuses: if selected {
+                HashMap::from([("contiguity".into(), "ok".into())])
+            } else { HashMap::new() },
+        })
+    }).collect();
+    let index = AnalysisIndex {
+        label: label.into(), year: year.into(), run: label.into(), run_index_sha256: index_sha,
+        types: types.to_vec(), created, states: statuses,
+    };
+    let index_json = bisect_report::label_indexes::serialize_analysis_index(&index)?;
+    let output = state_analysis_dir(label, year, &state);
+    std::fs::create_dir_all(&output).map_err(|e| format!("[INTERNAL] analyze: {e}"))?;
+    for (path, json) in [
+        (output.join("contiguity.json"), report_json),
+        (year_analysis_dir(label, year).join("index.json"), index_json),
+    ] {
+        std::fs::write(&path, json)
+            .map_err(|e| format!("[INTERNAL] analyze: cannot write '{}': {e}", path.display()))?;
+        eprintln!("[analyze] wrote: {}", path.display());
+    }
+    Registry::mark_analyzed(label, year)?;
+    Ok(())
+}
+
 /// Execute `BISECT report <label> [--year Y] [--format html|json] [--out PATH]`.
 ///
 /// Logic:
@@ -312,6 +422,28 @@ pub fn run_label_report(
     year: Option<&str>,
     format: &str,
     out: Option<&Path>,
+) -> Result<(), String> {
+    run_label_report_with_clock(label, year, format, out, now_rfc3339)
+}
+
+/// Execute native filesystem orchestration with one recorded timestamp, as used
+/// by reproducible browser requests. Ordinary CLI reporting keeps its live clock.
+pub fn run_label_report_at(
+    label: &str,
+    year: Option<&str>,
+    format: &str,
+    out: Option<&Path>,
+    created: &str,
+) -> Result<(), String> {
+    run_label_report_with_clock(label, year, format, out, || created.to_owned())
+}
+
+fn run_label_report_with_clock(
+    label: &str,
+    year: Option<&str>,
+    format: &str,
+    out: Option<&Path>,
+    mut clock: impl FnMut() -> String,
 ) -> Result<(), String> {
     // 1. Validate label.
     validate_label_name(label)?;
@@ -377,7 +509,7 @@ pub fn run_label_report(
         })?;
 
         // Generate the report for this label/year.
-        let files_written = generate_label_report(label, y, &analysis_dir, &report_dir, format)?;
+        let files_written = generate_label_report_with_clock(label, y, &analysis_dir, &report_dir, format, &mut clock)?;
         eprintln!(
             "[report] {label}/{y}: wrote {} file(s) to {}",
             files_written.len(),
@@ -390,7 +522,7 @@ pub fn run_label_report(
             year: y.clone(),
             analysis_index_sha256,
             format: format.to_string(),
-            created: now_rfc3339(),
+            created: clock(),
             files: files_written,
         };
         write_report_index(label, y, &report_index, out)?;
@@ -443,16 +575,18 @@ fn run_analyze_state(
     state_name: &str,
     types: &[String],
     out_dir: &Path,
+    input: AnalysisInput,
 ) -> Result<HashMap<String, String>, String> {
     let state_runs_dir = crate::label::state_runs_dir(label, year, state_name);
-    let assignments_path = state_runs_dir.join("final_assignments.json");
+    let filename = input.filename();
+    let assignments_path = state_runs_dir.join(filename);
 
     // If there are no assignments yet (state failed during build), skip gracefully.
     if !assignments_path.exists() {
         return Err(format!(
-            "final_assignments.json not found at '{}'; \
-             this state may have failed during bisect build {label}",
-            assignments_path.display()
+            "{filename} not found at '{}'; this state may have failed during {} {label}",
+            assignments_path.display(),
+            if matches!(input, AnalysisInput::Built) { "bisect build" } else { "bisect label-import" },
         ));
     }
 
@@ -464,6 +598,25 @@ fn run_analyze_state(
     } else {
         types.to_vec()
     };
+    let imported = matches!(input, AnalysisInput::Imported { .. });
+    if let AnalysisInput::Imported { tracts } = input {
+        let bytes = std::fs::read(&assignments_path)
+            .map_err(|e| format!("[INPUT] cannot read imported assignments: {e}"))?;
+        let assignments: HashMap<String, u64> = serde_json::from_slice(&bytes)
+            .map_err(|e| format!("[INPUT] cannot parse imported assignments: {e}"))?;
+        if assignments.len() as u64 != tracts || assignments.keys().any(|id| {
+            id.get(..2).and_then(bisect_report::label_import::fips_to_state_name) != Some(state_name)
+        }) {
+            return Err("[INPUT] imported assignments do not match the index state and tract count".into());
+        }
+        // Literal IDs remain valid import data. Do not pass unbounded labels
+        // to metric routines that may index or allocate by district number.
+        if effective_types.iter().any(|kind| matches!(kind.as_str(), "compactness" | "partisan"))
+            && assignments.values().any(|&d| d > 500)
+        {
+            return Err("[INPUT] imported district IDs exceed the 500-district analysis bound".into());
+        }
+    }
 
     // Resolve state code once — needed by compactness and partisan.
     // state_name uses lowercase_underscore convention ("north_carolina" → "NC").
@@ -473,7 +626,7 @@ fn run_analyze_state(
         let out_path = out_dir.join(format!("{type_name}.json"));
 
         // Skip if already exists.
-        if out_path.exists() {
+        if !imported && out_path.exists() {
             eprintln!("[analyze] skip {type_name} for {state_name}/{year} (exists)");
             type_statuses.insert(type_name.clone(), "ok".to_string());
             continue;
@@ -510,6 +663,7 @@ fn run_analyze_state(
                     state_code,
                     &assignments_path,
                     out_dir,
+                    imported,
                 );
                 match status {
                     Ok(()) => {
@@ -529,7 +683,7 @@ fn run_analyze_state(
                     "label": label,
                     "year": year,
                     "state": state_name,
-                    "source": format!("runs/{label}/{year}/{state_name}/final_assignments.json"),
+                    "source": format!("runs/{label}/{year}/{state_name}/{filename}"),
                     "status": "ok",
                 });
                 write_json_file(&out_path, &stub)?;
@@ -723,6 +877,7 @@ fn run_partisan_for_state(
     state_code: Option<&str>,
     assignments_path: &Path,
     out_dir: &Path,
+    force: bool,
 ) -> Result<(), String> {
     // Resolve state code.
     let code = match state_code {
@@ -771,7 +926,7 @@ fn run_partisan_for_state(
         election_file: None, // use default path: data/{year}/elections/presidential_by_tract.csv
         bootstrap_samples: 1000,
         analysis_dir: out_dir,
-        force: false,
+        force,
         chamber: "congressional",
     };
 
@@ -785,6 +940,7 @@ fn run_partisan_for_state(
 /// Produce a report from the analysis outputs and write to `report_dir`.
 ///
 /// Returns the list of file names written (relative to `report_dir`).
+#[cfg(test)]
 fn generate_label_report(
     label: &str,
     year: &str,
@@ -792,122 +948,36 @@ fn generate_label_report(
     report_dir: &Path,
     format: &str,
 ) -> Result<Vec<String>, String> {
-    let mut files: Vec<String> = Vec::new();
+    generate_label_report_with_clock(label, year, analysis_dir, report_dir, format, now_rfc3339)
+}
 
-    // Load analysis index for context.
+fn generate_label_report_with_clock(
+    label: &str,
+    year: &str,
+    analysis_dir: &Path,
+    report_dir: &Path,
+    format: &str,
+    mut clock: impl FnMut() -> String,
+) -> Result<Vec<String>, String> {
     let analysis_index_path = analysis_dir.join("index.json");
-    let analysis_summary: serde_json::Value = if analysis_index_path.exists() {
-        let raw = std::fs::read_to_string(&analysis_index_path)
-            .map_err(|e| format!("[INTERNAL] report: cannot read analysis index: {e}"))?;
-        serde_json::from_str(&raw)
-            .map_err(|e| format!("[INTERNAL] report: cannot parse analysis index: {e}"))?
-    } else {
-        serde_json::json!({ "label": label, "year": year, "states": {} })
-    };
-
-    match format {
-        "html" => {
-            let html = render_label_html_report(label, year, &analysis_summary);
-            let filename = format!("{label}_{year}_report.html");
-            let path = report_dir.join(&filename);
-            std::fs::write(&path, html).map_err(|e| {
-                format!("[INTERNAL] report: cannot write '{}': {e}", path.display())
-            })?;
-            eprintln!("[report] wrote HTML: {}", path.display());
-            files.push(filename);
-        }
-        "json" => {
-            let report = build_label_json_report(label, year, &analysis_summary);
-            let filename = format!("{label}_{year}_report.json");
-            let path = report_dir.join(&filename);
-            let json = serde_json::to_string_pretty(&report)
-                .map_err(|e| format!("[INTERNAL] report: serialise failed: {e}"))?;
-            std::fs::write(&path, json).map_err(|e| {
-                format!("[INTERNAL] report: cannot write '{}': {e}", path.display())
-            })?;
-            eprintln!("[report] wrote JSON: {}", path.display());
-            files.push(filename);
-        }
-        other => {
-            return Err(format!(
-                "[CONFIG] report: unsupported format '{other}'. \
-                 Use 'html' or 'json'."
-            ));
-        }
-    }
-
-    Ok(files)
-}
-
-/// Render a minimal but well-formed HTML report for a label/year.
-fn render_label_html_report(
-    label: &str,
-    year: &str,
-    analysis_summary: &serde_json::Value,
-) -> String {
-    let states_section = analysis_summary["states"]
-        .as_object()
-        .map(|states| {
-            let rows: String = states
-                .iter()
-                .map(|(state, info)| {
-                    let status = info["status"].as_str().unwrap_or("unknown");
-                    let row_class = if status == "ok" { "ok" } else { "failed" };
-                    format!("<tr class=\"{row_class}\"><td>{state}</td><td>{status}</td></tr>\n")
-                })
-                .collect();
-            format!(
-                "<table>\n<thead><tr><th>State</th><th>Status</th></tr></thead>\n\
-                 <tbody>\n{rows}</tbody>\n</table>"
-            )
-        })
-        .unwrap_or_else(|| "<p>No state analysis data found.</p>".to_string());
-
-    format!(
-        "<!DOCTYPE html>\n\
-         <html lang=\"en\">\n\
-         <head>\n\
-           <meta charset=\"UTF-8\">\n\
-           <title>Redistricting Report: {label} ({year})</title>\n\
-           <style>\n\
-             body {{ font-family: sans-serif; margin: 2em; }}\n\
-             table {{ border-collapse: collapse; width: 100%; }}\n\
-             th, td {{ border: 1px solid #ccc; padding: 0.4em 0.8em; text-align: left; }}\n\
-             tr.ok   td {{ color: green; }}\n\
-             tr.failed td {{ color: red; }}\n\
-           </style>\n\
-         </head>\n\
-         <body>\n\
-           <h1>Redistricting Report</h1>\n\
-           <p><strong>Label:</strong> {label}</p>\n\
-           <p><strong>Year:</strong> {year}</p>\n\
-           <h2>State Analysis Summary</h2>\n\
-           {states_section}\n\
-         </body>\n\
-         </html>\n"
-    )
-}
-
-/// Build a JSON report structure for a label/year.
-fn build_label_json_report(
-    label: &str,
-    year: &str,
-    analysis_summary: &serde_json::Value,
-) -> serde_json::Value {
-    serde_json::json!({
-        "report_type": "label_analysis",
-        "label": label,
-        "year": year,
-        "created": now_rfc3339(),
-        "states": analysis_summary["states"],
-    })
+    let raw = if analysis_index_path.exists() {
+        Some(std::fs::read_to_string(&analysis_index_path)
+            .map_err(|error| format!("[INTERNAL] report: cannot read analysis index: {error}"))?)
+    } else { None };
+    let (filename, text) = bisect_report::label_summary::render_label_summary(
+        label, year, raw.as_deref(), format, &clock(),
+    )?;
+    let path = report_dir.join(&filename);
+    std::fs::write(&path, text)
+        .map_err(|error| format!("[INTERNAL] report: cannot write '{}': {error}", path.display()))?;
+    eprintln!("[report] wrote {}: {}", if format == "html" { "HTML" } else { "JSON" }, path.display());
+    Ok(vec![filename])
 }
 
 /// Write the analysis index to `analysis/{label}/{year}/index.json`.
 fn write_analysis_index(label: &str, year: &str, index: &AnalysisIndex) -> Result<(), String> {
     let path = year_analysis_dir(label, year).join("index.json");
-    let json = serde_json::to_string_pretty(index)
-        .map_err(|e| format!("[INTERNAL] analyze: cannot serialize analysis index: {e}"))?;
+    let json = bisect_report::label_indexes::serialize_analysis_index(index)?;
     std::fs::write(&path, json)
         .map_err(|e| format!("[INTERNAL] analyze: cannot write '{}': {e}", path.display()))?;
     eprintln!("[analyze] wrote: {}", path.display());
@@ -926,8 +996,7 @@ fn write_report_index(
         None => year_reports_dir(label, year),
     };
     let path = dir.join("index.json");
-    let json = serde_json::to_string_pretty(index)
-        .map_err(|e| format!("[INTERNAL] report: cannot serialize report index: {e}"))?;
+    let json = bisect_report::label_indexes::serialize_report_index(index)?;
     std::fs::write(&path, json)
         .map_err(|e| format!("[INTERNAL] report: cannot write '{}': {e}", path.display()))?;
     eprintln!("[report] wrote: {}", path.display());
@@ -1668,6 +1737,7 @@ mod tests {
             None,
             &assignments_path,
             &out_dir,
+            false,
         );
         assert!(
             result.is_ok(),
@@ -1706,6 +1776,7 @@ mod tests {
             Some("VT"),
             &assignments_path,
             &out_dir,
+            false,
         );
 
         std::env::set_current_dir(&original).expect("restore current_dir");
@@ -1765,6 +1836,7 @@ mod tests {
             "vermont",
             &["compactness".to_string()],
             &out_dir,
+            AnalysisInput::Built,
         )
         .expect("run_analyze_state must not Err");
 
@@ -1813,6 +1885,7 @@ mod tests {
             "vermont",
             &["partisan".to_string()],
             &out_dir,
+            AnalysisInput::Built,
         )
         .expect("run_analyze_state must not Err");
 
@@ -1877,4 +1950,44 @@ mod tests {
             "must have 'available' field"
         );
     }
+    #[test]
+    fn test_report_clock_keeps_distinct_live_observations() {
+        let _dir = with_tempdir(|| {
+            std::fs::create_dir_all("analysis/clock_test/2020").unwrap();
+            std::fs::write("analysis/clock_test/2020/index.json", "{}").unwrap();
+            std::fs::write(".bisect", r#"{"clock_test":{"built":["2020"],"analyzed":["2020"],"reported":[]}}"#).unwrap();
+            let mut count = 0;
+            run_label_report_with_clock("clock_test", None, "json", None, || {
+                count += 1;
+                format!("2026-10-23T00:00:0{count}Z")
+            }).unwrap();
+            assert_eq!(count, 2);
+            let report: serde_json::Value = serde_json::from_str(&std::fs::read_to_string("reports/clock_test/2020/clock_test_2020_report.json").unwrap()).unwrap();
+            let index: serde_json::Value = serde_json::from_str(&std::fs::read_to_string("reports/clock_test/2020/index.json").unwrap()).unwrap();
+            assert_eq!(report["created"], "2026-10-23T00:00:01Z");
+            assert_eq!(index["created"], "2026-10-23T00:00:02Z");
+        });
+    }
+
+    #[test]
+    fn test_report_clock_recorded_self_overlap_hashes_exact_previous_index() {
+        let _dir = with_tempdir(|| {
+            let registry = r#"{"clock_test":{"built":["2020"],"analyzed":["2020","2020"],"reported":[]}}"#;
+            let source = "analysis/clock_test/2020/index.json";
+            std::fs::create_dir_all("analysis/clock_test/2020").unwrap();
+            std::fs::write(source, "{}").unwrap();
+            std::fs::write(".bisect", registry).unwrap();
+            let output = Some(Path::new("analysis/clock_test/2020"));
+            run_label_report_at("clock_test", Some("2020"), "json", output, "recorded-time").unwrap();
+            std::fs::copy(source, "first-index.json").unwrap();
+            let first_hash = sha256_file(Path::new("first-index.json")).unwrap();
+            std::fs::write(source, "{}").unwrap();
+            std::fs::write(".bisect", registry).unwrap();
+            run_label_report_at("clock_test", None, "json", output, "recorded-time").unwrap();
+            let last: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(source).unwrap()).unwrap();
+            assert_eq!(last["analysis_index_sha256"], first_hash);
+            assert_eq!(last["created"], "recorded-time");
+        });
+    }
+
 }

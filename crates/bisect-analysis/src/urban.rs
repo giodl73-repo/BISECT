@@ -107,6 +107,9 @@ fn try_aggregate_urban(
     })
 }
 
+/// Shared file-independent reader used by the native and browser analyzers.
+pub fn analyze_urban_csv<R:std::io::Read>(reader:R,assignments:&HashMap<String,usize>,num_districts:usize)->anyhow::Result<UrbanResult>{let mut rdr=csv::Reader::from_reader(reader);let rows:Vec<PlaceRow>=rdr.deserialize().collect::<Result<Vec<_>,_>>()?;Ok(try_aggregate_urban(&rows,assignments,num_districts)?)}
+
 pub struct UrbanAnalyzer;
 
 impl Analyzer for UrbanAnalyzer {
@@ -144,15 +147,8 @@ impl Analyzer for UrbanAnalyzer {
             });
         }
 
-        let mut rdr = csv::Reader::from_path(&csv_path)
-            .with_context(|| format!("cannot open places CSV: {}", csv_path.display()))?;
-
-        let rows: Vec<PlaceRow> = rdr
-            .deserialize()
-            .collect::<Result<Vec<_>, _>>()
-            .context("failed to parse places CSV rows")?;
-
-        try_aggregate_urban(&rows, ctx.assignments, ctx.num_districts).map_err(anyhow::Error::from)
+        let file=std::fs::File::open(&csv_path).with_context(||format!("cannot open analyzer CSV: {}",csv_path.display()))?;
+        analyze_urban_csv(file,ctx.assignments,ctx.num_districts)
     }
 }
 

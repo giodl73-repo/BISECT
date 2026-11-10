@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';import fs from 'node:fs/promises';
+import {createStateSourceJob} from '../../web/lab/state-source-job.js';
+import {stateRunJobs} from '../../web/lab/state-run-batch.js';
+import {createWorkbenchArchive,parseWorkbenchArchive} from '../../web/lab/workbench-archive.js';
+const original=JSON.parse(await fs.readFile('target/large-source/handoff.bisect-workbench','utf8')),files=original.files;
+const job=createStateSourceJob(files,files.configRunSettings,files.tuiRunSettings,{analysis:true,map:true,report:true,dpi:'72',dissolve_method:'batch'}),text=JSON.stringify([job]),source={name:'RI-block-source-jobs.json',base64:Buffer.from(text).toString('base64')};
+assert(Buffer.byteLength(text)>16*1024*1024&&Buffer.byteLength(text)<64*1024*1024);assert.deepEqual(stateRunJobs(source),[job]);assert.equal(job.source_preparation.geometry_profile,'source-exact-large');assert.equal(job.configuration.settings.districts,null);
+await fs.writeFile('target/large-source/source-job.json',JSON.stringify(job));
+const archive=createWorkbenchArchive({name:'Original RI block source job',files:{stateRunBatchInputs:{jobs:source,workers:1},stateBatchInputs:{year:'2020',states:['RI'],manifest:null}},operation:'run-state-batch',result:null});
+assert.equal(parseWorkbenchArchive(archive).files.stateRunBatchInputs.jobs.base64,source.base64);await fs.writeFile('target/large-source/source-job.bisect-workbench',archive);
+console.log(JSON.stringify({source_job_bytes:Buffer.byteLength(text),source_job_archive_bytes:Buffer.byteLength(archive),exact_raw_sources_and_recipe:true,allocation_left_unresolved:true,execution_performed_by_this_test:false}));

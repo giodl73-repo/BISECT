@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {fetchOutcomeRecord,parseStoredFetchOutcome,readFetchOutcome,saveFetchOutcome,FETCH_INSTALL_OUTCOME_DB} from '../../web/lab/fetch-install-outcome-store.js';
+import {readInstallationOutcome,INSTALL_OUTCOME_DB} from '../../web/lab/installation-outcome-store.js';
+const scope={repository:'giodl73-repo/REDIST',tag:'data-inputs-v1',state:'RI',year:'2020'},directory='V3/data/2020/adjacency',id='12345678-1234-1234-1234-123456789abc';
+const review={scope,directory,root_name:'outputs',source_inventory_sha256:'a'.repeat(64),force:false},initial=fetchOutcomeRecord(id,review),parse=r=>parseStoredFetchOutcome(JSON.stringify(r));
+const receipt={schema_version:'bisect-native-fetch-install-outcome-v1',...review,status:'completed',attempted_path:null,completed_paths:[directory+'/ri_adjacency_2020.pkl',directory+'/ri_adjacency_2020.done'],effects_may_have_started:true,marker_invalidated:false,marker_committed:true,installation_performed:true,source_authenticity_verified:false,authority:'Passive observation.'};
+const final=fetchOutcomeRecord(id,review,receipt,'completed');
+assert.deepEqual(parse(initial),initial);assert.deepEqual(parse(final),final);
+for(const status of ['interrupted','cancelled'])assert.equal(parse(fetchOutcomeRecord(id,review,null,status)).outcome.receipt,null);
+assert.equal(parse(fetchOutcomeRecord(id,review,{...receipt,status:'skipped-native-presence',completed_paths:[],effects_may_have_started:false,marker_committed:false,installation_performed:false},'skipped-native-presence')).outcome.status,'skipped-native-presence');
+const mutations=[r=>r.root={},r=>r.id='../outside',r=>r.outcome.handle={},r=>r.outcome.scope.token='secret',r=>r.outcome.directory='../outside',r=>r.outcome.source_inventory_sha256='bad',r=>r.outcome.receipt.root={},r=>r.outcome.receipt.scope.state='CA',r=>r.outcome.receipt.completed_paths[0]='../outside',r=>r.outcome.receipt.completed_paths.push(r.outcome.receipt.completed_paths[0]),r=>r.outcome.receipt.marker_committed=false,r=>r.outcome.receipt.installation_performed=false,r=>r.outcome.receipt.effects_may_have_started=false,r=>r.outcome.receipt.attempted_path=directory+'/ri_adjacency_2020.pkl',r=>r.outcome.receipt.source_authenticity_verified=true,r=>r.outcome.receipt.error='x'.repeat(1001),r=>r.outcome.status='in-progress'];
+for(const change of mutations){const value=structuredClone(final);change(value);assert.throws(()=>parse(value));}
+for(const text of ['{"__proto__":{}}','{"id":"a","id":"b"}',' '.repeat(1024*1024+1),JSON.stringify({...initial,outcome:{...initial.outcome,authority:'💾'.repeat(300000)}})])assert.throws(()=>parseStoredFetchOutcome(text));
+await assert.rejects(readFetchOutcome({idb:null}),/unavailable/);
+await assert.rejects(saveFetchOutcome(initial,{idb:{open(){throw Error('quota refusal');}}}),/quota refusal/);
+let invoked=0;const getter={...initial};Object.defineProperty(getter,'outcome',{enumerable:true,get(){invoked++;return initial.outcome;}});await assert.rejects(saveFetchOutcome(getter));assert.equal(invoked,0);
+const hook={...initial,toJSON(){invoked++;return initial;}};await assert.rejects(saveFetchOutcome(hook));assert.equal(invoked,0);
+const hidden={...initial};Object.defineProperty(hidden,'toJSON',{value(){invoked++;return initial;}});await assert.rejects(saveFetchOutcome(hidden,{idb:null}),/unavailable/);assert.equal(invoked,0);
+const opened=[];const idb={open(name){opened.push(name);throw Error('controlled open refusal');}};
+await assert.rejects(readFetchOutcome({idb,dbName:INSTALL_OUTCOME_DB}));await assert.rejects(readInstallationOutcome({idb,dbName:FETCH_INSTALL_OUTCOME_DB}));assert.deepEqual(opened,[FETCH_INSTALL_OUTCOME_DB,INSTALL_OUTCOME_DB]);
+console.log('PASS Fetch outcome: strict bounded passive records, effect consistency, hostile input, no getter/toJSON execution, storage failures and fixed namespace isolation.');

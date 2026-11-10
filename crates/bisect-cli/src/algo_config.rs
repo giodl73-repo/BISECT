@@ -1,4 +1,3 @@
-use sha2::{Digest, Sha256};
 /// Algorithm configuration YAML loading — Phase 7 of Spec 7 (Label-Based Run Management).
 ///
 /// Loads `configs/X.yml` into an `AlgoYaml` struct and converts it to the
@@ -31,365 +30,48 @@ use std::path::Path;
 /// This is the committed, human-editable file in `configs/X.yml`.
 /// Separate from `.bisect` (auto-managed registry) and `runs/X/index.json`
 /// (auto-managed build index).
-#[derive(Debug, Clone, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct AlgoYaml {
-    /// Must match the label used in `bisect build` commands.
-    pub name: String,
-    /// Free-text description (optional, for human readers and audit reports).
-    pub description: Option<String>,
-    /// Three-layer algorithm compositor parameters.
-    pub algorithm: AlgorithmSection,
-    /// Parallel workers per year (default: 4).
-    pub workers: Option<usize>,
-    /// Census years to build (default: ["2020", "2010", "2000"]).
-    pub years: Option<Vec<String>>,
-    /// Analysis types to run after each build year.
-    /// Values: demographic | political | compactness | contiguity | splits | summary
-    pub analysis_types: Option<Vec<String>>,
-}
-
-/// The `algorithm:` block in the YAML.
-///
-/// All fields are `Option<_>` except `structure` which is required.
-/// Conditional requirements (e.g. `alpha_county` when `weights: county`) are
-/// enforced in `to_algorithm_config`.
-#[derive(Debug, Clone, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct AlgorithmSection {
-    /// Layer 1: bisection structure.
-    /// Values: standard-bisect | nway | ratio-optimal | ratio-optimal-area |
-    ///         ratio-optimal-vra | prime-factor | compact-polsby | apportion-regions
-    pub structure: String,
-
-    /// Layer 2: edge weight mode.
-    /// Values: unweighted | geographic | county | vra-aligned | proportional
-    pub weights: Option<String>,
-
-    /// County stickiness factor (T.3). Required when weights == "county".
-    pub alpha_county: Option<f64>,
-
-    /// Layer 3: seed search strategy.
-    /// Values: single | multi | convergence | short-burst
-    pub search: Option<String>,
-
-    /// Consecutive non-improving seeds before stopping (B.7/U.1).
-    /// Required when search == "convergence".
-    pub convergence_threshold: Option<u32>,
-
-    /// Fixed seed count for search == "multi".
-    pub seeds: Option<usize>,
-
-    /// METIS random seed. Required by profiles that claim assignment-level
-    /// reproducibility across independent executions.
-    pub seed: Option<u64>,
-
-    /// ReCom steps per burst for search == "short-burst". Default: 20.
-    pub burst_length: Option<usize>,
-
-    /// Number of bursts for search == "short-burst". Default: 50.
-    pub n_bursts: Option<usize>,
-
-    /// Percentile for search == "short-burst" (0.0–1.0). Default: 0.0 (minimum EC).
-    pub percentile: Option<f64>,
-
-    /// Population balance tolerance (percent). Congressional standard: 0.5.
-    pub balance_tolerance: Option<f64>,
-
-    /// Area swing for ratio-optimal-area (AreaSection). Default 0.10.
-    pub area_swing: Option<f64>,
-
-    /// VRA alignment weight for ratio-optimal-vra (VRASection). Default 0.40.
-    pub w_vra: Option<f64>,
-
-    /// METIS backend engine.
-    /// Values: c-ffi (default) | metis-core | gpmetis
-    /// c-ffi: links libmetis (battle-tested, all k values).
-    /// metis-core: pure Rust, no C dependency, portable standalone binary.
-    /// gpmetis: external subprocess (reserved, not yet implemented).
-    pub engine: Option<String>,
-
-    /// MKA: number of sweep orientations (default: 180).
-    /// Only used when structure == "moving-knife".
-    pub mka_orientations: Option<usize>,
-
-    /// MKA: compactness metric (default: "reock").
-    /// Values: reock | polsby-popper
-    /// Only used when structure == "moving-knife".
-    pub mka_metric: Option<String>,
-}
-
+pub use bisect_runner::config::{AlgoYaml, AlgorithmSection};
 // ---------------------------------------------------------------------------
 // impl AlgoYaml
 // ---------------------------------------------------------------------------
 
-impl AlgoYaml {
-    /// Load from a YAML file path. Returns `[CONFIG]` error on parse failure.
-    pub fn from_file(path: &Path) -> Result<Self, String> {
-        let bytes = std::fs::read(path)
-            .map_err(|e| format!("[CONFIG] config: cannot read '{}': {e}", path.display()))?;
-        let text = std::str::from_utf8(&bytes).map_err(|e| {
-            format!(
-                "[CONFIG] config: '{}' is not valid UTF-8: {e}",
-                path.display()
-            )
-        })?;
-        serde_yaml::from_str::<AlgoYaml>(text).map_err(|e| {
-            // serde_yaml error messages already mention the field name for unknown-field
-            // errors; wrap with [CONFIG] prefix to match the project error convention.
-            format!("[CONFIG] config: {}", e)
-        })
-    }
-
+pub trait NativeAlgorithmConfig {
+    fn to_algorithm_config(&self) -> Result<crate::runner::AlgorithmConfig, String>;
+}
+impl NativeAlgorithmConfig for AlgoYaml {
     /// Convert to `AlgorithmConfig` using the three-layer compositor logic.
     ///
     /// Maps structure/weights/search strings to SplitStrategy/WeightSpec/SeedCompositor.
     /// Returns `[CONFIG]` error for unknown values or missing conditional fields.
-    pub fn to_algorithm_config(&self) -> Result<crate::runner::AlgorithmConfig, String> {
-        use crate::runner::{
-            AlgorithmConfig, MetisParams, SeedCompositor, SplitStrategy, WeightSpec,
-        };
+    fn to_algorithm_config(&self) -> Result<crate::runner::AlgorithmConfig, String> {
+        use bisect_runner::config::{ResolvedSplit as S,ResolvedSearch as Q,ResolvedEngine as E,ResolvedVertex as V};
+        use crate::runner::{AlgorithmConfig,SplitStrategy,SeedCompositor,WeightSpec,MetisParams,AreaSectionInit};
         use crate::vertex_weights::VertexConstraintKind;
-
-        let sec = &self.algorithm;
-
-        // ── Layer 1: structure ─────────────────────────────────────────────────
-        let (split, vertex_constraints) = match sec.structure.as_str() {
-            "standard-bisect" => (
-                SplitStrategy::Bisect,
-                vec![VertexConstraintKind::Population],
-            ),
-            "nway" => (SplitStrategy::NWay, vec![VertexConstraintKind::Population]),
-            "ratio-optimal" | "geosection" => (
-                SplitStrategy::GeoSection,
-                vec![VertexConstraintKind::Population],
-            ),
-            "ratio-optimal-area" | "areasection" => {
-                let area_swing = sec.area_swing.unwrap_or(0.10);
-                (
-                    SplitStrategy::AreaSection {
-                        area_swing,
-                        area_section_init: crate::runner::AreaSectionInit::RatioOptimal,
-                    },
-                    vec![VertexConstraintKind::Population, VertexConstraintKind::Area],
-                )
-            }
-            "ratio-optimal-vra" | "vra-section" => {
-                let w_vra = sec.w_vra.unwrap_or(0.40);
-                (
-                    SplitStrategy::VraSection { w_vra },
-                    vec![VertexConstraintKind::Population],
-                )
-            }
-            "prime-factor" | "apportion-regions" => (
-                SplitStrategy::ApportionRegions,
-                vec![VertexConstraintKind::Population],
-            ),
-            "compact-polsby" | "compact-bisect" => {
-                let epsilon = 0.01; // default epsilon for CompactBisect
-                (
-                    SplitStrategy::CompactBisect { epsilon },
-                    vec![VertexConstraintKind::Population],
-                )
-            }
-            "moving-knife" => {
-                let n_orientations = sec.mka_orientations.unwrap_or(180);
-                let metric = sec
-                    .mka_metric
-                    .clone()
-                    .unwrap_or_else(|| "reock".to_string());
-                (
-                    SplitStrategy::MovingKnife {
-                        n_orientations,
-                        metric,
-                    },
-                    vec![VertexConstraintKind::Population],
-                )
-            }
-            "spectral" => (
-                SplitStrategy::Spectral { max_iters: 200 },
-                vec![VertexConstraintKind::Population],
-            ),
-            "regionalization" => (
-                SplitStrategy::Regionalization,
-                vec![VertexConstraintKind::Population],
-            ),
-            "flow-construction" => (
-                SplitStrategy::FlowConstruction,
-                vec![VertexConstraintKind::Population],
-            ),
-            other => {
-                return Err(format!(
-                    "[CONFIG] config: unknown structure '{}'. \
-                     Valid values: standard-bisect | nway | ratio-optimal | \
-                     ratio-optimal-area | ratio-optimal-vra | prime-factor | \
-                     compact-polsby | apportion-regions | moving-knife | \
-                     spectral | regionalization | flow-construction",
-                    other
-                ));
-            }
+        let r=self.resolve()?;
+        let split=match r.split {
+            S::Bisect=>SplitStrategy::Bisect,S::NWay=>SplitStrategy::NWay,S::GeoSection=>SplitStrategy::GeoSection,
+            S::AreaSection{area_swing,..}=>SplitStrategy::AreaSection{area_swing,area_section_init:AreaSectionInit::RatioOptimal},
+            S::VraSection{w_vra}=>SplitStrategy::VraSection{w_vra},S::ApportionRegions=>SplitStrategy::ApportionRegions,
+            S::CompactBisect{epsilon}=>SplitStrategy::CompactBisect{epsilon},
+            S::MovingKnife{n_orientations,metric}=>SplitStrategy::MovingKnife{n_orientations,metric},
+            S::Spectral{max_iters}=>SplitStrategy::Spectral{max_iters},S::Regionalization=>SplitStrategy::Regionalization,
+            S::FlowConstruction=>SplitStrategy::FlowConstruction,
         };
-
-        // ── Layer 2: weights ───────────────────────────────────────────────────
-        let weights = {
-            let weight_str = sec.weights.as_deref().unwrap_or("geographic");
-            match weight_str {
-                "unweighted" => WeightSpec {
-                    geographic: false,
-                    alpha_county: 0.0,
-                    ..WeightSpec::default()
-                },
-                "geographic" => WeightSpec::default(),
-                "county" => {
-                    let alpha = sec.alpha_county.ok_or_else(|| {
-                        "[CONFIG] config: 'alpha_county' is required when weights: county"
-                            .to_string()
-                    })?;
-                    WeightSpec {
-                        geographic: true,
-                        alpha_county: alpha,
-                        ..WeightSpec::default()
-                    }
-                }
-                "vra-aligned" => WeightSpec {
-                    geographic: true,
-                    minority_weighting: true,
-                    ..WeightSpec::default()
-                },
-                "proportional" => WeightSpec {
-                    geographic: true,
-                    ..WeightSpec::default()
-                },
-                other => {
-                    return Err(format!(
-                        "[CONFIG] config: unknown weights '{}'. \
-                         Valid values: unweighted | geographic | county | vra-aligned | proportional",
-                        other
-                    ));
-                }
-            }
+        let seeds=match r.seeds {
+            Q::Single=>SeedCompositor::Single,Q::Multi{seeds}=>SeedCompositor::Multi{seeds},
+            Q::ConvergenceSweep{threshold}=>SeedCompositor::ConvergenceSweep{threshold},
+            Q::ShortBurst{burst_length,n_bursts,p}=>SeedCompositor::ShortBurst{burst_length,n_bursts,p},
+            Q::ShortBurstForest{burst_length,n_bursts,p}=>SeedCompositor::ShortBurstForest{burst_length,n_bursts,p},
+            Q::ShortBurstMergeSplit{burst_length,n_bursts,p}=>SeedCompositor::ShortBurstMergeSplit{burst_length,n_bursts,p},
         };
-
-        // ── Layer 3: seeds ─────────────────────────────────────────────────────
-        let seeds = match sec.search.as_deref().unwrap_or("single") {
-            "single" => SeedCompositor::Single,
-            "multi" => {
-                let n = sec.seeds.unwrap_or(50);
-                SeedCompositor::Multi { seeds: n }
-            }
-            "convergence" => {
-                let threshold = sec.convergence_threshold.ok_or_else(|| {
-                    "[CONFIG] config: 'convergence_threshold' is required when search: convergence"
-                        .to_string()
-                })?;
-                SeedCompositor::ConvergenceSweep { threshold }
-            }
-            "short-burst" => {
-                let burst_length = sec.burst_length.unwrap_or(20);
-                let n_bursts = sec.n_bursts.unwrap_or(50);
-                let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
-                SeedCompositor::ShortBurst {
-                    burst_length,
-                    n_bursts,
-                    p,
-                }
-            }
-            "short-burst-forest" => {
-                let burst_length = sec.burst_length.unwrap_or(20);
-                let n_bursts = sec.n_bursts.unwrap_or(50);
-                let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
-                SeedCompositor::ShortBurstForest {
-                    burst_length,
-                    n_bursts,
-                    p,
-                }
-            }
-            "short-burst-merge-split" => {
-                let burst_length = sec.burst_length.unwrap_or(20);
-                let n_bursts = sec.n_bursts.unwrap_or(50);
-                let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
-                SeedCompositor::ShortBurstMergeSplit {
-                    burst_length,
-                    n_bursts,
-                    p,
-                }
-            }
-            other => {
-                return Err(format!(
-                    "[CONFIG] config: unknown search '{}'. \
-                     Valid values: single | multi | convergence | short-burst | \
-                     short-burst-forest | short-burst-merge-split",
-                    other
-                ));
-            }
-        };
-
-        // ── Engine selection ───────────────────────────────────────────────────
-        let engine = match sec.engine.as_deref().unwrap_or("c-ffi") {
-            "c-ffi" | "c" | "metis-rs" => bisect_apportion::split::MetisEngine::CFfi,
-            "metis-core" | "rust" => bisect_apportion::split::MetisEngine::RedistMetis,
-            "gpmetis" | "subprocess" => bisect_apportion::split::MetisEngine::Gpmetis,
-            other => {
-                return Err(format!(
-                    "[CONFIG] config: unknown engine '{}'. \
-                     Valid values: c-ffi | metis-core | gpmetis",
-                    other
-                ));
-            }
-        };
-
-        Ok(AlgorithmConfig {
-            split,
-            weights,
-            vertex_constraints,
-            seeds,
-            metis: MetisParams {
-                engine,
-                seed: sec.seed,
-                ..MetisParams::default()
-            },
-            mode_label: None,
-        })
+        let engine=match r.metis.engine{E::CFfi=>bisect_apportion::split::MetisEngine::CFfi,E::RedistMetis=>bisect_apportion::split::MetisEngine::RedistMetis,E::Gpmetis=>bisect_apportion::split::MetisEngine::Gpmetis};
+        Ok(AlgorithmConfig {split,seeds,
+            weights:WeightSpec{geographic:r.weights.geographic,minority_weighting:r.weights.minority_weighting,alpha_county:r.weights.alpha_county,..WeightSpec::default()},
+            vertex_constraints:r.vertex_constraints.into_iter().map(|v|match v{V::Population=>VertexConstraintKind::Population,V::Area=>VertexConstraintKind::Area}).collect(),
+            metis:MetisParams{engine,seed:r.metis.seed,ufactor:r.metis.ufactor,niter:r.metis.niter},mode_label:None})
     }
 
-    /// Compute SHA-256 of the raw file bytes. Used for the provenance chain.
-    ///
-    /// Returns a 64-character lowercase hex string.
-    pub fn file_sha256(path: &Path) -> Result<String, String> {
-        let bytes = std::fs::read(path).map_err(|e| {
-            format!(
-                "[CONFIG] config: cannot read '{}' for hashing: {e}",
-                path.display()
-            )
-        })?;
-        let mut hasher = Sha256::new();
-        hasher.update(&bytes);
-        let result = hasher.finalize();
-        Ok(format!("{:x}", result))
-    }
 
-    /// Return the resolved workers count (config value or default 4).
-    pub fn resolved_workers(&self) -> usize {
-        self.workers.unwrap_or(4)
-    }
-
-    /// Return the resolved years list (config value or default ["2020", "2010", "2000"]).
-    pub fn resolved_years(&self) -> Vec<String> {
-        self.years
-            .clone()
-            .unwrap_or_else(|| vec!["2020".to_string(), "2010".to_string(), "2000".to_string()])
-    }
-
-    /// Return the resolved analysis types (config value or default).
-    pub fn resolved_analysis_types(&self) -> Vec<String> {
-        self.analysis_types.clone().unwrap_or_else(|| {
-            vec![
-                "compactness".to_string(),
-                "splits".to_string(),
-                "summary".to_string(),
-            ]
-        })
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -416,81 +98,11 @@ pub fn write_template_config(
     force: bool,
     dry_run: bool,
 ) -> Result<String, String> {
-    // Validate inputs by doing a dry-run through to_algorithm_config
-    let section = AlgorithmSection {
-        structure: structure.to_string(),
-        weights: weights.map(|s| s.to_string()),
-        alpha_county,
-        search: search.map(|s| s.to_string()),
-        convergence_threshold,
-        seeds,
-        seed: None,
-        burst_length: None,
-        n_bursts: None,
-        percentile: None,
-        balance_tolerance,
-        area_swing: None,
-        w_vra: None,
-        engine: None,
-        mka_orientations: None,
-        mka_metric: None,
-    };
-    let yaml_doc = AlgoYaml {
-        name: name.to_string(),
-        description: None,
-        algorithm: section,
-        workers: Some(workers),
-        years: Some(years.to_vec()),
-        analysis_types: None,
-    };
-    // Validate that the config would produce a valid AlgorithmConfig.
-    yaml_doc.to_algorithm_config()?;
-
-    // Build YAML text
-    let weights_str = weights.unwrap_or("geographic");
-    let search_str = search.unwrap_or("single");
-    let years_str = years
-        .iter()
-        .map(|y| format!("\"{}\"", y))
-        .collect::<Vec<_>>()
-        .join(", ");
-
-    let mut lines = vec![
-        format!("# configs/{name}.yml"),
-        "# User-editable. Commit this. Do not confuse with .bisect (auto-managed).".to_string(),
-        String::new(),
-        format!("name: {name}"),
-        "description: >".to_string(),
-        format!("  Run configuration for '{name}'."),
-        String::new(),
-        "algorithm:".to_string(),
-        format!("  structure: {structure}"),
-        format!("  weights: {weights_str}"),
-    ];
-
-    if let Some(alpha) = alpha_county {
-        lines.push(format!("  alpha_county: {alpha}"));
-    }
-
-    lines.push(format!("  search: {search_str}"));
-
-    if let Some(t) = convergence_threshold {
-        lines.push(format!("  convergence_threshold: {t}"));
-    }
-    if let Some(n) = seeds {
-        lines.push(format!("  seeds: {n}"));
-    }
-
-    let tol = balance_tolerance.unwrap_or(0.5);
-    lines.push(format!("  balance_tolerance: {tol}"));
-
-    lines.push(String::new());
-    lines.push(format!("workers: {workers}"));
-    lines.push(format!("years: [{years_str}]"));
-    lines.push("analysis_types: [compactness, splits, summary]".to_string());
-    lines.push(String::new());
-
-    let content = lines.join("\n");
+    let content=bisect_runner::config::render_template_config(&bisect_runner::config::TemplateConfig {
+        name:name.to_owned(),structure:structure.to_owned(),weights:weights.map(str::to_owned),alpha_county,
+        search:search.map(str::to_owned),convergence_threshold,seeds,balance_tolerance,years:years.to_vec(),workers,
+        engine:None,seed:None,
+    })?;
 
     if dry_run {
         return Ok(content);
@@ -541,145 +153,12 @@ pub fn write_template_config(
 /// Reject a build config that is not court-defensible. ASCII-only messages.
 pub fn validate_config_court(path: &Path) -> Result<(), String> {
     let yaml = AlgoYaml::from_file(path)?;
-    let a = &yaml.algorithm;
-    let s = a.structure.to_lowercase();
-    let w = a.weights.as_deref().unwrap_or("").to_lowercase();
-    let sr = a.search.as_deref().unwrap_or("single").to_lowercase();
-    if s.contains("proportional") || w == "proportional" || w == "partisan" {
-        return Err(format!(
-            "profile=court rejects config '{}': partisan/proportional algorithm. \
-             Use a neutral config or --profile open.",
-            path.display()
-        ));
-    }
-    if !matches!(sr.as_str(), "single" | "convergence") {
-        return Err(format!(
-            "profile=court rejects config '{}': search '{sr}' is not deterministic. \
-             Use single or convergence, or --profile open.",
-            path.display()
-        ));
-    }
-    Ok(())
+    yaml.validate_court(&path.display().to_string())
 }
 
 pub fn validate_config(path: &Path) -> Result<String, String> {
-    let yaml = AlgoYaml::from_file(path)?;
-    let algo = yaml.to_algorithm_config()?;
-
-    let sha = AlgoYaml::file_sha256(path)?;
-
-    let structure_desc = algo.split.mode_name();
-    let weight_desc = if algo.weights.alpha_county > 0.0 {
-        format!("county (alpha={:.1})", algo.weights.alpha_county)
-    } else if algo.weights.minority_weighting {
-        "vra-aligned".to_string()
-    } else if algo.weights.geographic {
-        "geographic".to_string()
-    } else {
-        "unweighted".to_string()
-    };
-    let search_desc = match &algo.seeds {
-        crate::runner::SeedCompositor::Single => "single".to_string(),
-        crate::runner::SeedCompositor::Multi { seeds } => format!("multi (seeds={seeds})"),
-        crate::runner::SeedCompositor::ConvergenceSweep { threshold } => {
-            format!("convergence (threshold={threshold})")
-        }
-        crate::runner::SeedCompositor::Percentile { p, seeds } => {
-            format!("percentile (p={p:.2}, seeds={seeds})")
-        }
-        crate::runner::SeedCompositor::BisectionEnsemble { p, ensemble_steps } => {
-            format!("bisection-ensemble (p={p:.2}, steps={ensemble_steps})")
-        }
-        crate::runner::SeedCompositor::Flip { flip_steps, p } => {
-            format!("flip (p={p:.2}, steps={flip_steps})")
-        }
-        crate::runner::SeedCompositor::ShortBurst {
-            burst_length,
-            n_bursts,
-            p,
-        } => {
-            format!("short-burst (p={p:.2}, bursts={n_bursts}, length={burst_length})")
-        }
-        crate::runner::SeedCompositor::ShortBurstForest {
-            burst_length,
-            n_bursts,
-            p,
-        } => {
-            format!("short-burst-forest (p={p:.2}, bursts={n_bursts}, length={burst_length})")
-        }
-        crate::runner::SeedCompositor::ShortBurstMergeSplit {
-            burst_length,
-            n_bursts,
-            p,
-        } => {
-            format!("short-burst-merge-split (p={p:.2}, bursts={n_bursts}, length={burst_length})")
-        }
-        crate::runner::SeedCompositor::ForestRecom { steps, p } => {
-            format!("forest-recom (p={p:.2}, steps={steps})")
-        }
-        crate::runner::SeedCompositor::MultiScale {
-            total_steps,
-            p,
-            alpha,
-        } => {
-            format!("multiscale (p={p:.2}, steps={total_steps}, alpha={alpha:.2})")
-        }
-        crate::runner::SeedCompositor::MergeSplit { steps, p } => {
-            format!("merge-split (p={p:.2}, steps={steps})")
-        }
-        crate::runner::SeedCompositor::MultiScaleAdaptive {
-            total_steps,
-            p,
-            target_accept,
-            adapt_interval,
-        } => {
-            format!("multiscale-adaptive (p={p:.2}, steps={total_steps}, target_accept={target_accept:.2}, adapt_interval={adapt_interval})")
-        }
-        crate::runner::SeedCompositor::ParallelTempering {
-            n_replicas,
-            swap_interval,
-            cold_tolerance,
-            hot_tolerance,
-            steps,
-            p,
-        } => {
-            format!("parallel-tempering (p={p:.2}, steps={steps}, replicas={n_replicas}, swap_interval={swap_interval}, cold_tol={cold_tolerance:.4}, hot_tol={hot_tolerance:.4})")
-        }
-        crate::runner::SeedCompositor::VraRecom {
-            steps,
-            p,
-            vap_threshold,
-        } => {
-            format!("vra-recom (p={p:.2}, steps={steps}, vap_threshold={vap_threshold:.2})")
-        }
-        crate::runner::SeedCompositor::SmcPercentile { n_particles, p } => {
-            format!("smc-percentile (p={p:.2}, n_particles={n_particles})")
-        }
-    };
-
-    let years = yaml.resolved_years().join(", ");
-    let workers = yaml.resolved_workers();
-
-    let mut out = vec![
-        format!("[OK] {}", path.display()),
-        format!("  name:      {}", yaml.name),
-        format!("  structure: {structure_desc}"),
-        format!("  weights:   {weight_desc}"),
-        format!("  search:    {search_desc}"),
-        format!("  years:     {years}"),
-        format!("  workers:   {workers}"),
-        format!("  sha256:    {sha}"),
-    ];
-    if let Some(desc) = &yaml.description {
-        let trimmed = desc.trim();
-        if !trimmed.is_empty() {
-            out.push(format!(
-                "  description: {}",
-                trimmed.lines().next().unwrap_or("")
-            ));
-        }
-    }
-    Ok(out.join("\n"))
+    let yaml=AlgoYaml::from_file(path)?;
+    yaml.validation_summary(&path.display().to_string(), &AlgoYaml::file_sha256(path)?)
 }
 
 // ---------------------------------------------------------------------------
@@ -1302,7 +781,7 @@ algorithm:
         );
     }
 
-    // ── Test 24: structure "ratio-optimal-area" uses default area_swing 0.10 ─
+    // ── Test 24: structure "ratio-optimal-area" uses default area_swing 1.10 ─
 
     #[test]
     fn test_structure_ratio_optimal_area_default_area_swing() {
@@ -1319,8 +798,8 @@ algorithm:
         match algo.split {
             SplitStrategy::AreaSection { area_swing, .. } => {
                 assert!(
-                    (area_swing - 0.10).abs() < 1e-9,
-                    "default area_swing must be 0.10, got: {area_swing}"
+                    (area_swing - 1.10).abs() < 1e-9,
+                    "default area_swing must be 1.10, got: {area_swing}"
                 );
             }
             other => panic!("expected AreaSection, got: {:?}", other),
@@ -1601,7 +1080,7 @@ algorithm:
 name: test
 algorithm:
   structure: ratio-optimal-area
-  area_swing: 0.25
+  area_swing: 1.25
   search: single
 "#;
         let f = write_yaml(yaml);
@@ -1610,8 +1089,8 @@ algorithm:
         match algo.split {
             SplitStrategy::AreaSection { area_swing, .. } => {
                 assert!(
-                    (area_swing - 0.25).abs() < 1e-9,
-                    "explicit area_swing 0.25 must be used, got: {area_swing}"
+                    (area_swing - 1.25).abs() < 1e-9,
+                    "explicit area_swing 1.25 must be used, got: {area_swing}"
                 );
             }
             other => panic!("expected AreaSection, got: {:?}", other),

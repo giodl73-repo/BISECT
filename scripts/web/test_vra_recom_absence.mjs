@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {WasmCatalog} from '../../web/lab/wasm-catalog.js';
+import {createLabProject} from '../../web/lab/laboratory-project.js';
+const root='target/vra-recom-absence',source='dist/wasm-lab-build';await fs.mkdir(root,{recursive:true});
+const manifest=JSON.parse(await fs.readFile(source+'/catalog.json','utf8')),engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));manifest.wasm_sha256=engine.artifactIdentity.sha256;
+const graphs=[JSON.parse(await fs.readFile('target/ilp-balance-contract/branch-and-cut.json','utf8')).graph];for(const code of ['RI','IA'])graphs.push(JSON.parse(await fs.readFile(source+'/'+manifest.graphs[code+':2020'].graph_ref,'utf8')));
+const sharesFor=(g,profile)=>({schema_version:'bisect-partisan-shares-v1',state:g.state,year:g.year,source_label:'SYNTHETIC chain parity shares',dem_shares:Object.fromEntries(g.geoids.map((id,i)=>[id,profile==='uniform'?.5:i%4<2?.8:.2]))});
+const demoFor=(g,profile)=>({schema_version:'bisect-demographic-fractions-v1',state:g.state,year:g.year,basis:'total-population',source_label:'SYNTHETIC ReCom total-population fractions, not VAP counts',minority_fractions:Object.fromEntries(g.geoids.map((id,i)=>[id,profile==='uniform'?.6:i<g.geoids.length/2?.9:.2]))});
+const base={structure:'standard-bisect',weights:'partisan',search:'vra-recom',vra_threshold:.4,vra_absent_file_fallback:true,districts:2,seed:null,seeds:3,steps:4,percentile:0,alpha_county:0,balance_tolerance:25,area_swing:1.1,iterations:10,dem_threshold:.55,rep_threshold:.45};
+let cases=0,failures=0,coiCases=0;const records=[];
+for(const graph of graphs)for(const search of ['vra-recom'])for(const profile of ['uniform','stripe'])for(const seed of [null,'18446744073709551615'])for(const districts of [1,2])for(const steps of [0,4])for(const vra_threshold of [0,.5,1])for(const percentile of [0,1]){
+ const partisan=sharesFor(graph,profile),options={...base,search,seed,districts,steps,vra_threshold,percentile},request={graph,options,partisan};
+ const tsv=root+'/shares.tsv';await fs.writeFile(tsv,'geoid\tdem_share\n'+graph.geoids.map(id=>id+'\t'+partisan.dem_shares[id]).join('\n')+'\n');
+ const tokens=['--state',graph.state,'--year',graph.year,'--partition-mode','partisan-weighted','--structure','standard-bisect','--partisan-shares',path.resolve(tsv),'--dem-threshold','.55','--rep-threshold','.45','--alpha-county','0','--districts',String(districts),'--search',search,'--niter','10','--balance-tolerance','25','--percentile',String(percentile),'--seeds',String(steps),'--vra-threshold',String(vra_threshold),'--metis-engine','metis-core',...(seed===null?[]:['--seed',seed])];
+ const csv=root+'/demographics.csv';await fs.writeFile(csv,'GEOID,total_pop,white_non_hispanic\n'+graph.geoids.map((id,i)=>id+',100,'+(profile==='uniform'?40:i<graph.geoids.length/2?10:80)).join('\n')+'\n');const fixture={graph,state_args:tokens,demographics_absent:true};if(profile==='stripe'){const weights_json=JSON.stringify({[graph.geoids[0]]:9,[graph.geoids[1]]:0,'unknown-parity-unit':4})+'\n',file=root+'/coi.json';await fs.writeFile(file,weights_json);fixture.coi_path=path.resolve(file);request.coi={source_name:'SYNTHETIC COI.json',weights_json};}
+ const file=root+'/request.json';await fs.writeFile(file,JSON.stringify(fixture));const n=spawnSync('target/release/examples/partisan_structure_reference.exe',[file],{encoding:'utf8',maxBuffer:16*1024*1024});assert.equal(n.error,undefined);let actual,error;try{actual=engine.execute(request);}catch(e){error=e;}
+ assert.equal(Boolean(actual),n.status===0,`${graph.state}/${search}/${profile}/${districts}: ${n.stderr}; ${error?.message}`);
+ if(actual){const expected=JSON.parse(n.stdout);assert.deepEqual(actual.assignments,expected.assignments);assert(Math.abs(actual.metrics.weighted_boundary-expected.weighted_boundary)<1e-8);if(districts>1){assert.deepEqual(actual.metrics.structure_evidence.run,expected.summary);assert.equal(actual.metrics.structure_evidence.run.protected_districts.length,vra_threshold===0?districts:0);assert.equal(actual.metrics.structure_evidence.demographics_sha256,null);assert.equal(actual.metrics.structure_evidence.source_policy,'explicit-native-absent-file-zero-fractions');}if(request.coi)coiCases++;}else{assert(n.stderr.includes(error.message));failures++;}
+ if(cases===0)for(const mutate of [r=>delete r.options.vra_absent_file_fallback,r=>r.demographics=demoFor(graph,'uniform'),r=>r.options.vra_absent_file_fallback=false]){const invalid=structuredClone(request);mutate(invalid);assert.throws(()=>engine.execute(invalid));}
+ records.push({state:graph.state,search,profile,seed,districts,steps,vra_threshold,percentile,status:actual?'matched':'matching-native-failure'});cases++;
+}
+class Worker{postMessage(m){queueMicrotask(()=>{try{this.onmessage({data:m.type==='initialize'?{type:'ready'}:{type:'result',id:m.id,result:engine.execute(m.request)}});}catch(e){this.onmessage({data:{type:'error',id:m.id,error:e.message}});}});}terminate(){}}
+const fetcher=async ref=>{const b=await fs.readFile(source+'/'+ref);return{ok:true,arrayBuffer:async()=>b.buffer.slice(b.byteOffset,b.byteOffset+b.length)};};
+const configBase=JSON.parse(await fs.readFile('target/county-state-oracle/browser.bisect','utf8')).experiment.config;let projects=0,refusals=0;
+for(const code of ['RI','IA'])for(const search of ['vra-recom']){
+ const graph=graphs.find(g=>g.state===code),partisan=sharesFor(graph,'stripe'),config={...configBase,...base,search,states:[code],seed:'18446744073709551615',partisans:{[code]:partisan}},lab=new WasmCatalog(manifest,fetcher,()=>new Worker()),job=lab.submit(config);while(lab.active)await new Promise(r=>setTimeout(r,5));assert.equal(lab.jobs.get(job.id).status,'completed',lab.jobs.get(job.id).logs.join('\n'));
+ const p=await createLabProject(lab,job.id),restore=new WasmCatalog(manifest,fetcher,()=>{throw new Error('Open must not execute');});await restore.restoreProject(p);
+ for(const mutate of [p=>{p.experiment.states[0].metrics.structure_evidence.threshold=.5;},p=>{p.experiment.config.partisans[code].dem_shares[graph.geoids[0]]=.6;},p=>{p.experiment.config.demographics={[code]:demoFor(graph,'uniform')};}]){const changed=structuredClone(p);mutate(changed);await assert.rejects(()=>restore.restoreProject(changed));refusals++;}
+ const exported=await lab.exportPractitionerProject(job.id,code);assert.deepEqual(exported.exported.document.provenance.producer.partisan_input,partisan);
+ if(projects===0)await fs.writeFile(root+'/browser.bisect',JSON.stringify(p));projects++;
+}
+assert.equal(cases,288);await fs.writeFile(root+'/evidence.json',JSON.stringify({native_state_tsv_cases:cases,matching_failures:failures,coi_completed_cases:coiCases,real_state_projects:projects,source_or_preservation_refusals:refusals,inert_open:true,records,wasm_sha256:engine.artifactIdentity.sha256},null,2));console.log(`VRA ReCom absent-file branch: ${cases} native State/TSV cases, ${failures} matching failures, ${coiCases} COI cases; ${projects} source-preserving projects/exports and ${refusals} tamper refusals.`);

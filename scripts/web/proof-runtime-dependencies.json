@@ -1,0 +1,22 @@
+{
+  "schema": "bisect-proof-runtime-dependencies-v1",
+  "entry_points": ["proof-solver.html", "proof-checker.html", "native-proof.html", "native-tree.html"],
+  "runtime_files": [
+    "bisect_wasm.wasm",
+    "roundingsat/roundingsat.mjs",
+    "roundingsat/roundingsat.wasm",
+    "roundingsat/build-receipt.json",
+    "proof-checker/bisect_proof_checker.wasm",
+    "proof-checker/proof-checker-build.json"
+  ],
+  "distribution_files": [
+    "roundingsat/LICENSE-RoundingSat.txt",
+    "roundingsat/LICENSE-Boost.txt",
+    "roundingsat/package-receipt.json",
+    "proof-checker/LICENSE-MIT",
+    "proof-checker/LICENSE-APACHE",
+    "proof-checker/provenance.json",
+    "proof-checker/package-receipt.json",
+    "native-proof-build.json"
+  ]
+}

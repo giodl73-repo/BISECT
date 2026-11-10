@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {characterSelection,readCharacterSelections,applyCharacterSelections,alignCharacterSelections} from '../../web/lab/character-selection.js';
+import {validateNativeCharacterSources} from '../../web/lab/native-character-lab.js';
+const root='target/lab-native-character-selection';await fs.mkdir(root,{recursive:true});let cases=0,refusals=0;
+for(const kind of ['economic','housing']){
+ const original=JSON.parse(await fs.readFile('target/native-character-engine/'+kind+'-'+(kind==='economic'?'large':'nan')+'.bisect','utf8')),raw=original.files.nativeCharacterInputs,options={kind,year:'2020',nativeSourceMode:true,csvMetadata:{...raw.settings,source_label:'raw.csv'}};
+ const selections=await readCharacterSelections([new File([Uint8Array.from(atob(raw.source.base64),c=>c.charCodeAt(0))],'raw.csv')],options);assert.equal(selections.RI.input,null);assert.deepEqual(selections.RI.native.source,{name:'raw.csv',base64:raw.source.base64});
+ const selected=await characterSelection(original,options);assert.deepEqual(selected.native,raw);const merged=applyCharacterSelections({characters:{RI:{old:true}},preparations:{RI:{old:true}},fallbacks:{RI:{old:true}},native:{}},{RI:selected});assert.equal(merged.characters.RI,undefined);assert.equal(merged.preparations.RI,undefined);assert.equal(merged.fallbacks.RI,undefined);assert.deepEqual(merged.native.RI,raw);
+ const cfg={states:['RI'],year:'2020',weights:kind+'-character',characters:{},native_character_sources:{RI:raw}};validateNativeCharacterSources(cfg);const aligned=await alignCharacterSelections({}, {...options,states:['RI'],nativeSources:cfg.native_character_sources,graphFor:()=>{throw new Error('Native selection must not load an alignment graph');}});assert.equal(aligned.aligned,0);
+ for(const mutate of [c=>c.characters.RI={},c=>c.character_preparations={RI:{}},c=>c.character_fallback_sources={RI:{}},c=>c.states=['AL'],c=>c.year='2010',c=>c.weights='geographic']){const bad=structuredClone(cfg);mutate(bad);assert.throws(()=>validateNativeCharacterSources(bad));refusals++;}
+ const removed=applyCharacterSelections(merged,{RI:{input:{replacement:true}}});assert.equal(removed.native.RI,undefined);assert(removed.characters.RI);assert.deepEqual(merged.native.RI,raw);
+ const empty=await readCharacterSelections([new File([],'empty.csv')],options);assert.equal(empty.RI.native.source.base64,'');assert.equal(empty.RI.fallback,null);const conflicting=await characterSelection({...raw,settings:{...raw.settings,state:'AL'}},options);assert.equal(conflicting.state,'AL');await assert.rejects(characterSelection(original,{...options,year:'2010'}));refusals++;
+ let read=false;await assert.rejects(readCharacterSelections([{name:'huge.csv',size:8*1024*1024+1,arrayBuffer:async()=>{read=true;}}],options));assert.equal(read,false);refusals++;cases++;
+}
+await fs.writeFile(root+'/evidence.json',JSON.stringify({kinds:cases,refusals,no_csv_parser_or_engine_on_selection_or_alignment:true,original_csv_bytes_and_metadata_preserved:true,exclusive_state_replacement:true,empty_file_retained_without_implicit_fallback:true},null,2));console.log(`Original native CSV selection: both kinds, raw bytes/metadata, no parser/alignment/engine execution, exclusive replacement, retained empty files and ${refusals} refusals passed.`);

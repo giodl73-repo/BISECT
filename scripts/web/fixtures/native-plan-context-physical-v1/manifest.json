@@ -1,0 +1,239 @@
+{
+  "schema": "bisect-native-plan-context-physical-fixtures-v1",
+  "source_corpus_sha256": "948f5595578d8551cc3b328ebc191ad54c7bb6127b62425f9b5ae12404673410",
+  "cases": [
+    {
+      "name": "prefix-imported",
+      "sources": {
+        "adjacency-binary": {
+          "path": "prefix-imported.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "prefix-imported.geoids.json",
+          "sha256": "16b37451fa3194e15e6e02cda4199ea41b80b211f3c5c61dc7945808b9c032cc",
+          "bytes": 94
+        },
+        "centroid-companion": {
+          "path": "prefix-imported.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "no-prefix-imported",
+      "sources": {
+        "adjacency-binary": {
+          "path": "no-prefix-imported.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "no-prefix-imported.geoids.json",
+          "sha256": "b5f641b102be2c95377250f59626b93d3b3c37aa7e4d54e554b8a3b3323ee0e4",
+          "bytes": 70
+        },
+        "centroid-companion": {
+          "path": "no-prefix-imported.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "mixed-imported",
+      "sources": {
+        "adjacency-binary": {
+          "path": "mixed-imported.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "mixed-imported.geoids.json",
+          "sha256": "e9145dfe9b9986f1f9895d3e569adef87cc180d1aed8d2383588674248d834e8",
+          "bytes": 82
+        },
+        "centroid-companion": {
+          "path": "mixed-imported.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "absent-index",
+      "sources": {
+        "adjacency-binary": {
+          "path": "absent-index.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": null,
+        "centroid-companion": {
+          "path": "absent-index.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "absent-index-coi",
+      "sources": {
+        "adjacency-binary": {
+          "path": "absent-index-coi.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": null,
+        "centroid-companion": {
+          "path": "absent-index-coi.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "block",
+      "sources": {
+        "adjacency-binary": {
+          "path": "block.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "block.geoids.json",
+          "sha256": "ce30aac9c65a0964f3ab222f45581e2e5b5afd103059a97b30e88510f650fd36",
+          "bytes": 111
+        },
+        "centroid-companion": {
+          "path": "block.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "county-ids",
+      "sources": {
+        "adjacency-binary": {
+          "path": "county-ids.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "county-ids.geoids.json",
+          "sha256": "6ff9b92d430c9ba213d0064d09139983290501147c37684f385a121604f3314f",
+          "bytes": 71
+        },
+        "centroid-companion": {
+          "path": "county-ids.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "sparse-index",
+      "sources": {
+        "adjacency-binary": {
+          "path": "sparse-index.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "sparse-index.geoids.json",
+          "sha256": "9cef6527f01a03493a56f4ec52eea37b9e2e9e0734dccd57f9c09a2fad475d37",
+          "bytes": 49
+        },
+        "centroid-companion": {
+          "path": "sparse-index.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "sparse-index-coi",
+      "sources": {
+        "adjacency-binary": {
+          "path": "sparse-index-coi.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "sparse-index-coi.geoids.json",
+          "sha256": "9cef6527f01a03493a56f4ec52eea37b9e2e9e0734dccd57f9c09a2fad475d37",
+          "bytes": 49
+        },
+        "centroid-companion": {
+          "path": "sparse-index-coi.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "tract",
+      "sources": {
+        "adjacency-binary": {
+          "path": "tract.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "tract.geoids.json",
+          "sha256": "7a010bba9e4a67a371ddb8d9d38c68bee20b12f78a1a1ce8b178bf5545aa6879",
+          "bytes": 95
+        },
+        "centroid-companion": {
+          "path": "tract.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "block-group-native-spelling",
+      "sources": {
+        "adjacency-binary": {
+          "path": "block-group-native-spelling.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "block-group-native-spelling.geoids.json",
+          "sha256": "6cd7921152c682218e1dc838e88e96ad60eba40fb21adcc8044c28c79fbc8192",
+          "bytes": 99
+        },
+        "centroid-companion": {
+          "path": "block-group-native-spelling.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    },
+    {
+      "name": "foreign-prefix-tract",
+      "sources": {
+        "adjacency-binary": {
+          "path": "foreign-prefix-tract.adj.bin",
+          "sha256": "5bc5beaee90a98a098b6a4e03ec77f27c5d4220a994fc41ed3678a37e791fa7d",
+          "bytes": 208
+        },
+        "geoid-companion": {
+          "path": "foreign-prefix-tract.geoids.json",
+          "sha256": "bc3cfec5da5d4bc4618421bfe1d392396f52dd289bfecafdc7b6cc4cccdc3d62",
+          "bytes": 95
+        },
+        "centroid-companion": {
+          "path": "foreign-prefix-tract.centroids.json",
+          "sha256": "218798a22f30383751d502a32fb613c2af95c3b140dfe44a5c13948418a3a11d",
+          "bytes": 94
+        }
+      }
+    }
+  ],
+  "scope": "Exact selected original RADJ/companion bytes from the existing twelve actual-native corpus cases. Context/plan strings remain independent expected outputs, never production fresh inputs."
+}

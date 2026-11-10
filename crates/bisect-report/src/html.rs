@@ -5,7 +5,7 @@
 /// - Images embedded as data URIs (base64 PNG)
 /// - External analyzer disclaimer when external_analyzers present
 /// - All 10 section headers present in output
-use crate::report::Report;
+use crate::report_assembly::Report;
 
 /// Embedded HTML template (compile-time include so binary is self-contained).
 const REPORT_TEMPLATE: &str = include_str!("../templates/report.html.j2");
@@ -54,7 +54,7 @@ pub fn render_html_report(report: &Report) -> anyhow::Result<String> {
 // Tests — Task 5
 // ---------------------------------------------------------------------------
 
-#[cfg(test)]
+#[cfg(all(test, feature = "filesystem"))]
 mod tests {
     use super::*;
     use crate::manifest::PlanManifest;

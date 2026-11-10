@@ -62,7 +62,7 @@ pub use connectivity_cuts::{separate_connectivity_cuts, ConnectivityCut, Distric
 pub use formulation::{build_formulation, IlpFormulation};
 pub use lp::{master_lp_string, LpExportError};
 pub use output::{
-    solve_report_json, solve_report_json_with_model_artifact, verify_model_artifact_for_report,
+    solve_report_json, solve_report_json_with_model_artifact, verify_model_artifact_with_digest,
     IlpModelArtifact, IlpSolveAuditSummary, IlpSolveReport, ModelArtifactVerificationError,
     VerifiedModelArtifact, ILP_SOLVE_REPORT_SCHEMA_VERSION,
 };
@@ -84,3 +84,6 @@ pub use separation::{
     separate_round, SeparationRound, SeparationRoundStatus, SEPARATION_ROUND_SCHEMA_VERSION,
 };
 pub use solver::{solve, IlpSolver};
+
+#[cfg(feature = "filesystem")]
+pub use output::verify_model_artifact_for_report;

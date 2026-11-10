@@ -82,15 +82,35 @@ impl SpanningTree {
 /// `adj[v]` is the list of neighbour indices of vertex `v` (local indices 0..n).
 /// Returns a `SpanningTree` where `parent[root] == u32::MAX`.
 pub fn random_spanning_tree<R: Rng>(adj: &[Vec<u32>], rng: &mut R) -> SpanningTree {
-    random_spanning_tree_impl(adj, rng, false)
+    random_spanning_tree_impl(adj, rng, WilsonDraws::Host)
 }
 
 /// Wilson sampling with explicit u64 index draws, reproducible across pointer widths.
 pub fn random_spanning_tree_portable<R: Rng>(adj: &[Vec<u32>], rng: &mut R) -> SpanningTree {
-    random_spanning_tree_impl(adj, rng, true)
+    random_spanning_tree_impl(adj, rng, WilsonDraws::Fixed64)
 }
 
-fn random_spanning_tree_impl<R: Rng>(adj: &[Vec<u32>], rng: &mut R, portable: bool) -> SpanningTree {
+/// Native 32-bit Wilson draws. The ReCom entry point validates index bounds.
+pub(crate) fn random_spanning_tree_native32<R: Rng>(adj: &[Vec<u32>], rng: &mut R) -> SpanningTree {
+    random_spanning_tree_impl(adj, rng, WilsonDraws::Fixed32)
+}
+
+#[derive(Clone, Copy)]
+enum WilsonDraws {
+    Host,
+    Fixed32,
+    Fixed64,
+}
+
+fn wilson_index<R: Rng>(bound: usize, rng: &mut R, draws: WilsonDraws) -> usize {
+    match draws {
+        WilsonDraws::Host => rng.gen_range(0..bound),
+        WilsonDraws::Fixed32 => rng.gen_range(0..u32::try_from(bound).expect("validated native32 Wilson bound")) as usize,
+        WilsonDraws::Fixed64 => rng.gen_range(0..bound as u64) as usize,
+    }
+}
+
+fn random_spanning_tree_impl<R: Rng>(adj: &[Vec<u32>], rng: &mut R, draws: WilsonDraws) -> SpanningTree {
     let n = adj.len();
     assert!(n >= 2, "need at least 2 vertices for a spanning tree");
 
@@ -98,7 +118,7 @@ fn random_spanning_tree_impl<R: Rng>(adj: &[Vec<u32>], rng: &mut R, portable: bo
     let mut in_tree = vec![false; n];
 
     // Choose a random root.
-    let root = if portable { rng.gen_range(0..n as u64) as u32 } else { rng.gen_range(0..n) as u32 };
+    let root = wilson_index(n, rng, draws) as u32;
     in_tree[root as usize] = true;
 
     // Loop-erased random walk from each not-yet-in-tree vertex.
@@ -116,7 +136,7 @@ fn random_spanning_tree_impl<R: Rng>(adj: &[Vec<u32>], rng: &mut R, portable: bo
 
         loop {
             let nbrs = &adj[cur as usize];
-            let index = if portable { rng.gen_range(0..nbrs.len() as u64) as usize } else { rng.gen_range(0..nbrs.len()) };
+            let index = wilson_index(nbrs.len(), rng, draws);
             let step = nbrs[index];
 
             if in_tree[step as usize] {

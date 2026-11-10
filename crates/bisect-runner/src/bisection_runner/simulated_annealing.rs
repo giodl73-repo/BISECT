@@ -295,11 +295,10 @@ pub fn run_all_splits_sa(
     }
 
     if num_districts == 1 {
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join("depth_00");
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = "depth_00";
             let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
-            let _ = write_intermediate_round(&round_dir, &asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &asgn);
         }
         return Ok((0..n).map(|i| (i, 1)).collect());
     }
@@ -346,9 +345,8 @@ pub fn run_all_splits_sa(
             node_tracts.insert(format!("{path}1"), right);
         }
 
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = format!("depth_{:02}", depth + 1);
             let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
             nodes.sort_by_key(|(path, _)| (path.len(), *path));
             let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
@@ -357,7 +355,7 @@ pub fn run_all_splits_sa(
                     round_asgn.insert(tract, region_id + 1);
                 }
             }
-            let _ = write_intermediate_round(&round_dir, &round_asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &round_asgn);
         }
     }
 

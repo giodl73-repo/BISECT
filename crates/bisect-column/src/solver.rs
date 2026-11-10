@@ -23,13 +23,12 @@ pub fn solve_branch_price(
     weights: &[i64],
     config: BranchPriceConfig,
 ) -> Result<BranchPriceReport, ColumnError> {
-    validate(adjacency, weights, config)?;
     let pricing = price_columns(PricingInput {
         adjacency,
         weights,
         k: config.k,
         tolerance: config.tolerance,
-    });
+    })?;
     let master = MasterProblem::new(weights.len(), config.k, pricing.generated_columns);
     if config.formulation_only || weights.len() > config.exact_fixture_limit {
         return Ok(BranchPriceReport::new(
@@ -123,36 +122,4 @@ fn assignment_from_columns(unit_count: usize, selected: &[Column]) -> Vec<usize>
         }
     }
     assignment
-}
-
-fn validate(
-    adjacency: &[Vec<usize>],
-    weights: &[i64],
-    config: BranchPriceConfig,
-) -> Result<(), ColumnError> {
-    if config.k == 0 {
-        return Err(ColumnError::InvalidInput(
-            "k must be greater than zero".to_string(),
-        ));
-    }
-    if adjacency.len() != weights.len() {
-        return Err(ColumnError::InvalidInput(format!(
-            "adjacency has {} units but weights has {}",
-            adjacency.len(),
-            weights.len()
-        )));
-    }
-    if config.k > weights.len() {
-        return Err(ColumnError::InvalidInput(format!(
-            "k={} exceeds unit count {}",
-            config.k,
-            weights.len()
-        )));
-    }
-    if weights.iter().any(|&weight| weight <= 0) {
-        return Err(ColumnError::InvalidInput(
-            "weights must be positive".to_string(),
-        ));
-    }
-    Ok(())
 }

@@ -70,6 +70,9 @@ pub struct SeatsVotesCurve {
 
 #[derive(Debug, Serialize)]
 pub struct PartisanMetrics {
+    pub bootstrap_protocol: String,
+    pub bootstrap_seed: String,
+    pub bootstrap_replicates: usize,
     pub efficiency_gap: MetricWithCI,
     pub mean_median: MetricWithCI,
     pub partisan_bias: MetricWithCI,
@@ -214,8 +217,8 @@ pub fn compute_declination(districts: &[DistrictElection]) -> f64 {
     let mean_d: f64 = d_won.iter().sum::<f64>() / d_won.len() as f64;
     let mean_r: f64 = r_won.iter().sum::<f64>() / r_won.len() as f64;
 
-    let theta_d = (2.0 * mean_d - 1.0).atan();
-    let theta_r = (1.0 - 2.0 * mean_r).atan();
+    let theta_d = libm::atan(2.0 * mean_d - 1.0);
+    let theta_r = libm::atan(1.0 - 2.0 * mean_r);
 
     2.0 * (theta_d - theta_r) / std::f64::consts::PI
 }
@@ -449,6 +452,9 @@ pub fn try_compute_partisan_metrics(
         districts.iter().filter(|d| d.dem_won()).count() as f64 / n.max(1) as f64;
 
     Ok(PartisanMetrics {
+        bootstrap_protocol:rstat_core::resampling::BOOTSTRAP_PROTOCOL.into(),
+        bootstrap_seed:seed.to_string(),
+        bootstrap_replicates:n_bootstrap,
         efficiency_gap: MetricWithCI {
             value: eg_val,
             direction: direction_rep_pos(eg_val),

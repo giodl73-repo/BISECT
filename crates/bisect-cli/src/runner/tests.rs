@@ -1,4 +1,5 @@
 //! Runner unit/integration tests (moved with the module split).
+use crate::algo_config::NativeAlgorithmConfig;
 
 use super::*;
 use std::collections::HashSet;
@@ -79,6 +80,8 @@ fn make_config(state: &str) -> StateConfig {
         seats_per_district: 1,
         total_seats: 1,
         adjacency_override: None,
+        replay_auxiliary_root: None,
+        replay_multiscale_fine_path: None,
         coi_weights: None,
         multiscale_fine: "tract".to_string(),
         multiscale_coarse: "county".to_string(),
@@ -2460,7 +2463,7 @@ fn is_single_false_for_percentile_and_bisection_ensemble() {
 
 #[test]
 fn clone_preserves_variant() {
-    let orig = SeedCompositor::ConvergenceSweep { threshold: 999 };
+    let orig: SeedCompositor = SeedCompositor::ConvergenceSweep { threshold: 999 };
     let cloned = orig.clone();
     if let SeedCompositor::ConvergenceSweep { threshold } = cloned {
         assert_eq!(

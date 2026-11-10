@@ -163,6 +163,8 @@ fn bloc_voting_l1_synthetic_end_to_end() {
         .arg("30")
         .arg("--ci-level")
         .arg("0.95")
+        .arg("--bloc-bootstrap-seed")
+        .arg("18446744073709551615")
         .arg("--alpha")
         .arg("0.05")
         .arg("--election")
@@ -193,6 +195,9 @@ fn bloc_voting_l1_synthetic_end_to_end() {
         .expect("bloc_voting.json must parse");
     assert_eq!(json["schema_version"], "bloc-voting v1");
     assert_eq!(json["analyzer"], "bloc-voting");
+    assert_eq!(json["bootstrap"]["seed"],"18446744073709551615");
+    assert_eq!(json["bootstrap"]["protocol"],"county-cluster-and-naive-chacha12-u64-v1");
+    assert_eq!(json["bootstrap"]["replicates"],30);
     assert_eq!(json["state"], "VT");
     assert_eq!(json["election"], "test-primary");
     assert_eq!(json["candidates"][0]["candidate"], candidate_name);

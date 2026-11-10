@@ -681,7 +681,9 @@ pub mod scoring {
 
 pub mod resampling {
     use crate::summary::{percentile_interval_sorted_copy, SummaryError};
-    use rand::rngs::SmallRng;
+    use rand_chacha::ChaCha12Rng;
+    /// Changes legacy SmallRng intervals; stable across native/wasm word widths.
+    pub const BOOTSTRAP_PROTOCOL:&str="chacha12-u64-index-v1";
     use rand::{Rng, SeedableRng};
     use thiserror::Error;
 
@@ -714,11 +716,11 @@ pub mod resampling {
             return Err(BootstrapError::ZeroReplicates);
         }
 
-        let mut rng = SmallRng::seed_from_u64(seed);
+        let mut rng = ChaCha12Rng::seed_from_u64(seed);
         let mut stats = Vec::with_capacity(n_replicates);
         for replicate in 0..n_replicates {
             let resample: Vec<T> = (0..sample.len())
-                .map(|_| sample[rng.gen_range(0..sample.len())].clone())
+                .map(|_| sample[rng.gen_range(0u64..sample.len() as u64) as usize].clone())
                 .collect();
             let value = statistic(&resample);
             if !value.is_finite() {
@@ -1076,6 +1078,8 @@ pub mod mcmc {
         EmptyChain(usize),
         #[error("[INPUT] chains have differing lengths: {0:?}")]
         UnequalChainLengths(Vec<usize>),
+        #[error("[INPUT] R-hat is undefined: chains have zero within-chain variance but different means")]
+        ZeroWithinChainVariance,
         #[error("[INPUT] chain {chain_index} contains non-finite value {value} at sample {sample_index}")]
         NonFiniteChainValue {
             chain_index: usize,
@@ -1169,6 +1173,9 @@ pub mod mcmc {
             checked_sum(chain_vars.iter().copied(), "rhat within-chain variance sum")? / m as f64;
         validate_result("rhat within-chain variance", w)?;
         if w == 0.0 {
+            if b_over_n > 0.0 {
+                return Err(DiagnosticsError::ZeroWithinChainVariance);
+            }
             return Ok(1.0);
         }
 
@@ -1357,6 +1364,13 @@ pub mod mcmc {
             let chain = vec![5.0; 50];
             let chains: Vec<&[f64]> = (0..4).map(|_| chain.as_slice()).collect();
             assert!((gelman_rubin_rhat(&chains).unwrap() - 1.0).abs() < 1e-9);
+        }
+
+        #[test]
+        fn rhat_rejects_chains_stuck_at_different_constants() {
+            let traces = [vec![1.0; 10], vec![2.0; 10], vec![3.0; 10], vec![4.0; 10]];
+            let chains: Vec<&[f64]> = traces.iter().map(Vec::as_slice).collect();
+            assert_eq!(gelman_rubin_rhat(&chains), Err(DiagnosticsError::ZeroWithinChainVariance));
         }
 
         #[test]

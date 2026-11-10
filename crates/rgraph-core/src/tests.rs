@@ -1,5 +1,31 @@
 use super::*;
 
+#[test]
+fn articulation_matches_vertex_removal_for_all_small_graphs() {
+    fn components(adjacency:&[Vec<usize>],removed:Option<usize>)->usize {
+        let mut seen=vec![false;adjacency.len()];let mut count=0;
+        for start in 0..adjacency.len() {if Some(start)==removed||seen[start]{continue;}count+=1;seen[start]=true;let mut stack=vec![start];while let Some(node)=stack.pop(){for &to in &adjacency[node]{if Some(to)!=removed&&!seen[to]{seen[to]=true;stack.push(to);}}}}
+        count
+    }
+    for n in 1..=5 {
+        let pairs=(0..n).flat_map(|left|(left+1..n).map(move|right|(left,right))).collect::<Vec<_>>();
+        for mask in 0..(1usize<<pairs.len()) {
+            let mut graph=TinyGraph::new(n);let mut adjacency=vec![vec![];n];
+            for (id,&(left,right)) in pairs.iter().enumerate(){if mask&(1<<id)!=0{graph.add_edge(id,left,right,1.0);adjacency[left].push(right);adjacency[right].push(left);}}
+            let baseline=components(&adjacency,None);let expected=(0..n).filter(|&removed|components(&adjacency,Some(removed))>baseline).collect::<Vec<_>>();
+            assert_eq!(articulation_points(&graph).unwrap(),expected,"n={n} mask={mask}");
+        }
+    }
+}
+
+#[test]
+fn articulation_handles_a_deep_path_without_thread_stack() {
+    let n=100_000;let mut graph=TinyGraph::new(n);
+    for node in 1..n {graph.add_edge(node,node-1,node,1.0);}
+    assert_eq!(articulation_points(&graph).unwrap(),(1..n-1).collect::<Vec<_>>());
+    assert!(articulation_points_with_filter(&graph,|id|id%2==0).unwrap().is_empty());
+}
+
 #[derive(Debug, Clone)]
 struct TinyGraph {
     node_count: usize,

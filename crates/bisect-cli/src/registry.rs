@@ -93,66 +93,25 @@ impl LocationRegistry {
 
     /// Return true if `code` (case-insensitive lookup via uppercase) exists in the registry.
     pub fn has_location(&self, code: &str) -> bool {
-        let key = code.to_uppercase();
-        // _TEST_EL is stored as-is (leading underscore, already uppercased)
-        // Handle case where code already has underscore prefix
-        if self.raw.get(&key).is_some() {
-            return true;
-        }
-        false
+        bisect_analysis::location_registry::PolicyRegistry::new(&self.raw).has_location(code)
     }
 
     /// Return the years available for a location, as Strings (e.g. ["2000","2010","2020"]).
     /// Returns empty vec if location not found or `census_years` is absent.
     pub fn available_years(&self, code: &str) -> Vec<String> {
-        let key = self.resolve_key(code);
-        self.raw
-            .get(&key)
-            .and_then(|e| e.get("census_years"))
-            .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(String::from))
-                    .collect()
-            })
-            .unwrap_or_default()
+        bisect_analysis::location_registry::PolicyRegistry::new(&self.raw).available_years(code)
     }
 
     /// Validate that `year` is in the location's available years.
     /// Returns Ok(year.to_string()) on success, Err with message on failure.
     pub fn validate_year(&self, code: &str, year: &str) -> Result<String, String> {
-        if !self.has_location(code) {
-            return Err(format!("unknown location '{code}'"));
-        }
-        let years = self.available_years(code);
-        if years.is_empty() || years.contains(&year.to_string()) {
-            // Empty years = no restriction (backward compat); or year found
-            Ok(year.to_string())
-        } else {
-            Err(format!(
-                "year '{year}' not available for '{code}'. Available years: {}",
-                years.join(", ")
-            ))
-        }
+        bisect_analysis::location_registry::PolicyRegistry::new(&self.raw).validate_year(code, year)
     }
 
     /// Return the congressional district count for a location and year.
     /// Falls back to the manifest when `congressional_districts_by_year` is absent.
     pub fn congressional_districts(&self, code: &str, year: &str) -> Option<usize> {
-        let key = self.resolve_key(code);
-        let entry = self.raw.get(&key)?;
-
-        // Primary: congressional_districts_by_year field
-        if let Some(by_year) = entry.get("congressional_districts_by_year") {
-            if let Some(n) = by_year.get(year).and_then(|v| v.as_u64()) {
-                if n > 0 {
-                    return Some(n as usize);
-                }
-            }
-        }
-
-        // Fallback: read from manifest.json
-        self.manifest_congressional_districts(code, year)
+        bisect_analysis::location_registry::PolicyRegistry::new(&self.raw).congressional_districts(code,year).map(|n|n as usize).or_else(||self.manifest_congressional_districts(code,year))
     }
 
     /// Return district count for a given chamber and year.
@@ -162,28 +121,7 @@ impl LocationRegistry {
     /// "senate" / "upper" → uses `senate_districts` field
     /// Others → None
     pub fn chamber_districts(&self, code: &str, chamber: &str, year: &str) -> Option<usize> {
-        match chamber {
-            "congressional" => self.congressional_districts(code, year),
-            "house" | "lower" | "assembly" => {
-                let key = self.resolve_key(code);
-                self.raw
-                    .get(&key)
-                    .and_then(|e| e.get("house_districts"))
-                    .and_then(|v| v.as_u64())
-                    .filter(|&n| n > 0)
-                    .map(|n| n as usize)
-            }
-            "senate" | "upper" => {
-                let key = self.resolve_key(code);
-                self.raw
-                    .get(&key)
-                    .and_then(|e| e.get("senate_districts"))
-                    .and_then(|v| v.as_u64())
-                    .filter(|&n| n > 0)
-                    .map(|n| n as usize)
-            }
-            _ => None,
-        }
+        match chamber {"congressional"=>self.congressional_districts(code,year),_=>bisect_analysis::location_registry::PolicyRegistry::new(&self.raw).chamber_districts(code,chamber,year).map(|n|n as usize)}
     }
 
     /// Resolve the adjacency pkl path for a location, year, and resolution.
@@ -275,29 +213,12 @@ impl LocationRegistry {
         chamber: &str,
         resolution: &str,
     ) -> Option<String> {
-        if resolution != "tract" || chamber != "house" {
-            return None;
-        }
-        let n = self.chamber_districts(code, chamber, year)?;
-        if n <= 25 {
-            return None;
-        }
-        let state_name = self.state_name(code).unwrap_or_else(|| code.to_string());
-        Some(format!(
-            "{state_name} house has {n} districts. \
-             Tract resolution may hit the granularity floor (~1 tract/2 districts). \
-             Use --resolution block_group for better balance."
-        ))
+        bisect_analysis::location_registry::PolicyRegistry::new(&self.raw).granularity_warning(code,year,chamber,resolution)
     }
 
     /// Return the human-readable name for a location code (e.g. "Washington").
     pub fn state_name(&self, code: &str) -> Option<String> {
-        let key = self.resolve_key(code);
-        self.raw
-            .get(&key)
-            .and_then(|e| e.get("name"))
-            .and_then(|v| v.as_str())
-            .map(String::from)
+        bisect_analysis::location_registry::PolicyRegistry::new(&self.raw).state_name(code)
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────

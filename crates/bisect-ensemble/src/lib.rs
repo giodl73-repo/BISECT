@@ -32,3 +32,9 @@ pub(crate) fn portable_shuffle<T, R: rand::Rng>(values: &mut [T], rng: &mut R) {
 pub(crate) fn portable_index<R: rand::Rng>(length: usize, rng: &mut R) -> usize {
     rng.gen_range(0..length as u64) as usize
 }
+
+/// Explicit compatibility with the pinned 64-bit native sampler.
+pub mod native64_rng;
+
+/// Explicit compatibility with the pinned 32-bit native sampler.
+pub mod native32_rng;

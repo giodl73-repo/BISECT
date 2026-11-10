@@ -6,6 +6,10 @@ authors.workspace = true
 license.workspace = true
 description = "Exact redistricting via Integer Linear Programming — generates MPS/LP files (U.6)"
 
+[features]
+default = ["filesystem"]
+filesystem = []
+
 [dependencies]
 bisect-core = { path = "../bisect-core" }
 rgraph-core = { path = "../rgraph-core" }

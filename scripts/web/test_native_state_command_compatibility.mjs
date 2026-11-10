@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+const current=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm')),before=await instantiateEngine(await fs.readFile('target/native-state-command/before/engine.wasm')),records=JSON.parse(await fs.readFile('target/native-signal-presets/records.json','utf8'));for(const r of records)assert.deepEqual(current.execute(r.request),before.execute(r.request));await fs.writeFile('target/native-state-command/compatibility.json',JSON.stringify({wasm:current.artifactIdentity,previous_wasm:before.artifactIdentity,whole_unchanged_engine_replies:records.length},null,2)+'\n');console.log(`PASS shared State extraction: ${records.length} whole pre-extraction WASM engine replies unchanged`);

@@ -18,6 +18,7 @@ clap.workspace = true
 geo.workspace = true
 geo-types.workspace = true
 bisect-data = { path = "../bisect-data" }
+bisect-analysis = { path = "../bisect-analysis" }
 bisect-map = { path = "../bisect-map" }
 bisect-cli = { path = "../bisect-cli", default-features = false }
 tiny_http = "0.12"

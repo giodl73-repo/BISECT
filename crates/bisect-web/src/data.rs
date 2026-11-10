@@ -1,7 +1,6 @@
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use bisect_data::{deserialize_adjacency, serialize_adjacency, AdjacencyGraph};
-use geo::{Centroid, MapCoords, Simplify};
-use geo_types::{Geometry, MultiPolygon, Polygon};
+use geo::Centroid;
 use serde_json::{json, Value};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
@@ -160,67 +159,11 @@ pub fn prepare(paths: &Paths, code: &str, year: &str) -> Result<PathBuf> {
     let records = bisect_data::read_tiger_tracts(&shape)?;
     let (geo, pop) = paths.populations(code, year);
     let blocks = bisect_data::read_pl94_block_populations_for_year(&geo, &pop, year.parse()?)?;
-    let mut populations: HashMap<String, i64> = HashMap::new();
-    for block in blocks {
-        *populations.entry(block.geoid[..11].to_owned()).or_default() += block.population;
-    }
-    let input_population: i64 = populations.values().sum();
-    let projected: Vec<_> = records
-        .iter()
-        .map(|record| {
-            let geometry = bisect_map::wkb_to_geometry(&record.geometry_wkb)?;
-            let Geometry::MultiPolygon(mp) = (match geometry {
-                Geometry::Polygon(p) => Geometry::MultiPolygon(MultiPolygon(vec![p])),
-                other => other,
-            }) else {
-                bail!("Unsupported TIGER geometry.");
-            };
-            Ok(mp.map_coords(|coord| {
-                let (x, y) = bisect_data::projection::nad83_to_epsg5070(coord.x, coord.y);
-                geo_types::Coord { x, y }
-            }))
-        })
-        .collect::<Result<_>>()?;
-    let wkbs: Vec<_> = projected
-        .iter()
-        .map(bisect_data::tiger::geo_to_wkb_multipolygon)
-        .collect();
-    let mut graph = bisect_data::build_adjacency_graph(&wkbs, 10.0)?;
-    graph.vertex_weights = records
-        .iter()
-        .map(|r| populations.get(&r.geoid).copied().unwrap_or(0))
-        .collect();
-    ensure!(
-        graph.vertex_weights.iter().sum::<i64>() == input_population && input_population > 0,
-        "TIGER/population join did not retain the full state population."
-    );
-    graph.set_areas(records.iter().map(|r| r.aland as f64).collect());
-    let centers: Vec<_> = projected
-        .iter()
-        .map(|g| {
-            g.centroid()
-                .map(|c| (c.x(), c.y()))
-                .context("Empty tract geometry.")
-        })
-        .collect::<Result<_>>()?;
-    let geoids: Vec<_> = records.iter().map(|r| r.geoid.clone()).collect();
-    let mut bridges = bisect_data::connect_island_components(&graph.adjacency, &centers, &geoids);
-    bridges.sort();
-    let mut lengths: Vec<_> = graph.edge_weights.values().copied().collect();
-    lengths.sort_by(f64::total_cmp);
-    let bridge_weight = lengths.get(lengths.len() / 2).copied().unwrap_or(1.0);
-    for &(u, v) in &bridges {
-        graph.adjacency[u].push(v);
-        graph.adjacency[v].push(u);
-        graph
-            .edge_weights
-            .insert((u.min(v), u.max(v)), bridge_weight);
-    }
-    for neighbors in &mut graph.adjacency {
-        neighbors.sort();
-        neighbors.dedup();
-    }
-    graph.n_edges = graph.edge_weights.len();
+    let prepared=bisect_data::tract_preparation::prepare_tract_graph(&records,&blocks).map_err(anyhow::Error::msg)?;
+    let graph=prepared.graph;
+    let geoids=prepared.geoids;
+    let bridges=prepared.bridges;
+    let input_population=prepared.input_population;
     let stem = target
         .to_string_lossy()
         .trim_end_matches(".adj.bin")
@@ -257,14 +200,6 @@ pub fn prepare(paths: &Paths, code: &str, year: &str) -> Result<PathBuf> {
     Ok(target)
 }
 
-fn polygon_coordinates(polygon: &Polygon<f64>) -> Value {
-    let rings: Vec<_> = std::iter::once(polygon.exterior())
-        .chain(polygon.interiors())
-        .map(|ring| ring.0.iter().map(|c| [c.x, c.y]).collect::<Vec<_>>())
-        .collect();
-    json!(rings)
-}
-
 pub fn geometry(paths: &Paths, code: &str, year: &str) -> Result<Value> {
     let cache = paths
         .store
@@ -278,13 +213,7 @@ pub fn geometry(paths: &Paths, code: &str, year: &str) -> Result<Value> {
             .shape(code, year)
             .context("Geometry unavailable for this state and year.")?,
     )?;
-    let features:Vec<_>=records.iter().map(|record| {
-        let geom=bisect_map::wkb_to_geometry(&record.geometry_wkb)?;
-        let polygons=match geom { Geometry::Polygon(p)=>vec![p],Geometry::MultiPolygon(mp)=>mp.0,_=>bail!("Unsupported geometry.") };
-        let coordinates:Vec<_>=polygons.iter().map(|p|polygon_coordinates(&p.simplify(&0.0002))).collect();
-        Ok(json!({"type":"Feature","properties":{"geoid":record.geoid,"state":code,"county":&record.geoid[..5]},"geometry":{"type":"MultiPolygon","coordinates":coordinates}}))
-    }).collect::<Result<_>>()?;
-    let result = json!({"type":"FeatureCollection","state":code,"year":year,"display_simplification_degrees":0.0002,"features":features});
+    let result=bisect_data::tract_preparation::tract_display_geometry(&records,code,year).map_err(anyhow::Error::msg)?;
     write_json(&cache, &result)?;
     Ok(result)
 }

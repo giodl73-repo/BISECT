@@ -35,86 +35,10 @@ fn read_plan(
     plan_dir: &Path,
     registry: &bisect_cli::policy::LocationRegistry,
 ) -> Option<PlanSummary> {
-    // Read manifest.json
-    let manifest_path = plan_dir.join("manifest.json");
-    let manifest_content = std::fs::read_to_string(&manifest_path).ok()?;
-    let manifest: serde_json::Value = serde_json::from_str(&manifest_content).ok()?;
-
-    let state_code = manifest
-        .get("state_code")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let chamber = manifest
-        .get("chamber")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let year = manifest
-        .get("year")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let num_districts = manifest
-        .get("num_districts")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(0) as usize;
-    let label = manifest
-        .get("label")
-        .and_then(|v| v.as_str())
-        .unwrap_or_else(|| plan_dir.file_name().and_then(|n| n.to_str()).unwrap_or(""))
-        .to_string();
-
-    let state_name = registry
-        .state_name(&state_code)
-        .unwrap_or_else(|| state_code.clone());
-
-    // Read analysis/compactness.json → mean_pp (polsby_popper)
-    let mean_pp = read_f64_field(plan_dir, "analysis/compactness.json", "mean_polsby_popper");
-
-    // Read analysis/summary.json → max_deviation_pct
-    let max_deviation_pct = read_f64_field(plan_dir, "analysis/summary.json", "max_deviation_pct");
-
-    // Read analysis/splits.json → split count
-    let county_splits = read_usize_field(plan_dir, "analysis/splits.json", "split_count");
-
-    // Read analysis/contiguity.json → all_contiguous
-    let all_contiguous = read_bool_field(plan_dir, "analysis/contiguity.json", "all_contiguous");
-
-    Some(PlanSummary {
-        label,
-        state_code,
-        state_name,
-        chamber,
-        year,
-        num_districts,
-        mean_pp,
-        max_deviation_pct,
-        county_splits,
-        all_contiguous,
-        plan_dir: plan_dir.to_path_buf(),
-    })
-}
-
-fn read_json(plan_dir: &Path, relative: &str) -> Option<serde_json::Value> {
-    let path = plan_dir.join(relative);
-    let content = std::fs::read_to_string(path).ok()?;
-    serde_json::from_str(&content).ok()
-}
-
-fn read_f64_field(plan_dir: &Path, relative: &str, field: &str) -> Option<f64> {
-    read_json(plan_dir, relative)?.get(field)?.as_f64()
-}
-
-fn read_usize_field(plan_dir: &Path, relative: &str, field: &str) -> Option<usize> {
-    read_json(plan_dir, relative)?
-        .get(field)?
-        .as_u64()
-        .map(|n| n as usize)
-}
-
-fn read_bool_field(plan_dir: &Path, relative: &str, field: &str) -> Option<bool> {
-    read_json(plan_dir, relative)?.get(field)?.as_bool()
+    let manifest_content=std::fs::read_to_string(plan_dir.join("manifest.json")).ok()?;
+    let analysis=["compactness.json","summary.json","splits.json","contiguity.json"].into_iter().filter_map(|file|std::fs::read_to_string(plan_dir.join("analysis").join(file)).ok().map(|text|(file.to_string(),text))).collect();
+    let row=bisect_report::tui_library::read_plan(&plan_dir.to_string_lossy(),plan_dir.file_name().and_then(|s|s.to_str()).unwrap_or(""),&manifest_content,&analysis,|state|registry.state_name(state).unwrap_or_else(||state.to_string()))?;
+    Some(PlanSummary{label:row.label,state_code:row.state_code,state_name:row.state_name,chamber:row.chamber,year:row.year,num_districts:row.num_districts as usize,mean_pp:row.mean_pp,max_deviation_pct:row.max_deviation_pct,county_splits:row.county_splits.map(|n|n as usize),all_contiguous:row.all_contiguous,plan_dir:plan_dir.to_path_buf()})
 }
 
 #[cfg(test)]

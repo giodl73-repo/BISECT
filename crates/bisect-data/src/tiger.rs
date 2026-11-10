@@ -13,6 +13,7 @@ use shapefile::PolygonRing;
 /// This reader returns population=0 as a sentinel; callers must join
 /// population data separately.
 use std::path::Path;
+use std::io::{Read, Seek};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -71,9 +72,37 @@ pub fn read_tiger_block_groups<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractR
 
 fn read_tiger_units(shp_path: &Path, block_groups: bool) -> Result<Vec<TractRecord>, TigerError> {
 
-    let mut reader = shapefile::Reader::from_path(shp_path)
+    let reader = shapefile::Reader::from_path(shp_path)
         .map_err(|e| TigerError::ShapefileError(e.to_string()))?;
+    read_tiger_units_reader(reader, block_groups)
+}
 
+/// Decode selected SHP/DBF and optional SHX streams with the native unit reader.
+pub fn read_tiger_units_from_streams<S: Read+Seek, D: Read+Seek, X: Read>(
+    shp:S, dbf:D, shx:Option<X>, block_groups:bool,
+) -> Result<Vec<TractRecord>,TigerError> {
+    read_tiger_units_reader(reader_from_streams(shp,dbf,shx)?,block_groups)
+}
+
+fn reader_from_streams<S: Read+Seek, D: Read+Seek, X: Read>(
+    shp:S, dbf:D, shx:Option<X>,
+) -> Result<shapefile::Reader<S,D>,TigerError> {
+    let shape=match shx {Some(index)=>shapefile::ShapeReader::with_shx(shp,index),None=>shapefile::ShapeReader::new(shp)}
+        .map_err(|e|TigerError::ShapefileError(e.to_string()))?;
+    let attributes=shapefile::dbase::Reader::new(dbf).map_err(|e|TigerError::ShapefileError(e.to_string()))?;
+    Ok(shapefile::Reader::new(shape,attributes))
+}
+
+/// Geographic, unprojected Census polygons for experimental graph preparation.
+pub fn read_tiger_census_units_from_streams<S:Read+Seek,D:Read+Seek,X:Read>(shp:S,dbf:D,shx:Option<X>,width:usize)->Result<Vec<TractRecord>,TigerError>{
+ if ![5,11,12,15].contains(&width){return Err(TigerError::ShapefileError("Unsupported Census unit ID width".into()));}
+ read_census_units_reader(reader_from_streams(shp,dbf,shx)?,width,true)
+}
+fn read_tiger_units_reader<S: Read+Seek,D: Read+Seek>(reader:shapefile::Reader<S,D>,block_groups:bool)->Result<Vec<TractRecord>,TigerError>{
+ read_census_units_reader(reader,if block_groups{12}else{11},false)
+}
+fn read_census_units_reader<S:Read+Seek,D:Read+Seek>(mut reader:shapefile::Reader<S,D>,width:usize,census:bool)->Result<Vec<TractRecord>,TigerError>{
+    let block_groups=width==12;
     let mut records = Vec::new();
 
     for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
@@ -83,9 +112,12 @@ fn read_tiger_units(shp_path: &Path, block_groups: bool) -> Result<Vec<TractReco
         // Extract GEOID from attributes
         let geoid = match record
             .get("GEOID")
+            .or_else(|| if census {record.get("GEOID20")}else{None})
             .or_else(|| record.get("GEOID10"))
             .or_else(|| record.get("GEOID00"))
             .or_else(|| record.get("CTIDFP00"))
+            .or_else(||if census&&width==15{record.get("BLKIDFP00")}else{None})
+            .or_else(||if census&&width==5{record.get("CNTYIDFP00")}else{None})
         {
             Some(shapefile::dbase::FieldValue::Character(Some(s))) => s.trim().to_string(),
             _ => return Err(TigerError::MissingGeoid),
@@ -95,16 +127,17 @@ fn read_tiger_units(shp_path: &Path, block_groups: bool) -> Result<Vec<TractReco
         if block_groups && (geoid.len()!=12 || !geoid.bytes().all(|b|b.is_ascii_digit())) {
             return Err(TigerError::InvalidBlockGroupGeoid(geoid));
         }
-        if !block_groups && geoid.len() != 11 {
+        if census && (geoid.len()!=width||!geoid.bytes().all(|b|b.is_ascii_digit())) {return Err(TigerError::ShapefileError(format!("Census GEOID {geoid} must contain {width} ASCII digits")));}
+        if !census && !block_groups && geoid.len() != 11 {
             return Err(TigerError::InvalidGeoidLength(geoid));
         }
 
         // Extract area fields (both in square metres in TIGER files)
-        let aland = match record.get("ALAND").or_else(|| record.get("ALAND10")).or_else(|| record.get("ALAND00")) {
+        let aland = match record.get("ALAND").or_else(||if census{record.get("ALAND20")}else{None}).or_else(|| record.get("ALAND10")).or_else(|| record.get("ALAND00")) {
             Some(shapefile::dbase::FieldValue::Numeric(Some(v))) => *v as i64,
             _ => 0,
         };
-        let awater = match record.get("AWATER").or_else(|| record.get("AWATER10")).or_else(|| record.get("AWATER00")) {
+        let awater = match record.get("AWATER").or_else(||if census{record.get("AWATER20")}else{None}).or_else(|| record.get("AWATER10")).or_else(|| record.get("AWATER00")) {
             Some(shapefile::dbase::FieldValue::Numeric(Some(v))) => *v as i64,
             _ => 0,
         };
@@ -112,7 +145,7 @@ fn read_tiger_units(shp_path: &Path, block_groups: bool) -> Result<Vec<TractReco
         // Convert shapefile geometry to WKB
         let geometry_wkb = shape_to_wkb(&shape, idx)?;
         if geometry_wkb.is_empty() {
-            if block_groups {return Err(TigerError::UnsupportedGeometry(idx));}
+            if block_groups||census {return Err(TigerError::UnsupportedGeometry(idx));}
             continue; // skip empty geometries
         }
 
@@ -127,7 +160,7 @@ fn read_tiger_units(shp_path: &Path, block_groups: bool) -> Result<Vec<TractReco
 
     // Sort by GEOID for deterministic ordering (matches Python sort)
     records.sort_by(|a, b| a.geoid.cmp(&b.geoid));
-    if block_groups && (records.is_empty() || records.windows(2).any(|r|r[0].geoid==r[1].geoid)) {
+    if (block_groups||census) && (records.is_empty() || records.windows(2).any(|r|r[0].geoid==r[1].geoid)) {
         return Err(TigerError::ShapefileError("Empty or duplicate block-group universe.".into()));
     }
 
@@ -149,12 +182,23 @@ pub fn read_tiger_blocks_projected_for_year<P: AsRef<Path>>(
     shp_path: P,
     year: u16,
 ) -> Result<Vec<BlockRecord>, TigerError> {
-    let suffix = block_field_suffix(year)?;
-    let geoid_field = format!("GEOID{suffix}");
-    let aland_field = format!("ALAND{suffix}");
-    let awater_field = format!("AWATER{suffix}");
-    let mut reader = shapefile::Reader::from_path(shp_path.as_ref())
+    block_field_suffix(year)?;
+    let reader = shapefile::Reader::from_path(shp_path.as_ref())
         .map_err(|error| TigerError::ShapefileError(error.to_string()))?;
+    read_tiger_blocks_reader(reader,year)
+}
+
+/// Native projected block geometry from selected streams.
+pub fn read_tiger_blocks_projected_from_streams<S:Read+Seek,D:Read+Seek,X:Read>(shp:S,dbf:D,shx:Option<X>,year:u16)->Result<Vec<BlockRecord>,TigerError>{
+    block_field_suffix(year)?;
+    read_tiger_blocks_reader(reader_from_streams(shp,dbf,shx)?,year)
+}
+
+fn read_tiger_blocks_reader<S:Read+Seek,D:Read+Seek>(mut reader:shapefile::Reader<S,D>,year:u16)->Result<Vec<BlockRecord>,TigerError>{
+    let suffix=block_field_suffix(year)?;
+    let geoid_field=format!("GEOID{suffix}");
+    let aland_field=format!("ALAND{suffix}");
+    let awater_field=format!("AWATER{suffix}");
     let mut records = Vec::new();
     for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
         let (shape, record) =
@@ -212,9 +256,20 @@ pub fn read_tiger_block_centroids_projected_for_year<P: AsRef<Path>>(
     shp_path: P,
     year: u16,
 ) -> Result<Vec<(String, (f64, f64))>, TigerError> {
-    let geoid_field = format!("GEOID{}", block_field_suffix(year)?);
-    let mut reader = shapefile::Reader::from_path(shp_path.as_ref())
+    block_field_suffix(year)?;
+    let reader = shapefile::Reader::from_path(shp_path.as_ref())
         .map_err(|error| TigerError::ShapefileError(error.to_string()))?;
+    read_tiger_centroids_reader(reader,year)
+}
+
+/// Native centroid-only block preview path over selected streams.
+pub fn read_tiger_block_centroids_projected_from_streams<S:Read+Seek,D:Read+Seek,X:Read>(shp:S,dbf:D,shx:Option<X>,year:u16)->Result<Vec<(String,(f64,f64))>,TigerError>{
+    block_field_suffix(year)?;
+    read_tiger_centroids_reader(reader_from_streams(shp,dbf,shx)?,year)
+}
+
+fn read_tiger_centroids_reader<S:Read+Seek,D:Read+Seek>(mut reader:shapefile::Reader<S,D>,year:u16)->Result<Vec<(String,(f64,f64))>,TigerError>{
+    let geoid_field=format!("GEOID{}",block_field_suffix(year)?);
     let mut records = Vec::new();
     for (idx, shape_record) in reader.iter_shapes_and_records().enumerate() {
         let (shape, record) =
@@ -280,7 +335,7 @@ fn shape_to_multipolygon(
     }
 }
 
-fn project_epsg5070(multipolygon: &MultiPolygon<f64>) -> MultiPolygon<f64> {
+pub(crate) fn project_epsg5070(multipolygon: &MultiPolygon<f64>) -> MultiPolygon<f64> {
     MultiPolygon(
         multipolygon
             .0

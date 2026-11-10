@@ -1,0 +1,1 @@
+fn main()->Result<(),String>{let a:Vec<String>=std::env::args().collect();match a[1].as_str(){"ls"=>bisect_cli::label_cmd::run_ls(a[2]=="json"),"compare"=>bisect_cli::import_label::run_label_compare(&a[3],&a[4],&a[5],a[2]=="json",None),"show"=>bisect_cli::label_cmd::run_show(&a[3],a[2]=="json"),_=>Err("unknown reference command".into())}}

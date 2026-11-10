@@ -1,0 +1,48 @@
+{
+  "schema_version": "bisect-native-replay-regression-corpus-v1",
+  "cases": [
+    {
+      "id": "area-reordered",
+      "file": "area-reordered.json",
+      "sha256": "5b5035ec5e5ef47bed13402459b924fac3e3ca3b06fb833e43252a2dc24904ca",
+      "reference_kind": "actual-native-completed-plan"
+    },
+    {
+      "id": "area-empty-refusal",
+      "file": "area-empty-refusal.json",
+      "sha256": "74fb8cac742d198db0e6aad03a7b56e008ec4cad2e07120c6d5b04570230266d",
+      "reference_kind": "synthetic-bound-metadata-over-original-graph-and-plan-not-a-completed-native-run"
+    },
+    {
+      "id": "core-nway-empty",
+      "file": "core-nway-empty.json",
+      "sha256": "64dc4e4563eb3b79c3b5b19b4a6a00023935f9c631f9832f7fa1805a45d30245",
+      "reference_kind": "actual-native-completed-plan"
+    },
+    {
+      "id": "c-nway-effective-c",
+      "file": "c-nway-effective-c.json",
+      "sha256": "e368b74f3493b7fc124adcc583c43e49d12e7c89b3e2c0aae48d45b451eeab8c",
+      "reference_kind": "actual-native-completed-plan"
+    },
+    {
+      "id": "core-native64-bg",
+      "file": "core-native64-bg.json",
+      "sha256": "1d967f4a291885f57d993b687b739c07fd9cb40fbbb2c745293300d325f7ab55",
+      "reference_kind": "actual-native-completed-plan"
+    },
+    {
+      "id": "c-native64-bg",
+      "file": "c-native64-bg.json",
+      "sha256": "f7d1857e0dd4ee6c6ec184cd6c03f9d0a1626f28c81a50f99e998e5ab11295b3",
+      "reference_kind": "actual-native-completed-plan"
+    },
+    {
+      "id": "native64-metadata",
+      "file": "native64-metadata.json",
+      "sha256": "c765c89ffaa72fce7e52efb2ec57e60214d80805a5227915503c4423efc6ee7b",
+      "reference_kind": "native64-codec-only-no-algorithm-run"
+    }
+  ],
+  "scope": "Frozen regression vectors from actual owned Windows native outputs and separately labelled synthetic metadata/codec controls. Source requests are self-contained selected bytes, not native path authority. This corpus does not replace fresh native filesystem, browser, real-state, capacity or release acceptance."
+}

@@ -22,3 +22,6 @@ thiserror.workspace = true
 
 [dev-dependencies]
 # no extra dev deps needed
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+getrandom = { version = "0.2", features = ["custom"] }

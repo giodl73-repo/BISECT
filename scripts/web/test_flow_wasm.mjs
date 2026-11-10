@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 import {instantiateEngine} from '../../web/lab/wasm-engine.js';
 import {verifyLabAssignments,createLabProject,parseLabProject} from '../../web/lab/laboratory-project.js';
 import {WasmCatalog} from '../../web/lab/wasm-catalog.js';
-const root='dist/wasm-national', manifest=JSON.parse(await fs.readFile(path.join(root,'catalog.json'),'utf8'));
+const root=process.argv[2]||'dist/wasm-national', manifest=JSON.parse(await fs.readFile(path.join(root,'catalog.json'),'utf8'));
 const bytes=await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'),engine=await instantiateEngine(bytes);
 manifest.wasm_sha256=createHash('sha256').update(bytes).digest('hex');
 const native=path.resolve('target/release/examples/execute_request'+(process.platform==='win32'?'.exe':'')),run=promisify(execFile);

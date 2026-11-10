@@ -129,7 +129,7 @@ impl std::fmt::Display for PartitionMode {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, serde::Serialize, serde::Deserialize)]
 pub enum IlpMethod {
     /// Build and validate the ILP formulation, then fall back to METIS.
     #[value(name = "formulation-only")]
@@ -152,7 +152,7 @@ impl std::fmt::Display for IlpMethod {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, serde::Serialize, serde::Deserialize)]
 pub enum IlpFallback {
     /// Fall back to METIS when ILP cannot produce a plan.
     #[value(name = "metis")]

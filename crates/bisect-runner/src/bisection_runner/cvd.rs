@@ -18,7 +18,7 @@ pub fn derive_cvd_seed(base_seed: u64, path: &str) -> u64 {
 }
 
 /// Which distance metric CVD uses for assignment and seed update.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum VoronoiMetric {
     /// Phase 1: BFS hop-count on the tract adjacency graph. No extra data needed.
     GraphDistance,
@@ -133,13 +133,22 @@ pub(crate) fn find_medoid(
     probe.truncate(sample_size);
 
     let mut best_node = district_tracts[0];
-    let mut best_sum = usize::MAX;
+    // Keep unreachable-distance scoring identical on wasm32 and native64.
+    // BFS uses usize::MAX internally; widen its sentinel before clipping sums.
+    let mut best_sum = u64::MAX;
 
     for &candidate in district_tracts {
         let dist_from_cand = bfs_distances_from(candidate, local_adj);
-        let sum: usize = probe
+        let sum: u64 = probe
             .iter()
-            .map(|&p| dist_from_cand[p].min(usize::MAX / probe.len()))
+            .map(|&p| {
+                let distance = if dist_from_cand[p] == usize::MAX {
+                    u64::MAX
+                } else {
+                    dist_from_cand[p] as u64
+                };
+                distance.min(u64::MAX / probe.len() as u64)
+            })
             .sum();
         if sum < best_sum {
             best_sum = sum;
@@ -506,11 +515,10 @@ pub fn run_all_splits_cvd(
     let n = adjacency.len();
 
     if num_districts == 1 {
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join("depth_00");
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = "depth_00";
             let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
-            let _ = write_intermediate_round(&round_dir, &asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &asgn);
         }
         return Ok((0..n).map(|i| (i, 1)).collect());
     }
@@ -568,9 +576,8 @@ pub fn run_all_splits_cvd(
             node_tracts.insert(format!("{path}1"), right);
         }
 
-        if let Some(dir) = intermediate_dir {
-            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
-            let _ = std::fs::create_dir_all(&round_dir);
+        if round_output_enabled(intermediate_dir) {
+            let round_dir = format!("depth_{:02}", depth + 1);
             let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
             nodes.sort_by_key(|(path, _)| (path.len(), *path));
             let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
@@ -579,7 +586,7 @@ pub fn run_all_splits_cvd(
                     round_asgn.insert(tract, region_id + 1);
                 }
             }
-            let _ = write_intermediate_round(&round_dir, &round_asgn);
+            let _ = emit_intermediate_round(intermediate_dir,&round_dir, &round_asgn);
         }
     }
 

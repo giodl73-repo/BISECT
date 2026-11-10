@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {exportNativeTreePlan, nativeTreePlanZip} from '../../web/lab/native-tree-plan.js';
+import {sha256} from '../../web/lab/proof-solver-core.js';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+const root = 'target/native-tree-plan'; await fs.mkdir(root, {recursive: true});
+const base = 'target/proof-checker-wasm-build/wasm32-unknown-unknown/release/';
+const wasmBinary = await fs.readFile(base + 'bisect_proof_checker.wasm'), receipt = JSON.parse(await fs.readFile(base + 'proof-checker-build.json', 'utf8'));
+const native = path.resolve('target/proof-checker-build/release/bisect-proof-checker.exe');
+const nativeRun = request => { const run = spawnSync(native, [], {input: JSON.stringify(request), encoding: 'utf8', timeout: 60000, maxBuffer: 64 * 1024 * 1024}); assert.equal(run.status, 0, run.stderr); return JSON.parse(run.stdout); };
+const engine = await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const contextJson = await fs.readFile('target/certified-discovery-context-wasm/input.rctx', 'utf8');
+const profile = {schema_version:'legal-profile-v1', profile_id:'SYNTHETIC_EXTERNAL_TREE_DELIVERY_TEST', jurisdiction:'RI', chamber:'congressional', year:2020, population_tolerance:{type:'percent', max_deviation_percent:50}, contiguity_required:true, county_split_rule:{type:'not-evaluated'}, municipal_split_rule:{type:'not-evaluated'}, nesting_rule:{type:'not-evaluated'}, vra_policy:{type:'not-evaluated'}};
+const constraints = ['plan-shape','population','contiguity'], label = 'External tree test', createdAt = '2026-10-12T12:00:00Z';
+await fs.writeFile(root+'/profile.json',JSON.stringify(profile)); await fs.writeFile(root+'/strict-profile.json',JSON.stringify({...profile,population_tolerance:{type:'percent',max_deviation_percent:0.5}}));
+const nativeRequest = values => ({operation:'export-native-external-tree-plan', tree_request:values.treeRequest, context_json:values.contextJson, profile_json:values.profileJson, constraints:values.constraints ?? constraints, label, created_at:createdAt});
+const evidence = [];
+for (const k of [2,3,4]) {
+ const treeRequest = JSON.parse(await fs.readFile('target/native-external-tree/request-' + k + '.json', 'utf8'));
+ const values = {treeRequest,contextJson,profileJson:JSON.stringify(profile),label,createdAt,wasmBinary,receipt};
+ const expected = nativeRun(nativeRequest(values)); assert.equal(expected.ok, true, expected.error);
+ const result = await exportNativeTreePlan(values); assert.deepEqual(result, expected.result);
+ const tree = JSON.parse(result.files['external-tree.json']), document = JSON.parse(result.document_json);
+ assert.equal(result.districts,k); assert.equal(document.metadata.created_at,createdAt);
+ // Validate using the existing independently compiled native engine's format boundary.
+ const validation = engine.execute({operation:'validate-rplan-text',document_json:result.document_json}); assert.ok(validation);
+ for (const [name,text] of Object.entries(result.files)) assert.equal(await sha256(Buffer.from(text)),result.file_sha256[name]);
+ assert.deepEqual(JSON.parse(result.context_json), JSON.parse(contextJson));
+ assert.equal(tree.k,k); assert.deepEqual(tree.assignments,JSON.parse(await fs.readFile('target/native-external-tree/tree-'+k+'.json','utf8')).assignments);
+ await fs.writeFile(root+'/plan-'+k+'.json',JSON.stringify(result)); await fs.writeFile(root+'/package-'+k+'.zip',await nativeTreePlanZip(result));
+ await assert.rejects(() => nativeTreePlanZip({...result,files:{...result.files,'exact.rplan':result.document_json+' '}}),/changed/);
+ evidence.push({k,whole_native_wasm_match:true,original_context_preserved:true,native_format_validation:true,audit_passes:true});
+}
+const treeRequest = JSON.parse(await fs.readFile('target/native-external-tree/request-3.json','utf8'));
+const good = {treeRequest,contextJson,profileJson:JSON.stringify(profile),label,createdAt,wasmBinary,receipt};
+const strict = {...profile,population_tolerance:{type:'percent',max_deviation_percent:0.5}};
+assert.equal(nativeRun(nativeRequest({...good,profileJson:JSON.stringify(strict)})).ok,false);
+await assert.rejects(() => exportNativeTreePlan({...good,profileJson:JSON.stringify(strict)}),/audit/);
+await assert.rejects(() => exportNativeTreePlan({...good,profileJson:JSON.stringify({...profile,year:2010})}),/profile/);
+await assert.rejects(() => exportNativeTreePlan({...good,constraints:['plan-shape']}),/requires/);
+await assert.rejects(() => exportNativeTreePlan({...good,contextJson:contextJson.replace('"context_hash": "sha256:','"context_hash": "sha256:0')}),/hash/);
+const mismatched = structuredClone(treeRequest), instance = JSON.parse(mismatched.root_instance_json); instance.populations[0]++; mismatched.root_instance_json=JSON.stringify(instance);
+await assert.rejects(() => exportNativeTreePlan({...good,treeRequest:mismatched}),/population identity/);
+await fs.writeFile(root+'/evidence.json',JSON.stringify({cases:evidence,strict_population_audit_failure_refused:true,profile_year_constraint_context_hash_and_population_mismatch_refused:true,map_handoff:false,plan_ui:false},null,2));
+console.log('Native tree plan export: three whole native/WASM packages, original context preservation, native format validation, exact ZIP/hashes and audit/source/profile refusals passed.');

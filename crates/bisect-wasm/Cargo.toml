@@ -8,17 +8,30 @@ description = "Browser boundary for the BISECT Rust engine"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+c-metis-sidecar = ["bisect-apportion/wasm-c-ffi", "bisect-runner/wasm-c-ffi"]
+
 [dependencies]
 base64 = "0.22"
+flate2 = "1"
 csv.workspace = true
+geo-types.workspace = true
+bisect-ilp = { path = "../bisect-ilp", default-features = false }
+bisect-pareto = { path = "../bisect-pareto" }
+bisect-smc = { path = "../bisect-smc" }
+bisect-local-search = { path = "../bisect-local-search" }
+bisect-column = { path = "../bisect-column" }
 bisect-core = { path = "../bisect-core" }
 bisect-clustering = { path = "../bisect-clustering" }
 bisect-flow = { path = "../bisect-flow" }
 bisect-apportion = { path = "../bisect-apportion", default-features = false }
 bisect-runner = { path = "../bisect-runner", default-features = false }
 bisect-data = { path = "../bisect-data" }
+bisect-map = { path = "../bisect-map" }
+bisect-analysis = { path = "../bisect-analysis" }
+bisect-report = { path = "../bisect-report", default-features = false, features = ["polygon-import", "report-render", "label-import"] }
 serde.workspace = true
-serde_json = { workspace = true, features = ["float_roundtrip"] }
+serde_json = { workspace = true, features = ["float_roundtrip", "raw_value"] }
 sha2.workspace = true
 rplan-core = { path = "../rplan-core" }
 rplan-io = { path = "../rplan-io" }

@@ -19,11 +19,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_06_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_06_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_06_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_06_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/California/california2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/California/california2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/California/ca2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/California/cageo.upl.zip"
       }
     },
     "TX": {
@@ -36,11 +38,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_48_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_48_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_48_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_48_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Texas/texas2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Texas/texas2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Texas/tx2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Texas/txgeo.upl.zip"
       }
     },
     "FL": {
@@ -53,11 +57,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_12_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_12_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_12_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_12_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Florida/florida2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Florida/florida2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Florida/fl2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Florida/flgeo.upl.zip"
       }
     },
     "NY": {
@@ -70,11 +76,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_36_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_36_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_36_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_36_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New York/newyork2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/New York/newyork2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/New_York/ny2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/New_York/nygeo.upl.zip"
       }
     },
     "PA": {
@@ -87,11 +95,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_42_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_42_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_42_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_42_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Pennsylvania/pennsylvania2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Pennsylvania/pennsylvania2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Pennsylvania/pa2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Pennsylvania/pageo.upl.zip"
       }
     },
     "IL": {
@@ -104,11 +114,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_17_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_17_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_17_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_17_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Illinois/illinois2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Illinois/illinois2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Illinois/il2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Illinois/ilgeo.upl.zip"
       }
     },
     "OH": {
@@ -121,11 +133,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_39_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_39_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_39_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_39_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Ohio/ohio2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Ohio/ohio2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Ohio/oh2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Ohio/ohgeo.upl.zip"
       }
     },
     "GA": {
@@ -138,11 +152,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_13_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_13_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_13_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_13_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Georgia/georgia2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Georgia/georgia2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Georgia/ga2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Georgia/gageo.upl.zip"
       }
     },
     "NC": {
@@ -155,11 +171,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_37_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_37_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_37_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_37_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/North Carolina/northcarolina2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/North Carolina/northcarolina2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/North_Carolina/nc2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/North_Carolina/ncgeo.upl.zip"
       }
     },
     "MI": {
@@ -172,11 +190,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_26_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_26_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_26_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_26_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Michigan/michigan2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Michigan/michigan2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Michigan/mi2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Michigan/migeo.upl.zip"
       }
     },
     "NJ": {
@@ -189,11 +209,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_34_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_34_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_34_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_34_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New Jersey/newjersey2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/New Jersey/newjersey2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/New_Jersey/nj2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/New_Jersey/njgeo.upl.zip"
       }
     },
     "VA": {
@@ -206,11 +228,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_51_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_51_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_51_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_51_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Virginia/virginia2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Virginia/virginia2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Virginia/va2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Virginia/vageo.upl.zip"
       }
     },
     "WA": {
@@ -223,11 +247,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_53_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_53_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_53_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Washington/washington2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Washington/washington2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Washington/wa2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Washington/wageo.upl.zip"
       }
     },
     "AZ": {
@@ -240,11 +266,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_04_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_04_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_04_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_04_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Arizona/arizona2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Arizona/arizona2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Arizona/az2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Arizona/azgeo.upl.zip"
       }
     },
     "MA": {
@@ -257,11 +285,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_25_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_25_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_25_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_25_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Massachusetts/massachusetts2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Massachusetts/massachusetts2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Massachusetts/ma2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Massachusetts/mageo.upl.zip"
       }
     },
     "TN": {
@@ -274,11 +304,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_47_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_47_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_47_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_47_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Tennessee/tennessee2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Tennessee/tennessee2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Tennessee/tn2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Tennessee/tngeo.upl.zip"
       }
     },
     "IN": {
@@ -291,11 +323,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_18_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_18_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_18_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_18_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Indiana/indiana2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Indiana/indiana2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Indiana/in2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Indiana/ingeo.upl.zip"
       }
     },
     "MD": {
@@ -308,11 +342,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_24_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_24_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_24_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_24_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Maryland/maryland2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Maryland/maryland2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Maryland/md2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Maryland/mdgeo.upl.zip"
       }
     },
     "MO": {
@@ -325,11 +361,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_29_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_29_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_29_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_29_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Missouri/missouri2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Missouri/missouri2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Missouri/mo2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Missouri/mogeo.upl.zip"
       }
     },
     "WI": {
@@ -342,11 +380,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_55_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_55_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_55_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_55_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Wisconsin/wisconsin2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Wisconsin/wisconsin2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Wisconsin/wi2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Wisconsin/wigeo.upl.zip"
       }
     },
     "CO": {
@@ -359,11 +399,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_08_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_08_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_08_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_08_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Colorado/colorado2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Colorado/colorado2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Colorado/co2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Colorado/cogeo.upl.zip"
       }
     },
     "MN": {
@@ -376,11 +418,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_27_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_27_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_27_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_27_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Minnesota/minnesota2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Minnesota/minnesota2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Minnesota/mn2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Minnesota/mngeo.upl.zip"
       }
     },
     "SC": {
@@ -393,11 +437,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_45_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_45_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_45_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_45_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/South Carolina/southcarolina2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/South Carolina/southcarolina2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/South_Carolina/sc2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/South_Carolina/scgeo.upl.zip"
       }
     },
     "AL": {
@@ -410,11 +456,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_01_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_01_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_01_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_01_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Alabama/alabama2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Alabama/alabama2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Alabama/al2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Alabama/algeo.upl.zip"
       }
     },
     "LA": {
@@ -427,11 +475,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_22_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_22_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_22_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_22_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Louisiana/louisiana2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Louisiana/louisiana2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Louisiana/la2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Louisiana/lageo.upl.zip"
       }
     },
     "KY": {
@@ -444,11 +494,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_21_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_21_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_21_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_21_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Kentucky/kentucky2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Kentucky/kentucky2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Kentucky/ky2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Kentucky/kygeo.upl.zip"
       }
     },
     "OR": {
@@ -461,11 +513,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_41_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_41_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_41_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_41_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Oregon/oregon2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Oregon/oregon2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Oregon/or2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Oregon/orgeo.upl.zip"
       }
     },
     "OK": {
@@ -478,11 +532,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_40_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_40_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_40_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_40_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Oklahoma/oklahoma2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Oklahoma/oklahoma2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Oklahoma/ok2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Oklahoma/okgeo.upl.zip"
       }
     },
     "CT": {
@@ -495,11 +551,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_09_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_09_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_09_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_09_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Connecticut/connecticut2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Connecticut/connecticut2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Connecticut/ct2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Connecticut/ctgeo.upl.zip"
       }
     },
     "UT": {
@@ -512,11 +570,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_49_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_49_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_49_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_49_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Utah/utah2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Utah/utah2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Utah/ut2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Utah/utgeo.upl.zip"
       }
     },
     "IA": {
@@ -529,11 +589,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_19_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_19_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_19_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_19_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Iowa/iowa2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Iowa/iowa2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Iowa/ia2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Iowa/iageo.upl.zip"
       }
     },
     "NV": {
@@ -546,11 +608,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_32_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_32_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_32_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_32_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Nevada/nevada2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Nevada/nevada2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Nevada/nv2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Nevada/nvgeo.upl.zip"
       }
     },
     "AR": {
@@ -563,11 +627,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_05_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_05_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_05_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_05_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Arkansas/arkansas2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Arkansas/arkansas2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Arkansas/ar2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Arkansas/argeo.upl.zip"
       }
     },
     "MS": {
@@ -580,11 +646,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_28_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_28_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_28_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_28_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Mississippi/mississippi2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Mississippi/mississippi2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Mississippi/ms2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Mississippi/msgeo.upl.zip"
       }
     },
     "KS": {
@@ -597,11 +665,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_20_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_20_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_20_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_20_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Kansas/kansas2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Kansas/kansas2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Kansas/ks2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Kansas/ksgeo.upl.zip"
       }
     },
     "NM": {
@@ -614,11 +684,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_35_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_35_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_35_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_35_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New Mexico/newmexico2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/New Mexico/newmexico2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/New_Mexico/nm2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/New_Mexico/nmgeo.upl.zip"
       }
     },
     "NE": {
@@ -631,11 +703,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_31_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_31_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_31_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_31_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Nebraska/nebraska2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Nebraska/nebraska2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Nebraska/ne2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Nebraska/negeo.upl.zip"
       }
     },
     "ID": {
@@ -648,11 +722,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_16_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_16_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_16_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_16_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Idaho/idaho2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Idaho/idaho2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Idaho/id2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Idaho/idgeo.upl.zip"
       }
     },
     "WV": {
@@ -665,11 +741,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_54_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_54_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_54_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_54_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/West Virginia/westvirginia2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/West Virginia/westvirginia2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/West_Virginia/wv2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/West_Virginia/wvgeo.upl.zip"
       }
     },
     "HI": {
@@ -682,11 +760,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_15_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_15_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_15_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_15_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Hawaii/hawaii2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Hawaii/hawaii2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Hawaii/hi2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Hawaii/higeo.upl.zip"
       }
     },
     "NH": {
@@ -699,11 +779,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_33_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_33_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_33_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_33_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/New Hampshire/newhampshire2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/New Hampshire/newhampshire2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/New_Hampshire/nh2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/New_Hampshire/nhgeo.upl.zip"
       }
     },
     "ME": {
@@ -716,11 +798,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_23_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_23_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_23_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_23_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Maine/maine2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Maine/maine2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Maine/me2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Maine/megeo.upl.zip"
       }
     },
     "RI": {
@@ -733,11 +817,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_44_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_44_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_44_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_44_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Rhode Island/rhodeisland2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Rhode Island/rhodeisland2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Rhode_Island/ri2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Rhode_Island/rigeo.upl.zip"
       }
     },
     "MT": {
@@ -750,11 +836,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_30_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_30_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_30_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_30_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Montana/montana2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Montana/montana2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Montana/mt2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Montana/mtgeo.upl.zip"
       }
     },
     "DE": {
@@ -767,11 +855,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_10_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_10_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_10_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_10_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Delaware/delaware2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Delaware/delaware2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Delaware/de2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Delaware/degeo.upl.zip"
       }
     },
     "SD": {
@@ -784,11 +874,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_46_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_46_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_46_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_46_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/South Dakota/southdakota2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/South Dakota/southdakota2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/South_Dakota/sd2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/South_Dakota/sdgeo.upl.zip"
       }
     },
     "ND": {
@@ -801,11 +893,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_38_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_38_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_38_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_38_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/North Dakota/northdakota2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/North Dakota/northdakota2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/North_Dakota/nd2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/North_Dakota/ndgeo.upl.zip"
       }
     },
     "AK": {
@@ -818,11 +912,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_02_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_02_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_02_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_02_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Alaska/alaska2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Alaska/alaska2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Alaska/ak2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Alaska/akgeo.upl.zip"
       }
     },
     "VT": {
@@ -835,11 +931,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_50_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_50_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_50_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_50_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Vermont/vermont2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Vermont/vermont2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Vermont/vt2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Vermont/vtgeo.upl.zip"
       }
     },
     "WY": {
@@ -852,11 +950,13 @@
       },
       "tiger": {
         "2020": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_56_tract.zip",
-        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_56_tract10.zip"
+        "2010": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/tl_2010_56_tract10.zip",
+        "2000": "https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2000/tl_2010_56_tract00.zip"
       },
       "pl94171": {
         "2020": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/Wyoming/wyoming2020.pl.zip",
-        "2010": "https://www2.census.gov/programs-surveys/decennial/2010/data/01-Redistricting_File--PL_94-171/Wyoming/wyoming2010.pl.zip"
+        "2010": "https://www2.census.gov/census_2010/01-Redistricting_File--PL_94-171/Wyoming/wy2010.pl.zip",
+        "2000": "https://www2.census.gov/census_2000/datasets/redistricting_file--pl_94-171/Wyoming/wygeo.upl.zip"
       }
     }
   }

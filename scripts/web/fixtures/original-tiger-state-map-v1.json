@@ -1,0 +1,61 @@
+{
+  "schema_version": "bisect-original-tiger-state-map-fixture-v1",
+  "year": 2020,
+  "dpi": 72,
+  "cases": {
+    "CA": {
+      "units": 9129,
+      "source_positions": 3165316,
+      "districts": 52,
+      "files": {
+        "shp": {
+          "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.shp",
+          "bytes": 51156652,
+          "sha256": "655d4a13f36bf8e61f39ffc3a32c22fc44ff961f18cefe042b3c26258cadc0af"
+        },
+        "dbf": {
+          "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.dbf",
+          "bytes": 977221,
+          "sha256": "1d0f417b8c7ee0bd747cd717a90feeb85a3073a253403211da0cae365f97d1f8"
+        },
+        "shx": {
+          "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.shx",
+          "bytes": 73132,
+          "sha256": "c8ca01bffe4dac602806f357e09618e791eb1a665df5c87ae70df241f238f3e6"
+        },
+        "assignments": {
+          "path": "outputs/v1/2020/states/california/data/final_assignments.json",
+          "bytes": 153695,
+          "sha256": "f185a1f13afda860a3dda24a650e995504ad7067b26a1e7056ef900c390631a0"
+        }
+      }
+    },
+    "TX": {
+      "units": 6896,
+      "source_positions": 3241644,
+      "districts": 38,
+      "files": {
+        "shp": {
+          "path": "data/2020/tiger/tracts/tl_2020_48_tract/tl_2020_48_tract.shp",
+          "bytes": 52252836,
+          "sha256": "69fb16bb5aad6a3ed5c6ea50634e4d37a68e3a0355e35ca6301cabff2e9df718"
+        },
+        "dbf": {
+          "path": "data/2020/tiger/tracts/tl_2020_48_tract/tl_2020_48_tract.dbf",
+          "bytes": 738290,
+          "sha256": "83d7bec8b3581f14fc51502a65b3bbc11f494e153395633ce7dbcd8a393ef886"
+        },
+        "shx": {
+          "path": "data/2020/tiger/tracts/tl_2020_48_tract/tl_2020_48_tract.shx",
+          "bytes": 55268,
+          "sha256": "9838f90dbc5719f48aa9ab843772e8fa18e40f469a17bf197f26059dc6d7ccdc"
+        },
+        "assignments": {
+          "path": "outputs/v1/2020/states/texas/data/final_assignments.json",
+          "bytes": 115425,
+          "sha256": "5a74be77d5c88798a5365420477876db88cd0d1bed758b55af62e03136a770cc"
+        }
+      }
+    }
+  }
+}

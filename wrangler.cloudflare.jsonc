@@ -1,0 +1,10 @@
+{
+  "name": "bisect-lab",
+  "compatibility_date": "2026-10-04",
+  "main": "./cloudflare/source-worker.mjs",
+  "assets": {
+    "directory": "./dist/wasm-lab-build",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/source", "/api/adjacency-release"]
+  }
+}

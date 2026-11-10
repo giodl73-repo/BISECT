@@ -70,7 +70,7 @@ pub fn run_multiscale(
         &std::collections::HashMap<usize, String>,
     )>,
 ) -> Result<HashMap<usize, usize>, String> {
-    run_multiscale_impl::<SmallRng>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, false)
+    run_multiscale_impl::<SmallRng>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, MultiscaleDraws::Host)
 }
 
 /// Fixed-width ChaCha12 and portable Wilson draws for cross-platform replay.
@@ -98,7 +98,83 @@ pub fn run_multiscale_portable(
         &std::collections::HashMap<usize, String>,
     )>,
 ) -> Result<HashMap<usize, usize>, String> {
-    run_multiscale_impl::<rand_chacha::ChaCha12Rng>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, true)
+    run_multiscale_impl::<rand_chacha::ChaCha12Rng>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, MultiscaleDraws::Portable)
+}
+
+/// Explicit rand-0.8.6 native 64-bit SmallRng/Wilson replay profile.
+pub fn run_multiscale_native64(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    total_steps: usize,
+    alpha: f64,
+    p: f64,
+    // GEOID map for building county coarsening — None falls back to CONFIG error
+    geoids: Option<&std::collections::HashMap<usize, String>>,
+    // Resolution level for the fine side (Tract = Option B; BlockGroup = Option A or C)
+    fine_level: MultiscaleFineLevel,
+    // Coarse level string: "county" or "tract"
+    coarse_level: &str,
+    // BG adjacency graph (required for Options A and C; None for Option B)
+    bg_graph: Option<(
+        &[Vec<usize>],
+        &[i64],
+        &std::collections::HashMap<usize, String>,
+    )>,
+) -> Result<HashMap<usize, usize>, String> {
+    run_multiscale_impl::<bisect_ensemble::native64_rng::NativeSmallRng64>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, MultiscaleDraws::Native64)
+}
+
+/// Explicit rand-0.8.6 native 32-bit SmallRng/Wilson replay profile.
+pub fn run_multiscale_native32(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    total_steps: usize,
+    alpha: f64,
+    p: f64,
+    // GEOID map for building county coarsening — None falls back to CONFIG error
+    geoids: Option<&std::collections::HashMap<usize, String>>,
+    // Resolution level for the fine side (Tract = Option B; BlockGroup = Option A or C)
+    fine_level: MultiscaleFineLevel,
+    // Coarse level string: "county" or "tract"
+    coarse_level: &str,
+    // BG adjacency graph (required for Options A and C; None for Option B)
+    bg_graph: Option<(
+        &[Vec<usize>],
+        &[i64],
+        &std::collections::HashMap<usize, String>,
+    )>,
+) -> Result<HashMap<usize, usize>, String> {
+    run_multiscale_impl::<bisect_ensemble::native32_rng::NativeSmallRng32>(adjacency, vertex_weights, edge_weights, num_districts, balance_tolerance, niter, base_seed, total_steps, alpha, p, geoids, fine_level, coarse_level, bg_graph, MultiscaleDraws::Native32)
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum MultiscaleDraws {
+    Host,
+    Portable,
+    Native32,
+    Native64,
+}
+
+impl MultiscaleDraws {
+    pub(super) fn step<R: rand::Rng>(self, chain: &mut bisect_ensemble::recom::RecomChain, rng: &mut R) -> Result<(), String> {
+        match self {
+            Self::Host => { chain.step(rng); }
+            Self::Portable => { chain.step_portable(rng); }
+            Self::Native32 => { chain.step_native32(rng)?; }
+            Self::Native64 => { chain.step_native64(rng)?; }
+        }
+        Ok(())
+    }
 }
 
 fn run_multiscale_impl<R: rand::Rng + rand::SeedableRng>(
@@ -124,7 +200,7 @@ fn run_multiscale_impl<R: rand::Rng + rand::SeedableRng>(
         &[i64],
         &std::collections::HashMap<usize, String>,
     )>,
-    portable: bool,
+    draws: MultiscaleDraws,
 ) -> Result<HashMap<usize, usize>, String> {
     use bisect_ensemble::recom::RecomChain;
     use bisect_multiscale::rebalance::rebalance;
@@ -269,7 +345,7 @@ fn run_multiscale_impl<R: rand::Rng + rand::SeedableRng>(
 
         if is_coarse {
             // Coarse move: step the coarse-level chain
-            if portable { coarse_chain.step_portable(&mut rng); } else { coarse_chain.step(&mut rng); }
+            draws.step(&mut coarse_chain, &mut rng)?;
 
             // Project coarse assignment back to fine level
             for (fine_idx, &coarse_idx) in fine_to_coarse.iter().enumerate() {
@@ -310,7 +386,7 @@ fn run_multiscale_impl<R: rand::Rng + rand::SeedableRng>(
             }
         } else {
             // Fine move: step the fine-level chain
-            if portable { fine_chain.step_portable(&mut rng); } else { fine_chain.step(&mut rng); }
+            draws.step(&mut fine_chain, &mut rng)?;
             assignment_fine = fine_chain.assignment.clone();
             // Sync coarse assignment
             for (fine_idx, &coarse_idx) in fine_to_coarse.iter().enumerate() {

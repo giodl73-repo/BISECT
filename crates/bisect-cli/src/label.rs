@@ -28,7 +28,7 @@ use std::path::PathBuf;
 
 /// Reserved names that cannot be used as labels (they are the output directories
 /// themselves, so a label with one of these names would collide with the layout).
-const RESERVED: &[&str] = &["runs", "analysis", "reports", ".bisect", "configs"];
+
 
 /// Validate a label name.
 ///
@@ -36,35 +36,11 @@ const RESERVED: &[&str] = &["runs", "analysis", "reports", ".bisect", "configs"]
 /// - is non-empty
 /// - contains only `[a-zA-Z0-9_-]`
 /// - does not start with `'.'`
-/// - is not one of the [`RESERVED`] names
+/// - is not one of the shared reserved directory names
 ///
 /// Returns `Ok(())` on success or `Err(human-readable message)` on failure.
 pub fn validate_label_name(label: &str) -> Result<(), String> {
-    if label.is_empty() {
-        return Err("label must not be empty".to_string());
-    }
-
-    if label.starts_with('.') {
-        return Err(format!("label '{label}' must not start with '.'"));
-    }
-
-    if let Some(bad) = label
-        .chars()
-        .find(|c| !c.is_ascii_alphanumeric() && *c != '_' && *c != '-')
-    {
-        return Err(format!(
-            "label '{label}' contains invalid character '{bad}'; \
-             only [a-zA-Z0-9_-] are allowed"
-        ));
-    }
-
-    if RESERVED.contains(&label) {
-        return Err(format!(
-            "'{label}' is a reserved name and cannot be used as a label"
-        ));
-    }
-
-    Ok(())
+    bisect_report::label_rename::validate_name(label)
 }
 
 // ── Top-level directory paths ─────────────────────────────────────────────────

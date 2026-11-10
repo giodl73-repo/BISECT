@@ -1,4 +1,4 @@
-use geo::{Area, BoundingRect, Centroid, ConvexHull, EuclideanLength};
+use geo::{Area, BoundingRect, Centroid, ConvexHull};
 use geo_types::{Coord, LineString, Point, Polygon};
 use rstat_core::summary::weighted_mean;
 /// Compactness metrics: Polsby-Popper, Reock, Convex Hull Ratio,
@@ -42,6 +42,8 @@ pub enum CompactnessError {
     },
     #[error("[NUMERIC] total population overflowed")]
     PopulationOverflow,
+    #[error("Exact Reock vertex search exceeded its work limit")]
+    CircleWorkLimit,
     #[error("[INPUT] non-finite centroid {index}: ({x}, {y})")]
     NonFiniteCentroid { index: usize, x: f64, y: f64 },
     #[error("[INPUT] non-finite district centroid: ({x}, {y})")]
@@ -139,13 +141,16 @@ pub fn reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
 /// minimum circle containing all exterior vertices also contains every exterior
 /// edge segment because circles are convex.
 pub fn exact_reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
+    exact_reock_bounded(polygon,&mut 0,None)
+}
+pub fn exact_reock_bounded(polygon:&Polygon<f64>,work:&mut usize,limit:Option<usize>)->Result<f64,CompactnessError>{
     validate_polygon_finite(polygon)?;
     let area = polygon.unsigned_area();
     validate_result("exact_reock area", area)?;
     if area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
-    let circle = minimum_bounding_circle(polygon)?;
+    let circle = minimum_bounding_circle_bounded(polygon,work,limit)?;
     if circle.radius == 0.0 {
         return Ok(0.0);
     }
@@ -158,6 +163,9 @@ pub fn exact_reock(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
 }
 
 pub fn minimum_bounding_circle(polygon: &Polygon<f64>) -> Result<BoundingCircle, CompactnessError> {
+    minimum_bounding_circle_bounded(polygon,&mut 0,None)
+}
+fn minimum_bounding_circle_bounded(polygon:&Polygon<f64>,work:&mut usize,limit:Option<usize>)->Result<BoundingCircle,CompactnessError>{
     validate_polygon_finite(polygon)?;
     let points = exterior_points(polygon);
     let area = polygon.unsigned_area();
@@ -165,7 +173,13 @@ pub fn minimum_bounding_circle(polygon: &Polygon<f64>) -> Result<BoundingCircle,
     if points.is_empty() || area == 0.0 {
         return Err(CompactnessError::EmptyGeometry);
     }
-    let circle = smallest_enclosing_circle(&points);
+    charge_circle_work(work,points.len().checked_mul(points.len().max(1).ilog2() as usize+1).ok_or(CompactnessError::CircleWorkLimit)?,limit)?;
+    let hull=polygon.convex_hull();
+    let vertices=exterior_points(&hull);
+    let origin=vertices[0];
+    let local:Vec<_>=vertices.iter().map(|p|Coord{x:p.x-origin.x,y:p.y-origin.y}).collect();
+    let mut circle=smallest_enclosing_circle_bounded(&local,work,limit)?;
+    circle.center_x+=origin.x;circle.center_y+=origin.y;
     validate_result("minimum_bounding_circle center_x", circle.center_x)?;
     validate_result("minimum_bounding_circle center_y", circle.center_y)?;
     validate_result("minimum_bounding_circle radius", circle.radius)?;
@@ -215,8 +229,10 @@ pub fn schwartzberg(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
 /// The minimum bounding rectangle (MBR) is found via rotating calipers on the
 /// convex hull: for each edge of the hull we rotate so that edge is horizontal,
 /// compute the axis-aligned bounding box in that frame, and keep the box with
-/// the smallest area. This is the standard O(n) rotating-calipers result after
-/// computing the O(n log n) convex hull.
+/// the smallest area. This implementation scans all vertices for every edge
+/// (O(n²) after the convex hull). Equal-area boxes choose the smallest aspect
+/// ratio within a coordinate-roundoff tolerance. Relative coordinates reduce
+/// translation cancellation; the tie rule makes ambiguous boxes deterministic.
 ///
 /// Range [1, ∞); 1 = square or circle; 2 = 2:1 rectangle.
 pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessError> {
@@ -242,6 +258,7 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
     // compute axis-aligned bounding box, track minimum-area box and its ratio.
     let mut min_box_area = f64::MAX;
     let mut best_ratio: f64 = 1.0;
+    let coordinate_scale=coords[..n].iter().fold(0.0_f64,|scale,c|scale.max(c.x.abs()).max(c.y.abs()));
 
     for i in 0..n {
         let c0 = coords[i];
@@ -267,8 +284,10 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
         let mut y_max = f64::MIN;
 
         for c in &coords[..n] {
-            let xr = c.x * cos_a + c.y * sin_a;
-            let yr = -c.x * sin_a + c.y * cos_a;
+            let x=c.x-c0.x;
+            let y=c.y-c0.y;
+            let xr = x * cos_a + y * sin_a;
+            let yr = -x * sin_a + y * cos_a;
             validate_result("length_width_ratio rotated x", xr)?;
             validate_result("length_width_ratio rotated y", yr)?;
             if xr < x_min {
@@ -292,10 +311,20 @@ pub fn length_width_ratio(polygon: &Polygon<f64>) -> Result<f64, CompactnessErro
         validate_result("length_width_ratio box height", h)?;
         validate_result("length_width_ratio box area", box_area)?;
 
-        if box_area > 0.0 && box_area < min_box_area {
-            min_box_area = box_area;
-            best_ratio = if w >= h { w / h } else { h / w };
-            validate_result("length_width_ratio ratio", best_ratio)?;
+        if box_area > 0.0 {
+            let ratio=if w>=h {w/h}else{h/w};
+            validate_result("length_width_ratio ratio",ratio)?;
+            // Products of represented coordinates carry uncertainty proportional
+            // to coordinate magnitude and box span. Treat only roundoff-sized
+            // area differences as ties; choose the least elongated tied box.
+            let tolerance=64.0*f64::EPSILON*(box_area+coordinate_scale*w.max(h));
+            if min_box_area==f64::MAX || box_area<min_box_area-tolerance {
+                min_box_area=box_area;
+                best_ratio=ratio;
+            }else if (box_area-min_box_area).abs()<=tolerance {
+                min_box_area=min_box_area.min(box_area);
+                best_ratio=best_ratio.min(ratio);
+            }
         }
     }
 
@@ -493,7 +522,12 @@ fn validate_centroid(
 /// exterior ring perimeter, NOT including interior holes. Holes are excluded
 /// to maintain parity with `analyze_district_compactness.py:polsby_popper_score`.
 fn polygon_perimeter(polygon: &Polygon<f64>) -> f64 {
-    polygon.exterior().euclidean_length()
+    // The host's hypot and WASM's software hypot can differ by an ulp.
+    // Use the same scaled, overflow-safe implementation and input order on
+    // both platforms so receipt hashes do not depend on the host math library.
+    polygon.exterior().lines().map(|line| {
+        libm::hypot(line.end.x - line.start.x, line.end.y - line.start.y)
+    }).sum()
 }
 
 /// Max Euclidean distance from centroid to any exterior boundary coordinate.
@@ -518,6 +552,32 @@ fn exterior_points(polygon: &Polygon<f64>) -> Vec<Coord<f64>> {
     points
 }
 
+fn charge_circle_work(work:&mut usize,n:usize,limit:Option<usize>)->Result<(),CompactnessError>{
+    *work=work.checked_add(n).ok_or(CompactnessError::CircleWorkLimit)?;
+    if limit.is_some_and(|max|*work>max){return Err(CompactnessError::CircleWorkLimit);}Ok(())
+}
+fn smallest_enclosing_circle_bounded(points:&[Coord<f64>],work:&mut usize,limit:Option<usize>)->Result<BoundingCircle,CompactnessError>{
+    let mut best=BoundingCircle{center_x:0.,center_y:0.,radius:f64::INFINITY};
+    // Any containing diameter circle meets the radius lower bound imposed by
+    // its endpoints, so no triple search is necessary after that proof.
+    for i in 0..points.len(){for j in i+1..points.len(){
+        charge_circle_work(work,1+points.len(),limit)?;
+        let circle=circle_from_diameter(points[i],points[j]);
+        if contains_all(&circle,points){return Ok(circle);}
+    }}
+    for i in 0..points.len(){for j in i+1..points.len(){for k in j+1..points.len(){
+        charge_circle_work(work,1,limit)?;
+        if let Some(circle)=circle_from_three_points(points[i],points[j],points[k]){
+            if circle.radius<best.radius{
+                charge_circle_work(work,points.len(),limit)?;
+                if contains_all(&circle,points){best=circle;}
+            }
+        }
+    }}}
+    Ok(best)
+}
+
+#[cfg(test)]
 fn smallest_enclosing_circle(points: &[Coord<f64>]) -> BoundingCircle {
     if points.len() == 1 {
         return BoundingCircle {
@@ -571,15 +631,13 @@ fn circle_from_diameter(a: Coord<f64>, b: Coord<f64>) -> BoundingCircle {
 }
 
 fn circle_from_three_points(a: Coord<f64>, b: Coord<f64>, c: Coord<f64>) -> Option<BoundingCircle> {
-    let d = 2.0 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
-    if d.abs() < 1e-12 {
-        return None;
-    }
-    let a2 = a.x * a.x + a.y * a.y;
-    let b2 = b.x * b.x + b.y * b.y;
-    let c2 = c.x * c.x + c.y * c.y;
-    let center_x = (a2 * (b.y - c.y) + b2 * (c.y - a.y) + c2 * (a.y - b.y)) / d;
-    let center_y = (a2 * (c.x - b.x) + b2 * (a.x - c.x) + c2 * (b.x - a.x)) / d;
+    // Circumcenter relative to one support point avoids large-offset cancellation.
+    let bx=b.x-a.x;let by=b.y-a.y;let cx=c.x-a.x;let cy=c.y-a.y;
+    let d=2.0*(bx*cy-by*cx);
+    if d==0.0{return None;}
+    let b2=bx*bx+by*by;let c2=cx*cx+cy*cy;
+    let center_x=a.x+(cy*b2-by*c2)/d;
+    let center_y=a.y+(bx*c2-cx*b2)/d;
     let center = Coord {
         x: center_x,
         y: center_y,
@@ -598,7 +656,7 @@ fn contains_all(circle: &BoundingCircle, points: &[Coord<f64>]) -> bool {
     };
     points
         .iter()
-        .all(|&point| distance(center, point) <= circle.radius + 1e-9)
+        .all(|&point| distance(center, point) <= circle.radius * (1.0+64.0*f64::EPSILON))
 }
 
 fn distance(a: Coord<f64>, b: Coord<f64>) -> f64 {
@@ -864,6 +922,64 @@ mod tests {
         ));
     }
 
+
+    #[test]
+    fn minimum_rectangle_ties_are_translation_rotation_and_scale_invariant() {
+        // A 3-4-5 right triangle has two equal-area MBRs: 4×3 and 5×2.4.
+        // Their ratios differ; the declared tie rule selects 4/3.
+        for offset in [0.0,10.0,1_000_000.0] {
+            for angle in [0.0_f64,0.37,1.1] {
+                for scale in [0.01,1.0,1000.0] {
+                    for reversed in [false,true] {
+                        let mut points=vec![(0.0,0.0),(4.0,0.0),(0.0,3.0)];
+                        if reversed {points.reverse();}
+                        points.push(points[0]);
+                        let ring=LineString::from(points.into_iter().map(|(x,y)|
+                            (offset+scale*(x*angle.cos()-y*angle.sin()),-offset+scale*(x*angle.sin()+y*angle.cos()))).collect::<Vec<_>>());
+                        let ratio=length_width_ratio(&Polygon::new(ring,vec![])).unwrap();
+                        assert!((ratio-4.0/3.0).abs()<1e-5,"offset={offset}, angle={angle}, scale={scale}, reversed={reversed}, ratio={ratio}");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn unique_minimum_rectangle_is_translation_invariant() {
+        let coords=vec![(0.,0.),(5.,0.),(4.,2.),(1.,3.),(0.,0.)];
+        let reference=length_width_ratio(&Polygon::new(LineString::from(coords.clone()),vec![])).unwrap();
+        for offset in [10.,1_000_000.] {
+            let shifted=Polygon::new(LineString::from(coords.iter().map(|(x,y)|(x+offset,y-offset)).collect::<Vec<_>>()),vec![]);
+            assert!((length_width_ratio(&shifted).unwrap()-reference).abs()<1e-12);
+        }
+    }
+
+
+    #[test]fn hull_circle_search_matches_exhaustive_small_cases(){
+        for case in 0..100 {
+            let points:Vec<_>=(0..8).map(|i|Coord{x:((case*17+i*23)%101) as f64,y:((case*31+i*47)%97) as f64}).collect();
+            let old=smallest_enclosing_circle(&points);
+            let got=smallest_enclosing_circle_bounded(&points,&mut 0,Some(50_000_000)).unwrap();
+            assert!((old.radius-got.radius).abs()<1e-9,"case {case}");assert!(contains_all(&got,&points));
+        }
+    }
+    #[test]fn small_acute_triangle_requires_a_circumcircle(){
+        for scale in [1e-8,1.0,1000.0]{
+            let poly=Polygon::new(LineString::from(vec![(0.,0.),(2.*scale,0.),(scale,3.0_f64.sqrt()*scale),(0.,0.)]),vec![]);
+            let circle=minimum_bounding_circle(&poly).unwrap();
+            assert!((circle.radius/(2.*scale/3.0_f64.sqrt())-1.).abs()<1e-12);
+        }
+    }
+    #[test]fn minimum_circle_translation_scale_and_work_guard(){
+        for scale in [1e-8,1.,1000.] {
+            for offset in [0.,1000000.] {
+                if scale<1e-6&&offset!=0. {continue;}
+                let p=Polygon::new(LineString::from(vec![(offset,offset),(offset+4.*scale,offset),(offset,offset+3.*scale),(offset,offset)]),vec![]);
+                let c=minimum_bounding_circle(&p).unwrap();assert!((c.radius/(2.5*scale)-1.).abs()<1e-9);
+                assert!(matches!(exact_reock_bounded(&p,&mut 0,Some(1)),Err(CompactnessError::CircleWorkLimit)));
+            }
+        }
+    }
     // ── Length-Width Ratio ───────────────────────────────────────────────────
 
     #[test]

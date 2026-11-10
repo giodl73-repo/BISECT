@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 /// audit.rs — chain-of-custody, SHA-256 hashing, verification command generation.
 ///
 /// Spec 6 / Board amendments:
@@ -26,17 +25,7 @@ pub fn sha256_file(path: &Path) -> anyhow::Result<String> {
     Ok(hex::encode(hasher.finalize()))
 }
 
-/// Record of an external analyzer script used during analysis.
-/// Stored in manifest.json to support independent reproducibility checks.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExternalAnalyzerRecord {
-    /// Relative path or basename of the script
-    pub script: String,
-    /// SHA-256 of the script file at time of run
-    pub sha256: String,
-    /// Command template with {assignments_json} and {output_dir} placeholders
-    pub command: String,
-}
+pub use crate::verification::{ExternalAnalyzerRecord, generate_verification_command, generate_verification_command_from_manifest, generate_verification_script};
 
 impl ExternalAnalyzerRecord {
     /// Create a record from a script path and command template.
@@ -49,112 +38,6 @@ impl ExternalAnalyzerRecord {
             command: command_template.to_string(),
         })
     }
-}
-
-/// Generate the machine-readable verification command from a plan manifest.
-///
-/// Board amendments:
-/// - No local file paths — only relative paths and BISECT CLI flags
-/// - Must include --seed for reproducibility
-/// - Must include sha256sum step for external analyzer scripts (board amendment R3)
-/// - Format: a shell script fragment that can be embedded in audit.json
-pub fn generate_verification_command(
-    label: &str,
-    state_code: &str,
-    year: &str,
-    seed: Option<i64>,
-    chamber: &str,
-    num_districts: usize,
-    adjacency_file: &str,
-    adjacency_sha256: &str,
-    tiger_source_url: &str,
-    tiger_sha256: Option<&str>,
-    external_analyzers: &[ExternalAnalyzerRecord],
-) -> String {
-    let seed_str = seed
-        .map(|s| format!(" --seed {}", s))
-        .unwrap_or_else(|| " --seed <unknown: seed not recorded in manifest>".to_string());
-
-    let tiger_check = if let Some(sha) = tiger_sha256 {
-        format!(
-            "\n# Verify TIGER source shapefile (download from Census.gov):\n# wget '{}'\n# sha256sum <downloaded_file>  # expected: {}",
-            tiger_source_url, sha
-        )
-    } else {
-        format!("\n# Download TIGER source from:\n# {}", tiger_source_url)
-    };
-
-    let adj_check = format!(
-        "\n# Verify adjacency file:\n# sha256sum {}  # expected: {}\
-        \n# If not present locally: bisect fetch --type adjacency --states {} --year {}",
-        adjacency_file, adjacency_sha256, state_code, year
-    );
-
-    let external_checks: String = external_analyzers
-        .iter()
-        .map(|rec| {
-            format!(
-                "\n# Verify external analyzer script:\n# sha256sum {}  # expected: {}\n# {}",
-                rec.script, rec.sha256, rec.command
-            )
-        })
-        .collect();
-
-    format!(
-        "# Verification command for plan: {label}\n\
-        # Re-run with identical parameters to reproduce:\n\
-        bisect state --state {state} --year {year} --chamber {chamber} --districts {num_districts} --label {label}{seed}\n\
-        {tiger_check}\n\
-        {adj_check}{external_checks}",
-        label = label,
-        state = state_code,
-        year = year,
-        chamber = chamber,
-        num_districts = num_districts,
-        seed = seed_str,
-        tiger_check = tiger_check,
-        adj_check = adj_check,
-        external_checks = external_checks,
-    )
-}
-
-/// Generate ONLY the executable lines from the verification command (no comment lines).
-///
-/// Returns a shell script fragment containing only the commands that can be run directly
-/// (lines that do not start with `#` and are not empty).
-///
-/// Used by `BISECT export --format reproducibility-package` to write `verify.sh`.
-pub fn generate_verification_script(manifest: &crate::manifest::PlanManifest) -> String {
-    let full_cmd = generate_verification_command_from_manifest(manifest);
-    // Keep only lines that are NOT comments (don't start with #)
-    // and are not empty
-    full_cmd
-        .lines()
-        .filter(|line| {
-            let trimmed = line.trim();
-            !trimmed.is_empty() && !trimmed.starts_with('#')
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-/// High-level convenience wrapper using a PlanManifest.
-pub fn generate_verification_command_from_manifest(
-    manifest: &crate::manifest::PlanManifest,
-) -> String {
-    generate_verification_command(
-        &manifest.label,
-        &manifest.state_code,
-        &manifest.year,
-        manifest.seed,
-        &manifest.chamber,
-        manifest.num_districts,
-        &manifest.adjacency_file,
-        &manifest.adjacency_sha256,
-        &manifest.tiger_source_url,
-        manifest.tiger_sha256.as_deref(),
-        &[],
-    )
 }
 
 // ---------------------------------------------------------------------------

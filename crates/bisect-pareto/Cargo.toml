@@ -14,6 +14,7 @@ rplan-core = { path = "../rplan-core" }
 rplan-io = { path = "../rplan-io" }
 ropt-core = { path = "../ropt-core" }
 rand.workspace = true
+rand_chacha = "0.3"
 sha2.workspace = true
 rayon.workspace = true
 serde.workspace = true

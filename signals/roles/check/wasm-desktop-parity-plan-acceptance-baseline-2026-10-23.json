@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-23",
+  "head": "383db340235e21d752a35610aab28e2948b73e57",
+  "dirty_worktree": true,
+  "scope": "Planning review baseline; byte identity only, not runtime or build acceptance",
+  "files": [
+    {
+      "path": "docs/specs/wasm-desktop-parity-plan.md",
+      "sha256": "2a5a2ee7ced297230dd74afe2adefc7e22b3f13347c0f3ab759adedf5d881400",
+      "byte_length": 38162
+    },
+    {
+      "path": "docs/specs/wasm-parity-ledger.md",
+      "sha256": "8effd4335c80a4bd8ce63b91f5a92c633b1bd93418dd86153de5c58b47357d07",
+      "byte_length": 15614
+    },
+    {
+      "path": "signals/roles/check/wasm-desktop-parity-plan-acceptance-roles-check-2026-10-23.md",
+      "sha256": "d4c6f2c58ea4d62b3724a2ab10e9da12725ad8eaca97324bc82090f2d38497e0",
+      "byte_length": 11039
+    },
+    {
+      "path": "design/pitfalls/pitfalls-pipeline.md",
+      "sha256": "20ae7ed9515eacace0a66081c7f22d7b1a54c1b1ce02e0f637ea0b9e873b15a6",
+      "byte_length": 48291
+    },
+    {
+      "path": "design/pitfalls/README.md",
+      "sha256": "abd1ea3a799596a297eabb82f02f3b0ede00934318567aab44ef3e2f76852e6f",
+      "byte_length": 7760
+    },
+    {
+      "path": ".roles/ROLE.md",
+      "sha256": "1b361a6ab3230dd1ed701bad4df423f28f836d4434f936e855e7dbc940cb972b",
+      "byte_length": 5490
+    },
+    {
+      "path": ".roles/meridian.md",
+      "sha256": "b04e1bb2900a4dbdc7d7af7ca24ede9dc12f6098a2f7333b35bb9881912b3dec",
+      "byte_length": 2768
+    },
+    {
+      "path": ".roles/benchmark.md",
+      "sha256": "36e74e09cdc0d7f5931c7bd0e0436dc8e88d37b7d2bb9432d800ffaeec3f5afa",
+      "byte_length": 3883
+    },
+    {
+      "path": ".roles/covenant.md",
+      "sha256": "1949da7a5dafc2d1834c7ece1d60111daef53a6a4430f74540113e2cbfb85771",
+      "byte_length": 4050
+    },
+    {
+      "path": ".roles/ledger.md",
+      "sha256": "ecb264d569666727313b917a5f9891e221946c6f027d40daaca1d5bf4dce3578",
+      "byte_length": 4210
+    },
+    {
+      "path": ".roles/vault.md",
+      "sha256": "0f8d4983b036d507577ae10cb61cf431cb2105ada8e384d884cbaf7a664852cc",
+      "byte_length": 2775
+    },
+    {
+      "path": ".roles/trench.md",
+      "sha256": "f2a8285643bb05989fbb1128d588433b3137fd6849b93d2425b363b94cece739",
+      "byte_length": 3363
+    },
+    {
+      "path": ".roles/survey.md",
+      "sha256": "0ae9646045913ffde5e44bd2a87cb30cf201b935969547d4060e33a7a1dbc4e7",
+      "byte_length": 2705
+    },
+    {
+      "path": "web/lab/native-output-verification.js",
+      "sha256": "f84ea578959e227dd53c8c49f7849b67478e6f84632a10c4ec370fe025b60deb",
+      "byte_length": 13367
+    },
+    {
+      "path": "web/lab/native-workspace-source.js",
+      "sha256": "49410dbb214b5c50249f438c06254db3893c18a791a294127e0df88b66095e76",
+      "byte_length": 12619
+    },
+    {
+      "path": "web/lab/workbench.js",
+      "sha256": "e9eb104120fe7b109e131bbd18d47dd654b6fc3c5d60207a0f9c4136bb577849",
+      "byte_length": 640229
+    },
+    {
+      "path": "web/lab/workbench.html",
+      "sha256": "8b4ab4374304879b976a84b77b5c0bca5c0c57d28d7866d4b5c37972f116fab4",
+      "byte_length": 258632
+    },
+    {
+      "path": "scripts/web/test_native_output_verification.mjs",
+      "sha256": "d0b96c1174def674ab681da375d20f4e1e6008aef61317e6a7c6bd00aac55de8",
+      "byte_length": 10788
+    },
+    {
+      "path": "scripts/web/build_wasm.ps1",
+      "sha256": "f597a82779286f76014b7bce6e3a17fab894e5d38c01885346aa8556aa21526e",
+      "byte_length": 98781
+    },
+    {
+      "path": "scripts/web/build_wasm_lab.ps1",
+      "sha256": "abd26610b73374bf740539dac3392a8622cf664cc2e61b12992d6372a0b1397d",
+      "byte_length": 27202
+    },
+    {
+      "path": "scripts/web/build_workspace_preview.ps1",
+      "sha256": "69a2e27954f49b4330ffd4411ea3be7a20742bc6841b5d71221be97af8a177e9",
+      "byte_length": 10904
+    },
+    {
+      "path": "scripts/web/check_cffi_legacy_gates.ps1",
+      "sha256": "e76123513732438e6563bb2a14270344ec488594c2f0d7c90897dc0cc20e0ac2",
+      "byte_length": 4632
+    },
+    {
+      "path": "crates/bisect-wasm/src/verify_replay.rs",
+      "sha256": "9237def0380fce2be4c5ed5233b7db0966552ff94d85f1e6a7a5a5d98cb20bb0",
+      "byte_length": 8206
+    },
+    {
+      "path": "target/native-output-verification/evidence.json",
+      "sha256": "16b432e6d7edc49ef01e2f37a6b611762091bfb0aaab46ffeee8c6293d7adf57",
+      "byte_length": 654
+    }
+  ],
+  "checks": [
+    {
+      "command": "python scripts/web/wasm_parity_ledger.py",
+      "exit_code": 1,
+      "reason": "bisect.State: Stale evidence: web/lab/native-workspace-source.js"
+    },
+    {
+      "command": "python scripts/web/wasm_parity_ledger.py --full-parity",
+      "exit_code": 1,
+      "reason": "bisect.Run: Parent evidence has not been verified"
+    }
+  ],
+  "full_parity": false,
+  "runtime_acceptance": false
+}

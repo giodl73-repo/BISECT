@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {WasmCatalog} from '../../web/lab/wasm-catalog.js';
+import {createLabProject,validateLabConfig} from '../../web/lab/laboratory-project.js';
+const root=path.resolve('target/state-run-profile');await fs.mkdir(root,{recursive:true});const source='dist/wasm-lab-build',catalog=JSON.parse(await fs.readFile(source+'/catalog.json','utf8')),engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+let nativeMatches=0,refusals=0,cliMatches=0,lastRequest;const requests=[];
+async function host(request,name){const file=path.join(root,name+'.json');await fs.writeFile(file,JSON.stringify(request));return spawnSync(path.resolve('target/release/examples/'+(request.operation?'execute_tool_request.exe':'execute_request.exe')),[file],{encoding:'utf8',maxBuffer:64*1024*1024});}
+const original=JSON.parse(await fs.readFile(path.join(root,'original-cli-profile.json'),'utf8'));
+for(const record of original.records){const file=path.join(root,'cli-'+record.name+'.json');await fs.writeFile(file,JSON.stringify([record.command??'state',...(record.command==='states'?[]:['--state','RI']),...record.args]));const ref=spawnSync(path.resolve('target/debug/examples/state_profile_reference.exe'),[file],{encoding:'utf8'});assert.equal(ref.status,0,ref.stderr);const actual=JSON.parse(ref.stdout);assert.equal(actual.allowed,record.profile_error===null);assert.equal(actual.error,record.profile_error);cliMatches++;}
+class Worker{postMessage(m){queueMicrotask(()=>{try{if(m.type==='initialize'){this.onmessage({data:{type:'ready'}});return;}lastRequest=m.request;requests.push(m.request);this.onmessage({data:{type:'result',id:m.id,result:engine.execute(m.request)}});}catch(e){this.onmessage({data:{type:'error',id:m.id,error:e.message}});}});}terminate(){}}
+const fetcher=async ref=>{const b=await fs.readFile(source+'/'+ref);return {ok:true,arrayBuffer:async()=>b.buffer.slice(b.byteOffset,b.byteOffset+b.length)};};const base=JSON.parse(await fs.readFile('target/county-state-oracle/browser.bisect','utf8')).experiment.config;
+const cases=[];
+for(const profile of [undefined,'open','court','bulletproof'])for(const build of [false,true]){
+ const config={...base,mode:'state',states:['RI'],districts:2,structure:'standard-bisect',weights:'unweighted',search:'single',alpha_county:0,seed:null,balance_tolerance:50,...(profile?{profile}:{}),...(build?{native_build:true}:{})};
+ const lab=new WasmCatalog(catalog,fetcher,()=>new Worker()),job=lab.submit(config);while(lab.active)await new Promise(resolve=>setTimeout(resolve,5));const completed=lab.jobs.get(job.id);assert.equal(completed.status,'completed',completed.logs.join('\n'));const request=structuredClone(lastRequest),actual=engine.execute(request),ref=await host(request,'run-'+cases.length);assert.equal(ref.status,0,ref.stderr);assert.deepEqual(actual,JSON.parse(ref.stdout));nativeMatches++;
+ const raw=structuredClone(request);delete (raw.request??raw).options.profile;assert.deepEqual(actual.assignments,engine.execute(raw).assignments);
+ const snapshot=await createLabProject(lab,job.id),restored=new WasmCatalog(catalog,fetcher,()=>{throw new Error('Open must not run');});await restored.restoreProject(snapshot);assert.equal(snapshot.experiment.config.profile,profile);
+ if(profile==='court'&&!build){await fs.writeFile(path.join(root,'browser.bisect'),JSON.stringify(snapshot));const audit=await lab.exportPractitionerProject(job.id,'RI');assert.equal(audit.exported.document.provenance.producer.engine_options.profile,'court');const saved=structuredClone(snapshot);saved.experiment.config.profile='open';await assert.rejects(()=>restored.restoreProject(saved),/options disagree/);refusals++;}
+ cases.push({profile:profile??'omitted',build,exact_native:true,unchanged_assignments:true});
+}
+const start=requests.length,nationalConfig={...base,mode:'national',states:['RI','IA'],districts:null,structure:'standard-bisect',weights:'unweighted',search:'single',alpha_county:0,seed:null,balance_tolerance:50,profile:'court'},national=new WasmCatalog(catalog,fetcher,()=>new Worker()),nationalJob=national.submit(nationalConfig);
+while(national.active)await new Promise(resolve=>setTimeout(resolve,5));assert.equal(national.jobs.get(nationalJob.id).status,'completed');
+for(const request of requests.slice(start)){assert.equal(request.options.profile,'court');const out=engine.execute(request),ref=await host(request,'national-'+request.graph.state);assert.equal(ref.status,0,ref.stderr);assert.deepEqual(out,JSON.parse(ref.stdout));nativeMatches++;}
+assert.equal(requests.length-start,2);const nationalProject=await createLabProject(national,nationalJob.id);await new WasmCatalog(catalog,fetcher,()=>{throw new Error('National Open must be inert');}).restoreProject(nationalProject);await fs.writeFile(path.join(root,'national.bisect'),JSON.stringify(nationalProject));
+const graph=JSON.parse(await fs.readFile(source+'/'+catalog.graphs['RI:2020'].graph_ref,'utf8')),options={structure:'standard-bisect',weights:'unweighted',search:'single',districts:2,seed:null,seeds:3,steps:3,percentile:0,alpha_county:0,balance_tolerance:50,area_swing:1.1,iterations:10,profile:'court'};
+const spectralRequest={graph,options:{...options,structure:'spectral'}},spectral=engine.execute(spectralRequest),spectralRef=await host(spectralRequest,'court-spectral-no-seed');assert.equal(spectralRef.status,0,spectralRef.stderr);assert.deepEqual(spectral,JSON.parse(spectralRef.stdout));nativeMatches++;assert.equal(spectral.options.seed,null);
+const partisanInput={schema_version:'bisect-partisan-shares-v1',state:'RI',year:'2020',source_label:'synthetic shares for filter refusal',dem_shares:Object.fromEntries(graph.geoids.map(id=>[id,.5]))};
+for(const [name,request,expected]of [
+ ['multi',{graph,options:{...options,search:'multi'}},'court-multi'],
+ ['partisan',{graph,options:{...options,weights:'partisan'}},'court-partisan'],
+ ['shares-first',{graph,options:{...options,weights:'partisan'},partisan:partisanInput},'court-shares-first'],
+ ['unused-shares',{graph,options,partisan:partisanInput},'court-shares-first']
+]){const message=original.records.find(r=>r.name===expected).profile_error;assert.throws(()=>engine.execute(request),e=>e.message===message);const ref=await host(request,'refusal-'+name);assert.notEqual(ref.status,0);assert(ref.stderr.includes(message),ref.stderr);refusals++;}
+const multi=JSON.parse(JSON.parse(await fs.readFile('target/prepared-engine-multiscale/partisan-bg.bisect','utf8')).files.preparedEngineInputs.source.text);delete multi.fine_edges;multi.input.request.options.profile='court';const message=original.records.find(r=>r.name==='court-multiscale').profile_error;
+// Geographic multiscale ensures the outer search guard is exercised first.
+multi.input.request.options.weights='unweighted';delete multi.input.request.partisan;
+assert.throws(()=>engine.execute(multi),e=>e.message===message);const multiRef=await host(multi,'multiscale-refusal');assert.notEqual(multiRef.status,0);assert(multiRef.stderr.includes(message),multiRef.stderr);refusals++;
+for(const profile of ['invalid',true,0])assert.throws(()=>engine.execute({graph,options:{...options,profile}}));assert.throws(()=>validateLabConfig({...base,profile:'invalid'}));
+await fs.writeFile(path.join(root,'evidence.json'),JSON.stringify({original_cli_preflight_matches:cliMatches,original_cli_hash:original.native_cli_sha256,original_cli_completed_state_runs:false,native_host_matches:nativeMatches,matching_refusals_and_tamper_guards:refusals,cases,unseeded_court_is_native_behavior:true,structure_not_filtered_by_native_policy:true,national_two_state_propagation:true,outer_multiscale_guard:true,inert_open_and_exact_option_retention:true,practitioner_export_retains_profile:true,wasm_sha256:engine.artifactIdentity.sha256,scope:'Native State/States configuration filter only. Original CLI allowed observations continued past preflight but failed later and are not completed generation claims. No legal certification or expanded deterministic guarantee.'},null,2));console.log(`State run profile: ${cliMatches} original CLI preflight matches, ${nativeMatches} full native/WASM ordinary/build runs, ${refusals} refusal/tamper guards passed.`);

@@ -2,3 +2,6 @@
 /* Portable browser experiment controls. */
 .demographic-details{margin:0 0 18px}.demographic-details summary{cursor:pointer;font-size:11px;font-weight:600}.demographic-details>p{font-size:10px;color:var(--muted);line-height:1.65;margin:10px 0}.demographic-details .table-scroll{border:1px solid var(--line);border-radius:5px;background:white}
 .lab-project-controls{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.lab-project-controls h2{font-size:14px;margin:0 0 10px}.lab-project-controls>button{padding:7px 10px;border:1px solid var(--line);border-radius:4px;margin-bottom:10px}.lab-project-controls p{font-size:11px;color:var(--muted);line-height:1.5}.lab-project-controls input[type=file]{height:auto;font-size:11px;padding:7px 5px}
+
+.snapshot-control { padding: 10px 18px; margin: 0; border-bottom: 1px solid var(--border, #dde7e1); }
+.state-tile.completed.balance-missed{background:#fff1dd;border-color:#c89552}.state-tile.balance-missed .deviation-bad{color:#78430e;font-weight:600}

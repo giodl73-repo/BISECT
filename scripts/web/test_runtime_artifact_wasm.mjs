@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const bytes=await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm');
+const storage=Buffer.alloc(bytes.length+8);bytes.copy(storage,4);const slice=storage.subarray(4,4+bytes.length),pending=instantiateEngine(slice);storage.fill(0);const engine=await pending;
+const identity={sha256:createHash('sha256').update(bytes).digest('hex'),byte_length:bytes.length};assert.deepEqual(engine.artifactIdentity,identity);assert.ok(Object.isFrozen(engine.artifactIdentity));assert.throws(()=>{engine.artifactIdentity={sha256:'fake'};});
+const root='target/runtime-artifact-wasm';await fs.mkdir(root,{recursive:true});let parity=0;
+for(const [name,hash,loaded,status]of [['equal',identity.sha256,identity,'match'],['native-other','0'.repeat(64),identity,'mismatch'],['upper',identity.sha256.toUpperCase(),identity,'mismatch'],['empty','',identity,'not-recorded'],['sentinel','(not available)',identity,'not-recorded'],['missing',undefined,identity,'not-recorded'],['unavailable',identity.sha256,null,'unavailable']]){
+ const manifest_json=JSON.stringify({binary_version:'0.1.0',binary_sha256:hash});const request={operation:'verify-run-manifest',source_name:name+'.json',manifest_json,runtime_artifact:loaded};
+ const result=engine.execute(request);await fs.writeFile(root+'/request.json',JSON.stringify(request));const native=JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[root+'/request.json'],{encoding:'utf8',maxBuffer:8*1024*1024}));const {build_unix:wasmTime,...wasmBuild}=result.current_build,{build_unix:hostTime,...hostBuild}=native.current_build;assert.match(wasmTime,/^\d+$/);assert.match(hostTime,/^\d+$/);assert.deepEqual(wasmBuild,hostBuild);assert.deepEqual({...native,current_build:wasmBuild},{...result,current_build:wasmBuild});assert.equal(result.binary_check.status,status);assert.equal(result.native_exit_code,0);assert.equal(result.binary_check.advisory,true);parity++;
+ const manifestSource={name:name+'.json',base64:Buffer.from(manifest_json).toString('base64')};const project=createProject({name:'Runtime artifact '+name,files:{manifestSource},operation:'verify-run-manifest',constraints:[],result,lastOperation:'verify-run-manifest'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/'+name+'.bisect',JSON.stringify(project));
+}
+for(const artifact of [{sha256:'X'.repeat(64),byte_length:1},{sha256:identity.sha256,byte_length:0},{sha256:identity.sha256,byte_length:256*1024*1024+1},{...identity,extra:true}])assert.throws(()=>engine.execute({operation:'verify-run-manifest',source_name:'bad.json',manifest_json:'{}',runtime_artifact:artifact}));
+const messages=[],self={postMessage:m=>messages.push(m)},worker=await fs.readFile('web/lab/wasm-worker.js','utf8');const sandbox=vm.createContext({self,crypto,Uint8Array,ArrayBuffer,Number,Error,URL,fetch:async()=>({ok:true,arrayBuffer:async()=>Uint8Array.from(bytes).buffer}),instantiateEngine});vm.runInContext(worker.replace(/^import .*;\r?$/gm,'').replaceAll('import.meta.url',JSON.stringify('https://local.invalid/wasm-worker.js')),sandbox);
+await self.onmessage({data:{type:'initialize',url:'https://local.invalid/engine.wasm'}});assert.equal(messages.at(-1).type,'ready');assert.deepEqual(messages.at(-1).runtimeArtifact,identity);
+await self.onmessage({data:{type:'run',id:1,request:{operation:'verify-run-manifest',source_name:'worker.json',manifest_json:JSON.stringify({binary_version:'0.1.0',binary_sha256:identity.sha256}),runtime_artifact:{sha256:'0'.repeat(64),byte_length:1}}}});const receipt=messages.at(-1).result;assert.equal(receipt.binary_check.status,'match');assert.deepEqual(receipt.binary_check.loaded_wasm,identity);
+await self.onmessage({data:{type:'initialize',url:'https://local.invalid/engine.wasm',sha256:'0'.repeat(64)}});assert.equal(messages.at(-1).type,'error');assert.match(messages.at(-1).error,/integrity/);
+await self.onmessage({data:{type:'run',id:2,request:{operation:'verify-run-manifest',source_name:'blocked.json',manifest_json:'{}'}}});assert.equal(messages.at(-1).type,'error');assert.match(messages.at(-1).error,/not initialized/);
+await fs.writeFile(root+'/evidence.json',JSON.stringify({native_wasm_cases:parity,private_snapshot_hash_and_compile:true,worker_overrides_claimed_identity:true,catalog_integrity_guard:true,identity},null,2));
+console.log(`Runtime artifact: ${parity} native/WASM hash receipts, four invalid identity rejections, private sliced-byte snapshot, immutable identity, worker-owned measurement and catalog integrity guard passed.`);

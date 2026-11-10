@@ -12,7 +12,7 @@
 /// (the Reock-maximising cut angle), then converts it to a directional penalty
 /// applied to edge weights before the METIS ratio search. Requires tract centroids;
 /// falls back to `RatioOptimal` with a warning if centroid data is absent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum AreaSectionInit {
     /// Current default — internal Lorenz heuristic, no directional pre-bias.
     RatioOptimal,

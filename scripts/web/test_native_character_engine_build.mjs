@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {configRunRequest} from '../../web/lab/config-run.js';
+const root='target/native-character-engine-build';await fs.mkdir(root,{recursive:true});const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm')),fixture=JSON.parse(await fs.readFile('target/config-build-wasm/browser-retry.bisect','utf8')).files;
+let comparisons=0;
+async function parity(request){await fs.writeFile(root+'/request.json',JSON.stringify(request));const result=engine.execute(request);assert.deepEqual(result,JSON.parse(execFileSync(path.resolve('target/release/examples/execute_tool_request.exe'),[path.resolve(root+'/request.json')],{encoding:'utf8',maxBuffer:64*1024*1024,stdio:['ignore','pipe','pipe']})));comparisons++;return result;}
+const baseline=await parity(configRunRequest(fixture.configSource,fixture.configSettings,fixture.configRunInputs,fixture.configRunSettings));assert(baseline.build_report.accepted_attempt>0);const rows=[];
+for(const kind of ['economic','housing']){
+ const request=structuredClone(baseline.engine_request);request.options.seed=baseline.configuration.seed;request.options.weights=kind+'-character';request.options.character_alpha=.5;request.options.character_absent_file_fallback=true;
+ const source={state:request.graph.state,year:request.graph.year,data_year:'2019',kind,source_label:'SYNTHETIC empty file / actual native geographic retry path',source_name:'empty.csv',source_base64:''},tool={operation:'run-native-character-engine',input:{source,request_json:JSON.stringify({operation:'run-engine-build',request}),label:'Native source accepted retry',chamber:'congressional',created_at:'2026-10-17T00:00:00Z',inspect_only:false}},bundle=await parity(tool),report=bundle.result.build_report;
+ assert.equal(report.accepted_attempt,baseline.build_report.accepted_attempt);assert.deepEqual(bundle.result.assignments,baseline.result.assignments);const accepted=report.attempts.at(-1).seed;assert.equal(bundle.executed_request.options.seed===null?null:String(bundle.executed_request.options.seed),accepted);assert.equal(bundle.export.document.provenance.producer.engine_options.seed===null?null:String(bundle.export.document.provenance.producer.engine_options.seed),accepted);assert(bundle.export);const replay=engine.execute(bundle.executed_request),result=structuredClone(bundle.result);delete result.build_report;assert.deepEqual(replay,result);rows.push({kind,accepted_attempt:report.accepted_attempt,requested_seed:request.options.seed,accepted_seed:accepted});
+}
+await fs.writeFile(root+'/evidence.json',JSON.stringify({native_host_comparisons:comparisons,later_accepted_attempt:baseline.build_report.accepted_attempt,executed_request_and_export_seed_match_accepted_attempt:true,accepted_request_replays_identically:true,original_native_geographic_retry_assignments_retained:true,rows,wasm_sha256:engine.artifactIdentity.sha256},null,2));console.log(`Native source build: both kinds retain native later-attempt assignments, executed/exported accepted seeds and exact accepted-request replay; ${comparisons} Native host comparisons passed.`);

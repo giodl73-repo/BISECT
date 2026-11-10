@@ -5,8 +5,8 @@
 //!
 //! Per spec §5.
 
-use rand::rngs::SmallRng;
-use rand::seq::SliceRandom;
+use rand_chacha::ChaCha12Rng;
+use rand::Rng;
 use rand::SeedableRng;
 
 /// Single boundary-tract flip mutation.
@@ -39,7 +39,7 @@ pub fn mutate(
     let target_pop = total_pop as f64 / k as f64;
     let tol_abs = balance_tolerance * target_pop;
 
-    let mut rng = SmallRng::seed_from_u64(seed);
+    let mut rng = ChaCha12Rng::seed_from_u64(seed);
 
     // Collect all boundary tracts
     let boundary: Vec<usize> = (0..n)
@@ -51,7 +51,7 @@ pub fn mutate(
     }
 
     // Pick a random boundary tract
-    let t = *boundary.choose(&mut rng).unwrap();
+    let t = boundary[rng.gen_range(0..boundary.len() as u64) as usize];
     let d_old = plan[t];
 
     // Collect candidate target districts (neighbours of t with different district)
@@ -68,7 +68,7 @@ pub fn mutate(
     }
 
     // Pick a random target district
-    let d_new = *candidates.choose(&mut rng).unwrap();
+    let d_new = candidates[rng.gen_range(0..candidates.len() as u64) as usize];
 
     // Compute new population of the affected districts
     let pop_d_old: i64 = (0..n).filter(|&i| plan[i] == d_old).map(|i| pop[i]).sum();

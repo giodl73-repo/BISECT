@@ -97,10 +97,8 @@ fn main() -> anyhow::Result<()> {
     };
 
     // If --label was given, pre-select that label in the plan list
-    if let Some(ref lbl) = startup_label {
-        if let Some(idx) = app.plans.iter().position(|p| p.label == *lbl) {
-            app.selected_plan = idx;
-        }
+    if let Some(idx)=bisect_report::plan_hub::label_index(app.plans.iter().map(|plan|plan.label.as_str()),startup_label.as_deref()) {
+        app.selected_plan=idx;
     }
 
     // Run main event loop

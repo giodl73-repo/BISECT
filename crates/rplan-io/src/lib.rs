@@ -119,6 +119,14 @@ pub fn write_rctx_string(context: &RplanContext) -> Result<String, RplanIoError>
     Ok(serde_json::to_string_pretty(&context)?)
 }
 
+/// Retain every typed context field and its canonical hash without indentation.
+pub fn write_rctx_compact_string(context: &RplanContext) -> Result<String, RplanIoError> {
+    let mut context = context.clone();
+    context.validate()?;
+    context.context_hash = context.compute_context_hash()?;
+    Ok(serde_json::to_string(&context)?)
+}
+
 fn convert_v01(input: RplanV01) -> Result<RplanDocument, RplanIoError> {
     if input.rplan_version != "0.1" {
         return Err(RplanIoError::UnsupportedVersion(input.rplan_version));
@@ -201,6 +209,20 @@ fn convert_v01(input: RplanV01) -> Result<RplanDocument, RplanIoError> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn compact_context_preserves_native_fields_hash_and_tamper_rejection() {
+        let context = super::read_rctx_str(include_str!("fixtures/path5.rctx")).unwrap();
+        let pretty = super::write_rctx_string(&context).unwrap();
+        let compact = super::write_rctx_compact_string(&context).unwrap();
+        assert!(compact.len() < pretty.len());
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&compact).unwrap(), serde_json::from_str::<serde_json::Value>(&pretty).unwrap());
+        let decoded = super::read_rctx_str(&compact).unwrap();
+        assert_eq!(decoded.context_hash, context.context_hash);
+        assert_eq!(decoded.compute_context_hash().unwrap(), context.compute_context_hash().unwrap());
+        let mut changed: serde_json::Value = serde_json::from_str(&compact).unwrap();
+        changed["context_hash"] = serde_json::json!("0".repeat(64));
+        assert!(super::read_rctx_str(&changed.to_string()).is_err());
+    }
     use super::*;
     use rplan_core::{EdgeKind, EdgeSemantics, SourceHashes, UnitEdge, UnitGraph, RCTX_VERSION};
 

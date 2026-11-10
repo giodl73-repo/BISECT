@@ -1,0 +1,8 @@
+[package]
+name = "bisect-metis-sidecar"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Validated synchronous browser bridge to the explicit C METIS sidecar"
+
+[dependencies]

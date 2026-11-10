@@ -1,0 +1,63 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createServer} from 'node:http';
+import {createRequire} from 'node:module';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {createProject} from '../../web/lab/project.js';
+const packages=process.env.BISECT_PLAYWRIGHT_PACKAGES;if(!packages)throw new Error('Set BISECT_PLAYWRIGHT_PACKAGES.');
+const {chromium}=createRequire(path.join(packages,'package.json'))('playwright');
+const root=path.resolve('target/commission-preview-browser');await fs.mkdir(root,{recursive:true});
+const request=JSON.parse(await fs.readFile('target/commission-report-wasm/request-4.json','utf8'));
+request.files['maps/districts.png']=[...Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64')];
+const requestPath=path.join(root,'request.json');await fs.writeFile(requestPath,JSON.stringify(request));
+const native=spawnSync(path.resolve(process.env.BISECT_TEST_NATIVE_TOOL||'target/release/examples/execute_tool_request.exe'),[requestPath],{encoding:'utf8',maxBuffer:32*1024*1024});assert.equal(native.status,0,native.stderr);const expected=JSON.parse(native.stdout);
+const files={commissionInputs:{files:Object.fromEntries(Object.entries(request.files).map(([p,b])=>[p,{name:p.split('/').at(-1),base64:Buffer.from(b).toString('base64')}])),generated_at:request.generated_at},commissionDeliverySettings:{label:'preview',formats:['html','json'],audit_with_report:false}};
+const project=createProject({name:'Report preview',operation:'assemble-commission-report',files,constraints:[],result:expected,lastOperation:'assemble-commission-report'});
+const projectPath=path.join(root,'report.bisect');await fs.writeFile(projectPath,JSON.stringify(project));
+const staticRoot=path.resolve(process.argv[2]||'web/lab'),sourceTree=staticRoot===path.resolve('web/lab'),wasm=path.resolve(process.env.BISECT_TEST_WASM||'target/wasm32-unknown-unknown/release/bisect_wasm.wasm');
+const server=createServer(async(req,res)=>{try{const pathname=new URL(req.url,'http://localhost').pathname,target=pathname==='/bisect_wasm.wasm'&&sourceTree?wasm:path.resolve(staticRoot,'.'+decodeURIComponent(pathname==='/'?(sourceTree?'/workbench.html':'/index.html'):pathname));if(target!==wasm&&!target.startsWith(staticRoot+path.sep))throw new Error('Invalid path');res.setHeader('Content-Type',target.endsWith('.js')?'application/javascript':target.endsWith('.wasm')?'application/wasm':target.endsWith('.css')?'text/css':'text/html');res.end(await fs.readFile(target));}catch{res.writeHead(404);res.end();}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port;let browser,context,page;
+try{
+ browser=await chromium.launch({headless:true,executablePath:process.env.BISECT_TEST_BROWSER||'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--no-first-run','--disable-background-networking','--disable-extensions']});context=await browser.newContext({acceptDownloads:true});
+ const remote=[];await context.route('**/*',route=>{if(new URL(route.request().url()).origin===url)return route.continue();remote.push(route.request().url());return route.abort();});
+ page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.stack));
+ await page.addInitScript(()=>{window.requests=[];const Original=Worker;window.Worker=class extends Original{postMessage(m,...rest){if(m?.type==='run')requests.push(m.request);return super.postMessage(m,...rest);}};});
+ await page.goto(url);await page.locator('#open-project').setInputFiles(projectPath);await page.waitForFunction(()=>document.querySelector('#project-name').value==='Report preview');
+ assert.equal(await page.evaluate(()=>requests.length),0);assert(await page.locator('#preview-commission').isDisabled());assert(await page.locator('#print-commission').isDisabled());assert.equal(await page.locator('iframe').count(),0);
+ await page.locator('#execute').click();await page.waitForFunction(()=>!document.querySelector('#preview-commission').disabled);assert.equal(await page.evaluate(()=>requests.length),1);assert.equal(await page.locator('iframe').count(),0);
+ await page.locator('#preview-commission').click();await page.waitForFunction(()=>!document.querySelector('#print-commission').disabled);
+ const frame=page.frameLocator('#commission-preview-host iframe');assert.equal(await frame.locator('h2').count(),10);assert.match(await frame.locator('h1').innerText(),/Commission Report/);
+ const actual=await page.locator('#commission-preview-host iframe').evaluate(f=>({sandbox:f.getAttribute('sandbox'),text:f.contentDocument.body.textContent,imgs:[...f.contentDocument.images].map(i=>({src:i.src,ok:i.complete&&i.naturalWidth>0})),styles:f.contentDocument.querySelectorAll('style').length}));assert.equal(actual.sandbox,'allow-same-origin allow-modals');assert(actual.styles>0);assert(actual.imgs.every(i=>i.src.startsWith('data:image/png;base64,')&&i.ok));
+ // Instrument the dialog entry point; never open an OS print dialog in a test.
+ await page.locator('#commission-preview-host iframe').evaluate(f=>{window.printCalls=0;f.contentWindow.print=()=>window.printCalls++;});await page.locator('#print-commission').click();await page.waitForFunction(()=>window.printCalls===1);assert.equal(await page.evaluate(()=>printCalls),1);assert.equal(await page.evaluate(()=>requests.length),1);
+ const downloaded=page.waitForEvent('download');await page.locator('#download-commission-html').click();const downloadedPath=path.join(root,'native-report.html');await(await downloaded).saveAs(downloadedPath);assert.equal(await fs.readFile(downloadedPath,'utf8'),expected.report_html);
+ await page.locator('#commission-preview-panel').screenshot({path:path.join(root,'preview.png')});
+ await page.locator('#commission-time').fill('2026-10-17T12:00:00Z');assert(await page.locator('#print-commission').isDisabled());assert.equal(await page.locator('iframe').count(),0);
+ await page.locator('#open-project').setInputFiles(projectPath);await page.waitForFunction(time=>document.querySelector('#commission-time').value===time,request.generated_at);assert.equal(await page.evaluate(()=>requests.length),1);assert(await page.locator('#preview-commission').isDisabled());
+ await page.locator('#execute').click();await page.waitForFunction(()=>!document.querySelector('#preview-commission').disabled);await page.locator('#preview-commission').click();await page.waitForFunction(()=>!document.querySelector('#print-commission').disabled);await page.locator('#close-commission-preview').click();assert.equal(await page.locator('iframe').count(),0);assert(await page.locator('#print-commission').isDisabled());
+ await page.route('**/commission-preview.html',route=>route.fulfill({status:404,contentType:'text/html',body:'Unavailable'}));
+ await page.locator('#preview-commission').click();await page.waitForFunction(()=>document.querySelector('#result-status').textContent.includes('Restricted report preview page is unavailable'));
+ assert(await page.locator('#print-commission').isDisabled());assert.equal(await page.locator('iframe').count(),0);await page.unroute('**/commission-preview.html');
+ await page.locator('#preview-commission').click();await page.waitForFunction(()=>!document.querySelector('#print-commission').disabled);
+ await page.locator('#open-project').setInputFiles(projectPath);await page.waitForFunction(()=>document.querySelector('#result-status').textContent.startsWith('Imported result is unverified'));assert.equal(await page.locator('iframe').count(),0);assert(await page.locator('#print-commission').isDisabled());
+ await page.locator('#execute').click();await page.waitForFunction(()=>!document.querySelector('#preview-commission').disabled);
+ await page.locator('#commission-delivery-html').uncheck();await page.locator('#execute').click();await page.waitForFunction(()=>!document.querySelector('#execute').disabled);assert(await page.locator('#preview-commission').isDisabled());
+ await page.locator('#commission-delivery-html').check();await page.locator('#execute').click();await page.waitForFunction(()=>!document.querySelector('#preview-commission').disabled);
+ await page.evaluate(()=>{document.querySelector('#preview-commission').click();document.querySelector('#commission-clear').click();});await page.waitForLoadState('networkidle');assert(await page.locator('#print-commission').isDisabled());assert.equal(await page.locator('iframe').count(),0);
+ const hostile=await page.evaluate(async()=>{
+  const {commissionPreviewDocument}=await import('./commission-preview.js');window.injected=0;
+  customElements.define('evil-report',class extends HTMLElement{constructor(){super();window.injected++;}});
+  const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+  const attack='<meta http-equiv="refresh" content="0;url=https://attacker.invalid/nav"><base href="https://attacker.invalid/"><script>parent.injected++</scr'+'ipt><evil-report></evil-report><svg onload="parent.injected++"><a href="https://attacker.invalid/svg">bad</a></svg><iframe src="https://attacker.invalid/frame"></iframe><form action="https://attacker.invalid/form"><input autofocus onfocus="parent.injected++"></form><style>@import "https://attacker.invalid/css";p{background:url(https://attacker.invalid/bg)}</style><img src="https://attacker.invalid/image" onerror="parent.injected++"><a href="javascript:parent.injected++" target="_top" ping="https://attacker.invalid/ping">stay here</a><img src="'+png+'" onload="parent.injected++" srcset="https://attacker.invalid/srcset 2x"><p onclick="parent.injected++">Safe report text</p>';
+  const safe=commissionPreviewDocument(attack,document),f=document.createElement('iframe');f.setAttribute('sandbox','allow-same-origin allow-modals');f.src='./commission-preview.html';const loaded=new Promise(resolve=>f.onload=resolve);document.body.append(f);await loaded;const content=f.contentDocument.createElement('template');content.innerHTML=safe;f.contentDocument.body.replaceChildren(...content.content.childNodes);await Promise.allSettled([...f.contentDocument.images].map(i=>i.decode()));
+  f.contentDocument.querySelector('p').click();f.contentDocument.querySelector('a').click();
+  const result={injected:window.injected,text:f.contentDocument.body.textContent,unsafe:f.contentDocument.querySelectorAll('script,iframe,form,svg,base,evil-report,[onclick],[onload],[onerror],[href],[srcset]').length,images:[...f.contentDocument.images].map(i=>i.src),url:f.contentWindow.location.href};f.remove();
+  for(const html of ['x'.repeat(25*1024*1024+1),'<div>'.repeat(70)+'end'+'</div>'.repeat(70)]){try{commissionPreviewDocument(html,document);throw new Error('Accepted oversized report');}catch(e){if(e.message==='Accepted oversized report')throw e;}}
+  return result;
+ });
+ assert.equal(hostile.injected,0);assert.equal(hostile.unsafe,0);assert.match(hostile.text,/Safe report text/);assert.equal(hostile.images.length,1);assert.equal(hostile.url,url+'/commission-preview.html');assert.deepEqual(remote,[]);assert.deepEqual(errors,[]);
+ await fs.writeFile(path.join(root,'evidence.json'),JSON.stringify({package:staticRoot,source_tree:sourceTree,wasm_sha256:createHash('sha256').update(await fs.readFile(sourceTree?wasm:path.join(staticRoot,'bisect_wasm.wasm'))).digest('hex'),actual_worker_report_native_html_byte_equal:true,ten_native_sections_and_embedded_pngs:true,explicit_preview_and_print:true,print_dialog_instrumented:true,pdf_bytes_not_compared:true,inert_open:true,edit_close_clear_pending_load_json_only_retire_preview:true,missing_restricted_wrapper_refused:true,hostile_content_no_execution_navigation_or_network:true,preview_size_depth_limits:true},null,2));
+ console.log('Commission preview browser: Native HTML byte equality, actual worker report, isolated preview, explicit print, inert Open/edit/close/JSON-only controls, malicious markup/network guards and size/depth bounds passed.');
+}catch(error){if(page)console.log('Browser state',await page.evaluate(()=>({status:document.querySelector('#project-status')?.textContent,result:document.querySelector('#result-status')?.textContent,preview:document.querySelector('#commission-preview-status')?.textContent})).catch(()=>null));throw error;}finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}

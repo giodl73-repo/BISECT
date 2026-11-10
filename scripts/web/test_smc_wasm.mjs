@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 import {instantiateEngine} from '../../web/lab/wasm-engine.js';
 import {WasmCatalog} from '../../web/lab/wasm-catalog.js';
 import {createLabProject,parseLabProject,verifyLabAssignments} from '../../web/lab/laboratory-project.js';
-const root='dist/wasm-national',manifest=JSON.parse(await fs.readFile(path.join(root,'catalog.json'),'utf8'));
+const root=process.argv[2]||'dist/wasm-national',manifest=JSON.parse(await fs.readFile(path.join(root,'catalog.json'),'utf8'));
 const bytes=await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'),engine=await instantiateEngine(bytes);
 const native=path.resolve('target/release/examples/execute_request'+(process.platform==='win32'?'.exe':'')),nativeRun=promisify(execFile);
 const sha=value=>createHash('sha256').update(value).digest('hex');
@@ -39,7 +39,7 @@ async function check(name,graph,o){
 }
 for(const {name,graph,k}of inputs)for(const weights of ['geographic','unweighted','county'])for(const percentile of [0,0.5,1])await check(name,graph,{...options,districts:k,weights,percentile,alpha_county:weights==='county'?2:0});
 for(const threshold of [0,1])for(const particles of [8,32])await check('resampling',inputs[4].graph,{...options,smc_particles:particles,smc_resample_threshold:threshold,percentile:0.5,seed:99});
-for(const overrides of [{smc_particles:0},{smc_particles:10001},{smc_resample_threshold:-1},{smc_resample_threshold:1.01},{balance_tolerance:5},{search:'multi'},{structure:'nway'}])assert.throws(()=>engine.execute({graph:line,options:{...options,...overrides}}));
+for(const overrides of [{smc_particles:0},{smc_particles:10001},{smc_resample_threshold:-1},{smc_resample_threshold:1.01},{balance_tolerance:0},{search:'multi'},{structure:'nway'}])assert.throws(()=>engine.execute({graph:line,options:{...options,...overrides}}));
 manifest.wasm_sha256=sha(bytes);manifest.catalog.searches.push('smc-percentile');manifest.catalog.search_compatibility['standard-bisect'].push('smc-percentile');
 const assets=new Map(),catalog=structuredClone(manifest);
 function asset(value){const data=Buffer.from(JSON.stringify(value)),hash=sha(data),ref=`assets/${hash}.json`;assets.set(ref,data);catalog.assets[ref]=hash;return ref;}

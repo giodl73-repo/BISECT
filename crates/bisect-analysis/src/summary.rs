@@ -31,6 +31,8 @@ pub struct SummaryResult {
 
 #[derive(Debug, Error, Clone, PartialEq)]
 pub enum SummaryError {
+    #[error("[NUMERIC] statewide demographic population overflowed i64")]
+    StatewidePopulationOverflow,
     #[error("[INPUT] balance tolerance must be finite and non-negative, got {value}")]
     InvalidBalanceTolerance { value: f64 },
     #[error("[INPUT] negative population for district {district}: {value}")]
@@ -41,6 +43,8 @@ pub enum SummaryError {
     PopulationDeviationOverflow { district: usize },
     #[error("[NUMERIC] {operation} produced non-finite value {value}")]
     NonFiniteResult { operation: &'static str, value: f64 },
+    #[error("[INPUT] district population count does not match summary districts")]
+    PopulationCountMismatch,
 }
 
 /// Merge per-district data from sub-analyzers into a summary district.
@@ -82,20 +86,7 @@ pub fn try_merge_district(
             });
         }
     }
-    let pop_deviation_pct = match (total_pop, ideal_pop) {
-        (Some(tp), Some(ip)) if ip != 0 => {
-            let diff = tp
-                .checked_sub(ip)
-                .and_then(|v| v.checked_abs())
-                .ok_or(SummaryError::PopulationDeviationOverflow { district })?;
-            let value = diff as f64 / ip as f64;
-            validate_finite("population deviation percentage", value)?;
-            Some(value)
-        }
-        (Some(_), Some(_)) => Some(0.0),
-        _ => None,
-    };
-    let pop_balance_ok = pop_deviation_pct.map(|dev| dev <= balance_tolerance);
+    let (pop_deviation_pct, pop_balance_ok) = population_metrics(district, total_pop, ideal_pop, balance_tolerance)?;
 
     Ok(SummaryDistrict {
         district,
@@ -111,6 +102,47 @@ pub fn try_merge_district(
     })
 }
 
+fn population_metrics(district: usize, total_pop: Option<i64>, ideal_pop: Option<i64>, balance_tolerance: f64) -> Result<(Option<f64>, Option<bool>), SummaryError> {
+    let pop_deviation_pct = match (total_pop, ideal_pop) {
+        (Some(tp), Some(ip)) if ip != 0 => {
+            let diff = tp
+                .checked_sub(ip)
+                .and_then(|v| v.checked_abs())
+                .ok_or(SummaryError::PopulationDeviationOverflow { district })?;
+            let value = diff as f64 / ip as f64;
+            validate_finite("population deviation percentage", value)?;
+            Some(value)
+        }
+        (Some(_), Some(_)) => Some(0.0),
+        _ => None,
+    };
+    let pop_balance_ok = pop_deviation_pct.map(|dev| dev <= balance_tolerance);
+
+    Ok((pop_deviation_pct, pop_balance_ok))
+}
+
+/// Supply measured population totals without manufacturing demographic shares.
+/// Uses the same integer ideal and checked deviation as the native demographic summary.
+pub fn with_population_totals(mut summary: SummaryResult, populations: &[i64], balance_tolerance: f64) -> Result<SummaryResult, SummaryError> {
+    validate_tolerance(balance_tolerance)?;
+    if populations.len() != summary.districts.len() { return Err(SummaryError::PopulationCountMismatch); }
+    let mut total = 0_i64;
+    for (index, &population) in populations.iter().enumerate() {
+        if population < 0 { return Err(SummaryError::NegativePopulation { district: index + 1, value: population }); }
+        total = total.checked_add(population).ok_or(SummaryError::StatewidePopulationOverflow)?;
+    }
+    let ideal = if populations.is_empty() { None } else { Some(total / populations.len() as i64) };
+    for (district, &population) in summary.districts.iter_mut().zip(populations) {
+        let (deviation, balanced) = population_metrics(district.district, Some(population), ideal, balance_tolerance)?;
+        district.total_pop = Some(population);
+        district.ideal_pop = ideal;
+        district.pop_deviation_pct = deviation;
+        district.pop_balance_ok = balanced;
+    }
+    summary.population_balance_valid = summary.districts.iter().all(|d| d.pop_balance_ok.unwrap_or(true));
+    Ok(summary)
+}
+
 fn validate_tolerance(value: f64) -> Result<(), SummaryError> {
     if !value.is_finite() || value < 0.0 {
         return Err(SummaryError::InvalidBalanceTolerance { value });
@@ -123,6 +155,55 @@ fn validate_finite(operation: &'static str, value: f64) -> Result<(), SummaryErr
         return Err(SummaryError::NonFiniteResult { operation, value });
     }
     Ok(())
+}
+
+/// Shared native summary merge. Missing demographic inputs retain unknown ideal population.
+pub fn summarize_results(demo_result:Option<&crate::DemographicResult>,pol_result:Option<&crate::PoliticalResult>,urban_result:Option<&crate::UrbanResult>,num_districts:usize,balance_tolerance:f64)->Result<SummaryResult,SummaryError>{
+    validate_tolerance(balance_tolerance)?;
+        // Build lookup maps
+        let demo_map: HashMap<usize, &DemographicDistrict> = demo_result
+            .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
+            .unwrap_or_default();
+
+        let pol_map: HashMap<usize, &PoliticalDistrict> = pol_result
+            .filter(|r| r.available)
+            .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
+            .unwrap_or_default();
+
+        let urban_map: HashMap<usize, &UrbanDistrict> = urban_result
+            .filter(|r| r.available)
+            .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
+            .unwrap_or_default();
+
+        // Compute ideal_pop from demographic totals
+        let state_total_pop=demo_map.values().try_fold(0i64,|sum,d|sum.checked_add(d.total_pop).ok_or(SummaryError::StatewidePopulationOverflow))?;
+        let ideal_pop = if demo_result.is_some() && num_districts > 0 {
+            Some(state_total_pop / num_districts as i64)
+        } else {
+            None
+        };
+
+        let mut districts: Vec<SummaryDistrict> = (1..=num_districts)
+            .map(|d| {
+                try_merge_district(
+                    d,
+                    demo_map.get(&d).copied(),
+                    pol_map.get(&d).copied(),
+                    ideal_pop,
+                    urban_map.get(&d).copied(),
+                    balance_tolerance,
+                )
+            })
+            .collect::<Result<Vec<_>, SummaryError>>()?;
+        districts.sort_by_key(|d| d.district);
+
+        let population_balance_valid = districts.iter().all(|d| d.pop_balance_ok.unwrap_or(true));
+
+        Ok(SummaryResult {
+            analyzer: "summary",
+            population_balance_valid,
+            districts,
+        })
 }
 
 pub struct SummaryAnalyzer;
@@ -140,53 +221,7 @@ impl Analyzer for SummaryAnalyzer {
         let pol_result = PoliticalAnalyzer::run(ctx).ok();
         let urban_result = UrbanAnalyzer::run(ctx).ok();
 
-        // Build lookup maps
-        let demo_map: HashMap<usize, &DemographicDistrict> = demo_result
-            .as_ref()
-            .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
-            .unwrap_or_default();
-
-        let pol_map: HashMap<usize, &PoliticalDistrict> = pol_result
-            .as_ref()
-            .filter(|r| r.available)
-            .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
-            .unwrap_or_default();
-
-        let urban_map: HashMap<usize, &UrbanDistrict> = urban_result
-            .as_ref()
-            .filter(|r| r.available)
-            .map(|r| r.districts.iter().map(|d| (d.district, d)).collect())
-            .unwrap_or_default();
-
-        // Compute ideal_pop from demographic totals
-        let state_total_pop: i64 = demo_map.values().map(|d| d.total_pop).sum();
-        let ideal_pop = if ctx.num_districts > 0 {
-            Some(state_total_pop / ctx.num_districts as i64)
-        } else {
-            None
-        };
-
-        let mut districts: Vec<SummaryDistrict> = (1..=ctx.num_districts)
-            .map(|d| {
-                try_merge_district(
-                    d,
-                    demo_map.get(&d).copied(),
-                    pol_map.get(&d).copied(),
-                    ideal_pop,
-                    urban_map.get(&d).copied(),
-                    ctx.balance_tolerance,
-                )
-            })
-            .collect::<Result<Vec<_>, SummaryError>>()?;
-        districts.sort_by_key(|d| d.district);
-
-        let population_balance_valid = districts.iter().all(|d| d.pop_balance_ok.unwrap_or(true));
-
-        Ok(SummaryResult {
-            analyzer: "summary",
-            population_balance_valid,
-            districts,
-        })
+        summarize_results(demo_result.as_ref(),pol_result.as_ref(),urban_result.as_ref(),ctx.num_districts,ctx.balance_tolerance).map_err(anyhow::Error::from)
     }
 }
 
@@ -196,6 +231,26 @@ mod tests {
     use crate::demographic::DemographicDistrict;
     use crate::political::PoliticalDistrict;
     use crate::urban::UrbanDistrict;
+
+    #[test]
+    fn population_context_preserves_native_metrics_without_demographic_claims() {
+        for populations in [vec![10, 11, 12], vec![0, 0, 0], vec![i64::MAX, 0, 0]] {
+            let rows=populations.iter().enumerate().map(|(i,&p)|make_demo(i+1,p,0.7)).collect();
+            let demo=crate::DemographicResult{analyzer:"demographic",districts:rows,pop_basis:"total_population"};
+            let native=summarize_results(Some(&demo),None,None,3,0.05).unwrap();
+            let measured=with_population_totals(summarize_results(None,None,None,3,0.05).unwrap(),&populations,0.05).unwrap();
+            assert_eq!(native.population_balance_valid,measured.population_balance_valid);
+            for (a,b) in native.districts.iter().zip(&measured.districts) {
+                assert_eq!((a.total_pop,a.ideal_pop,a.pop_deviation_pct,a.pop_balance_ok),(b.total_pop,b.ideal_pop,b.pop_deviation_pct,b.pop_balance_ok));
+                assert_eq!(b.pct_minority,None);assert_eq!(b.is_majority_minority,None);
+            }
+        }
+        let empty=||summarize_results(None,None,None,2,0.05).unwrap();
+        assert!(with_population_totals(empty(),&[1],0.05).is_err());
+        assert!(with_population_totals(empty(),&[-1,2],0.05).is_err());
+        assert!(with_population_totals(empty(),&[i64::MAX,1],0.05).is_err());
+        assert!(with_population_totals(empty(),&[1,2],f64::NAN).is_err());
+    }
 
     fn make_demo(district: usize, total_pop: i64, pct_minority: f64) -> DemographicDistrict {
         DemographicDistrict {
@@ -346,5 +401,12 @@ mod tests {
             }
             other => panic!("expected NegativeIdealPopulation, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn summary_rejects_statewide_overflow_and_keeps_missing_population_unknown(){
+        let demo=crate::DemographicResult{analyzer:"demographic",districts:vec![make_demo(1,i64::MAX,0.5),make_demo(2,1,0.5)],pop_basis:"total_population"};
+        assert_eq!(summarize_results(Some(&demo),None,None,2,0.05).unwrap_err(),SummaryError::StatewidePopulationOverflow);
+        let unknown=summarize_results(None,None,None,2,0.05).unwrap();assert!(unknown.districts.iter().all(|d|d.ideal_pop.is_none()&&d.total_pop.is_none()&&d.pop_balance_ok.is_none()));
     }
 }

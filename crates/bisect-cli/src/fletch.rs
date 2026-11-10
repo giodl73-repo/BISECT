@@ -5,70 +5,16 @@ use fletch_core::{
     fetch_plan_with_kind, fetch_to_cache, graph_from_registry, read_cache_manifest_json,
     upsert_cache_manifest_entries, validate_registry, write_cache_manifest_json, CacheEntry,
     CacheIndexGatePolicy, CacheManifest, CachePolicy, FetchOptions, FletchDefinition,
-    FletchRegistry, FreshnessPolicy, GraphNodeKind, SourceKind, SourceSpec,
-    FLETCH_CACHE_INDEX_SCHEMA, FLETCH_REGISTRY_SCHEMA,
+    FletchRegistry, FreshnessPolicy, GraphNodeKind, SourceKind, SourceSpec, FLETCH_REGISTRY_SCHEMA,
 };
-use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-pub struct FletchSourceHandoffRow {
-    pub fetch_family: String,
-    pub fletch_id: String,
-    pub state_code: String,
-    pub year: String,
-    pub source_kind: String,
-    pub source_url: String,
-    pub cache_targets: String,
-    pub mutation_mode: String,
-    pub acquisition_mode: String,
-    pub activation_rule: String,
-    pub bisect_validation_floor: String,
-    pub handoff_status: String,
-    pub validation_status: String,
-}
+pub use bisect_core::fletch_sources::{
+    fletch_source_handoff_gate_failures, FletchSourceHandoffReport,
+};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FletchSourceHandoffReport {
-    pub registry_id: String,
-    pub registry_valid: bool,
-    pub fletch_count: usize,
-    pub source_count: usize,
-    pub adapter_source_count: usize,
-    pub graph_node_count: usize,
-    pub graph_edge_count: usize,
-    pub flight_step_count: usize,
-    pub validation_finding_count: usize,
-    pub rows: Vec<FletchSourceHandoffRow>,
-}
-
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-pub struct FletchCacheIndexRow {
-    pub fletch_id: String,
-    pub dataset_id: String,
-    pub cache_key: String,
-    pub sha256: String,
-    pub relative_path: String,
-    pub bytes: u64,
-    pub verified: bool,
-    pub evidence_status: String,
-}
-
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-pub struct FletchCacheIndexReport {
-    pub schema_version: String,
-    pub generated_by: String,
-    pub source_schema: String,
-    pub registry_id: String,
-    pub fletch_source_count: usize,
-    pub indexed_source_count: usize,
-    pub missing_source_count: usize,
-    pub unexpected_index_count: usize,
-    pub unverified_index_count: usize,
-    pub byte_count: u64,
-    pub rows: Vec<FletchCacheIndexRow>,
-}
+pub use bisect_core::fletch_cache::FletchCacheIndexReport;
 
 pub fn fletch_registry_from_items(items: &[FetchItem]) -> FletchRegistry {
     let mut seen = BTreeSet::new();
@@ -88,11 +34,6 @@ pub fn fletch_registry_from_items(items: &[FetchItem]) -> FletchRegistry {
                 ),
             ),
         };
-        let acquisition_mode = if source_kind == SourceKind::Http {
-            "generic-http-cacheline"
-        } else {
-            "adapter-required"
-        };
         fletches.push(FletchDefinition {
             id: fletch_id,
             node_kind: GraphNodeKind::Fletch,
@@ -109,38 +50,17 @@ pub fn fletch_registry_from_items(items: &[FetchItem]) -> FletchRegistry {
                 item.year.clone(),
                 item.state_code.clone(),
             ],
-            metadata: BTreeMap::from([
-                ("fetch_family".to_string(), item.kind.clone()),
-                ("state_code".to_string(), item.state_code.clone()),
-                ("year".to_string(), item.year.clone()),
-                (
-                    "cache_targets".to_string(),
-                    item.local_path.display().to_string(),
-                ),
-                (
-                    "done_marker".to_string(),
-                    item.done_marker.display().to_string(),
-                ),
-                (
-                    "mutation_mode".to_string(),
-                    "fletch-acquires-source-bisect-owns-derived-target".to_string(),
-                ),
-                ("acquisition_mode".to_string(), acquisition_mode.to_string()),
-                (
-                    "activation_rule".to_string(),
-                    "bisect fetch preserves --force, --release, local manifest, done marker, and output paths"
-                        .to_string(),
-                ),
-                (
-                    "bisect_validation_floor".to_string(),
-                    "download/cache success only; BISECT build/analyze/report own admissibility claims"
-                        .to_string(),
-                ),
-                (
-                    "claim_validated_by_download".to_string(),
-                    "false".to_string(),
-                ),
-            ]),
+            metadata: bisect_core::fletch_sources::generated_source_definition(
+                &bisect_core::fletch_sources::GeneratedFetchSource {
+                    state_code: item.state_code.clone(),
+                    year: item.year.clone(),
+                    kind: item.kind.clone(),
+                    url: item.url.clone(),
+                    cache_targets: item.local_path.display().to_string(),
+                    done_marker: item.done_marker.display().to_string(),
+                },
+            )
+            .metadata,
         });
     }
     FletchRegistry {
@@ -161,69 +81,39 @@ pub fn fletch_source_handoff_report(registry: &FletchRegistry) -> FletchSourceHa
     let handoff = adapter_handoff_report(registry, &requested);
     let flight = dry_run_flight(registry, &requested);
     let graph = graph_from_registry(registry);
-    let mut rows = Vec::new();
-    for definition in &registry.fletches {
-        let source = definition.shafts.first();
-        let source_kind = source
-            .map(|source| source_kind_label(&source.kind).to_string())
-            .unwrap_or_else(|| "none".to_string());
-        let source_url = source.map(|source| source.url.clone()).unwrap_or_default();
-        let handoff_status = if validation.findings.iter().any(|finding| {
-            finding
-                .fletch_id
-                .as_deref()
-                .is_some_and(|id| id == definition.id)
-        }) {
-            "registry-blocked"
-        } else if source.is_some_and(|source| source.kind == SourceKind::Adapter) {
-            "adapter-required"
-        } else {
-            "generic-fetch-ready"
-        };
-        let validation_status = if required_metadata_present(definition)
-            && definition
-                .metadata
-                .get("claim_validated_by_download")
-                .is_some_and(|value| value == "false")
-        {
-            "pass"
-        } else {
-            "review"
-        };
-        rows.push(FletchSourceHandoffRow {
-            fetch_family: metadata(definition, "fetch_family"),
-            fletch_id: definition.id.clone(),
-            state_code: metadata(definition, "state_code"),
-            year: metadata(definition, "year"),
-            source_kind,
-            source_url,
-            cache_targets: metadata(definition, "cache_targets"),
-            mutation_mode: metadata(definition, "mutation_mode"),
-            acquisition_mode: metadata(definition, "acquisition_mode"),
-            activation_rule: metadata(definition, "activation_rule"),
-            bisect_validation_floor: metadata(definition, "bisect_validation_floor"),
-            handoff_status: handoff_status.to_string(),
-            validation_status: validation_status.to_string(),
-        });
-    }
-    rows.sort_by(|left, right| {
-        left.year
-            .cmp(&right.year)
-            .then(left.state_code.cmp(&right.state_code))
-            .then(left.fetch_family.cmp(&right.fetch_family))
-    });
-    FletchSourceHandoffReport {
-        registry_id: registry.registry_id.clone(),
-        registry_valid: handoff.registry_valid,
-        fletch_count: handoff.fletch_count,
-        source_count: handoff.source_count,
-        adapter_source_count: handoff.adapter_source_count,
-        graph_node_count: graph.nodes.len(),
-        graph_edge_count: graph.edges.len(),
-        flight_step_count: flight.steps.len(),
-        validation_finding_count: handoff.validation_finding_count,
-        rows,
-    }
+    let definitions = registry
+        .fletches
+        .iter()
+        .map(
+            |definition| bisect_core::fletch_sources::SourceHandoffDefinition {
+                id: definition.id.clone(),
+                source_kind: definition
+                    .shafts
+                    .first()
+                    .map(|s| source_kind_label(&s.kind).into()),
+                source_url: definition.shafts.first().map(|s| s.url.clone()),
+                metadata: definition.metadata.clone(),
+                registry_blocked: validation
+                    .findings
+                    .iter()
+                    .any(|finding| finding.fletch_id.as_deref() == Some(definition.id.as_str())),
+            },
+        )
+        .collect::<Vec<_>>();
+    bisect_core::fletch_sources::project_source_handoff(
+        &registry.registry_id,
+        &definitions,
+        bisect_core::fletch_sources::SourceHandoffCounts {
+            registry_valid: handoff.registry_valid,
+            fletch_count: handoff.fletch_count,
+            source_count: handoff.source_count,
+            adapter_source_count: handoff.adapter_source_count,
+            graph_node_count: graph.nodes.len(),
+            graph_edge_count: graph.edges.len(),
+            flight_step_count: flight.steps.len(),
+            validation_finding_count: handoff.validation_finding_count,
+        },
+    )
 }
 
 pub fn write_fletch_source_handoff(path: &Path, report: &FletchSourceHandoffReport) -> Result<()> {
@@ -241,31 +131,6 @@ pub fn write_fletch_source_handoff(path: &Path, report: &FletchSourceHandoffRepo
     }
     writer.flush()?;
     Ok(())
-}
-
-pub fn fletch_source_handoff_gate_failures(report: &FletchSourceHandoffReport) -> Vec<String> {
-    let mut failures = Vec::new();
-    if !report.registry_valid {
-        failures.push("registry validation failed".to_string());
-    }
-    if report.validation_finding_count > 0 {
-        failures.push(format!(
-            "{} registry validation findings",
-            report.validation_finding_count
-        ));
-    }
-    for row in &report.rows {
-        if row.validation_status != "pass" {
-            failures.push(format!(
-                "{} {} {} validation_status={}",
-                row.state_code, row.year, row.fetch_family, row.validation_status
-            ));
-        }
-        if row.handoff_status == "registry-blocked" {
-            failures.push(format!("{} is registry-blocked", row.fletch_id));
-        }
-    }
-    failures
 }
 
 pub fn fletch_cache_manifest_path(cache_root: &Path) -> PathBuf {
@@ -293,96 +158,25 @@ pub fn fletch_cache_index_report(
             allow_missing_expected: true,
         },
     );
-    let indexed_by_dataset = index
+    let entries = index
         .entries
         .iter()
-        .map(|entry| (entry.dataset_id.clone(), entry))
-        .collect::<BTreeMap<_, _>>();
-
-    let mut rows = Vec::new();
-    for fletch_id in &expected_ids {
-        match indexed_by_dataset.get(fletch_id) {
-            Some(entry) => rows.push(FletchCacheIndexRow {
-                fletch_id: fletch_id.clone(),
-                dataset_id: entry.dataset_id.clone(),
-                cache_key: entry.cache_key.clone(),
-                sha256: entry.sha256.clone(),
-                relative_path: entry.relative_path.clone(),
-                bytes: entry.bytes,
-                verified: entry.verified,
-                evidence_status: if entry.verified {
-                    "indexed-verified"
-                } else {
-                    "indexed-unverified"
-                }
-                .to_string(),
-            }),
-            None => rows.push(FletchCacheIndexRow {
-                fletch_id: fletch_id.clone(),
-                dataset_id: String::new(),
-                cache_key: String::new(),
-                sha256: String::new(),
-                relative_path: String::new(),
-                bytes: 0,
-                verified: false,
-                evidence_status: "missing-index-row".to_string(),
-            }),
-        }
-    }
-    for entry in &index.entries {
-        if !expected_ids.contains(&entry.dataset_id) {
-            rows.push(FletchCacheIndexRow {
-                fletch_id: entry.dataset_id.clone(),
-                dataset_id: entry.dataset_id.clone(),
-                cache_key: entry.cache_key.clone(),
-                sha256: entry.sha256.clone(),
-                relative_path: entry.relative_path.clone(),
-                bytes: entry.bytes,
-                verified: entry.verified,
-                evidence_status: "unexpected-index-row".to_string(),
-            });
-        }
-    }
-
-    rows.sort_by(|left, right| {
-        left.evidence_status
-            .cmp(&right.evidence_status)
-            .then(left.fletch_id.cmp(&right.fletch_id))
-    });
-    let indexed_source_count = rows
-        .iter()
-        .filter(|row| {
-            matches!(
-                row.evidence_status.as_str(),
-                "indexed-verified" | "indexed-unverified"
-            )
+        .map(|entry| bisect_core::fletch_cache::CacheIndexEntry {
+            dataset_id: entry.dataset_id.clone(),
+            cache_key: entry.cache_key.clone(),
+            sha256: entry.sha256.clone(),
+            relative_path: entry.relative_path.clone(),
+            bytes: entry.bytes,
+            verified: entry.verified,
         })
-        .count();
-    let missing_source_count = rows
-        .iter()
-        .filter(|row| row.evidence_status == "missing-index-row")
-        .count();
-    let unexpected_index_count = gate.unexpected_count;
-    let unverified_index_count = gate.unverified_count;
-    let byte_count = rows
-        .iter()
-        .filter(|row| row.evidence_status == "indexed-verified")
-        .map(|row| row.bytes)
-        .sum();
-
-    FletchCacheIndexReport {
-        schema_version: "bisect.fletch-cache-index.v1".to_string(),
-        generated_by: "bisect-cli".to_string(),
-        source_schema: FLETCH_CACHE_INDEX_SCHEMA.to_string(),
-        registry_id: registry.registry_id.clone(),
-        fletch_source_count: expected_ids.len(),
-        indexed_source_count,
-        missing_source_count,
-        unexpected_index_count,
-        unverified_index_count,
-        byte_count,
-        rows,
-    }
+        .collect::<Vec<_>>();
+    bisect_core::fletch_cache::project_cache_index(
+        &registry.registry_id,
+        &expected_ids,
+        &entries,
+        gate.unexpected_count,
+        gate.unverified_count,
+    )
 }
 
 fn cacheable_registry_ids(registry: &FletchRegistry) -> Vec<String> {
@@ -494,36 +288,7 @@ fn upsert_fletch_cache_manifest_entries(
 }
 
 pub fn fletch_id_for_item(item: &FetchItem) -> String {
-    format!(
-        "bisect.{}.{}.{}",
-        safe_id(&item.year),
-        safe_id(&item.state_code.to_lowercase()),
-        safe_id(&item.kind)
-    )
-}
-
-fn metadata(definition: &FletchDefinition, key: &str) -> String {
-    definition.metadata.get(key).cloned().unwrap_or_default()
-}
-
-fn required_metadata_present(definition: &FletchDefinition) -> bool {
-    [
-        "fetch_family",
-        "state_code",
-        "year",
-        "cache_targets",
-        "mutation_mode",
-        "acquisition_mode",
-        "activation_rule",
-        "bisect_validation_floor",
-    ]
-    .iter()
-    .all(|key| {
-        definition
-            .metadata
-            .get(*key)
-            .is_some_and(|value| !value.is_empty())
-    })
+    bisect_core::fletch_sources::source_id(&item.year, &item.state_code, &item.kind)
 }
 
 fn source_kind_label(kind: &SourceKind) -> &'static str {
@@ -532,19 +297,6 @@ fn source_kind_label(kind: &SourceKind) -> &'static str {
         SourceKind::File => "file",
         SourceKind::Adapter => "adapter",
     }
-}
-
-fn safe_id(value: &str) -> String {
-    value
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
-                ch.to_ascii_lowercase()
-            } else {
-                '-'
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]
@@ -620,7 +372,7 @@ mod tests {
 
         let report = fletch_cache_index_report(&registry, &manifest);
 
-        assert_eq!(report.source_schema, FLETCH_CACHE_INDEX_SCHEMA);
+        assert_eq!(report.source_schema, fletch_core::FLETCH_CACHE_INDEX_SCHEMA);
         assert_eq!(report.indexed_source_count, 1);
         assert_eq!(report.missing_source_count, 0);
         assert_eq!(report.unexpected_index_count, 0);

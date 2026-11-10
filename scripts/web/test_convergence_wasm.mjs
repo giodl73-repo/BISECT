@@ -19,7 +19,7 @@ function score(graph,assignments,o){
   const du=assignments[graph.geoids[u]],dv=assignments[graph.geoids[v]];if(du===dv)continue;
   let first=1,count=o.districts;
   while(true){const left=Math.floor(count/2),middle=first+left;
-   if((du<middle)!==(dv<middle)){sum+=(o.weights==='unweighted'?1:o.weights==='county'&&graph.geoids[u].slice(0,5)===graph.geoids[v].slice(0,5)?length*Math.max(1,o.alpha_county):length)/Math.sqrt(Math.min(left,count-left));break;}
+   if((du<middle)!==(dv<middle)){sum+=(o.weights==='unweighted'?1:o.weights==='county'&&graph.geoids[u].slice(0,5)===graph.geoids[v].slice(0,5)?length*(o.alpha_county>1e-10?1+o.alpha_county:1):length)/Math.sqrt(Math.min(left,count-left));break;}
    if(du<middle)count=left;else{first=middle;count-=left;}
   }
  }

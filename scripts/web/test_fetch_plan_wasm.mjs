@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {FETCH_PLAN_DEFAULTS,fetchPlanRequest,readFetchPlanSource,fetchPlanTemplateBytes} from '../../web/lab/fetch-plan-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const root='target/fetch-plan-wasm';await fs.mkdir(root,{recursive:true});const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));const builtin=JSON.parse(await fs.readFile('data/manifest.json','utf8'));
+const sort=rows=>rows.sort((a,b)=>[a.state_code,a.kind,a.local_path].join('|').localeCompare([b.state_code,b.kind,b.local_path].join('|')));
+for(const [name,changes]of [['default',{}],['all-explicit',{data_types:['all']}],['optional',{states:['NC'],data_types:['lodes','lodes-od','acs-housing','school-districts','eia-861']}],['elections',{data_types:['elections']}],['all-and-elections',{data_types:['all','elections']}],['unknown',{states:['XX']}],['all-states',{states:[]}],['older',{year:'2010'}],['all-vintages',{year:'all'}],['all-states-vintages',{states:[],year:'all'}],['unused-types',{data_types:['enacted','geography']}],['selected-inventory',{}]]){
+ const manifest=structuredClone(builtin);manifest.local_data_dir=root+'/'+name+'/data';manifest.local_outputs_dir=root+'/'+name+'/outputs';const input={...FETCH_PLAN_DEFAULTS,...changes,manifest_json:JSON.stringify(manifest),selected_paths:[]};let result=engine.execute({operation:'plan-fetch-sources',input});
+ if(name==='selected-inventory'){
+  const [a,b,c]=result.items;input.selected_paths=[a.local_path,a.done_marker,b.local_path,c.done_marker];for(const p of input.selected_paths){await fs.mkdir(p.slice(0,p.lastIndexOf('/')),{recursive:true});await fs.writeFile(p,'selected');}result=engine.execute({operation:'plan-fetch-sources',input});assert.deepEqual(result.items.map(v=>v.check_status),['done','file','need']);
+ }
+ const raw=JSON.stringify(input,null,2)+'\n',bytes=new TextEncoder().encode(raw),source=await readFetchPlanSource({name:name+'.json',size:bytes.length,arrayBuffer:async()=>bytes.buffer}),request=fetchPlanRequest({source});assert.deepEqual(request.input,input);await fs.writeFile(root+'/request.json',JSON.stringify(request));assert.deepEqual(JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[root+'/request.json'],{encoding:'utf8'})),result);
+ await fs.writeFile(root+'/native-request.json',raw);const native=sort(JSON.parse(execFileSync('target/debug/examples/fetch_plan_reference.exe',[root+'/native-request.json'],{encoding:'utf8'})));assert.deepEqual(sort(result.items.map(({check_status,...item})=>item)),native);assert.equal(result.acquisition_performed,false);assert.equal(result.execution_performed,false);assert.equal(result.manifest_sha256,createHash('sha256').update(input.manifest_json).digest('hex'));
+ if(name==='default'||name==='all-explicit'||name==='all-and-elections')assert.deepEqual(result.items.map(v=>v.kind),['adjacency','pl94171','tiger']);if(name==='elections')assert.equal(result.warnings.length,1);if(name==='all-and-elections')assert.equal(result.warnings.length,0);if(name==='unknown')assert.deepEqual(result.ignored_states,['XX']);
+ if(name==='optional'){const wac=result.items.find(v=>v.kind==='lodes-wac');assert.equal(wac.url,'https://lehd.ces.census.gov/data/lodes/LODES8/nc/wac/nc_wac_S000_JT00_2020.csv.gz');assert.equal(result.items.filter(v=>v.state_code==='US').length,1);}
+ const project=createProject({name:'Fetch '+name,files:{fetchPlanInputs:{source}},operation:'plan-fetch-sources',constraints:[],result,lastOperation:'plan-fetch-sources'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/'+name+'.bisect',JSON.stringify(project));await fs.writeFile(root+'/'+name+'-result.json',JSON.stringify(result));
+}
+assert.deepEqual(JSON.parse(new TextDecoder().decode(fetchPlanTemplateBytes())),FETCH_PLAN_DEFAULTS);assert.equal(engine.execute(fetchPlanRequest({source:null})).manifest_source,'builtin');
+for(const changes of [{year:'../2020'},{selected_paths:['../file']},{selected_paths:['A','a']},{data_types:['unknown']},{manifest_json:JSON.stringify({...builtin,local_data_dir:'C:/outside'})},{states:['ri']}])assert.throws(()=>engine.execute({operation:'plan-fetch-sources',input:{...FETCH_PLAN_DEFAULTS,...changes}}));
+let read=false;await assert.rejects(()=>readFetchPlanSource({name:'huge.json',size:4*1024*1024+1,arrayBuffer(){read=true;}}));assert.equal(read,false);
+console.log('Fetch planning: twelve native-host/WASM/native filesystem planner comparisons, all/optional/ignored state/type semantics, selected file+marker statuses, exact URLs, source/project/template preservation and portable boundary rejection passed.');

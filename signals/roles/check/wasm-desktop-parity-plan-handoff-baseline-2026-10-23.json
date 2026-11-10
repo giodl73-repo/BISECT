@@ -1,0 +1,48 @@
+{
+  "schema": "bisect-plan-review-baseline-v1",
+  "head": "383db340235e21d752a35610aab28e2948b73e57",
+  "dirty_working_tree": true,
+  "runtime_tests_rerun": false,
+  "files": [
+    {
+      "path": "docs/specs/wasm-desktop-parity-plan.md",
+      "sha256": "8494337428b39a116d4cdaba0c59a1b8205828f4ffa5fffe9c8a1c77aea1c6d3"
+    },
+    {
+      "path": "docs/specs/wasm-parity-ledger.md",
+      "sha256": "05de44851c3d982cfb4671448af2ba5a9edde3aa5fe05cccddaf328b815eb5b3"
+    },
+    {
+      "path": "scripts/web/build_cffi_preview.ps1",
+      "sha256": "6eeb53d38c49770e3a966700640dd63d4e447038fd0ecb46394d7e28120c41b1"
+    },
+    {
+      "path": "scripts/web/build_workspace_preview.ps1",
+      "sha256": "b5221c3b7d9ba3fac9ef4b6d3e0706779a970c39a50f04e5201f7e7bd0cf0f05"
+    },
+    {
+      "path": "scripts/web/build_wasm.ps1",
+      "sha256": "819ed81f7b2dc9e45d0c4b1c82dba813be9e88f36ae19d3a9af9593715d2ded8"
+    },
+    {
+      "path": "scripts/web/build_wasm_lab.ps1",
+      "sha256": "464973b71e6c5d5ffe01824ef5ee9c348a1e46800d029322b0b6739a3d9689cc"
+    },
+    {
+      "path": "web/lab/native-state-target-run.js",
+      "sha256": "3478b6df347e4324e1099ebf45a1a29441fdda2c18eef0e012d6f733a8469610"
+    },
+    {
+      "path": "crates/bisect-wasm/src/native_state_run.rs",
+      "sha256": "f31b4ce1205f71cff79c00a50e7cad86e20474a1fa7179a52e1bc04db41b4b25"
+    },
+    {
+      "path": "target/native-state-target-run/evidence.json",
+      "sha256": "19f16b2e82c24aeef72f4bbf12fb0df21b636d626801ab38960671497187b1e3"
+    },
+    {
+      "path": "target/native-state-target-run-browser/evidence.json",
+      "sha256": "496f87a5c28bf2af218fda8cd7a19baf50104faa38675cadbecbd4f2e724f934"
+    }
+  ]
+}

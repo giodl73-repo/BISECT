@@ -8,5 +8,6 @@ description = "Reusable deterministic statistical kernels for civic analysis pro
 
 [dependencies]
 rand.workspace = true
+rand_chacha = "0.3"
 thiserror.workspace = true
 

@@ -115,6 +115,115 @@ pub fn build_svg(
     svg
 }
 
+/// Shared native congressional district-map layout. District IDs are one-based.
+/// Uses the legacy empty district-adjacency palette input, preserving native colors.
+pub fn district_map_svg(districts:std::collections::HashMap<usize,MultiPolygon<f64>>,num_districts:usize,dpi:u32)->anyhow::Result<(String,u32,u32)> {
+    state_map_svg(districts,num_districts,dpi,"districts",&serde_json::Value::Null)
+}
+
+/// Native state map colors and labels, including legacy missing-stat defaults.
+pub fn state_map_svg(districts:std::collections::HashMap<usize,MultiPolygon<f64>>,num_districts:usize,dpi:u32,map_type:&str,analysis:&serde_json::Value)->anyhow::Result<(String,u32,u32)> {
+    anyhow::ensure!(["districts","political","demographic","compactness","rounds"].contains(&map_type),"Unsupported state map type");
+    use geo::{BoundingRect,CoordsIter};
+    let all=MultiPolygon(districts.values().flat_map(|mp|mp.0.clone()).collect());
+    let bbox=all.bounding_rect().ok_or_else(||anyhow::anyhow!("empty geometry"))?;
+    let mut min_lon=bbox.min().x;let mut max_lon=bbox.max().x;
+    let mut wrap=false;
+    // Only geographic coordinates can be unwrapped. Retain the legacy
+    // projection for ordinary state maps and projected coordinate inputs.
+    if max_lon-min_lon>180.0 && min_lon>=-180.0 && max_lon<=180.0
+        && bbox.min().y>=-90.0 && bbox.max().y<=90.0 {
+        let (min,max)=all.coords_iter().fold((f64::INFINITY,f64::NEG_INFINITY),|(min,max),c|{
+            let lon=if c.x>0.0 {c.x-360.0}else{c.x};
+            (min.min(lon),max.max(lon))
+        });
+        if max-min<=180.0 && max-min<max_lon-min_lon {min_lon=min;max_lon=max;wrap=true;}
+    }
+    let lon_span=max_lon-min_lon;let lat_span=bbox.max().y-bbox.min().y;
+    let aspect=if lat_span>1e-9{lon_span/lat_span}else{1.5};
+    let (w,h)=canvas_size_from_dpi(dpi,8.0,aspect);
+    let projection=Projection::from_bbox(min_lon,bbox.min().y,max_lon,bbox.max().y,w,h,0.05);
+    let projection=if wrap {projection.with_antimeridian_wrap()}else{projection};
+    let list=state_map_items(districts,num_districts,map_type,analysis)?;
+    Ok((build_svg(&list,&projection,w,h),w,h))
+}
+
+pub type DistrictGeometries=std::collections::HashMap<usize,MultiPolygon<f64>>;
+pub type MapDistrict=(usize,MultiPolygon<f64>,(u8,u8,u8),LabelSpec);
+/// Shared native state palette/stat labels; returns sorted one-based district rows.
+pub fn state_map_items(districts:DistrictGeometries,num_districts:usize,map_type:&str,analysis:&serde_json::Value)->anyhow::Result<Vec<MapDistrict>> {
+    use crate::colorscheme::{PoliticalScheme,DemographicScheme,CompactnessScheme};
+    use crate::labeler::{political_label,demographic_label,compactness_label};
+    anyhow::ensure!(["districts","political","demographic","compactness","rounds"].contains(&map_type),"Unsupported state map type");
+    let field=match map_type {"political"=>"dem_pct","demographic"=>"pct_minority",_=>"polsby_popper"};
+    let fallback=match map_type {"political"=>0.5,"demographic"=>0.0,_=>0.3};
+    let mut stats=std::collections::HashMap::new();
+    if let Some(rows)=analysis["districts"].as_array(){for row in rows{let id=row["district"].as_u64().unwrap_or(0) as usize;stats.insert(id,row[field].as_f64().unwrap_or(fallback));}}
+    let total_regions=districts.len();
+    let colors=crate::colorscheme::graph_color(&vec![vec![];num_districts],&crate::colorscheme::CategoricalScheme::default());
+    let mut list:Vec<_>=districts.into_iter().map(|(id,mp)|{
+        let color=colors.get(id.saturating_sub(1)).copied().unwrap_or((200,200,200));
+        let label=LabelSpec {main:id.to_string(),annotation:None,stat:None,lineage_superscript:None};
+        let stat=stats.get(&id).copied().unwrap_or(fallback);
+        let (color,label)=match map_type {
+            "rounds"=>(crate::colorscheme::CategoricalScheme::default().color(id.saturating_sub(1)),crate::labeler::round_label(id,total_regions,total_regions)),
+            "political"=>(PoliticalScheme.color(stat),political_label(id,stat)),
+            "demographic"=>(DemographicScheme.color(stat),demographic_label(id,stat)),
+            "compactness"=>(CompactnessScheme.color(stat),compactness_label(id,stat)),
+            _=>(color,label),
+        };
+        (id,mp,color,label)
+    }).collect();list.sort_by_key(|r|r.0);
+    Ok(list)
+}
+
+/// Native national drawing: legacy exterior-only paths and numeric main labels.
+/// Caller orders states/districts and supplies native colors/labels.
+pub fn build_national_svg(districts:&[(usize,MultiPolygon<f64>,(u8,u8,u8),LabelSpec)],proj:&crate::projection::InsetProjection,w:u32,h:u32)->String {
+    use crate::labeler::{largest_component,adaptive_font_size,label_fits,halo_text_svg};
+    use polylabel::polylabel;
+    let mut svg = format!(
+        "<svg width=\"{w}\" height=\"{h}\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"{w}\" height=\"{h}\" fill=\"white\"/>"
+    );
+    for (_, mp, color, _) in districts {
+        let (r, g, b) = color;
+        for poly in &mp.0 {
+        let d: String = {
+            let mut path = String::new();
+            for (i, c) in poly.exterior().coords().enumerate() {
+            let (x, y) = proj.project(c.x, c.y);
+            if i == 0 {
+                path.push_str(&format!("M {x:.1} {y:.1}"));
+            } else {
+                path.push_str(&format!(" L {x:.1} {y:.1}"));
+            }
+            }
+            path.push('Z');
+            path
+        };
+        svg.push_str(&format!(
+            "<path d=\"{d}\" fill=\"rgb({r},{g},{b})\" opacity=\"0.85\" stroke=\"#555\" stroke-width=\"0.3\"/>"
+        ));
+        }
+    }
+    // Labels (very small on national scale — skip tiny districts)
+    let label_radius = proj.continental_height() * 0.008;
+    for (_, mp, _, label) in districts {
+        if let Some(poly) = largest_component(mp) {
+        if let Ok(center) = polylabel(poly, &1.0) {
+            let (cx, cy) = proj.project(center.x(), center.y());
+            let font_px = adaptive_font_size(label_radius).min(7.0);
+            if label_fits(&label.main, font_px, label_radius) && font_px >= 4.0 {
+            svg.push_str(&halo_text_svg(cx, cy, &label.main, "", font_px));
+            }
+        }
+        }
+    }
+    svg.push_str("</svg>");
+    svg
+
+}
+
 /// Render an SVG string to PNG bytes via resvg.
 pub fn svg_to_png(svg_str: &str, font_db: &fontdb::Database) -> anyhow::Result<Vec<u8>> {
     let mut opt = usvg::Options::default();
@@ -152,6 +261,39 @@ mod tests {
     use super::*;
     use crate::labeler::LabelSpec;
     use geo_types::{polygon, MultiPolygon};
+
+    #[test]
+    fn state_maps_fit_antimeridian_islands_without_changing_sources() {
+        use geo::MapCoords;
+        let islands = MultiPolygon(vec![
+            polygon![(x:174.,y:52.),(x:175.,y:52.),(x:175.,y:53.),(x:174.,y:53.),(x:174.,y:52.)],
+            polygon![(x:-178.,y:52.),(x:-177.,y:52.),(x:-177.,y:53.),(x:-178.,y:53.),(x:-178.,y:52.)],
+            polygon![(x:-151.,y:60.),(x:-149.,y:60.),(x:-149.,y:62.),(x:-151.,y:62.),(x:-151.,y:60.)],
+        ]);
+        let original = islands.clone();
+        let continuous = islands.map_coords(|c| geo_types::Coord { x: if c.x>0.0 {c.x-360.0}else{c.x}, y:c.y });
+        for map_type in ["districts", "political", "demographic", "compactness", "rounds"] {
+            let mapped = state_map_svg([(1,islands.clone())].into(),1,72,map_type,&serde_json::Value::Null).unwrap();
+            let reference = state_map_svg([(1,continuous.clone())].into(),1,72,map_type,&serde_json::Value::Null).unwrap();
+            assert_eq!(mapped,reference);
+            assert_eq!(mapped.1,576);
+            assert_eq!(mapped.2,156);
+        }
+        assert_eq!(islands,original);
+    }
+
+    #[test]
+    fn ordinary_and_projected_maps_keep_legacy_layout() {
+        use geo::BoundingRect;
+        for x in [-100.0,1000.0] {
+            let geometry = MultiPolygon(vec![polygon![(x:x,y:35.),(x:x+3.,y:35.),(x:x+3.,y:37.),(x:x,y:37.),(x:x,y:35.)]]);
+            let bbox=geometry.bounding_rect().unwrap();
+            let projection=Projection::from_bbox(bbox.min().x,bbox.min().y,bbox.max().x,bbox.max().y,576,384,0.05);
+            let rows=state_map_items([(1,geometry.clone())].into(),1,"districts",&serde_json::Value::Null).unwrap();
+            let expected=build_svg(&rows,&projection,576,384);
+            assert_eq!(state_map_svg([(1,geometry)].into(),1,72,"districts",&serde_json::Value::Null).unwrap(),(expected,576,384));
+        }
+    }
 
     fn simple_label(main: &str) -> LabelSpec {
         LabelSpec {

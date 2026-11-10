@@ -247,6 +247,12 @@ fn validate_finite(operation: &'static str, value: f64) -> Result<(), Proportion
     Ok(())
 }
 
+/// Shared file-independent reader used by native and browser analyzers.
+pub fn analyze_proportionality_csv<R:std::io::Read>(reader:R,assignments:&HashMap<String,usize>,num_districts:usize)->anyhow::Result<ProportionalityResult>{
+ let mut rdr=csv::Reader::from_reader(reader);let rows:Vec<PoliticalRow>=rdr.deserialize().collect::<Result<Vec<_>,_>>()?;
+ Ok(try_aggregate_proportionality(&rows,assignments,num_districts)?)
+}
+
 pub struct ProportionalityAnalyzer;
 
 impl Analyzer for ProportionalityAnalyzer {
@@ -287,13 +293,7 @@ impl Analyzer for ProportionalityAnalyzer {
             });
         }
 
-        let mut rdr = csv::Reader::from_path(&csv_path)?;
-        let rows: Vec<PoliticalRow> = rdr.deserialize().collect::<Result<Vec<_>, _>>()?;
-        Ok(try_aggregate_proportionality(
-            &rows,
-            ctx.assignments,
-            ctx.num_districts,
-        )?)
+        analyze_proportionality_csv(std::fs::File::open(&csv_path)?,ctx.assignments,ctx.num_districts)
     }
 }
 

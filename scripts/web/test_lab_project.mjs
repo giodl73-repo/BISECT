@@ -15,6 +15,8 @@ class Worker {
 }
 const testYear=process.argv[4]||'2020', testStates=(process.argv[3]||'RI,IA').split(',').slice(0,2), primary=testStates[0];
 const config={name:'Portable national experiment',mode:'national',states:testStates,year:testYear,chamber:'congressional',districts:null,structure:'standard-bisect',weights:'county',search:'multi',seed:42,seeds:8,steps:20,percentile:0,alpha_county:2,balance_tolerance:5,area_swing:1.1,iterations:10,timeout_seconds:30};
+validateLabConfig({...config,area_swing:1});
+assert.throws(()=>validateLabConfig({...config,area_swing:.99}));
 const lab=new WasmCatalog(manifest,fetcher,()=>new Worker());
 const run=lab.submit(config);while(lab.active)await new Promise(resolve=>setTimeout(resolve,5));
 const actual=await lab.api('/api/runs/'+run.id);assert.equal(actual.status,'completed');
@@ -87,10 +89,22 @@ if(manifest.catalog.structures.includes('ratio-optimal-area')){
   while(lab.active)await new Promise(resolve=>setTimeout(resolve,5));
   const areaProject=await createLabProject(lab,area.id);assert.equal(areaProject.experiment.status,'completed');
   await restoredLab.restoreProject(areaProject);
-  const tampered=structuredClone(areaProject);tampered.experiment.states[0].metrics.root_split.area_left_m2++;
+  const tampered=structuredClone(areaProject),split=tampered.experiment.states[0].metrics.root_split;split.area_left_m2+=Math.max(1,Math.abs(split.area_left_m2)*0.01);
   await assert.rejects(restoredLab.restoreProject(tampered),/root-split metrics/);
   const missing=structuredClone(areaProject);delete missing.experiment.states[0].metrics.root_split;
   await assert.rejects(restoredLab.restoreProject(missing),/omits root/);
 }
 await fs.writeFile('target/wasm-laboratory-project-fixture.bisect',JSON.stringify(project));
+if(manifest.catalog.weights.includes('vra-aligned')){
+ const demographics={};
+ for(const code of testStates){const g=await lab.asset(manifest.graphs[`${code}:${testYear}`].graph_ref);demographics[code]={schema_version:'bisect-demographic-fractions-v1',state:code,year:testYear,basis:'total-population',source_label:'SYNTHETIC national minority project regression',minority_fractions:Object.fromEntries(g.geoids.map((id,i)=>[id,i%3?.8:.1]))};}
+ const minorityConfig={...config,weights:'vra-aligned',alpha_county:0,demographics};
+ const minorityRun=lab.submit(minorityConfig);while(lab.active)await new Promise(resolve=>setTimeout(resolve,5));
+ const completed=await lab.api('/api/runs/'+minorityRun.id);assert.equal(completed.status,'completed');
+ const saved=await createLabProject(lab,minorityRun.id),count=executions;
+ const reopened=await restoredLab.restoreProject(saved);assert.equal(executions,count);assert.deepEqual(reopened.config,minorityConfig);
+ for(const state of reopened.states){assert.equal(state.metrics.weighting_evidence.method,'native-minority-override-v1');assert.ok((await restoredLab.api(`/api/runs/${reopened.id}/${state.code}/map`)).features.length);}
+ await fs.writeFile('target/minority-weights-wasm/national.bisect',JSON.stringify(saved));
+ console.log('Minority national project: real prepared state inputs, actual WASM, complete demographics, saved result/map verification and inert reopening passed.');
+}
 console.log('Laboratory projects: actual WASM county/Multi roundtrip, maps, hashes, independent metrics, tamper rejection, atomic cancellation/edit guards, historical provenance and unfinished snapshots passed; opening executes no engine.');

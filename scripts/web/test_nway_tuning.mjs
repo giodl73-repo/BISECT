@@ -41,7 +41,7 @@ if(process.argv[2]){
     const restoredLab=new WasmCatalog(manifest,fetcher,()=>{throw new Error('Project Open must not execute.');});
     const restored=await restoredLab.restoreProject(JSON.parse(JSON.stringify(saved)));assert.equal(restoredLab.worker,null);
     assert.deepEqual(await restoredLab.api(`/api/runs/${restored.id}/${code}/assignments`),saved.assignments[code]);
-    const forged=structuredClone(saved);forged.experiment.states[0].metrics.structure_evidence.internal_trials++;await assert.rejects(restoredLab.restoreProject(forged),/n-way METIS evidence/);
+    if(saved.experiment.states[0].metrics.district_count>1){const forged=structuredClone(saved);forged.experiment.states[0].metrics.structure_evidence.internal_trials++;await assert.rejects(restoredLab.restoreProject(forged),/n-way METIS evidence/);}else assert.equal(saved.experiment.states[0].metrics.structure_evidence,null,'Single-district plans bypass METIS.');
     await fs.writeFile(`target/nway-volume-${code}.bisect`,JSON.stringify(saved));projects++;
   }
 }

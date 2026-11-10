@@ -1,0 +1,11 @@
+# Selected library manifest verification
+
+The plan library has a separate **Prepare selected manifest verification** action. It requires a fresh native library inspection and a selected listed plan. It copies that plan's exact manifest and retained analysis/assignment sources into the verification package, sets prechecks mode, and retires prior package, manifest-provenance and engine-replay inputs. The existing **Open manifest verification** navigation remains available.
+
+Preparation performs no verification or partition. The next explicit Run uses the existing native TUI verification operation. Referenced certificate, model, report, transcript, plan or context files that were not retained by the library must be supplied explicitly. Presence-only library observations do not become package evidence. Missing required files retain the native failure behavior. Successful prechecks alone do not claim engine replay or certification.
+
+The helper validates all sources before replacing workbench inputs and copies the package so edits cannot mutate the library. Changing the project revision retires pending source reads through the existing read guards. Opening a saved project remains inert; imported verification receipts cannot activate downloads without explicit execution. The existing library and package source limits remain unchanged.
+
+`test_tui_library_verify.mjs` checks exact source retention, immutable adoption, missing-manifest refusal and the native missing-evidence failure without replay. Its native host comparison preserves every field except the separately recorded compilation timestamp in binary provenance; both actual timestamps are retained in evidence. `test_tui_library_verify_browser.mjs` starts with a different prior manifest, complete prior certificate package and replay mode. Real WASM workers verify that adoption retires those sources, requires explicit prechecks, preserves the native failure, performs no partition and survives inert Save/Open. It also checks a 390px viewport.
+
+This improves access to the existing verification kernels. It does not authenticate library metadata, turn source availability into a certificate, add filesystem discovery or establish full practitioner/TUI parity. No deployment is included.

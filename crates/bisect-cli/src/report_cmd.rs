@@ -38,11 +38,7 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
         &args.label,
     )
     .map(|ctx| ctx.manifest)
-    .unwrap_or_else(|_| PlanManifest {
-        label: args.label.clone(),
-        year: args.year.clone(),
-        ..Default::default()
-    });
+    .unwrap_or_else(|_| bisect_report::commission_manifest::fallback_manifest(args.label.clone(), args.year.clone()));
 
     let ctx = ReportContext::new(plan_dir.clone(), manifest.clone());
 
@@ -55,24 +51,7 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
     std::fs::create_dir_all(&out_dir)?;
 
     // Build audit JSON (used by --audit-only and --audit-with-report)
-    let build_audit_json = |manifest: &PlanManifest| -> anyhow::Result<String> {
-        Ok(serde_json::to_string_pretty(&serde_json::json!({
-            "label": manifest.label,
-            "audit": {
-                "verification_command": bisect_report::audit::generate_verification_command_from_manifest(manifest),
-                "verification_script": bisect_report::audit::generate_verification_script(manifest),
-                "binary_version": manifest.binary_version,
-                "binary_download_url": manifest.binary_download_url,
-                "binary_sha256": if manifest.binary_sha256.is_empty() { "(not computed)".to_string() } else { manifest.binary_sha256.clone() },
-                "adjacency_file": manifest.adjacency_file,
-                "adjacency_sha256": if manifest.adjacency_sha256.is_empty() { "(not computed — run: sha256sum adjacency_file)".to_string() } else { manifest.adjacency_sha256.clone() },
-                "tiger_source_url": manifest.tiger_source_url,
-                "tiger_sha256": manifest.tiger_sha256.clone().unwrap_or_else(|| format!("(not recorded — download from {} and compute manually)", manifest.tiger_source_url)),
-                "created_at": manifest.created_at,
-                "seed": manifest.seed,
-            }
-        }))?)
-    };
+    let build_audit_json = bisect_report::commission_audit::build_commission_audit_json;
 
     // Audit-only mode: write audit.json and return (skips HTML/JSON report)
     if args.audit_only {

@@ -1,0 +1,2 @@
+import {importConfiguredSourceBundle} from './configured-source-import.js';
+self.onmessage=async({data:file})=>{try{if(!file||!Number.isSafeInteger(file.size)||file.size<22||file.size>32*1024*1024)throw new Error('Source ZIP exceeds 32 MiB.');const buffer=await file.arrayBuffer();if(buffer.byteLength!==file.size)throw new Error('Source ZIP changed while reading.');self.postMessage({ok:true,project:await importConfiguredSourceBundle(new Uint8Array(buffer))});}catch(error){self.postMessage({ok:false,error:error.message||'Invalid source ZIP.'});}};

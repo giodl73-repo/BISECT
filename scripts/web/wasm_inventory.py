@@ -15,7 +15,10 @@ sources = [
 ]
 entries = []
 output = root / 'docs/specs/wasm-capability-inventory.json'
-previous = {item['id']: item for item in json.loads(output.read_text())['entries']} if output.exists() else {}
+old = json.loads(output.read_text(encoding='utf-8')) if output.exists() else {'entries': []}
+if output.exists() and old.get('schema_version') != 1:
+    raise ValueError('Unsupported command inventory schema; review an explicit migration before regeneration.')
+previous = {item['id']: item for item in old['entries']}
 for family, source, enum in sources:
     text = (root / source).read_text(encoding='utf-8')
     match = re.search(r'\benum\s+' + enum + r'\s*\{(.*?)^\}', text, re.M | re.S)
@@ -25,12 +28,17 @@ for family, source, enum in sources:
     for command in variants:
         entry=dict(id=f'{family}.{command}', source=source, enum=enum, operation='pending', ui='pending', verification='pending')
         prior=previous.get(entry['id'], {})
-        for key in ['operation','ui','verification','evidence']:
-            if key in prior: entry[key]=prior[key]
-        entries.append(entry)
+        # Current declaration identity wins; every other field is historical data.
+        combined={**prior, **{key:entry[key] for key in ('id','source','enum')}}
+        for key in ('operation','ui','verification'): combined.setdefault(key,entry[key])
+        entries.append(combined)
 if '--check' in sys.argv:
     if {item['id'] for item in entries} != set(previous): raise SystemExit('Command coverage inventory has drifted; regenerate it.')
+    for entry in entries:
+        if any(entry[key] != previous[entry['id']].get(key) for key in ('source', 'enum')):
+            raise SystemExit('Command declaration authority changed: ' + entry['id'])
     print(f'{len(entries)} command/screen entries match current sources')
     raise SystemExit(0)
-output.write_text(json.dumps(dict(schema_version=1, entries=entries), indent=2)+'\n', encoding='utf-8')
+result = {**old, 'schema_version':1, 'entries':entries}
+output.write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
 print(f'{len(entries)} command/screen entries recorded in {output}')

@@ -1,0 +1,14 @@
+[package]
+name = "bisect-wasm-cffi-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Deliberately isolated from the production workspace/build features.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+metis = { version = "=0.2.2", features = ["vendored"] }

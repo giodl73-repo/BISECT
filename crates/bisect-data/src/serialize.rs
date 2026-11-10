@@ -48,6 +48,8 @@ pub enum SerializeError {
     Truncated { context: &'static str },
     #[error("n_edges header ({header}) does not match actual edge weight count ({actual})")]
     EdgeCountMismatch { header: usize, actual: usize },
+    #[error("invalid adjacency data: {context}")]
+    InvalidData { context: &'static str },
 }
 
 /// Serialize an adjacency graph to binary bytes (format v2 with vertex_weights).
@@ -148,28 +150,27 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
     let n_edges_hdr = read_u32!("n_edges") as usize;
 
     // Vertex weights (v2+ addition; v1 files have none — backward compat below)
-    let vertex_weights: Vec<i64> = if version >= 2 {
-        (0..n_vertices)
-            .map(|_| {
-                if pos + 8 > data.len() {
-                    return 1i64;
-                }
-                let v = i64::from_le_bytes(data[pos..pos + 8].try_into().unwrap());
-                pos += 8;
-                v
-            })
-            .collect()
-    } else {
-        vec![1i64; n_vertices] // v1 files: default to 1 (no population data)
-    };
+    // A vertex requires its i64 weight and at least its u32 neighbor count.
+    // Bound every allocation by bytes already present, before trusting counts.
+    if n_vertices > data.len().saturating_sub(pos) / 12 {
+        return Err(SerializeError::Truncated { context: "vertex sections" });
+    }
+    let mut vertex_weights=Vec::with_capacity(n_vertices);
+    for _ in 0..n_vertices {
+        if data.len().saturating_sub(pos)<8 {return Err(SerializeError::Truncated {context:"vertex weight"});}
+        vertex_weights.push(i64::from_le_bytes(data[pos..pos+8].try_into().unwrap()));pos+=8;
+    }
 
     // Adjacency
     let mut adjacency: Vec<Vec<usize>> = Vec::with_capacity(n_vertices);
     for _ in 0..n_vertices {
         let n_nbrs = read_u32!("n_neighbors") as usize;
+        if n_nbrs>data.len().saturating_sub(pos)/4 {return Err(SerializeError::Truncated {context:"neighbors"});}
         let mut nbrs = Vec::with_capacity(n_nbrs);
         for _ in 0..n_nbrs {
-            nbrs.push(read_u32!("neighbor") as usize);
+            let neighbor=read_u32!("neighbor") as usize;
+            if neighbor>=n_vertices {return Err(SerializeError::InvalidData {context:"neighbor index"});}
+            nbrs.push(neighbor);
         }
         adjacency.push(nbrs);
     }
@@ -183,11 +184,14 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
             actual: n_weights,
         });
     }
+    if n_weights>data.len().saturating_sub(pos)/16 {return Err(SerializeError::Truncated {context:"edge weights"});}
     let mut edge_weights = std::collections::HashMap::with_capacity(n_weights);
     for _ in 0..n_weights {
         let u = read_u32!("edge_u") as usize;
         let v = read_u32!("edge_v") as usize;
         let w = read_f64!("edge_weight");
+        if u>=n_vertices||v>=n_vertices||u==v {return Err(SerializeError::InvalidData {context:"edge index"});}
+        if !w.is_finite() {return Err(SerializeError::InvalidData {context:"nonfinite edge weight"});}
         // Enforce canonical order on read (defensive)
         let key = (u.min(v), u.max(v));
         edge_weights.insert(key, w);
@@ -196,7 +200,9 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
     // v3: CompactBisect geometry (optional — v2 files have none)
     let (vertex_ext_perimeters, vertex_areas) = if version >= 3 && pos < data.len() {
         let has_geometry = read_u32!("has_geometry");
+        if has_geometry>1 {return Err(SerializeError::InvalidData {context:"geometry flag"});}
         if has_geometry == 1 {
+            if n_vertices>data.len().saturating_sub(pos)/16 {return Err(SerializeError::Truncated {context:"geometry"});}
             let mut ext_perims = Vec::with_capacity(n_vertices);
             for _ in 0..n_vertices {
                 ext_perims.push(read_f64!("ext_perimeter"));
@@ -213,6 +219,7 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
         (Vec::new(), Vec::new()) // v2 files: no geometry
     };
 
+    if pos!=data.len() {return Err(SerializeError::InvalidData {context:"trailing bytes"});}
     Ok(AdjacencyGraph {
         adjacency,
         vertex_weights,
@@ -462,4 +469,30 @@ mod tests {
         assert_eq!(g2.n_edges, 0);
         assert_eq!(g2.vertex_weights, vec![42]);
     }
+    #[test]
+    fn declared_counts_do_not_allocate_missing_bytes() {
+        let original=serialize_adjacency(&make_graph());
+        for offset in [8usize,40] {let mut bytes=original.clone();bytes[offset..offset+4].copy_from_slice(&u32::MAX.to_le_bytes());assert!(matches!(deserialize_adjacency(&bytes),Err(SerializeError::Truncated {..})));}
+        let mut edges=original.clone();edges[12..16].copy_from_slice(&u32::MAX.to_le_bytes());
+        // Counts must agree before edge-map allocation; arbitrary headers fail.
+        assert!(deserialize_adjacency(&edges).is_err());
+        for length in 0..original.len()-4 {assert!(deserialize_adjacency(&original[..length]).is_err(),"accepted truncated prefix {length}");}
+    }
+    #[test]
+    fn geometry_flags_and_trailing_data_reject() {
+        let original=serialize_adjacency(&make_graph());
+        let mut flag=original.clone();let offset=flag.len()-4;flag[offset..].copy_from_slice(&2u32.to_le_bytes());assert!(matches!(deserialize_adjacency(&flag),Err(SerializeError::InvalidData {..})));
+        let mut trailing=original;trailing.push(0);assert!(matches!(deserialize_adjacency(&trailing),Err(SerializeError::InvalidData {..})));
+    }
+
+    #[test]
+    fn malformed_indices_and_nonfinite_weights_reject() {
+        let original=serialize_adjacency(&make_graph());
+        let mut neighbor=original.clone();neighbor[44..48].copy_from_slice(&3u32.to_le_bytes());assert!(matches!(deserialize_adjacency(&neighbor),Err(SerializeError::InvalidData {context:"neighbor index"})));
+        // Header + 3 weights + 3 neighbor counts + 4 neighbor indices + count.
+        let edge_offset=16+24+12+16+4;
+        for value in [3u32, u32::MAX] {let mut edge=original.clone();edge[edge_offset..edge_offset+4].copy_from_slice(&value.to_le_bytes());assert!(matches!(deserialize_adjacency(&edge),Err(SerializeError::InvalidData {context:"edge index"})));}
+        let mut weight=original;weight[edge_offset+8..edge_offset+16].copy_from_slice(&f64::NAN.to_le_bytes());assert!(matches!(deserialize_adjacency(&weight),Err(SerializeError::InvalidData {context:"nonfinite edge weight"})));
+    }
+
 }

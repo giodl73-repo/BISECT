@@ -192,15 +192,29 @@ fn validate_inputs(
     assignment: &[usize],
     config: &LocalSearchConfig,
 ) -> Result<(), ImproveError> {
-    if config.k == 0 {
+    if config.k == 0 || config.k > assignment.len() {
         return Err(ImproveError::InvalidInput(
-            "k must be greater than zero".to_string(),
+            "k must be between one and the number of units".to_string(),
         ));
     }
     if adjacency.len() != weights.len() || adjacency.len() != assignment.len() {
         return Err(ImproveError::InvalidInput(
             "adjacency, weights, and assignment lengths must match".to_string(),
         ));
+    }
+    if !config.tolerance.is_finite() || config.tolerance < 0.0 {
+        return Err(ImproveError::InvalidInput("tolerance must be finite and nonnegative".into()));
+    }
+    let mut total = 0i64;
+    for &weight in weights {
+        if weight < 0 {
+            return Err(ImproveError::InvalidInput("populations must be nonnegative".into()));
+        }
+        total = total.checked_add(weight).ok_or_else(||
+            ImproveError::InvalidInput("total population exceeds i64".into()))?;
+    }
+    if total == 0 {
+        return Err(ImproveError::InvalidInput("total population must be positive".into()));
     }
     if assignment.iter().any(|&district| district >= config.k) {
         return Err(ImproveError::InvalidInput(
@@ -214,6 +228,17 @@ fn validate_inputs(
                     "neighbor index {neighbor} out of bounds for node {node}"
                 )));
             }
+        }
+    }
+    // The objective counts undirected edges, and contiguity must use the same graph.
+    let neighbor_sets: Vec<std::collections::BTreeSet<usize>> = adjacency.iter()
+        .map(|neighbors| neighbors.iter().copied().collect()).collect();
+    for (node, neighbors) in adjacency.iter().enumerate() {
+        if neighbor_sets[node].len() != neighbors.len() || neighbor_sets[node].contains(&node) {
+            return Err(ImproveError::InvalidInput("graph contains duplicate edges or self loops".into()));
+        }
+        if neighbors.iter().any(|&neighbor| !neighbor_sets[neighbor].contains(&node)) {
+            return Err(ImproveError::InvalidInput("graph must have symmetric undirected adjacency".into()));
         }
     }
     Ok(())

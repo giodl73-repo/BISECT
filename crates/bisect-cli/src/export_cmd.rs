@@ -1,8 +1,7 @@
 use crate::args::{ExportArgs, ExportFormat};
 use bisect_report::{
-    audit::{generate_verification_command_from_manifest, generate_verification_script},
-    export_geojson, export_gerrychain_v23, export_tracts_csv, sha256_file, write_rplan,
-    PlanManifest, RplanFile,
+    export_geojson, export_gerrychain_v23, export_tracts_csv, sha256_file,
+    RplanFile,
 };
 /// export_cmd.rs — `BISECT export` command dispatch.
 ///
@@ -79,65 +78,17 @@ pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
 /// Load an RplanFile from a plan directory.
 /// Tries plan.rplan first, then reconstructs from final_assignments.json + manifest.json.
 /// Also checks `data/final_assignments.json` (new pipeline layout).
-fn load_rplan_from_plan_dir(plan_dir: &std::path::Path, label: &str) -> anyhow::Result<RplanFile> {
-    // Try to read a .rplan file
-    let rplan_path = plan_dir.join(format!("{}.rplan", label));
-    if rplan_path.exists() {
-        let content = std::fs::read_to_string(&rplan_path)?;
-        let rplan: RplanFile = serde_json::from_str(&content)
-            .map_err(|e| anyhow::anyhow!("failed to parse {}: {}", rplan_path.display(), e))?;
-        return Ok(rplan);
+pub fn load_rplan_from_plan_dir(plan_dir: &std::path::Path, label: &str) -> anyhow::Result<RplanFile> {
+    let selected=bisect_report::export_source::source_path(label,|path|plan_dir.join(path).exists())
+        .ok_or_else(||anyhow::anyhow!("No .rplan or final_assignments.json found in '{}'",plan_dir.display()))?;
+    let text=std::fs::read_to_string(plan_dir.join(&selected))?;
+    if selected==format!("{label}.rplan"){
+        return bisect_report::export_source::load(label,Some(&text),None,None)
+            .map_err(|e|anyhow::anyhow!("failed to parse {}: {}",plan_dir.join(selected).display(),e));
     }
-
-    // Fall back: reconstruct from final_assignments.json (root or data/ subdir)
-    let assignments_path_root = plan_dir.join("final_assignments.json");
-    let assignments_path_data = plan_dir.join("data").join("final_assignments.json");
-    let assignments_path = if assignments_path_root.exists() {
-        assignments_path_root
-    } else if assignments_path_data.exists() {
-        assignments_path_data
-    } else {
-        anyhow::bail!(
-            "No .rplan or final_assignments.json found in '{}'",
-            plan_dir.display()
-        );
-    };
-
-    let assignments_str = std::fs::read_to_string(&assignments_path)?;
-    let assignments: std::collections::HashMap<String, usize> =
-        serde_json::from_str(&assignments_str)?;
-
-    // Read manifest for metadata
-    let manifest_path = plan_dir.join("manifest.json");
-    let metadata = if manifest_path.exists() {
-        let manifest_str = std::fs::read_to_string(&manifest_path)?;
-        let manifest: bisect_report::PlanManifest = serde_json::from_str(&manifest_str)?;
-        bisect_report::RplanMetadata {
-            label: manifest.label,
-            state_fips: "00".into(),
-            state_code: manifest.state_code,
-            year: manifest.year,
-            chamber: manifest.chamber,
-            num_districts: manifest.num_districts,
-            population_source: manifest.population_source,
-            balance_tolerance_pct: manifest.balance_tolerance_pct,
-            created_at: manifest.created_at,
-            created_by: format!("bisect {}", manifest.binary_version),
-            ..Default::default()
-        }
-    } else {
-        bisect_report::RplanMetadata {
-            label: label.to_string(),
-            ..Default::default()
-        }
-    };
-
-    Ok(RplanFile {
-        rplan_version: "0.1".into(),
-        metadata,
-        assignments,
-        geometry: None,
-    })
+    let manifest_path=plan_dir.join("manifest.json");
+    let manifest=if manifest_path.exists(){Some(std::fs::read_to_string(manifest_path)?)}else{None};
+    bisect_report::export_source::load(label,None,Some(&text),manifest.as_deref()).map_err(anyhow::Error::msg)
 }
 
 /// Warn if all GeoJSON features will have null geometry.
@@ -191,90 +142,32 @@ fn write_reproducibility_package(
     label: &str,
     rplan: &RplanFile,
 ) -> anyhow::Result<()> {
-    // Output directory: {out_dir}/{label}_reproducibility/
-    let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
-    std::fs::create_dir_all(&pkg_dir)?;
-
-    // 1. manifest.json — copy from plan directory
-    let manifest_src = plan_dir.join("manifest.json");
-    let manifest_dst = pkg_dir.join("manifest.json");
-    let manifest: Option<PlanManifest> = if manifest_src.exists() {
-        std::fs::copy(&manifest_src, &manifest_dst)?;
-        let content = std::fs::read_to_string(&manifest_src)?;
-        serde_json::from_str(&content).ok()
-    } else {
-        None
-    };
-
-    // 2. {label}.rplan — export plan assignments in RPLAN format
-    let rplan_path = pkg_dir.join(format!("{}.rplan", label));
-    write_rplan(
-        &rplan_path,
-        &rplan.metadata,
-        &rplan.assignments,
-        rplan.geometry.clone(),
-    )?;
-
-    // 3. analysis/ — copy all JSON files from plan_dir/analysis/ if they exist
+    let manifest_path = plan_dir.join("manifest.json");
+    let manifest_text = if manifest_path.exists() { Some(std::fs::read_to_string(manifest_path)?) } else { None };
+    let mut analysis = std::collections::BTreeMap::new();
     let analysis_src = plan_dir.join("analysis");
-    let analysis_dst = pkg_dir.join("analysis");
-    let mut analysis_count = 0usize;
-    if analysis_src.exists() && analysis_src.is_dir() {
-        std::fs::create_dir_all(&analysis_dst)?;
-        if let Ok(entries) = std::fs::read_dir(&analysis_src) {
-            for entry in entries.flatten() {
-                let src_path = entry.path();
-                if src_path.extension().map(|e| e == "json").unwrap_or(false) {
-                    let dst_path = analysis_dst.join(entry.file_name());
-                    std::fs::copy(&src_path, &dst_path)?;
-                    analysis_count += 1;
-                }
+    if analysis_src.is_dir() {
+        for entry in std::fs::read_dir(&analysis_src)? {
+            let path = entry?.path();
+            if path.is_file() && path.extension().is_some_and(|e| e == "json") {
+                let name = path.file_name().and_then(|n|n.to_str()).ok_or_else(||anyhow::anyhow!("Analysis name must be UTF-8"))?;
+                analysis.insert(name.to_string(),std::fs::read_to_string(&path)?);
             }
         }
     }
-
-    // 4. audit.json — build from manifest (same as --audit-only format)
-    let audit_dst = pkg_dir.join("audit.json");
-    let audit_json = if let Some(ref m) = manifest {
-        serde_json::to_string_pretty(&serde_json::json!({
-            "label": m.label,
-            "audit": {
-                "verification_command": generate_verification_command_from_manifest(m),
-                "verification_script": generate_verification_script(m),
-                "binary_version": m.binary_version,
-                "binary_download_url": m.binary_download_url,
-                "binary_sha256": if m.binary_sha256.is_empty() { "(not computed)".to_string() } else { m.binary_sha256.clone() },
-                "adjacency_file": m.adjacency_file,
-                "adjacency_sha256": if m.adjacency_sha256.is_empty() { "(not computed — run: sha256sum adjacency_file)".to_string() } else { m.adjacency_sha256.clone() },
-                "tiger_source_url": m.tiger_source_url,
-                "tiger_sha256": m.tiger_sha256.clone().unwrap_or_else(|| format!("(not recorded — download from {} and compute manually)", m.tiger_source_url)),
-                "created_at": m.created_at,
-                "seed": m.seed,
-            }
-        }))?
-    } else {
-        serde_json::to_string_pretty(&serde_json::json!({
-            "label": label,
-            "audit": { "note": "manifest.json not found — audit fields unavailable" }
-        }))?
-    };
-    std::fs::write(&audit_dst, &audit_json)?;
-
-    // 5. verify.sh — executable lines from the verification command
-    let verify_dst = pkg_dir.join("verify.sh");
-    let verify_content = if let Some(ref m) = manifest {
-        generate_verification_script(m)
-    } else {
-        format!("# Verification script unavailable — manifest.json not found\n# Re-run: bisect state --label {}", label)
-    };
-    std::fs::write(&verify_dst, &verify_content)?;
-    // Make executable on Unix
+    let files = bisect_report::reproducibility::build_reproducibility_package(label,rplan,manifest_text.as_deref(),&analysis)?;
+    let pkg_dir = out_dir.join(format!("{}_reproducibility",label));
+    std::fs::create_dir_all(&pkg_dir)?;
+    for (name,text) in files {
+        let path = pkg_dir.join(name);
+        if let Some(parent) = path.parent() { std::fs::create_dir_all(parent)?; }
+        std::fs::write(path,text)?;
+    }
+    let analysis_count = analysis.len();
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        let mut perms = std::fs::metadata(&verify_dst)?.permissions();
-        perms.set_mode(0o755);
-        std::fs::set_permissions(&verify_dst, perms)?;
+        std::fs::set_permissions(pkg_dir.join("verify.sh"),std::fs::Permissions::from_mode(0o755))?;
     }
 
     // Report output

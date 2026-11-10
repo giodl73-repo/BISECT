@@ -117,7 +117,7 @@ pub fn load_district_geometries(
         let state_code_lower = state_code.to_lowercase();
         // Geoid filename depends on resolution
         let geoid_file = match resolution {
-            "block_group" | "block-group" => {
+            "bg" | "block_group" | "block-group" => {
                 format!("{state_code_lower}_bg_adjacency_{year}_geoids.json")
             }
             _ => format!("{state_code_lower}_adjacency_{year}_geoids.json"),
@@ -164,7 +164,7 @@ pub fn load_district_geometries(
     //   tract:       data/{year}/tiger/tracts/tl_{year}_{fips}_tract/tl_{year}_{fips}_tract.shp
     //   block_group: data/{year}/tiger/tracts/tl_{year}_{fips}_bg/tl_{year}_{fips}_bg.shp
     let (stem, subdir) = match resolution {
-        "block_group" | "block-group" => (
+        "bg" | "block_group" | "block-group" => (
             format!("tl_{year}_{fips}_bg"),
             "tracts", // block group shapefiles live alongside tracts
         ),
@@ -186,8 +186,11 @@ pub fn load_district_geometries(
         );
     }
 
-    let tract_records = read_tiger_tracts(&tiger_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read TIGER shapefile: {e}"))?;
+    let tract_records = if matches!(resolution, "bg" | "block_group" | "block-group") {
+        bisect_data::tiger::read_tiger_block_groups(&tiger_path)
+    } else {
+        read_tiger_tracts(&tiger_path)
+    }.map_err(|e| anyhow::anyhow!("Failed to read TIGER shapefile: {e}"))?;
 
     let geoms: Vec<Geometry<f64>> = tract_records
         .iter()

@@ -5,44 +5,30 @@
 /// Use `--run` in a future version to auto-execute.
 use crate::args::SweepArgs;
 
-const VALID_METRICS: &[&str] = &["compactness", "splits", "deviation"];
+#[cfg(test)]
+use bisect_runner::sweep::VALID_METRICS;
+
+fn settings(args: &SweepArgs) -> bisect_runner::sweep::Settings {
+    bisect_runner::sweep::Settings {state:args.state.clone(),year:args.year.clone(),chamber:args.chamber.clone(),seeds:args.seeds,seed_start:args.seed_start,keep_top:args.keep_top,optimize_by:args.optimize_by.clone(),version:args.version.clone(),output_base:args.output_base.clone(),run:args.run}
+}
 
 /// Validate sweep arguments and return an error message if invalid.
 pub fn validate_sweep_args(args: &SweepArgs) -> Result<(), String> {
-    if args.seeds < 1 {
-        return Err("--seeds must be at least 1".into());
-    }
-    if args.keep_top > args.seeds {
-        return Err(format!(
-            "--keep-top ({}) cannot exceed --seeds ({})",
-            args.keep_top, args.seeds
-        ));
-    }
-    if !VALID_METRICS.contains(&args.optimize_by.as_str()) {
-        return Err(format!(
-            "invalid --optimize-by '{}'; valid values: {}",
-            args.optimize_by,
-            VALID_METRICS.join(", ")
-        ));
-    }
-    Ok(())
+    bisect_runner::sweep::validate(&settings(args))
 }
 
 /// Generate plan labels following the naming convention:
 /// `{state}_{chamber}_seed_{seed_number}`
 pub fn generate_sweep_labels(args: &SweepArgs) -> Vec<String> {
-    let state = args.state.to_lowercase();
-    let chamber = &args.chamber;
-    (args.seed_start..args.seed_start + args.seeds as u64)
-        .map(|seed| format!("{state}_{chamber}_seed_{seed}"))
-        .collect()
+    bisect_runner::sweep::labels(&settings(args))
 }
 
 /// Run the sweep planning command.
 pub fn run_sweep(args: &SweepArgs) -> anyhow::Result<()> {
     validate_sweep_args(args).map_err(|e| anyhow::anyhow!("{}", e))?;
 
-    let labels = generate_sweep_labels(args);
+    let plan = bisect_runner::sweep::plan(&settings(args)).map_err(anyhow::Error::msg)?;
+    let labels: Vec<_> = plan.rows.iter().map(|row| row.label.clone()).collect();
 
     eprintln!(
         "=== bisect sweep: {} seeds, keep top {} by {} ===",
@@ -56,26 +42,14 @@ pub fn run_sweep(args: &SweepArgs) -> anyhow::Result<()> {
     eprintln!();
 
     for (i, label) in labels.iter().enumerate() {
-        let seed_val = args.seed_start + i as u64;
         eprintln!("  [{}] {}", i + 1, label);
-        println!("bisect state --state {} --year {} --chamber {} --label {} --seed {} --version {} --output-base {}",
-            args.state, args.year, args.chamber, label, seed_val, args.version, args.output_base);
-        println!("bisect analyze --state {} --year {} --label {} --version {} --types compactness splits summary",
-            args.state, args.year, label, args.version);
+        println!("{}", plan.rows[i].state_command);
+        println!("{}", plan.rows[i].analyze_command);
         eprintln!();
     }
 
     eprintln!("After running all seeds, compare with:");
-    eprintln!(
-        "  bisect compare --labels {} --optimize-by {}",
-        labels
-            .iter()
-            .take(args.keep_top)
-            .cloned()
-            .collect::<Vec<_>>()
-            .join(","),
-        args.optimize_by
-    );
+    eprintln!("  {}", plan.comparison_command);
     eprintln!();
     eprintln!(
         "Report: Would run {} plans, keeping top {} by {}",

@@ -1,5 +1,66 @@
 use crate::*;
 
+/// Snapshot of validated weak-undirected topology for repeated subset queries.
+/// Scratch memory belongs to this instance; every query resets it, including
+/// queries following an error. Later changes to the source adjacency are not
+/// reflected in this snapshot. The existing one-shot API is unchanged.
+pub struct PreparedSubsetConnectivity {
+    undirected: Vec<Vec<usize>>,
+    in_subset: Vec<bool>,
+    seen: Vec<bool>,
+    unique_nodes: Vec<usize>,
+    stack: Vec<usize>,
+}
+
+impl PreparedSubsetConnectivity {
+    pub fn new<I: NodeIndex>(adjacency: &[Vec<I>]) -> Result<Self, SubsetConnectivityError> {
+        Ok(Self {
+            undirected: undirected_index_adjacency_for_subset(adjacency)?,
+            in_subset: vec![false; adjacency.len()],
+            seen: vec![false; adjacency.len()],
+            unique_nodes: Vec::new(),
+            stack: Vec::new(),
+        })
+    }
+
+    pub fn node_subset_connected<N: NodeIndex>(
+        &mut self, nodes: &[N],
+    ) -> Result<bool, SubsetConnectivityError> {
+        if nodes.is_empty() { return Ok(true); }
+        self.in_subset.fill(false);
+        self.seen.fill(false);
+        self.unique_nodes.clear();
+        self.stack.clear();
+        let node_count = self.undirected.len();
+        for &value in nodes {
+            let node = value.to_usize().ok_or(SubsetConnectivityError::NodeOutOfBounds {
+                node: usize::MAX, node_count,
+            })?;
+            if node >= node_count {
+                return Err(SubsetConnectivityError::NodeOutOfBounds { node, node_count });
+            }
+            if !self.in_subset[node] {
+                self.in_subset[node] = true;
+                self.unique_nodes.push(node);
+            }
+        }
+        let start = self.unique_nodes[0];
+        self.stack.push(start);
+        self.seen[start] = true;
+        let mut reached = 0usize;
+        while let Some(node) = self.stack.pop() {
+            reached += 1;
+            for &neighbor in &self.undirected[node] {
+                if self.in_subset[neighbor] && !self.seen[neighbor] {
+                    self.seen[neighbor] = true;
+                    self.stack.push(neighbor);
+                }
+            }
+        }
+        Ok(reached == self.unique_nodes.len())
+    }
+}
+
 pub fn assignment_label_connected<I, D>(
     adjacency: &[Vec<I>],
     assignment: &[D],

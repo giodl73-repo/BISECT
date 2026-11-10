@@ -65,12 +65,22 @@ pub fn read_pl94_block_populations_for_year<G: AsRef<Path>, P: AsRef<Path>>(
     year: u16,
 ) -> Result<Vec<Pl94BlockPopulation>, Pl94Error> {
     let geo = BufReader::new(File::open(geo_path)?);
+    read_pl94_block_populations_from_readers(geo, || File::open(population_path).map(BufReader::new), year)
+}
+
+/// Native format dispatch over selected streams. The population opener is lazy:
+/// the 2000 geography file contains POP100 and never reads a population file.
+pub fn read_pl94_block_populations_from_readers<G: BufRead, P: BufRead>(
+    geo: G,
+    population: impl FnOnce() -> io::Result<P>,
+    year: u16,
+) -> Result<Vec<Pl94BlockPopulation>, Pl94Error> {
     match year {
         2000 => parse_pl94_2000_block_populations(geo),
         2010 => {
-            parse_pl94_2010_block_populations(geo, BufReader::new(File::open(population_path)?))
+            parse_pl94_2010_block_populations(geo, population()?)
         }
-        2020 => parse_pl94_block_populations(geo, BufReader::new(File::open(population_path)?)),
+        2020 => parse_pl94_block_populations(geo, population()?),
         _ => Err(Pl94Error::UnsupportedYear(year)),
     }
 }

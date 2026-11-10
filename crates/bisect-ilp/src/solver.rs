@@ -10,7 +10,15 @@ use crate::certificates::{branch_and_cut_certificate, BranchAndCutMode, ExactSea
 use crate::formulation::{build_formulation, IlpFormulation};
 use crate::result::{IlpResult, SolverStatus};
 use std::collections::HashMap;
+#[cfg(not(all(target_arch="wasm32",target_os="unknown")))]
 use std::time::Instant;
+#[cfg(all(target_arch="wasm32",target_os="unknown"))]
+struct Instant(f64);
+#[cfg(all(target_arch="wasm32",target_os="unknown"))]
+impl Instant {
+    fn now()->Self {extern "C" {fn bisect_monotonic_millis()->f64;}Self(unsafe{bisect_monotonic_millis()})}
+    fn elapsed(&self)->std::time::Duration {extern "C" {fn bisect_monotonic_millis()->f64;}let millis=unsafe{bisect_monotonic_millis()}-self.0;std::time::Duration::from_secs_f64(millis.max(0.)/1000.)}
+}
 
 const EXACT_BRANCH_AND_BOUND_LIMIT: usize = 24;
 const UNASSIGNED_DISTRICT: usize = usize::MAX;

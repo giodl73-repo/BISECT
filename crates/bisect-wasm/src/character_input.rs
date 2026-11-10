@@ -17,9 +17,11 @@ pub struct CharacterInput {
     pub data_year: String,
     pub source_label: String,
     pub data: CharacterData,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alignment: Option<CharacterAlignment>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum CharacterData {
     Economic {
@@ -30,6 +32,48 @@ pub enum CharacterData {
     Housing {
         characters: BTreeMap<String, HousingChar>,
     },
+}
+
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CharacterAlignment {
+    pub policy: String,
+    pub source_data: CharacterData,
+    pub matched_tracts: usize,
+    pub missing_tract_ids: Vec<String>,
+    pub ignored_tract_ids: Vec<String>,
+}
+
+/// Explicit native alignment of a nonempty source. Missing-file geographic
+/// fallback is a separate policy and is not represented by an empty source.
+pub fn align(input: &CharacterInput, geoids: &[String]) -> Result<CharacterInput, String> {
+    if input.alignment.is_some() { return Err("Align original character observations, not an already aligned input.".into()); }
+    let source_ids: Vec<_> = match &input.data {
+        CharacterData::Economic { characters, .. } => characters.keys().cloned().collect(),
+        CharacterData::Housing { characters } => characters.keys().cloned().collect(),
+    };
+    build_weights(input, &source_ids, &[], 0.5)?;
+    let fips = crate::tract_input::import_scope(&input.state, &input.year, &input.source_label)?;
+    let mut ids = HashSet::new();
+    if geoids.is_empty() || geoids.len() > 100_000 { return Err("Select 1–100,000 target tracts for character alignment.".into()); }
+    for id in geoids {
+        if id.len()!=11 || crate::tract_input::tract_id(id,fips)?!=*id || !ids.insert(id.clone()) {return Err("Character alignment requires unique canonical state tract GEOIDs.".into());}
+    }
+    let supplied: HashSet<_> = source_ids.iter().cloned().collect();
+    let mut missing: Vec<_> = ids.difference(&supplied).cloned().collect();missing.sort();
+    let mut ignored: Vec<_> = supplied.difference(&ids).cloned().collect();ignored.sort();
+    let zero = LodesWacRaw { c000:0.,cns01:0.,cns02:0.,cns05:0.,cns07:0.,cns08:0.,cns09:0.,cns10:0.,cns11:0. };
+    let data = match &input.data {
+        CharacterData::Economic {raw_counts,..} => {
+            let raw_counts: BTreeMap<_,_> = geoids.iter().map(|id|(id.clone(),raw_counts.get(id).copied().unwrap_or(zero))).collect();
+            let characters=raw_counts.iter().map(|(id,raw)|(id.clone(),derive_economic_character(*raw))).collect();
+            CharacterData::Economic {raw_counts,characters}
+        },
+        CharacterData::Housing {characters} => CharacterData::Housing {characters:geoids.iter().map(|id|(id.clone(),characters.get(id).copied().unwrap_or_else(HousingChar::neutral))).collect()},
+    };
+    let mut output=input.clone();output.data=data;
+    output.alignment=Some(CharacterAlignment {policy:"explicit-native-nonempty-source-alignment-v1".into(),source_data:input.data.clone(),matched_tracts:geoids.len()-missing.len(),missing_tract_ids:missing,ignored_tract_ids:ignored});
+    Ok(output)
 }
 
 #[derive(Serialize)]
@@ -180,6 +224,7 @@ pub fn import_csv(
         data_year: data_year.into(),
         source_label: source_label.into(),
         data,
+        alignment: None,
     })
 }
 
@@ -211,6 +256,11 @@ pub fn build_weights(
         if id.len() != 11 || crate::tract_input::tract_id(id, fips)? != *id || !ids.insert(id) {
             return Err("Character weights require unique canonical tract GEOIDs.".into());
         }
+    }
+    if let Some(receipt)=&input.alignment {
+        let mut source=input.clone();source.data=receipt.source_data.clone();source.alignment=None;
+        let expected=align(&source,geoids)?;
+        if expected.data!=input.data || expected.alignment!=input.alignment {return Err("Character alignment receipt or native defaults disagree with original observations and target tracts.".into());}
     }
     let mut digest = Sha256::new();
     digest.update(b"BISECT_CHARACTER_V1\0");
@@ -322,3 +372,6 @@ pub fn build_weights(
         .collect::<Result<Vec<_>, _>>()?;
     Ok(CharacterWeights{schema_version:"bisect-character-weights-v1",kind,alpha,character_hash:format!("{:x}",digest.finalize()),edges:weighted,formula:"geographic-times-alpha-plus-one-minus-alpha-times-cosine",zero_policy:if kind=="economic"{"both-zero-one;one-zero-half"}else{"any-zero-one"}})
 }
+
+/// Explicit browser authorization for the native missing-file geographic path.
+pub fn absent_evidence(weights:&str,units:usize,scope:&str)->serde_json::Value{serde_json::json!({"method":"native-character-absent-geographic-v1","kind":weights.trim_end_matches("-character"),"character_sha256":null,"data_year":null,"source_policy":"explicit-absent-input-geographic","baseline":"geographic-boundary-m","tracts":units,"scope":scope})}

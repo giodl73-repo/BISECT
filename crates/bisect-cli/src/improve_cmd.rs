@@ -11,6 +11,11 @@ pub fn run_improve(args: &ImproveArgs) -> anyhow::Result<()> {
     let context = rplan_io::read_rctx_str(&context_text)
         .with_context(|| format!("parse input RCTX {}", args.context.display()))?;
 
+    // Validate ordered unit identity and checked population totals before searching.
+    rplan_audit::measurements::measure_plan(&document.plan, Some(&context))
+        .map_err(|error| anyhow!(error))
+        .context("validate local-search plan/context identity")?;
+
     let graph = context
         .graph
         .as_ref()
@@ -352,6 +357,25 @@ mod tests {
             plan_ref: None,
         })
         .unwrap();
+    }
+
+    #[test]
+    fn improve_rejects_reordered_context_before_writing_outputs() {
+        let tmp = TempDir::new().unwrap();
+        let (document, mut context) = fixture_document_and_context();
+        context.units.unit_ids.swap(0, 1);
+        context.units.unit_universe_hash = context.units.compute_unit_universe_hash().unwrap();
+        let plan = tmp.path().join("input.rplan");
+        let ctx = tmp.path().join("input.rctx");
+        let out_dir = tmp.path().join("out");
+        std::fs::write(&plan, rplan_io::write_rplan_string(&document).unwrap()).unwrap();
+        std::fs::write(&ctx, rplan_io::write_rctx_string(&context).unwrap()).unwrap();
+        let error = run_improve(&ImproveArgs {
+            plan, context: ctx, out_dir: out_dir.clone(), method: ImproveMethodArg::OneMove,
+            tolerance: 34.0, label: None, generated_at: Some("2026-05-11T00:00:00Z".into()),
+        }).unwrap_err();
+        assert!(format!("{error:#}").contains("identity"));
+        assert!(!out_dir.exists());
     }
 
     fn fixture_document_and_context() -> (rplan_io::RplanDocument, RplanContext) {

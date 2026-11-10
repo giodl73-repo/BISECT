@@ -30,7 +30,7 @@ assert.ok(cases>0);
 for(const search of ['single','multi']){const old=engine.execute({graph,options:{...base,search}}),tuned=engine.execute({graph,options:{...base,search,metis_objective:'cut',metis_trials:1}});assert.deepEqual(old.assignments,tuned.assignments);assert.equal(old.metrics.structure_evidence,null);}
 const oneOptions={...base,districts:1,metis_objective:'volume',metis_trials:3},one=engine.execute({graph,options:oneOptions});assert.equal(one.metrics.structure_evidence,null);verifyLabAssignments(graph,{metrics:{...one.metrics,district_count:1,districts:one.metrics.district_metrics,balance_passed:true}},one.assignments,oneOptions);
 let rejected=0;for(const change of [{metis_trials:0},{metis_trials:101},{metis_objective:'bad'},{search:'flip'},{structure:'bfs-growth'}]){const request={graph,options:{...base,metis_objective:'volume',metis_trials:3,...change}};assert.throws(()=>engine.execute(request));await fs.writeFile(file,JSON.stringify(request).replace(/"seed":"([0-9]+)"/, '"seed":$1'));assert.notEqual(spawnSync('target/release/examples/execute_request.exe',[file],{stdio:'pipe'}).status,0);rejected++;}
-let projects=0;
+let projects=0,realMisses=0,realDisconnected=0,oneDistrictProjects=0,splitProjects=0;
 if(process.argv[2]){
  const root=process.argv[2],manifest=JSON.parse(await fs.readFile(pathModule.join(root,'catalog.json'),'utf8'));
  const fetcher=async name=>{const b=await fs.readFile(pathModule.join(root,name));return{ok:true,arrayBuffer:async()=>b.buffer.slice(b.byteOffset,b.byteOffset+b.length)};};
@@ -40,10 +40,18 @@ if(process.argv[2]){
    const job=lab.submit({...config,states:[code],districts:null,search});while(lab.active)await new Promise(r=>setTimeout(r,5));assert.equal(lab.jobs.get(job.id).status,'completed');
    const saved=await createLabProject(lab,job.id),restore=new WasmCatalog(manifest,fetcher,()=>{throw new Error('Opening must not generate.');});const reopened=await restore.restoreProject(JSON.parse(JSON.stringify(saved)));assert.equal(restore.worker,null);
    assert.deepEqual(await restore.api(`/api/runs/${reopened.id}/${code}/assignments`),saved.assignments[code]);
-   const bad=structuredClone(saved);bad.experiment.states[0].metrics.structure_evidence.seeds_per_ratio++;await assert.rejects(restore.restoreProject(bad),/GeoSection refinement evidence/);
+   const bad=structuredClone(saved),metrics=bad.experiment.states[0].metrics;
+   if(metrics.district_count===1){
+     assert.equal(metrics.structure_evidence,null);assert.equal(metrics.root_split,null);
+     metrics.structure_evidence={method:'geosection-metis',seeds_per_ratio:1};
+     await assert.rejects(restore.restoreProject(bad),/One-district project must not claim split or search evidence/);oneDistrictProjects++;
+   }else{
+     metrics.structure_evidence.seeds_per_ratio++;await assert.rejects(restore.restoreProject(bad),/GeoSection refinement evidence/);splitProjects++;
+   }
    const exported=await lab.exportPractitionerProject(job.id,code);assert.equal(exported.project.files.plan.provenance.producer.engine_options.metis_objective,'volume');assert.equal(exported.project.files.plan.provenance.producer.engine_options.metis_trials,3);
-   await fs.writeFile(`target/geosection-volume-${code}-${search}.bisect`,JSON.stringify(saved));projects++;
+   await fs.writeFile(`target/geosection-volume-${code}-${search}.bisect`,JSON.stringify(saved));const realMetrics=saved.experiment.states[0].metrics;assert.equal(typeof realMetrics.balance_passed,'boolean');assert.equal(typeof realMetrics.contiguous,'boolean');realMisses+=!realMetrics.balance_passed;realDisconnected+=!realMetrics.contiguous;projects++;
  }
+ assert.ok(oneDistrictProjects>0,'No one-district GeoSection project tested');assert.ok(splitProjects>0,'No multi-district GeoSection project tested');
 }
-await fs.writeFile('target/geosection-tuning-verification.json',JSON.stringify({exact_cases:cases,matching_generation_failures:failed,rejected,tamper,real_state_projects:projects,balance_misses:misses,disconnected,legacy_default_unchanged:true},null,2));
-console.log(`GeoSection METIS: ${cases} exact native/WASM cases, ${failed} matching generation failures, ${rejected} invalid requests, ${tamper} evidence tamper rejections, ${projects} real-state project roundtrips; ${misses} balance misses, ${disconnected} disconnected plans.`);
+await fs.writeFile('target/geosection-tuning-verification.json',JSON.stringify({exact_cases:cases,matching_generation_failures:failed,rejected,tamper,real_state_projects:projects,one_district_projects:oneDistrictProjects,split_projects:splitProjects,balance_misses:misses+realMisses,synthetic_balance_misses:misses,real_state_balance_misses:realMisses,real_state_disconnected:realDisconnected,disconnected:disconnected+realDisconnected,synthetic_disconnected:disconnected,legacy_default_unchanged:true},null,2));
+console.log(`GeoSection METIS: ${cases} exact native/WASM cases, ${failed} matching generation failures, ${rejected} invalid requests, ${tamper} evidence tamper rejections, ${projects} real-state project roundtrips; ${misses+realMisses} balance misses (${misses} synthetic / ${realMisses} real-state), ${disconnected+realDisconnected} disconnected plans.`);

@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {gzipSync} from 'node:zlib';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {fetchDataSettingsFromPrepared,fetchDataRequest,fetchDataZip} from '../../web/lab/fetch-data-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const root='target/fetch-data-package-wasm';await fs.mkdir(root,{recursive:true});const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+for(const [name,path,resultPath,kind]of [['housing','target/acs-housing-wasm/valid.bisect','target/acs-housing-wasm/valid-result.json','acs-housing'],['workplace','target/lodes-gzip-wasm/workplace.bisect','target/lodes-gzip-wasm/workplace-result.json','lodes-wac'],['commuting','target/lodes-source-wasm/commuting.bisect','target/lodes-source-wasm/commuting-result.json','lodes-od']]){
+ const original=JSON.parse(await fs.readFile(path,'utf8')),prepared=JSON.parse(await fs.readFile(resultPath,'utf8')),settings=fetchDataSettingsFromPrepared(prepared,original.files);settings.selection.manifest_json=JSON.stringify({...JSON.parse(await fs.readFile('data/manifest.json','utf8')),local_data_dir:root+'/'+name+'/data',local_outputs_dir:root+'/'+name+'/outputs'});
+ const files={...original.files,fetchDataPackageSettings:settings},request=fetchDataRequest(files),result=engine.execute(request);await fs.writeFile(root+'/request.json',JSON.stringify(request));assert.deepEqual(JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[root+'/request.json'],{encoding:'utf8'})),result);
+ const target=Buffer.from(result.files_base64[result.item.local_path],'base64'),marker=Buffer.from(result.files_base64[result.item.done_marker],'base64');assert.equal(target.toString(),prepared.csv_text);assert.equal(marker.toString(),'done');assert.equal(result.installation_performed,false);
+ const source=files[kind==='acs-housing'?'acsHousingInputs':'lodesInputs'].source;let raw=Buffer.from(source.base64,'base64');if(kind==='lodes-od')raw=gzipSync(raw);await fs.writeFile(root+'/source.bin',raw);
+ for(const mode of ['supplied','404']){
+  const current=mode==='supplied'?result:engine.execute({...request,input:{...request.input,source:{kind:'unavailable404'}}});const output=execFileSync('target/debug/examples/fetch_data_reference.exe',[kind,root+'/source.bin',root+'/'+name+'-native-'+mode,mode],{encoding:'utf8'});const native=JSON.parse(output.trim().split(/\r?\n/).at(-1));assert.equal(native.csv_text,Buffer.from(current.files_base64[current.item.local_path],'base64').toString());assert.equal(native.marker_text,'done');assert.equal(native.is_done,true);if(mode==='404'){assert.equal(current.source_availability,'http404-claim');assert.equal(current.preparation,null);}await fs.writeFile(root+'/'+name+'-'+mode+'.zip',await fetchDataZip(current));if(mode==='404')await fs.writeFile(root+'/'+name+'-404-result.json',JSON.stringify(current));
+ }
+ const project=createProject({name:'Fetch data '+name,files,operation:'prepare-fetch-data-package',constraints:[],result,lastOperation:'prepare-fetch-data-package'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/'+name+'.bisect',JSON.stringify(project));await fs.writeFile(root+'/'+name+'-result.json',JSON.stringify(result));
+ const selected=[result.item.local_path,result.item.done_marker];const skip=engine.execute({...request,input:{...request.input,selection:{...request.input.selection,selected_paths:selected},source:null}});assert.equal(skip.status,'skipped');assert.deepEqual(skip.files_base64,{});await assert.rejects(()=>fetchDataZip(skip));
+ const forced=engine.execute({...request,input:{...request.input,force:true,selection:{...request.input.selection,selected_paths:selected}}});assert.equal(forced.status,'prepared');
+ const markerOnly=engine.execute({...request,input:{...request.input,selection:{...request.input.selection,selected_paths:[result.item.done_marker]}}});assert.equal(markerOnly.status,'prepared');
+ await assert.rejects(()=>fetchDataZip({...result,target_sha256:'0'.repeat(64)}));
+}
+const files=JSON.parse(await fs.readFile(root+'/housing.bisect','utf8')).files,request=fetchDataRequest(files);assert.throws(()=>engine.execute({...request,input:{...request.input,source:null}}));assert.throws(()=>engine.execute({...request,input:{...request.input,item_index:999}}));assert.throws(()=>engine.execute({...request,input:{...request.input,source:{kind:'acs-housing',input:{...request.input.source.input,state:'NC'}}}}));
+console.log('Fetch data: native-host/WASM packages and six actual native download/CSV/marker cases through local HTTP (including soft404), source scope, skip/force/marker-only semantics, artifact hash checks, ZIP/project preservation and preparation failures passed.');

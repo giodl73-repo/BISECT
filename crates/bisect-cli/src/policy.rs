@@ -7,7 +7,7 @@
 /// backward compatibility).
 
 /// Embedded fallback — compiled into the binary.
-static EMBEDDED_POLICY: &str = include_str!("../../../data/location_policy.json");
+use bisect_analysis::location_policy::EMBEDDED_POLICY;
 
 /// Re-export LocationRegistry so callers can use `crate::policy::LocationRegistry`.
 pub use crate::registry::LocationRegistry;
@@ -79,125 +79,13 @@ use crate::args::PolicyArgs;
 
 pub fn run_policy(args: &PolicyArgs) -> anyhow::Result<()> {
     let policy = load_policy();
-    let state_code = args.state.to_uppercase();
-
-    match get_state_policy(&policy, &state_code) {
-        None => {
-            // Try fuzzy name match (e.g., "ireland" -> "IE")
-            let policy_obj = policy.as_object();
-            if let Some(obj) = policy_obj {
-                let query = state_code.to_lowercase();
-                let matches: Vec<(&str, &str)> = obj
-                    .iter()
-                    .filter(|(k, _)| !k.starts_with('_')) // skip test states
-                    .filter_map(|(code, entry)| {
-                        entry
-                            .get("name")
-                            .and_then(|v| v.as_str())
-                            .filter(|name| name.to_lowercase().contains(&query))
-                            .map(|name| (code.as_str(), name))
-                    })
-                    .collect();
-
-                match matches.len() {
-                    1 => {
-                        let (code, _name) = matches[0];
-                        eprintln!(
-                            "NOTE: '{}' matched as {} ({}). Use the 2-letter code next time.",
-                            state_code, code, _name
-                        );
-                        // Re-run display with the matched code
-                        let matched_args = PolicyArgs {
-                            state: code.to_string(),
-                            format: args.format.clone(),
-                        };
-                        return run_policy(&matched_args);
-                    }
-                    0 => {} // fall through to error
-                    _ => {
-                        let suggestions: Vec<String> = matches
-                            .iter()
-                            .map(|(code, name)| format!("{} ({})", code, name))
-                            .collect();
-                        eprintln!(
-                            "Multiple matches for '{}': {}. Use the 2-letter code.",
-                            state_code,
-                            suggestions.join(", ")
-                        );
-                    }
-                }
-            }
-            anyhow::bail!(
-                "Location '{}' not found in policy database. \
-                Check BISECT_LOCATION_POLICY or use a 2-letter code (e.g., IE for Ireland).",
-                state_code
-            )
-        }
-        Some(state) => {
-            if args.format == "json" {
-                println!("{}", serde_json::to_string_pretty(&state)?);
-            } else {
-                // Human-readable table format
-                let name = state["name"].as_str().unwrap_or(&state_code);
-                println!("=== {name} ({state_code}) Redistricting Policy ===\n");
-
-                let fields = [
-                    ("House districts", "house_districts"),
-                    ("Senate districts", "senate_districts"),
-                    ("Subdivision term", "subdivision_term_plural"),
-                    ("Municipal term", "municipal_term_plural"),
-                    ("House balance tolerance", "balance_tolerance_house_pct"),
-                    ("Senate balance tolerance", "balance_tolerance_senate_pct"),
-                    (
-                        "Congressional balance tolerance",
-                        "balance_tolerance_congressional_pct",
-                    ),
-                    ("Population basis", "population_basis"),
-                    ("Prison gerrymandering reform", "prison_gerrymandering"),
-                    ("Student counting", "student_counting"),
-                    ("Nesting requirement", "nesting_requirement"),
-                    ("Nesting ratio", "nesting_ratio"),
-                    ("Preservation standard", "preservation_standard"),
-                    ("Legal citation", "preservation_citation"),
-                    ("Commission type", "commission_type"),
-                    ("VRA Section 2 applies", "vra_section2_applies"),
-                ];
-
-                for (label, key) in fields {
-                    if let Some(val) = state.get(key) {
-                        if !val.is_null() {
-                            let display = match val {
-                                serde_json::Value::String(s) => s.clone(),
-                                serde_json::Value::Number(n) => {
-                                    if key.contains("pct") {
-                                        format!("{}%", n)
-                                    } else {
-                                        n.to_string()
-                                    }
-                                }
-                                serde_json::Value::Bool(b) => {
-                                    if *b {
-                                        "Yes".into()
-                                    } else {
-                                        "No".into()
-                                    }
-                                }
-                                other => other.to_string(),
-                            };
-                            println!("  {label:<38} {display}");
-                        }
-                    }
-                }
-
-                if let Some(notes) = state.get("notes").and_then(|v| v.as_str()) {
-                    println!("\nNotes: {notes}");
-                }
-                if let Some(note) = state.get("independent_city_note").and_then(|v| v.as_str()) {
-                    println!("\nIndependent cities: {note}");
-                }
-            }
-        }
+    let (state_code,state,fuzzy)=bisect_analysis::location_policy::resolve(&policy,&args.state)
+        .map_err(anyhow::Error::msg)?;
+    if fuzzy {
+        eprintln!("NOTE: '{}' matched as {} ({}). Use the 2-letter code next time.",args.state.to_uppercase(),state_code,state["name"].as_str().unwrap_or(&state_code));
     }
+    if args.format=="json" { println!("{}",serde_json::to_string_pretty(&state)?); }
+    else { print!("{}",bisect_analysis::location_policy::render_table(&state_code,&state)); }
     Ok(())
 }
 

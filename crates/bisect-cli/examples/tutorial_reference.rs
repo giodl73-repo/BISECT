@@ -1,0 +1,1 @@
+fn main()->anyhow::Result<()>{let mut args=std::env::args().skip(1);let tutorial=args.next().ok_or_else(||anyhow::anyhow!("Expected tutorial and root"))?;let root=args.next().ok_or_else(||anyhow::anyhow!("Expected root"))?;std::process::exit(bisect_cli::doctor::run_check_tutorial_data(&tutorial,std::path::Path::new(&root)));}

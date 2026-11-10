@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import worker from '../../cloudflare/source-worker.mjs';
+import {bridgeAdjacencyRelease} from '../../cloudflare/adjacency-release-bridge.mjs';
+const root='target/adjacency-release/bridge-streams-'+Date.now();await fs.mkdir(root,{recursive:true});
+const origin='https://bisect.test',base='https://api.github.com/repos/giodl73-repo/REDIST',body={repository:'giodl73-repo/REDIST',tag:'data-inputs-v1',state:'RI',year:'2020',asset_id:1};
+const request=signal=>new Request(origin+'/api/adjacency-release',{method:'POST',headers:{Origin:origin,'content-type':'application/json','x-bisect-release-bridge':'v1'},body:JSON.stringify(body),signal});
+let mode='overflow',cancelled=false,pulls=0;
+const fetcher=async(url,options)=>{
+ assert(!options.headers.Authorization);if(url.includes('/releases/tags/'))return Response.json({id:99,tag_name:body.tag,draft:false,prerelease:false});
+ if(url.includes('/releases/99/assets?'))return Response.json([{id:1,name:'ri_adjacency_2020.adj.bin',size:8,state:'uploaded',url:base+'/releases/assets/1',digest:null}]);
+ return new Response(new ReadableStream({start(output){if(mode==='stall')options.signal.addEventListener('abort',()=>{cancelled=true;output.error(new Error('provider aborted'));},{once:true});},pull(output){if(mode==='short'){output.enqueue(new Uint8Array(7));output.close();}else if(mode!=='stall')output.enqueue(new Uint8Array(pulls++?1:8));},cancel(){cancelled=true;}}));
+};
+let response=await bridgeAdjacencyRelease(request(),{fetcher});await assert.rejects(response.arrayBuffer(),/stream failed/);assert(cancelled);
+mode='short';response=await bridgeAdjacencyRelease(request(),{fetcher});await assert.rejects(response.arrayBuffer(),/stream failed/);
+mode='cancel';cancelled=false;response=await bridgeAdjacencyRelease(request(),{fetcher});await response.body.cancel();assert(cancelled);
+mode='stall';cancelled=false;response=await bridgeAdjacencyRelease(request(),{fetcher,timeoutMs:20});await assert.rejects(response.arrayBuffer(),/stream failed/);assert(cancelled);
+const controller=new AbortController();cancelled=false;response=await bridgeAdjacencyRelease(request(controller.signal),{fetcher});controller.abort();await assert.rejects(response.arrayBuffer(),/stream failed/);assert(cancelled);
+const route=await worker.fetch(new Request(origin+'/api/adjacency-release'),{ASSETS:{fetch(){throw new Error('Release route fell through to assets');}}});assert.equal(route.status,405);assert.equal(route.headers.get('x-bisect-release-bridge'),'v1');const config=JSON.parse(await fs.readFile('wrangler.cloudflare.jsonc','utf8'));assert(config.assets.run_worker_first.includes('/api/adjacency-release'));
+await fs.writeFile(root+'/evidence.json',JSON.stringify({status:'passed',controlled_provider:true,worker_route_and_asset_priority:true,stream_overflow_refused:true,short_unannounced_body_refused:true,downstream_cancel_propagates:true,deadline_and_request_abort_propagate:true,live_provider_claim:false},null,2));console.log('PASS release bridge stream failures and cancellation: '+root);

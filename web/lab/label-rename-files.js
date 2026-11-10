@@ -1,0 +1,25 @@
+import {validateSourceFile,exactSourceText,encodeBytes} from './package-files.js';
+import {storedZipBytes} from './reproducibility-files.js';
+export const LABEL_RENAME_DEFAULTS={source_label:'official_proposal',destination_label:'renamed_proposal',force:false};
+const safe=p=>typeof p==='string'&&p.length>0&&p.length<=240&&/^[A-Za-z0-9_./ -]+$/.test(p)&&!p.split('/').some(x=>!x||['.','..','__proto__','constructor','prototype'].includes(x));
+const token=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(s)&&!['__proto__','constructor','prototype','runs','analysis','reports','configs'].includes(s);
+export function validateLabelRenameInputs(v){
+ if(!v||Object.keys(v).sort().join()!=='directories,files,registry,settings'||!v.files||Array.isArray(v.files)||Object.keys(v.files).length>512||!Array.isArray(v.directories)||v.directories.length>512||!v.settings||Object.keys(v.settings).sort().join()!=='destination_label,force,source_label'||!token(v.settings.source_label)||!token(v.settings.destination_label)||typeof v.settings.force!=='boolean')throw new Error('Invalid label rename inputs.');
+ if(v.registry!==null){validateSourceFile(v.registry,{maxBytes:1024*1024});exactSourceText(v.registry);}
+ let total=0;const folded=new Set();for(const [p,b]of Object.entries(v.files)){if(!safe(p)||['.bisect','.bisect.tmp'].includes(p)||folded.has(p.toLowerCase()))throw new Error('Unsafe or colliding package path.');folded.add(p.toLowerCase());if(b!=='')validateSourceFile({name:p,base64:b},{maxBytes:16*1024*1024});total+=atob(b).length;}
+ if(total>16*1024*1024)throw new Error('Package exceeds 16 MiB.');const dirs=new Set();for(const d of v.directories){if(typeof d!=='string'||!d.endsWith('/')||!safe(d.slice(0,-1))||dirs.has(d.toLowerCase())||folded.has(d.slice(0,-1).toLowerCase()))throw new Error('Invalid or colliding directory.');dirs.add(d.toLowerCase());}
+ for(const p of [...Object.keys(v.files),...v.directories]){const parts=p.replace(/\/$/,'').split('/');for(let i=1;i<parts.length;i++)if(folded.has(parts.slice(0,i).join('/').toLowerCase()))throw new Error('Package path is both file and directory.');}
+ return v;
+}
+export function labelRenameRequest(v){validateLabelRenameInputs(v);if(!v.registry)throw new Error('Select a native registry.');return {operation:'rename-label-package',registry_json:exactSourceText(v.registry),files_base64:v.files,directories:v.directories,...v.settings};}
+export async function readLabelRenameFolder(selection){
+ const list=Array.from(selection);if(!list.length||list.length>513)throw new Error('Select up to 512 files and one registry.');let root,total=0;const paths=[],folded=new Set();
+ for(const f of list){const parts=(f.webkitRelativePath||'').split('/');if(parts.length<2||!safe(parts[0]))throw new Error('Select one repository folder.');const r=parts.shift(),p=parts.join('/');if(root&&root!==r)throw new Error('Select one repository folder.');root=r;if(!safe(p)||folded.has(p.toLowerCase())||!Number.isSafeInteger(f.size)||f.size<0)throw new Error('Unsafe source path or size.');folded.add(p.toLowerCase());paths.push(p);if(p!=='.bisect')total+=f.size;if((p==='.bisect'&&f.size>1024*1024)||total>16*1024*1024)throw new Error('Select a 1 MiB registry and up to 16 MiB file bytes.');}
+ if(paths.filter(p=>p!=='.bisect').length>512||paths.includes('.bisect.tmp'))throw new Error('Select at most 512 package files, excluding registry temporary files.');
+ for(const p of paths){const parts=p.split('/');for(let i=1;i<parts.length;i++)if(folded.has(parts.slice(0,i).join('/').toLowerCase()))throw new Error('Package path is both file and directory.');}
+ let registry=null;const files={};for(let i=0;i<list.length;i++){const f=list[i],p=paths[i],data=new Uint8Array(await f.arrayBuffer());if(data.length!==f.size)throw new Error('File size changed while reading.');if(p==='.bisect'){registry={name:'.bisect',base64:encodeBytes(data)};validateSourceFile(registry,{maxBytes:1024*1024});exactSourceText(registry);}else files[p]=encodeBytes(data);}return {registry,files};
+}
+export function labelRenameZip(result,inputs){
+ labelRenameRequest(inputs);if(result?.schema_version!=='bisect-label-rename-v1'||result.source_label!==inputs.settings.source_label||result.destination_label!==inputs.settings.destination_label||result.force!==inputs.settings.force||!Array.isArray(result.files)||!Array.isArray(result.directories))throw new Error('Run label rename with these sources first.');
+ const entries=result.files.map(f=>{if(!safe(f.path))throw new Error('Unsafe output file path.');const b=typeof f.base64==='string'?f.base64:(safe(f.source_path)&&Object.hasOwn(inputs.files,f.source_path)?inputs.files[f.source_path]:null);if(typeof b!=='string')throw new Error('Output references an unavailable selected source.');return [f.path,Uint8Array.from(atob(b),c=>c.charCodeAt(0))];});for(const d of result.directories){if(typeof d!=='string'||!d.endsWith('/')||!safe(d.slice(0,-1)))throw new Error('Unsafe output directory.');entries.push([d,new Uint8Array()]);}return storedZipBytes(entries);
+}

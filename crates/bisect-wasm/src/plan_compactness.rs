@@ -1,0 +1,30 @@
+//! Exact plan/unit identity and shared native geometry measurements.
+use bisect_analysis::district_geometry::{CoordinateBasis,DissolveMethod,unit_geometry_byte_limit,compactness_report,read_unit_geometries_with_method};
+use serde_json::{json,Value};
+use sha2::{Digest,Sha256};
+use std::collections::HashMap;
+pub(crate) fn analyze(plan_text:&str,geometry_text:&str,basis:CoordinateBasis,crs_label:&str,include_exact_reock:bool,population_centroids_csv:Option<&str>,dissolve_method:DissolveMethod)->Result<Value,String>{
+    if plan_text.len().saturating_add(geometry_text.len()).saturating_add(population_centroids_csv.map_or(0,str::len))>unit_geometry_byte_limit(geometry_text,18*1024*1024)?{return Err("Plan, geometry and optional population sources must fit their 18/64 MiB source profile.".into());}
+    if crs_label.trim().is_empty()||crs_label.len()>200{return Err("Supply a recorded CRS label of 1–200 bytes.".into());}
+    if basis==CoordinateBasis::Wgs84Degrees&&crs_label!="EPSG:4326"{return Err("WGS84 degree input requires CRS label EPSG:4326.".into());}
+    if basis==CoordinateBasis::Nad83Degrees&&crs_label!="EPSG:4269"{return Err("NAD83 degree input requires CRS label EPSG:4269.".into());}
+    let plan=crate::plan_audit_text::plan(plan_text)?;
+    if plan.units.unit_universe_hash!=plan.units.compute_unit_universe_hash().map_err(|e|e.to_string())?{return Err("Compactness plan unit-universe hash mismatch.".into());}
+    rplan_audit::measurements::measure_plan(&plan,None)?;
+    let assignments:HashMap<_,_>=plan.units.unit_ids.iter().cloned().zip(plan.assignment.iter().map(|d|*d as usize+1)).collect();
+    let (districts,extras)=read_unit_geometries_with_method(geometry_text,&assignments,basis,dissolve_method)?;
+    let mut report=compactness_report(&districts,plan.units.state.as_deref().unwrap_or("unknown"),&plan.units.year.map(|y|y.to_string()).unwrap_or_else(||"unknown".into()),basis,crs_label);
+    if dissolve_method==DissolveMethod::Balanced {report["dissolve_method"]=json!("balanced-input-order-pairs-indexed-work-v1");}
+    if dissolve_method==DissolveMethod::SpatialBalanced {report["dissolve_method"]=serde_json::json!("balanced-morton16-disjoint-envelopes-v1");}
+    if dissolve_method==DissolveMethod::Batch {report["dissolve_method"]=serde_json::json!("validated-partition-single-sweep-v1");}
+    if include_exact_reock {bisect_analysis::district_geometry::add_exact_reock(&mut report,&districts,Some(50_000_000))?;}
+    if let Some(source)=population_centroids_csv {bisect_analysis::population_geometry::add_population_compactness(&mut report,&districts,&assignments,source,basis)?;}
+    let report_json=serde_json::to_string_pretty(&report).map_err(|e|e.to_string())?;
+    Ok(json!({"schema_version":"bisect-plan-compactness-v1","report":report,"report_json":report_json,
+        "report_sha256":format!("{:x}",Sha256::digest(report_json.as_bytes())),
+        "matched_units":assignments.len(),"unmatched_geometry_units":extras,
+        "plan_hash":plan.plan_hash().map_err(|e|e.to_string())?,
+        "plan_source_sha256":format!("{:x}",Sha256::digest(plan_text.as_bytes())),
+        "geometry_source_sha256":format!("{:x}",Sha256::digest(geometry_text.as_bytes())),
+        "scope":"Optional population-weighted compactness uses all assigned unit centroid/population rows and the full dissolved area centroid, including islands. Values are mean squared distances in supplied m² or degrees², not dimensionless compactness; lower means less spread. Counts use checked u64 totals with native f64 weighting. Zero total population is explicitly labelled native zero. No centroid containment, projection or population authenticity is verified. Shared native polygon union and compactness formulas. Default sequential input-order unions preserve earlier behavior; optional balanced input-order pairs use indexed charged sweep work and record a named method. Spatial balanced pairs sort by 16-bit Morton envelope-center keys and concatenate strictly envelope-disjoint pieces; quantization affects ordering only, never source coordinates. Floating-point geometry and scores can differ between union orders. Every plan unit requires one unique properties.GEOID feature; extra source units are reported and excluded. Polygon holes and disjoint MultiPolygon pieces are retained in the union. Length/width uses minimum-area hull-edge rectangles with the least elongated box among roundoff-sized area ties; relative coordinates reduce translation cancellation. This changes legacy ambiguous-box ratios. Scores use only the largest-area dissolved component; omitted islands and measured area fraction are disclosed. Area subtracts holes but native perimeter counts only the exterior ring, excluding hole boundaries. Reock retains the production centroid-radius proxy. Optional exact_reock separately measures the native convex-hull/pruned vertex-circle minimum with a 50-million charged-work limit; containing diameter circles terminate the search; floating-point arithmetic is not a formal exact-arithmetic certificate. Both use only the largest-area component. Geographic (WGS84 or NAD83) scores are planar degree diagnostics with null metre fields. Projected input uses a GeoJSON-shaped envelope with explicitly supplied metre coordinates and CRS declaration, not RFC 7946 GeoJSON; no reprojection or CRS authentication occurs. Source topology checks, 18 MiB combined sources (64 MiB with explicit source-exact-large root profile) (plan and population CSV retain their individual 3 MiB readers), 100,000 features, 500,000 positions (2,000,000 with the larger profile) and a 50-million charged geometry budget (200 million with the larger profile) (per-feature topology, each input-order union pair and resulting hull measurements) bound this browser path. The work model is not a wall-clock guarantee. Simplification changes scores and must be documented. These measurements do not prove contiguity, optimality, source authenticity or legal compliance."}))
+}

@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {commissionRequest,validateCommissionInputs,readCommissionFolder,commissionReportView} from '../../web/lab/commission-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+import {countResultTables} from '../../web/lab/count-results.js';
+const fixture=JSON.parse(await fs.readFile('target/commission-report-wasm/request-4.json','utf8'));
+const sources=Object.fromEntries(Object.entries(fixture.files).map(([path,bytes])=>[path,{name:path.split('/').at(-1),base64:Buffer.from(bytes).toString('base64')}]));
+const inputs={files:sources,generated_at:fixture.generated_at};assert.deepEqual(commissionRequest(inputs),fixture);
+const folder=Object.entries(fixture.files).map(([path,b])=>({name:path.split('/').at(-1),webkitRelativePath:'report/'+path,size:b.length,arrayBuffer:async()=>Uint8Array.from(b).buffer}));
+let ignoredRead=false;folder.push({name:'private.txt',webkitRelativePath:'report/private.txt',size:100,arrayBuffer:async()=>{ignoredRead=true;throw new Error('should not read');}});
+const read=await readCommissionFolder(folder);assert.deepEqual({...read.files},sources);assert.equal(ignoredRead,false);assert.equal(read.generated_at,'');
+const report_json=await fs.readFile('target/commission-report-wasm/expected-4.json','utf8');const report_html=await fs.readFile('target/commission-report-wasm/expected-4.html','utf8');const result={schema_version:'bisect-commission-report-v1',report_json,report_html,label:'report_4',state:'RI',year:'2020',source_boundary:'Supplied claims'};
+const project=createProject({name:'Commission report',files:{commissionInputs:inputs},operation:'assemble-commission-report',constraints:[],result,lastOperation:'assemble-commission-report'});assert.deepEqual(parseProject(JSON.stringify(project)),project);assert.equal(project.result.report_json,report_json);assert.equal(project.result.report_html,report_html);
+const tables=countResultTables(result);assert.equal(tables[1].rows.length,10);assert.equal(tables[0].rows.find(r=>r[0].includes('seed'))[1],'9007199254740993');
+const seedConflict='{"sections":{"population_equality":{"seed":1,"label":"seed 23"},"audit":{"seed":9007199254740993}},"generated_at":"2026-10-07T01:00:00Z"}';assert.equal(commissionReportView(seedConflict).sections.audit.seed,'9007199254740993');assert.equal(commissionReportView(seedConflict).sections.population_equality.label,'seed 23');assert.equal(countResultTables({...result,report_json:seedConflict})[0].rows.find(r=>r[0].includes('seed'))[1],'9007199254740993');
+let rejects=0;for(const mutate of [v=>v.extra=1,v=>v.generated_at='x'.repeat(101),v=>v.files['../bad']=sources['manifest.json'],v=>v.files['unknown.json']=sources['manifest.json'],v=>v.files['analysis/summary.json']={name:'x',base64:Buffer.from('{"x":1,"x":2}').toString('base64')},v=>v.files['analysis/summary.json']={name:'x',base64:Buffer.from('{"__proto__":{}}').toString('base64')},v=>v.files['analysis/summary.json']={name:'x',base64:Buffer.from([255]).toString('base64')}]){const v=structuredClone(inputs);mutate(v);assert.throws(()=>validateCommissionInputs(v));rejects++;}
+let oversizedRead=false;await assert.rejects(()=>readCommissionFolder([{name:'manifest.json',size:16*1024*1024+1,arrayBuffer:async()=>{oversizedRead=true;}}]));assert.equal(oversizedRead,false);
+await assert.rejects(()=>readCommissionFolder([{name:'manifest.json',size:1,arrayBuffer:async()=>Uint8Array.from([123,125]).buffer}]));
+await fs.writeFile('target/commission-report-wasm/browser-project.bisect',JSON.stringify(project));await fs.writeFile('target/commission-report-wasm/files-evidence.json',JSON.stringify({exact_request:true,exact_project:true,exact_html_project:true,ten_section_table:true,exact_seed_display:true,unrelated_file_not_read:true,rejects,pre_read_limit:true,changed_size:true},null,2));
+console.log('Commission files: exact request/project/seed, ten sections, ignored unrelated files, pre-read/changed-size bounds and seven source rejects passed.');

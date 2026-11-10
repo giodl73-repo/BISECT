@@ -1,0 +1,2487 @@
+{
+  "schema_version": "bisect-real-data-matrix-v1",
+  "declared_at_utc": "2026-10-23T19:40:20.815Z",
+  "status": "predeclared-not-run",
+  "scope": "First real-data retained-graph/native-adapter tier. A matching native failure is not successful workload support; original raw hashes and historical derivation witnesses do not prove fresh derivation or source authenticity. Browser and broader lifecycle rows remain not-run.",
+  "declaration_engine": {
+    "path": "dist/wasm-workspace-continuation-validated/toolkit/bisect_wasm.wasm",
+    "sha256": "56d1898c7743dbed3634e342112d061b9400e37d3d040e76def74ad4bf13704b",
+    "byte_length": 25123741
+  },
+  "recipe_sources": [
+    {
+      "path": "scripts/web/fixtures/real-data-matrix-case.mjs",
+      "sha256": "9475e50d89c42588c14569d115c790da92b437ac8979b4ddb379ddeaae7133ee",
+      "byte_length": 1674
+    },
+    {
+      "path": "web/lab/config-template.js",
+      "sha256": "ccc8622b835acd2cf6dbed809bd1c21f64a94e8f285b27d65cc8b1feee0b0b4d",
+      "byte_length": 1907
+    },
+    {
+      "path": "web/lab/tui-run-files.js",
+      "sha256": "25118822a59957d98efe04743262c5ad7969a51cea80beb7007c8c394d166c8b",
+      "byte_length": 7528
+    },
+    {
+      "path": "web/lab/config-run.js",
+      "sha256": "d1f4926a7ebe7462b61caff41f59e71ec06ec60d8ed56a38de5a79b707d5e9ac",
+      "byte_length": 7607
+    }
+  ],
+  "comparison": {
+    "successful_results": "Exact complete native adapter/WASM reply. No normalizations.",
+    "failures": "Exact declared native and WASM error text; no success/capacity claim.",
+    "kernel_orchestration_limit": "Native host shares adapter kernels; this tier makes no independent CLI orchestration claim."
+  },
+  "rows": [
+    {
+      "id": "RI-2020-tract-apportion-regions-core-42",
+      "tier": "retained-integration",
+      "size": "small",
+      "state": "RI",
+      "year": "2020",
+      "unit_kind": "tract",
+      "chamber": "congressional",
+      "districts": 2,
+      "units": 250,
+      "population": "1097379",
+      "seed": "42",
+      "structure": "apportion-regions",
+      "search": "single",
+      "weights": "geographic",
+      "backend": "metis-core",
+      "balance_tolerance_percent": 0.5,
+      "sources": [
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.shp",
+          "sha256": "977bc64c912101776391c4d2a3c50aa95d7eb8efe3235fdeaa341b12c7e78fc5",
+          "byte_length": 1354900
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.dbf",
+          "sha256": "e2b7b0109bf6409d692ce8b13fa95259855633cf1f902e817febb2f281ff3ee7",
+          "byte_length": 27168
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.shx",
+          "sha256": "6a60422efdc22303bc6e48269be8622730f9a081ae8145106119afd2842be146",
+          "byte_length": 2100
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_44_tract/tl_2020_44_tract.prj",
+          "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd",
+          "byte_length": 165
+        },
+        {
+          "path": "data/2020/redistricting/rhode_island/rigeo2020.pl",
+          "sha256": "d7236ca05940f50fa1bdb6b35c08435327011af40843f19a3f269503063300fd",
+          "byte_length": 14024819
+        },
+        {
+          "path": "data/2020/redistricting/rhode_island/ri000012020.pl",
+          "sha256": "a077a305148dd567de66c7ba28e355d62b5b6adde7e72b3bb7a876fefb773657",
+          "byte_length": 12094099
+        }
+      ],
+      "graph": {
+        "path": "target/original-all-state-wasm/RI/engine-graph.json.gz",
+        "sha256": "b3e69699e7d98b62fbe6fcd91839a5152a119815b733d25929d542fbe43eb3da",
+        "byte_length": 17975,
+        "decoded_sha256": "74316656cf0f846b00e62c228168677a8479249a533e8e17522cb4330082b05c"
+      },
+      "derivation_witness": {
+        "path": "target/original-all-state-wasm/RI/receipt.json",
+        "sha256": "a543a826bf2abd472259a74f16ff7c414d4dc60641098d40ff770a73996f89d4",
+        "byte_length": 4835
+      },
+      "expected_native": {
+        "status": "completed"
+      },
+      "expected_basis": "Historical retained original-state campaign; this declaration fixes the same template/graph/TUI recipe before new execution. Any changed result fails rather than updating expectations.",
+      "browser_requirements": [
+        "WebAssembly",
+        "Worker",
+        "crypto.subtle",
+        "portable file import/download"
+      ],
+      "required_checks": [
+        "native-adapter exact result or error",
+        "all graph units assigned on success",
+        "exact seed",
+        "population and graph-contiguity recomputation on success",
+        "native/WASM request hash",
+        "original raw source identity"
+      ],
+      "remaining_checks": [
+        "fresh raw-to-graph derivation",
+        "independent native CLI orchestration",
+        "actual browser workflow",
+        "map/report follow-ups",
+        "Save/Open and replay",
+        "recovery/install",
+        "other vintages/resolutions/methods",
+        "national capacity"
+      ],
+      "request_sha256": "4e1e06d5e64a81fe61c500cf68fa8d2a16e613613d0fadd2d1dd9e7282cbe2e5"
+    },
+    {
+      "id": "NC-2020-tract-apportion-regions-core-42",
+      "tier": "retained-integration",
+      "size": "medium",
+      "state": "NC",
+      "year": "2020",
+      "unit_kind": "tract",
+      "chamber": "congressional",
+      "districts": 14,
+      "units": 2672,
+      "population": "10439388",
+      "seed": "42",
+      "structure": "apportion-regions",
+      "search": "single",
+      "weights": "geographic",
+      "backend": "metis-core",
+      "balance_tolerance_percent": 0.5,
+      "sources": [
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.shp",
+          "sha256": "f16e92e1fb6842af7aa8ef52c29c7b779312ad1682b00a547ac200a104fc6410",
+          "byte_length": 31635960
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.dbf",
+          "sha256": "bb04d88fb0b441d6d352210a70ad9fe6902e4963013d6db9677ddb68446e4162",
+          "byte_length": 286322
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.shx",
+          "sha256": "42cfaefce3df2b23b29e0ab7f33a35560d29616388301f35dd22b464ddbc1628",
+          "byte_length": 21476
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.prj",
+          "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd",
+          "byte_length": 165
+        },
+        {
+          "path": "data/2020/redistricting/north_carolina/ncgeo2020.pl",
+          "sha256": "a15c373e68e67bb7dd77cbd070c38a4915b532dd9ebdca48fccff45ae9cda61b",
+          "byte_length": 131874085
+        },
+        {
+          "path": "data/2020/redistricting/north_carolina/nc000012020.pl",
+          "sha256": "d4b1a62cafb117142f13dc8c62bfea35261b38485f80565a3cecd687b764ff6c",
+          "byte_length": 112335690
+        }
+      ],
+      "graph": {
+        "path": "target/original-all-state-wasm/NC/engine-graph.json.gz",
+        "sha256": "b96d043faeed5a950da3d1effc1f61558c0363022e57e97b27bcd2a1ca8898d6",
+        "byte_length": 191809,
+        "decoded_sha256": "a4d4e6d2c20b9abda4ac14c6899af17926a853fc68833a4aec4291349fa7dbc6"
+      },
+      "derivation_witness": {
+        "path": "target/original-all-state-wasm/NC/receipt.json",
+        "sha256": "d95aafa9443acb09a1e1a2f0544ba6adc0dc8d704f263a85f59e05de7e42323c",
+        "byte_length": 2024
+      },
+      "expected_native": {
+        "status": "failed",
+        "error": "apportion-regions balance 36.1% exceeds 3% research limit"
+      },
+      "expected_basis": "Historical retained original-state campaign; this declaration fixes the same template/graph/TUI recipe before new execution. Any changed result fails rather than updating expectations.",
+      "browser_requirements": [
+        "WebAssembly",
+        "Worker",
+        "crypto.subtle",
+        "portable file import/download"
+      ],
+      "required_checks": [
+        "native-adapter exact result or error",
+        "all graph units assigned on success",
+        "exact seed",
+        "population and graph-contiguity recomputation on success",
+        "native/WASM request hash",
+        "original raw source identity"
+      ],
+      "remaining_checks": [
+        "fresh raw-to-graph derivation",
+        "independent native CLI orchestration",
+        "actual browser workflow",
+        "map/report follow-ups",
+        "Save/Open and replay",
+        "recovery/install",
+        "other vintages/resolutions/methods",
+        "national capacity"
+      ],
+      "request_sha256": "d8936d84828d2f8e91b67f982bdc7ae91e0106588c967c00dcb5110c27aff5ec"
+    },
+    {
+      "id": "CA-2020-tract-apportion-regions-core-42",
+      "tier": "retained-integration",
+      "size": "large",
+      "state": "CA",
+      "year": "2020",
+      "unit_kind": "tract",
+      "chamber": "congressional",
+      "districts": 52,
+      "units": 9129,
+      "population": "39538223",
+      "seed": "42",
+      "structure": "apportion-regions",
+      "search": "single",
+      "weights": "geographic",
+      "backend": "metis-core",
+      "balance_tolerance_percent": 0.5,
+      "sources": [
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.shp",
+          "sha256": "655d4a13f36bf8e61f39ffc3a32c22fc44ff961f18cefe042b3c26258cadc0af",
+          "byte_length": 51156652
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.dbf",
+          "sha256": "1d0f417b8c7ee0bd747cd717a90feeb85a3073a253403211da0cae365f97d1f8",
+          "byte_length": 977221
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.shx",
+          "sha256": "c8ca01bffe4dac602806f357e09618e791eb1a665df5c87ae70df241f238f3e6",
+          "byte_length": 73132
+        },
+        {
+          "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.prj",
+          "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd",
+          "byte_length": 165
+        },
+        {
+          "path": "data/2020/redistricting/california/cageo2020.pl",
+          "sha256": "ca49b3a5323e9eaa430b82afe36c01d72cddd1cae3462f3bdbd4be9463dea976",
+          "byte_length": 256684567
+        },
+        {
+          "path": "data/2020/redistricting/california/ca000012020.pl",
+          "sha256": "05078225921e109ed882ef9e370a1532c99f8ef92c4cc3809ba00c15afff3a12",
+          "byte_length": 219677245
+        }
+      ],
+      "graph": {
+        "path": "target/original-all-state-wasm/CA/engine-graph.json.gz",
+        "sha256": "719b04412d07d95844fe1a5159797265502024f20ea60ae6befb05a809a72f6c",
+        "byte_length": 628648,
+        "decoded_sha256": "6910b13ce4110480c8e05d573ba2c9042811141f87041641e31932c08ace7b8b"
+      },
+      "derivation_witness": {
+        "path": "target/original-all-state-wasm/CA/receipt.json",
+        "sha256": "69a8c3eb1a1dbbb5fe0cfa9454fd8c462882e9ed1626f6a9cb7421f2605572ea",
+        "byte_length": 1978
+      },
+      "expected_native": {
+        "status": "failed",
+        "error": "apportion-regions balance 43.9% exceeds 3% research limit"
+      },
+      "expected_basis": "Historical retained original-state campaign; this declaration fixes the same template/graph/TUI recipe before new execution. Any changed result fails rather than updating expectations.",
+      "browser_requirements": [
+        "WebAssembly",
+        "Worker",
+        "crypto.subtle",
+        "portable file import/download"
+      ],
+      "required_checks": [
+        "native-adapter exact result or error",
+        "all graph units assigned on success",
+        "exact seed",
+        "population and graph-contiguity recomputation on success",
+        "native/WASM request hash",
+        "original raw source identity"
+      ],
+      "remaining_checks": [
+        "fresh raw-to-graph derivation",
+        "independent native CLI orchestration",
+        "actual browser workflow",
+        "map/report follow-ups",
+        "Save/Open and replay",
+        "recovery/install",
+        "other vintages/resolutions/methods",
+        "national capacity"
+      ],
+      "request_sha256": "2e7550574b091e843cf4f51ec792321be83541b1fae765bca97351750950b8ef"
+    }
+  ],
+  "followup_campaigns": [
+    {
+      "id": "full-chamber-standard-core-42-v1",
+      "declared_at_utc": "2026-10-24T06:20:05.224Z",
+      "status": "predeclared-not-run",
+      "owner": "coding agent; BISECT maintainer acceptance",
+      "scope": "Successful full congressional chamber target on retained NC/CA original graphs. Old apportion-regions expectations and raw failures remain unchanged. Native-host success is a candidate baseline; CLI, WASM, browser, fresh derivation, host and national acceptance remain separate.",
+      "declaration_engine": {
+        "path": "target/build-application/engines-1792821652704681900/default.wasm",
+        "sha256": "19ab174eaa807da4db877adb7a72c084946b4aed2bdcf46b102767a5a4bcaf92",
+        "byte_length": 24999930
+      },
+      "native_host": {
+        "path": "target/build-application/engines-1792821652704681900/execute_tool_request.exe",
+        "sha256": "9abd38d8ae97f6f1cc85cfa363b5d2d7b0b8d8ae883b10711cd164f6d843b9f1",
+        "byte_length": 35245056
+      },
+      "recipe_sources": [
+        {
+          "path": "scripts/web/fixtures/full-chamber-matrix-case.mjs",
+          "sha256": "01678dabe6daf53e965434976ed65b2e53137d6a84515dbe4098def922111508",
+          "byte_length": 1802
+        },
+        {
+          "path": "scripts/web/fixtures/real-data-matrix-case.mjs",
+          "sha256": "9475e50d89c42588c14569d115c790da92b437ac8979b4ddb379ddeaae7133ee",
+          "byte_length": 1674
+        },
+        {
+          "path": "web/lab/config-template.js",
+          "sha256": "ccc8622b835acd2cf6dbed809bd1c21f64a94e8f285b27d65cc8b1feee0b0b4d",
+          "byte_length": 1907
+        },
+        {
+          "path": "web/lab/tui-run-files.js",
+          "sha256": "25118822a59957d98efe04743262c5ad7969a51cea80beb7007c8c394d166c8b",
+          "byte_length": 7528
+        },
+        {
+          "path": "web/lab/config-run.js",
+          "sha256": "d1f4926a7ebe7462b61caff41f59e71ec06ec60d8ed56a38de5a79b707d5e9ac",
+          "byte_length": 7607
+        }
+      ],
+      "comparison": {
+        "assignments": "Exact accepted native CLI assignments by original ordered unit IDs; no relabeling.",
+        "native_adapter": "Exact complete reply against retained native baseline; no blanket normalization.",
+        "invariants": "Independent complete unit roster, population sums, all requested nonempty districts, graph connectivity, 0.5% integer balance, and original input hashes.",
+        "scope": "Selected retained-graph tier; raw-to-graph fresh derivation and original-source authenticity are not established."
+      },
+      "rows": [
+        {
+          "id": "NC-2020-tract-standard-bisect-core-42-full-chamber",
+          "tier": "retained-integration",
+          "size": "medium",
+          "state": "NC",
+          "year": "2020",
+          "unit_kind": "tract",
+          "chamber": "congressional",
+          "districts": 14,
+          "units": 2672,
+          "population": "10439388",
+          "seed": "42",
+          "structure": "standard-bisect",
+          "search": "single",
+          "weights": "geographic",
+          "backend": "metis-core",
+          "balance_tolerance_percent": 0.5,
+          "sources": [
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.shp",
+              "sha256": "f16e92e1fb6842af7aa8ef52c29c7b779312ad1682b00a547ac200a104fc6410",
+              "byte_length": 31635960
+            },
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.dbf",
+              "sha256": "bb04d88fb0b441d6d352210a70ad9fe6902e4963013d6db9677ddb68446e4162",
+              "byte_length": 286322
+            },
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.shx",
+              "sha256": "42cfaefce3df2b23b29e0ab7f33a35560d29616388301f35dd22b464ddbc1628",
+              "byte_length": 21476
+            },
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_37_tract/tl_2020_37_tract.prj",
+              "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd",
+              "byte_length": 165
+            },
+            {
+              "path": "data/2020/redistricting/north_carolina/ncgeo2020.pl",
+              "sha256": "a15c373e68e67bb7dd77cbd070c38a4915b532dd9ebdca48fccff45ae9cda61b",
+              "byte_length": 131874085
+            },
+            {
+              "path": "data/2020/redistricting/north_carolina/nc000012020.pl",
+              "sha256": "d4b1a62cafb117142f13dc8c62bfea35261b38485f80565a3cecd687b764ff6c",
+              "byte_length": 112335690
+            }
+          ],
+          "graph": {
+            "path": "target/original-all-state-wasm/NC/engine-graph.json.gz",
+            "sha256": "b96d043faeed5a950da3d1effc1f61558c0363022e57e97b27bcd2a1ca8898d6",
+            "byte_length": 191809,
+            "decoded_sha256": "a4d4e6d2c20b9abda4ac14c6899af17926a853fc68833a4aec4291349fa7dbc6"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NC/receipt.json",
+            "sha256": "d95aafa9443acb09a1e1a2f0544ba6adc0dc8d704f263a85f59e05de7e42323c",
+            "byte_length": 2024
+          },
+          "expected_native": {
+            "status": "completed"
+          },
+          "expected_basis": "Exploratory fixed native-host standard-bisect baseline at original full chamber count, seed42 and 0.5% tolerance, retained before new CLI/WASM/browser acceptance. This is not an independent CLI result.",
+          "browser_requirements": [
+            "WebAssembly",
+            "Worker",
+            "crypto.subtle",
+            "portable file import/download"
+          ],
+          "required_checks": [
+            "native-adapter exact result or error",
+            "all graph units assigned on success",
+            "exact seed",
+            "population and graph-contiguity recomputation on success",
+            "native/WASM request hash",
+            "original raw source identity",
+            "actual native CLI accepted assignment equality",
+            "both actual WASM profiles",
+            "actual worker UI Save/Open/replay",
+            "explicit map/report follow-up outcomes"
+          ],
+          "remaining_checks": [
+            "fresh raw-to-graph derivation",
+            "independent native CLI orchestration",
+            "actual browser workflow",
+            "map/report follow-ups",
+            "Save/Open and replay",
+            "recovery/install",
+            "other vintages/resolutions/methods",
+            "national capacity"
+          ],
+          "request_sha256": "c24d30efbff2afefa30be2e45d9e0710793e1e51658ed9a84dbc046d9b850e12",
+          "baseline_request": {
+            "path": "target/build-application/matrix-investigation-1792822589951/NC-request.json",
+            "sha256": "c24d30efbff2afefa30be2e45d9e0710793e1e51658ed9a84dbc046d9b850e12",
+            "byte_length": 502371
+          },
+          "baseline_native": {
+            "path": "target/build-application/matrix-investigation-1792822589951/NC-stdout.json",
+            "sha256": "c671c984413a6341a419c8a5c463aa1f55b9bce031b730994af243781c5c9e6c",
+            "byte_length": 3614669
+          },
+          "execution_status": "not-run-for-campaign"
+        },
+        {
+          "id": "CA-2020-tract-standard-bisect-core-42-full-chamber",
+          "tier": "retained-integration",
+          "size": "large",
+          "state": "CA",
+          "year": "2020",
+          "unit_kind": "tract",
+          "chamber": "congressional",
+          "districts": 52,
+          "units": 9129,
+          "population": "39538223",
+          "seed": "42",
+          "structure": "standard-bisect",
+          "search": "single",
+          "weights": "geographic",
+          "backend": "metis-core",
+          "balance_tolerance_percent": 0.5,
+          "sources": [
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.shp",
+              "sha256": "655d4a13f36bf8e61f39ffc3a32c22fc44ff961f18cefe042b3c26258cadc0af",
+              "byte_length": 51156652
+            },
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.dbf",
+              "sha256": "1d0f417b8c7ee0bd747cd717a90feeb85a3073a253403211da0cae365f97d1f8",
+              "byte_length": 977221
+            },
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.shx",
+              "sha256": "c8ca01bffe4dac602806f357e09618e791eb1a665df5c87ae70df241f238f3e6",
+              "byte_length": 73132
+            },
+            {
+              "path": "data/2020/tiger/tracts/tl_2020_06_tract/tl_2020_06_tract.prj",
+              "sha256": "0b9041e921d9ebb43247d314608fe9e38a0b008ee793067fc1806199ea1fb9dd",
+              "byte_length": 165
+            },
+            {
+              "path": "data/2020/redistricting/california/cageo2020.pl",
+              "sha256": "ca49b3a5323e9eaa430b82afe36c01d72cddd1cae3462f3bdbd4be9463dea976",
+              "byte_length": 256684567
+            },
+            {
+              "path": "data/2020/redistricting/california/ca000012020.pl",
+              "sha256": "05078225921e109ed882ef9e370a1532c99f8ef92c4cc3809ba00c15afff3a12",
+              "byte_length": 219677245
+            }
+          ],
+          "graph": {
+            "path": "target/original-all-state-wasm/CA/engine-graph.json.gz",
+            "sha256": "719b04412d07d95844fe1a5159797265502024f20ea60ae6befb05a809a72f6c",
+            "byte_length": 628648,
+            "decoded_sha256": "6910b13ce4110480c8e05d573ba2c9042811141f87041641e31932c08ace7b8b"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/CA/receipt.json",
+            "sha256": "69a8c3eb1a1dbbb5fe0cfa9454fd8c462882e9ed1626f6a9cb7421f2605572ea",
+            "byte_length": 1978
+          },
+          "expected_native": {
+            "status": "completed"
+          },
+          "expected_basis": "Exploratory fixed native-host standard-bisect baseline at original full chamber count, seed42 and 0.5% tolerance, retained before new CLI/WASM/browser acceptance. This is not an independent CLI result.",
+          "browser_requirements": [
+            "WebAssembly",
+            "Worker",
+            "crypto.subtle",
+            "portable file import/download"
+          ],
+          "required_checks": [
+            "native-adapter exact result or error",
+            "all graph units assigned on success",
+            "exact seed",
+            "population and graph-contiguity recomputation on success",
+            "native/WASM request hash",
+            "original raw source identity",
+            "actual native CLI accepted assignment equality",
+            "both actual WASM profiles",
+            "actual worker UI Save/Open/replay",
+            "explicit map/report follow-up outcomes"
+          ],
+          "remaining_checks": [
+            "fresh raw-to-graph derivation",
+            "independent native CLI orchestration",
+            "actual browser workflow",
+            "map/report follow-ups",
+            "Save/Open and replay",
+            "recovery/install",
+            "other vintages/resolutions/methods",
+            "national capacity"
+          ],
+          "request_sha256": "d5be092f742e8505cb68b037499becc8f6f4bd159db77751ae75b7d3da1f4347",
+          "baseline_request": {
+            "path": "target/build-application/matrix-investigation-1792822589951/CA-request.json",
+            "sha256": "d5be092f742e8505cb68b037499becc8f6f4bd159db77751ae75b7d3da1f4347",
+            "byte_length": 1720835
+          },
+          "baseline_native": {
+            "path": "target/build-application/matrix-investigation-1792822589951/CA-stdout.json",
+            "sha256": "96b3dbdc1c32d43d526ca0f6677f914d300ac83b1006b5f5a85693fa23e594a4",
+            "byte_length": 12185594
+          },
+          "execution_status": "not-run-for-campaign"
+        }
+      ],
+      "execution_evidence": {
+        "native_cli": {
+          "path": "target/full-chamber-matrix/native-1792822863039/evidence.json",
+          "sha256": "ee545d81b4f56f0ac56c8ba9f5fc3c95baadb15327aafce7dbaacba56a920439",
+          "byte_length": 2138
+        },
+        "default_wasm": {
+          "path": "target/full-chamber-matrix/wasm-1792822942239/evidence.json",
+          "sha256": "533c21049f824a3e14b59fdea677bd6a4523d24707b4bba21d66d0fa3f324f83",
+          "byte_length": 3144
+        },
+        "c_enabled_wasm": {
+          "path": "target/full-chamber-matrix/wasm-1792823060660/evidence.json",
+          "sha256": "84773b4d98384287501e53ebcb71a20d3f5da68b3518cc7bffa499b490017abd",
+          "byte_length": 3146
+        },
+        "default_browser": {
+          "path": "target/full-chamber-matrix/wasm-1792822942239/browser-1792823114761/evidence.json",
+          "sha256": "fc546901f22debf2a42d8037154a9142f3504ce52fe5d21fc6020ff3103c8aef",
+          "byte_length": 44394
+        },
+        "c_enabled_package_browser": {
+          "path": "target/full-chamber-matrix/wasm-1792823060660/browser-1792823197394/evidence.json",
+          "sha256": "04feb5b499abb29bf1a414206237538fcfdd7cc6b4e4371c2e185d3ccdd18bfd",
+          "byte_length": 54159
+        }
+      },
+      "current_scope_status": "Passed CLI/native-adapter/default/C-enabled metis-core and GUI Save/Open/explicit-repeat tier; fresh raw derivation, map/analysis/report workflows, broader recovery/host/national and full WP-08 acceptance remain open.",
+      "execution_test_sources": [
+        {
+          "path": "scripts/web/test_full_chamber_matrix_native.mjs",
+          "sha256": "ad76275babcca360308adda5f88c64f63b2de521d0d5cee7e95a3a48da0cae17",
+          "byte_length": 4722
+        },
+        {
+          "path": "scripts/web/test_full_chamber_matrix_wasm.mjs",
+          "sha256": "8416f24d163fb8434dd68a3f0d84ec6302bef0c7dd92ba135d80cd719895b396",
+          "byte_length": 4562
+        },
+        {
+          "path": "scripts/web/test_full_chamber_matrix_browser.mjs",
+          "sha256": "0f4c070863177f084924d67be30e6489f701c2bb72a7a6ec6d6313c3fb67a012",
+          "byte_length": 8182
+        }
+      ],
+      "map_report_followup": {
+        "schema_version": "bisect-full-chamber-map-report-v1",
+        "declared_at_utc": "2026-10-24T06:44:26.054Z",
+        "status": "predeclared-not-run",
+        "rows": [
+          {
+            "id": "NC-2020-tract-standard-bisect-core-42-full-chamber-map-report",
+            "state": "NC",
+            "geometry": {
+              "path": "target/original-all-state-wasm/NC/display-geometry.geojson.gz",
+              "sha256": "25b9320f827be7cbeeae4dc66c4e159094d3b53a4c28c00f9610321307d4c437",
+              "byte_length": 3203707,
+              "decoded_sha256": "26f5dfee4dfa908168b8f52cc62b62c5f8740378946eb0625319b343faeedae8",
+              "decoded_byte_length": 14160549,
+              "geometry_profile": "display-topology",
+              "coordinate_basis": "nad83-degrees",
+              "crs_label": "EPSG:4269",
+              "simplification_degrees": 0.0002,
+              "simplification_method": "shared-boundary-conservative-v1"
+            },
+            "accepted_native": {
+              "path": "target/build-application/matrix-investigation-1792822589951/NC-stdout.json",
+              "sha256": "c671c984413a6341a419c8a5c463aa1f55b9bce031b730994af243781c5c9e6c",
+              "byte_length": 3614669
+            },
+            "settings": {
+              "analysis": true,
+              "map": true,
+              "report": true,
+              "dpi": "72",
+              "map_types": [
+                "districts",
+                "compactness"
+              ],
+              "dissolve_method": "sequential"
+            },
+            "created_at": "2026-10-23T00:00:00Z",
+            "expected": {
+              "partition_execution_performed": false,
+              "map_districts": "completed",
+              "map_compactness": "completed",
+              "report": "completed",
+              "optional_demographic_election_urban_evidence": "unavailable-or-partial-without-fabrication"
+            },
+            "scope": "Retained display-topology geometry with explicit simplification. Native and WASM follow-ups on exact accepted full-chamber plans, not fresh geometry derivation or exact unsimplified boundary measurements. No new partition or invented evidence."
+          },
+          {
+            "id": "CA-2020-tract-standard-bisect-core-42-full-chamber-map-report",
+            "state": "CA",
+            "geometry": {
+              "path": "target/original-all-state-wasm/CA/display-geometry.geojson.gz",
+              "sha256": "9b43a5970ae54c9a98cf9fef3901bc7b2c2d2138e2c6290733556757f87f5d67",
+              "byte_length": 5492918,
+              "decoded_sha256": "cb5908497a8d3244ea7f4e8901747ae88f5fb9c4f69410f3163e03c075ff73be",
+              "decoded_byte_length": 24416511,
+              "geometry_profile": "display-topology",
+              "coordinate_basis": "nad83-degrees",
+              "crs_label": "EPSG:4269",
+              "simplification_degrees": 0.0002,
+              "simplification_method": "shared-boundary-conservative-v1"
+            },
+            "accepted_native": {
+              "path": "target/build-application/matrix-investigation-1792822589951/CA-stdout.json",
+              "sha256": "96b3dbdc1c32d43d526ca0f6677f914d300ac83b1006b5f5a85693fa23e594a4",
+              "byte_length": 12185594
+            },
+            "settings": {
+              "analysis": true,
+              "map": true,
+              "report": true,
+              "dpi": "72",
+              "map_types": [
+                "districts",
+                "compactness"
+              ],
+              "dissolve_method": "sequential"
+            },
+            "created_at": "2026-10-23T00:00:00Z",
+            "expected": {
+              "partition_execution_performed": false,
+              "map_districts": "completed",
+              "map_compactness": "completed",
+              "report": "completed",
+              "optional_demographic_election_urban_evidence": "unavailable-or-partial-without-fabrication"
+            },
+            "scope": "Retained display-topology geometry with explicit simplification. Native and WASM follow-ups on exact accepted full-chamber plans, not fresh geometry derivation or exact unsimplified boundary measurements. No new partition or invented evidence."
+          }
+        ],
+        "requirements": [
+          "verify exact accepted plan/context and geometry identities",
+          "native/WASM output stage and byte comparison",
+          "retain accepted plans after any follow-up failure",
+          "actual GUI map/report/ZIP and Save/Open journey",
+          "report absent demographic/election evidence as unknown"
+        ],
+        "scope": "Candidate required follow-up outcomes; observed failures remain failures and do not change expectations.",
+        "execution_evidence": {
+          "path": "target/full-chamber-matrix/map-report-1792824341758/evidence.json",
+          "sha256": "698c5faabed77d8ea02f033fc4908b38c8534104559d3235b64effb910e33142",
+          "byte_length": 15911
+        },
+        "current_outcome": "Failed required map/report target with native-identical sequential work-budget refusal; accepted partitions preserved."
+      },
+      "map_report_followups": [
+        {
+          "schema_version": "bisect-full-chamber-map-report-v1",
+          "declared_at_utc": "2026-10-24T06:47:26.143Z",
+          "status": "predeclared-not-run",
+          "rows": [
+            {
+              "id": "NC-2020-tract-standard-bisect-core-42-full-chamber-map-report-spatial-balanced",
+              "state": "NC",
+              "geometry": {
+                "path": "target/original-all-state-wasm/NC/display-geometry.geojson.gz",
+                "sha256": "25b9320f827be7cbeeae4dc66c4e159094d3b53a4c28c00f9610321307d4c437",
+                "byte_length": 3203707,
+                "decoded_sha256": "26f5dfee4dfa908168b8f52cc62b62c5f8740378946eb0625319b343faeedae8",
+                "decoded_byte_length": 14160549,
+                "geometry_profile": "display-topology",
+                "coordinate_basis": "nad83-degrees",
+                "crs_label": "EPSG:4269",
+                "simplification_degrees": 0.0002,
+                "simplification_method": "shared-boundary-conservative-v1"
+              },
+              "accepted_native": {
+                "path": "target/build-application/matrix-investigation-1792822589951/NC-stdout.json",
+                "sha256": "c671c984413a6341a419c8a5c463aa1f55b9bce031b730994af243781c5c9e6c",
+                "byte_length": 3614669
+              },
+              "settings": {
+                "analysis": true,
+                "map": true,
+                "report": true,
+                "dpi": "72",
+                "map_types": [
+                  "districts",
+                  "compactness"
+                ],
+                "dissolve_method": "spatial-balanced"
+              },
+              "created_at": "2026-10-23T00:00:00Z",
+              "expected": {
+                "partition_execution_performed": false,
+                "map_districts": "completed",
+                "map_compactness": "completed",
+                "report": "completed",
+                "optional_demographic_election_urban_evidence": "unavailable-or-partial-without-fabrication"
+              },
+              "scope": "Retained display-topology geometry with explicit simplification. Native and WASM follow-ups on exact accepted full-chamber plans, not fresh geometry derivation or exact unsimplified boundary measurements. No new partition or invented evidence."
+            },
+            {
+              "id": "CA-2020-tract-standard-bisect-core-42-full-chamber-map-report-spatial-balanced",
+              "state": "CA",
+              "geometry": {
+                "path": "target/original-all-state-wasm/CA/display-geometry.geojson.gz",
+                "sha256": "9b43a5970ae54c9a98cf9fef3901bc7b2c2d2138e2c6290733556757f87f5d67",
+                "byte_length": 5492918,
+                "decoded_sha256": "cb5908497a8d3244ea7f4e8901747ae88f5fb9c4f69410f3163e03c075ff73be",
+                "decoded_byte_length": 24416511,
+                "geometry_profile": "display-topology",
+                "coordinate_basis": "nad83-degrees",
+                "crs_label": "EPSG:4269",
+                "simplification_degrees": 0.0002,
+                "simplification_method": "shared-boundary-conservative-v1"
+              },
+              "accepted_native": {
+                "path": "target/build-application/matrix-investigation-1792822589951/CA-stdout.json",
+                "sha256": "96b3dbdc1c32d43d526ca0f6677f914d300ac83b1006b5f5a85693fa23e594a4",
+                "byte_length": 12185594
+              },
+              "settings": {
+                "analysis": true,
+                "map": true,
+                "report": true,
+                "dpi": "72",
+                "map_types": [
+                  "districts",
+                  "compactness"
+                ],
+                "dissolve_method": "spatial-balanced"
+              },
+              "created_at": "2026-10-23T00:00:00Z",
+              "expected": {
+                "partition_execution_performed": false,
+                "map_districts": "completed",
+                "map_compactness": "completed",
+                "report": "completed",
+                "optional_demographic_election_urban_evidence": "unavailable-or-partial-without-fabrication"
+              },
+              "scope": "Retained display-topology geometry with explicit simplification. Native and WASM follow-ups on exact accepted full-chamber plans, not fresh geometry derivation or exact unsimplified boundary measurements. No new partition or invented evidence."
+            }
+          ],
+          "requirements": [
+            "verify exact accepted plan/context and geometry identities",
+            "native/WASM output stage and byte comparison",
+            "retain accepted plans after any follow-up failure",
+            "actual GUI map/report/ZIP and Save/Open journey",
+            "report absent demographic/election evidence as unknown"
+          ],
+          "scope": "Explicit existing spatial-balanced native option, with identical complete geometry and accepted plans, unchanged work budget and no partition. The separate sequential candidate and its failed required targets remain preserved.",
+          "id": "spatial-balanced-full-chamber-map-report-v1",
+          "execution_evidence": {
+            "path": "target/full-chamber-matrix/map-report-1792824522881/evidence.json",
+            "sha256": "6d802f52687ed3eed8d37575283e7b7a2aa8faf57f0fb85b5569011fdd938320",
+            "byte_length": 27366
+          },
+          "current_outcome": "NC completed maps/report; CA native/WASM both refuse the shared work budget. Required two-state target remains failed."
+        },
+        {
+          "schema_version": "bisect-full-chamber-map-report-v1",
+          "declared_at_utc": "2026-10-24T06:51:13.043Z",
+          "status": "predeclared-not-run",
+          "rows": [
+            {
+              "id": "NC-2020-tract-standard-bisect-core-42-full-chamber-map-report-batch",
+              "state": "NC",
+              "geometry": {
+                "path": "target/original-all-state-wasm/NC/display-geometry.geojson.gz",
+                "sha256": "25b9320f827be7cbeeae4dc66c4e159094d3b53a4c28c00f9610321307d4c437",
+                "byte_length": 3203707,
+                "decoded_sha256": "26f5dfee4dfa908168b8f52cc62b62c5f8740378946eb0625319b343faeedae8",
+                "decoded_byte_length": 14160549,
+                "geometry_profile": "display-topology",
+                "coordinate_basis": "nad83-degrees",
+                "crs_label": "EPSG:4269",
+                "simplification_degrees": 0.0002,
+                "simplification_method": "shared-boundary-conservative-v1"
+              },
+              "accepted_native": {
+                "path": "target/build-application/matrix-investigation-1792822589951/NC-stdout.json",
+                "sha256": "c671c984413a6341a419c8a5c463aa1f55b9bce031b730994af243781c5c9e6c",
+                "byte_length": 3614669
+              },
+              "settings": {
+                "analysis": true,
+                "map": true,
+                "report": true,
+                "dpi": "72",
+                "map_types": [
+                  "districts",
+                  "compactness"
+                ],
+                "dissolve_method": "batch"
+              },
+              "created_at": "2026-10-23T00:00:00Z",
+              "expected": {
+                "partition_execution_performed": false,
+                "map_districts": "completed",
+                "map_compactness": "completed",
+                "report": "completed",
+                "optional_demographic_election_urban_evidence": "unavailable-or-partial-without-fabrication"
+              },
+              "scope": "Retained display-topology geometry with explicit simplification. Native and WASM follow-ups on exact accepted full-chamber plans, not fresh geometry derivation or exact unsimplified boundary measurements. No new partition or invented evidence."
+            },
+            {
+              "id": "CA-2020-tract-standard-bisect-core-42-full-chamber-map-report-batch",
+              "state": "CA",
+              "geometry": {
+                "path": "target/original-all-state-wasm/CA/display-geometry.geojson.gz",
+                "sha256": "9b43a5970ae54c9a98cf9fef3901bc7b2c2d2138e2c6290733556757f87f5d67",
+                "byte_length": 5492918,
+                "decoded_sha256": "cb5908497a8d3244ea7f4e8901747ae88f5fb9c4f69410f3163e03c075ff73be",
+                "decoded_byte_length": 24416511,
+                "geometry_profile": "display-topology",
+                "coordinate_basis": "nad83-degrees",
+                "crs_label": "EPSG:4269",
+                "simplification_degrees": 0.0002,
+                "simplification_method": "shared-boundary-conservative-v1"
+              },
+              "accepted_native": {
+                "path": "target/build-application/matrix-investigation-1792822589951/CA-stdout.json",
+                "sha256": "96b3dbdc1c32d43d526ca0f6677f914d300ac83b1006b5f5a85693fa23e594a4",
+                "byte_length": 12185594
+              },
+              "settings": {
+                "analysis": true,
+                "map": true,
+                "report": true,
+                "dpi": "72",
+                "map_types": [
+                  "districts",
+                  "compactness"
+                ],
+                "dissolve_method": "batch"
+              },
+              "created_at": "2026-10-23T00:00:00Z",
+              "expected": {
+                "partition_execution_performed": false,
+                "map_districts": "completed",
+                "map_compactness": "completed",
+                "report": "completed",
+                "optional_demographic_election_urban_evidence": "unavailable-or-partial-without-fabrication"
+              },
+              "scope": "Retained display-topology geometry with explicit simplification. Native and WASM follow-ups on exact accepted full-chamber plans, not fresh geometry derivation or exact unsimplified boundary measurements. No new partition or invented evidence."
+            }
+          ],
+          "requirements": [
+            "verify exact accepted plan/context and geometry identities",
+            "native/WASM output stage and byte comparison",
+            "retain accepted plans after any follow-up failure",
+            "actual GUI map/report/ZIP and Save/Open journey",
+            "report absent demographic/election evidence as unknown"
+          ],
+          "scope": "Explicit existing batch dissolve on the complete unchanged validated geometry and accepted plans. Same shared 200-million source-work budget; no extra simplification, relabeling or partitioning. Prior sequential/spatial target failures remain retained.",
+          "id": "batch-full-chamber-map-report-v1",
+          "execution_evidence": {
+            "default": {
+              "path": "target/full-chamber-matrix/map-report-1792824673295/evidence.json",
+              "sha256": "49f376b930c3a93d0cf4616833070589473f4aa57a0f5bc1767edc9d0295b13e",
+              "byte_length": 37665
+            },
+            "c_enabled": {
+              "path": "target/full-chamber-matrix/map-report-1792824878824/evidence.json",
+              "sha256": "f31bf29c6b917e4238893d7c238b0cda1b44be5d0be30c681da4134a67abaa14",
+              "byte_length": 37697
+            },
+            "staged_browser": {
+              "path": "target/full-chamber-matrix/map-report-1792824673295/browser-1792827385108/evidence.json",
+              "sha256": "2b9bdf18286fb17173c453d11179d811fce3c256125287599473e173322474ad",
+              "byte_length": 54439
+            }
+          },
+          "current_outcome": "Both actual profiles match complete native map/report replies on unchanged geometry. The corrected staged UI displays both maps/report and roundtrips the large archives exactly for NC/CA; reader correction and scoped package/evidence/support acceptance remain pending."
+        }
+      ],
+      "prerequisite_guard": {
+        "scope": "Validation scripts now distinguish missing inputs and insufficient evidence storage as not-run before execution. This is not a browser product memory/storage minimum. Original passing execution-source pins remain historical.",
+        "evidence": {
+          "path": "target/full-chamber-matrix/prerequisite-tests-1792825773202/evidence.json",
+          "sha256": "39a1f827f5cfe20bb1663033837680ed344ca6794642834248b7fe7d6b719f41",
+          "byte_length": 1456
+        },
+        "current_sources": [
+          {
+            "path": "scripts/web/fixtures/matrix-prerequisites.mjs",
+            "sha256": "dc204b9a132fe7180d70c6a665f71d4aa80956f16bcc9798cdbca41b9857b3cb",
+            "byte_length": 2125
+          },
+          {
+            "path": "scripts/web/test_full_chamber_prerequisites.mjs",
+            "sha256": "60b00ad4e3d497716fb40099d0ebd2e4b30a9111eb3b8b1de6296b8c40c100b1",
+            "byte_length": 3621
+          },
+          {
+            "path": "scripts/web/test_full_chamber_matrix_native.mjs",
+            "sha256": "1ad1da4021e153682b40866083167ec5bb8673cc777f1d492d7a34b9879b663d",
+            "byte_length": 5223
+          },
+          {
+            "path": "scripts/web/test_full_chamber_matrix_wasm.mjs",
+            "sha256": "9117bc6d21e841786da7a7bcaae1fb61fb7a3ec39c2abe242ed09f2afc68b049",
+            "byte_length": 5011
+          },
+          {
+            "path": "scripts/web/test_full_chamber_matrix_browser.mjs",
+            "sha256": "23d626e306e91392ebedc5f1b5d0469c5b0c68bf80d08df7e646c2a536eb1dcb",
+            "byte_length": 8768
+          }
+        ]
+      },
+      "large_context_reader_correction": {
+        "contract": "docs/specs/wasm-large-context-followup.md",
+        "source": {
+          "path": "web/lab/state-workflow-files.js",
+          "sha256": "9f6f02685dd5fbcbfc693298d467c193f14323d13e944b50b8152c6d1018b3b4",
+          "byte_length": 7176
+        },
+        "real_context_regression": {
+          "path": "target/full-chamber-matrix/context-reader-1792827083427/evidence.json",
+          "sha256": "817c2df48793ec261c5b1f34cfe3250f37d01548f0862cff2113874af4153a5d",
+          "byte_length": 638
+        },
+        "old_refusal": {
+          "path": "target/build-application/accepted-context-3mib-refusal.log",
+          "sha256": "5d4060594ae9ef8879be283e069e6b607695fb7a6b4e09d7a235c0507e60500c",
+          "byte_length": 142
+        },
+        "candidate": "dist/wasm-full-chamber-followup-preview",
+        "status": "actual staged GUI passed; affected regression logs passed; formal evidence/package/support acceptance pending"
+      }
+    }
+  ],
+  "national_campaigns": [
+    {
+      "id": "national-50-2020-tract-standard-core-42-v1",
+      "declared_at_utc": "2026-10-24T07:03:00.708Z",
+      "status": "predeclared-not-run",
+      "label": "national_2020",
+      "year": "2020",
+      "unit_kind": "tract",
+      "chamber": "congressional",
+      "structure": "standard-bisect",
+      "weights": "geographic",
+      "search": "single",
+      "backend": "metis-core",
+      "seed": "42",
+      "balance_tolerance_percent": 0.5,
+      "created_at": "2026-10-24T00:00:00.000Z",
+      "participants": [
+        "AK",
+        "AL",
+        "AR",
+        "AZ",
+        "CA",
+        "CO",
+        "CT",
+        "DE",
+        "FL",
+        "GA",
+        "HI",
+        "IA",
+        "ID",
+        "IL",
+        "IN",
+        "KS",
+        "KY",
+        "LA",
+        "MA",
+        "MD",
+        "ME",
+        "MI",
+        "MN",
+        "MO",
+        "MS",
+        "MT",
+        "NC",
+        "ND",
+        "NE",
+        "NH",
+        "NJ",
+        "NM",
+        "NV",
+        "NY",
+        "OH",
+        "OK",
+        "OR",
+        "PA",
+        "RI",
+        "SC",
+        "SD",
+        "TN",
+        "TX",
+        "UT",
+        "VA",
+        "VT",
+        "WA",
+        "WI",
+        "WV",
+        "WY"
+      ],
+      "excluded": [
+        "DC",
+        "territories"
+      ],
+      "workers": 4,
+      "source_tier": "retained original per-state graphs, no fresh raw-source derivation or acquisition claim",
+      "declaration_engine": {
+        "path": "target/build-application/engines-1792821652704681900/default.wasm",
+        "sha256": "19ab174eaa807da4db877adb7a72c084946b4aed2bdcf46b102767a5a4bcaf92",
+        "byte_length": 24999930
+      },
+      "allocation_source": {
+        "path": "data/manifest.json",
+        "sha256": "973a81de9cf15f02fe88f1ee7f419bcde47b629a617b7f1ae900426431469db2",
+        "byte_length": 45726
+      },
+      "recipe_sources": [
+        {
+          "path": "scripts/web/fixtures/national-matrix-case.mjs",
+          "sha256": "98528c8bee5bfdbc4a19754cb4a3340ca1ff672cf84d372648fe0c45c9fca6dc",
+          "byte_length": 1720
+        },
+        {
+          "path": "web/lab/config-template.js",
+          "sha256": "ccc8622b835acd2cf6dbed809bd1c21f64a94e8f285b27d65cc8b1feee0b0b4d",
+          "byte_length": 1907
+        },
+        {
+          "path": "web/lab/tui-run-files.js",
+          "sha256": "25118822a59957d98efe04743262c5ad7969a51cea80beb7007c8c394d166c8b",
+          "byte_length": 7528
+        },
+        {
+          "path": "web/lab/config-run.js",
+          "sha256": "d1f4926a7ebe7462b61caff41f59e71ec06ec60d8ed56a38de5a79b707d5e9ac",
+          "byte_length": 7607
+        }
+      ],
+      "expected": {
+        "states": 50,
+        "total_districts": 435,
+        "status": "completed-all-requested-states",
+        "basis": "Required acceptance target, not an observed native result. Any failed/missing state stays failed/not-run; no state, district, source or tolerance reduction.",
+        "units": 84208,
+        "population": "330759736"
+      },
+      "required_checks": [
+        "actual independent CLI assignments per original unit order",
+        "both actual WASM profiles",
+        "population and graph-connectivity recomputation",
+        "all 50 full requested state chamber counts",
+        "actual national queue worker/UI and explicit Save/Open/continuation",
+        "download/output and national map stage outcomes"
+      ],
+      "remaining": [
+        "fresh derivation/acquisition",
+        "other vintages/resolutions/method combinations",
+        "actual OS/API/permission/capacity matrix",
+        "formal support/release acceptance"
+      ],
+      "rows": [
+        {
+          "id": "AK-2020-tract-national-core-42",
+          "state": "AK",
+          "districts": 1,
+          "units": 177,
+          "population": "733391",
+          "graph": {
+            "path": "target/original-all-state-wasm/AK/engine-graph.json.gz",
+            "sha256": "1d4f13b7c0f1b5609000c3900fdacf148aebbf0626c16ef8932a4d4cc53624f4",
+            "byte_length": 12918,
+            "decoded_sha256": "9387e0b3f31e5064809fad2fbe684e69d157a6d005d6e8f7eaa220fac6e108cc"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/AK/receipt.json",
+            "sha256": "c7edd741ff06a80ec46d45f318f05fde874b52c872b29d65e7783e824a9a40e9",
+            "byte_length": 2118
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "ac88986a4d827177e59f839a9acef674ba5cad945d4ba640efa08e0c6be29851"
+        },
+        {
+          "id": "AL-2020-tract-national-core-42",
+          "state": "AL",
+          "districts": 7,
+          "units": 1437,
+          "population": "5024279",
+          "graph": {
+            "path": "target/original-all-state-wasm/AL/engine-graph.json.gz",
+            "sha256": "5154bed001ae673b90aed43c21817b6e2aab5a27b107b83f2b8d7472ccf74bd7",
+            "byte_length": 104430,
+            "decoded_sha256": "df83a11595b00de20330412abfd2593b3b32aaf704949efc43a9bb1d93fc7e61"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/AL/receipt.json",
+            "sha256": "a53d399898c8ffc44d6229f1131d34b536ca70a1e8bbd485ba68b3e992359eaa",
+            "byte_length": 1983
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "0d1221ddf05bce71b9a9c8258c63c90450f35e99a95910a9a5bd6933fee53158"
+        },
+        {
+          "id": "AR-2020-tract-national-core-42",
+          "state": "AR",
+          "districts": 4,
+          "units": 823,
+          "population": "3011524",
+          "graph": {
+            "path": "target/original-all-state-wasm/AR/engine-graph.json.gz",
+            "sha256": "38074830a49666d02d4580f13e5126d44c82ddee10755ac79e6f006551505f7a",
+            "byte_length": 59932,
+            "decoded_sha256": "535e836e08869d0e24381ffe3864bf03479f9fe3ec5c1449c587af5c9249e84b"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/AR/receipt.json",
+            "sha256": "89339c88b8f6dcd2bd4a49333e7e2fbae1cf1eb59f4c6d01c53be6f2c9921065",
+            "byte_length": 5204
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "0d8dbf2834b5f0e20c95299c942e957db79b36a277d9dcba1107f1cd4218e5df"
+        },
+        {
+          "id": "AZ-2020-tract-national-core-42",
+          "state": "AZ",
+          "districts": 9,
+          "units": 1765,
+          "population": "7151502",
+          "graph": {
+            "path": "target/original-all-state-wasm/AZ/engine-graph.json.gz",
+            "sha256": "4fe290cbdcf8990f929dd1790652b4f4216a81243af1cac004f31e659932f262",
+            "byte_length": 120406,
+            "decoded_sha256": "c5759fb2a3d14a4a948be175601047f97d15d5d006a3c9195c18699cf6842f76"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/AZ/receipt.json",
+            "sha256": "a2b811e1efa4856ec90559fc27cc13a7948a50ef00945ed1dd47f16c9bf1d805",
+            "byte_length": 1982
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "f61445cf8fcc8a8c7e0e13ef87b04e342a84d8ea77e8227cca100f6d3ca5aa46"
+        },
+        {
+          "id": "CA-2020-tract-national-core-42",
+          "state": "CA",
+          "districts": 52,
+          "units": 9129,
+          "population": "39538223",
+          "graph": {
+            "path": "target/original-all-state-wasm/CA/engine-graph.json.gz",
+            "sha256": "719b04412d07d95844fe1a5159797265502024f20ea60ae6befb05a809a72f6c",
+            "byte_length": 628648,
+            "decoded_sha256": "6910b13ce4110480c8e05d573ba2c9042811141f87041641e31932c08ace7b8b"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/CA/receipt.json",
+            "sha256": "69a8c3eb1a1dbbb5fe0cfa9454fd8c462882e9ed1626f6a9cb7421f2605572ea",
+            "byte_length": 1978
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "5da1e6f286230a6d6dbd51452ba603edac5c14322516952d642386efbc0f083e"
+        },
+        {
+          "id": "CO-2020-tract-national-core-42",
+          "state": "CO",
+          "districts": 8,
+          "units": 1447,
+          "population": "5773714",
+          "graph": {
+            "path": "target/original-all-state-wasm/CO/engine-graph.json.gz",
+            "sha256": "920d03db4252d245533fe29c197eec0efa8175416d38df2146bdcdbd1bec71ee",
+            "byte_length": 101799,
+            "decoded_sha256": "80509ff78e1b0b58d96aca427b07b4ca27b4e9ba5fcefa25c146fcec7cd95441"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/CO/receipt.json",
+            "sha256": "95d9698b2a44da44d6706f6f3d28133b888d9577e7049339c907d4826e4ce3aa",
+            "byte_length": 2028
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "ebc7c4e0e5c954966ca54ca66b5152a9852135b95ece9e2a56d1fe5de7bc9c57"
+        },
+        {
+          "id": "CT-2020-tract-national-core-42",
+          "state": "CT",
+          "districts": 5,
+          "units": 883,
+          "population": "3605944",
+          "graph": {
+            "path": "target/original-all-state-wasm/CT/engine-graph.json.gz",
+            "sha256": "4f20800b83f0a0436cbcd86c624fa7e09fb04d6d8438378203232fe810f953b1",
+            "byte_length": 63261,
+            "decoded_sha256": "ad5e9d0c3146f4764c12c77c7b13e1977d876c88362b3394d8f19ca087866ee1"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/CT/receipt.json",
+            "sha256": "6b19c5e0bd38824b041b8bf8a8be14dfe0ac4082b340a3379c9c6ec594cd1111",
+            "byte_length": 5358
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "6e6882b7c42c5fabe10eb97f2942504eba506f8f780875c2883282d25a3ab9fd"
+        },
+        {
+          "id": "DE-2020-tract-national-core-42",
+          "state": "DE",
+          "districts": 1,
+          "units": 262,
+          "population": "989948",
+          "graph": {
+            "path": "target/original-all-state-wasm/DE/engine-graph.json.gz",
+            "sha256": "7337e58697e81f4c554b34d32e39d44db8b6f617c2dba7949368b70041ee1b35",
+            "byte_length": 19021,
+            "decoded_sha256": "39a35db26ac9b57b22dbb3d38dca13de109000d02ab28f389bdbcd65e4d1f31c"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/DE/receipt.json",
+            "sha256": "95115d5dbf63da3e856246d1744688a59bdd6fc85cde6da39d268808c120fa69",
+            "byte_length": 4239
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "1c4ccf9cad381f83eeafe2a663a56799121cdbd0dc1e786a48dadf6ecd01cdd4"
+        },
+        {
+          "id": "FL-2020-tract-national-core-42",
+          "state": "FL",
+          "districts": 28,
+          "units": 5160,
+          "population": "21538187",
+          "graph": {
+            "path": "target/original-all-state-wasm/FL/engine-graph.json.gz",
+            "sha256": "ed1544e929849544c9f36346a464d6335cb6fd8e976d6ab6ec716ad9f45515f1",
+            "byte_length": 359551,
+            "decoded_sha256": "9a046d175311dc3beff543db328e082bc9c01aea9187511163b7e7b75102a5ca"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/FL/receipt.json",
+            "sha256": "0c60065b4080c3d8151401f00f5858297fa09e2f7a2f36ab3219b7ac5215f92f",
+            "byte_length": 2024
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "861bf410fad8882c2a758e56d64a35c929ba135b5b14cf606717d8f84fe87fa3"
+        },
+        {
+          "id": "GA-2020-tract-national-core-42",
+          "state": "GA",
+          "districts": 14,
+          "units": 2796,
+          "population": "10711908",
+          "graph": {
+            "path": "target/original-all-state-wasm/GA/engine-graph.json.gz",
+            "sha256": "beebacf5196dc208c5c51f1e8dad16e29ad3d6e281c0852fd7c07ebace590364",
+            "byte_length": 200686,
+            "decoded_sha256": "8a5c67db54469c6d8c76fbdbd32a72c8ac84c1e9643e4bf9ea5e78e68eaf7fe5"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/GA/receipt.json",
+            "sha256": "9cfaa93c0ac8ca6873c588f955744e9eeb7ff8bcbdbe7a0a8a7ca02adf9e5f9e",
+            "byte_length": 2023
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "8c5da5a66be4ab400b9640167edb329b6670f4dac3be53e31503679afcf8011a"
+        },
+        {
+          "id": "HI-2020-tract-national-core-42",
+          "state": "HI",
+          "districts": 2,
+          "units": 461,
+          "population": "1455271",
+          "graph": {
+            "path": "target/original-all-state-wasm/HI/engine-graph.json.gz",
+            "sha256": "d1c50a55ebeda720b2cf40350bbc1b0b19df9c3ef796d37eab12a69950f5009b",
+            "byte_length": 33421,
+            "decoded_sha256": "82211bce3af37c0911cac2d76c1fa713a419a8dc3662681790c825b470f994c0"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/HI/receipt.json",
+            "sha256": "d8e3203284df040d3f4564475d40fc3cdf933a0989353a84fd30e39f52fcee52",
+            "byte_length": 4843
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "89d54e6326284ebd27a0af8e71657ec5fc083639d97dc66d2f9bbc3a1afeb671"
+        },
+        {
+          "id": "IA-2020-tract-national-core-42",
+          "state": "IA",
+          "districts": 4,
+          "units": 896,
+          "population": "3190369",
+          "graph": {
+            "path": "target/original-all-state-wasm/IA/engine-graph.json.gz",
+            "sha256": "897e4d805e8545958dda7493ace79501c0bd897e5c7e0a0ca6fce9acd6f09b41",
+            "byte_length": 63438,
+            "decoded_sha256": "12b1309594b3f24fd6c23e99d0039ecf943a610db0b15c61d25464ade9803953"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/IA/receipt.json",
+            "sha256": "6d3871f8afc7b90c0d2cf09eff7348e452ea27b1a28d1f3c4fd474448e23c9fa",
+            "byte_length": 5209
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "2c421eeb2d0efef973e43177df8574636aadfaabf1765de1c8a9a2fb99c66607"
+        },
+        {
+          "id": "ID-2020-tract-national-core-42",
+          "state": "ID",
+          "districts": 2,
+          "units": 456,
+          "population": "1839106",
+          "graph": {
+            "path": "target/original-all-state-wasm/ID/engine-graph.json.gz",
+            "sha256": "a8ff813c454946234aedf7b11780d4ceb10cefb8abd6a0de8699bbb40054766a",
+            "byte_length": 32660,
+            "decoded_sha256": "fd12cd06757b10d7e4fad4e317346fe8cec5be78e217fa3f0af93b1427c6ee96"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/ID/receipt.json",
+            "sha256": "1373ffa24f32c1c7ae1d4e1c318ffb4cefe435daac5eff6abcf27c59dd040ab0",
+            "byte_length": 4846
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "dc1fb3a0aa28f45346744abf129c650f7726a3a5752396e27e43cfc6fe09fb15"
+        },
+        {
+          "id": "IL-2020-tract-national-core-42",
+          "state": "IL",
+          "districts": 17,
+          "units": 3265,
+          "population": "12812508",
+          "graph": {
+            "path": "target/original-all-state-wasm/IL/engine-graph.json.gz",
+            "sha256": "a9576833c51f3375da227903de77cce9004b46c944eef3ad46c20a059509146a",
+            "byte_length": 226085,
+            "decoded_sha256": "6164593f30f2c8ece8ed51d86ff0dfdbc108821e153b9ab6ad0efadbc803fd44"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/IL/receipt.json",
+            "sha256": "102f9a09056b925c3f3d8f9e865f298191c5be48010384be65fe3772ed74a7f3",
+            "byte_length": 7362
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "c3a13663e39c98f7867ce25ac27b364dd9861e08c08de9f375bf0a6cb904e3bc"
+        },
+        {
+          "id": "IN-2020-tract-national-core-42",
+          "state": "IN",
+          "districts": 9,
+          "units": 1696,
+          "population": "6785528",
+          "graph": {
+            "path": "target/original-all-state-wasm/IN/engine-graph.json.gz",
+            "sha256": "8bf9fb4f13c2bded5d90b69796872808fd1986bc5dcdff0704e0785149410e82",
+            "byte_length": 120863,
+            "decoded_sha256": "ddc46c2c99926aac9b106355cbd53613c74340dd99ea106235ea937d6a6519fb"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/IN/receipt.json",
+            "sha256": "cc1f65f5dfa15007606054e546e5e445a0dfb9daa554820ce2cb19069abf3c91",
+            "byte_length": 2027
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "ae3ea232922837e40eaadf7b5b163aea7bcec47e1b6aba40ec7bc0ff9bd6c66b"
+        },
+        {
+          "id": "KS-2020-tract-national-core-42",
+          "state": "KS",
+          "districts": 4,
+          "units": 829,
+          "population": "2937880",
+          "graph": {
+            "path": "target/original-all-state-wasm/KS/engine-graph.json.gz",
+            "sha256": "a67d55aa6d28b67a10f97a129b297d7d74cd55be3ed7cfaab031e76cb6ce7ce6",
+            "byte_length": 58483,
+            "decoded_sha256": "c1664b8f4b0280f6d51ed36fa9f72a404cddb9c616e70268cc725407acf4ce24"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/KS/receipt.json",
+            "sha256": "8f6e341186675c782b13a2f5dcd7f9c6bcb16413f70ec0c2e72ef493178798d9",
+            "byte_length": 5209
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "17660bfbee06a15ae4da61420f9e7a79922aff9189b0dc51f5e4d16eadb75919"
+        },
+        {
+          "id": "KY-2020-tract-national-core-42",
+          "state": "KY",
+          "districts": 6,
+          "units": 1306,
+          "population": "4505836",
+          "graph": {
+            "path": "target/original-all-state-wasm/KY/engine-graph.json.gz",
+            "sha256": "e4517787ef1f3e89d328a62cad7d620f3f46447baaf99be5e47847154fcab2f8",
+            "byte_length": 94749,
+            "decoded_sha256": "6b901bf443f8b905ce40a963eddff83aabe389e58d281811511c305d16b93d88"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/KY/receipt.json",
+            "sha256": "e897295d341a98f033fa58899346db192f9150363da62eaa383eebe8047d008b",
+            "byte_length": 5540
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "6a9690b009cba7af04a8b6441352ff68611f336e353b3f496ea0a6a15c68594c"
+        },
+        {
+          "id": "LA-2020-tract-national-core-42",
+          "state": "LA",
+          "districts": 6,
+          "units": 1388,
+          "population": "4657757",
+          "graph": {
+            "path": "target/original-all-state-wasm/LA/engine-graph.json.gz",
+            "sha256": "829a78e6b29eacc123eaeae608f0b737dbf3d7368186e7d4a570357052d2578a",
+            "byte_length": 99816,
+            "decoded_sha256": "b11ecdf481021a670c729d793f927a8cae13e75ff9a5ba4063e961308459856b"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/LA/receipt.json",
+            "sha256": "1db988865882454a2eb1dc026e8dededc758e741f2d0678575fed71c0e5a05f8",
+            "byte_length": 4311
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "003d27e8350f74e7b4c805051f4531ce2c98253a70cd51c37e1b809aa7137938"
+        },
+        {
+          "id": "MA-2020-tract-national-core-42",
+          "state": "MA",
+          "districts": 9,
+          "units": 1620,
+          "population": "7029917",
+          "graph": {
+            "path": "target/original-all-state-wasm/MA/engine-graph.json.gz",
+            "sha256": "ce574193ac9ff97df3b2c75f35181eb1f548849b74ff5bab3f0e951635ae66b9",
+            "byte_length": 115902,
+            "decoded_sha256": "2dbc7f2cfcd90fe964206bd91c173859432a7d28325b28dfe2e0a5d1af774359"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/MA/receipt.json",
+            "sha256": "a29da695913f963a39e5e38899daac7c333d4c09431c6a5d7ffe0325a94379f0",
+            "byte_length": 2028
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "c8fa467ff4c674674fcfa2fb9f35690fcb67464e979258c1a5522a7cfef6a312"
+        },
+        {
+          "id": "MD-2020-tract-national-core-42",
+          "state": "MD",
+          "districts": 8,
+          "units": 1475,
+          "population": "6177224",
+          "graph": {
+            "path": "target/original-all-state-wasm/MD/engine-graph.json.gz",
+            "sha256": "82ae5f258ffa147e7dbb745b1d74bb238728192faf667d8b17554df12cd73133",
+            "byte_length": 103642,
+            "decoded_sha256": "252d90875fe0690c8a1de45016e582d391d90397a83a81c902aad77321f362cb"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/MD/receipt.json",
+            "sha256": "ff8ec382b91190b77ac4db890a75eb81735c1baee0487a02d0212e4457440d06",
+            "byte_length": 5877
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "cac9de8d3e0631dd8e962b12a26a86afdcbc896ed419bb487f3302afdf529769"
+        },
+        {
+          "id": "ME-2020-tract-national-core-42",
+          "state": "ME",
+          "districts": 2,
+          "units": 407,
+          "population": "1362359",
+          "graph": {
+            "path": "target/original-all-state-wasm/ME/engine-graph.json.gz",
+            "sha256": "c918257129699109e4ff003a7245c9da29d3e1ad3c48a8695896aaf0c8275d99",
+            "byte_length": 30302,
+            "decoded_sha256": "f6d5e4e4199d1346fbf5b334e6d53f199571f6e98ac9be3d0a11429cd1a84bbd"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/ME/receipt.json",
+            "sha256": "75765277de2b50bb4f7bbe951443fcca335b9680eba49be7cd5a14a2b74120ee",
+            "byte_length": 4836
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "7338d9c631e1333893061fbf4032c4f6957972f446cb1e7355b4c052449041c8"
+        },
+        {
+          "id": "MI-2020-tract-national-core-42",
+          "state": "MI",
+          "districts": 13,
+          "units": 3017,
+          "population": "10077331",
+          "graph": {
+            "path": "target/original-all-state-wasm/MI/engine-graph.json.gz",
+            "sha256": "d108e0c7f185cd84e0e443ea051667f4252e3076bacf1a3ac1df0a97d25ec582",
+            "byte_length": 208055,
+            "decoded_sha256": "b9927d7b4a3ed3e7f176dba9174b1189abc041a5d7b97bc2b1e8d183915b5a3a"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/MI/receipt.json",
+            "sha256": "c99faff186a4968796a354fed50c3e1260e9bed534b64285bbbc6f22fcdea801",
+            "byte_length": 6688
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "f626f01ab1f98ffeb08ca4631f0ad2665cffd87eb1a140b9bafed991052282c6"
+        },
+        {
+          "id": "MN-2020-tract-national-core-42",
+          "state": "MN",
+          "districts": 8,
+          "units": 1505,
+          "population": "5706494",
+          "graph": {
+            "path": "target/original-all-state-wasm/MN/engine-graph.json.gz",
+            "sha256": "12723b6b74b4a010662ffeddc1e59c0397d39a70d210280c535c0c61f24680c4",
+            "byte_length": 107361,
+            "decoded_sha256": "a068d0e85846f8adcf69c336ae54bf9e8b266a1ab241e50031cd20e1dba73907"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/MN/receipt.json",
+            "sha256": "3018e5d406b1dd13b5e9e4919ee335a5e4d56acea05f5b77b8b09d75cdaf4403",
+            "byte_length": 5880
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "8a22e75a5f9aa2811a43ba30ddaaca7b6d6112fe449f47c10a01e3f986f268a3"
+        },
+        {
+          "id": "MO-2020-tract-national-core-42",
+          "state": "MO",
+          "districts": 8,
+          "units": 1654,
+          "population": "6154913",
+          "graph": {
+            "path": "target/original-all-state-wasm/MO/engine-graph.json.gz",
+            "sha256": "aedd5f21b0e0f4357e7b8c4758de530be8e1a6de7341017180a14040e3d293eb",
+            "byte_length": 118138,
+            "decoded_sha256": "5e0bac5c91ff2ee56a99731b71f07f93bb2a3d409c380c001251059210ba5152"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/MO/receipt.json",
+            "sha256": "d95bf7f337c725f601df205bf56a5b29b6a05c94afc3a0d47be1016598399917",
+            "byte_length": 5874
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "391f3dd8c19b4b1916d7164cdf93a0b56ec2cd59d431c2aa0c9c4d12e923fe6a"
+        },
+        {
+          "id": "MS-2020-tract-national-core-42",
+          "state": "MS",
+          "districts": 4,
+          "units": 878,
+          "population": "2961279",
+          "graph": {
+            "path": "target/original-all-state-wasm/MS/engine-graph.json.gz",
+            "sha256": "a8b56dc3ee8252f53a64d7f828d41d59ff78331e1f198cdd70de6f9633738290",
+            "byte_length": 63592,
+            "decoded_sha256": "da28ad87f97344278b9ae3811b9679319545c9f041c7f452cc947f0a7a05b664"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/MS/receipt.json",
+            "sha256": "de60ee0702d71c1c10adba3f33a1f69df9a123a03ea789fe78a48bd151978128",
+            "byte_length": 3973
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "18fc8e408ec42d988f7b778de58210f7745b389a4ef1a67fdb1b0ada1c57fae1"
+        },
+        {
+          "id": "MT-2020-tract-national-core-42",
+          "state": "MT",
+          "districts": 2,
+          "units": 319,
+          "population": "1084225",
+          "graph": {
+            "path": "target/original-all-state-wasm/MT/engine-graph.json.gz",
+            "sha256": "84eee0ae2ed399aac795cae67c7446ea41a86a662761bdb72cdfcca173199342",
+            "byte_length": 23672,
+            "decoded_sha256": "78c3e9c899147129070845895f709fbecd965b2e09db9dc27f2e9f13ec105e62"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/MT/receipt.json",
+            "sha256": "28c9fa71bc4043cd3f9911ea0c84cf273acadcdf915c01760f5ae48f67d4fdcd",
+            "byte_length": 4846
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "20c90a5326c39b1390243336dbdcd557cbeb2620ed3c98e3ad21e5c60bf99c05"
+        },
+        {
+          "id": "NC-2020-tract-national-core-42",
+          "state": "NC",
+          "districts": 14,
+          "units": 2672,
+          "population": "10439388",
+          "graph": {
+            "path": "target/original-all-state-wasm/NC/engine-graph.json.gz",
+            "sha256": "b96d043faeed5a950da3d1effc1f61558c0363022e57e97b27bcd2a1ca8898d6",
+            "byte_length": 191809,
+            "decoded_sha256": "a4d4e6d2c20b9abda4ac14c6899af17926a853fc68833a4aec4291349fa7dbc6"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NC/receipt.json",
+            "sha256": "d95aafa9443acb09a1e1a2f0544ba6adc0dc8d704f263a85f59e05de7e42323c",
+            "byte_length": 2024
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "5a022d60fd0a86b1a34009653b549d735cc3c47c1d93ef71454ddb8c94fdcf7a"
+        },
+        {
+          "id": "ND-2020-tract-national-core-42",
+          "state": "ND",
+          "districts": 1,
+          "units": 228,
+          "population": "779094",
+          "graph": {
+            "path": "target/original-all-state-wasm/ND/engine-graph.json.gz",
+            "sha256": "ecc116055077ee4ae23caede2f04bf336b76a9696af6a0029e90c7a8cc29cd68",
+            "byte_length": 16548,
+            "decoded_sha256": "9296c753492bb1b6bf6e2966ceb7b548ad7fb91f3c29088cd42c6f5523503c6f"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/ND/receipt.json",
+            "sha256": "6b42643fb80abb5c6501c24ac191dd9acb2b08891bd028d03af3052a4b2bfa5b",
+            "byte_length": 4240
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "d29a2174049d3dc152b412f2ade2f638e57e0038501d38f2ebd37d88bc641156"
+        },
+        {
+          "id": "NE-2020-tract-national-core-42",
+          "state": "NE",
+          "districts": 3,
+          "units": 553,
+          "population": "1961504",
+          "graph": {
+            "path": "target/original-all-state-wasm/NE/engine-graph.json.gz",
+            "sha256": "fbea08a0b3030e31b242e3ca60edb31b88482f1d872d5a0b3064b7e9392a47bd",
+            "byte_length": 39184,
+            "decoded_sha256": "710bf1acb04cf0522c3f052ea6d291f670bc55ffe0edc5ca3ef3affc274d4517"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NE/receipt.json",
+            "sha256": "1153ef8fba5b960c077396a91d5a515b8ce3aea077af37651ca24cabe66c9c08",
+            "byte_length": 5000
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "ba0b3828d2a77ff5547bd6a1abe522f465d1d8daac163851e3ee4bd109c86d54"
+        },
+        {
+          "id": "NH-2020-tract-national-core-42",
+          "state": "NH",
+          "districts": 2,
+          "units": 350,
+          "population": "1377529",
+          "graph": {
+            "path": "target/original-all-state-wasm/NH/engine-graph.json.gz",
+            "sha256": "660dc2633bef55ff04fd8245cc237ce2811f57fbcea6dd699633d70013f3a964",
+            "byte_length": 25654,
+            "decoded_sha256": "6c3a99e3c1c6c68363ee3baa685dc66d20dbed769d85bbadb5510d98891bfeab"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NH/receipt.json",
+            "sha256": "f667d80bacf8d02a6682774fec825a71f1ed6d0756546071468edd684dd7e37d",
+            "byte_length": 4851
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "3276fbaf0219823bd2c5912bdef14af360b1a0c94f33afa1a71ccef98cfd2443"
+        },
+        {
+          "id": "NJ-2020-tract-national-core-42",
+          "state": "NJ",
+          "districts": 12,
+          "units": 2181,
+          "population": "9288994",
+          "graph": {
+            "path": "target/original-all-state-wasm/NJ/engine-graph.json.gz",
+            "sha256": "2783bbaa53eb44daf9f150362f5f0e9805202749ae8dc8080f7c7fa72193d7c7",
+            "byte_length": 153823,
+            "decoded_sha256": "9e25b4d2393281f9f4a0487d3b15b19f675dcf070ef36270b9ad92a843b58e99"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NJ/receipt.json",
+            "sha256": "515dc2e9109582496e249f44313ce75554be6e279f9b36b6a3635c500b7f218c",
+            "byte_length": 2028
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "1d446815570fc97d68bdc73e117c668f4ab6d60d611a09fbd7a3f6f72a3243f5"
+        },
+        {
+          "id": "NM-2020-tract-national-core-42",
+          "state": "NM",
+          "districts": 3,
+          "units": 612,
+          "population": "2117522",
+          "graph": {
+            "path": "target/original-all-state-wasm/NM/engine-graph.json.gz",
+            "sha256": "40a9bd29cf88e888cf9e510421ee3f3697523a83ef20a297a754f71b056cf354",
+            "byte_length": 43859,
+            "decoded_sha256": "6c095e9d82f9481db2734cb48cbedc2ed71767a0007f1039d033dc22ffc20335"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NM/receipt.json",
+            "sha256": "5ba40044b057cfc1850f11f6f7bfbd65a21fab4ce76ad7dc01a918cc1f3bf545",
+            "byte_length": 5007
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "b2b154df46f5d1469e215819f62c5f16a74c8681833648cc28e08805421a2b22"
+        },
+        {
+          "id": "NV-2020-tract-national-core-42",
+          "state": "NV",
+          "districts": 4,
+          "units": 779,
+          "population": "3104614",
+          "graph": {
+            "path": "target/original-all-state-wasm/NV/engine-graph.json.gz",
+            "sha256": "b24d1678f7ae523a3594dc499442dfb7d40c18f320357505a0f9170c1f5424e2",
+            "byte_length": 53781,
+            "decoded_sha256": "f72adc57974ad6a7a63af3c114edef1eccce8f458b69f933a52e74eba3f9fba7"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NV/receipt.json",
+            "sha256": "f79c80e8abcd520e7780c762aa01d4c9a6abe6ed6318e6467110e8ea25950579",
+            "byte_length": 5212
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "253d7a43c68bdcd1f6437df3ad34face56456fc4f1f63db5a47ed84704f8de29"
+        },
+        {
+          "id": "NY-2020-tract-national-core-42",
+          "state": "NY",
+          "districts": 26,
+          "units": 5411,
+          "population": "20201249",
+          "graph": {
+            "path": "target/original-all-state-wasm/NY/engine-graph.json.gz",
+            "sha256": "1638a102dfee232c3fe925c0d2d0f368a808a5e82e740b56c46863f45b1325f7",
+            "byte_length": 376264,
+            "decoded_sha256": "998cb4b35848bbe923594346f5e38b74e5c2d9431915235fce96febbcacf0523"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/NY/receipt.json",
+            "sha256": "18a20b0fdb1633be1c6b18df38ed0e85c654aad3403b8f04e5c1e34ab5deddd6",
+            "byte_length": 2031
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "867c15eb7f063bcb80231d5627acafc4377dc7711223cdbc428637d70ac9ad43"
+        },
+        {
+          "id": "OH-2020-tract-national-core-42",
+          "state": "OH",
+          "districts": 15,
+          "units": 3168,
+          "population": "11799448",
+          "graph": {
+            "path": "target/original-all-state-wasm/OH/engine-graph.json.gz",
+            "sha256": "1318eceee6141014f081e7488ffdc11a68039557e37d38389a24e3eddb7685ba",
+            "byte_length": 224976,
+            "decoded_sha256": "b6b870c8d0ea0e346ebcd6cb2d16910aef7d672899f5782dbea4dd95801b19cb"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/OH/receipt.json",
+            "sha256": "5d25806708666953aa6c2bdc6ab387cbd706995378e2fc7fa90580bdcf1605f2",
+            "byte_length": 2021
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "3f386f14b955a4b7d38d231528d6c9d810bfea75015dfe34f758fc023c9df67c"
+        },
+        {
+          "id": "OK-2020-tract-national-core-42",
+          "state": "OK",
+          "districts": 5,
+          "units": 1205,
+          "population": "3959353",
+          "graph": {
+            "path": "target/original-all-state-wasm/OK/engine-graph.json.gz",
+            "sha256": "4eeeabfb791acb40766e82de3c675d7a781a440c3b3225494501800df90262a9",
+            "byte_length": 84029,
+            "decoded_sha256": "1e09cc6bc7cb873be9926eac2076f7c4c3b7f5b3e4a61a23c1f1f30e262f4942"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/OK/receipt.json",
+            "sha256": "24a8a8be1e5b51cbd72408df28eec80fc2cceaa05bfd3afa7d0c1a7383b902d0",
+            "byte_length": 2027
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "f9ba4cc972e9ab5845a43db97de56e9584e9761d7ccd623abc47001bd6192ee3"
+        },
+        {
+          "id": "OR-2020-tract-national-core-42",
+          "state": "OR",
+          "districts": 6,
+          "units": 1001,
+          "population": "4237256",
+          "graph": {
+            "path": "target/original-all-state-wasm/OR/engine-graph.json.gz",
+            "sha256": "f5f25e69572961f836704c98f108130aa6b2a0062401a34e2150b98782e7560e",
+            "byte_length": 71897,
+            "decoded_sha256": "7fcbe006fc853c1a6e60a3a70228ef558292c800bee9dfcf15d1f5a28eddd8a7"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/OR/receipt.json",
+            "sha256": "a9c1ef9437ca65814b4d7b4c5890d821e055f092546ee0c05e4aa42422990c8e",
+            "byte_length": 5544
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "68dbef775cd168d6d0b480e2a73ec6d359e601368c9e2ba5cffe8ee8fe039f93"
+        },
+        {
+          "id": "PA-2020-tract-national-core-42",
+          "state": "PA",
+          "districts": 17,
+          "units": 3446,
+          "population": "13002700",
+          "graph": {
+            "path": "target/original-all-state-wasm/PA/engine-graph.json.gz",
+            "sha256": "8881e6cef931c39a9c250ee13e8bb7fa9ca14b58f61e56402c4c22f5004c708f",
+            "byte_length": 246013,
+            "decoded_sha256": "a32cf0af5138ec98162b55b227209478673f92401a0fffde1066048b706a9c64"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/PA/receipt.json",
+            "sha256": "c064c727e46c35f834aa1ab880e8517309cfb0216a191b7608fa4960633c9f89",
+            "byte_length": 2021
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "c94e1460ebd4184f8f9fce35e75059f0fe1c9fc1cdf847aebb0add11ac7c4d6f"
+        },
+        {
+          "id": "RI-2020-tract-national-core-42",
+          "state": "RI",
+          "districts": 2,
+          "units": 250,
+          "population": "1097379",
+          "graph": {
+            "path": "target/original-all-state-wasm/RI/engine-graph.json.gz",
+            "sha256": "b3e69699e7d98b62fbe6fcd91839a5152a119815b733d25929d542fbe43eb3da",
+            "byte_length": 17975,
+            "decoded_sha256": "74316656cf0f846b00e62c228168677a8479249a533e8e17522cb4330082b05c"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/RI/receipt.json",
+            "sha256": "a543a826bf2abd472259a74f16ff7c414d4dc60641098d40ff770a73996f89d4",
+            "byte_length": 4835
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "285ccd52eceb6c67d7b72a163e1c341b640ce2fea13939a86e3b52538b97978e"
+        },
+        {
+          "id": "SC-2020-tract-national-core-42",
+          "state": "SC",
+          "districts": 7,
+          "units": 1323,
+          "population": "5118425",
+          "graph": {
+            "path": "target/original-all-state-wasm/SC/engine-graph.json.gz",
+            "sha256": "4bbc05945f236a035d5e5d21c43242b182cc9f2cb130eb24666b3a5990f374d6",
+            "byte_length": 95378,
+            "decoded_sha256": "1bf27139f228f24d0502595e4f2b1aaf97b00800dcdcd3f22b08b325fa81cb03"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/SC/receipt.json",
+            "sha256": "f356cf92ec6a925192e5ed584c7608def40b0d3b917d8f4dd2a8c5d283014c88",
+            "byte_length": 5688
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "d603eb568b874932b3b10b007182be3ab6786426c9a4ff4a592c323883de399b"
+        },
+        {
+          "id": "SD-2020-tract-national-core-42",
+          "state": "SD",
+          "districts": 1,
+          "units": 242,
+          "population": "886667",
+          "graph": {
+            "path": "target/original-all-state-wasm/SD/engine-graph.json.gz",
+            "sha256": "5a709f7be75726a18c67d7e728edb2d6f3a93f411b7a4757f4b487dd426137d1",
+            "byte_length": 17807,
+            "decoded_sha256": "4aed68cbcab1596dc286964374466894f121ab864299e0b26b9cbd2f2288fdd0"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/SD/receipt.json",
+            "sha256": "b90a6f394b44a0dc2e7858d197af411bd69b6dac1b817744de123ac376d83fe7",
+            "byte_length": 4258
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "f842d2691598f5d6d28fdabff5db6cdf2020cafdacc69253cf628a0618d6d4a4"
+        },
+        {
+          "id": "TN-2020-tract-national-core-42",
+          "state": "TN",
+          "districts": 9,
+          "units": 1701,
+          "population": "6910840",
+          "graph": {
+            "path": "target/original-all-state-wasm/TN/engine-graph.json.gz",
+            "sha256": "cef92c838162d8262e4134cd1618f4e82252aaae7022707e1d0e2b667b5d5a2a",
+            "byte_length": 122543,
+            "decoded_sha256": "cec5ea1c23b6acb231b30060276e5f1144b93526ec443989b59a8f05a3a644eb"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/TN/receipt.json",
+            "sha256": "380e181d63d411881f82b0c32be4c4d508eca81c20be4258a7e5dc7fd6f4d3b0",
+            "byte_length": 2021
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "15e93f0eb29fe053228a935b5d9680a8566ee54be92d4e5d437a96e213ce1918"
+        },
+        {
+          "id": "TX-2020-tract-national-core-42",
+          "state": "TX",
+          "districts": 38,
+          "units": 6896,
+          "population": "29145505",
+          "graph": {
+            "path": "target/original-all-state-wasm/TX/engine-graph.json.gz",
+            "sha256": "4e9763bc6c91b620a9057eff93c19d66c9d5c0793babc8a8d65d8e229dbdfb68",
+            "byte_length": 479289,
+            "decoded_sha256": "749bda770c7d5b03ddb4c92169c9876545ef805b8a4537525e2c99a1b5f7a7c3"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/TX/receipt.json",
+            "sha256": "8440ba6acfadb3f319b86ad272052703c90d9f602cb45ffe8464866f21e2366d",
+            "byte_length": 2025
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "ff89a6bd533cff073023a13c8fb7257ec2e27b81aec8648420b47874f7a3f80c"
+        },
+        {
+          "id": "UT-2020-tract-national-core-42",
+          "state": "UT",
+          "districts": 4,
+          "units": 716,
+          "population": "3271616",
+          "graph": {
+            "path": "target/original-all-state-wasm/UT/engine-graph.json.gz",
+            "sha256": "72e9df78359a3c8347c474062e532edc553bd8bf499bcb83589c555b3895e556",
+            "byte_length": 51092,
+            "decoded_sha256": "b815d7b64a82984e56dba9ff5812ab164eac4671f1d978549b55532a805f32f2"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/UT/receipt.json",
+            "sha256": "ee5d37bb3bb7ffee52b821d4004519b15279eac7612b185e48cff140593a0823",
+            "byte_length": 2019
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "4016619fea82bed2e5703c80dc017eda6b570222c5a832b72ea50acedef8bdaf"
+        },
+        {
+          "id": "VA-2020-tract-national-core-42",
+          "state": "VA",
+          "districts": 11,
+          "units": 2198,
+          "population": "8631393",
+          "graph": {
+            "path": "target/original-all-state-wasm/VA/engine-graph.json.gz",
+            "sha256": "58ac59751995dbde915443144843d1cdc9b0a5d18c0c184f8a43f32f8387ebb9",
+            "byte_length": 156903,
+            "decoded_sha256": "61c704bbdff86d4d62836d6f74f440053cffd6d52a464d8a597450950160b21e"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/VA/receipt.json",
+            "sha256": "5c2439601f15f7c2059b9656f5e4cd381dcd9864dcab509b82d4ff49578c566a",
+            "byte_length": 2023
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "f3ab767093f8289a5327408437c0fd43410b6fc96c5f7ea50af5e418ac00cee5"
+        },
+        {
+          "id": "VT-2020-tract-national-core-42",
+          "state": "VT",
+          "districts": 1,
+          "units": 193,
+          "population": "643077",
+          "graph": {
+            "path": "target/original-all-state-wasm/VT/engine-graph.json.gz",
+            "sha256": "a987efad3e57f14f78acebb4522c490c0e4579e4ace8ce0e8a26e5901113fe8a",
+            "byte_length": 14070,
+            "decoded_sha256": "8780c56b0d8c14c3d9aed79215a33fb1edb8601c1df0103ba8868d6788721e60"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/VT/receipt.json",
+            "sha256": "a414e74d20f1240e48265592b40549db8a4d25bbf76410d174c49e49082fd4a2",
+            "byte_length": 4239
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "0a19b03c5d9aba505fdf491eb7f99cdc82ec340d0e4bd2f0c60d123e0ce5ef25"
+        },
+        {
+          "id": "WA-2020-tract-national-core-42",
+          "state": "WA",
+          "districts": 10,
+          "units": 1784,
+          "population": "7705281",
+          "graph": {
+            "path": "target/original-all-state-wasm/WA/engine-graph.json.gz",
+            "sha256": "56e1e34f9e85c4dd1f4bb04389f9eccdddbcee5088e89ff086219429d475e93e",
+            "byte_length": 127460,
+            "decoded_sha256": "f6521403b8db3cc5ef59bc81fbfee292dbb2b78bb00c7324a27b3194b40a6d01"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/WA/receipt.json",
+            "sha256": "6790cd64c88b94e35a517fe39dda0c6e874cddcb3937c6b18795308b0461fb0b",
+            "byte_length": 6207
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "2b126b8273e32ee7ba27082f128e51fcc056c788b7db677db32b83a15024fc7e"
+        },
+        {
+          "id": "WI-2020-tract-national-core-42",
+          "state": "WI",
+          "districts": 8,
+          "units": 1542,
+          "population": "5893718",
+          "graph": {
+            "path": "target/original-all-state-wasm/WI/engine-graph.json.gz",
+            "sha256": "284e03f1e550203dad48b1d1b09a9f829c3cd3fdd66cc0d055ebf2e84faae3b4",
+            "byte_length": 110370,
+            "decoded_sha256": "8d240674ec6d7cd941e899ca9b2d74eecae2f41b260488baaa0a0fdc56137a8f"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/WI/receipt.json",
+            "sha256": "ca55bb396140db07ee074eb9c3c066a590f90cab27878fe1fb56fec2de4065cd",
+            "byte_length": 5864
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "4f3ba06d1e9074d9ee87e7b243ee1f471e40a9c85ad0d0911781420432cf6183"
+        },
+        {
+          "id": "WV-2020-tract-national-core-42",
+          "state": "WV",
+          "districts": 2,
+          "units": 546,
+          "population": "1793716",
+          "graph": {
+            "path": "target/original-all-state-wasm/WV/engine-graph.json.gz",
+            "sha256": "aa209ef779f52d0f4999c796e374d305147e91f45d400a0f19225844de68c487",
+            "byte_length": 39969,
+            "decoded_sha256": "630d54da706b695154e47d08dfe601193162687c16e2554c045c4bb0f1df423b"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/WV/receipt.json",
+            "sha256": "f6247ec41f832d7ff2f353e0dc7ae1d011f1ca5339761da66314d3fc328d2467",
+            "byte_length": 4846
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "13e72fb2dc341923a6fbd79d60f29842172c4e75f46342409e5144d35895c401"
+        },
+        {
+          "id": "WY-2020-tract-national-core-42",
+          "state": "WY",
+          "districts": 1,
+          "units": 160,
+          "population": "576851",
+          "graph": {
+            "path": "target/original-all-state-wasm/WY/engine-graph.json.gz",
+            "sha256": "512b6d7e3e6660b41430e453b88555b5af6968ce7181c93fdfddd80d15e317be",
+            "byte_length": 11461,
+            "decoded_sha256": "4f3085779c249e071ee4913e8390861f719b60d7c9ec1286eb4f1c4487b4737c"
+          },
+          "derivation_witness": {
+            "path": "target/original-all-state-wasm/WY/receipt.json",
+            "sha256": "825e0437ecc21a1f8b3423eae48ef763983c5843ab4c7fd8e35ee8f4d20634a7",
+            "byte_length": 4243
+          },
+          "expected_native": {
+            "status": "completed",
+            "basis": "Acceptance target, not yet executed in this national campaign."
+          },
+          "request_sha256": "f7a2db07af5f28575e817be5d5a5ff05bd457af8774d77c542d01ee14d494fd4"
+        }
+      ],
+      "execution_evidence": {
+        "native_cli": {
+          "path": "target/national-matrix/native-1792825774701/evidence.json",
+          "sha256": "90b543a790bb60916f5e0e77f12a23a08d3adadbdd234d6a940008d7a6291beb",
+          "byte_length": 28477
+        },
+        "default_wasm": {
+          "path": "target/national-matrix/wasm-1792827622072/evidence.json",
+          "sha256": "aff39a92cb55143b5ba07786496b69c987df66dfab4d49be029a92c8f389358d",
+          "byte_length": 27790
+        },
+        "c_enabled_wasm": {
+          "path": "target/national-matrix/wasm-1792827814125/evidence.json",
+          "sha256": "5d88135f49c146452474e53e5cea9d6ca42ecbf8479f0827e8b9d719e0ee4e70",
+          "byte_length": 27796
+        }
+      },
+      "current_scope_status": "Native CLI, both direct metis-core WASM profiles, both actual staged browser queues/recovery/export and both staged national map GUIs pass all 50 full allocations / 435 districts / 84,208 units. Both refuse altered source/runtime before partition. Maps use complete retained simplified display topology and fresh native reference. Fresh sources, OS/API, broader lifecycle and immutable evidence/scoped support closure remain open.",
+      "browser_queue_followup": {
+        "id": "national-full-roster-browser-capacity-v1",
+        "declaration": {
+          "path": "target/national-matrix/browser-1792829207963/acceptance-contract.json",
+          "sha256": "774efa1e3437db4e4a3c5981a3a6680e6812884f7c078dd2cdd2c7bd2488d86c",
+          "byte_length": 1372
+        },
+        "c_enabled_core_browser": {
+          "path": "target/national-matrix/browser-1792829207963/evidence.json",
+          "sha256": "7f9cf99d21e244c2147649ed5c969fb228c2e832316d18dab3bb9b878641906d",
+          "byte_length": 53044
+        },
+        "original_failure": {
+          "path": "target/national-matrix/browser-1792828755437/evidence.json",
+          "sha256": "603a1af643c65f3ee4734c306f9276dee610e900896e284494f3acc57feb040c",
+          "byte_length": 5067
+        },
+        "output_only_zip_validation": {
+          "path": "target/national-matrix/zip-1792829069024/evidence.json",
+          "sha256": "80ac47c2ef79596819ed5122b046465636463e2a9075f15c8d64ed36e6c868df",
+          "byte_length": 527
+        },
+        "saved_refusals": {
+          "path": "target/national-matrix/saved-refusals-1792829565430/evidence.json",
+          "sha256": "3ad4eab992106fb5281a8244fc76b75fdacef660efd641d2582fb3e4f6fc3ccd",
+          "byte_length": 1199
+        },
+        "current_test_sources": [
+          {
+            "path": "scripts/web/test_national_matrix_browser.mjs",
+            "sha256": "d6e8cc791591ed7415dfc35eb75dccc0c534d8b79f8a117f95069c8132e5e1f8",
+            "byte_length": 13926
+          },
+          {
+            "path": "scripts/web/test_national_batch_zip.mjs",
+            "sha256": "83aaef7be84608f32bbbca3a18e48313cc37c535698eba3292e343553c563647",
+            "byte_length": 4028
+          },
+          {
+            "path": "scripts/web/test_national_saved_refusal_browser.mjs",
+            "sha256": "1bd09654996bbe4ceaeec0461f55e36fefc096d29012080c41da704d6b367327",
+            "byte_length": 4668
+          }
+        ],
+        "current_runtime_sources": [
+          {
+            "path": "web/lab/state-run-batch.js",
+            "sha256": "b87aa609b9bda7102db230f67b5b5b0da88ff0acf6e690005217c815fbd7f3e1",
+            "byte_length": 40706
+          },
+          {
+            "path": "web/lab/state-batch-zip.js",
+            "sha256": "149c36359d703839771b875cd2487e1c0d8a1123635f0f4b24a34f2eec75c67a",
+            "byte_length": 2757
+          },
+          {
+            "path": "web/lab/project.js",
+            "sha256": "21be9b51e06a029f7d293df5d2aea1b6d60b95cf9df5e273f3c64803ab122f79",
+            "byte_length": 45525
+          },
+          {
+            "path": "web/lab/workbench-archive.js",
+            "sha256": "f61534cd1c239865dc97ea90fc5c8905c40138ae263a8bb0b86c5623e24621c0",
+            "byte_length": 10773
+          }
+        ],
+        "contract": "docs/specs/wasm-national-browser-capacity.md",
+        "scope": "Both actual default and C-enabled metis-core staged GUI profiles pass all 50 full receipts/four workers, exact Save/Open and ZIP, cancellation and saved verification/unfinished-only continuation. Both refuse altered source/runtime before partition. National map, fresh sources, OS/API, evidence freeze/scoped registration and formal support remain separate.",
+        "default_core_browser": {
+          "path": "target/national-matrix/browser-1792829617947/evidence.json",
+          "sha256": "df9d03ddd6e121a6b487424aabf733c7e9d35377ec8035c475809d59789fea1e",
+          "byte_length": 54796
+        },
+        "default_saved_refusals": {
+          "path": "target/national-matrix/saved-refusals-1792830053440/evidence.json",
+          "sha256": "dbce547f3da93b29896487fbe3280c6414f449cfd032bb95f5285a84551d66aa",
+          "byte_length": 1207
+        },
+        "capacity_refusals": {
+          "path": "target/national-matrix/zip-bounds-1792830062245/evidence.json",
+          "sha256": "f64e805cadd94591ed7c29c35dec9d2fefd1b85b9e904919f2c27a789d1ec211",
+          "byte_length": 267
+        },
+        "fresh_engine_record": {
+          "path": "target/build-application/engines-1792830521942830300/evidence.json",
+          "sha256": "8464ddd98327db272029602706ee64cdc29d532aef55bc43c2da00f1eaf1bad5",
+          "byte_length": 8247
+        },
+        "final_package_validation": {
+          "path": "target/national-matrix/package-1792832025154197300/package-evidence.json",
+          "sha256": "3007c5d28d692d34fe8941668b2737ff2b0b1c664d2fa47a400b3dbde90fdc3e",
+          "byte_length": 378717
+        },
+        "registered_gates_log": {
+          "path": "target/build-application/national-followup-registered-gates-second.log",
+          "sha256": "af4f891d02cb05a33d5e149a94cb4c7cc529e039ff181301a4b235ae359b1b9a",
+          "byte_length": 31070
+        },
+        "prior_registered_gate_failure": {
+          "path": "target/build-application/national-followup-registered-gates-first.log",
+          "sha256": "e130b9ce7af6c1e370bc33939d3258d76aaa82233da52500172865d242af5583",
+          "byte_length": 22122
+        },
+        "fetch_source_reconciliation": {
+          "path": "target/national-matrix/queue-source-before-1792828755437/fetch-source-reconciliation.json",
+          "sha256": "fd66aa70ffa06e3145b57e402ce5b2e6273c222c9a66700b42e7784fb6fcdff6",
+          "byte_length": 688
+        }
+      },
+      "map_followup": {
+        "id": "national-full-roster-standard-core-42-display-map-v1",
+        "declaration": {
+          "path": "target/national-matrix/map-1792829919513/acceptance-contract.json",
+          "sha256": "64d78907d9da24750d7ca4d016be9edce450dffad2386fe0a5488a5d60b8375b",
+          "byte_length": 41209
+        },
+        "native_and_c_enabled_stream": {
+          "path": "target/national-matrix/map-1792829919513/evidence.json",
+          "sha256": "628db06e0d1431f53c936875cfea5c68bdd14df2b53e6394b3c9df084b887af8",
+          "byte_length": 2038
+        },
+        "cross_profile_accepted_plans": {
+          "path": "target/national-matrix/map-1792829919513/cross-profile-plan-identities.json",
+          "sha256": "5591e59cda59d28d4c1561a2c27414bf1660cd96fdd54e17ce99c0540b57f0dd",
+          "byte_length": 31819
+        },
+        "native_engine_record": {
+          "path": "target/national-matrix/map-engine-1792829799214781500/evidence.json",
+          "sha256": "4eff5f4a33877daac8533c32dd2fb16ce66581470069f4d4f9d6f1a8082b307f",
+          "byte_length": 148113
+        },
+        "current_test_sources": [
+          {
+            "path": "scripts/web/test_national_matrix_map.mjs",
+            "sha256": "b859e4dfcd98cbd9d322f61c74df22cc7222161309f63cbc01c6d729f26ae2da",
+            "byte_length": 9538
+          },
+          {
+            "path": "scripts/web/test_national_matrix_map_browser.mjs",
+            "sha256": "ddc8caebc5d62fc945cbd1c01c9136149e73ccad07d3b583f9f9e87dd0f32413",
+            "byte_length": 8244
+          }
+        ],
+        "scope": "All 50 accepted plans and complete retained display topology, 435 districts, 84,208 units. Fresh native/C-enabled stream replies and both actual staged GUI map/result/SVG/PNG, archive Save/Open pass. No fresh source derivation, exact unsimplified measurement, new partition, OS/API or formal acceptance.",
+        "c_enabled_staged_browser": {
+          "path": "target/national-matrix/map-1792829919513/browser-1792830241708/evidence.json",
+          "sha256": "dbefde34c830f219ae01606f241343a18d52370411b0da6b4ec54baa908efd71",
+          "byte_length": 51368
+        },
+        "default_staged_browser": {
+          "path": "target/national-matrix/map-1792829919513/browser-1792830429589/evidence.json",
+          "sha256": "2f29fd6ed005c35f170a548ba45a67c8b9efbd0553fe18bce45c6c84bec99b30",
+          "byte_length": 53120
+        },
+        "contract": "docs/specs/wasm-national-retained-map.md",
+        "final_package_validation": {
+          "path": "target/national-matrix/package-1792832025154197300/package-evidence.json",
+          "sha256": "3007c5d28d692d34fe8941668b2737ff2b0b1c664d2fa47a400b3dbde90fdc3e",
+          "byte_length": 378717
+        }
+      },
+      "partition_timing_engine_followup": {
+        "contract": {
+          "path": "docs/specs/wasm-national-engine-refresh.md",
+          "sha256": "0512728001d627668bfc2fd79d70d4e8117a44477c0a7b111cdc91962e11cf70",
+          "byte_length": 4106
+        },
+        "review": {
+          "path": "signals/roles/check/wasm-national-engine-refresh-roles-check-2026-10-26.md",
+          "sha256": "ad9ba7bf6b260cec53d672a784364e0bd1a399dfa8b55c12d89df1b8c6d13c2f",
+          "byte_length": 4653
+        },
+        "validation": {
+          "path": "target/national-engine-refresh/package/evidence.json",
+          "sha256": "c4e7e42bd5167480ac6ff5b451f841fa21fa4ae28a7bba8c16af739bfc721bc3",
+          "byte_length": 5273
+        },
+        "scope": "Both exact timing engines: retained 2020 tract standard metis-core seed 42, all 50 states/435 districts; exact native/historical replies, real browser queue/recovery/refusals and exact native/browser maps. No broader source/host/full parent acceptance.",
+        "deployed": false,
+        "acceptance_v1": false,
+        "closure": {
+          "path": "target/national-engine-refresh/closure/evidence.json",
+          "sha256": "78d6c8e75f6ce6cfde8ab092ab3930784ec06f805ac7ae116f1c9fb3fa903ade",
+          "byte_length": 4998
+        }
+      }
+    }
+  ]
+}

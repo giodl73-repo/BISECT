@@ -1,0 +1,2 @@
+import {extractCensusZip,censusArchiveLimit} from './census-archive.js';
+self.onmessage=async({data})=>{try{const {file,settings}=data;if(!file||file.size<22||file.size>censusArchiveLimit(settings))throw new Error('Invalid Census ZIP size.');const bytes=new Uint8Array(await file.arrayBuffer());if(bytes.length!==file.size)throw new Error('ZIP changed while reading.');self.postMessage({ok:true,result:await extractCensusZip(bytes,settings)});}catch(error){self.postMessage({ok:false,error:error.message});}};

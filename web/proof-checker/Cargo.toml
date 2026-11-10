@@ -1,0 +1,31 @@
+[workspace]
+resolver = "3"
+
+[package]
+name = "bisect-proof-checker"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.92.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+sha2 = "0.10"
+bisect-ilp = { path = "../../crates/bisect-ilp", default-features = false }
+rplan-core = { path = "../../crates/rplan-core" }
+rplan-io = { path = "../../crates/rplan-io" }
+rplan-audit = { path = "../../crates/rplan-audit" }
+veripb-checker = { path = "../../third_party/veripb/veripb-checker" }
+veripb-formula = { path = "../../third_party/veripb/veripb-formula" }
+veripb-parser = { path = "../../third_party/veripb/veripb-parser" }
+veripb-rules = { path = "../../third_party/veripb/veripb-rules" }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+strip = "debuginfo"
+

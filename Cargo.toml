@@ -22,6 +22,7 @@ members = [
     "crates/bisect-core",
     "crates/bisect-data",
     "crates/bisect-apportion",
+    "crates/bisect-metis-sidecar",
     "crates/bisect-runner",
     "crates/bisect-cli",
     "crates/bisect-ops",
@@ -43,7 +44,7 @@ members = [
     "python/bisect_py",
 ]
 resolver = "2"
-exclude = ["vendor/metis-core"]
+exclude = ["vendor/metis-core", "third_party/veripb", "third_party/veripb/*", "web/proof-checker"]
 
 [patch."https://github.com/giodl73-repo/METIS-CORE.git"]
 metis-core = { path = "vendor/metis-core" }

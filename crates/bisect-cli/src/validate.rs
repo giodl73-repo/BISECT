@@ -3,6 +3,7 @@
 /// Dispatches to `bisect_report::validate_rplan()`.
 /// Exits 0 on PASS, non-zero on FAIL.
 use crate::args::ValidateArgs;
+#[cfg(test)]
 use bisect_report::validate_rplan_str;
 
 /// Validate a .rplan file and print a human-readable summary.
@@ -12,37 +13,10 @@ pub fn run_validate(args: &ValidateArgs) -> anyhow::Result<()> {
     let content = std::fs::read_to_string(path)
         .map_err(|e| anyhow::anyhow!("cannot read '{}': {}", path.display(), e))?;
 
-    // Parse and validate
-    let result = validate_rplan_str(&content).map_err(|e| anyhow::anyhow!("FAIL: {}", e))?;
-
-    // Count assignments
-    let rplan: serde_json::Value = serde_json::from_str(&content)?;
-    let tract_count = rplan["assignments"]
-        .as_object()
-        .map(|m| m.len())
-        .unwrap_or(0);
-    let num_districts = rplan["metadata"]["num_districts"].as_u64().unwrap_or(0);
-    let state = rplan["metadata"]["state_code"].as_str().unwrap_or("?");
-    let year = rplan["metadata"]["year"].as_str().unwrap_or("?");
-    let chamber = rplan["metadata"]["chamber"].as_str().unwrap_or("?");
-
-    // Print warnings if any
-    for w in &result.warnings {
-        eprintln!("WARNING: {}", w);
-    }
-
-    // Exit with failure in strict mode if there are warnings
-    if args.strict && !result.warnings.is_empty() {
-        anyhow::bail!(
-            "FAIL (strict): {} warning(s) treated as errors",
-            result.warnings.len()
-        );
-    }
-
-    println!(
-        "PASS: valid RPLAN v0.1 ({} tracts, {} districts, {} {} {})",
-        tract_count, num_districts, state, year, chamber
-    );
+    let result=bisect_report::format_validation::assess(&content,args.strict);
+    for warning in result["warnings"].as_array().into_iter().flatten() { eprintln!("WARNING: {}",warning.as_str().unwrap_or("")); }
+    if let Some(error)=result["error"].as_str(){anyhow::bail!("{error}");}
+    if let Some(summary)=result["native_summary"].as_str(){println!("{summary}");}
 
     Ok(())
 }

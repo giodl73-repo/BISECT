@@ -312,7 +312,7 @@ mod tests {
             jobs.push(Job{id:id.into(),config,status:"completed".into(),created_unix:0,logs:vec!["secret".into()],states:vec![crate::model::StateRun{code:"RI".into(),status:"completed".into(),error:None,elapsed_seconds:1.0,command:vec!["secret".into()],metrics:Some(json!({"district_count":1,"units":1,"graph_path":"secret","districts":[{"district":1,"private":"secret"}]}))}]});
         }
         let out = temp.path().join("site");
-        build(&paths, &jobs, &out, 1_000_000).unwrap();
+        let report = build(&paths, &jobs, &out, u64::MAX).unwrap();
         let manifest: Value =
             serde_json::from_slice(&std::fs::read(out.join("catalog.json")).unwrap()).unwrap();
         assert_eq!(manifest["assets"].as_object().unwrap().len(), 2);
@@ -321,13 +321,26 @@ mod tests {
         // Eager lab.js imports must be present in the published static bundle.
         let mut sources=vec![std::fs::read_to_string(out.join("lab.js")).unwrap()];
         for(name,_)in crate::input_assets::INPUT_ASSETS {sources.push(std::fs::read_to_string(out.join(name)).unwrap());}
-        for source in sources {for import in source.split("from './").skip(1) {let name=import.split('\'').next().unwrap();assert!(out.join(name).is_file(),"Missing input module {name}");}}
+        for source in sources {for import in source.split("from './").skip(1) {let name=import.split('\'').next().unwrap().split(['?','#']).next().unwrap();assert!(out.join(name).is_file(),"Missing input module {name}");}}
         for file in std::fs::read_dir(out.join("assets")).unwrap() {
             assert!(!std::fs::read_to_string(file.unwrap().path())
                 .unwrap()
                 .contains("secret"));
         }
-        assert!(build(&paths, &jobs, &out, 1_000_000).is_err());
+        let exact_bytes = report["bytes"].as_u64().unwrap();
+        fn disk_bytes(dir: &Path) -> u64 {
+            std::fs::read_dir(dir).unwrap().map(|entry| {
+                let path = entry.unwrap().path();
+                if path.is_dir() { disk_bytes(&path) } else { std::fs::metadata(path).unwrap().len() }
+            }).sum()
+        }
+        assert_eq!(exact_bytes, disk_bytes(&out), "Budget must include all module bytes exactly once");
+        let exact = temp.path().join("exact-budget");
+        assert!(build(&paths, &jobs, &exact, exact_bytes).is_ok());
+        let below = temp.path().join("below-budget");
+        assert!(build(&paths, &jobs, &below, exact_bytes - 1).is_err());
+        assert!(!below.join("catalog.json").exists());
+        assert!(build(&paths, &jobs, &out, exact_bytes).is_err());
         let oversized = temp.path().join("too-small");
         assert!(build(&paths, &jobs, &oversized, 1).is_err());
         assert!(!oversized.join("catalog.json").exists());

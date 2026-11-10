@@ -238,17 +238,34 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
         return Err(RaceParseError::FileNotFound(csv_path.to_path_buf()));
     }
     let csv_bytes = std::fs::read(csv_path)?;
-    let source_sha256 = sha256_hex(&csv_bytes);
     let csv_dir = csv_path.parent().unwrap_or(Path::new("."));
+    parse_race_of_candidate_source(&csv_bytes,
+        csv_path.file_name().and_then(|s|s.to_str()).unwrap_or(""),
+        |relative| {
+            let doc_path_abs=csv_dir.join(relative);
+            if !doc_path_abs.exists(){return Err(RaceParseError::AttestationDocMissing{row:0,path:relative.display().to_string()});}
+            let mut f=File::open(&doc_path_abs)?;let mut hasher=Sha256::new();let mut buf=[0u8;64*1024];
+            loop {let n=f.read(&mut buf)?;if n==0{break;}hasher.update(&buf[..n]);}
+            Ok(hex_lower(&hasher.finalize()))
+        })
+}
 
+/// Shared annotation reader with explicit attestation-byte hashing supplied by the caller.
+/// Filesystem access belongs to the native wrapper; browser callers resolve only selected files.
+pub fn parse_race_of_candidate_source<F>(csv_bytes:&[u8],source_name:&str,mut hash_document:F)
+    ->Result<AnnotationSet,RaceParseError>
+where F:FnMut(&Path)->Result<String,RaceParseError> {
+    let source_sha256=sha256_hex(csv_bytes);
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(true)
-        .from_reader(csv_bytes.as_slice());
+        .from_reader(csv_bytes);
 
     let headers = reader.headers().map_err(|e| RaceParseError::Csv {
         line: 0,
         message: e.to_string(),
     })?;
+    let mut seen=std::collections::BTreeSet::new();
+    if headers.iter().any(|h|!seen.insert(h)){return Err(RaceParseError::Csv{line:1,message:"duplicate CSV headers".into()});}
     let required = [
         "candidate_name",
         "party",
@@ -319,7 +336,6 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
         let doc_path_rel_str = need_nonempty("attestation_doc_path")?;
         let doc_path_rel = PathBuf::from(&doc_path_rel_str);
         validate_attestation_doc_path(row_num, &doc_path_rel_str, &doc_path_rel)?;
-        let doc_path_abs = csv_dir.join(&doc_path_rel);
 
         let declared_fmt = need_nonempty("attestation_doc_format")?;
         let format = AttestationDocFormat::from_extension(&declared_fmt)?;
@@ -349,23 +365,10 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
             _ => {}
         }
 
-        if !doc_path_abs.exists() {
-            return Err(RaceParseError::AttestationDocMissing {
-                row: row_num,
-                path: doc_path_abs.display().to_string(),
-            });
-        }
-        let mut f = File::open(&doc_path_abs)?;
-        let mut hasher = Sha256::new();
-        let mut buf = [0u8; 64 * 1024];
-        loop {
-            let n = f.read(&mut buf)?;
-            if n == 0 {
-                break;
-            }
-            hasher.update(&buf[..n]);
-        }
-        let doc_sha = hex_lower(&hasher.finalize());
+        let doc_sha=hash_document(&doc_path_rel).map_err(|e|match e {
+            RaceParseError::AttestationDocMissing{path,..}=>RaceParseError::AttestationDocMissing{row:row_num,path},
+            other=>other,
+        })?;
 
         // Multi-curator dispute tracking.
         disputes
@@ -431,11 +434,7 @@ pub fn parse_race_of_candidate_csv<P: AsRef<Path>>(
 
     let provenance = RaceOfCandidateProvenance {
         schema_version: "race-of-candidate v1".to_string(),
-        source_file: csv_path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("")
-            .to_string(),
+        source_file: source_name.to_string(),
         source_sha256,
         annotations_independently_verified: all_verified,
         curators: curator_list,
@@ -505,7 +504,9 @@ fn validate_attestation_doc_path(
         raw_bytes.len() >= 2 && raw_bytes[0].is_ascii_alphabetic() && raw_bytes[1] == b':';
     let has_platform_root = raw_path.starts_with('/') || raw_path.starts_with('\\');
 
-    if has_platform_root
+    if raw_path.contains(':') || raw_path.contains('\0')
+        || raw_path.split(['/', '\\']).any(|p| p==".." || p=="." || p.is_empty())
+        || has_platform_root
         || has_windows_drive_prefix
         || path.is_absolute()
         || path.components().any(|component| {

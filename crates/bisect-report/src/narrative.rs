@@ -106,6 +106,75 @@ pub fn render_narrative(report: &ComparisonReport, cfg: &NarrativeConfig) -> Str
     s
 }
 
+/// Draft narrative for imported analysis. Missing measurements and assignment
+/// differences are explicit; imported values are not independently recomputed.
+pub fn render_imported_narrative(
+    report: &ComparisonReport,
+    cfg: &NarrativeConfig,
+    a: crate::comparison::ReportAvailability,
+    b: crate::comparison::ReportAvailability,
+) -> String {
+    render_imported_narrative_inner(report,cfg,a,b,true,None)
+}
+
+/// Plain narrative text for the HTML renderer, which escapes it as text itself.
+/// Use the Markdown entry point for a downloadable Markdown document.
+pub fn render_imported_narrative_text(
+    report: &ComparisonReport,
+    cfg: &NarrativeConfig,
+    a: crate::comparison::ReportAvailability,
+    b: crate::comparison::ReportAvailability,
+) -> String { render_imported_narrative_inner(report,cfg,a,b,false,None) }
+
+/// Imported analysis narrative with separately measured plan evidence.
+pub fn render_imported_narrative_with_evidence(
+    report:&ComparisonReport,cfg:&NarrativeConfig,
+    a:crate::comparison::ReportAvailability,b:crate::comparison::ReportAvailability,
+    evidence:Option<&crate::comparison::ReportPlanEvidence>,markdown:bool,
+)->String {render_imported_narrative_inner(report,cfg,a,b,markdown,evidence)}
+
+fn render_imported_narrative_inner(
+    report: &ComparisonReport,
+    cfg: &NarrativeConfig,
+    a: crate::comparison::ReportAvailability,
+    b: crate::comparison::ReportAvailability,
+    markdown:bool,
+    evidence:Option<&crate::comparison::ReportPlanEvidence>,
+) -> String {
+    let prefix = "[DRAFT - review before publication] ";
+    let mut paragraphs = vec![String::from("Imported analysis from supplied bytes; not recomputed or authenticated. Hashes establish byte integrity only.")];
+    let mut markdown_report=report.clone();
+    for side in [&mut markdown_report.plan_a,&mut markdown_report.plan_b] {
+        if !markdown {continue;}
+        if let Some(by)=&side.submitted_by { side.submitted_by=Some(escape_markdown_metadata(by)); }
+        if let Some(at)=&side.submitted_at { side.submitted_at=Some(escape_markdown_metadata(at)); }
+    }
+    if let Some(framing) = civic_counter_proposal_framing(&markdown_report) { paragraphs.push(framing); }
+    if let Some(evidence)=evidence {
+        paragraphs.push(if markdown {escape_markdown_metadata(&evidence.narrative())}else{evidence.narrative()});
+        paragraphs.push("Assignment/population measurements use the supplied plans and context. Imported partisan, demographic and compactness analysis is separately supplied; matching district counts do not authenticate its association with those plans.".into());
+    } else { paragraphs.push("Assignment changes and population totals are unavailable in this imported report comparison.".into()); }
+    // Keep the native numerical and close-call logic when both sides are usable.
+    // Do not generate a comparison claim from a missing side's zero/NaN default.
+    paragraphs.push(if a.partisan && b.partisan { partisan_composition_paragraph(report, cfg) } else { "Partisan comparison unavailable or incomplete; see each side's numerical table.".into() });
+    paragraphs.push(if a.demographic && b.demographic { mm_count_paragraph(report, cfg) } else { "Majority-minority comparison unavailable or incomplete; see each side's numerical table.".into() });
+    paragraphs.push(if a.compactness && b.compactness { compactness_paragraph(report, cfg) } else { "Compactness comparison unavailable or incomplete; see each side's numerical table.".into() });
+    paragraphs.into_iter().map(|p|format!("{prefix}{p}\n\n")).collect()
+}
+
+fn escape_markdown_metadata(text:&str)->String {
+    let mut out=String::new();
+    for ch in text.chars() {
+        match ch {
+            '&'=>out.push_str("&amp;"), '<'=>out.push_str("&lt;"), '>'=>out.push_str("&gt;"),
+            '\\'|'['|']'|'('|')'|'!'|'*'|'_'|'`'|'#'|'|'=>{out.push('\\');out.push(ch);},
+            '\n'|'\r'=>out.push(' '),
+            _=>out.push(ch),
+        }
+    }
+    out
+}
+
 fn civic_counter_proposal_framing(report: &ComparisonReport) -> Option<String> {
     let civic_side = if report.plan_a.submission_type.as_deref() == Some("civic_counter_proposal") {
         Some(("Plan A", &report.plan_a))

@@ -47,14 +47,45 @@ pub struct PlanSide {
     pub analysis_sha256: BTreeMap<String, String>,
 }
 
+/// Availability of imported measurements, separate from native reader defaults.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct ReportAvailability {
+    pub partisan: bool,
+    pub demographic: bool,
+    pub compactness: bool,
+}
+
+/// Measurements from separately supplied plans and a matching optional context.
+/// Imported analysis is still independently supplied, not authenticated to plans.
+#[derive(Debug, Clone)]
+pub struct ReportPlanEvidence {
+    pub unit_kind: String,
+    pub changed_units: usize,
+    pub district_ids_with_changes: Vec<usize>,
+    pub population_in_changed_units: Option<u64>,
+    pub total_population_a: Option<u64>,
+    pub total_population_b: Option<u64>,
+    pub plan_a_hash: String,
+    pub plan_b_hash: String,
+    pub context_hash: Option<String>,
+}
+impl ReportPlanEvidence {
+    pub fn narrative(&self) -> String {
+        let population = self.population_in_changed_units.map(|n|n.to_string()).unwrap_or_else(||"unavailable".into());
+        let districts=self.district_ids_with_changes.iter().map(usize::to_string).collect::<Vec<_>>().join(", ");
+        let total=|value:Option<u64>|value.map(|n|n.to_string()).unwrap_or_else(||"unavailable".into());
+        format!("Total population from supplied context: Plan A {}; Plan B {}. Supplied plan assignment difference: {} units (unit kind {}) have changed district labels. Population in those units: {}. Touched district IDs (zero based): [{}]. Pure label renumbering counts as change; no population movement is implied.",total(self.total_population_a),total(self.total_population_b),self.changed_units,self.unit_kind,population,districts)
+    }
+}
+
 /// Diff between two plans: which tracts moved, how many people, which districts changed.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DiffSummary {
     pub tracts_changed: usize,
     pub population_changed: u64,
-    /// Sorted list of district numbers (in plan A's labeling) where any tract
-    /// was reassigned.
-    pub districts_with_changes: Vec<usize>,
+    /// Sorted union of touched district labels from both plans.
+    /// A pure label renumbering counts as reassignment.
+    pub districts_with_changes: Vec<u64>,
 }
 
 /// Top-level comparison report consumed by the narrative renderer.
@@ -129,6 +160,7 @@ pub enum AssembleError {
 ///
 /// `plan_dir` is the directory containing `manifest.json` (e.g.,
 /// `outputs/v1/2020/plans/vt_2020/`).
+#[cfg(feature = "filesystem")]
 pub fn load_plan_side_from_dir(
     plan_dir: &Path,
     leaning_threshold: f64,
@@ -139,15 +171,53 @@ pub fn load_plan_side_from_dir(
         ));
     }
 
-    // Load manifest.json + compute its SHA-256.
+    let fallback_label = plan_dir
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown");
+    load_plan_side_from_source(
+        plan_dir,
+        fallback_label,
+        leaning_threshold,
+        &mut |relative| {
+            let path = plan_dir.join(relative);
+            if !path.is_file() {
+                return Ok(None);
+            }
+            std::fs::read(&path)
+                .map(Some)
+                .map_err(|e| AssembleError::Io(path.display().to_string(), e.to_string()))
+        },
+    )
+}
+
+/// Read report evidence from explicitly supplied file bytes without filesystem IO.
+/// Keys are relative report names such as `manifest.json` or
+/// `analysis/partisan.json`; only the fixed native report inputs are read.
+/// `label` is a fallback when the manifest omits its own label.
+/// Parsing, original-byte hashes and missing-analysis behavior match the disk reader.
+pub fn load_plan_side_from_files(
+    files: &BTreeMap<String, Vec<u8>>,
+    label: &str,
+    leaning_threshold: f64,
+) -> Result<PlanSide, AssembleError> {
+    load_plan_side_from_source(
+        Path::new(label),
+        label,
+        leaning_threshold,
+        &mut |relative| Ok(files.get(relative).cloned()),
+    )
+}
+
+fn load_plan_side_from_source(
+    plan_dir: &Path,
+    fallback_label: &str,
+    leaning_threshold: f64,
+    read: &mut impl FnMut(&str) -> Result<Option<Vec<u8>>, AssembleError>,
+) -> Result<PlanSide, AssembleError> {
     let manifest_path = plan_dir.join("manifest.json");
-    if !manifest_path.is_file() {
-        return Err(AssembleError::ManifestNotFound(
-            manifest_path.display().to_string(),
-        ));
-    }
-    let manifest_bytes = std::fs::read(&manifest_path)
-        .map_err(|e| AssembleError::Io(manifest_path.display().to_string(), e.to_string()))?;
+    let manifest_bytes = read("manifest.json")?
+        .ok_or_else(|| AssembleError::ManifestNotFound(manifest_path.display().to_string()))?;
     let manifest_sha = sha256_hex(&manifest_bytes);
     let manifest: serde_json::Value = serde_json::from_slice(&manifest_bytes).map_err(|e| {
         AssembleError::JsonParse(manifest_path.display().to_string(), e.to_string())
@@ -156,12 +226,7 @@ pub fn load_plan_side_from_dir(
     let label = manifest
         .get("label")
         .and_then(|v| v.as_str())
-        .unwrap_or_else(|| {
-            plan_dir
-                .file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("unknown")
-        })
+        .unwrap_or(fallback_label)
         .to_string();
     let n_districts = load_manifest_num_districts(&manifest_path, &manifest)?;
     let total_population = 0u64; // manifest doesn't carry it; would need analysis/summary.json
@@ -186,9 +251,9 @@ pub fn load_plan_side_from_dir(
     let analysis_dir = plan_dir.join("analysis");
 
     let (leaning_seats, per_district_dem_share) =
-        load_partisan_seats(&analysis_dir, leaning_threshold, &mut analysis_sha)?;
-    let mm_count = load_mm_count(&analysis_dir, &mut analysis_sha)?;
-    let mean_pp = load_mean_pp(&analysis_dir, &mut analysis_sha)?;
+        load_partisan_seats(&analysis_dir, leaning_threshold, &mut analysis_sha, read)?;
+    let mm_count = load_mm_count(&analysis_dir, &mut analysis_sha, read)?;
+    let mean_pp = load_mean_pp(&analysis_dir, &mut analysis_sha, read)?;
 
     Ok(PlanSide {
         label,
@@ -236,13 +301,12 @@ fn load_analysis_json(
     analysis_dir: &Path,
     filename: &str,
     sha_map: &mut BTreeMap<String, String>,
+    read: &mut impl FnMut(&str) -> Result<Option<Vec<u8>>, AssembleError>,
 ) -> Result<Option<serde_json::Value>, AssembleError> {
     let path = analysis_dir.join(filename);
-    if !path.is_file() {
+    let Some(bytes) = read(&format!("analysis/{filename}"))? else {
         return Ok(None);
-    }
-    let bytes = std::fs::read(&path)
-        .map_err(|e| AssembleError::Io(path.display().to_string(), e.to_string()))?;
+    };
     sha_map.insert(filename.to_string(), sha256_hex(&bytes));
     let value = serde_json::from_slice(&bytes)
         .map_err(|e| AssembleError::JsonParse(path.display().to_string(), e.to_string()))?;
@@ -253,9 +317,10 @@ fn load_partisan_seats(
     analysis_dir: &Path,
     leaning_threshold: f64,
     sha_map: &mut BTreeMap<String, String>,
+    read: &mut impl FnMut(&str) -> Result<Option<Vec<u8>>, AssembleError>,
 ) -> Result<(usize, Vec<f64>), AssembleError> {
     let path = analysis_dir.join("partisan.json");
-    let Some(partisan) = load_analysis_json(analysis_dir, "partisan.json", sha_map)? else {
+    let Some(partisan) = load_analysis_json(analysis_dir, "partisan.json", sha_map, read)? else {
         return Ok((0, Vec::new()));
     };
     // Try several common shapes for the per-district Dem-share array.
@@ -320,9 +385,10 @@ fn load_dem_shares_from_numbers(
 fn load_mm_count(
     analysis_dir: &Path,
     sha_map: &mut BTreeMap<String, String>,
+    read: &mut impl FnMut(&str) -> Result<Option<Vec<u8>>, AssembleError>,
 ) -> Result<usize, AssembleError> {
     let path = analysis_dir.join("vra_analysis.json");
-    let Some(vra) = load_analysis_json(analysis_dir, "vra_analysis.json", sha_map)? else {
+    let Some(vra) = load_analysis_json(analysis_dir, "vra_analysis.json", sha_map, read)? else {
         return Ok(0);
     };
     let Some(mm_count) = vra.get("mm_count") else {
@@ -343,9 +409,10 @@ fn load_mm_count(
 fn load_mean_pp(
     analysis_dir: &Path,
     sha_map: &mut BTreeMap<String, String>,
+    read: &mut impl FnMut(&str) -> Result<Option<Vec<u8>>, AssembleError>,
 ) -> Result<f64, AssembleError> {
     let path = analysis_dir.join("compactness.json");
-    let Some(comp) = load_analysis_json(analysis_dir, "compactness.json", sha_map)? else {
+    let Some(comp) = load_analysis_json(analysis_dir, "compactness.json", sha_map, read)? else {
         return Ok(f64::NAN);
     };
     // Try shapes:
@@ -383,33 +450,54 @@ fn load_polsby_popper_from_objects(
 
 /// Compute a basic `DiffSummary` between two plans by reading their
 /// `final_assignments.json` files. Returns zeros when either file is missing.
+#[cfg(feature = "filesystem")]
 pub fn diff_from_assignments(
     plan_a_dir: &Path,
     plan_b_dir: &Path,
 ) -> Result<DiffSummary, AssembleError> {
     let a = load_assignments(plan_a_dir)?;
     let b = load_assignments(plan_b_dir)?;
-    if a.is_empty() || b.is_empty() {
-        return Ok(DiffSummary::default());
-    }
-    let mut tracts_changed = 0usize;
-    let mut districts_with_changes = std::collections::BTreeSet::<usize>::new();
-    for (geoid, dist_a) in &a {
-        if let Some(dist_b) = b.get(geoid) {
-            if dist_a != dist_b {
-                tracts_changed += 1;
-                districts_with_changes.insert(*dist_a);
-                districts_with_changes.insert(*dist_b);
-            }
-        }
-    }
-    Ok(DiffSummary {
-        tracts_changed,
-        population_changed: 0, // would need per-tract population data
-        districts_with_changes: districts_with_changes.into_iter().collect(),
-    })
+    Ok(diff_from_loaded_assignments(
+        a.iter().map(|(unit, &district)| (unit.as_str(), district as u64)),
+        b.iter().map(|(unit, &district)| (unit.as_str(), district as u64)),
+    ))
 }
 
+/// Compare the exact selected file bytes using the same primary/fallback
+/// precedence as the disk reader. IDs are u64 even on 32-bit browser hosts.
+pub fn diff_from_assignment_files(
+    a: &BTreeMap<String, Vec<u8>>, label_a: &str,
+    b: &BTreeMap<String, Vec<u8>>, label_b: &str,
+) -> Result<DiffSummary, AssembleError> {
+    let read = |files: &BTreeMap<String, Vec<u8>>, label: &str| {
+        for name in ["data/final_assignments.json", "final_assignments.json"] {
+            if let Some(bytes) = files.get(name) {
+                return parse_assignment_bytes::<u64>(bytes, &Path::new(label).join(name));
+            }
+        }
+        Ok(BTreeMap::new())
+    };
+    let a = read(a, label_a)?;
+    let b = read(b, label_b)?;
+    Ok(diff_from_loaded_assignments(
+        a.iter().map(|(unit, &district)| (unit.as_str(), district)),
+        b.iter().map(|(unit, &district)| (unit.as_str(), district)),
+    ))
+}
+
+fn diff_from_loaded_assignments<'a>(
+    a: impl IntoIterator<Item = (&'a str, u64)>,
+    b: impl IntoIterator<Item = (&'a str, u64)>,
+) -> DiffSummary {
+    let changes = bisect_analysis::comparison::assignment_changes_typed(a, b);
+    DiffSummary {
+        tracts_changed: changes.changed_units.len(),
+        population_changed: 0, // no unit populations are supplied to this native format
+        districts_with_changes: changes.districts_with_changes,
+    }
+}
+
+#[cfg(feature = "filesystem")]
 fn load_assignments(plan_dir: &Path) -> Result<BTreeMap<String, usize>, AssembleError> {
     // Production layout: plan_dir/data/final_assignments.json (matches PlanContext::assignments_path).
     // Fallback: plan_dir/final_assignments.json (legacy/flat tests).
@@ -424,7 +512,11 @@ fn load_assignments(plan_dir: &Path) -> Result<BTreeMap<String, usize>, Assemble
     };
     let bytes = std::fs::read(&path)
         .map_err(|e| AssembleError::Io(path.display().to_string(), e.to_string()))?;
-    let v: serde_json::Value = serde_json::from_slice(&bytes)
+    parse_assignment_bytes(&bytes, &path)
+}
+
+fn parse_assignment_bytes<D: TryFrom<u64>>(bytes: &[u8], path: &Path) -> Result<BTreeMap<String, D>, AssembleError> {
+    let v: serde_json::Value = serde_json::from_slice(bytes)
         .map_err(|e| AssembleError::JsonParse(path.display().to_string(), e.to_string()))?;
     let mut out = BTreeMap::new();
     if let Some(obj) = v.as_object() {
@@ -443,7 +535,7 @@ fn load_assignments(plan_dir: &Path) -> Result<BTreeMap<String, usize>, Assemble
                     reason: "district 0 is invalid".to_string(),
                 });
             }
-            let d = usize::try_from(d).map_err(|_| AssembleError::InvalidAssignment {
+            let d = D::try_from(d).map_err(|_| AssembleError::InvalidAssignment {
                 path: path.display().to_string(),
                 geoid: geoid.clone(),
                 reason: format!("district {d} is too large"),
@@ -468,9 +560,116 @@ fn sha256_hex(bytes: &[u8]) -> String {
 // Tests
 // ---------------------------------------------------------------------------
 
-#[cfg(test)]
+#[cfg(all(test, feature = "filesystem"))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn disk_assignment_diff_uses_common_units_and_touched_labels() {
+        let root = tempfile::tempdir().unwrap();
+        let a = root.path().join("a");
+        let b = root.path().join("b");
+        std::fs::create_dir_all(a.join("data")).unwrap();
+        std::fs::create_dir_all(b.join("data")).unwrap();
+        std::fs::write(
+            a.join("data/final_assignments.json"),
+            r#"{"x":1,"z":3,"only_a":4}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            b.join("data/final_assignments.json"),
+            r#"{"x":2,"z":3,"only_b":6}"#,
+        )
+        .unwrap();
+        let result = diff_from_assignments(&a, &b).unwrap();
+        assert_eq!(result.tracts_changed, 1);
+        assert_eq!(result.districts_with_changes, [1, 2]);
+        assert_eq!(result.population_changed, 0);
+    }
+
+    #[test]
+    fn memory_report_reader_matches_disk_shapes_and_original_hashes() {
+        let root = tempfile::tempdir().unwrap();
+        for (index, partisan) in [
+            r#"{"districts":[{"dem_share":0.55},{"dem_share":0.54}]}"#,
+            r#"{"per_district_dem_share":[0.55,0.54]}"#,
+            r#"[{"dem_share":0.55},{"dem_share":0.54}]"#,
+        ]
+        .iter()
+        .enumerate()
+        {
+            let directory = root.path().join(format!("case-{index}"));
+            std::fs::create_dir_all(directory.join("analysis")).unwrap();
+            let files = BTreeMap::from([
+                ("manifest.json".into(), br#"{ "label":"supplied", "num_districts":2, "submission_type":"civic_counter_proposal" }"#.to_vec()),
+                ("analysis/partisan.json".into(), partisan.as_bytes().to_vec()),
+                ("analysis/vra_analysis.json".into(), br#"{"mm_count":1}"#.to_vec()),
+                ("analysis/compactness.json".into(), br#"{"districts":[{"polsby_popper":0.4},{"polsby_popper":0.6}]}"#.to_vec()),
+            ]);
+            for (relative, bytes) in &files {
+                std::fs::write(directory.join(relative), bytes).unwrap();
+            }
+            let disk = load_plan_side_from_dir(&directory, 0.55).unwrap();
+            let memory = load_plan_side_from_files(&files, "fallback", 0.55).unwrap();
+            assert_eq!(
+                serde_json::to_value(&disk).unwrap(),
+                serde_json::to_value(&memory).unwrap()
+            );
+            assert_eq!(memory.leaning_seats, 1);
+            assert_eq!(memory.mean_pp, 0.5);
+            assert_eq!(memory.manifest_sha256, sha256_hex(&files["manifest.json"]));
+            assert_eq!(
+                memory.analysis_sha256["partisan.json"],
+                sha256_hex(partisan.as_bytes())
+            );
+        }
+    }
+
+    #[test]
+    fn memory_report_reader_preserves_missing_and_malformed_boundaries() {
+        let mut files = BTreeMap::new();
+        assert!(matches!(
+            load_plan_side_from_files(&files, "fallback", 0.55),
+            Err(AssembleError::ManifestNotFound(_))
+        ));
+        files.insert("manifest.json".into(), br#"{"num_districts":2}"#.to_vec());
+        let side = load_plan_side_from_files(&files, "fallback", 0.55).unwrap();
+        assert_eq!(side.label, "fallback");
+        assert_eq!(
+            load_plan_side_from_files(&files, "literal / label", 0.55)
+                .unwrap()
+                .label,
+            "literal / label"
+        );
+        assert!(side.mean_pp.is_nan());
+        assert!(side.analysis_sha256.is_empty());
+        for (name, bytes) in [
+            (
+                "analysis/partisan.json",
+                br#"{"districts":[{"dem_share":"bad"}]}"#.as_slice(),
+            ),
+            (
+                "analysis/vra_analysis.json",
+                br#"{"mm_count":-1}"#.as_slice(),
+            ),
+            (
+                "analysis/compactness.json",
+                br#"{"districts":[{"polsby_popper":null}]}"#.as_slice(),
+            ),
+        ] {
+            let mut invalid = files.clone();
+            invalid.insert(name.into(), bytes.to_vec());
+            assert!(matches!(
+                load_plan_side_from_files(&invalid, "fallback", 0.55),
+                Err(AssembleError::AnalysisInvalid { .. })
+            ));
+        }
+        files.insert("analysis/partisan.json".into(), b"invalid JSON".to_vec());
+        assert!(matches!(
+            load_plan_side_from_files(&files, "fallback", 0.55),
+            Err(AssembleError::JsonParse(_, _))
+        ));
+    }
 
     fn fixture_plan_a() -> PlanSide {
         PlanSide {
@@ -709,7 +908,7 @@ mod tests {
             population_changed: 50_000,
             districts_with_changes: vec![1, 2, 3, 7, 9],
         };
-        let sorted: Vec<usize> = {
+        let sorted = {
             let mut v = d.districts_with_changes.clone();
             v.sort();
             v

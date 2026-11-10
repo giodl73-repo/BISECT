@@ -193,15 +193,19 @@ dependencies = [
  "csv",
  "geo 0.28.0",
  "geo-types 0.7.19",
+ "libm",
  "rand",
+ "rand_chacha",
  "rgraph-core",
  "rmath-core",
+ "rstar 0.12.2",
  "rstat-core",
  "serde",
  "serde_json",
  "sha2",
  "tempfile",
  "thiserror 2.0.18",
+ "url",
 ]
 
 [[package]]
@@ -209,6 +213,7 @@ name = "bisect-apportion"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bisect-metis-sidecar",
  "metis",
  "metis-core",
  "rgraph-core",
@@ -317,6 +322,7 @@ dependencies = [
  "csv",
  "geo 0.28.0",
  "geo-types 0.7.19",
+ "libm",
  "rayon",
  "rmath-core",
  "rstar 0.12.2",
@@ -335,6 +341,7 @@ dependencies = [
  "anyhow",
  "bisect-data",
  "csv",
+ "getrandom 0.2.17",
  "metis-core",
  "rand",
  "rayon",
@@ -390,6 +397,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "approx",
+ "bisect-analysis",
  "fontdb",
  "geo 0.28.0",
  "geo-svg",
@@ -403,6 +411,10 @@ dependencies = [
  "tiny-skia",
  "usvg",
 ]
+
+[[package]]
+name = "bisect-metis-sidecar"
+version = "0.1.0"
 
 [[package]]
 name = "bisect-multiscale"
@@ -442,6 +454,7 @@ version = "0.1.0"
 dependencies = [
  "bisect-ensemble",
  "rand",
+ "rand_chacha",
  "rayon",
  "rgraph-core",
  "ropt-core",
@@ -461,6 +474,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64",
+ "bisect-analysis",
  "bisect-core",
  "chrono",
  "csv",
@@ -473,19 +487,24 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "shapefile",
  "tempfile",
  "tera",
  "thiserror 2.0.18",
+ "toml",
 ]
 
 [[package]]
 name = "bisect-runner"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "bisect-apportion",
  "bisect-core",
  "bisect-data",
  "bisect-ensemble",
  "bisect-ilp",
+ "bisect-metis-sidecar",
  "bisect-multiscale",
  "bisect-smc",
  "clap",
@@ -496,8 +515,10 @@ dependencies = [
  "rayon",
  "rgraph-core",
  "rmath-core",
+ "rplan-core",
  "serde",
  "serde_json",
+ "serde_yaml",
  "sha2",
  "tempfile",
 ]
@@ -539,13 +560,23 @@ name = "bisect-wasm"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "bisect-analysis",
  "bisect-apportion",
  "bisect-clustering",
+ "bisect-column",
  "bisect-core",
  "bisect-data",
  "bisect-flow",
+ "bisect-ilp",
+ "bisect-local-search",
+ "bisect-map",
+ "bisect-pareto",
+ "bisect-report",
  "bisect-runner",
+ "bisect-smc",
  "csv",
+ "flate2",
+ "geo-types 0.7.19",
  "getrandom 0.2.17",
  "rcount-audit",
  "rcount-core",
@@ -565,6 +596,7 @@ name = "bisect-web"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bisect-analysis",
  "bisect-cli",
  "bisect-data",
  "bisect-map",
@@ -3564,6 +3596,7 @@ name = "rstat-core"
 version = "0.1.0"
 dependencies = [
  "rand",
+ "rand_chacha",
  "thiserror 2.0.18",
 ]
 

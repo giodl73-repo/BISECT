@@ -1,0 +1,1 @@
+fn main(){let args:Vec<_>=std::env::args().skip(1).collect();if args.len()!=2{eprintln!("Expected RPLAN path and strict true/false.");std::process::exit(2);}match bisect_cli::validate::run_validate(&bisect_cli::args::ValidateArgs{file:args[0].clone().into(),strict:args[1]=="true"}){Ok(())=>{},Err(e)=>{eprintln!("{e}");std::process::exit(1);}}}

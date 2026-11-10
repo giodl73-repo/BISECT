@@ -324,6 +324,27 @@ fn solve_node(
     Ok(())
 }
 
+/// Derive both children using the same induced-graph contract as native trees.
+/// This validates feasibility; it does not certify the supplied assignment.
+pub fn derive_certified_split_children(
+    parent: &CertifiedSplitInstance,
+    assignment: &[u8],
+    parent_certificate_id: &str,
+) -> Result<[CertifiedSplitInstance; 2], CertifiedSplitError> {
+    parent.validate()?;
+    crate::evaluate_certified_split_objective(parent, assignment)?;
+    if !crate::certified_split_children_connected(parent, assignment)? {
+        return Err(CertifiedSplitError::DisconnectedChildren);
+    }
+    if !parent_certificate_id.starts_with("sha256:") || parent_certificate_id.len() != 71 || !parent_certificate_id[7..].bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
+        return Err(CertifiedSplitError::InvalidParentCertificateId);
+    }
+    Ok([
+        derive_child_instance(parent, assignment, 0, parent.k_left, format!("{}0", parent.node_path), parent_certificate_id.into())?,
+        derive_child_instance(parent, assignment, 1, parent.k_right, format!("{}1", parent.node_path), parent_certificate_id.into())?,
+    ])
+}
+
 pub(crate) fn derive_child_instance(
     parent: &CertifiedSplitInstance,
     assignment: &[u8],
@@ -433,6 +454,20 @@ mod tests {
             k_right,
             orientation_rule: canonical_orientation_rule(k_left, k_right),
         }
+    }
+
+    #[test]
+    fn public_child_derivation_refuses_invalid_assignment_connectivity_and_parent_id() {
+        let parent = path_root(4, 8);
+        let parent_id = format!("sha256:{}", "0".repeat(64));
+        assert!(derive_certified_split_children(&parent, &[0, 1], &parent_id).is_err());
+        assert!(matches!(derive_certified_split_children(&parent, &[0, 1, 0, 1, 0, 1, 0, 1], &parent_id), Err(CertifiedSplitError::DisconnectedChildren)));
+        assert!(matches!(derive_certified_split_children(&parent, &[0, 0, 0, 0, 1, 1, 1, 1], "unverified"), Err(CertifiedSplitError::InvalidParentCertificateId)));
+        let children = derive_certified_split_children(&parent, &[0, 0, 0, 0, 1, 1, 1, 1], &parent_id).unwrap();
+        assert_eq!(children[0].unit_ids, parent.unit_ids[..4]);
+        assert_eq!(children[1].unit_ids, parent.unit_ids[4..]);
+        assert_eq!(children[0].node_path, "0");
+        assert_eq!(children[1].node_path, "1");
     }
 
     #[test]

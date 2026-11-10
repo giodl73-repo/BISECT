@@ -1,5 +1,4 @@
 //! `BISECT-apportion` — Huntington-Hill apportionment and prime-factor redistricting.
-//!
 //! Three things in one crate:
 //!
 //! 1. **`huntington_hill`** — allocates congressional seats to states using the
@@ -28,6 +27,10 @@ pub mod paradoxes;
 pub mod prime;
 pub mod spectral;
 pub mod split;
+#[cfg(feature="wasm-c-ffi")]
+pub use metis_sidecar;
+#[cfg(test)]
+mod connected_balance;
 
 pub use compositor::PfrCompositor;
 pub use divisor_methods::{apportionment_divisor, RoundingRule};

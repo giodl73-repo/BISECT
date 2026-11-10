@@ -29,6 +29,16 @@
     "method": {"type": "string", "enum": ["ols", "wls", "rxc"]},
     "minority_group": {"type": "string"},
     "alpha": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "bootstrap": {
+      "type": "object",
+      "required": ["protocol", "seed", "replicates", "confidence_level"],
+      "properties": {
+        "protocol": {"const": "county-cluster-and-naive-chacha12-u64-v1"},
+        "seed": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"},
+        "replicates": {"type": "integer", "minimum": 1},
+        "confidence_level": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1}
+      }
+    },
     "ecology": {
       "type": "object",
       "required": ["n_precincts", "n_clusters"],
@@ -45,6 +55,7 @@
         "required": ["candidate", "regression", "robustness_check", "ecology_caveat", "draft_interpretation"],
         "properties": {
           "candidate": {"type": "string"},
+        "headline_variant": {"type": "string"},
           "regression": {"$ref": "#/$defs/regression"},
           "robustness_check": {"$ref": "#/$defs/robustness_check"},
           "ecology_caveat": {"type": "string"},
@@ -81,9 +92,9 @@
           "minItems": 2,
           "maxItems": 2
         },
-        "standardized_beta": {"type": "number"},
+        "standardized_beta": {"type": ["number", "null"], "description": "Null for the intercept, which has no standardized scale interpretation."},
         "p_value_raw": {"type": "number"},
-        "p_value_holm": {"type": "number"}
+        "p_value_holm": {"type": ["number", "null"], "description": "Joint Holm correction applies to the racial coefficient; other coefficients are null."}
       }
     },
     "regression": {
@@ -91,6 +102,7 @@
       "required": ["model", "specification", "diagnostics", "coefficients", "n_precincts", "n_clusters", "r_squared"],
       "properties": {
         "model": {"const": "WLS"},
+        "p_value_method": {"const": "normal-cdf-approximation-hc3-statistic"},
         "specification": {
           "type": "string",
           "description": "Verbatim: 'WLS weighted by precinct vote count; HC3 robust SE; cluster-bootstrap by county B=<n_samples>'."
@@ -101,7 +113,9 @@
           "properties": {
             "vif_pct_minority_vs_baseline": {"type": "number"},
             "vif_underpowered_flag": {"type": "boolean"},
-            "ci_naive_vs_cluster_diverged": {"type": "boolean"}
+            "ci_naive_vs_cluster_diverged": {"type": "boolean"},
+            "successful_cluster_fits": {"type": "integer", "minimum": 0},
+            "successful_naive_fits": {"type": "integer", "minimum": 0}
           }
         },
         "coefficients": {
@@ -161,11 +175,11 @@
     },
     "provenance": {
       "type": "object",
-      "required": ["BISECT_version", "BISECT_build_commit", "rustc_version"],
+      "required": ["version", "build_commit", "rustc_version"],
       "properties": {
-        "BISECT_version": {"type": "string"},
-        "BISECT_build_commit": {"type": "string"},
-        "BISECT_build_commit_short": {"type": "string"},
+        "version": {"type": "string"},
+        "build_commit": {"type": "string"},
+        "build_commit_short": {"type": "string"},
         "rustc_version": {"type": "string"},
         "args": {"type": "object"}
       }

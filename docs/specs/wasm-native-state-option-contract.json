@@ -1,0 +1,297 @@
+{
+  "schema_version": "bisect-native-state-option-contract-v1",
+  "state_declarations": 79,
+  "reviewed_prior_unclassified_fields": 37,
+  "compiled_selected_source_fields": 24,
+  "explicit_prepared_path_refusals": 13,
+  "compiler_sha256": "efc7c09f3daf10c1a17f0dd97d923762e4528d5c9f25dbb0a56f996bbb076248",
+  "wasm": {
+    "sha256": "c0af875cada71be6089d157bf2c737216427179fec6b9e0b8c6a64a4a12e7585",
+    "byte_length": 25063982
+  },
+  "fields": {
+    "seeds": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-multi"
+      ]
+    },
+    "percentile": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-percentile"
+      ]
+    },
+    "ensemble_steps": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-bisection-ensemble"
+      ]
+    },
+    "burst_length": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-short-burst"
+      ]
+    },
+    "n_bursts": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-short-burst"
+      ]
+    },
+    "flip_steps": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-flip"
+      ]
+    },
+    "forest_steps": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-forest-recom"
+      ]
+    },
+    "merge_split_steps": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-merge-split"
+      ]
+    },
+    "structure": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "structure-standard-bisect",
+        "structure-nway",
+        "structure-ratio-optimal",
+        "structure-ratio-optimal-area",
+        "structure-ratio-optimal-vra",
+        "structure-prime-factor",
+        "structure-compact-polsby",
+        "structure-centroidal-voronoi",
+        "structure-bfs-growth",
+        "structure-moving-knife",
+        "structure-capacity-clustering",
+        "structure-spectral",
+        "structure-regionalization",
+        "structure-flow-construction"
+      ]
+    },
+    "weights_override": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "weights-unweighted",
+        "weights-geographic",
+        "weights-county",
+        "weights-vra-aligned",
+        "weights-proportional",
+        "weights-economic-character",
+        "weights-housing-character",
+        "weights-zone-membership"
+      ]
+    },
+    "search": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-single",
+        "search-multi",
+        "search-convergence",
+        "search-percentile",
+        "search-bisection-ensemble",
+        "search-flip",
+        "search-short-burst",
+        "search-short-burst-forest",
+        "search-short-burst-merge-split",
+        "search-forest-recom",
+        "search-merge-split",
+        "search-parallel-tempering",
+        "search-vra-recom",
+        "search-smc-percentile",
+        "search-multiscale",
+        "search-multiscale-adaptive"
+      ]
+    },
+    "multiscale_steps": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-multiscale"
+      ]
+    },
+    "multiscale_alpha": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-multiscale"
+      ]
+    },
+    "ms_target_accept": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-multiscale-adaptive"
+      ]
+    },
+    "ms_adapt_interval": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-multiscale-adaptive"
+      ]
+    },
+    "multiscale_fine": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-multiscale"
+      ]
+    },
+    "multiscale_coarse": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "search-multiscale"
+      ]
+    },
+    "state": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "state-lowercase"
+      ]
+    },
+    "year": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "year-2010",
+        "year-2000"
+      ]
+    },
+    "resolution": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "resolution-block_group",
+        "resolution-block"
+      ]
+    },
+    "chamber": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "chamber-house"
+      ]
+    },
+    "districts": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "districts-two"
+      ]
+    },
+    "balance_tolerance": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "tolerance-three"
+      ]
+    },
+    "profile": {
+      "classification": "compiled-selected-source-path",
+      "cases": [
+        "profile-court"
+      ]
+    },
+    "version": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-version"
+      ]
+    },
+    "output_dir": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-output_dir"
+      ]
+    },
+    "dpi": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-dpi"
+      ]
+    },
+    "position": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-position"
+      ]
+    },
+    "print_only": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-print_only"
+      ]
+    },
+    "debug": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-debug"
+      ]
+    },
+    "reset": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-reset"
+      ]
+    },
+    "manifest": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-manifest"
+      ]
+    },
+    "force": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-force"
+      ]
+    },
+    "adjacency": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-adjacency"
+      ]
+    },
+    "state_name": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-state_name"
+      ]
+    },
+    "label": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-label"
+      ]
+    },
+    "time_partition": {
+      "classification": "explicit-prepared-path-refusal",
+      "cases": [
+        "refused-time_partition"
+      ]
+    }
+  },
+  "supplemental_host_compilations": 7,
+  "host_wasm_refusals_including_population_metadata": 14,
+  "baseline": {
+    "wasm": {
+      "sha256": "c0af875cada71be6089d157bf2c737216427179fec6b9e0b8c6a64a4a12e7585",
+      "byte_length": 25063982
+    },
+    "compiled": 87,
+    "full_native_host_matches": 148,
+    "executed_with_native_retries_and_exports": 61,
+    "independent_native_state_assignment_matches": 24,
+    "all20_legacy_modes": true,
+    "all14_structure_overrides": true,
+    "all16_searches": true,
+    "all8_weight_overrides": true,
+    "inert_preparation": true,
+    "all3_native_resolutions_executed": true,
+    "unsafe_or_unbound_flags_refused": true,
+    "max_u64_seed": true,
+    "compiled_hash_and_source_guard": true,
+    "published": false
+  },
+  "evidence": "target/native-state-option-contract/evidence.json",
+  "scope": "Selected prepared/native graph behavior only. Refused orchestration flags are incomplete work, not implemented native effects. No claim of every source/method combination or full State orchestration."
+}

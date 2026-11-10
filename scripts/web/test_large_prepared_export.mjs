@@ -1,0 +1,21 @@
+// Re-export a captured original 25,649-block run, without rerunning generation.
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {preparedEnginePlanSources,preparedEngineReplayInputs} from '../../web/lab/prepared-engine-results.js';
+import {engineReplayRequest} from '../../web/lab/engine-replay-files.js';
+const root='target/large-prepared-export';await fs.mkdir(root,{recursive:true});
+const captured=JSON.parse(await fs.readFile('target/prepared-census-real/block-output.json','utf8')).result;
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const request={operation:'export-engine-plan',request:captured.prepared.executed_request,assignments:captured.prepared.result.assignments,...captured.request_source.settings};delete request.inspect_only;
+const actual=engine.execute(request);await fs.writeFile(root+'/request.json',JSON.stringify(request));
+const expected=JSON.parse(execFileSync(path.resolve('target/release/examples/execute_tool_request.exe'),[path.resolve(root+'/request.json')],{encoding:'utf8',maxBuffer:192*1024*1024,stdio:['ignore','pipe','pipe']}));assert.deepEqual(actual,expected);
+assert(Buffer.byteLength(actual.context_json)<=8*1024*1024);assert.deepEqual(actual.context,captured.prepared.export.context);assert.equal(actual.context_hash,captured.prepared.export.context_hash);assert.equal(actual.document_json,captured.prepared.export.document_json);
+assert.deepEqual(JSON.parse(actual.context_json),actual.context);
+const prettyBytes=Buffer.byteLength(JSON.stringify(actual.context,null,2));assert(prettyBytes>8*1024*1024);
+const result={...captured.prepared,export:actual},files=preparedEnginePlanSources(result),replay=engineReplayRequest(await preparedEngineReplayInputs(result));
+assert.equal(Buffer.from(files.auditContextText.base64,'base64').toString(),actual.context_json);assert.equal(replay.input.run_json,result.replay_artifact_json);
+await fs.writeFile(root+'/evidence.json',JSON.stringify({wasm_sha256:engine.artifactIdentity.sha256,original_units:25649,native_export_comparisons:1,context_bytes:Buffer.byteLength(actual.context_json),pretty_context_bytes:prettyBytes,same_context_hash_and_contents:true,same_plan_bytes:true,large_replay_and_practitioner_handoffs:true,no_partition_performed:true},null,2));
+console.log('Large prepared export: original 25,649 blocks; Native-exact compact context, unchanged context hash/contents and plan bytes, replay/practitioner handoffs passed without generation.');

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {parseGeometryJson} from '../../web/lab/project.js';
+import {compactnessGeometryText,readCompactnessGeometry,compactnessRequest} from '../../web/lab/compactness-files.js';
+const source=text=>({name:'geometry.json',base64:Buffer.from(text).toString('base64')});
+const large=JSON.stringify({type:'FeatureCollection',geometry_profile:'source-exact-large',note:'x'.repeat(18*1024*1024),features:[]});
+assert.equal(parseGeometryJson(large).geometry_profile,'source-exact-large');
+assert.equal(compactnessGeometryText(source(large)),large);
+assert.throws(()=>parseGeometryJson(large.replace('source-exact-large','source-exact')),/16 MiB/);
+const nested=JSON.stringify({type:'FeatureCollection',metadata:{geometry_profile:'source-exact-large'},features:[]});
+assert.throws(()=>parseGeometryJson(nested),/explicit root source profile/);
+assert.throws(()=>parseGeometryJson('{"geometry_profile":"source-exact-large","geometry_profile":"source-exact-large","features":[]}'),/duplicate/i);
+let read=false;await assert.rejects(()=>readCompactnessGeometry({name:'too-big.json',size:64*1024*1024+1,arrayBuffer(){read=true;}}),/64 MiB/);assert.equal(read,false);
+const request=compactnessRequest({auditPlanText:source('{}')},{geometry:source(large),coordinate_basis:'nad83-degrees',crs_label:'EPSG:4269'});assert.equal(request.unit_geometry_json,large);
+console.log('Large geometry profile: explicit root opt-in, legacy size bound, duplicate/nested marker rejection, upfront 64 MiB file bound and compactness handoff passed.');

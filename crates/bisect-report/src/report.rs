@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 /// report.rs — 10-section report assembly.
 ///
@@ -8,7 +7,6 @@ use serde_json::Value;
 /// - External analyzer disclaimer required in HTML when external_analyzers present
 use std::path::{Path, PathBuf};
 
-use crate::audit::{generate_verification_command_from_manifest, generate_verification_script};
 use crate::manifest::PlanManifest;
 
 /// Context needed to assemble a report.
@@ -31,18 +29,6 @@ impl ReportContext {
 }
 
 /// Names of required analysis files (relative to plan_dir/analysis/).
-pub const REQUIRED_ANALYSIS_FILES: &[&str] =
-    &["summary.json", "contiguity.json", "compactness.json"];
-
-/// Optional analysis files (not required — report section will note "unavailable").
-pub const OPTIONAL_ANALYSIS_FILES: &[&str] = &[
-    "partisan.json",
-    "splits.json",
-    "vra_analysis.json",
-    "comparison.json",
-    "nesting.json",
-];
-
 /// Check which required analysis files are missing.
 /// Returns list of missing filenames (relative to analysis/).
 pub fn check_required_analysis_files(ctx: &ReportContext) -> Vec<&'static str> {
@@ -79,162 +65,32 @@ fn read_analysis_json(analysis_dir: &Path, name: &str) -> anyhow::Result<Option<
     Ok(Some(value))
 }
 
-/// Fully assembled 10-section redistricting report.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Report {
-    pub report_version: String,
-    pub label: String,
-    pub state: String,
-    pub year: String,
-    pub generated_at: String,
-    pub sections: ReportSections,
-    /// Whether any external analyzers were used (triggers disclaimer in HTML)
-    pub has_external_analyzers: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ReportSections {
-    /// Section 1: Executive summary
-    pub executive_summary: Value,
-    /// Section 2: Population equality
-    pub population_equality: Value,
-    /// Section 3: Geographic constraints (contiguity + splits)
-    pub geographic_constraints: Value,
-    /// Section 4: Partisan fairness
-    pub partisan_fairness: Value,
-    /// Section 5: VRA compliance
-    pub vra_compliance: Value,
-    /// Section 6: Compactness
-    pub compactness: Value,
-    /// Section 7: Comparison vs enacted plan
-    pub comparison: Value,
-    /// Section 8: Nesting compliance
-    pub nesting: Value,
-    /// Section 9: Audit trail
-    pub audit: Value,
-    /// Section 10: Maps
-    pub maps: Value,
-}
+pub use crate::report_assembly::{Report, ReportSections, REQUIRED_ANALYSIS_FILES, OPTIONAL_ANALYSIS_FILES};
 
 /// Assemble a full 10-section report from a plan context.
 ///
 /// Board amendment: returns Err if required analysis files are missing.
 /// (Does NOT panic, does NOT produce a partial report.)
 pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
-    // R3 amendment: check for required files first
     let missing = check_required_analysis_files(ctx);
     if !missing.is_empty() {
-        anyhow::bail!(
-            "Cannot assemble report: required analysis files missing: {}. \
-             Run 'bisect analyze' first.",
-            missing.join(", ")
-        );
+        anyhow::bail!("Cannot assemble report: required analysis files missing: {}. Run 'bisect analyze' first.", missing.join(", "));
     }
-
     let analysis_dir = ctx.plan_dir.join("analysis");
-    let m = &ctx.manifest;
-
-    // Section 1: Executive summary
-    let exec_summary = serde_json::json!({
-        "label": m.label,
-        "state": m.state_code,
-        "year": m.year,
-        "chamber": m.chamber,
-        "num_districts": m.num_districts,
-        "binary_version": m.binary_version,
-        "created_at": m.created_at,
-        "population_balance_valid": m.population_balance_valid,
-        "balance_tolerance_pct": m.balance_tolerance_pct,
-    });
-
-    // Section 2: Population equality (written by SummaryAnalyzer as summary.json)
-    let population_json = read_analysis_json(&analysis_dir, "summary.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-
-    // Section 3: Geographic constraints
-    let contiguity_json = read_analysis_json(&analysis_dir, "contiguity.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-    let splits_json = read_analysis_json(&analysis_dir, "splits.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-    let geographic = serde_json::json!({
-        "contiguity": contiguity_json,
-        "splits": splits_json,
-    });
-
-    // Section 4: Partisan fairness (optional)
-    let partisan = read_analysis_json(&analysis_dir, "partisan.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-
-    // Section 5: VRA compliance (optional)
-    let vra = read_analysis_json(&analysis_dir, "vra_analysis.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-
-    // Section 6: Compactness
-    let compactness = read_analysis_json(&analysis_dir, "compactness.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-
-    // Section 7: Comparison (optional)
-    let comparison = read_analysis_json(&analysis_dir, "comparison.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-
-    // Section 8: Nesting (optional)
-    let nesting = read_analysis_json(&analysis_dir, "nesting.json")?
-        .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
-
-    // Section 9: Audit trail
-    let audit = build_audit_section(ctx, m)?;
-
-    // Section 10: Maps (embed base64 PNG if available)
-    let maps = build_maps_section(ctx);
-
-    Ok(Report {
-        report_version: "1.0".into(),
-        label: m.label.clone(),
-        state: m.state_code.clone(),
-        year: m.year.clone(),
-        generated_at: crate::paths::now_iso8601(),
-        has_external_analyzers: false,
-        sections: ReportSections {
-            executive_summary: exec_summary,
-            population_equality: population_json,
-            geographic_constraints: geographic,
-            partisan_fairness: partisan,
-            vra_compliance: vra,
-            compactness,
-            comparison,
-            nesting,
-            audit,
-            maps,
-        },
-    })
+    let mut analysis = std::collections::BTreeMap::new();
+    for name in ["summary.json", "contiguity.json", "splits.json", "partisan.json", "vra_analysis.json", "compactness.json", "comparison.json", "nesting.json"] {
+        if let Some(value) = read_analysis_json(&analysis_dir, name)? {
+            analysis.insert(name.to_owned(), value);
+        }
+    }
+    crate::report_assembly::assemble_report_from_values(
+        &ctx.manifest, &analysis, build_audit_section(ctx, &ctx.manifest)?,
+        build_maps_section(ctx), crate::paths::now_iso8601(),
+    )
 }
 
 fn build_audit_section(ctx: &ReportContext, m: &PlanManifest) -> anyhow::Result<Value> {
-    let verification_command = generate_verification_command_from_manifest(m);
-    let verification_script = generate_verification_script(m);
-    Ok(serde_json::json!({
-        "verification_command": verification_command,
-        "verification_script": verification_script,
-        "binary_version": m.binary_version,
-        "binary_download_url": m.binary_download_url,
-        "binary_sha256": m.binary_sha256,
-        "adjacency_file": m.adjacency_file,
-        "adjacency_sha256": if m.adjacency_sha256.is_empty() { "(not computed — run: sha256sum adjacency_file)".to_string() } else { m.adjacency_sha256.clone() },
-        "tiger_source_url": m.tiger_source_url,
-        "tiger_sha256": m.tiger_sha256.clone().unwrap_or_else(|| format!("(not recorded — download from {} and compute manually)", m.tiger_source_url)),
-        "created_at": m.created_at,
-        "seed": m.seed,
-        "rplan_path": m.rplan_path,
-        "rctx_path": m.rctx_path,
-        "audit_certificate_path": m.audit_certificate_path,
-        "audit_certificate_sha256": m.audit_certificate_sha256,
-        "audit_certificate_content_hash": m.audit_certificate_content_hash,
-        "audit_result": m.audit_result,
-        "legal_profile_id": m.legal_profile_id,
-        "context_hash": m.context_hash,
-        "rplan_source_hashes": read_rplan_source_hashes(ctx, m)?,
-        "algorithm_lineage": read_rplan_algorithm_lineage(ctx, m)?,
-    }))
+    crate::report_assembly::build_audit_from_values(m, read_rplan_source_hashes(ctx, m)?, read_rplan_algorithm_lineage(ctx, m)?)
 }
 
 fn read_rplan_algorithm_lineage(ctx: &ReportContext, m: &PlanManifest) -> anyhow::Result<Value> {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {spawnSync} from 'node:child_process';
+import {spawnSync,execFileSync} from 'node:child_process';
 import {instantiateEngine} from '../../web/lab/wasm-engine.js';
 import {parseSeed,isSeed} from '../../web/lab/static.js';
 import {validateLabConfig,verifyLabAssignments,createLabProject} from '../../web/lab/laboratory-project.js';
@@ -27,13 +27,18 @@ for(const profile of profiles)for(const seed of seeds){
  verifyLabAssignments(graph,{metrics:{...actual.metrics,district_count:options.districts,districts:actual.metrics.district_metrics,balance_passed:actual.metrics.within_requested_tolerance}},actual.assignments,options);
 }
 let invalid=0;
-for(const seed of ['', '00','01','-1','-0','+1',' 1','1 ','1e3','1.0','18446744073709551616','999999999999999999999',true,null,{},-1,1.5,9007199254740992,-0]){
+for(const seed of ['', '00','01','-1','-0','+1',' 1','1 ','1e3','1.0','18446744073709551616','999999999999999999999',true,{},-1,1.5,9007199254740992,-0]){
  assert.throws(()=>engine.execute({graph,options:{...base,seed}}));assert.equal(isSeed(seed),false);assert.throws(()=>validateLabConfig({...config,seed}));invalid++;
 }
 assert.equal(parseSeed('0'),0);assert.equal(parseSeed('42'),42);assert.equal(parseSeed('18446744073709551615'),'18446744073709551615');
-for(const seed of ['00','-1','18446744073709551616',true,null]){
+for(const seed of ['00','-1','18446744073709551616',true]){
  await fs.writeFile(file,JSON.stringify({graph,options:{...base,seed}}));assert.notEqual(spawnSync('target/release/examples/execute_request.exe',[file],{stdio:'pipe'}).status,0);
 }
+// None is a native optional seed, distinct from an invalid integer spelling.
+assert.equal(isSeed(null),false);
+validateLabConfig({...config,seed:null});
+await fs.writeFile(file,JSON.stringify({graph,options:{...base,seed:null}}));
+assert.deepEqual(engine.execute({graph,options:{...base,seed:null}}),JSON.parse(execFileSync('target/release/examples/execute_request.exe',[file],{encoding:'utf8',maxBuffer:32*1024*1024})));
 // Small seed strings are accepted by the transport, normalized to legacy numeric output.
 assert.deepEqual(engine.execute({graph,options:{...base,seed:'42'}}),engine.execute({graph,options:base}));
 if(process.argv[2]){

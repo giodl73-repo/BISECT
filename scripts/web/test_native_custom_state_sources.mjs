@@ -1,0 +1,42 @@
+import {createNativeCommandComparator} from './native_command_comparison.mjs';
+let strictComparator;
+function compareNative(request,actual,expected){strictComparator??=createNativeCommandComparator(root,'target/wasm32-unknown-unknown/release/bisect_wasm.wasm');strictComparator.compare(request,actual,expected);}
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {writeFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {nativeSelectedStateSourceRequest,executeNativeSelectedStateSource,nativeCommandOutputChoices} from '../../web/lab/native-selected-state-source.js';
+import {createNativeStateSourceJob,nativeStateSourceDefaultCommand} from '../../web/lab/native-state-sources.js';
+import {validateNativeStateJob} from '../../web/lab/native-state-job.js';
+import {preparedStateRunZip,preparedStateRunMap} from '../../web/lab/prepared-state-job.js';
+import {stateSourceWorkbench} from '../../web/lab/local-state-output.js';
+import {parseWorkbenchArchive,createWorkbenchArchive} from '../../web/lab/workbench-archive.js';
+import {createProject} from '../../web/lab/project.js';
+import {appendStateRunJob,STATE_RUN_BATCH_DEFAULTS} from '../../web/lab/state-run-batch.js';
+const root='target/native-custom-state-sources';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const fixtures=JSON.parse(await fs.readFile('target/native-adjacency-state/outputs.json','utf8')).slice(0,3),outputs=[];
+let hosts=0,partitions=0;const facade={execute(r,o){if(r.operation==='run-prepared-engine'&&!r.input.inspect_only)partitions++;const result=engine.execute(r,o);writeFileSync(root+'/request.json',JSON.stringify(r));const native=JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[root+'/request.json'],{encoding:'utf8',windowsHide:true,maxBuffer:48*1024*1024}));compareNative(r,result,native);hosts++;return result;}};
+for(const fixture of fixtures){
+ const {source,arguments:args,...meta}=fixture.request.input,{sources,...settings}=source,name=meta.label;
+ const files={nativeAdjacencyInputs:sources,nativeAdjacencySettings:settings,nativeStateSourceSettings:{enabled:true},nativeSelectedStateSourceSettings:{kind:'native'},stateCommandInputs:{arguments_json:JSON.stringify(args)},stateGraphInputs:{graph:null,auxiliary:null,settings:{...meta,inspect_only:true}}};
+ const geoids=['ward-A','ward-B','ward-C','ward-D'],geometry={type:'FeatureCollection',state:source.state,year:source.year,features:geoids.map((id,i)=>{const x=-71+i*.01;return {type:'Feature',properties:{GEOID:id},geometry:{type:'Polygon',coordinates:[[[x,41],[x+.009,41],[x+.009,41.009],[x,41.009],[x,41]]]}};})};files.planGeometry={name:'custom-polygons.geojson',base64:Buffer.from(JSON.stringify(geometry)).toString('base64')};
+ const snapshot=JSON.stringify(files),request=await nativeSelectedStateSourceRequest(files);assert.equal(JSON.stringify(files),snapshot);assert.equal(partitions,outputs.length);assert.equal(request.input.native_state.source_scope_policy,'match-native-adjacency-flags');assert.equal(request.input.scope.districts,null);
+ const result=await executeNativeSelectedStateSource(facade,request.input);assert.deepEqual(result.prepared,fixture.accepted);assert.equal(result.scope.state,source.state);assert.equal(result.scope.year,source.year);assert.deepEqual(result.native_state.compilation.native_command.arguments,args);assert.equal(result.source_preparation.graph_json,undefined);assert.equal(result.single_source_selection.unit_kind,source.unit_kind);assert.equal(result.single_source_selection.scope_changed,false);assert.equal(nativeCommandOutputChoices(result).layout,'labeled');
+ await assert.rejects(()=>createNativeStateSourceJob(files,'native'),/single State Run/);
+ assert.throws(()=>appendStateRunJob(STATE_RUN_BATCH_DEFAULTS,request.input),/single State Run/);
+ assert.equal(preparedStateRunMap(result).features.length,4);
+ const completedArchive=parseWorkbenchArchive(createWorkbenchArchive({name,files,operation:'run-native-selected-state-source',result,lastOperation:'run-native-selected-state-source'}));assert.deepEqual(completedArchive.result,result);
+ const defaultArgs=JSON.parse(nativeStateSourceDefaultCommand(files,'native').arguments_json);assert.equal(defaultArgs[defaultArgs.indexOf('--adjacency')+1],sources.adjacency.name);
+ const changed=structuredClone(request.input);changed.native_state.source_inputs.preparation.input.sources.adjacency.base64='AAAA';await assert.rejects(()=>executeNativeSelectedStateSource(facade,changed),/changed/);
+ const acquired=structuredClone(request.input);acquired.acquisition={};assert.throws(()=>validateNativeStateJob(acquired),/one selected source/);
+ await fs.writeFile(root+'/'+name+'.zip',preparedStateRunZip(result));
+ const archive=await stateSourceWorkbench(request.input,{version:'v1',layout:'labeled'});await fs.writeFile(root+'/'+name+'.source.bisect-workbench',archive);
+ const restored=parseWorkbenchArchive(new TextDecoder().decode(archive));assert.equal(restored.operation,'run-native-selected-state-source');assert.equal(restored.result,null);assert.deepEqual(restored.files.nativeAdjacencySettings,settings);assert.deepEqual(restored.files.stateCommandInputs,files.stateCommandInputs);
+ await fs.writeFile(root+'/'+name+'.browser.bisect',JSON.stringify(createProject({name,files,operation:'run-native-selected-state-source',constraints:[],result:null,lastOperation:null})));
+ outputs.push({name,request,result});
+}
+assert.equal(partitions,3);assert.equal(hosts,9);
+await fs.writeFile(root+'/outputs.json',JSON.stringify(outputs));await fs.writeFile(root+'/evidence.json',JSON.stringify({wasm:engine.artifactIdentity,whole_native_host_replies:hosts,explicit_runs:partitions,custom_cases:outputs.map(o=>o.name),source_archive_inert:true,queue_refused:true,unchanged_flags:true,published:false},null,2));
+console.log('PASS custom State sources: 9 whole native replies, 3 explicit native-equal runs, unchanged flags/custom scope, source archive restoration, queue refusal and modified-source refusal.');

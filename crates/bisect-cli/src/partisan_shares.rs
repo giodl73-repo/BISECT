@@ -20,57 +20,7 @@ pub fn load_partisan_shares_map(tsv_path: &Path) -> Result<HashMap<String, f64>,
     let content = std::fs::read_to_string(tsv_path)
         .map_err(|e| format!("cannot read {}: {e}", tsv_path.display()))?;
 
-    let mut result = HashMap::new();
-    let mut data_started = false;
-    for (line_num, line) in content.lines().enumerate() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') {
-            continue;
-        }
-
-        let parts: Vec<&str> = line.split('\t').collect();
-        if parts.len() < 2 {
-            return Err(format!(
-                "{}:{}: expected 2 tab-separated columns, got {}",
-                tsv_path.display(),
-                line_num + 1,
-                parts.len()
-            ));
-        }
-
-        // Skip header row (first data line that doesn't parse as a float in column 2)
-        if !data_started {
-            if parts[1].trim().parse::<f64>().is_err() {
-                data_started = true;
-                continue;
-            }
-            data_started = true;
-        }
-
-        let geoid = format!("{:0>11}", parts[0].trim());
-        let share: f64 = parts[1].trim().parse().map_err(|e| {
-            format!(
-                "{}:{}: cannot parse dem_share '{}': {e}",
-                tsv_path.display(),
-                line_num + 1,
-                parts[1]
-            )
-        })?;
-
-        if !(0.0..=1.0).contains(&share) {
-            return Err(format!(
-                "{}:{}: dem_share {} for {} not in [0.0, 1.0]",
-                tsv_path.display(),
-                line_num + 1,
-                share,
-                geoid
-            ));
-        }
-
-        result.insert(geoid, share);
-    }
-
-    Ok(result)
+    Ok(bisect_runner::partisan_shares::parse_native(&content,&tsv_path.display().to_string())?.into_iter().collect())
 }
 
 /// Align per-GEOID partisan shares to adjacency vertex index order.

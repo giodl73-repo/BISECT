@@ -1,0 +1,40 @@
+import {openWorkbenchProject} from './workbench_project_open.mjs';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createServer} from 'node:http';
+import {createRequire} from 'node:module';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {createProject} from '../../web/lab/project.js';
+import {createStateWorkflowBinding,stateWorkflowSettingsPatch} from '../../web/lab/native-state-workflow.js';
+import {stateCommandRequest} from '../../web/lab/state-command-files.js';
+import {CENSUS_ARCHIVE_ENDPOINTS as endpoints} from '../../web/lab/census-endpoints.js';
+const {chromium}=createRequire(path.join(process.env.BISECT_PLAYWRIGHT_PACKAGES,'package.json'))('playwright');
+const root=path.resolve('target/state-source-preflight-browser'),staticRoot=path.resolve('web/lab'),wasm=path.resolve('target/wasm32-unknown-unknown/release/bisect_wasm.wasm');await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile(wasm)),base=['--state','RI','--metis-engine','metis-core','--seed','18446744073709551615'];
+const settings={label:'Before',chamber:'congressional',created_at:'2026-10-20T00:00:00Z',inspect_only:true},files={nativeStateSourceSettings:{enabled:true},stateCommandInputs:{arguments_json:JSON.stringify([...base,'--print-only'])},stateGraphInputs:{graph:null,auxiliary:null,settings}};
+const project=files=>createProject({name:'Source preflight',files,operation:'plan-fetch-sources',constraints:[],result:null,lastOperation:null});
+await fs.writeFile(root+'/refused.bisect',JSON.stringify(project(files)));
+const original={arguments_json:JSON.stringify([...base,'--version','vQueue','--label','Queue_Label','--manifest','--dpi','72'])},binding=await createStateWorkflowBinding(original,engine.execute(stateCommandRequest(original))),bound={...files,...stateWorkflowSettingsPatch(binding,files)};
+await fs.writeFile(root+'/bound.bisect',JSON.stringify(project(bound)));
+const tiger=await fs.readFile('target/state-source-acquisition/synthetic-states/RI-tiger.zip'),pl94=await fs.readFile('target/state-source-acquisition/synthetic-states/RI-pl94.zip');
+const server=createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost'),file=url.pathname==='/bisect_wasm.wasm'?wasm:path.resolve(staticRoot,'.'+decodeURIComponent(url.pathname==='/'?'/workbench.html':url.pathname));if(file!==wasm&&!file.startsWith(staticRoot+path.sep))throw Error('Path rejected');res.setHeader('Content-Type',file.endsWith('.js')?'application/javascript':file.endsWith('.wasm')?'application/wasm':file.endsWith('.css')?'text/css':'text/html');res.end(await fs.readFile(file));}catch{res.writeHead(404);res.end();}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const origin='http://127.0.0.1:'+server.address().port;let context;const providerRequests=[];
+try{
+ context=await chromium.launchPersistentContext(path.join(root,'profile-'+Date.now()),{headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--no-first-run','--disable-background-networking','--disable-extensions']});
+ await context.route('**/*',async route=>{const url=route.request().url();if(new URL(url).origin===origin)return route.continue();if([endpoints['RI:2020:tiger'],endpoints['RI:2020:pl94171']].includes(url)){providerRequests.push(url);return route.fulfill({headers:{'Content-Type':'application/zip','Access-Control-Allow-Origin':'*'},body:url===endpoints['RI:2020:tiger']?tiger:pl94});}return route.abort();});
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{window.requests=[];window.inspectionWorkersTerminated=0;const Original=Worker;window.Worker=class extends Original{constructor(url,options){super(url,options);this.inspection=new URL(url,location.href).pathname.endsWith('/wasm-worker.js')&&!new URL(url,location.href).search;}postMessage(message,...rest){if(message?.type==='run')requests.push(message.request.operation);return super.postMessage(message,...rest);}terminate(){if(this.inspection)inspectionWorkersTerminated++;return super.terminate();}};});
+ await page.goto(origin);
+ const open=async name=>{await openWorkbenchProject(page,path.join(root,name),{ready:({argument:__bisectOpenArgument4279,openedStatus:__bisectOpenedStatus4279})=>(name=>__bisectOpenedStatus4279==='Opened '+name)(__bisectOpenArgument4279),readyArg:name});};
+ const save=async name=>{const pending=page.waitForEvent('download');await page.locator('#save-project').click();await(await pending).saveAs(path.join(root,name));return JSON.parse(await fs.readFile(path.join(root,name),'utf8'));};
+ const plan=async()=>{await page.locator('#execute').click();await page.waitForFunction(()=>!document.querySelector('#fetch-acquire-state-queue').disabled);};
+ await open('refused.bisect');assert.equal(await page.evaluate(()=>requests.length),0);assert.equal(providerRequests.length,0);await plan();
+ for(const button of ['fetch-acquire-state-queue','fetch-acquire-state-batch']){const before=await page.evaluate(()=>requests.length);await page.locator('#'+button).click();await page.waitForFunction(()=>!document.querySelector('#execute').disabled);assert((await page.locator('#result-status').textContent()).includes('before source acquisition'));assert.equal(providerRequests.length,0);assert.equal(await page.evaluate(()=>requests.length),before+1);}
+ const refused=await save('refused-after.bisect');assert.equal(refused.files.stateRunBatchInputs?.jobs??null,null);
+ await open('bound.bisect');await plan();const before=await page.evaluate(()=>requests.length);await page.locator('#fetch-acquire-state-queue').click();await page.waitForFunction(()=>!document.querySelector('#execute').disabled);assert((await page.locator('#result-status').textContent()).includes('sources acquired and queued'));assert.equal(providerRequests.length,2);assert.equal(await page.evaluate(()=>requests.length),before+2);
+ const queued=await save('queued.bisect'),jobs=JSON.parse(Buffer.from(queued.files.stateRunBatchInputs.jobs.base64,'base64'));assert.equal(jobs.length,1);assert.deepEqual(jobs[0].native_state.workflow_binding,binding);assert.equal(jobs[0].native_state.source_inputs.settings.label,'Queue_Label');assert.equal(jobs[0].acquisition.archives[0].source.base64,tiger.toString('base64'));assert.equal(jobs[0].acquisition.archives[1].source.base64,pl94.toString('base64'));
+ const after=await page.evaluate(()=>requests.length);await open('queued.bisect');assert.equal(await page.evaluate(()=>requests.length),after);assert.equal(providerRequests.length,2);assert(!(await page.evaluate(()=>requests)).some(op=>op.startsWith('run-')));assert.equal(await page.evaluate(()=>inspectionWorkersTerminated),3);
+ await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);
+ await fs.writeFile(root+'/evidence.json',JSON.stringify({single_and_bulk_ui_refuse_before_fetch:true,valid_bound_ui_queues_exact_sources:true,original_flags_binding_and_max_u64_retained:true,inert_open:true,real_inspection_workers_terminated:3,partition_runs:0,mobile_width:390,page_errors:errors,published:false},null,2));console.log('PASS source preflight browser: single/bulk UI blocks unsupported flags before network; native-inspected bound queue retains exact original ZIPs, original command and seed; three workers released; inert Open, no partition.');
+}finally{await context?.close();await new Promise(resolve=>server.close(resolve));}

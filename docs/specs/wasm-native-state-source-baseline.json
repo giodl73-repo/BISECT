@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "scope": "Reviewed native source bodies before portable State extraction; module paths only are canonicalized. Source identity is not runtime proof.",
+  "items": [
+    {
+      "marker": "pub enum RunProfile",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "6ac2dcdfc6f114bb1f53fd0c686c35dad37921432367ce81ba8c754db7353f5a"
+    },
+    {
+      "marker": "pub fn validate_court_profile",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "e38f222c703786e5168394b2a0eb41efec910f295ac4e08d7d3866b8f504b3b7"
+    },
+    {
+      "marker": "pub enum Resolution",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "4fbe0eced1206134ead02634849944fb55a26f119396b567032ad322327ed3db"
+    },
+    {
+      "marker": "impl std::fmt::Display for Resolution",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "95c1ac14bf5672fd381d6b9f7161959fb7b69d279c67bf51c47eabdcadf9956e"
+    },
+    {
+      "marker": "pub enum MetisObjective",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "2b51020d3d560a61c675e33e6d3eb2c93dff9a1669cdb092da00c580d62b2ab5"
+    },
+    {
+      "marker": "pub enum WeightMode",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "cee473944c4f122443bc7567e5e71fa52a8bbb2ebdf5a7cb2ef91dd577b18621"
+    },
+    {
+      "marker": "pub enum MetisEngineArg",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "2790480223d8868f141abeca3a72ca8d85766566a47cba4508e6a42fac601754"
+    },
+    {
+      "marker": "impl From<MetisEngineArg>",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "a4c14302e4f46b80c5ffbf585862493d7b7c96ecf5b0f1d6bacb850ab294a3c0"
+    },
+    {
+      "marker": "pub struct StateArgs",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/args.rs",
+      "current_source": "crates/bisect-runner/src/state_args.rs",
+      "sha256": "669090ac21340164c83745cb0e6c9f5e8667d5924611535d6fd2ae5b5c445260"
+    },
+    {
+      "marker": "pub enum SeedCompositor",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "622d48dbf31b2d155150619a66dd7f91002d113ac0b670d956579a5458736c43"
+    },
+    {
+      "marker": "impl SeedCompositor",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "606fa0f40f54e22f72bcc287b56272b9dcb5f63525100f7ac1f88236509ab652"
+    },
+    {
+      "marker": "impl Default for SeedCompositor",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "f80ccca3f4acb800501798f2be84cce11804904a11372f2a6027af3ab601ccfd"
+    },
+    {
+      "marker": "pub enum SplitStrategy",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "1d3c51d4ddc473d3002b1492a08d4a952e802e14307dede22132bcae9988e88b"
+    },
+    {
+      "marker": "impl SplitStrategy",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "6f1f7e940d4e1af6226679f2fbddb9f3176de50ff565deab723a16cfedefe74b"
+    },
+    {
+      "marker": "pub struct WeightSpec",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "2f0a60f8fea1ccd82f3e3e3a2b7466b5204dcb5c223f97afac162d4f0802f827"
+    },
+    {
+      "marker": "impl Default for WeightSpec",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "cae5ae52448f58acda1c583bcabaca1e9b98fe9448cc9adc458d9ac02b149732"
+    },
+    {
+      "marker": "pub struct MetisParams",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "dd009aa4c004be0aa13228b6f29f53566de44f5fee67d32d7e795b78fe26fad0"
+    },
+    {
+      "marker": "impl Default for MetisParams",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "3874b2619eae78371a160506b992301cc15ea889d90d09e21be549d87bd9075a"
+    },
+    {
+      "marker": "pub struct AlgorithmConfig",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "3227941ab4457ea19166e217116e3f9d4fed842f2822f2d91a63545ad942a9b5"
+    },
+    {
+      "marker": "impl AlgorithmConfig",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "a0d869b4d18daf654d81859567daf21c6cfc69a3847ada0299f66acb38a80fe0"
+    },
+    {
+      "marker": "impl Default for AlgorithmConfig",
+      "derive": false,
+      "original_source": "crates/bisect-cli/src/runner/mod.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "ef170310be4678b556695dc168f0f54c69e122020e1300f6d5400f06494b1c66"
+    },
+    {
+      "marker": "pub enum VertexConstraintKind",
+      "derive": true,
+      "original_source": "crates/bisect-cli/src/vertex_weights.rs",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "sha256": "4246ea68b52517e3ec913c37c27fd28a4345ba8714fd04450e9c212238fdad40"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "cli_sha256": "e4585b4055d6ec9ac0af56f5a132741a078afe2a976c65bd5e6913bff5411cd2",
+  "context_sha256": "222343603c7c81219e8d25cfbb5bfc3a9b3e98cfece2afd9aab60b230d425c7b",
+  "cases": [
+    {
+      "districts": 2,
+      "refinement": "metis",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 2,
+      "refinement": "population",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 2,
+      "refinement": "nrs-v0-1",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 2,
+      "refinement": "nrs-v0-2",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 2,
+      "refinement": "nrs-v0-3",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 2,
+      "refinement": "fast",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 2,
+      "refinement": "full",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 3,
+      "refinement": "metis",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 3,
+      "refinement": "population",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 3,
+      "refinement": "nrs-v0-1",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 3,
+      "refinement": "nrs-v0-2",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 3,
+      "refinement": "nrs-v0-3",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 3,
+      "refinement": "fast",
+      "exit_code": 0,
+      "error": null
+    },
+    {
+      "districts": 3,
+      "refinement": "full",
+      "exit_code": 0,
+      "error": null
+    }
+  ],
+  "file_sha256": {
+    "2-fast/certified-discovery.json": "88b3f4db195e3e233a046c8553f8c535307210659105605b0d89479c88ecc798",
+    "2-fast/certified-split-instance.json": "3f755ad352ec83d4ff314e4fb6ba782eb083bf64e21c878388fe3d9983c8c392",
+    "2-full/certified-discovery.json": "592f62036b0870ea2ba76413e146d7a8c986677363cd28cbb00f33736292a118",
+    "2-full/certified-split-instance.json": "3f755ad352ec83d4ff314e4fb6ba782eb083bf64e21c878388fe3d9983c8c392",
+    "2-metis/certified-discovery.json": "b4e1c8fa8ba8686ec1c89198e53953b0cde8f54ef9f8dec290f4eab437451f90",
+    "2-metis/certified-split-instance.json": "3f755ad352ec83d4ff314e4fb6ba782eb083bf64e21c878388fe3d9983c8c392",
+    "2-nrs-v0-1/certified-discovery.json": "9612cd67a8223384f58375bcf9467d1b3ff55e4a49fd5f41fbe462e4763b31bb",
+    "2-nrs-v0-1/certified-split-instance.json": "3f755ad352ec83d4ff314e4fb6ba782eb083bf64e21c878388fe3d9983c8c392",
+    "2-nrs-v0-2/certified-discovery.json": "186766fe47ca4ff173867c68aee411cb5b9c4b15cb59a0016f68275cf9476a8e",
+    "2-nrs-v0-2/certified-split-instance.json": "3f755ad352ec83d4ff314e4fb6ba782eb083bf64e21c878388fe3d9983c8c392",
+    "2-nrs-v0-3/certified-discovery.json": "766a280547baa207a38e4ed1d193a84fcc2c8d87a6b2dea7e82726e15ba9ffa5",
+    "2-nrs-v0-3/certified-split-instance.json": "3f755ad352ec83d4ff314e4fb6ba782eb083bf64e21c878388fe3d9983c8c392",
+    "2-population/certified-discovery.json": "a0ecc5f5b30c1825bb3a6cc96a873477178657dfda88c0f6531f3624b62e1006",
+    "2-population/certified-split-instance.json": "3f755ad352ec83d4ff314e4fb6ba782eb083bf64e21c878388fe3d9983c8c392",
+    "3-fast/certified-discovery.json": "9ec5ee478a233daf8c212160c1ba8645e802285f597de7860ce77800fdfe0b3e",
+    "3-fast/certified-split-instance.json": "5cac84a85ba84e77a7ef4a1fa7a2f178a392cc3aa86ef31380e0c6db179564f8",
+    "3-full/certified-discovery.json": "ae6647ba57c2a773e5aa20fc71373ae217714763844e27bf3ccde8c208bdf5b7",
+    "3-full/certified-split-instance.json": "5cac84a85ba84e77a7ef4a1fa7a2f178a392cc3aa86ef31380e0c6db179564f8",
+    "3-metis/certified-discovery.json": "7ea0fad64574eb1e47fd1c18c96ebbda9741afdcc1c236051ad14382dbd6845f",
+    "3-metis/certified-split-instance.json": "5cac84a85ba84e77a7ef4a1fa7a2f178a392cc3aa86ef31380e0c6db179564f8",
+    "3-nrs-v0-1/certified-discovery.json": "4316e57d07164e8ed7a0b448cacbe64f12d3c33e3ea6da4fd6c02c7bac53fcb7",
+    "3-nrs-v0-1/certified-split-instance.json": "5cac84a85ba84e77a7ef4a1fa7a2f178a392cc3aa86ef31380e0c6db179564f8",
+    "3-nrs-v0-2/certified-discovery.json": "465cca0ccacc752078324b52570e00ff3f5c2972385efb299c64a26b35c7092b",
+    "3-nrs-v0-2/certified-split-instance.json": "5cac84a85ba84e77a7ef4a1fa7a2f178a392cc3aa86ef31380e0c6db179564f8",
+    "3-nrs-v0-3/certified-discovery.json": "653c12db1034a51ccf514ede84f561bf11fb40bd7fc74bc38dd8dd538e8ff531",
+    "3-nrs-v0-3/certified-split-instance.json": "5cac84a85ba84e77a7ef4a1fa7a2f178a392cc3aa86ef31380e0c6db179564f8",
+    "3-population/certified-discovery.json": "bb1b04bbdd618733baa5a440b4fea9976bca0d69383fce079b15aec4e06a3983",
+    "3-population/certified-split-instance.json": "5cac84a85ba84e77a7ef4a1fa7a2f178a392cc3aa86ef31380e0c6db179564f8"
+  }
+}

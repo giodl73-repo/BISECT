@@ -158,6 +158,13 @@ fn validate_finite(operation: &'static str, value: f64) -> Result<(), PoliticalE
     Ok(())
 }
 
+/// Shared file-independent reader used by native and browser analyzers.
+pub fn analyze_political_csv<R:std::io::Read>(reader:R,assignments:&HashMap<String,usize>,num_districts:usize)->anyhow::Result<PoliticalResult>{
+ let mut rdr=csv::Reader::from_reader(reader);
+ let rows:Vec<PoliticalRow>=rdr.deserialize().collect::<Result<Vec<_>,_>>().context("failed to parse political CSV rows")?;
+ Ok(try_aggregate_political(&rows,assignments,num_districts)?)
+}
+
 pub struct PoliticalAnalyzer;
 
 impl Analyzer for PoliticalAnalyzer {
@@ -187,19 +194,8 @@ impl Analyzer for PoliticalAnalyzer {
             });
         }
 
-        let mut rdr = csv::Reader::from_path(&csv_path)
-            .with_context(|| format!("cannot open political CSV: {}", csv_path.display()))?;
-
-        let rows: Vec<PoliticalRow> = rdr
-            .deserialize()
-            .collect::<Result<Vec<_>, _>>()
-            .context("failed to parse political CSV rows")?;
-
-        Ok(try_aggregate_political(
-            &rows,
-            ctx.assignments,
-            ctx.num_districts,
-        )?)
+        let file=std::fs::File::open(&csv_path).with_context(||format!("cannot open political CSV: {}",csv_path.display()))?;
+        analyze_political_csv(file,ctx.assignments,ctx.num_districts)
     }
 }
 

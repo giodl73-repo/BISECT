@@ -1,0 +1,53 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+const root='target/label-package-merge-wasm';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const sha=t=>createHash('sha256').update(t).digest('hex');
+const analysis=JSON.parse(await fs.readFile('target/label-stage-wasm/analysis.json','utf8')),report=JSON.parse(await fs.readFile('target/label-stage-wasm/report.json','utf8'));
+const a=JSON.parse(await fs.readFile('target/label-reconcile-wasm/native-request-0.json','utf8')),r=JSON.parse(await fs.readFile('target/label-reconcile-wasm/native-request-1.json','utf8'));
+const expected=files=>Object.fromEntries(Object.keys(files).filter(p=>p!=='.bisect').map(p=>[p,null]));
+const longPath='other/'+'a'.repeat(190)+'/'+'b'.repeat(190)+'.json';
+const current={'.bisect':a.input.current_registry_json,[`runs/${analysis.label}/${analysis.year}/index.json`]:a.input.upstream_index_json,[JSON.parse(a.input.upstream_index_json).config_path]:'fixture configuration bytes','config/unrelated.yaml':'concurrent config bytes','reports/other/2000/state/report.json':'{"other":true}',[longPath]:'long portable path bytes'};
+const request={operation:'reconcile-label-package',input:{reconciliation:a.input,current_files:current,generated_files:analysis.files,generated_file_sha256:analysis.file_sha256,expected_file_sha256:expected(analysis.files)}};
+const first=engine.execute(request);assert.equal(first.status,'prepared');assert.equal(first.files['config/unrelated.yaml'],current['config/unrelated.yaml']);assert.equal(first.files[analysis.index_path],analysis.index_json);assert.equal(first.files['.bisect'],first.reconciliation.registry_json);assert.deepEqual(JSON.parse(first.files['.bisect']).new_label,JSON.parse(current['.bisect']).new_label);
+assert.equal(first.changes.filter(c=>c.action==='add').length,Object.keys(analysis.files).length-1);assert.deepEqual(first.current_file_sha256,Object.fromEntries(Object.entries(current).map(([p,t])=>[p,sha(t)])));
+const reportReq={operation:'reconcile-label-package',input:{reconciliation:{...r.input,current_registry_json:first.files['.bisect']},current_files:first.files,generated_files:report.files,generated_file_sha256:report.file_sha256,expected_file_sha256:expected(report.files)}};
+const second=engine.execute(reportReq);assert.equal(second.files[report.index_path],report.index_json);assert.equal(second.files[analysis.index_path],analysis.index_json);assert.deepEqual(JSON.parse(second.files['.bisect']).analysis_fixture.reported,['2010','2000','2020']);
+const chain=engine.execute({operation:'verify-label-chain',registry_json:second.files['.bisect'],files_base64:Object.fromEntries(Object.entries(second.files).filter(([p])=>p===JSON.parse(a.input.upstream_index_json).config_path||p.endsWith('/index.json')).map(([p,t])=>[p,Buffer.from(t).toString('base64')])),label:analysis.label,year_filter:analysis.year});assert.equal(chain.status,'verified');
+const againReq={...reportReq,input:{...reportReq.input,reconciliation:{...reportReq.input.reconciliation,current_registry_json:second.files['.bisect']},current_files:second.files,expected_file_sha256:Object.fromEntries(Object.keys(report.files).filter(p=>p!=='.bisect').map(p=>[p,sha(second.files[p])]))}};
+const again=engine.execute(againReq);assert.deepEqual(again.files,second.files);assert.ok(again.changes.every(c=>c.action==='unchanged'));
+const path=Object.keys(analysis.files).find(p=>p.endsWith('summary.json'));
+const replaceReq=structuredClone(request);replaceReq.input.current_files[path]='previous summary bytes';replaceReq.input.expected_file_sha256[path]=sha('previous summary bytes');const replaced=engine.execute(replaceReq);assert.equal(replaced.changes.find(c=>c.path===path).action,'replace');
+let rejects=0;
+const bad=[];
+let v=structuredClone(request);v.input.current_files[path]='concurrent edit';bad.push(v);
+v=structuredClone(replaceReq);v.input.current_files[path]='new concurrent edit';bad.push(v);
+v=structuredClone(replaceReq);delete v.input.current_files[path];bad.push(v);
+v=structuredClone(request);v.input.generated_file_sha256[path]='0'.repeat(64);bad.push(v);
+v=structuredClone(request);delete v.input.expected_file_sha256[path];bad.push(v);
+v=structuredClone(request);v.input.current_files['.bisect']+=' ';bad.push(v);
+v=structuredClone(request);v.input.current_files[`runs/${analysis.label}/${analysis.year}/index.json`]+=' ';bad.push(v);
+v=structuredClone(request);v.input.generated_files[analysis.index_path]+=' ';v.input.generated_file_sha256[analysis.index_path]=sha(v.input.generated_files[analysis.index_path]);bad.push(v);
+for(const unsafe of ['../escape','C:/escape','folder\\escape','NUL.txt','data/FILE.json','data/file.json/child']){v=structuredClone(request);v.input.current_files['data/file.json']='original';v.input.current_files[unsafe]='unsafe';bad.push(v);}
+v=structuredClone(request);const escaped='analysis/other/2020/manifest.json';v.input.generated_files[escaped]='{}';v.input.generated_file_sha256[escaped]=sha('{}');v.input.expected_file_sha256[escaped]=null;bad.push(v);
+v=structuredClone(reportReq);delete v.input.generated_files[Object.keys(report.files).find(p=>p.endsWith('report-batch.json'))];v.input.generated_file_sha256=Object.fromEntries(Object.entries(v.input.generated_file_sha256).filter(([p])=>!p.endsWith('report-batch.json')));v.input.expected_file_sha256=expected(v.input.generated_files);bad.push(v);
+v=structuredClone(request);v.input.current_files['large.txt']='x'.repeat(25*1024*1024);bad.push(v);
+for(const req of bad){assert.throws(()=>engine.execute(req));rejects++;}
+// No mutation on rejection or success, including nested caller maps.
+assert.equal(request.input.current_files[path],undefined);assert.equal(request.input.generated_files['.bisect'],analysis.registry_json);
+for(const [i,[req,out]]of [[request,first],[reportReq,second],[againReq,again],[replaceReq,replaced]].entries()){const file=`${root}/native-request-${i}.json`;await fs.writeFile(file,JSON.stringify(req));assert.deepEqual(JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[file],{encoding:'utf8',maxBuffer:16*1024*1024})),out);}
+await fs.writeFile(root+'/analysis.json',JSON.stringify(first));await fs.writeFile(root+'/report.json',JSON.stringify(second));await fs.writeFile(root+'/evidence.json',JSON.stringify({native_wasm_cases:4,rejections:rejects,concurrent_files_preserved:true,registry_reconciled:true,explicit_replacement_hashes:true,idempotence:true,no_caller_mutation:true},null,2));
+console.log(`Label package merge: four native/WASM cases, ${rejects} conflict/hash/path/inventory/capacity rejections, preserved concurrent files, explicit replacement and idempotence passed.`);
+const helpers=await import('../../web/lab/label-package-merge-files.js');
+const {createProject,parseProject}=await import('../../web/lab/project.js');
+const sources={source:{name:'repository-stage.json',base64:Buffer.from(JSON.stringify(reportReq.input)).toString('base64')}};
+assert.deepEqual(helpers.labelPackageMergeRequest(sources),reportReq);
+const zip=await helpers.labelPackageMergeZip(second);await fs.writeFile(root+'/repository.zip',zip);
+await assert.rejects(()=>helpers.labelPackageMergeZip({...second,file_sha256:{...second.file_sha256,[report.index_path]:'0'.repeat(64)}}),/hash/);
+let read=false;await assert.rejects(()=>helpers.readLabelPackageMergeSource({size:25*1024*1024+1,arrayBuffer:async()=>{read=true;}}));assert.equal(read,false);
+const duplicate='{"current_files":{},"current_files":{}}';await assert.rejects(()=>helpers.readLabelPackageMergeSource({name:'duplicate.json',size:duplicate.length,arrayBuffer:async()=>Buffer.from(duplicate)}),/Duplicate/);
+const project=createProject({name:'Concurrent repository stage merge',files:{labelPackageMergeInputs:sources},operation:'reconcile-label-package',constraints:[],result:second,lastOperation:'reconcile-label-package'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/project.bisect',JSON.stringify(project));
+console.log('Package merge helpers: exact source requests, validated ZIP hashes, duplicate/size rejection and project roundtrip passed.');

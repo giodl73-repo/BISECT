@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {acquireFetchSource,fetchAcquisitionChoices,publicFetchUrl,validateFetchAcquisition} from '../../web/lab/fetch-acquisition.js';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {acsHousingRequest} from '../../web/lab/acs-housing-files.js';
+import {lodesRequest} from '../../web/lab/lodes-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const root='target/fetch-acquisition';await fs.mkdir(root,{recursive:true});const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const plan=engine.execute({operation:'plan-fetch-sources',input:{manifest_json:null,states:['RI'],year:'2020',data_types:['acs-housing','lodes','lodes-od'],selected_paths:[]}});await fs.writeFile(root+'/plan-result.json',JSON.stringify(plan));
+const project=createProject({name:'Acquire RI public sources',files:{fetchPlanInputs:{source:{name:'selection.json',base64:Buffer.from(JSON.stringify({manifest_json:null,states:['RI'],year:'2020',data_types:['acs-housing','lodes','lodes-od'],selected_paths:[]})).toString('base64')}}},operation:'plan-fetch-sources',constraints:[],result:plan,lastOperation:'plan-fetch-sources'});await fs.writeFile(root+'/plan.bisect',JSON.stringify(project));
+for(const kind of ['acs-housing','lodes-wac']){
+ const selected=fetchAcquisitionChoices(plan).find(v=>v.item.kind===kind),fixture=JSON.parse(await fs.readFile(kind==='acs-housing'?'target/acs-housing-wasm/valid.bisect':'target/lodes-gzip-wasm/workplace.bisect','utf8')),bytes=Buffer.from(fixture.files[kind==='acs-housing'?'acsHousingInputs':'lodesInputs'].source.base64,'base64');let calls=0;
+ const acquired=await acquireFetchSource(plan,selected.index,{censusApiKey:'test-key',fetcher:async(url,options)=>{calls++;assert.equal(url,selected.item.url+(kind==='acs-housing'?'&key=test-key':''));assert.equal(options.credentials,'omit');assert.equal(options.redirect,'error');assert.equal(options.referrerPolicy,'no-referrer');assert.equal(options.mode,'cors');return new Response(bytes,{status:200});}});assert.equal(calls,1);assert.equal(acquired.receipt.source_sha256,createHash('sha256').update(bytes).digest('hex'));assert.equal(acquired.inputs.source.base64,bytes.toString('base64'));assert.equal(acquired.receipt.byte_length,bytes.length);assert.equal(JSON.stringify(acquired).includes('test-key'),false);assert.equal(acquired.inputs.settings.state,'RI');assert.equal(engine.execute(kind==='acs-housing'?acsHousingRequest(acquired.inputs):lodesRequest(acquired.inputs)).character_status,'ready');
+ const saved=createProject({name:'Acquired '+kind,files:{fetchAcquisitionReceipt:acquired.receipt,[kind==='acs-housing'?'acsHousingInputs':'lodesInputs']:acquired.inputs},operation:kind==='acs-housing'?'prepare-acs-housing-source':'prepare-lodes-source',constraints:[],result:null,lastOperation:null});assert.deepEqual(parseProject(JSON.stringify(saved)),saved);await fs.writeFile(root+'/'+kind+'.bisect',JSON.stringify(saved));await fs.writeFile(root+'/'+kind+'-receipt.json',JSON.stringify(acquired));
+}
+const chosen=fetchAcquisitionChoices(plan)[0];
+assert.deepEqual((await acquireFetchSource(plan,chosen.index,{censusApiKey:'test-key',fetcher:async()=>new Response('missing',{status:404})})).inputs,null);
+for(const [name,fetcher]of [['http',async()=>new Response('error',{status:500})],['redirect',async()=>({redirected:true,url:chosen.item.url})],['declared-size',async()=>new Response('small',{headers:{'content-length':String(16*1024*1024+1)}})],['stream-size',async()=>new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array(16*1024*1024));c.enqueue(Uint8Array.of(1));c.close();}}))],['invalid-json',async()=>new Response('not JSON')]])await assert.rejects(()=>acquireFetchSource(plan,chosen.index,{fetcher,censusApiKey:'test-key'}),undefined,name);
+let calls=0;const noRequest=async()=>{calls++;throw new Error('Unexpected request');};const controller=new AbortController();controller.abort();await assert.rejects(()=>acquireFetchSource(plan,chosen.index,{censusApiKey:'test-key',fetcher:noRequest,signal:controller.signal}));assert.equal(calls,0);
+for(const url of ['http://api.census.gov/data/2020','https://attacker.invalid/data','https://api.census.gov@attacker.invalid/data',chosen.item.url+'&key=secret']){assert.throws(()=>publicFetchUrl({...chosen.item,url}));const hostile={...plan,items:[{...chosen.item,url}]};await assert.rejects(()=>acquireFetchSource(hostile,0,{censusApiKey:'test-key',fetcher:noRequest}));}assert.equal(calls,0);
+await assert.rejects(()=>acquireFetchSource(plan,chosen.index,{fetcher:noRequest}),/API key/);assert.equal(calls,0);
+await assert.rejects(()=>acquireFetchSource(plan,chosen.index,{censusApiKey:'test-key',fetcher:async()=>{throw new Error('private URL &key=test-key');}}),error=>!error.message.includes('test-key'));
+assert.throws(()=>validateFetchAcquisition({schema_version:'bisect-fetch-acquisition-v1'}));
+console.log('Fetch acquisition: exact endpoint/credential/redirect controls, ACS/gzip bytes and hash receipts, WASM preparation handoff, inert project persistence, 404 availability, HTTP/redirect/size/JSON failures and pre-request rejection passed.');
+
+const retryFixture=JSON.parse(await fs.readFile('target/acs-housing-wasm/valid.bisect','utf8')),retryBytes=Buffer.from(retryFixture.files.acsHousingInputs.source.base64,'base64');let retryCalls=0;
+const retried=await acquireFetchSource(plan,chosen.index,{retryAttempts:1,censusApiKey:'private-key',fetcher:async()=>++retryCalls===1?new Response('retry',{status:500}):new Response(retryBytes)});assert.equal(retryCalls,2);assert.deepEqual(retried.receipt.attempt_status,{attempts:2,retries:1,last_retryable_error:'HTTP status 500'});
+const retryProject=createProject({name:'Retried source',files:{fetchAcquisitionReceipt:retried.receipt,acsHousingInputs:retried.inputs},operation:'prepare-acs-housing-source',constraints:[],result:null,lastOperation:null});assert.deepEqual(parseProject(JSON.stringify(retryProject)),retryProject);assert.equal(JSON.stringify(retryProject).includes('private-key'),false);await fs.writeFile(root+'/retried.bisect',JSON.stringify(retryProject));
+let parseCalls=0;await assert.rejects(()=>acquireFetchSource(plan,chosen.index,{retryAttempts:2,censusApiKey:'test-key',fetcher:async()=>{parseCalls++;return new Response('invalid JSON');}}));assert.equal(parseCalls,1);
+console.log('Retry receipts: HTTP recovery records attempts/retries/sanitized class, exact inert project roundtrip excludes request key, and post-download parsing is not retried.');
+
+let policyCacheReads=0,policyNetworkReads=0;
+for(const policy of [{freshness:'unknown'},{freshness:'max-age-days',maxAgeDays:null},{freshness:'max-age-days',maxAgeDays:-1},{freshness:'max-age-days',maxAgeDays:4294967296},{freshness:'immutable',maxAgeDays:1}])await assert.rejects(()=>acquireFetchSource(plan,chosen.index,{...policy,cacheMode:'prefer-cache',cacheReader:async()=>{policyCacheReads++;},fetcher:async()=>{policyNetworkReads++;}}),/freshness policy/);
+assert.equal(policyCacheReads,0);assert.equal(policyNetworkReads,0);
+console.log('Cache policy invalid options reject before source-cache or provider access.');

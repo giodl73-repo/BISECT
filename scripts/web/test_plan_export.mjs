@@ -40,3 +40,9 @@ for(const mutate of [v=>delete v.assignments[ids[0]],v=>v.assignments.extra=1,v=
 const altered=structuredClone(result.context);altered.populations[0]++;await reject({operation:'verify-certificate',certificate:cert,plan:result.document.plan,context:altered});
 await fs.writeFile('target/plan-export-verification.json',JSON.stringify({exact_native_wasm_cases:cases,rejections:rejected,generated_assignments:true,explicit_unit_order:true,physical_weights:true,native_audit_and_certificate:true},null,2));
 console.log(`Plan export: ${cases} exact native/WASM cases and ${rejected} matching rejections; generated assignments, explicit unit order, physical weights, population, county IDs, native audit and certificate verification passed.`);
+
+const integral=structuredClone(input);integral.request.graph.edges=integral.request.graph.edges.map(([u,v])=>[u,v,6]);
+const exactExport=await parity(integral);assert.ok(exactExport.context_json.includes('6.0'));
+await parity({operation:'sample-smc-context',context_json:exactExport.context_json,settings:{k:1,particles:1,population_tolerance:0,resample_threshold:0.5,base_seed:'42'}});
+await parity({operation:'sample-smc-context',context_json:JSON.stringify(JSON.parse(exactExport.context_json)),settings:{k:1,particles:1,population_tolerance:0,resample_threshold:0.5,base_seed:'42'}});
+console.log('Native exact engine-export strings retain native writer bytes; typed RCTX reading also canonicalizes integer-valued f64 weights correctly.');

@@ -53,13 +53,7 @@ impl Provenance {
     /// Verify that a manifest's binary_version matches the running binary.
     /// Returns Ok(()) if compatible; Err with a description if not.
     pub fn verify_version_matches(&self, manifest_version: &str) -> Result<(), String> {
-        if manifest_version == self.version {
-            return Ok(());
-        }
-        Err(format!(
-            "binary version mismatch: manifest records {} but this binary is {}",
-            manifest_version, self.version
-        ))
+        bisect_analysis::manifest_provenance::version_matches(&self.version, manifest_version)
     }
 }
 

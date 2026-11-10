@@ -1,86 +1,24 @@
 /// Compare screen — side-by-side plan comparison with Jaccard similarity.
 
-// ── Data loading functions ────────────────────────────────────────────────────
-
-/// Load mean Polsby-Popper compactness from a plan's analysis/compactness.json.
+// Native disk loading remains outside the shared text-only computation.
+fn source(plan_dir: &std::path::Path, relative: &str) -> Option<String> {
+    std::fs::read_to_string(plan_dir.join(relative)).ok()
+}
 pub fn load_mean_pp(plan_dir: &std::path::Path) -> Option<f64> {
-    let path = plan_dir.join("analysis").join("compactness.json");
-    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
-    let d = v["districts"].as_array()?;
-    let vals: Vec<f64> = d
-        .iter()
-        .filter_map(|x| x["polsby_popper"].as_f64())
-        .collect();
-    if vals.is_empty() {
-        None
-    } else {
-        Some(vals.iter().sum::<f64>() / vals.len() as f64)
-    }
+    bisect_report::tui_compare::mean_pp(source(plan_dir,"analysis/compactness.json").as_deref())
 }
-
-/// Load max population deviation from a plan's analysis/summary.json.
 pub fn load_max_dev(plan_dir: &std::path::Path) -> Option<f64> {
-    let path = plan_dir.join("analysis").join("summary.json");
-    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
-    v["max_deviation_pct"].as_f64()
+    bisect_report::tui_compare::max_dev(source(plan_dir,"analysis/summary.json").as_deref())
 }
-
-/// Load county split count from a plan's analysis/splits.json.
 pub fn load_splits(plan_dir: &std::path::Path) -> Option<usize> {
-    let path = plan_dir.join("analysis").join("splits.json");
-    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
-    v["split"].as_u64().map(|n| n as usize)
+    bisect_report::tui_compare::splits(source(plan_dir,"analysis/splits.json").as_deref()).map(|n|n as usize)
 }
-
-/// Load contiguity flag from a plan's analysis/contiguity.json.
 pub fn load_contiguous(plan_dir: &std::path::Path) -> Option<bool> {
-    let path = plan_dir.join("analysis").join("contiguity.json");
-    let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).ok()?).ok()?;
-    v["all_contiguous"].as_bool()
+    bisect_report::tui_compare::contiguous(source(plan_dir,"analysis/contiguity.json").as_deref())
 }
-
-/// Load tract→district assignments from a plan's data/final_assignments.json.
-fn load_assignments(plan_dir: &std::path::Path) -> std::collections::HashMap<String, usize> {
-    let path = plan_dir.join("data").join("final_assignments.json");
-    std::fs::read_to_string(&path)
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default()
-}
-
-/// Compute a CompareResult for two plan directories.
-pub fn compute_compare_result(
-    plan_a_dir: &std::path::Path,
-    plan_b_dir: &std::path::Path,
-    _label_a: &str,
-    _label_b: &str,
-) -> crate::app::CompareResult {
-    let asgn_a = load_assignments(plan_a_dir);
-    let asgn_b = load_assignments(plan_b_dir);
-
-    let jaccard = if asgn_a.is_empty() || asgn_b.is_empty() {
-        0.0
-    } else {
-        let matching = asgn_a
-            .iter()
-            .filter(|(g, &d)| asgn_b.get(*g) == Some(&d))
-            .count();
-        let union = asgn_a.len().max(asgn_b.len());
-        matching as f64 / union as f64
-    };
-
-    crate::app::CompareResult {
-        jaccard,
-        mean_pp_a: load_mean_pp(plan_a_dir).unwrap_or(0.0),
-        mean_pp_b: load_mean_pp(plan_b_dir).unwrap_or(0.0),
-        max_dev_a: load_max_dev(plan_a_dir).unwrap_or(0.0),
-        max_dev_b: load_max_dev(plan_b_dir).unwrap_or(0.0),
-        splits_a: load_splits(plan_a_dir).unwrap_or(0),
-        splits_b: load_splits(plan_b_dir).unwrap_or(0),
-        contiguous_a: load_contiguous(plan_a_dir).unwrap_or(true),
-        contiguous_b: load_contiguous(plan_b_dir).unwrap_or(true),
-        most_changed: vec![],
-    }
+pub fn compute_compare_result(a: &std::path::Path,b: &std::path::Path,_label_a: &str,_label_b: &str) -> crate::app::CompareResult {
+    let read=|dir: &std::path::Path| ["data/final_assignments.json","analysis/compactness.json","analysis/summary.json","analysis/splits.json","analysis/contiguity.json"].into_iter().filter_map(|name| source(dir,name).map(|text|(name.to_string(),text))).collect();
+    bisect_report::tui_compare::compare(&read(a),&read(b))
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -189,7 +127,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &CompareState) {
                 "County splits",
                 format!("{}", result.splits_a),
                 format!("{}", result.splits_b),
-                (result.splits_b as i64 - result.splits_a as i64) as f64,
+                (result.splits_b as i128 - result.splits_a as i128) as f64,
                 false, // lower is better for splits
             ),
             (
@@ -324,6 +262,20 @@ mod tests {
         };
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
         assert!(content.contains("wa_house_plan_a") || content.contains("Plan A"));
+    }
+
+    #[test]
+    fn test_compare_large_split_delta_does_not_overflow() {
+        let state = CompareState {
+            result: Some(crate::app::CompareResult {
+                splits_a: u64::MAX,
+                splits_b: 1,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("County splits"));
     }
 
     #[test]

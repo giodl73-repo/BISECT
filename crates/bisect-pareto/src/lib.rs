@@ -17,6 +17,6 @@ pub mod output;
 pub mod seeds;
 
 pub use algorithm::{run_nsga2, ParetoConfig, ParetoError};
-pub use audit::{write_selected_frontier_package, SelectedFrontierPackage};
+pub use audit::{build_selected_frontier_package, write_selected_frontier_package, SelectedFrontierFiles, SelectedFrontierPackage};
 pub use objectives::Objectives;
 pub use output::{ParetoEntry, ParetoResult};

@@ -1,0 +1,11 @@
+{
+  "native_cli": {
+    "path": "target/release/bisect.exe",
+    "sha256": "ce0d94e967adf043862a64060e841fc7c998e2647b140fa55c24686d2ffee4ff"
+  },
+  "native_source": {
+    "path": "crates\\bisect-cli\\src\\analyze_label.rs",
+    "sha256": "9076b26e35d3480fb5b5e876e3269bdb0f4fbf920800ff57eb3e9d384eeac744"
+  },
+  "comparison_contract": "Exact native HTML/JSON bytes; original JSON creation timestamp supplied explicitly in the unit fixture. No value normalization or new algorithm."
+}

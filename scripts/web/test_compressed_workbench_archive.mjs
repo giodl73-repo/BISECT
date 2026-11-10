@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {gzipSync,gunzipSync} from 'node:zlib';
+import {createWorkbenchArchive,createStoredWorkbenchArchive,parseWorkbenchArchiveBytes} from '../../web/lab/workbench-archive.js';
+const original=JSON.parse(await fs.readFile('target/tract-preparation-wasm/2020.bisect','utf8'));
+const source={...original,result:{payload:'x'.repeat(129*1024*1024)}};
+assert.throws(()=>createWorkbenchArchive(source),/128 MiB/);
+assert.equal(typeof await createStoredWorkbenchArchive(original),'string');
+const bytes=await createStoredWorkbenchArchive(source),restored=await parseWorkbenchArchiveBytes(bytes);
+assert.deepEqual(restored.files,source.files);assert.equal(restored.result.payload,source.result.payload);
+const corrupt=bytes.slice();corrupt[corrupt.length-8]^=1;await assert.rejects(()=>parseWorkbenchArchiveBytes(corrupt));
+const shared=JSON.parse(gunzipSync(bytes));
+shared.shared_string_refs[0].path=['result','__proto__','polluted'];await assert.rejects(()=>parseWorkbenchArchiveBytes(gzipSync(JSON.stringify(shared))),/reference path/);
+assert.equal({}.polluted,undefined);
+shared.shared_string_refs[0].path=['result','payload'];shared.result.copy=null;shared.shared_string_refs.push({path:['result','copy'],string_index:0});await assert.rejects(()=>parseWorkbenchArchiveBytes(gzipSync(JSON.stringify(shared))),/expanded strings/);
+await assert.rejects(()=>parseWorkbenchArchiveBytes(gzipSync(JSON.stringify(original))),/shared workbench schema/);
+await assert.rejects(()=>parseWorkbenchArchiveBytes(gzipSync(' '.repeat(256*1024*1024+1))),/256 MiB/);
+console.log('Compressed workbench: above-128-MiB exact roundtrip, checksum refusal, schema guard and decoded expansion bound passed.',bytes.length);

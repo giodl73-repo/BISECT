@@ -25,10 +25,15 @@ pub fn load_lodes_wac_tract(
     state_name: &str,
     year: &str,
 ) -> Result<HashMap<String, EconChar>, String> {
-    let path = std::path::Path::new("data")
-        .join(year)
-        .join("lodes")
-        .join(format!("{state_name}_wac_tract.csv"));
+    load_lodes_wac_tract_at(std::path::Path::new("."),state_name,year)
+}
+
+pub(crate) fn load_lodes_wac_tract_at(
+    root: &std::path::Path,
+    state_name: &str,
+    year: &str,
+) -> Result<HashMap<String, EconChar>, String> {
+    let path = root.join(bisect_core::native_input_paths::character_relative_path(state_name,year,"economic").unwrap());
 
     if !path.exists() {
         return Ok(HashMap::new());
@@ -37,89 +42,7 @@ pub fn load_lodes_wac_tract(
     let content = std::fs::read_to_string(&path)
         .map_err(|e| format!("LODES WAC read error {}: {e}", path.display()))?;
 
-    let mut map = HashMap::new();
-    let mut lines = content.lines();
-
-    // Parse header
-    let header_line = match lines.next() {
-        Some(h) => h,
-        None => return Ok(HashMap::new()),
-    };
-    let headers: Vec<&str> = header_line.split(',').map(str::trim).collect();
-
-    // Locate required column indices
-    let col = |name: &str| -> Result<usize, String> {
-        headers
-            .iter()
-            .position(|&h| h.eq_ignore_ascii_case(name))
-            .ok_or_else(|| format!("LODES WAC: column '{name}' not found in {}", path.display()))
-    };
-
-    let idx_geoid = col("geoid")?;
-    let idx_c000 = col("c000")?;
-    let idx_cns07 = col("cns07")?;
-    let idx_cns09 = col("cns09")?;
-    let idx_cns10 = col("cns10")?;
-    let idx_cns11 = col("cns11")?;
-    let idx_cns01 = col("cns01")?;
-    let idx_cns02 = col("cns02")?;
-    let idx_cns05 = col("cns05")?;
-    let idx_cns08 = col("cns08")?;
-
-    for (lineno, line) in lines.enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').map(str::trim).collect();
-
-        let get = |idx: usize| -> Result<f64, String> {
-            fields
-                .get(idx)
-                .ok_or_else(|| {
-                    format!(
-                        "LODES WAC {}: row {} has too few columns",
-                        path.display(),
-                        lineno + 2
-                    )
-                })?
-                .parse::<f64>()
-                .map_err(|e| {
-                    format!(
-                        "LODES WAC {}: row {} column {idx} parse error: {e}",
-                        path.display(),
-                        lineno + 2
-                    )
-                })
-        };
-
-        let geoid = fields
-            .get(idx_geoid)
-            .ok_or_else(|| {
-                format!(
-                    "LODES WAC {}: row {} missing geoid",
-                    path.display(),
-                    lineno + 2
-                )
-            })?
-            .to_string();
-
-        map.insert(
-            geoid,
-            derive_economic_character(LodesWacRaw {
-                c000: get(idx_c000)?,
-                cns01: get(idx_cns01)?,
-                cns02: get(idx_cns02)?,
-                cns05: get(idx_cns05)?,
-                cns07: get(idx_cns07)?,
-                cns08: get(idx_cns08)?,
-                cns09: get(idx_cns09)?,
-                cns10: get(idx_cns10)?,
-                cns11: get(idx_cns11)?,
-            }),
-        );
-    }
-
-    Ok(map)
+    bisect_core::native_character_csv::parse_lodes_wac_raw(&content,&path.display().to_string()).map(|map|map.into_iter().map(|(id,raw)|(id,derive_economic_character(raw))).collect())
 }
 
 // ---------------------------------------------------------------------------

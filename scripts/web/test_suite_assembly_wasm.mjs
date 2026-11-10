@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+import {suiteAssemblyRequest,suiteAssemblyZip,SUITE_ASSEMBLY_DEFAULTS} from '../../web/lab/suite-assembly-files.js';
+const root='target/suite-assembly-wasm';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));let parity=0,cli=0,rejections=0;
+const original=JSON.parse(await fs.readFile('crates/rplan-audit/fixtures/grid3x3-valid.rplan','utf8'));
+const plan=(assignment,chamber)=>{const p=structuredClone(original);p.plan.assignment=assignment;p.plan.k=Math.max(...assignment)+1;p.metadata.chamber=chamber;return JSON.stringify(p);};
+const house=plan([0,0,0,1,1,2,2,3,3],'house'),senate=plan([0,0,0,0,0,1,1,1,1],'senate'),congress=plan([0,0,1,0,1,0,1,0,1],'congressional');
+const base={operation:'assemble-plan-suite',house_json:house,senate_json:senate,congressional_json:null,suite_name:'portable',nest_mode:'senate-in-house',required_ratio:null,policy_source_name:null,policy_json:null};
+async function native(r){await fs.writeFile(root+'/request.json',JSON.stringify(r));return JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[root+'/request.json'],{encoding:'utf8',maxBuffer:24*1024*1024,stdio:['ignore','pipe','pipe']}));}
+async function exact(r){const out=engine.execute(r);assert.deepEqual(out,await native(r));parity++;await fs.writeFile(root+'/request.json',JSON.stringify(r));const text=execFileSync('target/debug/examples/suite_assembly_reference.exe',[root+'/request.json',root+'/native-'+parity],{encoding:'utf8',stdio:['ignore','pipe','pipe']});assert.equal(out.manifest_json,text);cli++;return out;}
+const out=await exact(base);assert.equal(out.resolved_ratio,2);assert.equal(out.files.portable_house_rplan,undefined);assert.equal(out.files['portable_house.rplan'],house);
+await exact({...base,congressional_json:congress});await exact({...base,nest_mode:'none'});await exact({...base,nest_mode:'none',required_ratio:3});await exact({...base,nest_mode:'none',congressional_json:congress});
+await exact({...base,required_ratio:2});await exact({...base,policy_source_name:'policy.json',policy_json:'{"WA":{"nesting_ratio":"variable"}}',required_ratio:2});const mismatch=await exact({...base,policy_source_name:'policy.json',policy_json:'{"WA":{"nesting_ratio":"3:1"}}',required_ratio:2});assert.ok(mismatch.messages.some(m=>m.includes('WARNING')));
+const paddedHouse=house+' '.repeat(3*1024*1024-Buffer.byteLength(house)-Buffer.byteLength(senate));await exact({...base,house_json:paddedHouse});
+for(const r of [{...base,required_ratio:3},{...base,policy_source_name:'p.json',policy_json:'{"WA":{"nesting_ratio":"variable"}}'},{...base,policy_source_name:'p.json',policy_json:'{}'},{...base,nest_mode:'unknown'},{...base,suite_name:'../escape'},{...base,suite_name:'constructor'},{...base,unexpected:true},{...base,policy_json:'{}'},{...base,house_json:'{}'},{...base,congressional_json:'{}'},{...base,house_json:paddedHouse+' '}]){assert.throws(()=>engine.execute(r));await assert.rejects(()=>native(r));rejections++;}
+const file=(name,text)=>({name,base64:Buffer.from(text).toString('base64')});const suite={house:file('house.rplan',house),senate:file('senate.rplan',senate),suite_name:'portable',required_ratio:null},assembly={...SUITE_ASSEMBLY_DEFAULTS,nest_mode:'senate-in-house'};assert.deepEqual(suiteAssemblyRequest(suite,assembly),base);
+const project=createProject({name:'Chamber suite assembly',files:{suiteInputs:suite,suiteAssemblyInputs:assembly},operation:'assemble-plan-suite',constraints:[],result:out,lastOperation:'assemble-plan-suite'});assert.deepEqual(parseProject(JSON.stringify(project)),project);const zip=suiteAssemblyZip(out);await fs.writeFile(root+'/portable.zip',zip);
+const portable=root+'/portable';for(const [path,text]of Object.entries(out.files)){const parent=path.includes('/')?portable+'/'+path.slice(0,path.lastIndexOf('/')):portable;await fs.mkdir(parent,{recursive:true});await fs.writeFile(portable+'/'+path,text);}
+const validated=JSON.parse(execFileSync('target/debug/examples/suite_assembly_reference.exe',['--validate',portable+'/portable'],{encoding:'utf8',stdio:['ignore','pipe','pipe']}));assert.equal(validated.valid,true);cli++;
+assert.throws(()=>suiteAssemblyZip({...out,files:{...out.files,'../escape':'bad'}}));assert.throws(()=>parseProject(JSON.stringify({...project,files:{suiteAssemblyInputs:{...assembly,nest_mode:'unknown'}}})));
+await fs.writeFile(root+'/browser-project.bisect',JSON.stringify(project));await fs.writeFile(root+'/evidence.json',JSON.stringify({parity,cli,rejections,scope:out.scope},null,2));console.log(`Suite assembly: ${parity} native/WASM results, ${cli} actual CLI manifest/readback checks and ${rejections} matching rejections passed.`);

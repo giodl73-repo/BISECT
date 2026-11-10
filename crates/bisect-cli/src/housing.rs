@@ -6,10 +6,15 @@ pub fn load_acs_housing_tract(
     state_name: &str,
     year: &str,
 ) -> Result<HashMap<String, HousingChar>, String> {
-    let path = std::path::Path::new("data")
-        .join(year)
-        .join("acs_housing")
-        .join(format!("{state_name}_housing_{year}.csv"));
+    load_acs_housing_tract_at(std::path::Path::new("."),state_name,year)
+}
+
+pub(crate) fn load_acs_housing_tract_at(
+    root: &std::path::Path,
+    state_name: &str,
+    year: &str,
+) -> Result<HashMap<String, HousingChar>, String> {
+    let path = root.join(bisect_core::native_input_paths::character_relative_path(state_name,year,"housing").unwrap());
 
     if !path.exists() {
         return Ok(HashMap::new());
@@ -18,77 +23,7 @@ pub fn load_acs_housing_tract(
     let content = std::fs::read_to_string(&path)
         .map_err(|e| format!("ACS housing read error {}: {e}", path.display()))?;
 
-    let mut map = HashMap::new();
-    let mut lines = content.lines();
-    let header_line = match lines.next() {
-        Some(h) => h,
-        None => return Ok(HashMap::new()),
-    };
-    let headers: Vec<&str> = header_line.split(',').map(str::trim).collect();
-    let col = |name: &str| -> Result<usize, String> {
-        headers
-            .iter()
-            .position(|&h| h.eq_ignore_ascii_case(name))
-            .ok_or_else(|| {
-                format!(
-                    "ACS housing: column '{name}' not found in {}",
-                    path.display()
-                )
-            })
-    };
-
-    let idx_geoid = col("geoid")?;
-    let idx_sf = col("pct_single_family").or_else(|_| col("pct_sf"))?;
-    let idx_mf = col("pct_multifamily").or_else(|_| col("pct_mf"))?;
-    let idx_owner = col("pct_owner")?;
-    let idx_vintage = col("housing_vintage")?;
-
-    for (lineno, line) in lines.enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').map(str::trim).collect();
-        let get = |idx: usize| -> Result<f64, String> {
-            fields
-                .get(idx)
-                .ok_or_else(|| {
-                    format!(
-                        "ACS housing {}: row {} has too few columns",
-                        path.display(),
-                        lineno + 2
-                    )
-                })?
-                .parse::<f64>()
-                .map_err(|e| {
-                    format!(
-                        "ACS housing {}: row {} column {idx} parse error: {e}",
-                        path.display(),
-                        lineno + 2
-                    )
-                })
-        };
-        let geoid = fields
-            .get(idx_geoid)
-            .ok_or_else(|| {
-                format!(
-                    "ACS housing {}: row {} missing geoid",
-                    path.display(),
-                    lineno + 2
-                )
-            })?
-            .to_string();
-        map.insert(
-            geoid,
-            HousingChar {
-                pct_single_family: get(idx_sf)?.clamp(0.0, 1.0),
-                pct_multifamily: get(idx_mf)?.clamp(0.0, 1.0),
-                pct_owner: get(idx_owner)?.clamp(0.0, 1.0),
-                housing_vintage: get(idx_vintage)?.clamp(0.0, 1.0),
-            },
-        );
-    }
-
-    Ok(map)
+    bisect_core::native_character_csv::parse_housing_tract(&content,&path.display().to_string())
 }
 
 pub fn align_housing_to_adjacency(

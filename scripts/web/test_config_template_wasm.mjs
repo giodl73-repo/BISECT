@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {CONFIG_TEMPLATE_DEFAULTS,configTemplateRequest,validateConfigTemplate} from '../../web/lab/config-template.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+import {countResultTables} from '../../web/lab/count-results.js';
+import {compareConfigCapability} from './fixtures/config-capability-comparison.mjs';
+const root='target/config-template-wasm';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile(process.env.BISECT_TEST_WASM||'target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const exec=(exe,args)=>execFileSync(exe,args,{encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe']});
+let matches=0,byteMatches=0,rejected=0;
+const comparisons=[];
+const base={...CONFIG_TEMPLATE_DEFAULTS,engine:null,seed:null};
+async function exact(settings){const request=configTemplateRequest(settings),result=engine.execute(request);const path=root+`/request-${matches}.json`,input=root+`/settings-${matches}.json`;await fs.writeFile(path,JSON.stringify(request));await fs.writeFile(input,JSON.stringify(settings));
+ comparisons.push(compareConfigCapability(result,JSON.parse(exec('target/release/examples/execute_tool_request.exe',[path])),engine.supportsCMetis));
+ assert.equal(result.yaml_text,exec('target/debug/examples/config_template_reference.exe',[input]));byteMatches++;
+ assert.equal(result.source_sha256,createHash('sha256').update(result.yaml_text).digest('hex'));assert.equal(result.document.name,settings.name);assert.equal(result.generated_filename,settings.name+'.yml');assert.equal(result.seed,settings.seed);matches++;return result;
+}
+for(const structure of ['standard-bisect','nway','ratio-optimal','geosection','ratio-optimal-area','areasection','ratio-optimal-vra','vra-section','prime-factor','apportion-regions','compact-polsby','compact-bisect','moving-knife','spectral','regionalization','flow-construction'])await exact({...base,structure});
+for(const weights of ['unweighted','geographic','county','vra-aligned','proportional'])for(const search of ['single','multi','convergence','short-burst','short-burst-forest','short-burst-merge-split'])await exact({...base,weights,search,alpha_county:weights==='county'?2.5:null,convergence_threshold:search==='convergence'?37:null});
+for(const engine of ['c-ffi','c','metis-rs','metis-core','rust','gpmetis','subprocess'])await exact({...base,engine,seed:'18446744073709551615'});
+for(const name of ['true','null','123','sample-label'])await exact({...base,name});
+await exact({...base,weights:null,search:null,balance_tolerance:null,years:['2010'],workers:0,seeds:0});
+const browser=await exact({...CONFIG_TEMPLATE_DEFAULTS,seed:'18446744073709551615'});assert.equal(browser.browser_engine_available,true);
+const defaults=await exact(base);assert.equal(defaults.declared_engine,'c-ffi');assert.equal(defaults.seed,null);assert.equal(defaults.browser_engine_available,engine.supportsCMetis);assert.ok(!defaults.yaml_text.includes('  engine:'));
+async function reject(settings){const request={operation:'create-algorithm-config',settings},path=root+`/reject-${rejected}.json`,input=root+`/invalid-${rejected}.json`;await fs.writeFile(path,JSON.stringify(request));await fs.writeFile(input,JSON.stringify(settings));assert.throws(()=>engine.execute(request));assert.throws(()=>exec('target/release/examples/execute_tool_request.exe',[path]));assert.throws(()=>exec('target/debug/examples/config_template_reference.exe',[input]));rejected++;}
+for(const change of [{name:'../escape'},{name:'injected\nalgorithm: nope'},{name:'x'.repeat(101)},{years:[]},{years:['2020"\nname: changed']},{years:['123']},{years:Array(101).fill('2020')},{structure:'unknown'},{weights:'unknown'},{search:'unknown'},{engine:'unknown'},{weights:'county',alpha_county:null},{search:'convergence',convergence_threshold:null},{seed:'01'},{seed:'-1'},{seed:'18446744073709551616'},{extra:'unknown'}])await reject({...base,...change});
+assert.throws(()=>validateConfigTemplate({...base,seed:42}));assert.throws(()=>validateConfigTemplate({...base,alpha_county:NaN}));assert.throws(()=>validateConfigTemplate({...base,workers:4294967296}));
+const project=createProject({name:'Native config template generation',files:{configTemplate:{...CONFIG_TEMPLATE_DEFAULTS,seed:'18446744073709551615'}},operation:'create-algorithm-config',constraints:[],result:browser,lastOperation:'create-algorithm-config'});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/example.bisect',JSON.stringify(project));assert.equal(countResultTables(browser)[0].title,'Generated native YAML configuration');
+assert.equal(engine.execute(configTemplateRequest(base)).document.name,base.name);
+await fs.writeFile(root+'/capability-comparisons.json',JSON.stringify({supports_c_bridge:engine.supportsCMetis,comparisons},null,2)+'\n');
+console.log(`Config templates: ${matches} native compositor comparisons with explicit browser-capability checks, ${byteMatches} identical native YAML files, ${rejected} three-way rejections; all native YAML modes, defaults, exact seed/engine extensions, hashes and project retention passed.`);

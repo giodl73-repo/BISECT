@@ -94,12 +94,14 @@ impl SmcResult {
             .map(|&w| if w > 0.0 { libm::log(w) } else { f64::NEG_INFINITY })
             .collect();
 
+        // Zero importance weight has log weight -infinity. JSON represents it
+        // as null; consumers must treat null as a zero-weight particle.
         // Write particle lines
         for (i, (plan, log_w)) in self.plans.iter().zip(log_weights.iter()).enumerate() {
             let line = format!(
-                "{{\"plan\":{},\"log_weight\":{:.6},\"particle_idx\":{}}}\n",
+                "{{\"plan\":{},\"log_weight\":{},\"particle_idx\":{}}}\n",
                 serde_json::to_string(plan).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?,
-                log_w,
+                if log_w.is_finite() { format!("{log_w:.6}") } else { "null".into() },
                 i,
             );
             hasher.update(line.as_bytes());
@@ -344,5 +346,20 @@ mod tests {
         assert_eq!(meta.base_seed, 42);
         assert_eq!(meta.n_particles, 3);
         assert_eq!(meta.smc_version, "2.0-chacha12-u64-v1");
+    }
+}
+
+#[cfg(test)]
+mod zero_weight_json_tests {
+    use super::*;
+    #[test]
+    fn killed_particles_have_valid_json_and_bound_payload_hash() {
+        let result=SmcResult {plans:vec![vec![1,2],vec![2,2]],weights:vec![1.0,0.0],resample_count:0,resample_rounds:vec![],ess_trace:vec![],index_maps:vec![],base_seed:u64::MAX,n_particles:2};
+        let mut bytes=Vec::new();result.write_ndjson(&mut bytes,&WriteConfig {resample_threshold:0.0,pop_tolerance:0.1}).unwrap();
+        let text=String::from_utf8(bytes).unwrap();let lines:Vec<_>=text.lines().collect();
+        let records:Vec<serde_json::Value>=lines.iter().map(|line|serde_json::from_str(line).unwrap()).collect();
+        assert_eq!(records[0]["log_weight"],0.0);assert!(records[1]["log_weight"].is_null());
+        assert_eq!(records[2]["base_seed"].as_u64(),Some(u64::MAX));
+        let payload=format!("{}\n{}\n",lines[0],lines[1]);assert_eq!(records[2]["file_sha256"],format!("{:x}",Sha256::digest(payload.as_bytes())));
     }
 }

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {labelBuildPlanChoices,labelBuildPlanSources} from '../../web/lab/label-build-files.js';
+import {tuiVerifyRequest} from '../../web/lab/tui-verify-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const root='target/batch-manifest-handoff';await fs.mkdir(root,{recursive:true});const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm')),batch=JSON.parse(await fs.readFile('target/batch-report-manifests/browser.bisect','utf8')).result;let cases=0;
+for(const path of labelBuildPlanChoices(batch)){
+ const sources=labelBuildPlanSources(batch,path);assert.equal(Buffer.from(sources.packageVerificationInputs.files['plan.rplan'].base64,'base64').toString('utf8'),batch.files[path]);assert.equal(Buffer.from(sources.manifestSource.base64,'base64').toString('utf8'),batch.files[path.replace('plan.rplan','manifest.json')]);assert.deepEqual(sources.tuiVerifySettings,{mode:'prechecks'});
+ const project=createProject({name:'Built-state native manifest prechecks',operation:'verify-tui-manifest',files:sources,constraints:[],result:null,lastOperation:null});assert.deepEqual(parseProject(JSON.stringify(project)),project);const request=tuiVerifyRequest(sources.tuiVerifySettings,sources.packageVerificationInputs,null),out=engine.execute(request),file=root+'/'+cases+'.json';await fs.writeFile(file,JSON.stringify(request));const host=JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[file],{encoding:'utf8',maxBuffer:16*1024*1024}));const normalize=v=>{const value=structuredClone(v);delete value.binary_provenance.current_build.build_unix;return value;};assert.deepEqual(normalize(out),normalize(host));assert.equal(out.execution_performed,false);assert.equal(out.mode,'prechecks');await fs.writeFile(root+'/'+cases+'-result.json',JSON.stringify(out));cases++;
+}
+const legacy=structuredClone(batch);for(const path of Object.keys(legacy.files))if(path.endsWith('/manifest.json'))delete legacy.files[path];const old=labelBuildPlanSources(legacy,labelBuildPlanChoices(legacy)[0]);assert.equal(old.manifestSource,undefined);assert.equal(old.packageVerificationInputs,undefined);
+await fs.writeFile(root+'/evidence.json',JSON.stringify({native_precheck_handoffs:cases,inert_source_preserving_projects:true,no_replay_inputs_inferred:true,legacy_plan_context_handoff_preserved:true,wasm_sha256:engine.artifactIdentity.sha256},null,2));console.log(`Batch manifest handoff: ${cases} exact native precheck receipts and inert projects, relative package sources retained; legacy plan/context handoff remains supported.`);

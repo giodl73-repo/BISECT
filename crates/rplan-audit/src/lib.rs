@@ -5,6 +5,9 @@ use thiserror::Error;
 
 pub const AUDIT_CERTIFICATE_SCHEMA_VERSION: &str = "audit-certificate-v1";
 pub const LEGAL_PROFILE_SCHEMA_VERSION: &str = "legal-profile-v1";
+pub mod measurements;
+pub mod package_verification;
+pub mod manifest_verification;
 
 #[derive(Debug, Error)]
 pub enum AuditError {
@@ -612,40 +615,16 @@ fn check_population(
             "population audit requires context populations",
         );
     };
-    let total: i64 = populations.iter().sum();
-    let ideal = total as f64 / plan.k as f64;
-    let mut district_populations = vec![0i64; plan.k];
-    for (idx, &district_id) in plan.assignment.iter().enumerate() {
-        if let Some(slot) = district_populations.get_mut(district_id as usize) {
-            *slot += populations[idx];
-        }
-    }
-
+    let population_witnesses = match measurements::population_witnesses(plan, populations) {
+        Ok(witnesses) => witnesses,
+        Err(reason) => return missing_input_check("population", "populations", &reason),
+    };
+    let total_deviation = population_witnesses.iter().map(|w|w.population).max().unwrap_or(0)
+        - population_witnesses.iter().map(|w|w.population).min().unwrap_or(0);
     let mut failing = Vec::new();
     let mut witnesses = Vec::new();
-    let max_population = district_populations.iter().copied().max().unwrap_or(0);
-    let min_population = district_populations.iter().copied().min().unwrap_or(0);
-    let total_deviation = max_population - min_population;
-    for (district_id, population) in district_populations.into_iter().enumerate() {
-        let absolute_deviation = (population as f64 - ideal).abs();
-        let percent_deviation = if ideal == 0.0 {
-            0.0
-        } else {
-            absolute_deviation / ideal * 100.0
-        };
-        let deviation_ppm = if ideal == 0.0 {
-            0
-        } else {
-            (absolute_deviation / ideal * 1_000_000.0).round() as i64
-        };
-        let witness = PopulationWitness {
-            district_id: district_id as u32,
-            population,
-            ideal,
-            absolute_deviation,
-            percent_deviation,
-            deviation_ppm,
-        };
+    for witness in population_witnesses {
+        let district_id = witness.district_id;
         if !population_passes(&witness, &profile.population_tolerance, total_deviation) {
             failing.push(district_id as u32);
             witnesses.push(Witness::Population(witness));

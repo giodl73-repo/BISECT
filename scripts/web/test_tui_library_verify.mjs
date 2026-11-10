@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {TUI_LIBRARY_DEFAULTS,tuiLibraryRequest,tuiLibraryVerificationInputs} from '../../web/lab/tui-library-files.js';
+import {tuiVerifyRequest} from '../../web/lab/tui-verify-files.js';
+import {createProject,parseProject} from '../../web/lab/project.js';
+const root='target/tui-library-verify';await fs.mkdir(root,{recursive:true});
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm'));
+const prior=JSON.parse(await fs.readFile('target/tui-verify-wasm/replay.bisect','utf8'));
+const source=(name,text)=>({name,base64:Buffer.from(text).toString('base64')});
+const library={settings:{...TUI_LIBRARY_DEFAULTS,selected_directory:'plans/selected'},plans:[{directory:'plans/selected',folder_name:'selected',manifest:structuredClone(prior.files.packageVerificationInputs.manifest),analysis:{'summary.json':source('summary.json','{"max_deviation_pct":0.5}')},assignments:source('final_assignments.json','{"unit":18446744073709551615}'),present:[]}]};
+const listed=engine.execute(tuiLibraryRequest(library));assert.equal(listed.plans.length,1);
+const original=structuredClone(library),selected=tuiLibraryVerificationInputs(library,'plans/selected');assert.deepEqual(library,original);assert.deepEqual(Object.keys(selected).sort(),['packageVerificationInputs','tuiVerifySettings']);assert.equal(selected.tuiVerifySettings.mode,'prechecks');assert.deepEqual(selected.packageVerificationInputs.manifest,original.plans[0].manifest);assert.deepEqual(Object.keys(selected.packageVerificationInputs.files).sort(),['analysis/summary.json','data/final_assignments.json']);
+const request={...tuiVerifyRequest(selected.tuiVerifySettings,selected.packageVerificationInputs,null),runtime_artifact:engine.artifactIdentity};assert.equal(request.input.replay,null);const result=engine.execute(request);assert.equal(result.status,'prechecks-failed');assert.equal(result.execution_performed,false);assert.equal(result.execution_completed,false);assert.equal(result.view.replay_matched,false);
+await fs.writeFile(root+'/native-request.json',JSON.stringify(request));const native=JSON.parse(execFileSync('target/release/examples/execute_tool_request.exe',[root+'/native-request.json'],{encoding:'utf8',maxBuffer:32*1024*1024}));
+// Separately compiled hosts legitimately record different build timestamps.
+const builds={native:native.binary_provenance.current_build.build_unix,wasm:result.binary_provenance.current_build.build_unix};for(const value of Object.values(builds))assert.match(value,/^\d+$/);native.binary_provenance.current_build.build_unix=builds.wasm;assert.deepEqual(native,result);
+selected.packageVerificationInputs.manifest.name='changed.json';assert.deepEqual(library,original);assert.throws(()=>tuiLibraryVerificationInputs(library,'plans/missing'),/manifest/);const absent=structuredClone(library);absent.plans[0].manifest=null;assert.throws(()=>tuiLibraryVerificationInputs(absent,'plans/selected'),/manifest/);
+const oldFiles=structuredClone(prior.files);const text=Buffer.from(oldFiles.packageVerificationInputs.manifest.base64,'base64').toString();oldFiles.packageVerificationInputs.manifest.base64=Buffer.from(text.replace(/"label"\s*:\s*"[^"]*"/,'"label":"Prior plan"')).toString('base64');
+const project=createProject({name:'Selected library manifest verification',files:{...oldFiles,tuiLibraryInputs:library,tuiVerifySettings:{mode:'replay'}},operation:'inspect-tui-plan-library',constraints:[],result:null,lastOperation:null});assert.deepEqual(parseProject(JSON.stringify(project)),project);await fs.writeFile(root+'/browser.bisect',JSON.stringify(project));await fs.writeFile(root+'/expected.json',JSON.stringify(result));
+await fs.writeFile(root+'/evidence.json',JSON.stringify({wasm:engine.artifactIdentity,exact_manifest_and_retained_sources:true,immutable_handoff:true,prechecks_only:true,missing_referenced_evidence_fails:true,native_host_reply_match_except_compilation_timestamp:true,compilation_timestamps:builds,partition_executed:false,published:false},null,2));console.log('PASS selected library verification: exact manifest/retained sources, native missing-evidence failure, prechecks without replay, immutable handoff and missing-manifest refusal.');

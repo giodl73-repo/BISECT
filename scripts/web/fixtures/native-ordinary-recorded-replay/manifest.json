@@ -1,0 +1,61 @@
+{
+  "schema_version": "bisect-native-ordinary-context-corpus-v1",
+  "cases": [
+    {
+      "id": "core-state-baseline",
+      "file": "core-state-baseline.json",
+      "sha256": "b109d9c3b1d6e9b1eda7296dca0c9430d6eb6eaf11d6b4125a02b7d58f6e341c"
+    },
+    {
+      "id": "core-state-dpi",
+      "file": "core-state-dpi.json",
+      "sha256": "9a7a58ae9cca39117c1b62e0944d9c7f7f2fb63320ea393598da794cd7821e76"
+    },
+    {
+      "id": "core-state-objtype",
+      "file": "core-state-objtype.json",
+      "sha256": "a92a2f872041161c7d383ce3080a70bd0bf2bf5f233f4ed02d635cf28a09ad1e"
+    },
+    {
+      "id": "core-state-print_only",
+      "file": "core-state-print_only.json",
+      "sha256": "bd43468c5f597c4369e298c99ac727c851b0501c048f7543e8c89b134b3b30b2"
+    },
+    {
+      "id": "core-state-target_mm_districts",
+      "file": "core-state-target_mm_districts.json",
+      "sha256": "01bd7e3e3f5307533a4484242a27aabbb3324ba009699ed10cc899d52cf69344"
+    },
+    {
+      "id": "c-state-baseline",
+      "file": "c-state-baseline.json",
+      "sha256": "bb04524a65a44b46ca10003c250350274eba7f51d101f47919ecc4b2c279831e"
+    },
+    {
+      "id": "c-state-dpi",
+      "file": "c-state-dpi.json",
+      "sha256": "0294e6fc742ea05ba86f763256fa2cab25dce5022d948fa8cc53af4ed3728ca0"
+    },
+    {
+      "id": "c-state-objtype",
+      "file": "c-state-objtype.json",
+      "sha256": "cea3c9e49346768b8d75e4a9316df59a19523b9c8cb4cfdd922e7440613a065d"
+    },
+    {
+      "id": "c-state-print_only",
+      "file": "c-state-print_only.json",
+      "sha256": "cc3993e90e559a9bbe09fb1e9289a1bc8c4936f3f35392c58b271e204fe445cf"
+    },
+    {
+      "id": "c-state-target_mm_districts",
+      "file": "c-state-target_mm_districts.json",
+      "sha256": "a469ab69d2152ad25a52502243b02d8232c4d170f27b09ae776297f063b89bca"
+    },
+    {
+      "id": "cffi-nway-original",
+      "file": "cffi-nway-original.json",
+      "sha256": "5419c9a000790fdaf978b3794eca4724fcbc8819549981eab1609019d3181b80"
+    }
+  ],
+  "scope": "Ten actual native State counterfactual outputs on four synthetic units, exact original context/plan/body/source/max-u64/native multi; one retained actual native C-FFI nway sixteen-unit/seed17 reference with original7.125% tolerance. Core C-FFI unavailability is a refusal, not successful C execution. Native paths are metadata only. No real-state/all-method/capacity/authentication or full release claim."
+}

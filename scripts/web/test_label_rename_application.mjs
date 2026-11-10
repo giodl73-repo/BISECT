@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {nativeOutputDirectoryHarness} from './fixtures/native-output-directory.mjs';
+import {readLabelRenameRoot,reviewLabelRenameApplication as review,applyLabelRenameApplication as apply,retireLabelRenameReview as retire} from '../../web/lab/label-rename-application.js';
+import {labelRenameRequest} from '../../web/lab/label-rename-files.js';
+const root=path.resolve('target/label-rename-application/run-'+Date.now());await fs.mkdir(root,{recursive:true});
+const wasm=process.env.BISECT_TEST_WASM||'target/wasm32-unknown-unknown/release/bisect_wasm.wasm';
+const engine=await instantiateEngine(await fs.readFile(wasm)),harness=nativeOutputDirectoryHarness(root),native=path.join(root,'bisect.exe');await fs.copyFile('target/release/bisect.exe',native);
+const sha=b=>createHash('sha256').update(b).digest('hex'),entry={built:['2020','2020'],analyzed:['2020'],reported:[]};
+const base={'.bisect':JSON.stringify({a:entry}),'runs/a/index.json':'{"label":"a","config_path":"config/a.yaml"}','runs/a/2020/index.json':'{"label":"a"}','runs/a/2020/raw.bin':Buffer.from([0,255,128,13,10]),'analysis/a/index.json':'{"label":"different"}','reports/a/index.json':'null','config/a.yaml':'unrelated config','unlisted.bin':Buffer.from([0,23,255])};
+let cases=0;const receipts=[],nativeCases=[];
+async function write(folder,p,b){const dest=path.resolve(folder.dir,p);assert(dest.startsWith(root+path.sep));await fs.mkdir(path.dirname(dest),{recursive:true});await fs.writeFile(dest,b);}
+async function setup(files=base,options={},dirs=['reports/a/empty/']){const folder=await harness.directory('repository',options);for(const [p,b]of Object.entries(files))await write(folder,p,b);for(const d of dirs)await fs.mkdir(path.join(folder.dir,d),{recursive:true});return folder;}
+async function prepare(folder,settings={source_label:'a',destination_label:'b',force:false}){const inputs=await readLabelRenameRoot(folder,settings),request=labelRenameRequest(inputs),result=engine.execute(request);return {inputs,request,result};}
+async function inventory(folder){const files={},dirs=[];async function visit(rel=''){for(const e of await fs.readdir(path.join(folder.dir,rel),{withFileTypes:true})){const p=rel?rel+'/'+e.name:e.name;if(e.isDirectory()){dirs.push(p+'/');await visit(p);}else if(p!=='.bisect.lock')files[p]=await fs.readFile(path.join(folder.dir,p));}}await visit();return {files,dirs:dirs.sort()};}
+async function compareNative(files,dirs=[],settings={source_label:'a',destination_label:'b',force:false}){
+ const folder=await setup(files,{},dirs),reference=await setup(files,{},dirs),fixture=await prepare(folder,settings),before=harness.log.length,grant=await review(engine,fixture.result,fixture.inputs,folder);assert.equal(harness.log.length,before,'review must be read only');
+ await assert.rejects(apply(structuredClone(grant),{confirmed:true}),/no authority/);await assert.rejects(apply(grant),/Confirm/);
+ const receipt=await apply(grant,{confirmed:true});assert.equal(receipt.status,'completed');assert(receipt.registry_readback_verified);await assert.rejects(apply(grant,{confirmed:true}),/no authority/);
+ const args=['mv',settings.source_label,settings.destination_label,...(settings.force?['--force']:[])],reply=spawnSync(native,args,{cwd:reference.dir,encoding:'utf8'});nativeCases.push({args,status:reply.status,stdout:reply.stdout,stderr:reply.stderr});assert.equal(reply.status,0,reply.stdout+'\n'+reply.stderr);
+ const actual=await inventory(folder),expected=await inventory(reference);assert.deepEqual(actual.dirs,expected.dirs);assert.deepEqual(Object.keys(actual.files).sort(),Object.keys(expected.files).sort());for(const [p,b]of Object.entries(actual.files)){if(p==='.bisect')assert.deepEqual(JSON.parse(b),JSON.parse(expected.files[p]));else assert.deepEqual(b,expected.files[p],p);}
+ assert.equal(receipt.completed_events.at(-1)?.path,'.bisect');receipts.push(receipt);cases++;return {folder,fixture,receipt};
+}
+await compareNative(base,['reports/a/empty/']);
+await compareNative({'.bisect':JSON.stringify({a:entry})});
+await compareNative({...base,'.bisect':JSON.stringify({a:entry,b:{...entry,built:[]}}),'runs/b/obsolete.bin':'old','analysis/b/obsolete':'remove','reports/b/old':'old'},['runs/b/oldempty/','analysis/a/empty/'],{source_label:'a',destination_label:'b',force:true});
+await compareNative({'.bisect':JSON.stringify({a:entry,b:entry}),'runs/a/new':'new','runs/b/old':'old','analysis/b/keep':'keep'},['reports/b/empty/'],{source_label:'a',destination_label:'b',force:true});
+await compareNative({...base,'runs/a/index.json':'[1,2]','analysis/a/index.json':'{"label":"a"}'});
+// Missing label / occupied registry or destination / malformed index have matching CLI failures.
+for(const [files,settings]of [[{'.bisect':'{}'},{source_label:'a',destination_label:'b',force:false}],[{...base,'.bisect':JSON.stringify({a:entry,b:entry})},{source_label:'a',destination_label:'b',force:false}],[{...base,'runs/b/occupied':'old'},{source_label:'a',destination_label:'b',force:false}],[{...base,'runs/a/index.json':'invalid'},{source_label:'a',destination_label:'b',force:true}]]){
+ const f=await setup(files),inputs=await readLabelRenameRoot(f,settings);assert.throws(()=>engine.execute(labelRenameRequest(inputs)));const n=spawnSync(native,['mv','a','b',...(settings.force?['--force']:[])],{cwd:f.dir,encoding:'utf8'});assert.notEqual(n.status,0);nativeCases.push({status:n.status,stdout:n.stdout,stderr:n.stderr,failure:true,partial_effect_boundary:'Native may move before patch failure; browser preparation refuses before writes.'});cases++;
+}
+const normal=await setup(),fixture=await prepare(normal),grant=await review(engine,fixture.result,fixture.inputs,normal);await write(normal,'runs/a/new-concurrent','unexpected');const count=harness.log.length;let changedReceipt;await assert.rejects(apply(grant,{confirmed:true}).catch(e=>{changedReceipt=e.renameReceipt;throw e;}),/changed after/);assert.equal(harness.log.length,count);assert.equal(changedReceipt.effects_may_have_started,false);
+const stale=await setup(),staleFixture=await prepare(stale);await write(stale,'runs/b/unknown','new');await assert.rejects(review(engine,staleFixture.result,staleFixture.inputs,stale),/differs from original/);
+const forged=structuredClone(fixture.result);forged.registry_json='{}';await assert.rejects(review(engine,forged,fixture.inputs,await setup()),/recomputation/);
+const retired=await setup(),retiredFixture=await prepare(retired),retiredReview=await review(engine,retiredFixture.result,retiredFixture.inputs,retired);retire(retiredReview);await assert.rejects(apply(retiredReview,{confirmed:true}),/no authority/);
+// Interrupt at every observed boundary in a full ordinary application; explicit continuation must converge exactly.
+const forceFiles={...base,'.bisect':JSON.stringify({a:entry,b:entry}),'runs/b/old':'old','analysis/b/old':'old','reports/b/old':'old'},forceSettings={source_label:'a',destination_label:'b',force:true};
+const full=await compareNative(base,['reports/a/empty/']),forced=await compareNative(forceFiles,['reports/a/empty/'],forceSettings);let interruptedCases=0;
+for(const scenario of [{full,files:base,settings:{source_label:'a',destination_label:'b',force:false}},{full:forced,files:forceFiles,settings:forceSettings}])for(let stop=1;stop<=scenario.full.receipt.completed_events.length;stop++){
+ const f=await setup(scenario.files),p=await prepare(f,scenario.settings),c=new AbortController();let receipt;
+ try{await apply(await review(engine,p.result,p.inputs,f),{confirmed:true,signal:c.signal,onProgress:r=>{if(r.status==='incomplete'&&r.completed_events.length===stop)c.abort(Error('Pause at phase '+stop));}});}catch(e){receipt=e.renameReceipt;assert.match(e.message,/Pause/);}
+ if(!receipt)continue;assert.equal(receipt.status,'cancelled');receipts.push(receipt);
+ const resumed=await apply(await review(engine,p.result,p.inputs,f,{continuation:true}),{confirmed:true});assert.equal(resumed.status,'completed');const actual=await inventory(f),expected=await inventory(scenario.full.folder);assert.deepEqual(actual,expected);interruptedCases++;
+}
+const corrupt=await setup(base,{corrupt:p=>p.endsWith('raw.bin')}),cp=await prepare(corrupt);let corruptReceipt;await assert.rejects(apply(await review(engine,cp.result,cp.inputs,corrupt),{confirmed:true}).catch(e=>{corruptReceipt=e.renameReceipt;throw e;}),/read-back/);assert(corruptReceipt.effects_may_have_started);assert.equal(corruptReceipt.registry_write_started,false);assert.deepEqual(await fs.readFile(path.join(corrupt.dir,'runs/a/2020/raw.bin')),base['runs/a/2020/raw.bin']);await assert.rejects(review(engine,cp.result,cp.inputs,corrupt,{continuation:true}),/unknown partial/);
+const early=await setup(),ep=await prepare(early),eg=await review(engine,ep.result,ep.inputs,early),abort=new AbortController();abort.abort(Error('early cancel'));let er;await assert.rejects(apply(eg,{confirmed:true,signal:abort.signal}).catch(e=>{er=e.renameReceipt;throw e;}),/early cancel/);assert.equal(er.effects_may_have_started,false);
+let granted=true;const revoked=await setup(base,{afterClose:()=>{granted=false;}});revoked.queryPermission=async() => granted?'granted':'denied';const rp=await prepare(revoked);let revokedReceipt;await assert.rejects(apply(await review(engine,rp.result,rp.inputs,revoked),{confirmed:true}).catch(e=>{revokedReceipt=e.renameReceipt;throw e;}),/permission/);assert.equal(revokedReceipt.registry_write_started,false);assert(await fs.stat(path.join(revoked.dir,'runs/a')));
+const removal=await setup(base,{removeFail:p=>p.endsWith(path.sep+'a')}),mp=await prepare(removal);let removalReceipt;await assert.rejects(apply(await review(engine,mp.result,mp.inputs,removal),{confirmed:true}).catch(e=>{removalReceipt=e.renameReceipt;throw e;}),/removal failure/);assert.equal(removalReceipt.registry_write_started,false);assert(await fs.stat(path.join(removal.dir,'runs/a')));assert.equal(await fs.readFile(path.join(removal.dir,'.bisect'),'utf8'),base['.bisect']);
+const alias=await setup({'.bisect':base['.bisect'],'runs/A/collision':'x'}, {}, []);await assert.rejects(readLabelRenameRoot(alias,{source_label:'a',destination_label:'b',force:false}),/Case-colliding/);
+await fs.writeFile(path.join(root,'native-cases.json'),JSON.stringify(nativeCases,null,2));await fs.writeFile(path.join(root,'receipts.json'),JSON.stringify({receipts,corruptReceipt,changedReceipt},null,2));await fs.writeFile(path.join(root,'events.json'),JSON.stringify(harness.log,null,2));
+await fs.writeFile(path.join(root,'evidence.json'),JSON.stringify({schema_version:'bisect-label-rename-application-tests-v1',wasm:engine.artifactIdentity,native_sha256:sha(await fs.readFile(native)),native_cases:nativeCases.length,successful_exact_cases:cases-nativeCases.filter(c=>c.failure).length,interruption_boundaries:interruptedCases,source_preserved_on_corrupt_copy:true,unknown_partial_refused:true,private_authority:true,permission_loss_refused:true,removal_failure_retained:true,scope:'Node disk-backed FSA adapter, actual CLI and actual WASM; no real browser/OS-picker/package acceptance'},null,2));
+console.log(JSON.stringify({status:'passed',root,native_cases:nativeCases.length,interruption_boundaries:interruptedCases}));

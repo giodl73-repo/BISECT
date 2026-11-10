@@ -61,10 +61,174 @@ pub struct MunicipalSplit {
 
 #[derive(Debug, Clone, Error, PartialEq, Eq)]
 pub enum SplitError {
+    #[error("[INPUT] explicit county identities require at least one unit")]
+    NoExplicitUnits,
+    #[error("[INPUT] county identity length {counties} does not match ordered unit length {units}")]
+    CountyIdentityLength { units: usize, counties: usize },
+    #[error("[INPUT] municipal identity length {municipalities} does not match ordered unit length {units}")]
+    MunicipalIdentityLength { units: usize, municipalities: usize },
+    #[error("[INPUT] explicit municipal identities do not cover the assignment universe")]
+    MunicipalAssignmentMismatch,
+    #[error("[INPUT] duplicate explicit unit identity {unit}")]
+    DuplicateUnitIdentity { unit: String },
+    #[error("[INPUT] missing county identity for unit {unit}; missing is not zero splits")]
+    MissingCountyIdentity { unit: String },
+    #[error("[INPUT] county identity supplied for an unassigned unit {unit}")]
+    UnexpectedCountyIdentity { unit: String },
+    #[error("[INPUT] invalid explicit {kind} identity {id:?}; use 1 through 200 bytes without control characters or blank-only IDs")]
+    InvalidExplicitIdentity { kind: &'static str, id: String },
     #[error("[INPUT] GEOID {geoid} cannot be sliced at byte 5 to extract county FIPS")]
     InvalidCountyFipsBoundary { geoid: String },
     #[error("[INPUT] assignment for tract {geoid} uses invalid district 0")]
     InvalidDistrictLabel { geoid: String },
+}
+
+/// Build an exact opaque unit-to-county map from a portable context's order.
+/// No Census prefix, FIPS name or jurisdiction policy is inferred.
+pub fn explicit_counties_from_ordered_units(
+    units: &[String], counties: &[Option<String>],
+) -> Result<HashMap<String, String>, SplitError> {
+    if units.is_empty() { return Err(SplitError::NoExplicitUnits); }
+    if units.len() != counties.len() { return Err(SplitError::CountyIdentityLength { units: units.len(), counties: counties.len() }); }
+    let mut result = HashMap::new();
+    for (unit, county) in units.iter().zip(counties) {
+        validate_explicit_identity(unit, "unit")?;
+        let county = county.as_ref().ok_or_else(|| SplitError::MissingCountyIdentity { unit: unit.clone() })?;
+        validate_explicit_identity(county, "county")?;
+        if result.insert(unit.clone(), county.clone()).is_some() { return Err(SplitError::DuplicateUnitIdentity { unit: unit.clone() }); }
+    }
+    Ok(result)
+}
+
+fn validate_explicit_identity(id: &str, kind: &'static str) -> Result<(), SplitError> {
+    if id.trim().is_empty() || id.len() > 200 || id.chars().any(char::is_control) {
+        return Err(SplitError::InvalidExplicitIdentity { kind, id: id.into() });
+    }
+    Ok(())
+}
+
+
+/// Optional RCTX membership for opaque custom units. Null means unknown.
+pub struct ExplicitMunicipalIdentities {
+    by_unit: std::collections::BTreeMap<String, Option<String>>,
+}
+
+impl ExplicitMunicipalIdentities {
+    pub fn from_ordered_units(units: &[String], ids: &[Option<String>]) -> Result<Self, SplitError> {
+        if units.is_empty() { return Err(SplitError::NoExplicitUnits); }
+        if units.len() != ids.len() {
+            return Err(SplitError::MunicipalIdentityLength { units: units.len(), municipalities: ids.len() });
+        }
+        let mut by_unit = std::collections::BTreeMap::new();
+        for (unit, id) in units.iter().zip(ids) {
+            validate_explicit_identity(unit, "unit")?;
+            if let Some(id) = id { validate_explicit_identity(id, "municipal")?; }
+            if by_unit.insert(unit.clone(), id.clone()).is_some() {
+                return Err(SplitError::DuplicateUnitIdentity { unit: unit.clone() });
+            }
+        }
+        Ok(Self { by_unit })
+    }
+
+    pub fn known_units(&self) -> usize {
+        self.by_unit.values().filter(|id| id.is_some()).count()
+    }
+
+    /// Attach evidence only for an explicit municipal column. An incomplete
+    /// column preserves the county report without certifying zero splits.
+    pub fn attach(
+        &self, report: &mut serde_json::Value, assignments: &HashMap<String, usize>,
+        place_names: &HashMap<String, String>,
+    ) -> Result<(), SplitError> {
+        use sha2::{Digest, Sha256};
+        if assignments.len() != self.by_unit.len() ||
+            self.by_unit.keys().any(|unit| !assignments.contains_key(unit)) {
+            return Err(SplitError::MunicipalAssignmentMismatch);
+        }
+        let canonical = serde_json::to_vec(&self.by_unit).expect("string-only membership serializes");
+        let mut hash = Sha256::new();
+        hash.update(b"bisect-explicit-municipal-identity-v1\0");
+        hash.update(canonical);
+        report["municipal_identity_schema"] = serde_json::json!("bisect-explicit-municipal-membership-v1");
+        report["municipal_identity_source"] = serde_json::json!("matching-rctx-explicit-municipalities");
+        report["municipal_identity_sha256"] = serde_json::json!(format!("{:x}", hash.finalize()));
+        let known = self.known_units();
+        let missing = self.by_unit.len() - known;
+        if missing != 0 {
+            report["municipalities"] = serde_json::json!({
+                "available":false, "status":"incomplete-explicit-membership",
+                "known_units":known, "missing_units":missing,
+                "total":null, "split":null, "preservation_score":null, "split_list":[]
+            });
+            return Ok(());
+        }
+        let mut groups: std::collections::BTreeMap<&str, (std::collections::BTreeSet<usize>, usize)> =
+            std::collections::BTreeMap::new();
+        for (unit, id) in &self.by_unit {
+            let district = assignments[unit];
+            if district == 0 { return Err(SplitError::InvalidDistrictLabel { geoid: unit.clone() }); }
+            let group = groups.entry(id.as_deref().expect("complete membership")).or_default();
+            group.0.insert(district);
+            group.1 += 1;
+        }
+        let splits: Vec<_> = groups.iter().filter(|(_, (districts, _))| districts.len() > 1)
+            .map(|(&id, (districts, units))| serde_json::json!({
+                "municipality_id":id, "municipality_name":place_names.get(id),
+                "districts_containing":districts, "unit_count":units, "split_severity":districts.len()
+            })).collect();
+        report["municipalities"] = serde_json::json!({
+            "available":true, "status":"complete-explicit-membership",
+            "known_units":known, "missing_units":0, "total":groups.len(), "split":splits.len(),
+            "preservation_score":(groups.len() - splits.len()) as f64 / groups.len() as f64,
+            "split_list":splits
+        });
+        Ok(())
+    }
+}
+
+/// Operational splits over supplied county identities, shared by desktop/WASM.
+/// This deliberately has a separate report schema from Census FIPS inference.
+pub fn assemble_explicit_splits_report(
+    assignments: &HashMap<String, usize>, county_ids: &HashMap<String, String>,
+    state: &str, year: &str, county_names: Option<&HashMap<String, String>>,
+    place_to_units: &HashMap<String, Vec<String>>, place_names: &HashMap<String, String>,
+) -> Result<serde_json::Value, SplitError> {
+    if assignments.is_empty() { return Err(SplitError::NoExplicitUnits); }
+    for unit in county_ids.keys() { if !assignments.contains_key(unit) { return Err(SplitError::UnexpectedCountyIdentity { unit: unit.clone() }); } }
+    let mut groups: std::collections::BTreeMap<String, (std::collections::BTreeSet<usize>, usize)> = std::collections::BTreeMap::new();
+    for (unit, &district) in assignments {
+        validate_explicit_identity(unit, "unit")?;
+        if district == 0 { return Err(SplitError::InvalidDistrictLabel { geoid: unit.clone() }); }
+        let county = county_ids.get(unit).ok_or_else(|| SplitError::MissingCountyIdentity { unit: unit.clone() })?;
+        validate_explicit_identity(county, "county")?;
+        let group = groups.entry(county.clone()).or_default(); group.0.insert(district); group.1 += 1;
+    }
+    let split_list: Vec<_> = groups.iter().filter(|(_, (districts, _))| districts.len() > 1).map(|(county, (districts, units))| serde_json::json!({
+        "county_id": county, "county_name": county_names.and_then(|names| names.get(county)),
+        "districts_containing": districts, "unit_count": units, "split_severity": districts.len(),
+    })).collect();
+    let municipal = try_analyze_municipal_splits(assignments, place_to_units, place_names)?;
+    let municipalities: Vec<_> = municipal.split_list.iter().map(|place| serde_json::json!({
+        "municipality_id": place.place_fips, "municipality_name": place.place_name,
+        "districts_containing": place.districts_containing, "split_severity": place.split_severity,
+    })).collect();
+    // Keep the effective identities bound even when only splits.json is retained.
+    // This is a new domain-separated identity, not a replacement RPLAN/RCTX hash.
+    use sha2::{Digest, Sha256};
+    let ordered: std::collections::BTreeMap<_,_> = county_ids.iter().collect();
+    let canonical = serde_json::to_vec(&ordered).expect("string-only county map serializes");
+    let mut identity = Sha256::new(); identity.update(b"bisect-explicit-county-identity-v1\0"); identity.update(canonical);
+    let identity = format!("{:x}", identity.finalize());
+    Ok(serde_json::json!({"analyzer":"splits", "state":state, "year":year,
+        "subdivision_identity":"explicit-unit-county-map-v1",
+        "county_identity_sha256":identity,
+        "counties":{"available":true,"subdivision_term":"county","subdivision_term_plural":"counties",
+            "total":groups.len(),"split":split_list.len(),"preservation_score":(groups.len()-split_list.len()) as f64/groups.len() as f64,
+            "split_list":split_list,"legal_standard":serde_json::Value::Null,"compliance_assessment":serde_json::Value::Null,
+            "disclaimer":"Operational counts over supplied county identities. IDs are opaque claims, not inferred Census FIPS or a legal preservation finding."},
+        "municipalities":{"available":municipal.available,"total":municipal.total,"split":municipal.split,
+            "preservation_score":municipal.preservation_score,"split_list":municipalities}
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -606,5 +770,63 @@ mod tests {
                 geoid: "53033005000".to_string()
             }
         );
+    }
+}
+
+/// Assemble the native CLI splits report from explicit lookups.
+pub fn assemble_splits_report(assignments:&HashMap<String,usize>,state:&str,year:&str,county_names:Option<&HashMap<String,String>>,place_to_tracts:&HashMap<String,Vec<String>>,place_names:&HashMap<String,String>)->Result<serde_json::Value,SplitError>{
+ let standard=get_split_standard(state);
+ let county_result=try_analyze_county_splits_with_state(assignments,county_names,Some(state))?;
+ let municipal_result=try_analyze_municipal_splits(assignments,place_to_tracts,place_names)?;
+ let (sub_term,sub_term_plural)=standard.as_ref().map(|s|(s.subdivision_term.clone(),s.subdivision_term_plural.clone())).unwrap_or_else(||("county".into(),"counties".into()));
+ Ok(serde_json::json!({"analyzer":"splits","state":state,"year":year,
+ "counties":{"subdivision_term":sub_term,"subdivision_term_plural":sub_term_plural,"total":county_result.total,"split":county_result.split,"preservation_score":county_result.preservation_score,"split_list":county_result.split_list,"legal_standard":county_result.legal_standard,"compliance_assessment":county_result.compliance_assessment,"disclaimer":county_result.disclaimer},
+ "municipalities":{"available":municipal_result.available,"total":municipal_result.total,"split":municipal_result.split,"preservation_score":municipal_result.preservation_score,"split_list":municipal_result.split_list}}))
+}
+
+#[cfg(test)]
+mod explicit_county_tests {
+    use super::*;
+    fn assignments() -> HashMap<String,usize> { [("ward-A",1),("ward-B",2),("numeric-looking-A",1),("numeric-looking-B",2)].into_iter().map(|(u,d)|(u.into(),d)).collect() }
+    fn identities() -> HashMap<String,String> { [("ward-A","county-α"),("ward-B","county-α"),("numeric-looking-A","44001"),("numeric-looking-B","44001")].into_iter().map(|(u,c)|(u.into(),c.into())).collect() }
+    #[test]
+    fn opaque_ids_are_not_fips_or_policy_findings() {
+        let report=assemble_explicit_splits_report(&assignments(),&identities(),"RI","2024",None,&HashMap::new(),&HashMap::new()).unwrap();
+        assert_eq!(report["counties"]["total"],2);assert_eq!(report["counties"]["split"],2);
+        assert_eq!(report["counties"]["split_list"][0]["county_id"],"44001");
+        assert!(report["counties"]["split_list"][0]["county_name"].is_null());
+        assert_eq!(report["counties"]["split_list"][1]["unit_count"],2);
+        assert!(report["counties"]["legal_standard"].is_null());assert!(report["counties"]["compliance_assessment"].is_null());
+        assert_eq!(report["municipalities"]["available"],false);
+    }
+    #[test]
+    fn optional_names_and_municipal_membership_are_explicit() {
+        let names=HashMap::from([("county-α".into(),"Supplied county name".into())]);
+        let places=HashMap::from([("place-1".into(),vec!["ward-A".into(),"ward-B".into()])]);
+        let report=assemble_explicit_splits_report(&assignments(),&identities(),"RI","2024",Some(&names),&places,&HashMap::new()).unwrap();
+        assert_eq!(report["counties"]["split_list"][1]["county_name"],"Supplied county name");
+        assert_eq!(report["municipalities"]["split_list"][0]["municipality_id"],"place-1");
+        assert!(report["municipalities"]["split_list"][0].get("place_fips").is_none());
+    }
+    #[test]
+    fn incomplete_extra_and_invalid_identities_refuse_counts() {
+        let mut ids=identities();ids.remove("ward-A");
+        assert!(matches!(assemble_explicit_splits_report(&assignments(),&ids,"ZZ","2024",None,&HashMap::new(),&HashMap::new()),Err(SplitError::MissingCountyIdentity{..})));
+        let mut ids=identities();ids.insert("unassigned".into(),"extra".into());
+        assert!(matches!(assemble_explicit_splits_report(&assignments(),&ids,"ZZ","2024",None,&HashMap::new(),&HashMap::new()),Err(SplitError::UnexpectedCountyIdentity{..})));
+        for invalid in [" ".to_string(),"bad\ncounty".into(),"α".repeat(101)] {
+            let mut ids=identities();ids.insert("ward-A".into(),invalid);
+            assert!(matches!(assemble_explicit_splits_report(&assignments(),&ids,"ZZ","2024",None,&HashMap::new(),&HashMap::new()),Err(SplitError::InvalidExplicitIdentity{..})));
+        }
+        let mut zero=assignments();zero.insert("ward-A".into(),0);assert!(matches!(assemble_explicit_splits_report(&zero,&identities(),"ZZ","2024",None,&HashMap::new(),&HashMap::new()),Err(SplitError::InvalidDistrictLabel{..})));
+    }
+    #[test]
+    fn ordered_context_requires_complete_unique_alignment() {
+        let units=vec!["A".into(),"B".into()];
+        assert!(matches!(explicit_counties_from_ordered_units(&units,&[Some("county".into())]),Err(SplitError::CountyIdentityLength{..})));
+        assert!(matches!(explicit_counties_from_ordered_units(&units,&[Some("county".into()),None]),Err(SplitError::MissingCountyIdentity{..})));
+        assert!(matches!(explicit_counties_from_ordered_units(&["A".into(),"A".into()],&[Some("c".into()),Some("c".into())]),Err(SplitError::DuplicateUnitIdentity{..})));
+        assert!(matches!(explicit_counties_from_ordered_units(&[],&[]),Err(SplitError::NoExplicitUnits)));
+        assert_eq!(explicit_counties_from_ordered_units(&units,&[Some("county".into()),Some("other".into())]).unwrap()["B"],"other");
     }
 }

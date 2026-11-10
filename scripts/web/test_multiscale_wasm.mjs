@@ -29,18 +29,33 @@ async function failure(req){const ref=await native(req);assert.notEqual(ref.stat
 for(const [fine,coarse]of[['tract','county'],['bg','tract'],['bg','county']])for(const adaptive of[false,true])for(const alpha of[0,.3,1])for(const seed of[42,'18446744073709551615'])for(const percentile of[0,1])await success(request(fine,coarse,adaptive,alpha,10,percentile,seed));
 for(const [fine,coarse]of[['tract','county'],['bg','tract'],['bg','county']])for(const adaptive of[false,true])await success(request(fine,coarse,adaptive,.3,0,0,42));
 const valid=request('bg','tract',true,.3,10,0,42);
+// Unweighted seed initialization is supported by both adapters. Physical edge
+// lengths remain graph evidence but must not become seed weights in this mode.
+for(const [fine,coarse]of[['tract','county'],['bg','tract'],['bg','county']])for(const adaptive of[false,true]){
+ const req=request(fine,coarse,adaptive,.3,10,0,42);req.input.request.options.weights='unweighted';
+ const result=await success(req);
+ assert.equal(result.evidence.initialization,'unweighted-tract-metis');
+ assert.deepEqual(result.evidence.seed_weighting,{method:'native-unweighted-empty-map',computed_edges:0,coi_effect:'none',scope:'parent-tract-initialization-only'});
+ const changed=structuredClone(req);changed.input.request.graph.edges=graph.edges.map(([u,v],i)=>[u,v,1+i*17]);
+ const replay=await success(changed);assert.deepEqual(replay.assignments,result.assignments);assert.deepEqual(replay.populations,result.populations);
+}
 for(const mutate of[
  r=>r.input.fine_level='bad',r=>r.input.coarse_level='bad',r=>r.input.block_groups=null,r=>r.input.total_steps=100001,
  r=>r.input.alpha=-1,r=>r.input.percentile=1.1,r=>r.input.adaptive.adapt_interval=0,r=>r.input.adaptive.gamma_0=2,
  r=>r.input.adaptive.target_accept=-.1,r=>r.input.adaptive.coarse_tol_factor=.5,r=>r.input.unexpected=1,
- r=>r.input.request.options.weights='unweighted',r=>r.input.request.options.seed='18446744073709551616',
+ r=>r.input.request.options.weights='unsupported-weight',r=>r.input.request.options.seed='18446744073709551616',
  r=>r.input.block_groups.state='RI',r=>r.input.block_groups.year='2010',r=>r.input.block_groups.schema_version='bad',
  r=>r.input.block_groups.population[0]=51,r=>r.input.block_groups.population[0]=-1,
  r=>r.input.block_groups.geoids[0]=r.input.block_groups.geoids[1],r=>r.input.block_groups.geoids[0]='010990000001',
  r=>r.input.block_groups.geoids[0]='é'.repeat(12),r=>r.input.block_groups.adjacency[0].push(10000),
  r=>r.input.block_groups.adjacency[0].push(r.input.block_groups.adjacency[0][0]),r=>r.input.block_groups.adjacency[0]=[],
  r=>r.input.block_groups.population.pop(),r=>r.input.block_groups.geoids.pop(),r=>r.input.block_groups.extra=true,
- r=>r.input.request.graph.geoids[0]='44001000001',r=>{r.input.total_steps=100000;},
+ r=>r.input.request.graph.geoids[0]='44001000001',r=>{
+  // A valid 108-unit fine graph exceeds 10 million retained assignments.
+  // The original 72-unit fixture at 100,000 steps remains within that bound.
+  r.input.total_steps=100000;
+  r.input.block_groups={...bg,geoids:geoids.flatMap(id=>[id+'1',id+'2',id+'3']),population:geoids.flatMap(()=>[34,33,33]),adjacency:Array.from({length:n*3},(_,i)=>[...Array.from({length:3},(_,j)=>Math.floor(i/3)*3+j).filter(j=>j!==i),...adj[Math.floor(i/3)].map(j=>j*3+i%3)].sort((a,b)=>a-b))};
+ },
  r=>{const b=r.input.block_groups;b.adjacency[0]=b.adjacency[0].filter(j=>j!==1);b.adjacency[1]=b.adjacency[1].filter(j=>j!==0);},
  r=>{const b=r.input.block_groups;for(const [i,j]of[[0,2],[1,3]]){b.adjacency[i]=b.adjacency[i].filter(v=>v!==j);b.adjacency[j]=b.adjacency[j].filter(v=>v!==i);}},
 ]){const r=structuredClone(valid);mutate(r);await failure(r);}

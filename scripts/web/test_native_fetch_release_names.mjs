@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {discoverAdjacencyRelease,acquireAdjacencyRelease,ADJACENCY_RELEASE_DEFAULTS} from '../../web/lab/adjacency-release.js';
+import {nativeFetchReleasePackage} from '../../web/lab/native-fetch-release-package.js';
+const root='target/adjacency-release-bundle/names-'+Date.now();await fs.mkdir(root,{recursive:true});
+const scope={...ADJACENCY_RELEASE_DEFAULTS,state:'RI',year:'2020'},base='https://api.github.com/repos/'+scope.repository,stem='ri_adjacency_2020';let rows=[],downloads=0;
+const fetcher=async(url)=>{if(url.includes('/releases/tags/'))return Response.json({id:1,tag_name:scope.tag,draft:false,prerelease:false});if(url.includes('/releases/1/assets?'))return Response.json(rows);downloads++;return new Response(Uint8Array.of(128,4,149,0),{headers:{'content-type':'application/octet-stream'}});};
+const row=(name,id,size=4)=>({id,name,size,state:'uploaded',url:base+'/releases/assets/'+id,digest:null});
+rows=[row(stem+'.pkl',1),row(stem+'.PKL',2)];await assert.rejects(discoverAdjacencyRelease(scope,{purpose:'native-fetch-bundle',fetcher}));assert.equal(downloads,0);
+rows=[row(stem+'.pkl',1,33*1024*1024),row(stem+'.adj.bin',2,33*1024*1024)];await assert.rejects(discoverAdjacencyRelease(scope,{purpose:'native-fetch-bundle',fetcher}));assert.equal(downloads,0);
+rows=[row('nc_adjacency_2020.pkl',1)];await assert.rejects(discoverAdjacencyRelease(scope,{purpose:'native-fetch-bundle',fetcher}));assert.equal(downloads,0);
+rows=[row(stem+'.pkl',1)];const picklePlan=await discoverAdjacencyRelease(scope,{purpose:'native-fetch-bundle',fetcher}),pickleOnly=await nativeFetchReleasePackage(await acquireAdjacencyRelease(picklePlan,{fetcher}));assert.equal(pickleOnly.receipt.native_layout.primary_asset_present,true);assert.equal(pickleOnly.receipt.opaque_files_executed,false);
+rows=[row(stem+'.adj.bin',1)];const binaryPlan=await discoverAdjacencyRelease(scope,{purpose:'native-fetch-bundle',fetcher}),binaryOnly=await nativeFetchReleasePackage(await acquireAdjacencyRelease(binaryPlan,{fetcher}));assert.equal(binaryOnly.receipt.native_layout.primary_asset_present,false);assert.equal(binaryOnly.receipt.native_layout.done_marker_text,'done');assert.equal(binaryOnly.receipt.installed,false);
+await assert.rejects(discoverAdjacencyRelease(scope,{purpose:'implicit',fetcher}));
+await fs.writeFile(root+'/evidence.json',JSON.stringify({status:'passed',controlled_provider:true,case_collision_refused_before_download:true,combined_limit_refused_before_download:true,other_state_refused:true,pickle_only_preserved_without_decoding:true,missing_pickle_not_reported_present:true,marker_not_installation_evidence:true,no_live_provider_claim:true},null,2));console.log('PASS wildcard name collisions, bounds and native-primary presence distinction: '+root);

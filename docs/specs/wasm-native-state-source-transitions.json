@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "baseline": "docs/specs/wasm-native-state-source-baseline.json",
+  "baseline_sha256": "d1bb3b5399a8e8a827bbf1aa1f44708d957019c752c037266930a69a9c372389",
+  "scope": "Explicit reviewed transitions only; original baseline hashes and module-path canonicalization remain unchanged. Each current exact body must also project back to its original body. This does not establish full runtime parity, native64 executable capacity, source authenticity or release acceptance.",
+  "items": [
+    {
+      "marker": "pub enum SeedCompositor",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "original_sha256": "622d48dbf31b2d155150619a66dd7f91002d113ac0b670d956579a5458736c43",
+      "current_sha256": "77819ead36eb8faa071e0e81c9ad5d6f390a7698dc8bef334048a8b428d18249",
+      "projection": "native-replay-serde-and-count-domain-v1",
+      "rationale": "Native execution retains the default usize domain; read-only recipes use u64 counts without narrowing. Serde adds exact source-bound recipe transport and rejects unknown fields.",
+      "review": "signals/roles/check/wasm-native-state-source-transition-roles-check-2026-11-02.md"
+    },
+    {
+      "marker": "pub enum SplitStrategy",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "original_sha256": "1d3c51d4ddc473d3002b1492a08d4a952e802e14307dede22132bcae9988e88b",
+      "current_sha256": "1ebc9cc97422cd47781eda08b81bf11e74eaf71d583b6345c979f4779dd0fa74",
+      "projection": "native-replay-serde-and-count-domain-v1",
+      "rationale": "The same default usize execution settings gain a separate read-only count domain and explicit recipe serialization. Variant names, fields and documented meanings project to the original body.",
+      "review": "signals/roles/check/wasm-native-state-source-transition-roles-check-2026-11-02.md"
+    },
+    {
+      "marker": "pub struct WeightSpec",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "original_sha256": "2f0a60f8fea1ccd82f3e3e3a2b7466b5204dcb5c223f97afac162d4f0802f827",
+      "current_sha256": "104a77b958df933047e23922dd5d3b82cf58d78dca012f422b38311db97f651f",
+      "projection": "native-replay-serde-and-count-domain-v1",
+      "rationale": "Add source-bound recipe serialization and unknown-field rejection; every native weight field remains unchanged.",
+      "review": "signals/roles/check/wasm-native-state-source-transition-roles-check-2026-11-02.md"
+    },
+    {
+      "marker": "pub struct MetisParams",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "original_sha256": "dd009aa4c004be0aa13228b6f29f53566de44f5fee67d32d7e795b78fe26fad0",
+      "current_sha256": "55d92ec68bc7e45b140888fd494a0d938eeb0aa8f5652a9b50688848d507bf2d",
+      "projection": "native-replay-serde-and-count-domain-v1",
+      "rationale": "Record exact optional unsigned seed using the reviewed decimal seed codec; native optimizer fields, types and default implementation remain unchanged.",
+      "review": "signals/roles/check/wasm-native-state-source-transition-roles-check-2026-11-02.md"
+    },
+    {
+      "marker": "pub struct AlgorithmConfig",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "original_sha256": "3227941ab4457ea19166e217116e3f9d4fed842f2822f2d91a63545ad942a9b5",
+      "current_sha256": "e04455bbe5ed8dab23aa50bab75109d33fc341411f9c5b1bf0afb98e3b772fb1",
+      "projection": "native-replay-serde-and-count-domain-v1",
+      "rationale": "Serialize resolved native settings, parameterizing the existing seed/split count domain with usize as its native default. Native construction/default implementation bodies remain byte-identical.",
+      "review": "signals/roles/check/wasm-native-state-source-transition-roles-check-2026-11-02.md"
+    },
+    {
+      "marker": "pub enum VertexConstraintKind",
+      "current_source": "crates/bisect-runner/src/state_config.rs",
+      "original_sha256": "4246ea68b52517e3ec913c37c27fd28a4345ba8714fd04450e9c212238fdad40",
+      "current_sha256": "0e708313a2527f34affd5c39c5640e299508f859412b5e1a65a6982b4737e659",
+      "projection": "native-replay-serde-and-count-domain-v1",
+      "rationale": "Serialize the exact recorded native constraint list; all variants and native meanings remain unchanged.",
+      "review": "signals/roles/check/wasm-native-state-source-transition-roles-check-2026-11-02.md"
+    }
+  ]
+}

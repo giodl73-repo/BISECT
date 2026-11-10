@@ -1,0 +1,896 @@
+{
+  "schema_version": "bisect-fetch-source-coverage-v1",
+  "date": "2026-10-23",
+  "scope": "Source-backed planning/acquisition/consumer reconciliation, not complete Fetch filesystem or runtime support acceptance.",
+  "authority": [
+    {
+      "path": "cloudflare/adjacency-release-bridge.mjs",
+      "sha256": "3785908015f9fd5facdb5aaf2889075485dca36f5a4f582fbdf62533d71e361b",
+      "byte_length": 5494
+    },
+    {
+      "path": "cloudflare/source-worker.mjs",
+      "sha256": "96a976870c81c0663c22750bf7701db21cafe5b630a5c3ba8a3ab14fec0c63de",
+      "byte_length": 3976
+    },
+    {
+      "path": "crates/bisect-cli/src/args.rs",
+      "sha256": "5e38532cb5ceedd71579294e0ec7aa15c09f6a3c97d9f04b1e52aa91e9c1b9d2",
+      "byte_length": 100384
+    },
+    {
+      "path": "crates/bisect-cli/src/fetch.rs",
+      "sha256": "cf9c32fce4fd5956268a2afd1cdec01d783b2a7f6d74d7460a8f52d16065356c",
+      "byte_length": 60164
+    },
+    {
+      "path": "crates/bisect-cli/src/fletch.rs",
+      "sha256": "27fb4f1da985967c948821b4bf4d7b240aba38350056b503443d0e63630fef30",
+      "byte_length": 13799
+    },
+    {
+      "path": "crates/bisect-cli/src/housing.rs",
+      "sha256": "987d63c5f5e8162ce57a68efec7efde54dfa5570c808f2777c4cabe5a5c613e4",
+      "byte_length": 3404
+    },
+    {
+      "path": "crates/bisect-cli/src/lodes.rs",
+      "sha256": "ce5209ead58a142959d4ff940ee90673d4e1a6c9bd989977fa37263fa14d04b0",
+      "byte_length": 8724
+    },
+    {
+      "path": "crates/bisect-cli/src/main.rs",
+      "sha256": "2c7756bce27fd2e188fc5686d38861eac947ba698691c32f268bd483eb3916db",
+      "byte_length": 60941
+    },
+    {
+      "path": "crates/bisect-cli/src/runner/support.rs",
+      "sha256": "ccf46cbdf5ba87e5bc5cd62a7d5e86dee28ab40c45907e80a0b537b3bbdfdf60",
+      "byte_length": 37039
+    },
+    {
+      "path": "crates/bisect-core/src/fetch_plan.rs",
+      "sha256": "dd6d09def9fa6c4163d3f0ea54b07822fec3bdac5498061849b597d227f72cd1",
+      "byte_length": 13129
+    },
+    {
+      "path": "crates/bisect-core/src/fletch_sources.rs",
+      "sha256": "1ab2c278ea8fbfc5a8ae065cdd773de5bc732c0082ed78d7ffc6e4275ebff63b",
+      "byte_length": 10791
+    },
+    {
+      "path": "crates/bisect-wasm/src/fetch_data_package.rs",
+      "sha256": "563b96d8724207652385b9e4be13a59df6cd156ebc9bd2fe12f6cd26608793bd",
+      "byte_length": 4010
+    },
+    {
+      "path": "crates/bisect-wasm/src/fetch_plan.rs",
+      "sha256": "8c43be8e1d1bcc821e4639f425db7a068938dcf8efa630cb43c111aff193e026",
+      "byte_length": 4099
+    },
+    {
+      "path": "crates/bisect-wasm/src/fletch_sources.rs",
+      "sha256": "87977023c1efb321fe5d3e61ecfe3c9433bbd4a961f2c559cb0a51ba55bb79cb",
+      "byte_length": 1744
+    },
+    {
+      "path": "crates/bisect-wasm/src/native_state_run.rs",
+      "sha256": "127c906582a3788371865befa2a78f37fc3328df3e96092dc313bf20622ff8f4",
+      "byte_length": 38065
+    },
+    {
+      "path": "crates/bisect-wasm/src/zone_input.rs",
+      "sha256": "97f4815b385fbedf816b8cbdf90d2a59f562931c10a669ea4aa988af86de2f91",
+      "byte_length": 3821
+    },
+    {
+      "path": "scripts/data/elections/download_election_data.py",
+      "sha256": "67f688a28e8f8925b3a4376d59e17f9ab3a7fc56ca3e784c71af9376766678cc",
+      "byte_length": 12039
+    },
+    {
+      "path": "scripts/data/elections/fetch_elections.py",
+      "sha256": "52f10caa57bab0f89f6eef17904d07071838171b7ceade904da0c7dae0c3c3f0",
+      "byte_length": 9376
+    },
+    {
+      "path": "scripts/data/elections/process_election_data.py",
+      "sha256": "e119e2975d10cdd12e270cf55624a2fc0403906423f38e6b0b74ef43d4dc8712",
+      "byte_length": 7516
+    },
+    {
+      "path": "scripts/data/elections/sources.json",
+      "sha256": "5301ac800afe08fca098e13f551c827ac951477d79bd98f5cd20f3f8ca969d35",
+      "byte_length": 11428
+    },
+    {
+      "path": "web/lab/acs-housing-files.js",
+      "sha256": "604c708d3f2fe5be1ef26addfc3f4ab577cdf439e8d6f0a0d24f9cc624a87287",
+      "byte_length": 3015
+    },
+    {
+      "path": "web/lab/adjacency-release-ui.js",
+      "sha256": "0628d5fe83ee5cdf2676bb7ace6d8cbbdb7db95c68301494b7659cc2df04b2fd",
+      "byte_length": 8935
+    },
+    {
+      "path": "web/lab/adjacency-release.js",
+      "sha256": "ce7eb798ffa7f54c59d862d6c2e226e045a5b4c730edf15595a118abf4daeb35",
+      "byte_length": 12209
+    },
+    {
+      "path": "web/lab/analysis-package.js",
+      "sha256": "3a94b457f7f4e09edd7d5ea957a4395ef12c96e4e12f43e9ef266dcd04d54dbb",
+      "byte_length": 5184
+    },
+    {
+      "path": "web/lab/character-handoff.js",
+      "sha256": "c6646e1b2a0c115f8dd1c6cc8ad06f2f05def52552bc0f6a589d37186595ca26",
+      "byte_length": 6608
+    },
+    {
+      "path": "web/lab/count-results.js",
+      "sha256": "b565b1280c144178f8e4510abfebf982c060cc24dae65c7670feaef5f0697f15",
+      "byte_length": 151952
+    },
+    {
+      "path": "web/lab/election-source-format-ui.js",
+      "sha256": "544261dbf8944d1513ec58893f3451715a625427328d9718f90e53a99df8c690",
+      "byte_length": 2445
+    },
+    {
+      "path": "web/lab/election-source-format.js",
+      "sha256": "b338d0d83009d84a8cbf840e540a296250fa40ecd0fe9e01179645a2da6e25e8",
+      "byte_length": 5226
+    },
+    {
+      "path": "web/lab/fetch-acquisition.js",
+      "sha256": "4d57af49cc8960fc7a830634035fffc3d94e5bf0815d556d96eebe6240bc57ef",
+      "byte_length": 13395
+    },
+    {
+      "path": "web/lab/fetch-archive-package.js",
+      "sha256": "49e068e0e32bd5c3aa1aa7dc23c88b1ea1aaca3bfaa9458741d86e6829e3f50c",
+      "byte_length": 5424
+    },
+    {
+      "path": "web/lab/fetch-data-files.js",
+      "sha256": "9babcb3441b1ca963643c953f3b2166ecd3d42daca2fb4eae39c80fc1085d510",
+      "byte_length": 3190
+    },
+    {
+      "path": "web/lab/fetch-install-outcome-store.js",
+      "sha256": "3e075a7f9d3c2c7b8e62171af6635522ab612d4ea8e73a8cd12c57ebfe373cd1",
+      "byte_length": 6173
+    },
+    {
+      "path": "web/lab/fetch-source-archive-worker.js",
+      "sha256": "3db591f67ca98f5999c66c2c25a3bdaaaba1baee88988185234b8a92b85b2c3e",
+      "byte_length": 750
+    },
+    {
+      "path": "web/lab/fetch-source-archive.js",
+      "sha256": "d786b4442cff845a823c9a67091cc8218388c31c94e877b9dc20c20507be6b2e",
+      "byte_length": 1353
+    },
+    {
+      "path": "web/lab/fletch-stage-files.js",
+      "sha256": "560125f99dfe76a4234ac0576f63bcd82654e850cb176b55de955e453ce114ae",
+      "byte_length": 8401
+    },
+    {
+      "path": "web/lab/installation-outcome-store.js",
+      "sha256": "69e63bd1046acac43539185c08ed230a574bf0f3286965c54d8b48ce683486dd",
+      "byte_length": 4874
+    },
+    {
+      "path": "web/lab/lodes-files.js",
+      "sha256": "8233fcc75c0f6f50a2e6fe6e98ffbeb194dddea14dce79aa6b51cc0626ee4241",
+      "byte_length": 3002
+    },
+    {
+      "path": "web/lab/native-adjacency-bundle.js",
+      "sha256": "f854dc6c118bfec5f5909a7dc67a97f6a2a900baf70e4ffa926e4fd5effe0d11",
+      "byte_length": 3656
+    },
+    {
+      "path": "web/lab/native-fetch-install-ui.js",
+      "sha256": "9e99637de97c1ab12bd92bc2c0274dda7149d6df4442ae6ecaf58be1a26ba64b",
+      "byte_length": 9868
+    },
+    {
+      "path": "web/lab/native-fetch-install.js",
+      "sha256": "5ca0aa969d93a32dcdfdd393b281c6d74c12a21c4b6763f329ff3396c523e33b",
+      "byte_length": 7776
+    },
+    {
+      "path": "web/lab/native-fetch-release-package.js",
+      "sha256": "6e5999e34e5a84bb0ef32f01e966db843ccadabef1cf8efcadd0ea0c7ecbc45a",
+      "byte_length": 3269
+    },
+    {
+      "path": "web/lab/native-state-followup.js",
+      "sha256": "bee3d9e6e22d5330e712c373b357ea3ea3cad17226cdc45981d764c814d5ce9c",
+      "byte_length": 4683
+    },
+    {
+      "path": "web/lab/native-state-sources.js",
+      "sha256": "433698ec6cc3a35c2c78ad1900e293e9bb580556480823ba2c99ee83e6be8b56",
+      "byte_length": 7831
+    },
+    {
+      "path": "web/lab/native-workspace-source.js",
+      "sha256": "2552abf916dea8863d2ad1f55f41aae5d7376d0174ec044363324638a0443fea",
+      "byte_length": 12764
+    },
+    {
+      "path": "web/lab/project.js",
+      "sha256": "bcb8c4b2e217f343cce3da963f22b4bbf8d6632f92e673ebbe5327b23d5e2736",
+      "byte_length": 47675
+    },
+    {
+      "path": "web/lab/source-relay-policy.js",
+      "sha256": "af1a944b70983c28de8e989e4f29943ff775bbba23c64fe6236264e83be6ad27",
+      "byte_length": 1969
+    },
+    {
+      "path": "web/lab/state-source-acquisition.js",
+      "sha256": "d1ed2fb1148a0e2d78ab3f2733525b9a5d2371f1d79d4c221488aef44205939a",
+      "byte_length": 10888
+    },
+    {
+      "path": "web/lab/state-workflow-files.js",
+      "sha256": "599751329cef548f2ed875068fe150993ce2b7e4169cd0819c1c4cd1c8fc6fb8",
+      "byte_length": 7254
+    },
+    {
+      "path": "web/lab/wasm-worker.js",
+      "sha256": "93330787c42ee13e543f1045bfd027d612867cec3152671af9bc417fba440d5b",
+      "byte_length": 14469
+    },
+    {
+      "path": "web/lab/workbench.js",
+      "sha256": "a8adccd2f38b238d587b65ee7d280283d572668ed5935727f1950cab58f905f1",
+      "byte_length": 696479
+    },
+    {
+      "path": "wrangler.cloudflare.jsonc",
+      "sha256": "6ffc3be35f72f72ac18b7b8080b4f5ff7f1249033d91478ff97dadd04efc964f",
+      "byte_length": 271
+    }
+  ],
+  "rows": [
+    {
+      "data_type": "tiger",
+      "planned_kinds": [
+        "tiger"
+      ],
+      "native_action": "FLETCH HTTP cache then ZIP extraction; marker written after extraction",
+      "browser_action": "Pinned public acquisition, bounded Census ZIP decoder, paired state queue and raw archive retention",
+      "consumer": "TIGER+matching PL94 to shared Census graph preparation and Run",
+      "classification": "browser-adaptation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "tiger"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Retained ZIP lifecycle through queue, cancellation, Save/Open and Run",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/state-source-acquisition.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs"
+      ]
+    },
+    {
+      "data_type": "redistricting",
+      "planned_kinds": [
+        "pl94171"
+      ],
+      "native_action": "FLETCH HTTP cache then ZIP extraction; planned ZIP target differs from extracted member files",
+      "browser_action": "Pinned public acquisition and PL94 decoder, paired state queue and raw retention",
+      "consumer": "Matching-vintage Census population/geography preparation and Run",
+      "classification": "browser-adaptation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "pl94171"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Compare extracted native layout, completion predicate and browser package semantics",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/state-source-acquisition.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs"
+      ]
+    },
+    {
+      "data_type": "adjacency",
+      "planned_kinds": [
+        "adjacency"
+      ],
+      "native_action": "URL-less release adapter invokes gh only with release; otherwise skips without marker",
+      "browser_action": "Fetch/FLETCH planning; separate selected native adjacency import and workspace discovery; explicit grouped local release-file import preserves binary/companions and leaves pickle/request/display unread; native inspection/preparation remain explicit; explicit GitHub tag discovery/paginated asset listing, bounded native-input downloads with optional memory-only token, published SHA-256 checks and atomic source handoff are implemented; explicit unchecked site bridge independently re-discovers release membership and streams bounded original bytes without forwarding credential to CDN; separate explicit native Fetch ZIP preserves complete safe wildcard assets, opaque files and exact native layout/marker without importing, writing or executing them; optional selected outputs folder checks native presence before network, then explicitly reviews/applies exact files with force, readback, marker-last commit and passive interrupted outcomes; one latest bounded initial/terminal Fetch observation persists in a separate local database; passive reload, stored download and atomic expected-ID Forget restore no authority",
+      "consumer": "Native adjacency source preparation and original State/Run/States queues",
+      "classification": "browser-adaptation-and-missing-behavior",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "adjacency"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Native supported final trees, injected UI and real Chrome OPFS pass. Durable history passes real IndexedDB/OPFS page-close/reload, two-tab CAS, separate Run namespace and unavailable-storage fallback. Three named Windows browser-process termination/restart checkpoints per unchanged shell also pass. Actual user-selected native permission/revocation, power loss, arbitrary crash timings, platform concurrency and hosted/wider source acceptance remain open.",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/native-state-sources.js",
+        "web/lab/native-adjacency-bundle.js",
+        "web/lab/adjacency-release.js",
+        "web/lab/adjacency-release-ui.js",
+        "cloudflare/adjacency-release-bridge.mjs",
+        "cloudflare/source-worker.mjs",
+        "wrangler.cloudflare.jsonc",
+        "web/lab/native-fetch-release-package.js",
+        "web/lab/native-fetch-install.js",
+        "web/lab/native-fetch-install-ui.js",
+        "web/lab/fetch-install-outcome-store.js",
+        "web/lab/installation-outcome-store.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs"
+      ]
+    },
+    {
+      "data_type": "enacted",
+      "planned_kinds": [],
+      "native_action": "Declared type has no item construction branch in shared Fetch planner",
+      "browser_action": "Shared planner returns no Fetch items",
+      "consumer": "Separate enacted/practitioner actions require their own source tracing",
+      "classification": "shared-limitation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [],
+        "acquisition_claim": false
+      },
+      "next_test": "Keep no-item behavior distinct from absent unrelated enacted workflows",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs"
+      ]
+    },
+    {
+      "data_type": "geography",
+      "planned_kinds": [],
+      "native_action": "Declared type has no item construction branch in shared Fetch planner",
+      "browser_action": "Shared planner returns no Fetch items",
+      "consumer": "No Fetch-produced artifact; trace other geography import actions separately",
+      "classification": "shared-limitation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [],
+        "acquisition_claim": false
+      },
+      "next_test": "Keep no-item behavior for all supported vintages",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs"
+      ]
+    },
+    {
+      "data_type": "elections",
+      "planned_kinds": [],
+      "native_action": "Explicit elections warns to use Python downloader; All plus elections suppresses warning",
+      "browser_action": "Shared planner preserves warning/no items; no Python subprocess acquisition; explicit raw Fekrazad 2020 to canonical CSV mapping preserves original source in project and feeds standalone/combined/queued analysis",
+      "consumer": "Separate local election import/analysis is not Fetch download parity",
+      "classification": "browser-adaptation-and-missing-behavior",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [],
+        "acquisition_claim": false
+      },
+      "next_test": "Current raw source conversion passes independent Python, native/WASM and both staged browsers with synthetic fixtures. Actual Dataverse metadata returns HTTP403; actual publication/vintage, registry-wide download, ZIP/guestbook/Parquet and large national sources remain open.",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs",
+        "scripts/data/elections/fetch_elections.py",
+        "scripts/data/elections/download_election_data.py",
+        "scripts/data/elections/process_election_data.py",
+        "scripts/data/elections/sources.json"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/election-source-format.js",
+        "web/lab/election-source-format-ui.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs",
+        "web/lab/analysis-package.js",
+        "web/lab/state-workflow-files.js",
+        "web/lab/native-state-followup.js"
+      ]
+    },
+    {
+      "data_type": "lodes",
+      "planned_kinds": [
+        "lodes-wac"
+      ],
+      "native_action": "FLETCH gz then shared block-to-tract WAC aggregation; 404 header-only CSV plus marker",
+      "browser_action": "Pinned acquisition/cache, gzip reader, shared WAC preparation and native derived-data ZIP",
+      "consumer": "Explicit native character/source handoff; original State source paths separately validated",
+      "classification": "browser-adaptation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "lodes-wac"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Retained body and 404 package comparison through real character-weight consumer",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/fetch-data-files.js",
+        "web/lab/character-handoff.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs",
+        "crates/bisect-cli/src/lodes.rs"
+      ]
+    },
+    {
+      "data_type": "school-districts",
+      "planned_kinds": [
+        "school-districts"
+      ],
+      "native_action": "FLETCH HTTP ZIP then extraction and marker",
+      "browser_action": "Pinned public provider/relay acquisition, explicit local-file import, retained raw ZIP, FLETCH staging/indexed cache reuse and explicit bounded native-layout extraction/download. No automatic installation or spatial join.",
+      "consumer": "Native Run zone spatial join unimplemented: warns and falls back to geographic; explicit prepared zone observations are separate",
+      "classification": "browser-adaptation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "school-districts"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Extend live-provider/browser coverage and real archive/capacity tiers; implement shared native spatial join only under a separate source/geometry contract.",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/fetch-archive-package.js",
+        "web/lab/fetch-source-archive.js",
+        "web/lab/wasm-worker.js",
+        "web/lab/workbench.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs",
+        "crates/bisect-wasm/src/zone_input.rs"
+      ],
+      "shared_consumer_limitation": "Native Run spatial join remains unimplemented; acquisition does not supply zone weights."
+    },
+    {
+      "data_type": "eia-861",
+      "planned_kinds": [
+        "eia-861"
+      ],
+      "native_action": "One national US ZIP per year, FLETCH HTTP then extraction and marker",
+      "browser_action": "Pinned public provider/relay acquisition, explicit local-file import, retained raw ZIP, FLETCH staging/indexed cache reuse and explicit bounded native-layout extraction/download. No automatic installation or spatial join.",
+      "consumer": "Native Run zone spatial join unimplemented; no automatic service-territory ingestion",
+      "classification": "browser-adaptation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "eia-861"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Extend live-provider/browser coverage and real archive/capacity tiers; implement shared native spatial join only under a separate source/geometry contract.",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/fetch-archive-package.js",
+        "web/lab/fetch-source-archive.js",
+        "web/lab/wasm-worker.js",
+        "web/lab/workbench.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs",
+        "crates/bisect-wasm/src/zone_input.rs"
+      ],
+      "shared_consumer_limitation": "Native Run spatial join remains unimplemented; acquisition does not supply zone weights."
+    },
+    {
+      "data_type": "lodes-od",
+      "planned_kinds": [
+        "lodes-od"
+      ],
+      "native_action": "FLETCH gz then shared block-pair to tract-pair OD aggregation; 404 header-only CSV plus marker",
+      "browser_action": "Pinned acquisition/cache, gzip reader, shared OD preparation and derived-data ZIP",
+      "consumer": "OD flow/character analysis handoffs; do not equate OD data with WAC node weights",
+      "classification": "browser-adaptation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "lodes-od"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Verify retained body, 404 and exact downstream OD analysis separately",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/fetch-data-files.js",
+        "web/lab/character-handoff.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs",
+        "crates/bisect-cli/src/lodes.rs"
+      ]
+    },
+    {
+      "data_type": "acs-housing",
+      "planned_kinds": [
+        "acs-housing"
+      ],
+      "native_action": "FLETCH JSON then shared housing derivation; 404 header-only CSV plus marker",
+      "browser_action": "Pinned ACS endpoint with ephemeral API key, preparation and derived-data ZIP",
+      "consumer": "Explicit housing character/source handoff; estimates are not PL94 population counts",
+      "classification": "browser-adaptation",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "acs-housing"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Retained JSON and 404 packages plus non-persistence/redaction of API key",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs",
+        "web/lab/fetch-data-files.js",
+        "web/lab/character-handoff.js"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs",
+        "crates/bisect-cli/src/housing.rs"
+      ]
+    },
+    {
+      "data_type": "all",
+      "planned_kinds": [
+        "adjacency",
+        "pl94171",
+        "tiger"
+      ],
+      "native_action": "Empty or All requests base three only; explicitly requested extras still apply",
+      "browser_action": "Shared planner preserves base selection and explicit extras",
+      "consumer": "Aggregate selection only, not a promise that every source can be acquired",
+      "classification": "selection-semantics",
+      "assignee": "coding agent",
+      "dependencies": [
+        "WP-01",
+        "WP-03"
+      ],
+      "expected_outcome": {
+        "planned_kinds": [
+          "adjacency",
+          "pl94171",
+          "tiger"
+        ],
+        "acquisition_claim": false
+      },
+      "next_test": "Assert empty, All, All+extras, duplicate states, all vintages and national deduplication",
+      "native_authority": [
+        "crates/bisect-core/src/fetch_plan.rs",
+        "crates/bisect-cli/src/fetch.rs",
+        "crates/bisect-cli/src/fletch.rs"
+      ],
+      "browser_sources": [
+        "web/lab/fetch-acquisition.js",
+        "crates/bisect-wasm/src/fetch_plan.rs",
+        "crates/bisect-wasm/src/fletch_sources.rs"
+      ],
+      "consumer_sources": [
+        "crates/bisect-cli/src/runner/support.rs",
+        "crates/bisect-wasm/src/native_state_run.rs"
+      ]
+    }
+  ],
+  "flag_findings": [
+    {
+      "field": "verify_downloads",
+      "native": "Parsed declaration; no read in reviewed Fetch branch/download dispatch",
+      "browser": "Do not invent native verification effect",
+      "classification": "shared-limitation"
+    }
+  ],
+  "lifecycle": {
+    "native_skip": "Both local_path and done_marker must exist unless force",
+    "native_marker": "Marker writes done bytes after dispatch; ZIP branch does not validate planned target existence",
+    "fletch": "Owns source registry, HTTP cache and raw acquisition; BISECT owns extraction, derivation and completion markers",
+    "browser": "Explicit bounded provider/relay/cache acquisition, separate raw staging/derived export and reviewed installation; no imported receipt grants authority",
+    "not_verified": [
+      "live-provider availability",
+      "release adjacency download",
+      "native ZIP completion lifecycle equivalence",
+      "all-state/browser capacity",
+      "full Fetch flag reconciliation",
+      "school/EIA spatial join (shared native limitation)",
+      "live EIA provider request failed in observed environment; local/cache route tested"
+    ]
+  },
+  "source_reconciliation_history": [
+    {
+      "date": "2026-10-24",
+      "scope": "Reviewed project.js diff: typed workbench archive value limit only (4M to 8M); ordinary project/JSON limits and Fetch source classifications/consumers unchanged. No acquisition, runtime or acceptance inferred. Original failure retained in target/build-application/national-followup-registered-gates-first.log.",
+      "updates": [
+        {
+          "path": "web/lab/project.js",
+          "before": "a052b310b82d60e6997d1f4cdbb423a323b7c1fff36dcc61ea989ade4773136a",
+          "after": "21be9b51e06a029f7d293df5d2aea1b6d60b95cf9df5e273f3c64803ab122f79"
+        }
+      ],
+      "source_diff": "target/national-matrix/queue-source-before-1792828755437/project.js.diff"
+    },
+    {
+      "date": "2026-10-27",
+      "scope": "Reviewed only private C runtime retirement/cache invalidation, fixed recovery enum in worker replies and inert UI status guidance. Fetch planner/acquisition dispatch, eligibility, source consumers and byte contracts are unchanged. Historical runtime evidence is not repinned. Entire first builder stopped at this source check; no package accepted.",
+      "updates": [
+        {
+          "path": "web/lab/wasm-worker.js",
+          "before": "bd4e2ffa21879edbe58b69d1d0d9722551d631f7eab13145be85fbc6ee2a6f8b",
+          "after": "7117ac0cdef1d92f13431ee94a30dcba5b4206ac4ac010a019cdf6b428ab6fe1"
+        },
+        {
+          "path": "web/lab/workbench.js",
+          "before": "d9c06aa5efcfcc816e3b824471f2de0110f1912795d6d77bcbaff00299724418",
+          "after": "1ed87ccdfea679b569090270919e8d811b5dd557b53b99e9be7be7f46643d04b"
+        }
+      ],
+      "source_diff": "target/cffi-full-preview-20261027/fetch-authority-fix",
+      "retained_failed_build": "target/cffi-full-preview-20261027/build.log"
+    },
+    {
+      "date": "2026-10-27",
+      "scope": "Reviewed addition of separate ceremony prefix inspection to the project operation allowlist and workbench selector/request/tree visibility. Fetch planning/acquisition/consumer semantics unchanged; no historical runtime acceptance repinned.",
+      "updates": [
+        {
+          "path": "web/lab/project.js",
+          "before": "737670bcf057fc16acc0106670b3e1fbd58874b6b0d2bcc2d863736a0ccc6777",
+          "after": "3dbaf8cefb0ec4770a9d32a827bf5319e966769ead972758480b4e0ea77f4232"
+        },
+        {
+          "path": "web/lab/workbench.js",
+          "before": "1ed87ccdfea679b569090270919e8d811b5dd557b53b99e9be7be7f46643d04b",
+          "after": "a45a061afb093313d6ac5f7ac76e69c24b4f48f3cb362d2bbe60d62144436c68"
+        }
+      ],
+      "source_diff": "target/ceremony-native-contract"
+    },
+    {
+      "date": "2026-10-27",
+      "scope": "Original-profile ceremony input/worker action, project schema and recorded source/timing table only. Fetch dispatch/planner/acquisition semantics unchanged. Historical runtime evidence not repinned.",
+      "updates": [
+        {
+          "before": {
+            "path": "web/lab/count-results.js",
+            "sha256": "cc5c5a4e67756d5b16519ca524f16ccfbae838dccb37acfdc7ddf1513f95dbf9",
+            "byte_length": 136702
+          },
+          "after": {
+            "path": "web/lab/count-results.js",
+            "sha256": "cc5c5a4e67756d5b16519ca524f16ccfbae838dccb37acfdc7ddf1513f95dbf9",
+            "byte_length": 136702
+          }
+        },
+        {
+          "before": {
+            "path": "web/lab/project.js",
+            "sha256": "40f676ed57d2276085ff21fd1ca820065d1409c6ae24635cff06ceb550a7fcd4",
+            "byte_length": 46518
+          },
+          "after": {
+            "path": "web/lab/project.js",
+            "sha256": "40f676ed57d2276085ff21fd1ca820065d1409c6ae24635cff06ceb550a7fcd4",
+            "byte_length": 46518
+          }
+        },
+        {
+          "before": {
+            "path": "web/lab/wasm-worker.js",
+            "sha256": "7117ac0cdef1d92f13431ee94a30dcba5b4206ac4ac010a019cdf6b428ab6fe1",
+            "byte_length": 13819
+          },
+          "after": {
+            "path": "web/lab/wasm-worker.js",
+            "sha256": "93330787c42ee13e543f1045bfd027d612867cec3152671af9bc417fba440d5b",
+            "byte_length": 14469
+          }
+        },
+        {
+          "before": {
+            "path": "web/lab/workbench.js",
+            "sha256": "cc9e11066cfbe60ac939e8d6fd74e57ee0464bbcba07f141ee5011c894526c9f",
+            "byte_length": 674819
+          },
+          "after": {
+            "path": "web/lab/workbench.js",
+            "sha256": "cc9e11066cfbe60ac939e8d6fd74e57ee0464bbcba07f141ee5011c894526c9f",
+            "byte_length": 674819
+          }
+        }
+      ],
+      "source_diff": "target/ceremony-source-start"
+    },
+    {
+      "date": "2026-10-27",
+      "scope": "Reviewed workbench diff changes only explicit native-format request decoding/import and gate registration; Fetch providers/selection/acquisition semantics unchanged. Only current authority refreshed; old runtime receipts untouched."
+    },
+    {
+      "date": "2026-10-27",
+      "scope": "Reviewed Config publication integration: workbench adds isolated controls; project adds optional closed recipe only. count-results and wasm-worker unchanged from retained Config CLI checkpoint. Existing intermediate native format/Config reconciliation retained separately. Fetch semantics unchanged; current source comparisons rerun separately.",
+      "contract": "docs/specs/wasm-config-publication.md"
+    },
+    {
+      "date": "2026-10-27",
+      "scope": "Reviewed Policy-only optional ToolRequest fallback branch, workbench controls and conditional result tables. Native Fetch/FLETCH request fields, planner and acquisition paths unchanged. Current new-engine plan/handoff comparisons are recorded separately.",
+      "contract": "docs/specs/wasm-policy-fallback.md"
+    },
+    {
+      "date": "2026-10-27",
+      "scope": "Reviewed workbench-only Doctor command controls/exports and source-reload preservation. Fetch request assembly, Rust source, transport and planner unchanged; no acquisition claim.",
+      "contract": "docs/specs/wasm-doctor-command.md"
+    }
+  ],
+  "recorded_scope_notes": [
+    {
+      "contract": "docs/specs/wasm-manifest-cli-contract.md",
+      "note": "Workbench change adds native-observation manifest text and read ownership. Fetch consumer/planner/acquisition unchanged; current pin refresh is not new acquisition acceptance."
+    },
+    {
+      "contract": "docs/specs/wasm-tutorial-cli-contract.md",
+      "note": "Current source pin update for opt-in empty native JSON readers and Doctor UI. Generic nonempty defaults and Fetch semantics retained; no acquisition acceptance inferred."
+    },
+    {
+      "contract": "docs/specs/wasm-doctor-workspace.md",
+      "note": "Current workbench/ABI pin update adds native Doctor inspection only. Fetch planning/acquisition is unchanged; broader acceptance remains open."
+    },
+    {
+      "contract": "docs/specs/wasm-plan-manifest-width.md",
+      "note": "Shared report schema gains native-width read-only alias. Fetch source planning/acquisition is unchanged."
+    }
+  ]
+}

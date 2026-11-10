@@ -1,0 +1,38 @@
+// Native currently has no zone spatial join. This tests its disclosed geographic fallback.
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {instantiateEngine} from '../../web/lab/wasm-engine.js';
+import {zoneFallbackEvidence,verifyZoneFallback} from '../../web/lab/zone-weighting.js';
+const root=path.resolve('target/zone-membership-fallback');await fs.mkdir(root,{recursive:true});const work=root+'/cli-'+Date.now();await fs.mkdir(work);
+const engine=await instantiateEngine(await fs.readFile('target/wasm32-unknown-unknown/release/bisect_wasm.wasm')),old=await instantiateEngine(await fs.readFile(root+'/before/engine.wasm'));
+const graph=JSON.parse(JSON.parse(await fs.readFile('target/source-projection-parity/after-wasm.json','utf8')).graph_json);let matches=0,legacy=0,ms=0;
+async function native(request,name){const result=engine.execute(request),file=root+'/'+name+'.request.json';await fs.writeFile(file,JSON.stringify(request));const p=spawnSync(path.resolve('target/release/examples/execute_tool_request.exe'),[file],{encoding:'utf8',windowsHide:true,timeout:180000,maxBuffer:64*1024*1024});assert.equal(p.status,0,p.stderr);assert.deepEqual(result,JSON.parse(p.stdout));await fs.writeFile(root+'/'+name+'.json',JSON.stringify(result));matches++;return result;}
+const options={structure:'standard-bisect',weights:'zone-membership',search:'single',districts:2,seed:'42',seeds:1,steps:10,percentile:0,alpha_county:0,balance_tolerance:25,area_swing:1.1,iterations:100};
+const wrap=(o)=>({operation:'run-prepared-engine',input:{request_json:JSON.stringify({graph,options:o}),label:'native_zone_fallback',chamber:'congressional',created_at:'2026-10-18T00:00:00Z',inspect_only:false}});
+for(const [name,extra]of [['single',{}],['multi',{search:'multi',seeds:3}],['bfs',{structure:'bfs-growth'}],['cvd',{structure:'centroidal-voronoi',cvd_iters:20,cvd_metric:'graph-distance'}],['mka',{structure:'moving-knife',mka_orientations:16,mka_metric:'polsby'}],['geo',{structure:'ratio-optimal',search:'multi',seeds:3}],['compact',{structure:'compact-polsby',search:'multi',seeds:3,compact_epsilon:.05}],['nway',{structure:'nway'}],['annealing',{structure:'simulated-annealing',sa_steps_per_tract:1,sa_t0_factor:.5,sa_t_final:.01}]]){
+ const o={...options,...extra},before=old.execute(wrap({...o,weights:'geographic'}));assert.deepEqual(engine.execute(wrap({...o,weights:'geographic'})),before);legacy++;
+ const actual=await native(wrap(o),name);verifyZoneFallback(actual.result.metrics.weighting_evidence);assert.equal(actual.executed_request.options.weights,'zone-membership');assert(JSON.stringify(actual.export.document.provenance).includes('zone-membership'));
+ const normalized=structuredClone(actual.result);normalized.options.weights='geographic';delete normalized.metrics.weighting_evidence;assert.deepEqual(normalized,before.result);assert.deepEqual(actual.export.document.plan.assignment,before.export.document.plan.assignment);
+}
+const source=JSON.parse(JSON.parse(await fs.readFile('target/context-full-engine/tract-multiscale-run.request.json','utf8')).input.request_json);source.input.request.options.weights='geographic';source.input.request.options.seed='42';
+for(const fixture of [source,JSON.parse(await fs.readFile('target/multiscale-fixtures/request-24-0.json','utf8')),JSON.parse(await fs.readFile('target/multiscale-fixtures/request-48-0.json','utf8'))])for(const adaptive of [false,true]){
+ const request=structuredClone(fixture);request.input.request.options.weights='geographic';request.input.request.options.seed='42';request.input.adaptive=adaptive?{target_accept:.3,adapt_interval:5,gamma_0:.1,coarse_tol_factor:3}:null;request.input.total_steps=5;
+ const baseline=old.execute(request);assert.deepEqual(engine.execute(request),baseline);legacy++;
+ request.input.request.options.weights='zone-membership';const actual=await native(request,'multiscale-'+request.input.fine_level+'-'+request.input.coarse_level+'-'+adaptive);verifyZoneFallback(actual.evidence.zone_initialization,'parent-tract-initialization-only');assert.equal(actual.evidence.initialization,'zone-unavailable-geographic-metis');
+ const normalized=structuredClone(actual);delete normalized.evidence.zone_initialization;normalized.evidence.initialization='weighted-geographic-metis';assert.deepEqual(normalized,baseline);ms++;
+}
+assert.throws(()=>old.execute(wrap(options)),/boundary weights/);
+const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;},f64=n=>{const b=Buffer.alloc(8);b.writeDoubleLE(n);return b;};const chunks=[Buffer.from('RADJ'),u32(2),u32(graph.geoids.length),u32(graph.edges.length)];for(const n of graph.population){const b=Buffer.alloc(8);b.writeBigInt64LE(BigInt(n));chunks.push(b);}for(const row of graph.adjacency)chunks.push(u32(row.length),...row.map(u32));chunks.push(u32(graph.edges.length));for(const [u,v,w]of graph.edges)chunks.push(u32(u),u32(v),f64(w));const binary=work+'/ri_2020.adj.bin';await fs.writeFile(binary,Buffer.concat(chunks));await fs.writeFile(work+'/ri_2020_geoids.json',JSON.stringify(Object.fromEntries(graph.geoids.map((id,i)=>[i,id]))));
+let cliAssignments;
+for(const weights of ['geographic','zone-membership']){
+ const out=work+'/'+weights,args=['state','--state','RI','--state-name','rhode_island','--year','2020','--output-dir',out,'--label','zone_test','--adjacency',binary,'--districts','2','--partition-mode','edge-weighted','--weights-override',weights,'--search','single','--seed','42','--niter','100','--balance-tolerance','25','--metis-engine','metis-core'];
+ const p=spawnSync(path.resolve('target/release/bisect.exe'),args,{cwd:work,encoding:'utf8',windowsHide:true,timeout:180000,maxBuffer:32*1024*1024});await fs.writeFile(root+'/cli-'+weights+'.log',p.stdout+'\n'+p.stderr);assert.equal(p.status,0,p.stderr);
+ if(weights==='zone-membership')assert.match(p.stderr,/zone-membership requires[\s\S]*Falling back to geographic weights/);
+ const raw=JSON.parse(await fs.readFile(out+'/2020/plans/zone_test/data/final_assignments.json','utf8')),assignments=Object.fromEntries(graph.geoids.map((id,i)=>[id,raw[i]]));if(cliAssignments)assert.deepEqual(assignments,cliAssignments);else cliAssignments=assignments;
+ const wasm=engine.execute(wrap(options));assert.deepEqual(wasm.result.assignments,assignments);
+}
+for(const bad of [{...zoneFallbackEvidence(),zone_data_applied:true},{...zoneFallbackEvidence(),effective_weights:'zones'},{...zoneFallbackEvidence(),extra:true}])assert.throws(()=>verifyZoneFallback(bad));
+const sha=b=>createHash('sha256').update(b).digest('hex');await fs.writeFile(root+'/evidence.json',JSON.stringify({wasm:engine.artifactIdentity,before_wasm:old.artifactIdentity,native_cli_sha256:sha(await fs.readFile('target/release/bisect.exe')),native_host_sha256:sha(await fs.readFile('target/release/examples/execute_tool_request.exe')),whole_native_matches:matches,unchanged_geographic_results:legacy,multiscale_fixed_adaptive:ms,actual_cli_geographic_and_zone_assignment_matches:2,zone_data_applied:false,scope:'Retained RI graph; nine ordinary method/search cases plus fixed/adaptive tract-county, block-group/tract and block-group/county fixtures. Native zone spatial join remains unimplemented. No zone-data or legal claim.',published:false},null,2)+'\n');console.log('PASS zone fallback: '+matches+' whole native replies, '+legacy+' unchanged geographic results, 2 actual CLI runs, fixed/adaptive multiscale and explicit no-zone-data evidence');

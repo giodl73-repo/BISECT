@@ -244,6 +244,9 @@ pub fn aggregate_demographic_from_str(
     )?)
 }
 
+/// Shared file-independent reader used by the native and browser analyzers.
+pub fn analyze_demographic_csv<R:std::io::Read>(reader:R,assignments:&HashMap<String,usize>,num_districts:usize)->anyhow::Result<DemographicResult>{let mut rdr=csv::Reader::from_reader(reader);validate_columns(rdr.headers()?)?;let rows:Vec<DemographicRow>=rdr.deserialize().collect::<Result<Vec<_>,_>>()?;Ok(try_aggregate_demographic(&rows,assignments,num_districts)?)}
+
 pub struct DemographicAnalyzer;
 
 impl Analyzer for DemographicAnalyzer {
@@ -271,22 +274,8 @@ impl Analyzer for DemographicAnalyzer {
             )
         })?;
 
-        let mut rdr = csv::Reader::from_path(csv_path)
-            .with_context(|| format!("cannot open demographics CSV: {}", csv_path.display()))?;
-
-        let headers = rdr.headers()?.clone();
-        validate_columns(&headers)?;
-
-        let rows: Vec<DemographicRow> = rdr
-            .deserialize()
-            .collect::<Result<Vec<_>, _>>()
-            .context("failed to parse demographics CSV rows")?;
-
-        Ok(try_aggregate_demographic(
-            &rows,
-            ctx.assignments,
-            ctx.num_districts,
-        )?)
+        let file=std::fs::File::open(&csv_path).with_context(||format!("cannot open analyzer CSV: {}",csv_path.display()))?;
+        analyze_demographic_csv(file,ctx.assignments,ctx.num_districts)
     }
 }
 

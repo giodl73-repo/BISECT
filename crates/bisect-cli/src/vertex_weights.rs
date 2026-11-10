@@ -18,13 +18,7 @@
 /// Which vertex balance constraints METIS should enforce.
 /// Ordering matters: first entry = first column of vwgt.
 /// Add a new constraint here; `build_vertex_weights` handles the data.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum VertexConstraintKind {
-    /// Census population (always present, usually first).
-    Population,
-    /// TIGER ALAND land area in hectares. Requires TIGER geometry.
-    Area,
-}
+pub use bisect_runner::state_config::VertexConstraintKind;
 
 /// Build `ComposedVertexWeighter` from a spec + graph data.
 /// Called in `run_single_state` after the adjacency graph is loaded.

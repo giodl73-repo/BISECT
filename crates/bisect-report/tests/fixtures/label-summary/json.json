@@ -1,0 +1,18 @@
+{
+  "created": "2026-10-23T23:58:43Z",
+  "label": "summary_fixture",
+  "report_type": "label_analysis",
+  "states": {
+    "iowa": {
+      "status": "skipped"
+    },
+    "rhode_island": {
+      "error": "Missing data",
+      "status": "failed"
+    },
+    "washington": {
+      "status": "ok"
+    }
+  },
+  "year": "2020"
+}

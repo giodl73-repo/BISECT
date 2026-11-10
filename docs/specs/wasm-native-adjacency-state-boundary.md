@@ -1,0 +1,18 @@
+# Selected native adjacency State compilation
+
+`prepare-native-adjacency-state-run` binds the real native State parser/compositor to the selected native binary reader. Its typed input contains original argument strings, the binary preparation input (including selected companion bytes and declared scope), optional auxiliary JSON/name, and export label/chamber/timestamp. Preparation is inert; execution remains an explicit prepared-engine action.
+
+This boundary requires explicit `--adjacency`. The last path component must equal the selected binary's filename. The path is retained intent and is never opened. Original state/year and export chamber must match the source. The source reader validates the actual binary and companions, hashes all selected bytes, and retains ordered IDs and county identities. The response retains that source receipt without duplicating graph JSON.
+
+Native adjacency overrides bypass the normal Census year and resolution lookup, as the native CLI does. This permits imported/precinct units and four-digit custom years for two-uppercase-letter jurisdictions. Custom units require an aligned county companion. The current portable graph schema does not establish support for longer jurisdiction identifiers or arbitrary year strings. An absent district count uses the native chamber registry, with the native congressional manifest fallback; missing counts require explicit `--districts`. Existing count and graph bounds still apply.
+
+The adjacency exception is private to this verified-source entry point. Ordinary graph/template compilation retains its Census scope checks and refuses `--adjacency`. The same fourteen-flag orchestration guard remains; only adjacency is exempted here, after native flag review. Reset, force, output installation, discovery, manifest and other unsupported orchestration effects remain refused. No source acquisition, path access, partition, installation or certification occurs during preparation.
+
+Validation on WASM `fbfdf7fb8c5b8a82a9981d21480e285de7b78ecc17a41a71f5764adcd1ec5418`:
+
+- `test_native_adjacency_state_boundary.mjs`: nine whole native-host replies, fifteen exact native-host errors, four explicit runs and four independent native n-way kernel assignment matches. Covers custom imported/precinct scope, House/Senate metadata, non-Census years, native resolution bypass and inferred congressional count. Checks preflight before binary parsing and refusal of mismatched source scope/basename/chamber, missing counties/count and unsupported effects.
+- Two ordinary results equal the protected previous WASM artifact. Build gates use `--skip-previous` because the protected local artifact is not a repository fixture; evidence states whether that comparison occurred.
+- `test_native_adjacency_state_artifacts.py`: independent source byte/hash/name/size identities, compiled request hashes, exact maximum-u64 seed, ordered unit/county/year/chamber identities and byte-exact RPLAN/RCTX exports. Requires the native comparison, not WASM-only evidence.
+- Existing State matrix: 87 compilations, 61 runs/exports, 24 independent native matches and 148 whole host matches. The 37-field option contract remains checked.
+
+This milestone establishes the Rust/WASM boundary; its evidence records `ui_connected: false` because it tests that layer alone. The subsequent [custom selected-source State UI](wasm-native-custom-state-sources.md) connects precinct/imported sources to this API with separate browser/export evidence. Existing known-Census House/Senate source UI remains separate. Synthetic fixtures do not establish authentic legislative data, legal validity, every algorithm/source combination or complete parity. No deployment is included.

@@ -1,7 +1,6 @@
 use crate::args::ImportArgs;
-use bisect_core::state_code_to_fips;
 use bisect_report::{
-    import_gerrychain_to_assignments, validate_geoid_format_batch, write_rplan, RplanMetadata,
+    validate_geoid_format_batch,
 };
 /// import_cmd.rs — `BISECT import` command dispatch.
 ///
@@ -64,110 +63,19 @@ pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
         .join(&args.label);
     std::fs::create_dir_all(&plan_dir)?;
 
-    // Dispatch based on format
-    let assignments = match args.format.as_str() {
-        "gerrychain" => {
-            // GerryChain v2.3 JSON import
-            import_gerrychain_to_assignments(&content)?
-        }
-        "dra-csv" => {
-            // Dave's Redistricting App CSV import
-            import_assignments_from_dra_csv(&content)?
-        }
-        _ => {
-            // Auto-detect DRA CSV by file extension
-            if file_path.extension().and_then(|e| e.to_str()) == Some("csv") {
-                import_assignments_from_dra_csv(&content)?
-            } else {
-                // Default: GeoJSON import (PIP assignment)
-                // For GeoJSON import without real tract centroids: use assignment field from properties
-                // or fall back to deriving centroids from the GeoJSON itself
-                import_assignments_from_geojson_properties(&content)?
-            }
-        }
-    };
-
-    // Validate GEOID format
-    validate_geoid_format_batch(&assignments)
-        .map_err(|e| anyhow::anyhow!("GEOID validation failed: {e}"))?;
-
-    let num_districts = assignments.values().copied().max().unwrap_or(0);
-
-    let metadata = RplanMetadata {
-        label: args.label.clone(),
-        state_fips: state_code_to_fips(&args.state.to_uppercase())
-            .unwrap_or("00")
-            .to_string(),
-        state_code: args.state.to_uppercase(),
-        year: args.year.clone(),
-        chamber: "imported".into(),
-        num_districts,
-        population_source: "unknown".into(),
-        balance_tolerance_pct: 0.0,
-        created_at: bisect_report::now_iso8601(),
-        created_by: "bisect import".into(),
-        notes: Some(format!("imported from {}", file_path.display())),
-        ..Default::default()
-    };
-
-    let rplan_path = plan_dir.join(format!("{}.rplan", args.label));
-    write_rplan(&rplan_path, &metadata, &assignments, None)?;
-
-    // Also write final_assignments.json for compatibility with analyze command
-    let assignments_path = plan_dir.join("final_assignments.json");
-    std::fs::write(
-        &assignments_path,
-        serde_json::to_string_pretty(&assignments)?,
-    )?;
-
-    // SSI Task 7 (civic-bypass) — validation: --as-civic-counter-proposal
-    // requires --submitted-by, otherwise the manifest tag becomes meaningless.
-    if args.as_civic_counter_proposal {
-        let submitted_by = args.submitted_by.as_deref().unwrap_or("");
-        if submitted_by.trim().is_empty() {
-            anyhow::bail!(
-                "[INPUT] --as-civic-counter-proposal requires --submitted-by \"<organization name>\". \
-                 Without a submitter, the civic-counter-proposal tag is unusable in downstream \
-                 comparison reports. See docs/superpowers/specs/2026-04-30-state-staff-interop.md."
-            );
-        }
-    }
-
-    // Compute submission_type / submitted_at default per SSI Task 7.
-    let submission_type = if args.as_civic_counter_proposal {
-        "civic_counter_proposal".to_string()
-    } else {
-        "authoritative".to_string()
-    };
-    let submitted_at = args.submitted_at.clone().or_else(|| {
-        if args.as_civic_counter_proposal {
-            Some(bisect_report::now_iso8601())
-        } else {
-            None
-        }
-    });
-
-    // Write minimal manifest.json
-    let manifest = bisect_report::PlanManifest {
-        label: args.label.clone(),
-        state_code: args.state.to_uppercase(),
-        year: args.year.clone(),
-        chamber: "imported".into(),
-        num_districts,
-        created_at: bisect_report::now_iso8601(),
-        submission_type,
-        submitted_by: args.submitted_by.clone(),
-        submitted_at,
-        source_tool: Some(args.format.clone()),
-        ..Default::default()
-    };
-    // SSI Task 6 — Callais p.36 mutex preflight at the import gate. For
-    // freshly-imported plans this is mostly a forward guard; partition_mode
-    // and population_source on imports default to empty strings so the
-    // preflight passes. The check fires for hand-edited or upstream-tampered
-    // manifest fields.
+    let assignments=bisect_report::import_source::parse(&args.format,&file_path.to_string_lossy(),&content)?;
+    validate_geoid_format_batch(&assignments).map_err(|e|anyhow::anyhow!("GEOID validation failed: {e}"))?;
+    let settings=bisect_report::import_source::Settings{label:args.label.clone(),state:args.state.clone(),year:args.year.clone(),format:args.format.clone(),source_name:file_path.display().to_string(),created_at:bisect_report::now_iso8601(),as_civic_counter_proposal:args.as_civic_counter_proposal,submitted_by:args.submitted_by.clone(),submitted_at:args.submitted_at.clone()};
+    let plan=bisect_report::import_source::legacy(&settings,assignments);
+    let legacy_files=bisect_report::import_source::legacy_files(&args.label,&plan)?;
+    for name in [format!("{}.rplan",args.label),"final_assignments.json".into()]{std::fs::write(plan_dir.join(&name),&legacy_files[&name])?;}
+    // Preserve the native failure boundary: a rejected civic manifest leaves
+    // the earlier legacy RPLAN/assignments files, without promoting a manifest.
+    let manifest=bisect_report::import_source::manifest(&settings,plan.metadata.num_districts,&bisect_report::now_iso8601(),&bisect_report::now_iso8601())?;
     bisect_report::manifest::callais_preflight(&manifest)?;
-    bisect_report::write_manifest_atomic(&plan_dir, &manifest)?;
+    bisect_report::write_manifest_atomic(&plan_dir,&manifest)?;
+    let rplan_path=plan_dir.join(format!("{}.rplan",args.label));
+    let assignments=&plan.assignments;let num_districts=plan.metadata.num_districts;
 
     eprintln!(
         "[OK] Imported {} tracts → {} districts. RPLAN: {}",
@@ -179,155 +87,7 @@ pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Import assignments from GeoJSON properties (tract-level assignments embedded in features).
-/// Each feature must have a "geoid" and "district" property.
-/// If features have polygon geometry with district_id: use those as district polygons.
-fn import_assignments_from_geojson_properties(
-    geojson_str: &str,
-) -> anyhow::Result<std::collections::HashMap<String, usize>> {
-    let v: serde_json::Value = serde_json::from_str(geojson_str)?;
-
-    // Check if this is a tract-level assignment GeoJSON (features have geoid property)
-    let features = v["features"].as_array();
-    if let Some(arr) = features {
-        // Try to extract geoid → district from feature properties
-        let mut assignments = std::collections::HashMap::new();
-        for feature in arr {
-            let props = &feature["properties"];
-            let geoid = props["geoid"].as_str().or_else(|| props["GEOID"].as_str());
-            if let Some(geoid) = geoid {
-                let district = props["district"].as_u64().ok_or_else(|| {
-                    anyhow::anyhow!(
-                        "[INPUT] GeoJSON assignment for GEOID {geoid} is missing an integer district"
-                    )
-                })?;
-                assignments.insert(
-                    geoid.to_string(),
-                    validate_import_district(geoid, district)?,
-                );
-            }
-        }
-        if !assignments.is_empty() {
-            return Ok(assignments);
-        }
-
-        // If no tract assignments found: this is a district-polygon GeoJSON.
-        // We can't do PIP without real tract centroids; return error with guidance.
-        anyhow::bail!(
-            "GeoJSON does not contain tract-level assignments (geoid + district properties). \
-             For district-polygon GeoJSON, provide tract centroids via a supplementary file \
-             or use the Python pipeline's import command."
-        );
-    }
-
-    anyhow::bail!("Invalid GeoJSON: missing 'features' array")
-}
-
-/// Import assignments from Dave's Redistricting App CSV format.
-///
-/// DRA exports a two-column CSV:
-///   Variant 1: GEOID,DISTRICT header  (GEOID = 11-char numeric, DISTRICT = small int)
-///   Variant 2: DISTRICT,GEOID header  (reversed columns)
-///   Variant 3: no header              (first column is detected as GEOID by length)
-///
-/// Returns HashMap<GEOID, district_id>.
-pub fn import_assignments_from_dra_csv(
-    csv_str: &str,
-) -> anyhow::Result<std::collections::HashMap<String, usize>> {
-    let mut lines = csv_str.lines().peekable();
-    if lines.peek().is_none() {
-        anyhow::bail!("DRA CSV is empty");
-    }
-
-    // Detect header row by checking whether the first token is numeric.
-    let first_line = *lines.peek().unwrap();
-    let first_fields: Vec<&str> = first_line.splitn(2, ',').collect();
-    let has_header = !first_fields
-        .get(0)
-        .map(|f| f.trim())
-        .unwrap_or("")
-        .chars()
-        .next()
-        .map(|c| c.is_ascii_digit())
-        .unwrap_or(false);
-
-    // Determine column order from header (or default to GEOID=0, DISTRICT=1).
-    let (geoid_col, district_col) = if has_header {
-        let header_line = lines.next().unwrap(); // consume the header
-        let headers: Vec<&str> = header_line.split(',').collect();
-        let h0 = headers
-            .get(0)
-            .map(|h| h.trim().to_uppercase())
-            .unwrap_or_default();
-        let h1 = headers
-            .get(1)
-            .map(|h| h.trim().to_uppercase())
-            .unwrap_or_default();
-        // Detect reversed order: first column is DISTRICT (small-int-like name)
-        let geoid_first = h0.contains("GEOID") || h0.contains("GEO_ID");
-        let district_first = h0.contains("DISTRICT") || h0.contains("DIST") || h0 == "ID";
-        if district_first && (h1.contains("GEOID") || h1.contains("GEO_ID")) {
-            (1usize, 0usize) // reversed: DISTRICT, GEOID
-        } else if geoid_first {
-            (0, 1) // normal: GEOID, DISTRICT
-        } else {
-            // Unknown header order — try to auto-detect from first data row
-            (0, 1)
-        }
-    } else {
-        (0usize, 1usize) // no header: assume GEOID first
-    };
-
-    let mut assignments = std::collections::HashMap::new();
-    for (lineno, line) in lines.enumerate() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(',').collect();
-        let geoid_raw = fields.get(geoid_col).map(|f| f.trim()).unwrap_or("");
-        let district_raw = fields.get(district_col).map(|f| f.trim()).unwrap_or("");
-
-        // If auto-detect failed and geoid looks numeric with small value, swap
-        let (geoid, district_str) = if geoid_raw.len() < 5
-            && district_raw.len() == 11
-            && district_raw.chars().all(|c| c.is_ascii_digit())
-        {
-            (district_raw, geoid_raw)
-        } else {
-            (geoid_raw, district_raw)
-        };
-
-        let district: usize = district_str.parse().map_err(|_| {
-            anyhow::anyhow!(
-                "DRA CSV line {}: cannot parse district '{}' as integer",
-                lineno + 1,
-                district_str
-            )
-        })?;
-        if district == 0 {
-            anyhow::bail!(
-                "[INPUT] DRA CSV line {}: assignment for GEOID {} uses invalid district 0",
-                lineno + 1,
-                geoid
-            );
-        }
-        assignments.insert(geoid.to_string(), district);
-    }
-
-    if assignments.is_empty() {
-        anyhow::bail!("DRA CSV produced no assignments — check file format");
-    }
-    Ok(assignments)
-}
-
-fn validate_import_district(geoid: &str, district: u64) -> anyhow::Result<usize> {
-    if district == 0 {
-        anyhow::bail!("[INPUT] GeoJSON assignment for GEOID {geoid} uses invalid district 0");
-    }
-    usize::try_from(district)
-        .map_err(|_| anyhow::anyhow!("[INPUT] district value {district} is too large"))
-}
+pub use bisect_report::assignment_import::{import_assignments_from_geojson_properties, import_assignments_from_dra_csv};
 
 // ---------------------------------------------------------------------------
 // Tests — Task 7

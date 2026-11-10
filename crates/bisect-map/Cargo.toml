@@ -7,6 +7,7 @@ license.workspace = true
 description = "Native Rust map rendering for redistricting outputs (SVG + PNG)"
 
 [dependencies]
+bisect-analysis = { path = "../bisect-analysis" }
 geo.workspace = true
 geo-types.workspace = true
 serde.workspace = true

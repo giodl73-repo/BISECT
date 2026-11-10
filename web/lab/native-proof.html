@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Native decision proofs · Bisect laboratory</title>
+<style>body{font:16px system-ui;max-width:900px;margin:3rem auto;padding:0 1rem;background:#f5f7fa;color:#182638}section{padding:1.5rem;background:white;border:1px solid #cbd5e1;border-radius:10px}label{display:block;margin:1rem 0}button{padding:.6rem 1rem;margin:.3rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf2f7;padding:1rem;max-height:28rem;overflow:auto}#status{font-weight:600}small{display:block;margin:.5rem 0}</style></head>
+<body><h1>Native decision proofs</h1><p>Compile the native compact models, generate their proofs with RoundingSat, and check each proof independently with VeriPB. All computation runs locally in WASM. <a href="./native-tree.html">Verify a complete recursive tree.</a></p>
+<section><label>Native split instance JSON <input id="instance" type="file" accept=".json,application/json"></label><small id="instance-name">No instance loaded.</small>
+<label>Open proof session <input id="open-session" type="file" accept=".json,application/json"></label><button id="save-session" disabled>Save proof session</button><button id="verify-session" disabled>Verify saved proofs</button>
+<label>Native discovery JSON <input id="discovery" type="file" accept=".json,application/json"></label><small id="discovery-name">No discovery loaded.</small>
+<small id="seed">Recorded discovery seed: unavailable. RoundingSat does not use a selectable seed.</small>
+<label>Solver time limit per decision in seconds <input id="seconds" type="number" min="1" max="120" value="30"></label>
+<button id="run" disabled>Generate and check native proofs</button><button id="cancel" disabled>Cancel</button><button id="save" disabled>Save run receipt</button><button id="package" disabled>Save checked proof package</button>
+<button id="issue-certificate" disabled>Issue native split certificate</button><button id="save-certificate" disabled>Save native split certificate</button>
+<small>Issuing a certificate recompiles the native models and checks every proof again in Rust. Opened sessions must first be explicitly verified. The certificate covers this split instance; recursive tree assembly is separate.</small>
+<p id="status" role="status">Choose instance and discovery files. Selecting files does not execute the tools.</p><div id="decisions"></div>
+<p>Each proof is bound to a freshly compiled native request, its exact formula and the supplied instance/discovery. A checked SAT counterexample or timeout leaves the incumbent unproved.</p>
+<p>This checks the supplied split model's decision package. Recursive tree certificate adoption, global plan optimality, source truth and legal compliance require separate work.</p>
+<small>Files stay on this device. Sources are limited to 3 MiB each. Cancel or the elapsed watchdog terminates the worker. Checked-package export requires a checked UNSAT proof for every required decision.</small><pre id="details"></pre></section>
+<script type="module" src="./native-proof-page.js"></script></body></html>

@@ -8,15 +8,17 @@ use serde_json::{json, Map, Value};
 /// - CSV has "geoid" and "district" columns
 use std::collections::HashMap;
 
-use crate::rplan::RplanFile;
+use crate::rplan::RplanFileWithIds;
+use serde::Serialize;
+use std::hash::Hash;
 
 /// Export district polygons as RFC 7946 GeoJSON FeatureCollection.
 /// Each Feature has "district_id" and (if available) "population" in properties.
 /// Geometry comes from rplan.geometry (GeoJSON FeatureCollection) if present.
 /// If no geometry: produces centroid-only Point features (placeholder).
-pub fn export_geojson(plan: &RplanFile) -> anyhow::Result<String> {
+pub fn export_geojson<D: Copy + Ord + Hash + Serialize>(plan: &RplanFileWithIds<D>) -> anyhow::Result<String> {
     // Build a map of district_id → list of assignments (GEOIDs) for counting
-    let mut district_geoids: HashMap<usize, Vec<&str>> = HashMap::new();
+    let mut district_geoids: HashMap<D, Vec<&str>> = HashMap::new();
     for (geoid, &dist) in &plan.assignments {
         district_geoids
             .entry(dist)
@@ -50,8 +52,8 @@ pub fn export_geojson(plan: &RplanFile) -> anyhow::Result<String> {
 }
 
 /// Build placeholder features (no real geometry) with district_id property.
-fn build_empty_district_features(district_geoids: &HashMap<usize, Vec<&str>>) -> Vec<Value> {
-    let mut districts: Vec<usize> = district_geoids.keys().copied().collect();
+fn build_empty_district_features<D: Copy + Ord + Hash + Serialize>(district_geoids: &HashMap<D, Vec<&str>>) -> Vec<Value> {
+    let mut districts: Vec<D> = district_geoids.keys().copied().collect();
     districts.sort_unstable();
 
     districts
@@ -74,7 +76,7 @@ fn build_empty_district_features(district_geoids: &HashMap<usize, Vec<&str>>) ->
 /// Schema: `{"assignment": {"GEOID": district_int, ...}, "gerrychain_version_target": "2.3"}`
 /// Field name is "assignment" (singular) — GerryChain v2.3 convention.
 /// RPLAN uses "assignments" (plural) — these must be mapped.
-pub fn export_gerrychain_v23(plan: &RplanFile) -> anyhow::Result<String> {
+pub fn export_gerrychain_v23<D: Serialize>(plan: &RplanFileWithIds<D>) -> anyhow::Result<String> {
     let assignment: Map<String, Value> = plan
         .assignments
         .iter()
@@ -94,37 +96,39 @@ pub fn export_gerrychain_v23(plan: &RplanFile) -> anyhow::Result<String> {
 /// Import GerryChain v2.3 JSON back to an RplanFile assignments map.
 /// GerryChain uses "assignment" (singular); we produce "assignments" (plural).
 pub fn import_gerrychain_to_assignments(gc_json: &str) -> anyhow::Result<HashMap<String, usize>> {
-    let v: Value = serde_json::from_str(gc_json)?;
-    let assignment = v["assignment"]
-        .as_object()
-        .ok_or_else(|| anyhow::anyhow!("GerryChain JSON missing 'assignment' field"))?;
-    let assignments: HashMap<String, usize> = assignment
-        .iter()
-        .map(|(k, v)| {
-            let dist = v
-                .as_u64()
-                .ok_or_else(|| anyhow::anyhow!("district value must be integer"))
-                as Result<u64, _>;
-            dist.and_then(|d| {
-                if d == 0 {
-                    anyhow::bail!(
-                        "[INPUT] GerryChain assignment for GEOID {k} uses invalid district 0"
-                    );
-                }
-                let district = usize::try_from(d)
-                    .map_err(|_| anyhow::anyhow!("district value {d} is too large"))?;
-                Ok((k.clone(), district))
-            })
-        })
-        .collect::<anyhow::Result<_>>()?;
-    Ok(assignments)
+    #[derive(serde::Deserialize)]
+    struct Input { #[serde(deserialize_with="unique_assignments")] assignment:HashMap<String,u64> }
+    let input:Input=serde_json::from_str(gc_json)?;
+    input.assignment.into_iter().map(|(k,d)| {
+        if d==0 { anyhow::bail!("[INPUT] GerryChain assignment for GEOID {k} uses invalid district 0"); }
+        let d=usize::try_from(d).map_err(|_|anyhow::anyhow!("district value {d} is too large"))?;
+        Ok((k,d))
+    }).collect()
+
+}
+
+// Detect repeated assignment keys before JSON maps can overwrite them.
+fn unique_assignments<'de,D:serde::Deserializer<'de>>(d:D)->Result<HashMap<String,u64>,D::Error>{
+    struct Unique;
+    impl<'de> serde::de::Visitor<'de> for Unique {
+        type Value=HashMap<String,u64>;
+        fn expecting(&self,f:&mut std::fmt::Formatter)->std::fmt::Result{f.write_str("unique unit assignments")}
+        fn visit_map<M:serde::de::MapAccess<'de>>(self,mut map:M)->Result<Self::Value,M::Error>{
+            let mut out=HashMap::new();
+            while let Some((id,district))=map.next_entry::<String,u64>()?{
+                if out.insert(id.clone(),district).is_some(){return Err(serde::de::Error::custom(format!("Duplicate GerryChain unit {id}")));}
+            }
+            Ok(out)
+        }
+    }
+    d.deserialize_map(Unique)
 }
 
 /// Export tract assignments as GEOID,district CSV (sorted by GEOID).
-pub fn export_tracts_csv(plan: &RplanFile) -> anyhow::Result<String> {
+pub fn export_tracts_csv<D: std::fmt::Display>(plan: &RplanFileWithIds<D>) -> anyhow::Result<String> {
     let mut wtr = csv::Writer::from_writer(Vec::new());
     wtr.write_record(["geoid", "district"])?;
-    let mut rows: Vec<(&String, &usize)> = plan.assignments.iter().collect();
+    let mut rows: Vec<(&String, &D)> = plan.assignments.iter().collect();
     rows.sort_by_key(|(k, _)| k.as_str());
     for (geoid, district) in rows {
         wtr.write_record([geoid.as_str(), &district.to_string()])?;

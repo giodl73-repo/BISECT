@@ -14,6 +14,7 @@ rmath-core = { path = "../rmath-core" }
 # The "vendored" sub-feature bundles the METIS C source so no system
 # libmetis is required at runtime — but a C compiler is needed at build time.
 metis = { version = "0.2", features = ["vendored"], optional = true }
+metis-sidecar = { package = "bisect-metis-sidecar", path = "../bisect-metis-sidecar", optional = true }
 thiserror.workspace   = true
 anyhow.workspace      = true
 serde.workspace       = true
@@ -24,6 +25,7 @@ sha2.workspace        = true
 # c-ffi: enables the C METIS FFI engine (links bundled C METIS source).
 # Requires a C compiler at build time; produces a standalone binary at runtime.
 c-ffi = ["dep:metis"]
+wasm-c-ffi = ["dep:metis-sidecar"]
 # shadow-metis: run metis-core alongside c-ffi and warn on quality regressions.
 # Implies c-ffi (both engines must be present to compare).
 shadow-metis = ["c-ffi"]

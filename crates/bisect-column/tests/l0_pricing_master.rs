@@ -24,7 +24,7 @@ fn pricing_generates_connected_balanced_columns_on_path() {
         weights: &weights,
         k: 2,
         tolerance: 0.01,
-    });
+    }).unwrap();
 
     let units: Vec<Vec<usize>> = pricing
         .generated_columns

@@ -1,3 +1,4 @@
+#[cfg(feature="filesystem")]
 use bisect_core::state_code_to_fips as core_fips;
 use serde_json::Value;
 /// import.rs — GeoJSON district polygon → PIP tract assignment + nearest fallback.
@@ -20,6 +21,18 @@ pub fn import_geojson_plan(
     geojson_str: &str,
     tract_centroids: &HashMap<String, (f64, f64)>,
 ) -> anyhow::Result<HashMap<String, usize>> {
+    Ok(import_geojson_plan_detailed(geojson_str,tract_centroids)?.assignments)
+}
+
+#[derive(Debug)]
+pub struct GeojsonAssignmentResult {
+    pub assignments:HashMap<String,usize>,
+    pub nearest_centroid_units:Vec<String>,
+}
+
+pub fn import_geojson_plan_detailed(
+    geojson_str:&str,tract_centroids:&HashMap<String,(f64,f64)>,
+)->anyhow::Result<GeojsonAssignmentResult>{
     use geo::algorithm::centroid::Centroid;
     use geo::{Contains, Point};
 
@@ -91,6 +104,7 @@ pub fn import_geojson_plan(
 
     // PIP assignment: for each tract centroid, find the containing polygon
     let mut assignments = HashMap::with_capacity(tract_centroids.len());
+    let mut nearest_centroid_units=Vec::new();
 
     for (geoid, &(lon, lat)) in tract_centroids {
         let pt = Point::new(lon, lat);
@@ -105,6 +119,7 @@ pub fn import_geojson_plan(
 
         if assigned.is_none() {
             // Fallback: nearest polygon centroid
+            nearest_centroid_units.push(geoid.clone());
             assigned = nearest_centroid(lon, lat, &district_centroids);
         }
 
@@ -114,7 +129,8 @@ pub fn import_geojson_plan(
         assignments.insert(geoid.clone(), dist);
     }
 
-    Ok(assignments)
+    nearest_centroid_units.sort();
+    Ok(GeojsonAssignmentResult{assignments,nearest_centroid_units})
 }
 
 fn parse_district_id(feature: &Value) -> anyhow::Result<usize> {
@@ -201,6 +217,7 @@ fn parse_coordinate_ring(ring: &Value, label: &str) -> anyhow::Result<Vec<geo::C
 
 /// Full import pipeline: GeoJSON file path → RplanFile written in memory.
 /// Sets `source = "imported"` and `source_file` in RPLAN metadata.
+#[cfg(feature="filesystem")]
 pub fn import_plan_to_rplan(
     geojson_path: &str,
     state_code: &str,
@@ -362,6 +379,22 @@ mod tests {
     }
 
     #[test]
+    fn test_detailed_import_reports_sorted_fallback_units() {
+        let centroids = HashMap::from([
+            ("53001001000".to_string(), (-122.5, 47.5)),
+            ("53001001002".to_string(), (-120.0, 47.5)),
+            ("53001001001".to_string(), (-124.0, 47.5)),
+        ]);
+        let source = fixture_2_district_geojson();
+        let result = import_geojson_plan_detailed(&source, &centroids).unwrap();
+        assert_eq!(result.nearest_centroid_units, vec!["53001001001", "53001001002"]);
+        assert_eq!(result.assignments["53001001000"], 1);
+        assert_eq!(result.assignments["53001001001"], 1);
+        assert_eq!(result.assignments["53001001002"], 2);
+        assert_eq!(result.assignments, import_geojson_plan(&source, &centroids).unwrap());
+    }
+
+    #[test]
     fn test_import_inside_polygon_assigned_correctly() {
         let geojson_str = fixture_2_district_geojson();
         let centroids = HashMap::from([
@@ -508,6 +541,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature="filesystem")]
     fn test_import_writes_source_imported_in_notes() {
         let geojson_str = fixture_2_district_geojson();
         let centroids = HashMap::from([("53001001000".to_string(), (-122.5, 47.5))]);

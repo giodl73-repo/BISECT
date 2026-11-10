@@ -1,0 +1,81 @@
+import {nativeSummarySourceFromAnalysis,nativeSummaryOutputDirectory,validateNativeSummarySource,nativeSummaryOutputFiles} from './native-label-summary.js';
+import {parseSafeJson,inspectJsonText} from './project.js';
+import {encodeBytes,validatePackagePath} from './package-files.js';
+import {labelBatchText,labelAnalysisFiles,labelAnalysisYearResult} from './label-analysis-files.js';
+import {storedZipBytes} from './reproducibility-files.js';
+const cap=25*1024*1024;
+export const LABEL_REPORT_DEFAULTS={generated_at:'',format:'html',audit_with_report:true};
+export function validateLabelReportInputs(v){
+ if(!v||Object.keys(v).some(k=>!['settings','source','years'].includes(k))||!Object.hasOwn(v,'source')||!v.settings||Object.keys(v.settings).filter(k=>!['report_variant','output_dir','native_label'].includes(k)).sort().join()!=='audit_with_report,format,generated_at'||!['html','json'].includes(v.settings.format)||typeof v.settings.audit_with_report!=='boolean'||typeof v.settings.generated_at!=='string'||v.settings.generated_at.length>100)throw new Error('Choose native report settings and a bounded timestamp.');
+ if(v.settings.report_variant!==undefined&&v.settings.report_variant!=='native-summary')throw new Error('Unknown report variant.');if(v.settings.native_label!==undefined&&(v.settings.report_variant!=='native-summary'||typeof v.settings.native_label!=='string'||v.settings.native_label.length>100))throw new Error('Invalid native repository label.');if(v.settings.output_dir!==undefined&&v.settings.report_variant!=='native-summary')throw new Error('Output directory is for native summaries.');if(v.settings.report_variant==='native-summary')nativeSummaryOutputDirectory(v.settings.output_dir);
+ if(Object.hasOwn(v,'years')&&(!Array.isArray(v.years)||v.years.length>10||v.years.some(year=>typeof year!=='string'||!/^\d{4}$/.test(year))||new Set(v.years).size!==v.years.length))throw new Error('Choose unique supplied four-digit report years.');
+ if(v.source!==null&&v.settings.report_variant==='native-summary'){const nativeSource=nativeSummarySourceFromAnalysis(parseSafeJson(labelBatchText(v.source)));if(v.settings.native_label&&v.settings.native_label!==nativeSource.label)throw new Error('Read or select sources for the chosen repository label.');if(v.years?.length>1)throw new Error('Native report takes one explicit year or all recorded years.');return v;}
+ if(v.source!==null){const source=parseSafeJson(labelBatchText(v.source));if(source?.batches){
+  if(Object.keys(source).some(k=>!['batches','registry_json'].includes(k))||Array.isArray(source.batches)||Object.keys(source.batches).length<1||Object.keys(source.batches).length>10)throw new Error('Select 1–10 report year batches.');let label;
+  for(const [year,batch]of Object.entries(source.batches)){validateLabelReportInputs({source:{name:v.source.name,base64:encodeBytes(new TextEncoder().encode(JSON.stringify(batch)))},settings:v.settings});const index=parseSafeJson(batch.analysis_index_json);if(!/^\d{4}$/.test(year)||index.year!==year||label!==undefined&&label!==index.label||Object.keys(batch).sort().join()!=='analysis_index_json,file_sha256,files'||Object.hasOwn(batch.files,'.bisect'))throw new Error('Report years need original indexes, one label and one separate shared registry.');label=index.label;}
+  if(source.registry_json!=null){if(typeof source.registry_json!=='string'||new TextEncoder().encode(source.registry_json).length>1024*1024)throw new Error('Registry exceeds 1 MiB.');parseSafeJson(source.registry_json);}
+ }else{
+if(!source||Object.keys(source).some(k=>!['analysis_index_json','file_sha256','files','registry_json'].includes(k))||!['analysis_index_json','file_sha256','files'].every(k=>Object.hasOwn(source,k))||typeof source.analysis_index_json!=='string'||new TextEncoder().encode(source.analysis_index_json).length>1024*1024||!source.files||typeof source.files!=='object'||Array.isArray(source.files)||Object.keys(source.files).length>842||!source.file_sha256||typeof source.file_sha256!=='object'||Array.isArray(source.file_sha256))throw new Error('Select a native analysis batch with exact file hashes.');parseSafeJson(source.analysis_index_json);if(source.registry_json!=null){if(typeof source.registry_json!=='string'||new TextEncoder().encode(source.registry_json).length>1024*1024)throw new Error('Registry exceeds 1 MiB.');parseSafeJson(source.registry_json);}if(Object.values(source.files).some(t=>typeof t!=='string')||Object.values(source.files).reduce((n,t)=>n+new TextEncoder().encode(t).length,0)>cap)throw new Error('Native analysis files exceed 25 MiB.');}}
+ if(v.years?.some(year=>!labelReportYearNames(v).includes(year)))throw new Error('Selected report year is absent from the supplied source.');
+ return v;
+}
+export function labelReportRequest(v){validateLabelReportInputs(v);if(!v.source||!v.settings.generated_at.trim())throw new Error('Select analyses and record a report timestamp.');const source=parseSafeJson(labelBatchText(v.source));if(v.settings.report_variant==='native-summary')return {operation:'run-native-label-summary-batch',input:{source:nativeSummarySourceFromAnalysis(source),year:v.years?.[0]??null,format:v.settings.format,generated_at:v.settings.generated_at,output_dir:nativeSummaryOutputDirectory(v.settings.output_dir)}};if(source.batches){const selected=new Set(v.years?.length?v.years:Object.keys(source.batches));return {operation:'run-label-report-years',input:{...source,batches:Object.fromEntries(Object.entries(source.batches).filter(([year])=>selected.has(year))),...v.settings}};}return {operation:'run-label-report',input:{...source,...v.settings}};}
+export async function readLabelReportSource(file){
+ if(!file||!Number.isSafeInteger(file.size)||file.size<1||file.size>cap)throw new Error('Select a nonempty analysis batch up to 25 MiB.');
+ const bytes=new Uint8Array(await file.arrayBuffer());if(bytes.length!==file.size)throw new Error('Analysis batch changed while reading.');
+ const source={name:file.name,base64:encodeBytes(bytes)},parsed=parseSafeJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes)),v={source,settings:{...LABEL_REPORT_DEFAULTS,...(parsed?.schema_version==='bisect-native-label-summary-sources-v1'?{report_variant:'native-summary'}:{})}};validateLabelReportInputs(v);return source;
+}
+export async function labelReportFromAnalysis(result,year){
+ await labelAnalysisFiles(result);
+ if(result.schema_version==='bisect-label-analysis-years-v1'){
+  const combined=result;result=labelAnalysisYearResult(combined,year);
+  // Report from the exact selected-year analysis and the latest shared registry snapshot.
+  if(typeof combined.registry_json==='string')result={...result,files:{...result.files,'.bisect':combined.registry_json},file_sha256:{...result.file_sha256,'.bisect':combined.file_sha256['.bisect']},registry_json:combined.registry_json};
+ }
+
+ const input={analysis_index_json:result.index_json,files:result.files,file_sha256:result.file_sha256};if(typeof result.registry_json==='string')input.registry_json=result.registry_json;
+ const source={name:`${result.label}-${result.year}-report-sources.json`,base64:encodeBytes(new TextEncoder().encode(JSON.stringify(input)))};
+ return validateLabelReportInputs({source,settings:{...LABEL_REPORT_DEFAULTS}});
+}
+export function labelReportYearNames(v){if(!v?.source)return [];const source=parseSafeJson(labelBatchText(v.source));if(source.schema_version==='bisect-native-label-summary-sources-v1')return Object.keys(source.sources);return source.batches?Object.keys(source.batches).sort():[parseSafeJson(source.analysis_index_json).year];}
+export async function labelReportFromAnalysisYears(result){
+ await labelAnalysisFiles(result);const source={batches:{}};const completed=result.schema_version==='bisect-label-analysis-years-v1'?result.years.filter(item=>item.status==='completed').map(item=>item.result):[result];
+ for(const item of completed){const files={...item.files},hashes={...item.file_sha256};delete files['.bisect'];delete hashes['.bisect'];source.batches[item.year]={analysis_index_json:item.index_json,files,file_sha256:hashes};}
+ if(typeof result.registry_json==='string')source.registry_json=result.registry_json;
+ return validateLabelReportInputs({source:{name:`${result.label}-all-years-report-sources.json`,base64:encodeBytes(new TextEncoder().encode(JSON.stringify(source)))},settings:{...LABEL_REPORT_DEFAULTS}});
+}
+const sha=async bytes=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');
+export async function labelReportFiles(result){
+ if(result?.report_variant==='native-summary-batch')return nativeSummaryOutputFiles(result);
+
+ if(result?.schema_version==='bisect-label-report-years-v1')return reportYearsFiles(result);
+ if(result?.schema_version!=='bisect-label-report-v1'||!/^[A-Za-z0-9_-]{1,100}$/.test(result.label)||!/^\d{4}$/.test(result.year)||!result.files||!result.file_sha256)throw new Error('Run batch reports first.');
+ const root=`reports/${result.label}/${result.year}/`,indexPath=root+'index.json';
+ if(result.index_path!==indexPath||typeof result.index_json!=='string'||result.files[indexPath]!==result.index_json||await sha(new TextEncoder().encode(result.index_json))!==result.index_sha256)throw new Error('Report index path or hash mismatch.');
+ const index=parseSafeJson(result.index_json);if(index.label!==result.label||index.year!==result.year||!['html','json'].includes(index.format)||!Array.isArray(index.files)||index.files.length>512||new Set(index.files).size!==index.files.length)throw new Error('Invalid native report index.');
+ const entries=Object.entries(result.files);if(entries.length!==index.files.length+1+(Object.hasOwn(result.files,'.bisect')?1:0)||Object.keys(result.file_sha256).length!==entries.length)throw new Error('Report file count does not match the index.');
+ let total=0;const files=[];
+ for(const [path,text]of entries){if(typeof text!=='string')throw new Error('Report file must be text.');const relative=path.slice(root.length);if(path==='.bisect'){if(result.registry_promoted!==true||text!==result.registry_json)throw new Error('Registry output does not match the recorded update.');parseSafeJson(text);}else if(!path.startsWith(root)||path!==indexPath&&!index.files.includes(relative))throw new Error('Unindexed report path.');if(path!=='.bisect'&&path!==indexPath&&relative!=='report-batch.json'){const parts=relative.split('/');if(parts.length!==2||!/^[a-z_]{1,100}$/.test(parts[0])||!['audit.json',`${result.label}_report.${index.format}`].includes(parts[1]))throw new Error('Unsafe or unknown native report filename.');}const bytes=new TextEncoder().encode(text);total+=bytes.length;if(total>cap)throw new Error('Report files exceed 25 MiB.');if(await sha(bytes)!==result.file_sha256[path])throw new Error('Report file hash mismatch.');if(path.endsWith('.json'))inspectJsonText(text);files.push([path,bytes]);}
+ return files;
+}
+
+export async function labelReportZip(result){return storedZipBytes(await labelReportFiles(result));}
+async function reportYearsFiles(result){
+ if(!/^[A-Za-z0-9_-]{1,100}$/.test(result.label)||!Array.isArray(result.years)||result.years.length<1||result.years.length>10||new Set(result.years.map(item=>item.year)).size!==result.years.length)throw new Error('Invalid multi-year report result.');
+ const expected=new Map();for(const item of result.years){if(!/^\d{4}$/.test(item.year)||!['completed','failed'].includes(item.status))throw new Error('Invalid report year outcome.');if(item.status==='completed'){if(item.result?.label!==result.label||item.result.year!==item.year)throw new Error('Report year identity mismatch.');for(const [path,bytes]of await labelReportFiles(item.result))if(path!=='.bisect')expected.set(path,bytes);}}
+ if(typeof result.registry_json==='string'){parseSafeJson(result.registry_json);expected.set('.bisect',new TextEncoder().encode(result.registry_json));}
+ const path=`reports/${result.label}/years.json`,text=result.files?.[path];if(typeof text!=='string')throw new Error('Missing multi-year report receipt.');const record=parseSafeJson(text);
+ if(record.schema_version!=='bisect-label-report-years-record-v1'||record.label!==result.label||record.generated_at!==result.generated_at||record.format!==result.format||record.audit_with_report!==result.audit_with_report||record.status!==result.status||JSON.stringify(record.requested_years)!==JSON.stringify(result.requested_years)||!Array.isArray(record.years)||record.years.length!==result.years.length||record.years.some((row,i)=>row.year!==result.years[i].year||row.status!==result.years[i].status||row.error!==(result.years[i].error??null)||row.index_sha256!==(result.years[i].result?.index_sha256??null)))throw new Error('Multi-year report receipt mismatch.');
+ expected.set(path,new TextEncoder().encode(text));if(Object.keys(result.files||{}).length!==expected.size||Object.keys(result.file_sha256||{}).length!==expected.size)throw new Error('Multi-year report file count mismatch.');let total=0;for(const [path,bytes]of expected){if(result.files[path]!==new TextDecoder().decode(bytes)||await sha(bytes)!==result.file_sha256[path])throw new Error('Multi-year report file/hash mismatch.');total+=bytes.length;if(total>cap)throw new Error('Multi-year reports exceed 25 MiB.');}return [...expected];
+}
+export async function startLabelReportYearsCheckpoint(request){
+ if(request?.operation!=='run-label-report-years'||!request.input?.batches)throw new Error('Select a multi-year report request.');const years=Object.keys(request.input.batches).sort();if(!years.length||years.length>10||years.some(year=>!/^\d{4}$/.test(year)))throw new Error('Invalid report checkpoint years.');let label;const hashes={};
+ for(const year of years){const text=request.input.batches[year].analysis_index_json,index=parseSafeJson(text);if(index.year!==year||label!==undefined&&label!==index.label)throw new Error('Report checkpoint source identities differ.');label=index.label;hashes[year]=await sha(new TextEncoder().encode(text));}
+ return {label,generated_at:request.input.generated_at,format:request.input.format,audit_with_report:request.input.audit_with_report,years,hashes};
+}
+export function retainLabelReportYearsCheckpoint(previous,event,binding){
+ const snapshot=event?.snapshot,sequence=previous?(previous.checkpoint_sequence||0)+1:binding?.resume_prefix_count||1;
+ if(event?.schema_version!=='bisect-label-report-years-progress-v1'||event.sequence!==sequence||!previous&&binding?.resume_prefix_count&&event.resume_verified!==true||JSON.stringify(event.requested_years)!==JSON.stringify(binding?.years)||snapshot?.schema_version!=='bisect-label-report-years-v1'||snapshot.label!==binding.label||snapshot.generated_at!==binding.generated_at||snapshot.format!==binding.format||snapshot.audit_with_report!==binding.audit_with_report||!Array.isArray(snapshot.years)||snapshot.years.length!==sequence||sequence>binding.years.length)throw new Error('Unexpected report checkpoint identity or sequence.');
+ for(const [i,item]of snapshot.years.entries()){if(item.year!==binding.years[i]||!['completed','failed'].includes(item.status))throw new Error('Unscheduled report checkpoint year.');if(item.status==='completed'){const result=item.result,index=parseSafeJson(result.index_json);if(result.label!==binding.label||result.year!==item.year||index.analysis_index_sha256!==binding.hashes[item.year]||index.label!==binding.label||index.year!==item.year||result.files?.[result.index_path]!==result.index_json)throw new Error('Report checkpoint source/index mismatch.');}if(previous&&i<sequence-1&&JSON.stringify(item)!==JSON.stringify(previous.years[i]))throw new Error('Earlier report checkpoint changed.');}
+ if(!snapshot.files||!snapshot.file_sha256||Object.keys(snapshot.files).length>5131||Object.values(snapshot.files).some(text=>typeof text!=='string')||Object.values(snapshot.files).reduce((size,text)=>size+new TextEncoder().encode(text).length,0)>cap)throw new Error('Report checkpoint files exceed bounds.');return {...snapshot,checkpoint_sequence:sequence,execution_status:sequence<binding.years.length?'running':'completed'};
+}

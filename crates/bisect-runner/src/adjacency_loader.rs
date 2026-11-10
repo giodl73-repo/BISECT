@@ -73,12 +73,15 @@ fn try_load_centroids(stem: &str, n_vertices: usize) -> Result<Vec<(f64, f64)>, 
     }
     let text =
         std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
+    parse_centroid_companion(&text,n_vertices,&path.display().to_string())
+}
+fn parse_centroid_companion(text:&str,n_vertices:usize,source_name:&str)->Result<Vec<(f64,f64)>,String>{
     let v: serde_json::Value =
-        serde_json::from_str(&text).map_err(|e| format!("parse {}: {e}", path.display()))?;
+        serde_json::from_str(&text).map_err(|e| format!("parse {}: {e}", source_name))?;
     let arr = v["centroids"].as_array().ok_or_else(|| {
         format!(
             "centroids file {} missing 'centroids' array key",
-            path.display()
+            source_name
         )
     })?;
     let centroids: Vec<(f64, f64)> = arr
@@ -102,7 +105,7 @@ fn try_load_centroids(stem: &str, n_vertices: usize) -> Result<Vec<(f64, f64)>, 
     if n_vertices > 0 && centroids.len() != n_vertices {
         return Err(format!(
             "centroids length mismatch: file {} has {} entries but adjacency has {} vertices",
-            path.display(),
+            source_name,
             centroids.len(),
             n_vertices
         ));
@@ -121,39 +124,27 @@ fn load_from_bin(bin_path: &Path, geoid_path: &Path) -> Result<LoadedGraph, Stri
 
     let bytes = std::fs::read(bin_path).map_err(|e| format!("read {}: {e}", bin_path.display()))?;
 
-    let graph = deserialize_adjacency(&bytes)
-        .map_err(|e| format!("deserialize {}: {e}", bin_path.display()))?;
+    let mut graph=load_adjacency_bytes(&bytes,None,None).map_err(|e|format!("deserialize {}: {e}",bin_path.display()))?;
+    if geoid_path.exists(){let content=std::fs::read_to_string(geoid_path).map_err(|e|format!("read geoids {}: {e}",geoid_path.display()))?;graph.index_to_geoid=parse_geoid_companion(&content)?;}
+    let stem=bin_path.to_string_lossy();let stem=stem.strip_suffix(".adj.bin").unwrap_or(&stem);
+    graph.tract_centroids=try_load_centroids(stem,graph.n_vertices)?;
+    Ok(graph)
+}
+fn parse_geoid_companion(content:&str)->Result<HashMap<usize,String>,String>{
+    let raw:HashMap<String,String>=serde_json::from_str(content).map_err(|e|format!("parse geoids: {e}"))?;
+    Ok(raw.into_iter().filter_map(|(k,v)|k.parse::<usize>().ok().map(|i|(i,v))).collect())
+}
 
-    // Load geoid mapping (optional — used for VRA demographics alignment)
-    let index_to_geoid: HashMap<usize, String> = if geoid_path.exists() {
-        let content = std::fs::read_to_string(geoid_path)
-            .map_err(|e| format!("read geoids {}: {e}", geoid_path.display()))?;
-        let raw: HashMap<String, String> =
-            serde_json::from_str(&content).map_err(|e| format!("parse geoids: {e}"))?;
-        raw.into_iter()
-            .filter_map(|(k, v)| k.parse::<usize>().ok().map(|ki| (ki, v)))
-            .collect()
-    } else {
-        HashMap::new()
-    };
-
-    let n_vertices = graph.n_vertices;
-    let n_edges = graph.n_edges;
-
-    // Load centroid companion file if present (optional -- no error if absent)
-    let stem = bin_path.to_string_lossy();
-    let stem = stem.strip_suffix(".adj.bin").unwrap_or(&stem);
-    let tract_centroids = try_load_centroids(stem, n_vertices)?;
-
-    Ok(LoadedGraph {
-        adjacency: graph.adjacency,
-        vertex_weights: graph.vertex_weights,
-        edge_weights: graph.edge_weights,
-        index_to_geoid,
-        n_vertices,
-        n_edges,
-        tract_centroids,
-    })
+/// Native adjacency and companion parsing without paths, Python or filesystem access.
+/// Hosts retain byte selections; absent companions retain native empty metadata semantics.
+/// Engine adapters must separately validate complete GEOID and geometry universes.
+pub fn load_adjacency_bytes(bytes:&[u8],geoids_json:Option<&str>,centroids_json:Option<&str>)->Result<LoadedGraph,String>{
+    let graph=deserialize_adjacency(bytes).map_err(|e|format!("deserialize adjacency: {e}"))?;
+    let index_to_geoid=if let Some(content)=geoids_json {
+        parse_geoid_companion(content)?
+    }else{HashMap::new()};
+    let tract_centroids=centroids_json.map(|text|parse_centroid_companion(text,graph.n_vertices,"selected centroid source")).transpose()?.unwrap_or_default();
+    Ok(LoadedGraph {adjacency:graph.adjacency,vertex_weights:graph.vertex_weights,edge_weights:graph.edge_weights,index_to_geoid,n_vertices:graph.n_vertices,n_edges:graph.n_edges,tract_centroids})
 }
 
 /// Python pkl shim fallback (used when .adj.bin not present).
@@ -820,4 +811,22 @@ mod tests {
             "counties must be adjacent when tracts cross boundary"
         );
     }
+    #[test]
+    fn centroid_decimal_rounding_matches_wasm() {
+        let centroids=parse_centroid_companion(r#"{"centroids":[[-71.52063413318334,41.702426445925276]]}"#,1,"selected source").unwrap();
+        assert_eq!(centroids[0].0.to_bits(),(-71.52063413318334_f64).to_bits());
+        assert_eq!(centroids[0].1.to_bits(),41.702426445925276_f64.to_bits());
+    }
+    #[test]
+    fn selected_bytes_match_native_file_loader() {
+        let dir=tempfile::tempdir().unwrap();let bin=dir.path().join("selected.adj.bin");
+        let graph=bisect_data::AdjacencyGraph {adjacency:vec![vec![1],vec![0]],vertex_weights:vec![11,7],edge_weights:[((0,1),2.5)].into_iter().collect(),n_vertices:2,n_edges:1,vertex_ext_perimeters:vec![],vertex_areas:vec![]};
+        let bytes=bisect_data::serialize_adjacency(&graph);let geoids=r#"{"0":"44001000100","1":"44001000200","ignored":"legacy"}"#;let centroids=r#"{"centroids":[[-71.5,41.5],[-71.4,41.6]]}"#;
+        std::fs::write(&bin,&bytes).unwrap();std::fs::write(dir.path().join("selected_geoids.json"),geoids).unwrap();std::fs::write(dir.path().join("selected_centroids.json"),centroids).unwrap();
+        let file=load_adjacency_pkl(&bin).unwrap();let memory=load_adjacency_bytes(&bytes,Some(geoids),Some(centroids)).unwrap();
+        assert_eq!(memory.adjacency,file.adjacency);assert_eq!(memory.vertex_weights,file.vertex_weights);assert_eq!(memory.edge_weights,file.edge_weights);assert_eq!(memory.index_to_geoid,file.index_to_geoid);assert_eq!(memory.tract_centroids,file.tract_centroids);assert_eq!(memory.n_vertices,file.n_vertices);assert_eq!(memory.n_edges,file.n_edges);
+        let absent=load_adjacency_bytes(&bytes,None,None).unwrap();assert!(absent.index_to_geoid.is_empty());assert!(absent.tract_centroids.is_empty());
+        assert!(load_adjacency_bytes(&bytes,Some("invalid"),None).is_err());assert!(load_adjacency_bytes(&bytes,None,Some(r#"{"centroids":[[1,2]]}"#)).is_err());
+    }
+
 }

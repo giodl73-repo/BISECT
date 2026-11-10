@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {planMapModel} from '../../web/lab/plan-map.js';
+import {parseGeometryJson,parseNativeMapPlanJson} from '../../web/lab/project.js';
+const native=JSON.parse(await fs.readFile('target/stream-state-source-batch/native-oracles/CA-52-topology.json','utf8'));
+const plan=parseNativeMapPlanJson(native.practitioner_export.document_json);
+const geometry=parseGeometryJson(await fs.readFile('target/full-ca-browser/prepared-geometry.json','utf8'));
+const model=planMapModel(plan,geometry);
+assert.equal(model.units,9129);assert.equal(model.k,52);assert.equal(model.features.length,9129);
+assert.deepEqual(model.features.map(feature=>feature.district),plan.plan.assignment);
+assert.throws(()=>planMapModel(plan,{...geometry,geometry_profile:'display-simplified'}),/500,000 position profile/);
+console.log('Actual CA interactive map model: all 9129 units and native assignments retained, explicit topology capacity accepted, smaller profile limit preserved.');

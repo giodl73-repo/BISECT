@@ -1,8 +1,10 @@
 pub mod analyzer;
 pub mod bloc_voting;
+pub mod bloc_voting_input;
 pub mod bloc_voting_writer;
 pub mod compactness;
 pub mod compactness_evidence;
+pub mod district_geometry;
 pub mod comparison;
 pub mod contiguity;
 pub mod county_names;
@@ -12,6 +14,7 @@ pub mod ensemble_diagnostics;
 pub mod exit_codes;
 pub mod nesting;
 pub mod partisan;
+pub mod partisan_report;
 pub mod permutation;
 pub mod political;
 pub mod proportionality;
@@ -83,3 +86,29 @@ pub use urban::{UrbanAnalyzer, UrbanDistrict, UrbanResult};
 pub use vra_analysis::{
     analyze_mm_districts, try_analyze_mm_districts, VraAnalysis, VraDistrict, VraError,
 };
+
+pub mod research_ensemble;
+
+pub mod suite_stability;
+
+pub mod population_geometry;
+
+pub mod national;
+
+pub mod location_policy;
+
+pub mod location_registry;
+
+pub mod manifest_provenance;
+
+pub mod tutorial_checksums;
+
+pub mod suite_assembly;
+
+pub mod civic;
+
+pub mod candidate_package;
+
+pub mod multi_plan_summary;
+
+pub mod civic_snapshot;

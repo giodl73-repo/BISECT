@@ -4,7 +4,7 @@ use crate::partisan::{run_partisan, PartisanArgs};
 use crate::runner::load_all_states;
 use bisect_analysis::{
     check_contiguity, compute_exit_code_with_flags, get_split_standard,
-    try_analyze_county_splits_with_state, try_analyze_municipal_splits, Analyzer, AnalyzerContext,
+    Analyzer, AnalyzerContext,
     AnalyzerType, DemographicAnalyzer, PoliticalAnalyzer, SummaryAnalyzer, UrbanAnalyzer,
 };
 use std::collections::HashMap;
@@ -46,6 +46,9 @@ pub fn check_election_census_year_mismatch(election_year: u32, plan_year: &str) 
 }
 
 pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
+    if args.splits_context.is_some() && (args.types.len()!=1 || !matches!(args.types.first(),Some(AnalyzerType::Splits))) {
+        anyhow::bail!("--splits-context requires --types splits alone; no other analyzer is run.");
+    }
     let year = args.year.to_string();
 
     // Locate output root first — needed for manifest-based state resolution.
@@ -180,12 +183,30 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
 
     // If assignments use tract indices (keys < 11 chars), resolve to GEOID-keyed map
     // using the adjacency geoids file so all analyzers can join by GEOID.
-    let assignments: HashMap<String, usize> = crate::geometry::resolve_to_geoid_assignments(
-        raw_assignments,
-        &adjacency_root,
-        &state_code,
-        &year,
-    );
+    let mut explicit_split_counties=None;
+    let mut explicit_split_municipalities=None;
+    let assignments: HashMap<String, usize> = if let Some(path)=&args.splits_context {
+        if std::fs::metadata(path)?.len()>8*1024*1024 {anyhow::bail!("Splits RCTX exceeds 8 MiB.");}
+        let context=rplan_io::read_rctx_str(&std::fs::read_to_string(path)?)?;
+        if !matches!(context.units.unit_kind,rplan_core::UnitKind::Precinct|rplan_core::UnitKind::Imported) {anyhow::bail!("--splits-context requires explicit precinct/imported unit identities; Census splits retain their existing path.");}
+        let plan_path=analysis_dir_base.join("plan.rplan");
+        if std::fs::metadata(&plan_path)?.len()>8*1024*1024 {anyhow::bail!("Splits RPLAN exceeds 8 MiB.");}
+        let plan=rplan_io::read_rplan_str(&std::fs::read_to_string(plan_path)?)?.plan;
+        rplan_audit::measurements::measure_plan(&plan,Some(&context)).map_err(anyhow::Error::msg)?;
+        if context.units.state.as_deref()!=Some(state_code.as_str()) || context.units.year!=Some(year.parse()?) || context.units.unit_universe_hash!=context.units.compute_unit_universe_hash()? {anyhow::bail!("Splits context scope or unit-universe identity mismatch.");}
+        let counties=context.subdivisions.as_ref().and_then(|s|s.county_ids.as_deref()).ok_or_else(||anyhow::anyhow!("Custom splits context has no explicit county identities; missing is not zero splits."))?;
+        explicit_split_counties=Some(bisect_analysis::splits::explicit_counties_from_ordered_units(&context.units.unit_ids,counties)?);
+        explicit_split_municipalities=context.subdivisions.as_ref().and_then(|s|s.municipal_ids.as_deref())
+            .map(|ids|bisect_analysis::splits::ExplicitMunicipalIdentities::from_ordered_units(&context.units.unit_ids,ids)).transpose()?;
+        if raw_assignments.len()!=context.units.unit_ids.len() {anyhow::bail!("Native indexed assignments do not cover the splits context.");}
+        let mut exact=HashMap::new();
+        for (i,unit) in context.units.unit_ids.iter().enumerate() {
+            let district=*raw_assignments.get(&i.to_string()).ok_or_else(||anyhow::anyhow!("--splits-context requires canonical zero-based native assignment index {i}."))?;
+            if district!=plan.assignment[i] as usize+1 {anyhow::bail!("Native assignments differ from the matching RPLAN at unit index {i}.");}
+            exact.insert(unit.clone(),district);
+        }
+        exact
+    }else{crate::geometry::resolve_to_geoid_assignments(raw_assignments,&adjacency_root,&state_code,&year)};
 
     let analysis_dir = analysis_dir_base.join("analysis");
     std::fs::create_dir_all(&analysis_dir)?;
@@ -355,38 +376,13 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                     "tract",
                 )?;
 
-                // Compute compactness metrics for each district using the largest polygon component
-                let mut district_results: Vec<serde_json::Value> = Vec::new();
-                for (district_id, mp) in &districts {
-                    if let Some(poly) = bisect_map::largest_component(mp) {
-                        match bisect_analysis::all_metrics(*district_id, poly) {
-                            Ok(metrics) => {
-                                district_results.push(serde_json::json!({
-                                    "district": metrics.district,
-                                    "polsby_popper": metrics.polsby_popper,
-                                    "reock": metrics.reock,
-                                    "convex_hull_ratio": metrics.convex_hull_ratio,
-                                    "perimeter_m": metrics.perimeter_m,
-                                    "area_m2": metrics.area_m2,
-                                    "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts"
-                                }));
-                            }
-                            Err(e) => {
-                                eprintln!(
-                                    "WARNING: compactness skipped for district {district_id}: {e}"
-                                );
-                            }
-                        }
-                    }
-                }
-                district_results.sort_by_key(|d| d["district"].as_u64().unwrap_or(0));
-
-                let result = serde_json::json!({
-                    "analyzer": "compactness",
-                    "state": state_code,
-                    "year": year,
-                    "districts": district_results
-                });
+                let mut result = bisect_analysis::district_geometry::compactness_report(
+                    &districts, &state_code, &year,
+                    bisect_analysis::district_geometry::CoordinateBasis::Wgs84Degrees,
+                    "EPSG:4326",
+                );
+                if let Some(path)=&args.compactness_population_csv {let source=std::fs::read_to_string(path)?;bisect_analysis::population_geometry::add_population_compactness(&mut result,&districts,&assignments,&source,bisect_analysis::district_geometry::CoordinateBasis::Wgs84Degrees).map_err(anyhow::Error::msg)?;}
+                if args.exact_reock { bisect_analysis::district_geometry::add_exact_reock(&mut result, &districts, None).map_err(anyhow::Error::msg)?; }
                 if args.stdout {
                     println!("{}", serde_json::to_string_pretty(&result)?);
                 } else {
@@ -471,58 +467,17 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             }
             AnalyzerType::Splits => {
                 let standard = get_split_standard(&state_code);
-                let county_result = try_analyze_county_splits_with_state(
-                    &assignments,
-                    None, // county names not loaded (optional enrichment)
-                    Some(&state_code),
-                )?;
-                // Municipal splits: not loaded unless geography data present
-                let place_to_tracts = HashMap::new();
-                let place_names = HashMap::new();
-                let municipal_result =
-                    try_analyze_municipal_splits(&assignments, &place_to_tracts, &place_names)?;
-
-                // Subdivision vocabulary: read from SplitStandard (populated from policy DB).
-                let (sub_term, sub_term_plural) = standard
-                    .as_ref()
-                    .map(|s| {
-                        (
-                            s.subdivision_term.clone(),
-                            s.subdivision_term_plural.clone(),
-                        )
-                    })
-                    .unwrap_or_else(|| ("county".into(), "counties".into()));
-
-                let out = serde_json::json!({
-                    "analyzer": "splits",
-                    "state": state_code,
-                    "year": year,
-                    "counties": {
-                        "subdivision_term": sub_term,
-                        "subdivision_term_plural": sub_term_plural,
-                        "total": county_result.total,
-                        "split": county_result.split,
-                        "preservation_score": county_result.preservation_score,
-                        "split_list": county_result.split_list,
-                        "legal_standard": county_result.legal_standard,
-                        "compliance_assessment": county_result.compliance_assessment,
-                        "disclaimer": county_result.disclaimer,
-                    },
-                    "municipalities": {
-                        "available": municipal_result.available,
-                        "total": municipal_result.total,
-                        "split": municipal_result.split,
-                        "preservation_score": municipal_result.preservation_score,
-                        "split_list": municipal_result.split_list,
-                    },
-                });
+                let mut out=if let Some(counties)=&explicit_split_counties {bisect_analysis::splits::assemble_explicit_splits_report(&assignments,counties,&state_code,&year,None,&HashMap::new(),&HashMap::new())?}else{bisect_analysis::splits::assemble_splits_report(&assignments,&state_code,&year,None,&HashMap::new(),&HashMap::new())?};
+                if let Some(municipalities)=&explicit_split_municipalities {
+                    municipalities.attach(&mut out,&assignments,&HashMap::new())?;
+                }
                 if args.stdout {
                     println!("{}", serde_json::to_string_pretty(&out)?);
                 } else {
                     write_json_atomic(&out_path, &out)?;
                     eprintln!("[OK] splits -> {}", out_path.display());
                     // Log the standard for auditing
-                    if let Some(ref s) = standard {
+                    if let Some(ref s) = standard.filter(|_|explicit_split_counties.is_none()) {
                         eprintln!("  Legal standard: {}", s.legal_standard);
                     }
                 }
@@ -640,10 +595,9 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
 /// Out-of-scope today (`--method rxc` returns not-yet-implemented per spec
 /// risk row).
 fn run_bloc_voting_dispatch(args: &AnalyzeArgs, analysis_dir: &Path) -> anyhow::Result<()> {
-    use bisect_analysis::bloc_voting::variants as bvv;
     use bisect_analysis::{
         build_bloc_voting_json, parse_race_of_candidate_csv, run_bloc_voting_family,
-        write_bloc_voting_outputs, BlocVotingConfig, BlocVotingTest, ProvenanceBlock, WriteContext,
+        write_bloc_voting_outputs, BlocVotingConfig, ProvenanceBlock, WriteContext,
     };
 
     if args.method != "wls" {
@@ -684,41 +638,14 @@ fn run_bloc_voting_dispatch(args: &AnalyzeArgs, analysis_dir: &Path) -> anyhow::
         "[bloc-voting] precinct TSV: {}",
         partisan_baseline.display()
     );
-    let precincts_by_candidate = load_precincts_by_candidate(partisan_baseline.as_path())?;
-    let n_total: usize = precincts_by_candidate.values().map(|v| v.len()).sum();
-    eprintln!(
-        "[bloc-voting] loaded {} candidate datasets ({} precinct rows total)",
-        precincts_by_candidate.len(),
-        n_total
-    );
-
-    if let Some((c, ps)) = precincts_by_candidate.iter().next() {
-        if ps.len() < args.min_precincts {
-            anyhow::bail!(
-                "[INPUT] candidate '{}' has only {} precincts (--min-precincts {}); \
-                 below the threshold for reliable inference. Either lower the threshold \
-                 deliberately or check that your precinct TSV is complete.",
-                c,
-                ps.len(),
-                args.min_precincts
-            );
-        }
-    }
-
-    // Build the family: one PRIMARY test per candidate. Robustness baselines +
-    // LOO variants are spec'd inputs the caller materializes; not auto-derived.
-    let mut tests: Vec<BlocVotingTest> = Vec::new();
-    for (cand, precincts) in &precincts_by_candidate {
-        tests.push(BlocVotingTest {
-            candidate: cand.clone(),
-            variant: bvv::PRIMARY.into(),
-            precincts: precincts.clone(),
-        });
-    }
+    let tests=bisect_analysis::bloc_voting_input::read_precinct_family(
+        std::fs::File::open(partisan_baseline)?,args.min_precincts)?;
+    bisect_analysis::bloc_voting_input::validate_annotation_coverage(&tests,&annotation_set,&args.party)?;
+    eprintln!("[bloc-voting] loaded {} candidate/variant tests",tests.len());
 
     let cfg = BlocVotingConfig {
         bootstrap_samples: args.bootstrap_samples,
-        bootstrap_seed: 42,
+        bootstrap_seed: args.bloc_bootstrap_seed,
         ci_level: args.ci_level,
         alpha: args.alpha,
         provenance: Some(annotation_set.provenance.clone()),
@@ -741,6 +668,8 @@ fn run_bloc_voting_dispatch(args: &AnalyzeArgs, analysis_dir: &Path) -> anyhow::
             "alpha": args.alpha,
             "ci_level": args.ci_level,
             "bootstrap_samples": args.bootstrap_samples,
+            "bootstrap_seed": args.bloc_bootstrap_seed.to_string(),
+            "bootstrap_protocol": "county-cluster-and-naive-chacha12-u64-v1",
             "min_precincts": args.min_precincts,
         })),
     };
@@ -782,72 +711,6 @@ fn run_bloc_voting_dispatch(args: &AnalyzeArgs, analysis_dir: &Path) -> anyhow::
     stage_repro_artifacts(analysis_dir, candidate_race_csv, &annotation_set)?;
 
     Ok(())
-}
-
-/// Load per-candidate precinct datasets from a TSV with columns:
-/// `candidate_name, precinct_id, county_fips, total_votes, candidate_share,
-/// pct_minority, pct_dem_baseline`. Returns one Vec<Precinct> per candidate.
-fn load_precincts_by_candidate(
-    path: &Path,
-) -> anyhow::Result<HashMap<String, Vec<bisect_analysis::Precinct>>> {
-    use bisect_analysis::Precinct;
-
-    let mut reader = csv::ReaderBuilder::new()
-        .delimiter(b'\t')
-        .has_headers(true)
-        .from_path(path)
-        .map_err(|e| anyhow::anyhow!("[INPUT] cannot read precinct TSV {}: {e}", path.display()))?;
-    let headers = reader
-        .headers()
-        .map_err(|e| anyhow::anyhow!("[INPUT] precinct TSV header read failed: {e}"))?
-        .clone();
-    let required = [
-        "candidate_name",
-        "precinct_id",
-        "county_fips",
-        "total_votes",
-        "candidate_share",
-        "pct_minority",
-        "pct_dem_baseline",
-    ];
-    let mut col_idx: HashMap<&str, usize> = HashMap::new();
-    for col in &required {
-        let idx = headers.iter().position(|h| h == *col).ok_or_else(|| {
-            anyhow::anyhow!(
-                "[INPUT] precinct TSV missing required column '{col}'. Required columns: {}",
-                required.join(", ")
-            )
-        })?;
-        col_idx.insert(col, idx);
-    }
-
-    let mut by_candidate: HashMap<String, Vec<Precinct>> = HashMap::new();
-    for (i, record) in reader.records().enumerate() {
-        let row = i + 2;
-        let r = record.map_err(|e| anyhow::anyhow!("[INPUT] precinct TSV row {row}: {e}"))?;
-        let get = |k: &str| r.get(col_idx[k]).unwrap_or("").trim();
-        let parse_f = |k: &str| -> anyhow::Result<f64> {
-            get(k).parse::<f64>().map_err(|_| {
-                anyhow::anyhow!("[INPUT] precinct TSV row {row} col '{k}': not a float")
-            })
-        };
-        let cand = get("candidate_name").to_string();
-        if cand.is_empty() {
-            anyhow::bail!("[INPUT] precinct TSV row {row}: empty candidate_name");
-        }
-        by_candidate
-            .entry(cand.clone())
-            .or_default()
-            .push(Precinct {
-                id: get("precinct_id").to_string(),
-                county_fips: get("county_fips").to_string(),
-                total_votes: parse_f("total_votes")?,
-                candidate_share: parse_f("candidate_share")?,
-                pct_minority: parse_f("pct_minority")?,
-                pct_dem_baseline: parse_f("pct_dem_baseline")?,
-            });
-    }
-    Ok(by_candidate)
 }
 
 /// Task 5: copy the race-of-candidate CSV + every referenced attestation doc

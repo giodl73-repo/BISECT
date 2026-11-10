@@ -1,5 +1,48 @@
 use super::*;
 
+#[test]
+fn ilp_all_size_skipped_does_not_audit_missing_or_stale_reports() {
+    let (adj,_)=small_grid(4,4);let pop=vec![100i64;16];
+    let directory=tempfile::tempdir().unwrap();let reports=directory.path().join("reports");
+    let run=|path:Option<&std::path::Path>|run_all_splits_ilp_with_report_count(&adj,&pop,&HashMap::new(),2,0.10,crate::args::IlpMethod::FormulationOnly,crate::args::IlpFallback::Metis,60,0.0,0,path).unwrap();
+    let (expected,none)=run(None);assert_eq!(none,0);
+    let (actual,count)=run(Some(&reports));assert_eq!(count,0);assert_eq!(actual,expected);assert!(!reports.exists());
+    std::fs::create_dir_all(reports.join("depth_00")).unwrap();
+    let stale=reports.join("depth_00/node_root.json");let summary=reports.join("audit-summary.json");
+    std::fs::write(&stale,"prior invocation report").unwrap();std::fs::write(&summary,"prior invocation summary").unwrap();
+    let (actual,count)=run(Some(&reports));assert_eq!(count,0);assert_eq!(actual,expected);
+    assert_eq!(std::fs::read_to_string(stale).unwrap(),"prior invocation report");assert_eq!(std::fs::read_to_string(summary).unwrap(),"prior invocation summary");
+}
+
+#[test]
+fn ilp_mixed_skips_count_only_reports_written_by_this_invocation() {
+    let (adj,_)=small_grid(4,4);let pop=vec![100i64;16];let directory=tempfile::tempdir().unwrap();
+    let (_,count)=run_all_splits_ilp_with_report_count(&adj,&pop,&HashMap::new(),4,0.20,crate::args::IlpMethod::FormulationOnly,crate::args::IlpFallback::Metis,60,0.0,8,Some(directory.path())).unwrap();
+    assert_eq!(count,2);assert!(!directory.path().join("depth_00/node_root.json").exists());
+    assert!(directory.path().join("depth_01/node_0.json").exists());assert!(directory.path().join("depth_01/node_1.json").exists());
+    assert!(directory.path().join("audit-summary.json").exists());
+    crate::ilp_audit::verify_ilp_audit_summary_for_dir(directory.path(),&directory.path().join("audit-summary.json")).unwrap();
+}
+
+#[test]
+fn ilp_exact_solver_converts_population_multiplier_to_relative_tolerance() {
+    let (adj,_)=small_grid(4,4);
+    let pop=vec![100i64;16];
+    let ideal=pop.iter().sum::<i64>() as f64/2.0;
+    for method in [crate::args::IlpMethod::BranchAndCut,crate::args::IlpMethod::IterativeSeparation] {
+        let directory=tempfile::tempdir().unwrap();
+        let plan=run_all_splits_ilp(&adj,&pop,&HashMap::new(),2,0.10,method,crate::args::IlpFallback::Error,60,0.0,16,Some(directory.path())).unwrap();
+        let left:HashSet<_>=plan.iter().filter_map(|(&i,&d)|(d==1).then_some(i)).collect();
+        let right:HashSet<_>=plan.iter().filter_map(|(&i,&d)|(d==2).then_some(i)).collect();
+        for part in [&left,&right] {let population=part.iter().map(|&i|pop[i]).sum::<i64>() as f64;assert!((population-ideal).abs()<=ideal*0.05);}
+        assert_eq!(left.len(),8);assert_eq!(right.len(),8);
+        let cut=adj.iter().enumerate().map(|(u,ns)|ns.iter().filter(|&&v|v>u&&left.contains(&u)!=left.contains(&v)).count()).sum::<usize>();assert_eq!(cut,4);
+        let model=std::fs::read_to_string(directory.path().join("depth_00/node_root.lp")).unwrap();
+        assert!(model.lines().filter(|line|line.contains("pop_lower_")).all(|line|line.ends_with(" >= 760")));
+        assert!(model.lines().filter(|line|line.contains("pop_upper_")).all(|line|line.ends_with(" <= 840")));
+    }
+}
+
 // ── ILP tests (L0/L1) ─────────────────────────────────────────────────────
 
 /// L0: `--partition-mode ilp` parses to PartitionMode::Ilp.
@@ -258,4 +301,18 @@ fn run_all_splits_ilp_writes_solve_report() {
     assert_eq!(summary["failed"], 0);
     assert_eq!(summary["outcomes"]["exact-plan"], 1);
     assert_eq!(summary["proof_statuses"]["proved-optimal"], 1);
+}
+
+#[test]
+fn ilp_current_summary_excludes_stale_skipped_root_and_unrelated_reports(){
+ let (adj,_)=small_grid(4,4);let pop=vec![100i64;16];let tmp=tempfile::tempdir().unwrap();
+ std::fs::create_dir_all(tmp.path().join("depth_00")).unwrap();
+ let stale_root=tmp.path().join("depth_00/node_root.json");let unrelated=tmp.path().join("node_old.json");
+ std::fs::write(&stale_root,"old skipped-root report").unwrap();std::fs::write(&unrelated,"old unrelated report").unwrap();
+ let (_,count)=run_all_splits_ilp_with_report_count(&adj,&pop,&HashMap::new(),4,0.20,crate::args::IlpMethod::FormulationOnly,crate::args::IlpFallback::Metis,60,0.0,8,Some(tmp.path())).unwrap();
+ assert_eq!(count,2);assert_eq!(std::fs::read_to_string(&stale_root).unwrap(),"old skipped-root report");assert_eq!(std::fs::read_to_string(&unrelated).unwrap(),"old unrelated report");
+ let summary_path=tmp.path().join("audit-summary.json");let bytes=std::fs::read(&summary_path).unwrap();
+ assert_eq!(crate::ilp_audit::summary_report_selection(&bytes).unwrap().unwrap(),vec!["depth_01/node_0.json","depth_01/node_1.json"]);
+ assert_eq!(crate::ilp_audit::verify_ilp_audit_summary_for_dir_receipt(tmp.path(),&summary_path).unwrap().checked,2);
+ std::fs::remove_file(tmp.path().join("depth_01/node_0.json")).unwrap();assert!(crate::ilp_audit::verify_ilp_audit_summary_for_dir_receipt(tmp.path(),&summary_path).is_err());
 }

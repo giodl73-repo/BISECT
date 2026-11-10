@@ -1,5 +1,6 @@
-use geo_types::{Geometry, MultiPolygon, Polygon};
-use std::collections::HashMap;
+use geo_types::Geometry;
+#[cfg(test)]
+use geo_types::{MultiPolygon, Polygon};
 
 /// Decode WKB bytes from tiger.rs into a geo_types Geometry.
 ///
@@ -12,51 +13,7 @@ pub fn wkb_to_geometry(wkb: &[u8]) -> anyhow::Result<Geometry<f64>> {
         .map_err(|e| anyhow::anyhow!("WKB decode: {e}"))
 }
 
-/// Union all geometries (Polygon or MultiPolygon) into one MultiPolygon.
-/// Flattens MultiPolygon components before dissolving.
-pub fn dissolve_geometries(geoms: &[Geometry<f64>]) -> MultiPolygon<f64> {
-    let polys: Vec<Polygon<f64>> = geoms
-        .iter()
-        .flat_map(|g| match g {
-            Geometry::Polygon(p) => vec![p.clone()],
-            Geometry::MultiPolygon(mp) => mp.0.clone(),
-            _ => vec![],
-        })
-        .collect();
-    dissolve_polygons(&polys)
-}
-
-/// Union all polygons into one MultiPolygon via geo::BooleanOps.
-pub fn dissolve_polygons(polys: &[Polygon<f64>]) -> MultiPolygon<f64> {
-    use geo::BooleanOps;
-    if polys.is_empty() {
-        return MultiPolygon(vec![]);
-    }
-    let mut acc = MultiPolygon(vec![polys[0].clone()]);
-    for p in &polys[1..] {
-        acc = acc.union(&MultiPolygon(vec![p.clone()]));
-    }
-    acc
-}
-
-/// Group tract geometries by district assignment and dissolve each group.
-/// Returns HashMap<district_id, MultiPolygon>.
-pub fn group_dissolve(
-    tract_geoms: &[Geometry<f64>],
-    assignments: &[usize],
-    _num_districts: usize,
-) -> HashMap<usize, MultiPolygon<f64>> {
-    let mut groups: HashMap<usize, Vec<Geometry<f64>>> = HashMap::new();
-    for (i, &dist) in assignments.iter().enumerate() {
-        if i < tract_geoms.len() {
-            groups.entry(dist).or_default().push(tract_geoms[i].clone());
-        }
-    }
-    groups
-        .into_iter()
-        .map(|(d, geoms)| (d, dissolve_geometries(&geoms)))
-        .collect()
-}
+pub use bisect_analysis::district_geometry::{dissolve_geometries, dissolve_polygons, group_dissolve};
 
 #[cfg(test)]
 mod tests {

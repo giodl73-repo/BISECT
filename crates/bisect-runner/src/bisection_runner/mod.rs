@@ -14,6 +14,24 @@ pub(crate) use crate::serial::*;
 pub(crate) use std::collections::{HashMap, HashSet};
 pub(crate) use std::path::Path;
 
+// Native builds retain their compile-time C choice. A browser build containing
+// both kernels selects C only inside an explicitly requested execution scope.
+fn use_c_metis()->bool {
+    #[cfg(feature="c-ffi-engine")]
+    {true}
+    #[cfg(all(not(feature="c-ffi-engine"),feature="wasm-c-ffi"))]
+    {metis_sidecar::is_enabled()}
+    #[cfg(not(any(feature="c-ffi-engine",feature="wasm-c-ffi")))]
+    {false}
+}
+#[cfg(all(feature="wasm-c-ffi",not(feature="c-ffi-engine")))]
+pub(crate) use metis_sidecar as metis;
+
+mod round_monitor;
+pub use round_monitor::{RoundMonitor,RoundMonitorEvent};
+mod round_capture;
+pub use round_capture::{RoundCapture,RoundObserver};
+pub(crate) use round_capture::{round_output_enabled,observe_round};
 mod adaptive_multiscale;
 mod bfs;
 mod bisection_ensemble;

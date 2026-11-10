@@ -41,29 +41,9 @@ pub fn create_plan_dir(base: &Path, label: &str) -> anyhow::Result<PathBuf> {
 /// and instructs the user to pass `--force` to overwrite.
 pub fn check_plan_collision(plan_dir: &Path, force: bool) -> anyhow::Result<()> {
     let manifest_path = plan_dir.join("manifest.json");
-    if !force && manifest_path.exists() {
-        // Read created_at from existing manifest for a helpful error message
-        let created_at = std::fs::read_to_string(&manifest_path)
-            .ok()
-            .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-            .and_then(|v| v["created_at"].as_str().map(|s| s.to_string()))
-            .unwrap_or_else(|| "unknown".to_string());
-
-        let label = plan_dir
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_else(|| plan_dir.display().to_string());
-
-        anyhow::bail!(
-            "ERROR: plan '{}' already exists at: {}\n\
-             Existing manifest created_at: {}\n\
-             Use --force to overwrite, or choose a different --label.",
-            label,
-            plan_dir.display(),
-            created_at,
-        );
-    }
-    Ok(())
+    let exists=!force&&manifest_path.exists();
+    let text=if exists {std::fs::read_to_string(&manifest_path).ok()}else{None};
+    crate::run_target::check_plan_collision_evidence(plan_dir,force,exists,text.as_deref())
 }
 
 /// Return current UTC time as ISO 8601 string (approximate, no external dep).

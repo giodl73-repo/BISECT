@@ -139,6 +139,7 @@ pub struct NarrativeManifestInputs {
 /// Build a `NarrativeManifest` from inputs. Pure function — reads
 /// `SOURCE_DATE_EPOCH` from the env. For tests that need to control the env
 /// without races, use `build_narrative_manifest_with_clock`.
+#[cfg(any(feature = "filesystem", test))]
 pub fn build_narrative_manifest(inputs: NarrativeManifestInputs) -> NarrativeManifest {
     let secs = std::env::var("SOURCE_DATE_EPOCH")
         .ok()
@@ -148,6 +149,7 @@ pub fn build_narrative_manifest(inputs: NarrativeManifestInputs) -> NarrativeMan
 
 /// Read and validate `SOURCE_DATE_EPOCH` for callers that can surface input
 /// errors instead of falling back to the draft timestamp sentinel.
+#[cfg(feature = "filesystem")]
 pub fn parse_source_date_epoch_env() -> anyhow::Result<Option<i64>> {
     match std::env::var("SOURCE_DATE_EPOCH") {
         Ok(value) => parse_source_date_epoch_value(&value).map(Some),
@@ -158,6 +160,7 @@ pub fn parse_source_date_epoch_env() -> anyhow::Result<Option<i64>> {
     }
 }
 
+#[cfg(any(feature = "filesystem", test))]
 pub fn parse_source_date_epoch_value(value: &str) -> anyhow::Result<i64> {
     value
         .parse::<i64>()
@@ -236,9 +239,12 @@ fn iso8601_from_unix_secs(secs: i64) -> String {
     )
 }
 
-fn days_to_ymd(days_since_epoch: u64) -> (u32, u32, u32) {
-    let mut year: u32 = 1970;
-    let mut days = days_since_epoch;
+fn days_to_ymd(days_since_epoch: u64) -> (u64, u32, u32) {
+    // Any 400 consecutive Gregorian years contain the same 146,097 days.
+    // Skip whole cycles so even i64::MAX needs at most 399 year steps.
+    const CYCLE_DAYS: u64 = 146_097;
+    let mut year = 1970 + (days_since_epoch / CYCLE_DAYS) * 400;
+    let mut days = days_since_epoch % CYCLE_DAYS;
     loop {
         let yr_days = if is_leap(year) { 366 } else { 365 };
         if days < yr_days {
@@ -264,7 +270,7 @@ fn days_to_ymd(days_since_epoch: u64) -> (u32, u32, u32) {
     (year, month, day)
 }
 
-fn is_leap(year: u32) -> bool {
+fn is_leap(year: u64) -> bool {
     (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 }
 
@@ -292,6 +298,13 @@ pub fn path_relative_to_repo_root(repo_root: &Path, target: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn extreme_source_date_epoch_has_bounded_exact_conversion() {
+        assert_eq!(iso8601_from_unix_secs(i64::MAX), "292277026596-12-04T15:30:07Z");
+        assert_eq!(iso8601_from_unix_secs(i64::MIN), "1970-01-01T00:00:00Z");
+        assert_eq!(iso8601_from_unix_secs(146_097 * 86_400), "2370-01-01T00:00:00Z");
+    }
 
     fn fixture_inputs() -> NarrativeManifestInputs {
         let mut analysis_a: BTreeMap<String, String> = BTreeMap::new();

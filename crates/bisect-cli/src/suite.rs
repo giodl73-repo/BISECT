@@ -1,195 +1,25 @@
 use anyhow::Context;
-use serde::{Deserialize, Serialize};
 /// Multi-chamber suite: draw and validate nested legislative plans.
 /// Spec 5 — board amendments R3 applied.
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+#[cfg(test)]
 use std::str::FromStr;
 
-use bisect_analysis::{try_validate_nesting, NestingValidation};
+
 
 // ---------------------------------------------------------------------------
 // Nest mode
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum NestMode {
-    None,
-    SenateInHouse,
-}
-
-impl FromStr for NestMode {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "none" => Ok(Self::None),
-            "senate-in-house" => Ok(Self::SenateInHouse),
-            other => anyhow::bail!("Invalid nest mode: '{other}'. Use 'none' or 'senate-in-house'"),
-        }
-    }
-}
-
-impl std::fmt::Display for NestMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::None => write!(f, "none"),
-            Self::SenateInHouse => write!(f, "senate-in-house"),
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Constitutional nesting ratio table
-// ---------------------------------------------------------------------------
-
-/// Nesting ratio: Fixed(n) = constitutionally mandated, Variable = IL-style.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NestedRatio {
-    Fixed(usize),
-    Variable,
-}
-
-/// Build the nesting ratio table from the embedded state policy database.
-///
-/// Any state in state_policy.json with a `nesting_ratio` field gets an entry:
-/// - "variable" → NestedRatio::Variable (e.g., IL, MD)
-/// - "{n}:1"   → NestedRatio::Fixed(n) (e.g., WA=2:1, NV=2:1, AK=2:1)
-/// - null/absent → state has no nesting requirement, not in table
-pub fn build_constitutional_nesting_table() -> HashMap<String, NestedRatio> {
-    let policy = crate::policy::load_policy();
-    let mut table = HashMap::new();
-
-    if let Some(obj) = policy.as_object() {
-        for (code, state) in obj {
-            if code.starts_with('_') {
-                continue; // skip test states
-            }
-            if let Some(ratio_str) = state.get("nesting_ratio").and_then(|v| v.as_str()) {
-                let entry = if ratio_str == "variable" {
-                    NestedRatio::Variable
-                } else if let Some(n_str) = ratio_str.split(':').next() {
-                    if let Ok(n) = n_str.parse::<usize>() {
-                        NestedRatio::Fixed(n)
-                    } else {
-                        continue; // unparseable ratio format
-                    }
-                } else {
-                    continue;
-                };
-                table.insert(code.clone(), entry);
-            }
-        }
-    }
-    table
-}
-
-/// Resolve required nesting ratio for a state, given optional user override.
-/// Board amendment (WARD): IL requires explicit --nest-ratio; exits non-zero if missing.
-pub fn resolve_nesting_ratio(state_code: &str, user_ratio: Option<usize>) -> anyhow::Result<usize> {
-    let table = build_constitutional_nesting_table();
-    match table.get(state_code) {
-        Some(NestedRatio::Fixed(r)) => {
-            if let Some(ur) = user_ratio {
-                if ur != *r {
-                    eprintln!(
-                        "WARNING: {state_code} constitution requires {r}:1 house-to-senate \
-                         nesting ratio. You specified {ur}:1.\n\
-                         Proceed only if you have verified this is legally permissible."
-                    );
-                    return Ok(ur); // use user-specified value after warning
-                }
-            }
-            Ok(*r)
-        }
-        Some(NestedRatio::Variable) => {
-            // Provide state-specific guidance for common variable-ratio states
-            let hint = match state_code {
-                "IL" => {
-                    " Illinois uses 2:1 or 3:1 depending on district geometry. \
-                          Historically most senate districts nest 2 house districts. \
-                          Try --nest-ratio 2 first; use --nest-ratio 3 if nesting fails."
-                }
-                "MD" => {
-                    " Maryland senate districts typically contain 3 house delegates, \
-                          though some have sub-districts with fewer. \
-                          Try --nest-ratio 3."
-                }
-                _ => " Check your state constitution for the required ratio.",
-            };
-            user_ratio.ok_or_else(|| {
-                anyhow::anyhow!(
-                "{state_code} nesting ratio is variable by statute — must be specified explicitly.\
-                 {hint}\n\
-                 Use: --nest-ratio N  (integer house districts per senate district)"
-            )
-            })
-        }
-        None => user_ratio.ok_or_else(|| {
-            anyhow::anyhow!(
-                "No constitutional nesting ratio defined for {state_code}. \
-                 Check your state constitution and use --nest-ratio N."
-            )
-        }),
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Plan suite data model
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PlanEntry {
-    pub chamber: String,
-    pub file: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PlanSuite {
-    pub suite_name: String,
-    pub state: String,
-    pub year: String,
-    #[serde(serialize_with = "serialize_nest_mode")]
-    #[serde(deserialize_with = "deserialize_nest_mode")]
-    pub nest_mode: NestMode,
-    pub plans: Vec<PlanEntry>,
-}
-
-fn serialize_nest_mode<S: serde::Serializer>(nm: &NestMode, s: S) -> Result<S::Ok, S::Error> {
-    s.serialize_str(&nm.to_string())
-}
-
-fn deserialize_nest_mode<'de, D: serde::Deserializer<'de>>(d: D) -> Result<NestMode, D::Error> {
-    let s = String::deserialize(d)?;
-    NestMode::from_str(&s).map_err(serde::de::Error::custom)
-}
-
-// ---------------------------------------------------------------------------
-// Suite export types
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Serialize)]
-pub struct SuiteEnvelope {
-    pub suite_name: String,
-    pub plans: Vec<PlanEntry>,
-}
-
-#[derive(Debug)]
-pub struct SuiteExport {
-    pub envelope: SuiteEnvelope,
-    pub plan_files: Vec<PlanEntry>,
-}
-
+pub use bisect_analysis::suite_assembly::{NestMode,NestedRatio,PlanEntry,PlanSuite,SuiteEnvelope,SuiteExport};
+pub fn build_constitutional_nesting_table()->HashMap<String,NestedRatio>{bisect_analysis::suite_assembly::build_constitutional_nesting_table(&crate::policy::load_policy())}
+pub fn resolve_nesting_ratio(state_code:&str,user_ratio:Option<usize>)->anyhow::Result<usize>{bisect_analysis::suite_assembly::resolve_nesting_ratio(&crate::policy::load_policy(),state_code,user_ratio,|message|eprintln!("{message}"))}
 // ---------------------------------------------------------------------------
 // Suite validate result
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Serialize)]
-pub struct SuiteValidateResult {
-    pub suite_name: String,
-    pub valid: bool,
-    pub nesting: NestingValidation,
-}
+pub use bisect_analysis::nesting::SuiteValidateResult;
 
 // ---------------------------------------------------------------------------
 // Args structs (used by args.rs and main.rs)
@@ -399,22 +229,8 @@ pub fn run_suite_validate_with_overrides(
         (house, senate)
     };
 
-    // Count districts for ratio
-    let num_house = house_assignments.values().cloned().max().unwrap_or(0);
-    let num_senate = senate_assignments.values().cloned().max().unwrap_or(0);
-    let ratio = if num_senate > 0 {
-        num_house / num_senate.max(1)
-    } else {
-        2
-    };
+    Ok(bisect_analysis::nesting::validate_suite_assignments(suite_name,&house_assignments,&senate_assignments,None)?)
 
-    let nesting = try_validate_nesting(&house_assignments, &senate_assignments, ratio)?;
-
-    Ok(SuiteValidateResult {
-        suite_name: suite_name.to_string(),
-        valid: nesting.valid,
-        nesting,
-    })
 }
 
 fn load_rplan_assignments(
@@ -429,6 +245,10 @@ fn load_rplan_assignments(
         std::fs::read_to_string(&path).with_context(|| format!("Reading {}", path.display()))?;
     let json: serde_json::Value =
         serde_json::from_str(&content).with_context(|| format!("Parsing {}", path.display()))?;
+    if json["rplan_version"] == "0.2" {
+        let plan = rplan_io::read_rplan_str(&content)?.plan;
+        return Ok(plan.units.unit_ids.into_iter().zip(plan.assignment.into_iter().map(|d| d as usize + 1)).collect());
+    }
     let assignments: HashMap<String, usize> = json["assignments"]
         .as_object()
         .ok_or_else(|| anyhow::anyhow!("No 'assignments' object in {}", path.display()))?
@@ -465,73 +285,7 @@ pub fn run_suite_draw(
         .join(&args.name);
     std::fs::create_dir_all(&suite_dir)?;
 
-    let mut plans = Vec::new();
-
-    if let Some(_cong) = congressional_assignments {
-        // Congressional plan: always independent of state legislative nesting.
-        // Guard: nesting mode is silently ignored for the congressional chamber —
-        // congressional districts do not nest with state legislative districts.
-        if args.nest_mode == NestMode::SenateInHouse {
-            eprintln!(
-                "NOTE: Congressional redistricting is independent of state legislative \
-                 redistricting. The --nest-mode senate-in-house only applies to state \
-                 house and senate plans. Congressional districts do not nest with \
-                 state legislative districts. The congressional plan will be drawn \
-                 without nesting constraints."
-            );
-        }
-        plans.push(PlanEntry {
-            chamber: "congressional".into(),
-            file: format!("{}_congressional.rplan", args.name),
-        });
-    }
-
-    plans.push(PlanEntry {
-        chamber: "house".into(),
-        file: format!("{}_house.rplan", args.name),
-    });
-
-    plans.push(PlanEntry {
-        chamber: "senate".into(),
-        file: format!("{}_senate.rplan", args.name),
-    });
-
-    let suite = PlanSuite {
-        suite_name: args.name.clone(),
-        state: args.state.clone(),
-        year: args.year.clone(),
-        nest_mode: args.nest_mode.clone(),
-        plans: plans.clone(),
-    };
-
-    // Validate nesting before writing.
-    // Nesting applies ONLY to state house and senate plans — not congressional.
-    if args.nest_mode == NestMode::SenateInHouse {
-        let required_ratio = resolve_nesting_ratio(&args.state, args.nest_ratio)?;
-        let validation =
-            try_validate_nesting(house_assignments, senate_assignments, required_ratio)?;
-        if !validation.valid {
-            let violation_strs: Vec<String> = validation
-                .violations
-                .iter()
-                .map(|v| {
-                    format!(
-                        "  senate district {} contains house districts {:?} (expected {})",
-                        v.senate_district, v.house_districts, v.expected_count
-                    )
-                })
-                .collect();
-            eprintln!(
-                "ERROR: nesting validation failed for suite '{}':\n{}",
-                args.name,
-                violation_strs.join("\n")
-            );
-            return Err(anyhow::anyhow!(
-                "Nesting validation failed — see violations above"
-            ));
-        }
-    }
-
+    let suite=bisect_analysis::suite_assembly::prepare(&crate::policy::load_policy(),&args.name,&args.state,&args.year,args.nest_mode.clone(),args.nest_ratio,house_assignments,senate_assignments,congressional_assignments.is_some(),|message|eprintln!("{message}"))?;
     let suite_json = serde_json::to_string_pretty(&suite)?;
     let suite_path = suite_dir.join("suite.json");
     std::fs::write(&suite_path, &suite_json)?;
@@ -544,18 +298,10 @@ pub fn run_suite_draw(
 // Suite stability runner
 // ---------------------------------------------------------------------------
 
-/// Result of a pairwise Jaccard stability analysis across N plan runs.
-#[derive(Debug, Serialize)]
-pub struct SuiteStabilityResult {
-    pub num_plans: usize,
-    pub num_pairs: usize,
-    pub mean_similarity: f64,
-    pub min_similarity: f64,
-    pub max_similarity: f64,
-    pub stable: bool,
-    /// Pairs with similarity below 0.95 (potential instability)
-    pub unstable_pairs: Vec<(String, String, f64)>,
-}
+pub use bisect_analysis::suite_stability::SuiteStabilityResult;
+use bisect_analysis::suite_stability::STABILITY_THRESHOLD;
+#[cfg(test)]
+use bisect_analysis::suite_stability::compute_jaccard_similarity;
 
 /// Compute pairwise Jaccard similarity across multiple plan runs.
 ///
@@ -567,7 +313,6 @@ pub struct SuiteStabilityResult {
 pub fn run_suite_stability(
     args: &crate::args::SuiteStabilityArgs,
 ) -> anyhow::Result<SuiteStabilityResult> {
-    const STABILITY_THRESHOLD: f64 = 0.95;
 
     if args.labels.len() < 2 {
         anyhow::bail!(
@@ -600,44 +345,7 @@ pub fn run_suite_stability(
         all_assignments.push((label.clone(), assignments));
     }
 
-    // Compute all pairwise Jaccard similarities
-    let n = all_assignments.len();
-    let mut similarities: Vec<f64> = Vec::new();
-    let mut unstable_pairs: Vec<(String, String, f64)> = Vec::new();
-
-    for i in 0..n {
-        for j in (i + 1)..n {
-            let (label_a, assignments_a) = &all_assignments[i];
-            let (label_b, assignments_b) = &all_assignments[j];
-            let sim = compute_jaccard_similarity(assignments_a, assignments_b);
-            similarities.push(sim);
-            if sim < STABILITY_THRESHOLD {
-                unstable_pairs.push((label_a.clone(), label_b.clone(), sim));
-            }
-        }
-    }
-
-    let num_pairs = similarities.len();
-    let mean = if num_pairs > 0 {
-        similarities.iter().sum::<f64>() / num_pairs as f64
-    } else {
-        0.0
-    };
-    let min = similarities.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max = similarities
-        .iter()
-        .cloned()
-        .fold(f64::NEG_INFINITY, f64::max);
-
-    let result = SuiteStabilityResult {
-        num_plans: n,
-        num_pairs,
-        mean_similarity: mean,
-        min_similarity: if min.is_finite() { min } else { 0.0 },
-        max_similarity: if max.is_finite() { max } else { 0.0 },
-        stable: unstable_pairs.is_empty(),
-        unstable_pairs,
-    };
+    let result=bisect_analysis::suite_stability::analyze_suite_stability(&all_assignments).map_err(anyhow::Error::msg)?;
 
     eprintln!(
         "[bisect suite stability] {} plans, {} pairs",
@@ -661,19 +369,6 @@ pub fn run_suite_stability(
     }
 
     Ok(result)
-}
-
-/// Compute Jaccard similarity between two assignment maps (used internally by stability).
-fn compute_jaccard_similarity(a: &HashMap<String, usize>, b: &HashMap<String, usize>) -> f64 {
-    if a.is_empty() || b.is_empty() {
-        return 0.0;
-    }
-    let matching = a
-        .iter()
-        .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
-        .count();
-    let union = a.len().max(b.len());
-    matching as f64 / union as f64
 }
 
 // ---------------------------------------------------------------------------
@@ -936,8 +631,7 @@ mod tests {
     #[test]
     fn test_stability_threshold_is_0_95() {
         // Documented in run_suite_stability: STABILITY_THRESHOLD = 0.95
-        const STABILITY_THRESHOLD: f64 = 0.95;
-        assert!((STABILITY_THRESHOLD - 0.95).abs() < 1e-9);
+            assert!((STABILITY_THRESHOLD - 0.95).abs() < 1e-9);
     }
 
     /// Task 125: Congressional redistricting is independent of state legislative redistricting.
