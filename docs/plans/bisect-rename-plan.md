@@ -132,7 +132,7 @@ All accepted specs reference CLI flags — update:
 
 ### 2.5 Python bindings rename
 
-`redist_py` → `bisect_py` (if/when the Python binding is published)
+`bisect_py` → `bisect_py` (if/when the Python binding is published)
 
 ---
 

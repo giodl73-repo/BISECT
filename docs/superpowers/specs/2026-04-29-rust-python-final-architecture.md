@@ -47,7 +47,7 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 | `bisect-report` | HTML reports, plan manifests, audit, export, rplan roundtrip |
 | `bisect-tui` | Interactive ratatui frontend |
 | `bisect-web` | Documented stub crate; future Rust dashboard work would land here |
-| `redist_py` | PyO3 bridge — retained for research scripts and validation harness |
+| `bisect_py` | PyO3 bridge — retained for research scripts and validation harness |
 
 ### Python retained, scoped narrowly
 
@@ -68,7 +68,7 @@ The three remaining map stubs (#62 choropleth real geometry, #63 rounds renderin
 
 ### Algorithm: zero parallel implementations in active code
 
-After cutover, `bisect-core` is the only implementation of the bisection algorithm in the active code paths. The Python `RecursiveBisection` class is **archived, not deleted** (see §Python Algorithm Preservation). PyO3 bindings (`redist_py.build_vra_edge_weights`, etc.) remain so research scripts can call the Rust algorithm from Python without re-implementing it.
+After cutover, `bisect-core` is the only implementation of the bisection algorithm in the active code paths. The Python `RecursiveBisection` class is **archived, not deleted** (see §Python Algorithm Preservation). PyO3 bindings (`bisect_py.build_vra_edge_weights`, etc.) remain so research scripts can call the Rust algorithm from Python without re-implementing it.
 
 ## Provenance and Reproducibility
 

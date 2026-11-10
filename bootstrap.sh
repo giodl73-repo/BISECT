@@ -9,7 +9,7 @@
 #   2. Builds redist in release mode (uses pinned toolchain from rust-toolchain.toml)
 #   3. PATH preflight (PP-18): verify binary at expected path BEFORE mutating PATH
 #   4. PATH update + verify with `command -v redist`
-#   5. Optional: --with-python builds the redist_py wheel via maturin and verifies the import
+#   5. Optional: --with-python builds the bisect_py wheel via maturin and verifies the import
 #   6. Optional: --with-api-key prompts for DATAVERSE_API_KEY and validates it via one round-trip
 #               (PP-19) before writing to ~/.config/redist/credentials.toml
 #   7. Real smoke test (PP-20): runs the Vermont walkthrough and asserts tract count
@@ -81,17 +81,17 @@ echo "      export PATH=\"${REPO_ROOT}/redist/target/release:\$PATH\""
 
 # ── Step 6 (optional): Python wheel via maturin ──────────────────────────────
 if [ "$WITH_PYTHON" -eq 1 ]; then
-    step 6 "Building redist_py PyO3 wheel via maturin..."
+    step 6 "Building bisect_py PyO3 wheel via maturin..."
     command -v python3 >/dev/null || fail "python3 required for --with-python"
     if ! command -v maturin >/dev/null 2>&1; then
         echo "maturin not found; installing via pip..."
         python3 -m pip install --user --quiet maturin || fail "maturin install failed"
     fi
-    (cd redist/python/redist_py && maturin develop --release) \
+    (cd redist/python/bisect_py && maturin develop --release) \
         || fail "maturin build failed"
-    python3 -c "import redist_py; print('redist_py:', redist_py.__version__)" \
-        || fail "redist_py import failed after build"
-    ok "redist_py importable"
+    python3 -c "import bisect_py; print('bisect_py:', bisect_py.__version__)" \
+        || fail "bisect_py import failed after build"
+    ok "bisect_py importable"
 fi
 
 # ── Step 7 (optional): API key with round-trip validation (PP-19) ────────────

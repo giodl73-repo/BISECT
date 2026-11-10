@@ -35,7 +35,7 @@ redist/                          # Cargo workspace root
 │   ├── bisect-analysis/         # Compactness, demographics, partisan metrics
 │   └── bisect-web/              # Static dashboard generation
 └── python/
-    └── redist_py/               # PyO3 bindings (wraps bisect-core)
+    └── bisect_py/               # PyO3 bindings (wraps bisect-core)
 ```
 
 ### Crate responsibilities
@@ -64,11 +64,11 @@ redist/                          # Cargo workspace root
 
 - [ ] `cargo init` workspace with 5 crate stubs
 - [ ] `bisect-core`: `Graph` struct (CSR adjacency list + vertex weights), `Partition` struct (tract→district map), round-trip serialize to/from Python dict
-- [ ] `redist_py`: PyO3 module exposing `Graph.from_csr()` and `Partition.to_dict()`
-- [ ] **Write new test** `tests/unit/test_rust_graph.py`: construct `redist_py.Graph` from a known 5-vertex CSR dict, assert `n_vertices()==5`, `n_edges()==correct`. This is the Phase 0 exit criterion test.
+- [ ] `bisect_py`: PyO3 module exposing `Graph.from_csr()` and `Partition.to_dict()`
+- [ ] **Write new test** `tests/unit/test_rust_graph.py`: construct `bisect_py.Graph` from a known 5-vertex CSR dict, assert `n_vertices()==5`, `n_edges()==correct`. This is the Phase 0 exit criterion test.
 - [ ] CI: add `rust-tests` job to `.github/workflows/` (see CI section below)
 - [ ] Set `REDIST_NO_RUST=1` in the **existing** `test` CI job so it keeps passing without Rust compiled
-- [ ] Python: replace `RecursiveBisection.__init__` graph-loading with `redist_py.Graph.from_csr()` only when `REDIST_NO_RUST` is unset
+- [ ] Python: replace `RecursiveBisection.__init__` graph-loading with `bisect_py.Graph.from_csr()` only when `REDIST_NO_RUST` is unset
 
 **Exit criterion**: `pytest tests/unit/test_rust_graph.py` passes (new test). Existing `tests/unit/` suite passes in both `REDIST_NO_RUST=1` mode (CI `test` job) and Rust-compiled mode (CI `rust-tests` job).
 
@@ -100,7 +100,7 @@ pub fn build_vra_edge_weights(
 }
 ```
 
-Once this function exists in `bisect-core`, **delete** `run_state_redistricting.py:226-260` and replace with `redist_py.build_vra_edge_weights(...)`. The formula then lives in exactly one place.
+Once this function exists in `bisect-core`, **delete** `run_state_redistricting.py:226-260` and replace with `bisect_py.build_vra_edge_weights(...)`. The formula then lives in exactly one place.
 
 #### 1b. Bisection tree
 Port `RecursiveBisection` tree-building logic. Important: the current Python implementation is **level-parallel** — it processes all nodes at a given depth simultaneously via `ProcessPoolExecutor`. The Rust port must also be level-parallel, not depth-first recursive. Use Rayon for parallel splits at each level. A depth-first port would differ in split order and produce different (not just slower) results.
@@ -258,9 +258,9 @@ rust-tests:
 
 2. **VRA analysis atomicity**: `final_assignments` and `vra_analysis.json` are written via rename from temp files in `bisect-cli::write_state_outputs()`. Partial-write states are detectable and restartable. This is only enforceable from the CLI binary — not through PyO3 (Python controls I/O when calling via bindings).
 
-3. **Formula ground truth**: After Phase 1a, the adaptive boost formula exists only in `bisect-core/src/vra.rs`. `run_state_redistricting.py:226-260` is deleted. Both Python (via `redist_py.build_vra_edge_weights`) and the CLI use the same implementation. Any future change to the formula requires one edit in one place.
+3. **Formula ground truth**: After Phase 1a, the adaptive boost formula exists only in `bisect-core/src/vra.rs`. `run_state_redistricting.py:226-260` is deleted. Both Python (via `bisect_py.build_vra_edge_weights`) and the CLI use the same implementation. Any future change to the formula requires one edit in one place.
 
-4. **No silent fallback**: When `REDIST_NO_RUST` is unset and `redist_py` is not compiled, the Python pipeline raises `ImportError` immediately. Set `REDIST_NO_RUST=1` to use pure-Python path (slower, same results).
+4. **No silent fallback**: When `REDIST_NO_RUST` is unset and `bisect_py` is not compiled, the Python pipeline raises `ImportError` immediately. Set `REDIST_NO_RUST=1` to use pure-Python path (slower, same results).
 
 5. **Output format parity**: Python and Rust pipelines produce byte-compatible CSVs (±1e-6 float tolerance). Verified by `test_adjacency_parity.py` (Phase 2) and `test_cli_parity.py` (Phase 3) before each Python code path is deprecated.
 
@@ -273,7 +273,7 @@ Every phase **must** have a new test written before the phase is marked complete
 | Phase | Required new test | What it proves |
 |---|---|---|
 | 0 | `tests/unit/test_rust_graph.py` | `Graph.from_csr()` round-trips correctly |
-| 1 | extend `test_vra_edge_weighting.py` to call `redist_py.build_vra_edge_weights` | Rust formula matches Python formula output |
+| 1 | extend `test_vra_edge_weighting.py` to call `bisect_py.build_vra_edge_weights` | Rust formula matches Python formula output |
 | 2 | `tests/integration/test_adjacency_parity.py` | Rust adjacency byte-matches Python for VT + DE |
 | 3 | `tests/integration/test_cli_parity.py` | `redist` binary produces valid VRA outputs |
 | 4 | `tests/unit/test_rust_compactness.py` | PP values match Python within 1e-6 (projected input) |

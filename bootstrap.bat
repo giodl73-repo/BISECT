@@ -80,7 +80,7 @@ echo       Add %REPO_ROOT%\redist\target\release to your User PATH
 REM ── Step 6 (optional): Python wheel via maturin ───────────────────────────
 if "%WITH_PYTHON%"=="1" (
     echo.
-    echo [step 6] Building redist_py PyO3 wheel via maturin...
+    echo [step 6] Building bisect_py PyO3 wheel via maturin...
     where py >NUL 2>&1
     if errorlevel 1 (echo [FAIL] python ^(py launcher^) required for --with-python & exit /b 1)
     where maturin >NUL 2>&1
@@ -89,13 +89,13 @@ if "%WITH_PYTHON%"=="1" (
         py -m pip install --user --quiet maturin
         if errorlevel 1 (echo [FAIL] maturin install failed & exit /b 1)
     )
-    pushd redist\python\redist_py
+    pushd redist\python\bisect_py
     maturin develop --release
     if errorlevel 1 (popd & echo [FAIL] maturin build failed & exit /b 1)
     popd
-    py -c "import redist_py; print('redist_py:', redist_py.__version__)"
-    if errorlevel 1 (echo [FAIL] redist_py import failed after build & exit /b 1)
-    echo [OK] redist_py importable
+    py -c "import bisect_py; print('bisect_py:', bisect_py.__version__)"
+    if errorlevel 1 (echo [FAIL] bisect_py import failed after build & exit /b 1)
+    echo [OK] bisect_py importable
 )
 
 REM ── Step 7 (optional): API key with round-trip validation (PP-19) ─────────

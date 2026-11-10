@@ -1305,6 +1305,10 @@ pub enum WeightMode {
     /// Geographic + D_votes constraint (ProportionalSection, requires partisan-shares)
     #[value(name = "proportional")]
     Proportional,
+    /// Economic character similarity weights (B.27/M.1). Requires LODES WAC data.
+    /// Download: bisect fetch --type lodes --year 2020 --states <STATE>
+    #[value(name = "economic-character")]
+    EconomicCharacter,
 }
 
 /// Layer 3 compositor: how to search the seed space.

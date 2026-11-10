@@ -23,7 +23,7 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
    - Builds `redist` in release mode
    - **Verifies the build produced the binary at the expected path** before mutating PATH (TRENCH PP-18 prevention)
    - Adds `redist/target/release` to PATH; verifies the next shell can find the binary via `which redist` / `where redist`
-   - Optionally installs maturin + builds the `redist_py` wheel; verifies via `python -c "import redist_py"` before claiming success
+   - Optionally installs maturin + builds the `bisect_py` wheel; verifies via `python -c "import bisect_py"` before claiming success
    - Optionally prompts for `DATAVERSE_API_KEY`. **Validates the key with one Dataverse API round-trip** before writing it to local config (TRENCH PP-19 prevention). Writes to `~/.config/redist/credentials.toml` (Linux/macOS) or `%APPDATA%\redist\credentials.toml` (Windows) — explicit path, not hidden in a project dir.
    - **Runs a real smoke test, not `--print-only`** (TRENCH PP-20): `bisect state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke`. Verifies the bisection actually completed and final_assignments.json has 193 tract entries.
    - Reports success with next-step pointers

@@ -176,15 +176,15 @@ except ImportError:
 
 ## PyO3 Bindings (Rust ↔ Python, Developers Only)
 
-Required only if you are modifying the `redist_py` Python bindings or working on
+Required only if you are modifying the `bisect_py` Python bindings or working on
 the `bisect-core`/`bisect-data` crates.
 
 ```bash
 pip install maturin
 
-cd redist/python/redist_py
+cd redist/python/bisect_py
 maturin develop          # Build and install in the current Python env
-python -c "import redist_py; print('PyO3 bindings OK')"
+python -c "import bisect_py; print('PyO3 bindings OK')"
 ```
 
 ---

@@ -92,7 +92,7 @@ Without this file, builds would use whatever stable rustc the developer has inst
 
 - `redist` binary is statically linked Rust dependencies; only system libraries (libc, libm) are dynamic.
 - METIS is invoked as a subprocess (`gpmetis`), not linked. Pin via `gpmetis --version` if reproducibility across machines matters.
-- PyO3 bridge (`redist_py`) is built separately and is not part of the production binary.
+- PyO3 bridge (`bisect_py`) is built separately and is not part of the production binary.
 
 ## Open Items
 

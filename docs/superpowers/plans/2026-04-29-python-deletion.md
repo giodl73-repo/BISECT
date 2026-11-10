@@ -103,13 +103,13 @@ src/apportionment/visualization/maps.py → archive/python-pipeline-final/src/ap
 - [ ] **3.2** Enumerate every test file that imports the soon-to-be-archived modules. Per BENCHMARK review v1, this includes at minimum:
    - `tests/integration/test_metis_integration.py` (24 calls to `partition_graph` from `metis_wrapper.py`)
    - Any other test surfaced by 3.1
-- [ ] **3.3** For each enumerated test: migrate the import to `redist_py` (PyO3 bindings) which call into Rust. The test logic should still work — only the import path changes. If a test cannot be migrated cleanly (e.g., it tested Python-specific behaviour that Rust doesn't replicate exactly), flag it for triage in this plan's appendix and decide: migrate, archive, or rewrite.
+- [ ] **3.3** For each enumerated test: migrate the import to `bisect_py` (PyO3 bindings) which call into Rust. The test logic should still work — only the import path changes. If a test cannot be migrated cleanly (e.g., it tested Python-specific behaviour that Rust doesn't replicate exactly), flag it for triage in this plan's appendix and decide: migrate, archive, or rewrite.
 - [ ] **3.4** Re-run grep step 3.1. Required exit: ZERO hits anywhere except `archive/`.
 - [ ] **3.5** `git mv` the directories/file into `archive/python-pipeline-final/src/apportionment/...`.
 - [ ] **3.6** Run `pytest tests/`. Green.
 - [ ] **3.7** Commit: "Archive Python algorithm library — replaced by bisect-core via PyO3 (Plan 02 Task 3)".
 
-**Exit:** No parallel implementations in the active tree. `bisect-core` is the only bisection. Research scripts and tests that need the algorithm call it via `redist_py`.
+**Exit:** No parallel implementations in the active tree. `bisect-core` is the only bisection. Research scripts and tests that need the algorithm call it via `bisect_py`.
 
 ---
 

@@ -2588,7 +2588,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "redist_py"
+name = "bisect_py"
 version = "0.1.0"
 dependencies = [
  "anyhow",

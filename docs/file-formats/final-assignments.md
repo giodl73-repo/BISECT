@@ -101,9 +101,9 @@ with open("final_assignments.json") as f:
     assignments = json.load(f)
 
 # Load index_to_geoid from the adjacency file (or wherever your tooling exposes it).
-# In Python via redist_py:
-import redist_py
-graph = redist_py.deserialize_adjacency(open("path/to/state.adj.bin", "rb").read())
+# In Python via bisect_py:
+import bisect_py
+graph = bisect_py.deserialize_adjacency(open("path/to/state.adj.bin", "rb").read())
 geoid_assignments = {
     graph.index_to_geoid[int(idx)]: district
     for idx, district in assignments.items()

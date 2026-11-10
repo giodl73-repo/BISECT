@@ -5,9 +5,9 @@
 **Date:** 2026-04-30
 **Spec:** `docs/superpowers/specs/2026-04-30-researcher-toolkit.md`
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
-**Goal:** Package the existing redist engine for academic researchers: 5 Jupyter notebooks against the `redist_py` PyO3 wheel, an MCMC ensemble wrapper around GerryChain, an AEA-compliant `--paper-mode` replication-package emitter, and convergence diagnostics that meet field-standard rigor (R-hat across ≥4 chains, ESS on summary statistics, partition-distance autocorrelation).
+**Goal:** Package the existing redist engine for academic researchers: 5 Jupyter notebooks against the `bisect_py` PyO3 wheel, an MCMC ensemble wrapper around GerryChain, an AEA-compliant `--paper-mode` replication-package emitter, and convergence diagnostics that meet field-standard rigor (R-hat across ≥4 chains, ESS on summary statistics, partition-distance autocorrelation).
 
-**Depends on:** spec v2.1 approval; existing `redist_py` PyO3 wheel (built via `maturin` from `redist/python/redist_py/`); existing `redist export --format gerrychain` and `redist import --format gerrychain` (already shipped). No blocking code dependencies; the new CLI lives under a new `redist research` subcommand group and a new `--paper-mode` flag on `bisect analyze`.
+**Depends on:** spec v2.1 approval; existing `bisect_py` PyO3 wheel (built via `maturin` from `redist/python/bisect_py/`); existing `redist export --format gerrychain` and `redist import --format gerrychain` (already shipped). No blocking code dependencies; the new CLI lives under a new `redist research` subcommand group and a new `--paper-mode` flag on `bisect analyze`.
 **Blocks:** none directly. The Researcher Toolkit is the last persona on the roadmap, so subsequent work is maintenance-mode.
 
 **v2.1 items addressed by this plan:**
@@ -22,7 +22,7 @@
 
 ## Pre-Conditions
 
-- `redist_py` builds cleanly via `maturin develop --release` from `redist/python/redist_py/` on Windows + Linux
+- `bisect_py` builds cleanly via `maturin develop --release` from `redist/python/bisect_py/` on Windows + Linux
 - `redist export --format gerrychain` produces valid GerryChain v2.3 JSON (already in `export_cmd.rs`)
 - `redist import --format gerrychain` round-trips assignments (already in `import_cmd.rs`)
 - A working Python 3.11+ environment with `gerrychain>=0.3.2,<0.4` installable via `requirements.lock`
@@ -37,8 +37,8 @@
 The notebooks are the load-bearing artifact for this persona; everything else either supports them (the wrapper, the diagnostics) or is referenced from them (paper-mode).
 
 - [ ] **1.1** Create `notebooks/` directory with the 5 ipynb files. Each notebook's cell-1 metadata carries `{"runtime_budget_secs": <N>}`: 60 for `01_quickstart`, 120 for `02_parameter_sweep`, 300 for `03_callais_evidence`, 120 for `04_gerrychain_interop`, 1800 for `05_mcmc_ensemble`.
-- [ ] **1.2** Cell 2 of every notebook is a standardized header importing `redist_py`, `gerrychain`, asserting versions against compatible ranges (Task 2), and printing the runtime budget so it's visible on render.
-- [ ] **1.3** Add `notebooks/_lib/budget.py` exposing `assert_versions(redist_py_range, gerrychain_range)` that raises `RuntimeError` with the spec's actionable message on mismatch. Notebooks call this from cell 2.
+- [ ] **1.2** Cell 2 of every notebook is a standardized header importing `bisect_py`, `gerrychain`, asserting versions against compatible ranges (Task 2), and printing the runtime budget so it's visible on render.
+- [ ] **1.3** Add `notebooks/_lib/budget.py` exposing `assert_versions(bisect_py_range, gerrychain_range)` that raises `RuntimeError` with the spec's actionable message on mismatch. Notebooks call this from cell 2.
 - [ ] **1.4** Write `notebooks/README.md` documenting: how to launch (`maturin develop --release && jupyter lab notebooks/`), the runtime-budget convention, the kernel-state attestation rule, the GerryChain version pinning policy, and the link to `redist research check-compat`.
 - [ ] **1.5** Add `.github/workflows/notebooks.yml`: PR job runs notebooks 01-04 with `nbconvert --execute --ExecutePreprocessor.allow_errors=False`, enforcing budget * 1.5 timeout per the spec's CI YAML. Notebook 05 is gated behind a `nightly` label (not on PR) because of the 1800s budget.
 - [ ] **1.6** Each notebook ends with the sanity output `notebook completed within budget`.
@@ -53,10 +53,10 @@ The notebooks are the load-bearing artifact for this persona; everything else ei
 
 The v2.1 patch reframes attestation from a single-version pin (which causes false-positive churn every wheel rev) to a *compatible range*, so the cell asserts the version satisfies the spec's pinned range AND emits the actual versions for the manifest.
 
-- [ ] **2.1** Implement `notebooks/_lib/attestation.py::attest_kernel_state(redist_py_range='>=0.4,<0.5', gerrychain_range='>=0.3.2,<0.4')`. It uses `packaging.specifiers.SpecifierSet` to validate ranges, hashes the notebook's input cells (read from the running notebook via `IPython.get_ipython().history_manager`), and returns a dict suitable for JSON-emit at the end of every notebook.
+- [ ] **2.1** Implement `notebooks/_lib/attestation.py::attest_kernel_state(bisect_py_range='>=0.4,<0.5', gerrychain_range='>=0.3.2,<0.4')`. It uses `packaging.specifiers.SpecifierSet` to validate ranges, hashes the notebook's input cells (read from the running notebook via `IPython.get_ipython().history_manager`), and returns a dict suitable for JSON-emit at the end of every notebook.
 - [ ] **2.2** Final cell of every notebook: `attestation = attest_kernel_state(); display(attestation); assert attestation['compatible']`. The cell saves the dict to `outputs/notebooks/{notebook_name}/attestation.json` for cross-reference from paper-mode.
 - [ ] **2.3** Document the range-vs-pin policy in `notebooks/README.md`: ranges follow PEP 440, change requires a spec amendment, the attestation is *advisory* on mismatch within range and *fatal* on out-of-range.
-- [ ] **2.4** L0 unit test in `tests/research/test_attestation.py`: monkeypatch `redist_py.__version__` to test in-range PASS, in-range different-patch PASS, out-of-range FAIL with the spec's actionable error string. Cover `gerrychain` not installed -> graceful degradation (PASS with `gerrychain_present=False`).
+- [ ] **2.4** L0 unit test in `tests/research/test_attestation.py`: monkeypatch `bisect_py.__version__` to test in-range PASS, in-range different-patch PASS, out-of-range FAIL with the spec's actionable error string. Cover `gerrychain` not installed -> graceful degradation (PASS with `gerrychain_present=False`).
 - [ ] **2.5** Drift test: a notebook fixture with mismatched recorded vs. live input-cell hash fails the attestation with `notebook_source_drift=True` set in the dict.
 
 **Exit:** Out-of-range version raises with the spec's wording; in-range patch revs do NOT cause false-positive failures; B-06 closed.
@@ -71,7 +71,7 @@ The handshake is the user-visible "is my environment OK?" command. It runs an ac
 
 - [ ] **3.1** Add a `Research` subcommand group to `args.rs` (`Subcommand::Research(ResearchArgs)`) with subcommands `check-compat` and `validate-ensemble` (Task 5). The dispatch lives in `bisect-cli/src/research.rs`.
 - [ ] **3.2** `research.rs::run_check_compat()` shells out to `python -m scripts.research.check_compat` (the Python script holds the GerryChain logic; the CLI is the user-facing wrapper). On `python` not found, exit with `[CONFIG]` category error per `error-conventions.md`.
-- [ ] **3.3** `scripts/research/check_compat.py` performs: (a) version match against the pinned range; (b) round-trip on a synthetic 10-node graph (`gerrychain.Partition` -> `redist_py` -> `gerrychain.Partition`) asserting assignment equality; (c) prints PASS/FAIL with diff. Exit code 0 on PASS, 1 on FAIL.
+- [ ] **3.3** `scripts/research/check_compat.py` performs: (a) version match against the pinned range; (b) round-trip on a synthetic 10-node graph (`gerrychain.Partition` -> `bisect_py` -> `gerrychain.Partition`) asserting assignment equality; (c) prints PASS/FAIL with diff. Exit code 0 on PASS, 1 on FAIL.
 - [ ] **3.4** L0 unit test in `tests/research/test_check_compat.py`: synthetic graph + monkeypatched gerrychain stub asserts the round-trip path; full pass + deliberately-tampered intermediate (assignment mutated) asserts FAIL.
 - [ ] **3.5** Document `redist research check-compat` in `docs/REDIST_CLI.md`.
 
@@ -101,7 +101,7 @@ The round-trip is the technical guarantee that lets us claim interop. Property t
 The renamed command (formerly `validate-against-ensemble`) compares one plan against an ensemble of N random plans and reports per-metric percentile + plain-English flag.
 
 - [ ] **5.1** Rename per M-02: `Subcommand::Research(ResearchArgs)` exposes `validate-ensemble` (NOT `validate-against-ensemble`). Apply M-01 simultaneously: flags are `--plan-label <LABEL>` and `--ensemble-label <LABEL>` (NOT bare `--label`); accept `--ensemble-dir <DIR>` as alternate path-based input.
-- [ ] **5.2** Implementation in `scripts/research/validate_ensemble.py` (Python — uses `redist_py` for analysis, pandas for percentile math). Loads target plan + ensemble plan JSONs, computes efficiency gap, mean-median, MM count, and Polsby-Popper mean per plan, then computes the target's percentile per metric.
+- [ ] **5.2** Implementation in `scripts/research/validate_ensemble.py` (Python — uses `bisect_py` for analysis, pandas for percentile math). Loads target plan + ensemble plan JSONs, computes efficiency gap, mean-median, MM count, and Polsby-Popper mean per plan, then computes the target's percentile per metric.
 - [ ] **5.3** Output: `outputs/{version}/ensembles/{ensemble_label}/target_plan_percentiles.json` per the spec's directory layout. Plain-English flag string follows spec wording: `"Plan ranks at the 99th percentile for efficiency gap; visible-outlier candidate"`.
 - [ ] **5.4** L0 unit test: 100 synthetic ensemble plans + 1 target with hand-computed percentiles; assert `redist research validate-ensemble` percentile output matches within 0.5 percentile points (per spec DoD).
 - [ ] **5.5** Refuse-to-validate guard: if the ensemble directory lacks `diagnostics/{ess.json, burn_in.json, acceptance_rates.csv, rhat.json, hamming_autocorr.json}` (Task 7), exit non-zero with `[INPUT]` category error: "ensemble {label} missing convergence diagnostics; refusing to compute percentile against unfalsifiable ensemble". This wires the spec's risk-row "report tooling refuses to cite a percentile from an ensemble missing diagnostics".
@@ -214,7 +214,7 @@ B-09 reframes the v2 spec's ensemble-diagnostic tests as *implementation-correct
 ## Definition of Done
 
 - All 5 notebooks under `notebooks/` execute end-to-end within their declared `runtime_budget_secs`; CI runs 01-04 on PR and 05 nightly
-- Kernel-state attestation cell in every notebook validates `redist_py` and `gerrychain` versions against compatible *ranges*, not single versions (B-06)
+- Kernel-state attestation cell in every notebook validates `bisect_py` and `gerrychain` versions against compatible *ranges*, not single versions (B-06)
 - `redist research check-compat` runs the round-trip property test against the user's installed GerryChain and reports PASS/FAIL
 - GerryChain ↔ redist round-trip property tests pass on a 30-graph hypothesis sweep
 - `redist research validate-ensemble` (renamed from `validate-against-ensemble`, M-02) produces percentile output within 0.5 pp of hand-computed truth and refuses ensembles missing diagnostics

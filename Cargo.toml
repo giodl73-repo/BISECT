@@ -14,7 +14,7 @@ members = [
     "crates/bisect-pareto",
     "crates/bisect-ilp",
     "crates/bisect-multiscale",
-    "python/redist_py",
+    "python/bisect_py",
 ]
 resolver = "2"
 

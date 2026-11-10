@@ -93,7 +93,7 @@ redist/ (Cargo workspace)
 │   └── bisect-web/               STUB — dashboard HTML (Python still used)
 │
 └── python/
-    └── redist_py/                PyO3 bindings (unchanged)
+    └── bisect_py/                PyO3 bindings (unchanged)
 ```
 
 ---

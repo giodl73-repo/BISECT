@@ -278,6 +278,11 @@ pub struct WeightSpec {
     pub alpha_vtd: f64,
     /// Directional lambda for GeoSection (0 = no penalty).
     pub directional_lambda: f64,
+    /// Enable economic character similarity weights (B.27/M.1). Requires LODES WAC data.
+    pub economic_character: bool,
+    /// Blend factor for economic character weighter [0.0, 1.0]. Default 0.5.
+    /// alpha=1.0 → no effect; alpha=0.0 → fully similarity-driven.
+    pub econ_alpha: f64,
 }
 
 impl Default for WeightSpec {
@@ -293,6 +298,8 @@ impl Default for WeightSpec {
             alpha_place: 0.0,
             alpha_vtd: 0.0,
             directional_lambda: 0.0,
+            economic_character: false,
+            econ_alpha: 0.5,
         }
     }
 }
@@ -555,11 +562,12 @@ impl AlgorithmConfig {
         // Layer 2: weight override
         if let Some(weight) = args.weights_override {
             algo.weights = match weight {
-                WM::Unweighted   => WeightSpec { geographic: false, alpha_county: 0.0, ..WeightSpec::default() },
-                WM::Geographic   => WeightSpec { geographic: true,  alpha_county: 0.0, ..WeightSpec::default() },
-                WM::County       => WeightSpec { geographic: true,  alpha_county: args.alpha_county.max(1.0), ..WeightSpec::default() },
-                WM::VraAligned   => WeightSpec { geographic: true,  minority_weighting: true, ..WeightSpec::default() },
-                WM::Proportional => WeightSpec { geographic: true,  partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from), ..WeightSpec::default() },
+                WM::Unweighted         => WeightSpec { geographic: false, alpha_county: 0.0, ..WeightSpec::default() },
+                WM::Geographic         => WeightSpec { geographic: true,  alpha_county: 0.0, ..WeightSpec::default() },
+                WM::County             => WeightSpec { geographic: true,  alpha_county: args.alpha_county.max(1.0), ..WeightSpec::default() },
+                WM::VraAligned         => WeightSpec { geographic: true,  minority_weighting: true, ..WeightSpec::default() },
+                WM::Proportional       => WeightSpec { geographic: true,  partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from), ..WeightSpec::default() },
+                WM::EconomicCharacter  => WeightSpec { geographic: true,  economic_character: true, econ_alpha: 0.5, ..WeightSpec::default() },
             };
         }
 
@@ -2400,6 +2408,26 @@ fn build_edge_weights(
         composer = composer.push(SubdivisionWeighter::county_only(
             &graph.index_to_geoid, graph.n_vertices, spec.alpha_county,
         ));
+    }
+
+    // Step 5: Economic character similarity (B.27/M.1).
+    if spec.economic_character {
+        use crate::lodes::{load_lodes_wac_tract, align_lodes_to_adjacency};
+        use crate::edge_weights::EconomicCharacterWeighter;
+        status(position, &format!("{state_code}: economic-character -- loading LODES WAC"));
+        match load_lodes_wac_tract(state_name, year) {
+            Ok(lodes_chars) if !lodes_chars.is_empty() => {
+                let node_chars = align_lodes_to_adjacency(&lodes_chars, &graph.index_to_geoid, graph.n_vertices);
+                composer = composer.push(EconomicCharacterWeighter::new(node_chars, spec.econ_alpha));
+            }
+            Ok(_) => {
+                eprintln!("WARNING: LODES WAC not found for {state_name} {year}. \
+                           Run: bisect fetch --type lodes --year {year} --states {state_code}");
+            }
+            Err(e) => {
+                eprintln!("WARNING: LODES WAC load error: {e}. Falling back to geographic weights.");
+            }
+        }
     }
 
     // If nothing was added to the composer, fall back to geographic weights

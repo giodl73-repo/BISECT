@@ -552,14 +552,14 @@ The Researcher Toolkit plan is partial. Today (2026-04-30):
 
 **Shipped:**
 - **`bisect-analysis::ensemble_diagnostics`** (Task 7 / S-03): pure-Rust math for the three load-bearing convergence diagnostics — Gelman-Rubin R-hat across ≥4 chains, Effective Sample Size (Geyer 1992 initial monotone sequence) on summary statistics, Hamming-distance autocorrelation on the partition trajectory with integrated `tau_int`. JSON-shape structs mirror the spec's `rhat.json` / `ess.json` / `hamming_autocorr.json`. 21 L0 tests.
-- **`notebooks/`** (Task 1): 5 notebook stubs (`01_quickstart`, `02_parameter_sweep`, `03_callais_evidence`, `04_gerrychain_interop`, `05_mcmc_ensemble`) with cell-1 metadata declaring `runtime_budget_secs` (60 / 120 / 300 / 120 / 1800), cell-2 kernel-state attestation header against compatible RANGES (Task 2 / B-06: `redist_py >=0.4,<0.5`, `gerrychain >=0.3.2,<0.4`), and final-cell completion sentinel. Notebook bodies are TODO; scaffolding + conventions shipped.
+- **`notebooks/`** (Task 1): 5 notebook stubs (`01_quickstart`, `02_parameter_sweep`, `03_callais_evidence`, `04_gerrychain_interop`, `05_mcmc_ensemble`) with cell-1 metadata declaring `runtime_budget_secs` (60 / 120 / 300 / 120 / 1800), cell-2 kernel-state attestation header against compatible RANGES (Task 2 / B-06: `bisect_py >=0.4,<0.5`, `gerrychain >=0.3.2,<0.4`), and final-cell completion sentinel. Notebook bodies are TODO; scaffolding + conventions shipped.
 - **`scripts/research/paper_mode_template/REPRODUCE.sh`** (Task 8 / D-05): AEA-compliant replication-script template with platform check (target `linux-x86_64-glibc-2.35`), Cargo.lock + rust-toolchain.toml + requirements.lock SHA verification, locked cargo build, output-checksum verification via jq, cross-platform reviewer note (use WSL / Docker `ubuntu:22.04`).
 - **`bisect analyze --paper-mode`** (Task 8.1) — emits a `paper_mode/` subdirectory containing 9 files: `REPRODUCE.sh` (template substituted with the recorded `redist_build_commit` + lockfile SHAs + verbatim analyze invocation), `inputs.sha256.json` + `expected_outputs.sha256.json` (deterministic file-walks + canonical BTreeMap key ordering), `environment.json` (rustc + target_platform + OS), `seeds.json`, `CITATION.bib` + `CITATION.apa.txt` + `CITATION.chicago.txt` (per `docs/file-formats/citation-strings.md` §3.3), and a `README.md` walkthrough. `--paper-mode-citation-style {bluebook|apa|chicago}` defaults to `apa` per citation-strings.md §1. Implementation in `bisect-cli/src/paper_mode.rs`; 8 module unit tests + 4 args-parse tests.
 
 - **`redist research validate-ensemble`** (Task 5 / M-02): consumes per-chain JSONL files (one chain per file, lines are `{step, metrics: {name: value}}`), computes Gelman-Rubin R-hat + pooled Effective Sample Size per metric using `bisect-analysis::ensemble_diagnostics`. Emits `validate-ensemble v1` JSON report with per-metric pass/fail against `--rhat-threshold` (default 1.05) + `--ess-min` (default 100). Optional `--enacted <metrics.json>` records per-metric `enacted_percentile_rank` against the pooled ensemble distribution. `--strict` propagates convergence failures as non-zero exit. Input validation rejects fewer than 4 chains (S-03), unequal chain lengths, and missing-metric-in-some-chain with `[INPUT]` actionable errors. 8 unit tests including well-mixed pass / unmixed flag-failure / enacted percentile-rank position / `*.jsonl` extension filter.
 
 **Deferred (next session pickup):**
-- **Notebook BODY content** — beyond cell-1 metadata + cell-2 attestation; depends on the `redist_py` PyO3 binding stabilizing.
+- **Notebook BODY content** — beyond cell-1 metadata + cell-2 attestation; depends on the `bisect_py` PyO3 binding stabilizing.
 - **`redist research check-compat`** (Task 3) — actual round-trip property test against installed GerryChain.
 - **`scripts/research/mcmc_ensemble.py`** (Task 6) — GerryChain wrapper.
 - **`.github/workflows/notebooks.yml`** (Task 1.5) — runtime-budget-enforcing CI.
@@ -778,7 +778,7 @@ For a clean machine, the project ships one-shot bootstrap scripts at the repo ro
 
 ```bash
 bash bootstrap.sh                            # Linux/macOS
-bash bootstrap.sh --with-python              # also build redist_py PyO3 wheel
+bash bootstrap.sh --with-python              # also build bisect_py PyO3 wheel
 bash bootstrap.sh --with-api-key             # prompt + validate Dataverse key
 bootstrap.bat                                # Windows mirror
 ```

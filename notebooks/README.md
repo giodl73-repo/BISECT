@@ -38,14 +38,14 @@ import sys
 from packaging.specifiers import SpecifierSet
 
 # Pinned compatible ranges per Researcher Toolkit plan Task 2 / B-06.
-# These are RANGES (not single versions) so legitimate patch revs of redist_py
+# These are RANGES (not single versions) so legitimate patch revs of bisect_py
 # or gerrychain don't cause false-positive failures every release.
 REDIST_PY_RANGE = ">=0.4,<0.5"
 GERRYCHAIN_RANGE = ">=0.3.2,<0.4"
 
-import redist_py
-assert redist_py.__version__ in SpecifierSet(REDIST_PY_RANGE), \
-    f"redist_py {redist_py.__version__} not in compatible range {REDIST_PY_RANGE}"
+import bisect_py
+assert bisect_py.__version__ in SpecifierSet(REDIST_PY_RANGE), \
+    f"bisect_py {bisect_py.__version__} not in compatible range {REDIST_PY_RANGE}"
 
 try:
     import gerrychain
@@ -70,10 +70,10 @@ CI greps for this exact string in stdout. If the notebook exited via exception i
 
 ## Launching
 
-After installing the `redist_py` PyO3 wheel:
+After installing the `bisect_py` PyO3 wheel:
 
 ```bash
-maturin develop --release  # from redist/python/redist_py/
+maturin develop --release  # from redist/python/bisect_py/
 jupyter lab notebooks/
 ```
 

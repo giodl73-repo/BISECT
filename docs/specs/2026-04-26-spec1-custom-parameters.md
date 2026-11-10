@@ -200,7 +200,7 @@ Fix: `PlanManifest` gains two additional fields:
 {
   "tiger_sha256": "hash of data/2020/tiger/tracts/{fips}/tl_2020_{fips}_tract.shp",
   "adjacency_build_command": "python scripts/data/geography/build_tract_adjacency.py ...",
-  "adjacency_build_version": "redist_py 0.1.0 (abi3)"
+  "adjacency_build_version": "bisect_py 0.1.0 (abi3)"
 }
 ```
 

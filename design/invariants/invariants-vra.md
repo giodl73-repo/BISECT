@@ -80,7 +80,7 @@ Properties of the Voting Rights Act compliance implementation that must be maint
 
 **When it can be violated:** Adding a Python fallback that reimplements the formula; reverting the Phase 1a deletion.
 
-**Enforcement:** The Python call site (run_state_redistricting.py) now calls `redist_py.build_vra_edge_weights()` — no formula present. If someone adds a fallback, the parity tests will catch drift when they disagree.
+**Enforcement:** The Python call site (run_state_redistricting.py) now calls `bisect_py.build_vra_edge_weights()` — no formula present. If someone adds a fallback, the parity tests will catch drift when they disagree.
 
 **Test:** `tests/unit/test_vra_edge_weighting.py::TestRustFormulaParity` (would fail if Python reimplementation differs from Rust)
 

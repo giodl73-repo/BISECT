@@ -3,7 +3,7 @@
 **Updated:** 2026-04-30 (v2 — incorporates 6-role consensus on AEA replication standards + ensemble diagnostics)
 **Status:** Revised; pending re-review
 **Closes gap for:** academic researcher (★★★★→★★★★★)
-**Depends on:** existing redist_py PyO3 bindings + bisect-cli + bisect-analysis
+**Depends on:** existing bisect_py PyO3 bindings + bisect-cli + bisect-analysis
 **Estimated effort:** 3-5 days (v2: notebook attestation + GerryChain handshake)
 
 ## Why this exists
@@ -81,7 +81,7 @@ Rather than re-implement MCMC in Rust, we ship a thin Python wrapper:
 ```python
 # scripts/research/mcmc_ensemble.py
 import gerrychain
-import redist_py
+import bisect_py
 
 def generate_ensemble(state, year, n_steps=10000, seed=42):
     """Generate a GerryChain ensemble, return list of plan labels."""
@@ -102,7 +102,7 @@ Run notebooks via `nbconvert --execute` in CI to catch breakage. Each notebook m
 
 - **Declare a runtime budget** in cell 1 metadata: `{"runtime_budget_secs": 60}` for quickstart, `300` for parameter sweeps, `1800` for ensembles
 - **Fail fast** if execution exceeds 1.5× budget (catches regressions)
-- **Attest kernel state** at the end: a final cell asserts `redist_py.__version__`, `gerrychain.__version__`, and a hash of the notebook's input cells. Mismatches between the notebook's recorded state and what CI ran flag drift between the published `.ipynb` (with output cells) and the source.
+- **Attest kernel state** at the end: a final cell asserts `bisect_py.__version__`, `gerrychain.__version__`, and a hash of the notebook's input cells. Mismatches between the notebook's recorded state and what CI ran flag drift between the published `.ipynb` (with output cells) and the source.
 - **No hidden state**: notebooks must run top-to-bottom; the CI step uses `--ExecutePreprocessor.allow_errors=False` and a clean kernel per notebook.
 
 ```yaml
@@ -152,7 +152,7 @@ outputs/{version}/ensembles/{label}/   # NEW per-ensemble outputs
 
 - L0: GerryChain ↔ redist roundtrip on synthetic 10-node graph
 - L0: `redist research check-compat` against the installed GerryChain version (skipped if GerryChain not installed); asserts round-trip exact match
-- L0 **kernel-state attestation**: notebook 01_quickstart.ipynb's final cell asserts `redist_py.__version__` matches a pinned value; CI fails on mismatch
+- L0 **kernel-state attestation**: notebook 01_quickstart.ipynb's final cell asserts `bisect_py.__version__` matches a pinned value; CI fails on mismatch
 - L0 **paper-mode acceptance** (BENCHMARK): `bisect analyze --paper-mode` on a synthetic VT plan produces a `REPRODUCE.sh` whose execution from a clean Python venv reproduces all headline numbers byte-identically
 - L0 **ensemble diagnostics**: synthetic 200-step ensemble has correct ESS, burn-in, and acceptance-rate JSON entries; assert numerical values against hand-computed truth
 - L1: small-state ensemble (N=100, VT or DE) generates + analyzes within 60s; diagnostics directory populated

@@ -79,7 +79,7 @@ The script implements the spec's §"Bootstrap script structure" with the v2.1 PP
 
 - [ ] **3.1** Write `bootstrap.sh` per the v2.1 spec. The smoke test asserts `final_assignments.json` exists AND `jq 'length' ... -eq 193`. ASCII-only output (`[OK]`, `[FAIL]`, `->`).
 - [ ] **3.2** PATH preflight (PP-18): after `cargo build`, verify `target/release/redist` exists at the expected path BEFORE adding to PATH. After PATH update, verify `which redist` finds it. If not, exit non-zero with a clear "build succeeded but binary not at expected path" message.
-- [ ] **3.3** Optional Python wheel build via maturin: gated by `--with-python` flag. After build, verify `python -c "import redist_py"` succeeds before claiming success.
+- [ ] **3.3** Optional Python wheel build via maturin: gated by `--with-python` flag. After build, verify `python -c "import bisect_py"` succeeds before claiming success.
 - [ ] **3.4** Optional Dataverse API key prompt: gated by `--with-api-key` flag. PP-19 requires validating the key with one Dataverse round-trip BEFORE writing to `~/.config/redist/credentials.toml`. On validation failure, do NOT write the key; print the actionable error from Dataverse.
 - [ ] **3.5** Run smoke test (Task 1's `run.sh` is the canonical smoke; bootstrap.sh runs an abbreviated version: `bisect state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke` and asserts the tract count).
 - [ ] **3.6** Print final summary: time elapsed, what was installed, what to try next.

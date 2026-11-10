@@ -64,9 +64,9 @@ The Callais PDF is being deliberately not committed (`.gitignore` excludes `*.pd
    partisan goals could have been achieved with better minority outcomes.
    ```
 - [ ] **1.4** Add a pre-commit hook at `.git/hooks/pre-commit` (and document in `docs/CONTRIBUTING.md`) that blocks any `*.pdf` file from being staged unless `ALLOW_PDF=1` env var is set. This is structural prevention of PP-17.
-- [ ] **1.5** Pop the stash: `git stash pop`. Expect conflicts on `bisect-core/src/lib.rs` and `redist_py/src/lib.rs` because both have evolved on the merged main.
+- [ ] **1.5** Pop the stash: `git stash pop`. Expect conflicts on `bisect-core/src/lib.rs` and `bisect_py/src/lib.rs` because both have evolved on the merged main.
 - [ ] **1.6** Resolve `bisect-core/src/lib.rs`: the merged file has `population.rs`, `fips.rs`, etc. Re-apply the partisan module declaration and `pub use` against the current structure.
-- [ ] **1.7** Resolve `redist_py/src/lib.rs`: re-apply the PyO3 wrapper for `build_partisan_edge_weights` against the current import block.
+- [ ] **1.7** Resolve `bisect_py/src/lib.rs`: re-apply the PyO3 wrapper for `build_partisan_edge_weights` against the current import block.
 - [ ] **1.8** Move the `.callais_ruling.pdf` to a personal location outside the repo. The reference doc + SHA stays.
 
 **Exit:** Stash popped, conflicts resolved, working tree compiles. Callais reference doc committed. Pre-commit hook installed.
