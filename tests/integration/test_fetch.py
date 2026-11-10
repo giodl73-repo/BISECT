@@ -614,15 +614,15 @@ class TestFetchThenRun:
         assert tiger_shp.exists(), 'TIGER .shp not extracted'
         assert tiger_shp.stat().st_size > 1000, 'TIGER .shp too small — probably stub'
 
-        # Step 2: read it with the Rust TIGER reader (via redist_py)
+        # Step 2: read it with the Rust TIGER reader (via bisect_py)
         try:
-            import redist_py
-            records = redist_py.read_tiger_shp(str(tiger_shp.parent.parent / 'tl_2020_50_tract' / 'tl_2020_50_tract.shp'))
+            import bisect_py
+            records = bisect_py.read_tiger_shp(str(tiger_shp.parent.parent / 'tl_2020_50_tract' / 'tl_2020_50_tract.shp'))
             # Actually the shp is one level up
-            records = redist_py.read_tiger_shp(str(tiger_shp))
+            records = bisect_py.read_tiger_shp(str(tiger_shp))
             assert len(records) == 193, f'VT should have 193 tracts, got {len(records)}'
         except ImportError:
-            pytest.skip('redist_py not available')
+            pytest.skip('bisect_py not available')
 
 
 # ---------------------------------------------------------------------------

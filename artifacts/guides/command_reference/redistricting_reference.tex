@@ -1,0 +1,318 @@
+\documentclass[10pt,landscape]{article}
+\usepackage[margin=0.35in]{geometry}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage[compact]{titlesec}
+\usepackage{tcolorbox}
+
+% Colors
+\definecolor{sectioncolor}{RGB}{0,102,204}
+\definecolor{highlightbg}{RGB}{230,240,255}
+\definecolor{commandcolor}{RGB}{0,51,102}
+
+% Section formatting
+\titleformat{\section}{\large\bfseries\color{sectioncolor}}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{6pt}{3pt}
+
+% No page numbers
+\pagestyle{empty}
+
+% Tighter spacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\setlength{\columnseprule}{0.4pt}
+\setlength{\multicolsep}{6pt}
+\setlength{\columnsep}{14pt}
+
+\begin{document}
+
+\begin{center}
+\textbf{\LARGE Congressional Redistricting - Command Reference}\\
+\vspace{4pt}
+\large Run \texttt{setup\_env.bat} first to enable shortcuts\\
+\vspace{2pt}
+\normalsize Updated: 2026-01-18
+\end{center}
+
+\vspace{6pt}
+
+\begin{tcolorbox}[colback=highlightbg,colframe=sectioncolor,boxrule=1pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt]
+\textbf{\large Quick Project Shortcuts}
+
+\vspace{4pt}
+
+\begin{multicols}{4}
+\raggedright
+
+\textbf{Pipeline:}
+\begin{Verbatim}[fontsize=\normalsize,frame=none]
+run
+runtest
+cancel
+validate
+\end{Verbatim}
+
+\columnbreak
+
+\textbf{Testing:}
+\begin{Verbatim}[fontsize=\normalsize,frame=none]
+test
+unittest
+inttest
+e2etest
+\end{Verbatim}
+
+\columnbreak
+
+\textbf{Dashboard:}
+\begin{Verbatim}[fontsize=\normalsize,frame=none]
+dash
+gendash
+master
+\end{Verbatim}
+
+\columnbreak
+
+\textbf{Data:}
+\begin{Verbatim}[fontsize=\normalsize,frame=none]
+dl
+dlcheck
+dlval
+dldemo
+buildadj
+\end{Verbatim}
+
+\end{multicols}
+\end{tcolorbox}
+
+\vspace{4pt}
+
+\begin{multicols}{3}
+\raggedright
+
+\section*{Pipeline}
+
+\textbf{Common:}
+\begin{Verbatim}[fontsize=\small,frame=single]
+run -v v1
+  # All years (2-4h)
+run -y 2020 -v v1
+  # Single year (~1h)
+run -y 2020 -v v1 -st CA TX
+  # Specific states
+run -v v1 -r
+  # Fresh run
+run -v v1 -s nation
+  # National only (fast)
+run -w 12 -v v1
+  # Custom workers
+\end{Verbatim}
+
+\textbf{Test/Debug:}
+\begin{Verbatim}[fontsize=\small,frame=single]
+runtest -y 2020 -v test
+  # Test run (outputs/dev/)
+runtest -y 2020 -v t -st VT
+  # Single state test
+run -p -v preview
+  # Dry run
+run -v v1 -d
+  # Debug mode
+\end{Verbatim}
+
+\textbf{Experimental:}
+\begin{Verbatim}[fontsize=\small,frame=single]
+run -pm unweighted -v v1
+run -rt experiment
+  --experiment-name test123
+  -v v1
+\end{Verbatim}
+
+\section*{Tests}
+
+\begin{Verbatim}[fontsize=\small,frame=single]
+test               # All (18s)
+unittest           # Unit tests
+inttest            # Integration
+e2etest            # End-to-end
+pytest tests/ -x   # Stop first
+pytest tests/ --cov # Coverage
+\end{Verbatim}
+
+\columnbreak
+
+\section*{Dashboard}
+
+\begin{Verbatim}[fontsize=\small,frame=single]
+dash --year 2020 --version v1
+gendash --year 2020 --version v1
+master
+start outputs/index.html
+\end{Verbatim}
+
+\section*{Data Management}
+
+\textbf{Download Orchestrator (NEW - Parallel):}
+\begin{Verbatim}[fontsize=\small,frame=single]
+dl
+  # Check all data (default: all stages,
+  # all years, check-only)
+dl --stages redistricting --year 2020
+  # Download redistricting data
+dl --stages redistricting demographics \
+   --year all --workers 12
+  # Multi-year parallel (4-8x faster)
+dl --stages metros enacted_districts \
+   --year 2020
+  # Download metros and CDs
+dl --stages redistricting --year 2020 \
+   --force
+  # Force redownload
+dlval --year all --create-markers
+  # Mark complete data
+\end{Verbatim}
+
+\textbf{Available Stages:}
+\begin{itemize}\itemsep0pt
+\item \texttt{redistricting} - Census tracts/blocks + pop
+\item \texttt{demographics} - Age, race, sex data
+\item \texttt{elections} - Presidential results
+\item \texttt{places} - City/town boundaries
+\item \texttt{metros} - CBSA/Metro boundaries
+\item \texttt{enacted\_districts} - Baseline CDs
+\end{itemize}
+
+\textbf{Legacy Downloads (Individual):}
+\begin{Verbatim}[fontsize=\small,frame=single]
+dldemo -y 2020
+  # Demographics only
+dlelect -y 2020
+  # Elections only
+dlplaces -y 2020
+  # Places only
+\end{Verbatim}
+
+\textbf{Processing:}
+\begin{Verbatim}[fontsize=\small,frame=single]
+buildadj -y 2020
+  # Build adjacency graphs
+checkconn -y 2020
+  # Check connectivity
+validate -y 2020 -v v1
+  # Validate outputs
+\end{Verbatim}
+
+\section*{Emergency}
+
+\begin{Verbatim}[fontsize=\small,frame=single]
+cancel  # Kill all Python
+\end{Verbatim}
+
+\section*{Claude Skills}
+
+\begin{Verbatim}[fontsize=\small,frame=single]
+/run-redistricting
+/run-tests
+/debug-tests
+/debug-pipeline
+/enhancement-plan
+/enhancement-implement
+/create-state-map
+/create-national-map
+/generate-dashboard
+/data-validate
+\end{Verbatim}
+
+\columnbreak
+
+\section*{Pipeline Flags}
+
+\textbf{Short Flags (all have long equivalents):}
+
+\vspace{2pt}
+
+\begin{small}
+\begin{tabular}{|l|l|p{3cm}|l|p{3cm}|}
+\hline
+\textbf{Short} & \textbf{Long} & \textbf{Values} & \textbf{Default} & \textbf{Description} \\
+\hline
+\texttt{-h} & \texttt{--help} & - & - & Show all options \\
+\texttt{-y} & \texttt{--year} & 2020/2010/2000/all & all & Census year(s) \\
+\texttt{-v} & \texttt{--version} & string & v1 & Version ID \\
+\texttt{-s} & \texttt{--stages} & data/states/nation & all & Pipeline stages \\
+\texttt{-st} & \texttt{--states} & codes & all & States (CA TX NY) \\
+\texttt{-w} & \texttt{--workers} & 1-24 & 12 & Parallel workers \\
+\texttt{-r} & \texttt{--reset} & flag & - & Fresh run \\
+\texttt{-p} & \texttt{--print-only} & flag & - & Dry run \\
+\texttt{-d} & \texttt{--debug} & flag & - & Debug mode \\
+\texttt{-ey} & \texttt{--election-year} & 2020/2016 & 2020 & Election data \\
+\texttt{-pm} & \texttt{--partition-mode} & edge/unweighted & edge & METIS mode \\
+\texttt{-rt} & \texttt{--run-type} & prod/test/exp & prod & Output type \\
+\hline
+\end{tabular}
+\end{small}
+
+\vspace{4pt}
+
+\textbf{Long-only Flags:}
+\begin{itemize}\itemsep0pt
+\item \texttt{--dpi N} - Quality (def: 150)
+\item \texttt{--minimum-boundary-length N} - Filter adjacencies (def: 10m)
+\item \texttt{--skip-political} - No politics
+\item \texttt{--skip-demographic} - No demos
+\item \texttt{--reprocess} - Redo all states
+\item \texttt{--experiment-name} - Experiment name
+\end{itemize}
+
+\textbf{Stage Examples:}
+\begin{itemize}\itemsep0pt
+\item \texttt{-s data} - Data only
+\item \texttt{-s states nation} - Skip data
+\item \texttt{-s nation} - Post-processing only
+\end{itemize}
+
+\textbf{Download Orchestrator Flags:}
+\begin{itemize}\itemsep0pt
+\item \texttt{--stages} - Stages to download (redistricting, demographics, elections, places, metros, enacted\_districts)
+\item \texttt{--year} - Census year (2000/2010/2020/all)
+\item \texttt{--workers N} - Parallel workers (def: 4)
+\item \texttt{--states} - Specific states (e.g., CA TX NY)
+\item \texttt{--check-only} - Check cache, no download
+\item \texttt{--force} - Force redownload
+\item \texttt{--output-dir} - Output directory
+\end{itemize}
+
+\textbf{Validate Downloads:}
+\begin{itemize}\itemsep0pt
+\item \texttt{--year} - Year to validate (2000/2010/2020/all)
+\item \texttt{--stages} - Stages to check
+\item \texttt{--create-markers} - Create completion markers
+\item \texttt{--check-only} - Check without modifying
+\end{itemize}
+
+\textbf{Tests:}
+\begin{itemize}\itemsep0pt
+\item \texttt{-v} - Verbose
+\item \texttt{-s} - Show prints
+\item \texttt{-x} - Stop first fail
+\item \texttt{--cov} - Coverage
+\item \texttt{-k PATTERN} - Filter
+\end{itemize}
+
+\section*{Performance}
+
+\textbf{DPI:} 100 (dev) | \textbf{150 (default)} | 200 | 300 (print)
+
+\textbf{Times:}
+\begin{itemize}\itemsep0pt
+\item Multi-year: \textbf{2-4h}
+\item Single year: \textbf{~1h}
+\item Small state: \textbf{30s-2min}
+\item Large state: \textbf{3-5min}
+\item Tests: \textbf{18s}
+\end{itemize}
+
+\end{multicols}
+
+\end{document}

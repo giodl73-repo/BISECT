@@ -21,10 +21,10 @@ import sys
 from pathlib import Path
 
 try:
-    import redist_py
+    import bisect_py
 except ImportError:
-    print("ERROR: redist_py not available.")
-    print("Build with: cd redist/python/redist_py && maturin develop")
+    print("ERROR: bisect_py not available.")
+    print("Build with: cd redist/python/bisect_py && maturin develop")
     sys.exit(1)
 
 
@@ -38,7 +38,7 @@ def convert_state(pkl_path: Path) -> None:
     ew_canonical = {(min(i, j), max(i, j)): float(w) for (i, j), w in ew.items()}
     ig = {int(k): str(v) for k, v in d.get('index_to_geoid', {}).items()}
 
-    bin_data = redist_py.adjacency_to_bin(adj, vw, ew_canonical, len(adj), len(ew_canonical))
+    bin_data = bisect_py.adjacency_to_bin(adj, vw, ew_canonical, len(adj), len(ew_canonical))
     bin_path = pkl_path.with_suffix('.adj.bin')
     bin_path.write_bytes(bin_data)
 

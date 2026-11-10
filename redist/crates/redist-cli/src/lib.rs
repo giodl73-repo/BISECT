@@ -1,4 +1,5 @@
 pub mod adjacency_loader;
+pub mod aggregate;
 pub mod analyze;
 pub mod args;
 pub mod bisection_runner;

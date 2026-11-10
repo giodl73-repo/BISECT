@@ -68,7 +68,7 @@ jobs:
     - name: Install maturin and build PyO3 bindings
       run: |
         pip install maturin
-        # Build and install redist_py wheel once redist/ workspace exists
+        # Build and install bisect_py wheel once redist/ workspace exists
         # Uncomment when Phase 0 scaffold is committed:
         # cd redist && maturin develop --release
 

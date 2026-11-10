@@ -21,10 +21,10 @@ from pathlib import Path
 import numpy as np
 
 try:
-    from redist_py import adjacency_from_bin
+    from bisect_py import adjacency_from_bin
 except ImportError:
-    print("ERROR: redist_py not available.")
-    print("Build with: cd redist/python/redist_py && maturin develop")
+    print("ERROR: bisect_py not available.")
+    print("Build with: cd redist/python/bisect_py && maturin develop")
     sys.exit(1)
 
 

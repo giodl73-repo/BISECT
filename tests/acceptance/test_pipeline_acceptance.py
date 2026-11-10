@@ -328,26 +328,26 @@ class TestRustIntegrationSmoke:
     These run in <1 second and catch import/build failures before the slow tests.
     """
 
-    def test_redist_py_importable(self):
+    def test_bisect_py_importable(self):
         if os.environ.get('REDIST_NO_RUST', '0') == '1':
             pytest.skip('REDIST_NO_RUST=1')
-        import redist_py
-        assert hasattr(redist_py, 'build_vra_edge_weights')
-        assert hasattr(redist_py, 'Partition')
-        assert hasattr(redist_py, 'Graph')
-        assert hasattr(redist_py, 'compute_polsby_popper')
-        assert hasattr(redist_py, 'compute_vra_analysis')
+        import bisect_py
+        assert hasattr(bisect_py, 'build_vra_edge_weights')
+        assert hasattr(bisect_py, 'Partition')
+        assert hasattr(bisect_py, 'Graph')
+        assert hasattr(bisect_py, 'compute_polsby_popper')
+        assert hasattr(bisect_py, 'compute_vra_analysis')
 
     def test_vra_formula_alabama_profile(self):
         """Adaptive boost for Alabama: f=0.22 → alpha ≈ 8.46."""
         if os.environ.get('REDIST_NO_RUST', '0') == '1':
             pytest.skip('REDIST_NO_RUST=1')
-        import redist_py
+        import bisect_py
         import numpy as np
         n = 100
         fracs = np.array([0.55 if i < 22 else 0.20 for i in range(n)], dtype=np.float64)
         edges = [(0, 1)]
-        weights = redist_py.build_vra_edge_weights(edges, fracs)
+        weights = bisect_py.build_vra_edge_weights(edges, fracs)
         alpha = weights.get((0, 1), 0.0)
         assert abs(alpha - 8.46) < 0.01, \
             f'Alabama adaptive boost should be ~8.46x, got {alpha:.4f}. ' \
@@ -357,22 +357,22 @@ class TestRustIntegrationSmoke:
         """PP for 1km square = π/4 ≈ 0.7854."""
         if os.environ.get('REDIST_NO_RUST', '0') == '1':
             pytest.skip('REDIST_NO_RUST=1')
-        import redist_py, struct, math
+        import bisect_py, struct, math
         coords = [(1e6, 1e6), (1e6+1000, 1e6), (1e6+1000, 1e6+1000), (1e6, 1e6+1000)]
         coords.append(coords[0])
         buf = bytearray(b'\x01' + struct.pack('<II', 3, 1) + struct.pack('<I', len(coords)))
         for x, y in coords:
             buf += struct.pack('<dd', x, y)
-        pp, _ = redist_py.compute_polsby_popper(bytes(buf))
+        pp, _ = bisect_py.compute_polsby_popper(bytes(buf))
         assert abs(pp - math.pi/4) < 1e-6, f'Square PP={pp:.6f}, expected π/4={math.pi/4:.6f}'
 
     def test_balance_checker_passes_valid_partition(self):
         """Rust balance checker should not raise for a balanced partition."""
         if os.environ.get('REDIST_NO_RUST', '0') == '1':
             pytest.skip('REDIST_NO_RUST=1')
-        import redist_py
+        import bisect_py
         import numpy as np
-        p = redist_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
+        p = bisect_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
         vw = np.array([1000, 1000, 1000, 1000], dtype=np.int64)
         p.assert_balanced(vw, n_districts=2, tolerance=0.005)  # should not raise
 

@@ -228,11 +228,11 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
             # METIS writer defaults missing edges to 1.0 (metis_executable.py:304),
             # so we only return the boosted minority-minority edges.
             try:
-                from redist_py import build_vra_edge_weights as _rust_vra
+                from bisect_py import build_vra_edge_weights as _rust_vra
             except ImportError:
                 raise ImportError(
-                    'redist_py not available — VRA mode requires the Rust extension. '
-                    'Build with: cd redist/python/redist_py && maturin develop\n'
+                    'bisect_py not available — VRA mode requires the Rust extension. '
+                    'Build with: cd redist/python/bisect_py && maturin develop\n'
                     'Or set REDIST_NO_RUST=1 to disable (VRA mode will not be available).'
                 )
 
@@ -292,7 +292,7 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     # Only call on the final leaf partition, not on intermediate bisection splits.
     # Raises ValueError immediately if any district exceeds ±0.5%.
     try:
-        from redist_py import Partition as _RustPartition
+        from bisect_py import Partition as _RustPartition
         import numpy as _np
         _rust_partition = _RustPartition.from_dict(
             {int(k): int(v) for k, v in final_assignments.items()}

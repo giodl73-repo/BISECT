@@ -395,7 +395,7 @@ redist/
 │   ├── redist-cli/         Binary: state, states, run, fetch subcommands
 │   └── redist-analysis/    Compactness (PP, Reock, CHR), VRA analysis
 └── python/
-    └── redist_py/          PyO3 bindings (Python calls into redist-core/data)
+    └── bisect_py/          PyO3 bindings (Python calls into redist-core/data)
 ```
 
 | Crate | Python equivalent | Key types |

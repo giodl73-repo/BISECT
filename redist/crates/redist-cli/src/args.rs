@@ -133,6 +133,8 @@ pub enum Commands {
     Analyze(AnalyzeArgs),
     /// Render district maps to PNG
     Map(MapArgs),
+    /// Merge all state analysis outputs into national datasets
+    Aggregate(AggregateArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -652,4 +654,29 @@ pub struct FetchArgs {
     /// Parallel download workers [default: 4]
     #[arg(short = 'w', long, default_value_t = 4)]
     pub workers: usize,
+}
+
+// ---------------------------------------------------------------------------
+// `redist aggregate` — merge state analysis into national datasets
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct AggregateArgs {
+    /// Version identifier (default: v1)
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+
+    /// Analyzer types to aggregate (default: all)
+    #[arg(long = "types", value_delimiter = ' ', num_args = 0..,
+          default_values = ["all"])]
+    pub types: Vec<redist_analysis::AnalyzerType>,
+
+    /// Write CSV alongside JSON
+    #[arg(long)]
+    pub csv: bool,
+
+    /// Re-aggregate even if output exists
+    #[arg(long)]
+    pub force: bool,
 }

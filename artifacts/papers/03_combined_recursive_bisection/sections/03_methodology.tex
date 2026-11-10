@@ -1,0 +1,250 @@
+\section{Methodology}
+
+Our approach uses recursive bisection to partition census tracts into congressional districts. We present two modes: \textbf{baseline recursive bisection} using unweighted edges, and \textbf{edge-weighted recursive bisection} using boundary lengths as edge weights. Both modes satisfy constitutional requirements (equal population, contiguity); edge-weighted mode additionally optimizes compactness.
+
+\subsection{Problem Formulation}
+
+Given a state with population $P$ allocated $k$ congressional districts:
+
+\textbf{Inputs:}
+\begin{itemize}
+\item Census tracts $V = \{v_1, \ldots, v_n\}$ with populations $p_i$
+\item Adjacency graph $G = (V, E)$ where $(i,j) \in E$ if tracts $i$ and $j$ share a boundary
+\item Boundary lengths $w_{ij}$ for each edge $(i,j) \in E$ (edge-weighted mode only)
+\end{itemize}
+
+\textbf{Objective:}
+Partition $V$ into $k$ disjoint districts $D_1, \ldots, D_k$ such that:
+
+\begin{enumerate}
+\item \textbf{Equal population}: Each district has population $\approx P/k$ within tolerance
+\item \textbf{Contiguity}: Each district forms a connected subgraph
+\item \textbf{Compactness} (edge-weighted mode): Minimize total perimeter $\sum_{d=1}^k \text{Perimeter}(D_d)$
+\end{enumerate}
+
+Target population per district: $\text{target}_d = P/k$. We allow $\pm 0.5\%$ deviation to balance districts precisely while giving METIS flexibility for compactness optimization.
+
+\subsection{Baseline Recursive Bisection}
+
+\subsubsection{Algorithm Overview}
+
+Recursive bisection hierarchically divides regions into smaller subregions until reaching individual districts:
+
+\begin{algorithm}[H]
+\caption{Baseline Recursive Bisection}
+\begin{algorithmic}[1]
+\Function{Partition}{$G, k$}
+    \If{$k = 1$}
+        \State \Return single district containing all vertices
+    \EndIf
+    \State $k_1 \gets \lfloor k/2 \rfloor$
+    \State $k_2 \gets k - k_1$
+    \State Compute target populations $t_1, t_2$ for split
+    \State $(V_1, V_2) \gets \Call{METIS-Bisect}{G, t_1, t_2}$
+    \State $D_1 \gets \Call{Partition}{G[V_1], k_1}$
+    \State $D_2 \gets \Call{Partition}{G[V_2], k_2}$
+    \State \Return $D_1 \cup D_2$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+At each bisection, METIS divides the current region into two parts with specified populations. This process continues until each leaf contains one district. The recursive structure creates a binary tree of splits, providing a clear decomposition hierarchy.
+
+\subsubsection{METIS Bisection (Unweighted)}
+
+We invoke METIS with:
+\begin{itemize}
+\item \texttt{-contig}: Enforce contiguity (connected partitions)
+\item \texttt{-minconn}: Minimize connectivity (prefer cleaner boundaries)
+\item \texttt{-ufactor=1.005}: Allow 0.5\% population imbalance
+\item \texttt{-niter=100}: Refinement iterations for quality
+\end{itemize}
+
+METIS minimizes edge cuts: $\min \sum_{(i,j) \in E} \mathbb{1}[P_i \neq P_j]$ subject to population balance. This treats all adjacencies equally—cutting a short edge costs the same as cutting a long edge.
+
+\subsubsection{Graph Representation}
+
+Census tracts form graph vertices. Two tracts are adjacent if they share any boundary (Queen contiguity: edge or vertex contact). For states with islands or water barriers (30+ states including Hawaii, Alaska, Washington, Michigan, New York, California, Florida, and Maine), we use county-based bridge connections to ensure graph connectivity. For each disconnected component, we connect tracts to the nearest tract in the main component within the same county (using the first 5 digits of the 11-digit GEOID: SSCCCTTTTTT where SS = state FIPS, CCC = county FIPS). This minimal bridging approach creates only necessary water crossings while respecting county boundaries, unlike distance-threshold methods which create excessive edges or fail for distant islands.
+
+Graph files use METIS CSR format:
+\begin{verbatim}
+<n_vertices> <n_edges> 001 1
+<vweight_1> <neighbor_1> <neighbor_2> ...
+<vweight_2> <neighbor_1> <neighbor_2> ...
+...
+\end{verbatim}
+
+Format code 001 indicates vertex weights only (populations). Edges are unweighted, implicitly having weight 1.
+
+\subsection{Edge-Weighted Recursive Bisection}
+
+\subsubsection{Motivating Example}
+
+Consider three adjacent tracts:
+\begin{itemize}
+\item Tract A and Tract B share a 150-meter boundary
+\item Tract A and Tract C share a 12,500-meter boundary
+\item Tract B and Tract C share a 200-meter boundary
+\end{itemize}
+
+Baseline recursive bisection treats all edges equally: cutting $(A,B)$, $(A,C)$, or $(B,C)$ has identical cost. METIS may separate A from C, adding 12.5 km to total perimeter.
+
+Edge-weighted recursive bisection weights edges by actual length: $w_{AB} = 150$, $w_{AC} = 12500$, $w_{BC} = 200$. Now METIS strongly prefers cuts minimizing boundary length. Separating A from C costs 83× more than separating A from B. This directly optimizes geometric compactness.
+
+\subsubsection{Boundary Length Computation}\label{sec:edge-weights}
+
+For each adjacent tract pair $(i,j)$, we compute shared boundary length $w_{ij}$:
+
+\begin{enumerate}
+\item \textbf{Load geometries}: Read census tract shapefiles (Census TIGER/Line format)
+\item \textbf{Project to CRS}: Transform to state-specific projected coordinate system (e.g., California Albers EPSG:3310) for accurate length measurements in meters
+\item \textbf{Compute intersection}: $I_{ij} = \partial G_i \cap \partial G_j$ where $\partial G_i$ is tract $i$'s boundary
+\item \textbf{Classify intersection}:
+\begin{itemize}
+    \item \textbf{LineString/MultiLineString}: $w_{ij} = \text{length}(I_{ij})$ (real shared boundary)
+    \item \textbf{Point}: $w_{ij} = 0.1$ meters (corner contact)
+    \item \textbf{Empty}: $w_{ij} = \text{median}\{w_{kl} \mid (k,l) \in E_{\text{land}}\}$ (county-based bridge)
+\end{itemize}
+\end{enumerate}
+
+County-based bridge edges (water crossings created to connect disconnected components) use the median land boundary length for the state. This provides adaptive scaling: small states have shorter typical boundaries ($\sim$1 km), large states longer ($\sim$5-10 km). This balances permitting necessary water crossings while discouraging excessive splits. Critically, these bridges only connect tracts within the same county, ensuring geographic sensibility even for distant islands like Alaska's Aleutians ($\sim$1700 km separation) or Hawaii's inter-island gaps ($\sim$100 km).
+
+\textbf{Computational complexity}: $O(Nd)$ for $N$ tracts with average degree $d \approx 6$. Preprocessing takes 10-30 seconds per state. Edge weights are cached as Python dictionaries, requiring $\sim$100 KB per 1,000 edges.
+
+\subsubsection{METIS Integration with Edge Weights}
+
+METIS supports edge weights via format code 011:
+\begin{verbatim}
+<n_vertices> <n_edges> 011 1
+<vweight_1> <nbr_1> <eweight_1> <nbr_2> <eweight_2> ...
+<vweight_2> <nbr_1> <eweight_1> <nbr_2> <eweight_2> ...
+...
+\end{verbatim}
+
+Boundary lengths (in meters) are scaled to integer centimeters: $w_{ij}^{\text{METIS}} = \max(1, \lfloor w_{ij} \times 100 \rfloor)$. This provides 1 cm precision while avoiding numerical issues with small weights.
+
+METIS now minimizes weighted edge cuts:
+\[
+\min_{P} \sum_{(i,j) \in E} w_{ij} \cdot \mathbb{1}[P_i \neq P_j]
+\]
+
+subject to population balance and contiguity. Since $w_{ij}$ represents boundary length, this directly minimizes total perimeter.
+
+\subsubsection{METIS Constraint Handling and Multilevel Algorithm}
+
+A critical distinction: METIS treats population balance as a \textbf{hard constraint}, not a soft objective to trade off against edge-cut minimization. The optimization problem is:
+\[
+\min_{P} \text{EdgeCut}(P) \quad \text{subject to} \quad \left|\frac{\sum_{v \in P_i} p_v}{\sum_{v \in V} p_v} - t_i\right| \leq \epsilon
+\]
+
+where $t_i$ is the target weight fraction for partition $i$ and $\epsilon$ is the balance tolerance (default 1-3\% for 2-way partitioning, controlled by \texttt{-ufactor} parameter). A partition that violates the balance constraint is rejected, regardless of how good its edge-cut is.
+
+\textbf{Multilevel K-way Partitioning Algorithm}~\cite{karypis1998fast,karypis1998multilevel}: METIS uses a three-phase approach to efficiently find high-quality partitions:
+
+\textbf{Phase 1: Coarsening}. The graph is progressively coarsened by collapsing vertices. At each level $i$, a matching $M_i$ is computed (pairs of vertices to merge), creating graph $G_{i+1}$ with $|V_{i+1}| \approx |V_i|/2$. Heavy-edge matching prioritizes merging vertices connected by high-weight edges, preserving graph structure. Coarsening continues until the graph has fewer than 100 vertices. This multi-level hierarchy allows global optimization with local refinement.
+
+\textbf{Phase 2: Initial Partitioning}. The coarsest graph $G_m$ is partitioned using either greedy graph growing (GGGP) or spectral bisection methods. These small-graph algorithms find initial partitions satisfying balance constraints. For 2-way partitioning, METIS typically uses GGGP: starting from a random seed vertex, greedily expand regions to meet target weights while minimizing boundary growth. Multiple random seeds are tried, selecting the partition with minimum edge-cut.
+
+\textbf{Phase 3: Uncoarsening and Refinement}. The partition is projected back through the coarsening levels. At each level $i$, vertices merged in $G_{i+1}$ are split in $G_i$, then the partition is refined using Kernighan-Lin (KL) or Fiduccia-Mattheyses (FM) algorithms~\cite{kernighan1970efficient,fiduccia1982linear}. These local search methods move vertices across partition boundaries to reduce edge-cut, subject to maintaining balance constraints. The key insight: refinement operates on progressively finer graphs, allowing both global structure (early levels) and local optimization (late levels).
+
+\textbf{Balance constraint enforcement}: At every phase, METIS maintains the balance constraint:
+\begin{itemize}
+\item \textbf{Initial partitioning}: GGGP explicitly grows regions to target weights
+\item \textbf{Refinement}: KL/FM moves are only accepted if they preserve balance within tolerance
+\item \textbf{Contiguity}: With \texttt{-contig} flag, moves that disconnect a partition are rejected
+\end{itemize}
+
+The \texttt{-ufactor} parameter controls balance tolerance. For redistricting, we use \texttt{-ufactor=1.005} (0.5\% imbalance), enforcing strict population equality while giving METIS minimal flexibility for compactness optimization. Tighter constraints (e.g., \texttt{-ufactor=1.001}) can over-constrain the problem, forcing poor edge-cuts; looser constraints violate equal population requirements.
+
+\textbf{Refinement iterations}: The \texttt{-niter} parameter controls how many KL/FM passes are performed. More iterations improve solution quality but increase runtime. We use \texttt{-niter=100}, balancing quality and efficiency. Empirically, edge-cut improvements plateau after 50-100 iterations for redistricting graphs.
+
+\textbf{Runtime complexity}: Coarsening and uncoarsening are $O(|E|)$. KL/FM refinement is $O(|E|)$ per pass. For $r$ refinement iterations across $\log|V|$ levels, total runtime is $O(r|E|\log|V|)$. With $r=100$ and redistricting graphs having $|E| \approx 6|V|$, this is highly efficient—California (8,057 tracts) partitions in 2-3 seconds per bisection.
+
+\textbf{Comparison to constrained multi-objective optimization}: Unlike Pareto-based methods that produce trade-off frontiers~\cite{zitzler2001spea2}, METIS solves a single-objective constrained problem. There is no "balance parameter" $\lambda$ mixing objectives. Population balance is non-negotiable; edge-cut minimization occurs strictly within the feasible region defined by balance and contiguity constraints. This matches redistricting's legal requirements: equal population is mandatory, compactness is desirable subject to equality.
+
+\subsubsection{Polsby-Popper Optimization}
+
+The Polsby-Popper score for a district with area $A$ and perimeter $P$ is:
+\[
+PP = \frac{4\pi A}{P^2}
+\]
+
+For redistricting, area is determined by population (held constant by equal population constraint). Thus minimizing $P$ maximizes $PP$. Edge-weighted recursive bisection optimizes Polsby-Popper by construction.
+
+\textbf{Global vs. local optimization}: Recursive bisection makes locally optimal splits at each level. This is not guaranteed globally optimal (NP-hard) but produces high-quality solutions in practice. The hierarchical structure also provides intuitive geographic divisions.
+
+\subsection{Visualization of Recursive Bisection Process}
+
+To illustrate the edge-weighted recursive bisection process, we present two examples showing how states are progressively divided.
+
+\textbf{Minnesota (Even Division)}: Minnesota receives 8 congressional districts, an even power of 2. Figures~\ref{fig:minnesota_rounds} shows the three bisection rounds:
+\begin{itemize}
+\item \textbf{Round 1}: State divided into 2 regions (4 districts each)
+\item \textbf{Round 2}: Each region bisected into 4 total regions (2 districts each)
+\item \textbf{Round 3}: Final bisection creates 8 districts (1 district each)
+\end{itemize}
+
+Every split is perfectly balanced (equal-sized partitions), creating a symmetric partition tree. This even division allows maximum flexibility for METIS to optimize compactness at each level.
+
+\begin{figure*}[t]
+\centering
+\begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{../../../../outputs/artifacts/papers/03_combined_recursive_bisection/figures/minnesota_round_1_2_regions.png}
+    \caption{Round 1: 2 regions}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{../../../../outputs/artifacts/papers/03_combined_recursive_bisection/figures/minnesota_round_2_4_regions.png}
+    \caption{Round 2: 4 regions}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{../../../../outputs/artifacts/papers/03_combined_recursive_bisection/figures/minnesota_round_3_8_regions.png}
+    \caption{Round 3: 8 districts}
+\end{subfigure}
+\caption{Minnesota edge-weighted recursive bisection progression. Three rounds of balanced bisection create 8 highly compact districts. Each split minimizes boundary length, producing districts with smooth, regular boundaries.}
+\label{fig:minnesota_rounds}
+\end{figure*}
+
+\textbf{Alabama (Odd Division)}: Alabama receives 7 congressional districts, not a power of 2. Figure~\ref{fig:alabama_rounds} shows the three bisection rounds:
+\begin{itemize}
+\item \textbf{Round 1}: State divided into 2 regions (4 and 3 districts respectively)
+\item \textbf{Round 2}: Unequal split creates 4 total regions (2, 2, 2, and 1 districts)
+\item \textbf{Round 3}: Final bisection creates 7 districts (some regions split, some remain)
+\end{itemize}
+
+Odd division creates asymmetric partition trees—some regions are subdivided more than others. This is fundamental to recursive bisection with non-power-of-2 targets. The algorithm maintains population balance despite asymmetry by adjusting target populations at each split.
+
+\begin{figure*}[t]
+\centering
+\begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{../../../../outputs/artifacts/papers/03_combined_recursive_bisection/figures/alabama_round_1_2_regions.png}
+    \caption{Round 1: 2 regions}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{../../../../outputs/artifacts/papers/03_combined_recursive_bisection/figures/alabama_round_2_4_regions.png}
+    \caption{Round 2: 4 regions}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{../../../../outputs/artifacts/papers/03_combined_recursive_bisection/figures/alabama_round_3_7_regions.png}
+    \caption{Round 3: 7 districts}
+\end{subfigure}
+\caption{Alabama edge-weighted recursive bisection progression. Asymmetric splits accommodate 7 districts (non-power-of-2). Despite unbalanced partition tree, edge-weighted mode produces compact districts through boundary length minimization.}
+\label{fig:alabama_rounds}
+\end{figure*}
+
+These visualizations demonstrate that edge-weighted recursive bisection produces compact districts regardless of even/odd division. The key is boundary length minimization at each split—METIS prefers cuts that create smooth, regular boundaries rather than jagged, irregular ones.
+
+\subsection{Algorithmic Properties}
+
+\textbf{Determinism}: Given fixed METIS random seed, the algorithm produces identical results. This ensures reproducibility.
+
+\textbf{Transparency}: The complete partition hierarchy is recorded. Every district's formation can be traced through the binary tree of splits, as shown in Figures~\ref{fig:minnesota_rounds} and~\ref{fig:alabama_rounds}.
+
+\textbf{Computational efficiency}: Runtime is $O(Nk \log k)$ for $N$ tracts and $k$ districts. Typical states partition in 1-5 minutes.
+
+\textbf{Constraints}: Both modes guarantee equal population (within 0.5\%) and contiguity. No additional constraints on communities of interest, political boundaries, or partisan balance are imposed.
+
+\textbf{Fairness}: The algorithm treats all census tracts identically. No geographic regions receive preferential treatment. The only inputs are population counts and spatial adjacency—no political or racial data.

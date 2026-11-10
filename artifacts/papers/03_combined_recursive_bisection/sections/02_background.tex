@@ -1,0 +1,89 @@
+\section{Background and Related Work}
+
+\subsection{Congressional Apportionment: A Success Story}
+
+The U.S. Constitution requires congressional seats be apportioned among states based on decennial census counts. For over a century, this process was contentious—different mathematical methods (Hamilton, Webster, Dean, Hill) produced different outcomes, leading to partisan deadlock. The Apportionment Act of 1941 permanently adopted the Huntington-Hill method, which minimizes relative differences in representation between states.
+
+Huntington-Hill demonstrates that mathematical algorithms can resolve seemingly intractable political problems. The method is:
+\begin{itemize}
+\item \textbf{Transparent}: The formula is publicly documented
+\item \textbf{Objective}: No discretionary decisions affect outcomes
+\item \textbf{Consistent}: Applied uniformly across all states
+\item \textbf{Accepted}: Used for over 80 years without serious challenge
+\end{itemize}
+
+This success provides a model for redistricting reform. If we can remove partisan discretion from seat allocation between states, why not from district boundary drawing within states?
+
+\subsection{Redistricting Approaches}
+
+\subsubsection{Manual Redistricting}
+
+Current redistricting practice involves legislative committees, independent commissions, or state officials drawing boundaries using GIS software. Mapmakers balance multiple objectives: equal population, compactness, contiguity, preservation of political subdivisions, and (often) partisan advantage. This process typically takes months, involves extensive public hearings, and frequently ends in litigation.
+
+Advantages include human judgment on communities of interest and political realities. Disadvantages include opacity, partisan manipulation, and public distrust. Even independent commissions face accusations of favoring one party.
+
+\subsubsection{Mathematical Optimization}
+
+Integer linear programming (ILP) formulations encode redistricting as constraint satisfaction problems \cite{garfinkel1970optimal,hess1965nonpartisan}. MILP solvers can find optimal solutions for specific objectives (e.g., minimize perimeter subject to population balance and contiguity). However, these approaches become computationally intractable for states with thousands of census units. Ohio has $\sim$3,500 tracts; finding optimal solutions requires exponential search.
+
+\subsubsection{MCMC Sampling}
+
+Markov Chain Monte Carlo (MCMC) methods sample from the space of valid redistricting plans \cite{duchin2018outlier,fifield2015new}. By comparing enacted plans to distributions of randomly generated plans, MCMC can identify outliers suggesting gerrymandering. This statistical approach provides powerful analytical tools but does not prescribe specific district boundaries. MCMC generates ensembles for analysis, not single plans for adoption.
+
+\subsubsection{Heuristic Algorithms}
+
+Simulated annealing, genetic algorithms, and greedy heuristics find approximate solutions in reasonable time \cite{bozkaya2003tabu,altman1997districting}. These methods often produce high-quality districts but lack theoretical guarantees. Multiple runs yield different results, raising questions about which solution to adopt.
+
+\subsection{Graph Partitioning with METIS}
+
+Graph partitioning divides graph vertices into disjoint sets while minimizing edges crossing partition boundaries. This framework naturally models redistricting: census units are vertices, adjacencies are edges, and districts are partitions.
+
+METIS \cite{karypis1998metis,karypis1999parallel} is a widely-used graph partitioning library developed at the University of Minnesota. It employs a multilevel approach:
+
+\begin{enumerate}
+\item \textbf{Coarsening}: Iteratively merge vertices to create smaller graphs
+\item \textbf{Partitioning}: Partition the coarsest graph
+\item \textbf{Refinement}: Project partition back to original graph, refining boundaries at each level
+\end{enumerate}
+
+METIS runs in near-linear time $O((|V|+|E|)\log k)$ for $k$-way partitioning, making it practical for large graphs. The \texttt{-contig} flag enforces connected partitions, essential for redistricting. The \texttt{-minconn} flag further minimizes partition boundary length.
+
+\textbf{Recursive bisection}: Rather than partitioning directly into $k$ districts, repeatedly apply 2-way METIS partitioning. This hierarchical approach mirrors natural geographic divisions and provides a clear audit trail showing how each district was formed.
+
+\subsection{Edge Weights in Graph Partitioning}
+
+Standard METIS minimizes unweighted edge cuts: $\min \sum_{(i,j) \in E} \mathbb{1}[P_i \neq P_j]$ where $P_i$ is the partition assignment of vertex $i$. This treats all adjacencies equally.
+
+METIS supports edge weights via format code 011: $\min \sum_{(i,j) \in E} w_{ij} \cdot \mathbb{1}[P_i \neq P_j]$ where $w_{ij}$ is the weight of edge $(i,j)$. Edge weights are standard in network partitioning (e.g., weighting by network traffic or communication costs) but have not been systematically applied to redistricting with geometric boundary lengths.
+
+\textbf{Key insight}: By setting $w_{ij}$ to the actual boundary length between census tracts $i$ and $j$, METIS minimizes total district perimeter. Since Polsby-Popper compactness is $PP = 4\pi A / P^2$, minimizing perimeter $P$ (with area $A$ held constant by population balance) maximizes $PP$.
+
+\subsection{Compactness Metrics}
+
+\subsubsection{Polsby-Popper}
+
+The Polsby-Popper score \cite{polsby1991third} measures how closely a district resembles a circle:
+\[
+PP = \frac{4\pi \cdot \text{Area}}{\text{Perimeter}^2}
+\]
+
+A perfect circle achieves $PP = 1$. Complex shapes with long perimeters have low scores. Polsby-Popper directly penalizes the elongated, snaking boundaries characteristic of gerrymandering.
+
+\subsubsection{Reock}
+
+The Reock score \cite{reock1961measuring} measures dispersion:
+\[
+R = \frac{\text{Area of district}}{\text{Area of minimum bounding circle}}
+\]
+
+Reock captures how "spread out" a district is. Compact districts nearly fill their bounding circle; gerrymandered districts with disconnected components score poorly.
+
+\subsubsection{Limitations and Tradeoffs}
+
+No single compactness metric is perfect. Polsby-Popper can be "gamed" by adding small appendages. Reock is sensitive to outlier regions. Geographic features (coastlines, mountains) naturally constrain compactness. We use both metrics but focus on Polsby-Popper because (1) it directly relates to perimeter minimization, (2) it's widely used in redistricting litigation, and (3) our edge-weighted approach explicitly optimizes it.
+
+\subsection{Baseline Comparison}
+
+To evaluate algorithmic redistricting, we must compare against enacted districts. We use the U.S. Census Bureau's TIGER/Line shapefiles for the 118th Congressional Districts \cite{census2023tigerline}, which represent enacted 2020 Census-based boundaries as of 2023. These official boundaries allow rigorous comparison of compactness scores.
+
+Previous work often lacked this baseline, comparing only against theoretical ideals or alternative algorithms. By measuring against actual enacted districts, we can assess whether algorithmic approaches offer practical improvements over current practice.

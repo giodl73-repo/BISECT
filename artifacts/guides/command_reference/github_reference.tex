@@ -1,0 +1,226 @@
+\documentclass[11pt,landscape]{article}
+\usepackage[margin=0.4in]{geometry}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage[compact]{titlesec}
+\usepackage{tcolorbox}
+
+% Colors
+\definecolor{sectioncolor}{RGB}{0,102,204}
+\definecolor{highlightbg}{RGB}{230,240,255}
+\definecolor{commandcolor}{RGB}{0,51,102}
+\definecolor{gitcolor}{RGB}{240,80,50}
+
+% Section formatting
+\titleformat{\section}{\Large\bfseries\color{sectioncolor}}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+
+% No page numbers
+\pagestyle{empty}
+
+% Tighter spacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\setlength{\columnseprule}{0.4pt}
+\setlength{\multicolsep}{8pt}
+\setlength{\columnsep}{16pt}
+
+\begin{document}
+
+\begin{center}
+\textbf{\Huge GitHub \& Git - Quick Reference}\\
+\vspace{6pt}
+\large Run \texttt{setup\_env.bat} first to enable all shortcuts
+\end{center}
+
+\vspace{8pt}
+
+\begin{multicols}{3}
+\raggedright
+
+\section*{Git Basics}
+
+\begin{tcolorbox}[colback=highlightbg,colframe=gitcolor,boxrule=1.5pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt]
+\textbf{\large Essential Git Commands}
+
+\vspace{4pt}
+
+\begin{Verbatim}[fontsize=\large,frame=none]
+gs          git status
+ga .        git add .
+gc "msg"    git commit -m
+gp          git push
+gl          git log (10)
+gd          git diff
+\end{Verbatim}
+\end{tcolorbox}
+
+\vspace{6pt}
+
+\textbf{Additional Git:}
+\begin{Verbatim}[fontsize=\normalsize,frame=single]
+gco branch    git checkout
+gb            git branch
+\end{Verbatim}
+
+\section*{GitHub CLI (gh)}
+
+\begin{tcolorbox}[colback=highlightbg,colframe=sectioncolor,boxrule=1pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt]
+\textbf{\large Pull Requests}
+
+\vspace{4pt}
+
+\begin{Verbatim}[fontsize=\large,frame=none]
+ghpr        gh pr create
+ghprl       gh pr list
+ghprv 123   gh pr view
+ghprc 123   gh pr checkout
+ghprm 123   gh pr merge
+\end{Verbatim}
+\end{tcolorbox}
+
+\vspace{6pt}
+
+\textbf{Issues:}
+\begin{Verbatim}[fontsize=\normalsize,frame=single]
+ghi         gh issue create
+ghil        gh issue list
+ghiv 42     gh issue view
+\end{Verbatim}
+
+\textbf{Repository:}
+\begin{Verbatim}[fontsize=\normalsize,frame=single]
+ghr         gh repo view
+\end{Verbatim}
+
+\columnbreak
+
+\section*{Common Workflows}
+
+\begin{tcolorbox}[colback=highlightbg,colframe=commandcolor,boxrule=1.5pt,arc=2pt,left=8pt,right=8pt,top=6pt,bottom=6pt,title={\large\textbf{1. Quick Commit \& Push}}]
+\begin{Verbatim}[fontsize=\Large,frame=none]
+gs
+ga .
+gc "your commit message"
+gp
+\end{Verbatim}
+\end{tcolorbox}
+
+\vspace{6pt}
+
+\begin{tcolorbox}[colback=highlightbg,colframe=commandcolor,boxrule=1.5pt,arc=2pt,left=8pt,right=8pt,top=6pt,bottom=6pt,title={\large\textbf{2. Review Before Push}}]
+\begin{Verbatim}[fontsize=\Large,frame=none]
+gs
+gd
+ga .
+gc "commit message"
+gp
+\end{Verbatim}
+\end{tcolorbox}
+
+\vspace{6pt}
+
+\begin{tcolorbox}[colback=highlightbg,colframe=commandcolor,boxrule=1.5pt,arc=2pt,left=8pt,right=8pt,top=6pt,bottom=6pt,title={\large\textbf{3. Create Pull Request}}]
+\begin{Verbatim}[fontsize=\Large,frame=none]
+gs
+ga .
+gc "feature: add X"
+gp
+ghpr
+\end{Verbatim}
+\end{tcolorbox}
+
+\vspace{6pt}
+
+\begin{tcolorbox}[colback=highlightbg,colframe=commandcolor,boxrule=1.5pt,arc=2pt,left=8pt,right=8pt,top=6pt,bottom=6pt,title={\large\textbf{4. Switch Branches}}]
+\begin{Verbatim}[fontsize=\Large,frame=none]
+gb
+gco branch-name
+gs
+\end{Verbatim}
+\end{tcolorbox}
+
+\columnbreak
+
+\section*{Step-by-Step Guides}
+
+\subsection*{First Time Setup}
+
+\begin{Verbatim}[fontsize=\normalsize,frame=single]
+# 1. Check git status
+gs
+
+# 2. Configure git (first time)
+git config --global user.name
+  "Your Name"
+git config --global user.email
+  "you@example.com"
+
+# 3. Verify GitHub CLI
+gh auth status
+\end{Verbatim}
+
+\subsection*{Making Changes}
+
+\begin{Verbatim}[fontsize=\normalsize,frame=single]
+# 1. Check current status
+gs
+
+# 2. See what changed
+gd
+
+# 3. Add all changes
+ga .
+
+# 4. Commit with message
+gc "describe your changes"
+
+# 5. Push to GitHub
+gp
+\end{Verbatim}
+
+\subsection*{Working with PRs}
+
+\begin{Verbatim}[fontsize=\normalsize,frame=single]
+# List all PRs
+ghprl
+
+# View specific PR
+ghprv 123
+
+# Checkout PR locally
+ghprc 123
+
+# Create new PR
+ghpr
+
+# Merge PR
+ghprm 123
+\end{Verbatim}
+
+\subsection*{View History}
+
+\begin{Verbatim}[fontsize=\normalsize,frame=single]
+# Last 10 commits
+gl
+
+# Full diff
+gd
+
+# Check status
+gs
+\end{Verbatim}
+
+\end{multicols}
+
+\vspace{8pt}
+
+\begin{center}
+\textbf{\large Quick Tips:}\\
+\vspace{4pt}
+Always run \texttt{gs} before and after commands to see changes $\bullet$ Use \texttt{gd} to review before committing\\
+Write clear commit messages $\bullet$ Push often to backup your work
+\end{center}
+
+\end{document}

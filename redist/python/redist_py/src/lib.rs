@@ -432,7 +432,7 @@ fn bisection_ufactor(depth: usize) -> f64 {
 // ---------------------------------------------------------------------------
 
 #[pymodule]
-fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn bisect_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Graph>()?;
     m.add_class::<Partition>()?;
     m.add_class::<BisectionTree>()?;

@@ -2,7 +2,7 @@
 
 The Python-facing API is intentionally minimal. Rust does computation; Python does I/O and orchestration.
 
-## `redist_py.Graph`
+## `bisect_py.Graph`
 
 ```python
 class Graph:
@@ -24,7 +24,7 @@ class Graph:
         """Write METIS .graph format file."""
 ```
 
-## `redist_py.Partition`
+## `bisect_py.Partition`
 
 ```python
 class Partition:
@@ -39,7 +39,7 @@ class Partition:
         """Raise ValueError if any district exceeds tolerance."""
 ```
 
-## `redist_py.build_vra_edge_weights`
+## `bisect_py.build_vra_edge_weights`
 
 ```python
 def build_vra_edge_weights(
@@ -54,7 +54,7 @@ def build_vra_edge_weights(
     """
 ```
 
-## `redist_py.build_adjacency_graph` (Phase 2)
+## `bisect_py.build_adjacency_graph` (Phase 2)
 
 ```python
 def build_adjacency_graph(
@@ -70,7 +70,7 @@ def build_adjacency_graph(
     """
 ```
 
-## `redist_py.analyze_mm_districts` (Phase 4)
+## `bisect_py.analyze_mm_districts` (Phase 4)
 
 ```python
 def analyze_mm_districts(

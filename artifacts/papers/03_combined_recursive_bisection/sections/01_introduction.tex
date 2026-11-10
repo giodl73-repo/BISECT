@@ -1,0 +1,59 @@
+\section{Introduction}
+
+Congressional redistricting shapes American democracy by determining how 435 House seats translate into representation. Every decade, following the Census, states must redraw congressional boundaries to reflect population changes while satisfying constitutional requirements: equal population per district (\textit{Reynolds v. Sims}, 1964) and geographic contiguity. Yet unlike congressional apportionment—where the Huntington-Hill method has provided mathematical objectivity since 1941—boundary drawing remains vulnerable to gerrymandering and partisan manipulation.
+
+The current redistricting landscape reveals deep dysfunction. Partisan state legislatures draw districts that favor incumbents and entrench power. Independent commissions offer some improvement but still rely on subjective judgment and political negotiation. Compactness requirements exist in many state constitutions but lack enforcement mechanisms. Citizens increasingly distrust the process: a 2019 Pew Research poll found 61\% of Americans believe congressional district lines are drawn to favor one party over another.
+
+\subsection{The Case for Algorithmic Redistricting}
+
+The contrast between apportionment and redistricting is stark. When seat allocation became contentious in the early 20th century—with partisan disputes over which mathematical formula to use—Congress eventually adopted the Huntington-Hill method in 1941. This algorithm applies consistently across census cycles, treats all states equally under defined mathematical criteria, and produces results that no single party controls. Redistricting lacks this framework.
+
+Algorithmic redistricting offers several advantages:
+
+\begin{itemize}
+\item \textbf{Transparency}: The algorithm's logic is publicly documented and mathematically verifiable
+\item \textbf{Reproducibility}: Given the same input data, the algorithm produces identical results
+\item \textbf{Objectivity}: No human judgment determines district boundaries
+\item \textbf{Partisan neutrality}: The algorithm uses only population and geography as inputs, excluding political data
+\item \textbf{Speed}: Generating all 50 states takes hours, not months of committee meetings
+\end{itemize}
+
+Critics argue that redistricting inherently involves political tradeoffs that algorithms cannot navigate. We acknowledge this perspective but note that algorithmic transparency makes tradeoffs explicit rather than hiding them in backroom negotiations. If communities disagree with algorithmic outcomes, the debate centers on explicit criteria rather than suspicions of hidden agendas.
+
+\subsection{Recursive Bisection: From Baseline to Edge-Weighted}
+
+This paper introduces a two-mode algorithmic approach to congressional redistricting based on graph partitioning via METIS recursive bisection:
+
+\begin{enumerate}
+\item \textbf{Baseline Recursive Bisection}: Uses unweighted edge cuts to partition census tracts into equal-population districts while maintaining contiguity. This provides a transparent, reproducible foundation that achieves constitutional requirements without partisan input.
+
+\item \textbf{Edge-Weighted Recursive Bisection}: Enhances the baseline by incorporating actual boundary lengths as edge weights in the partitioning process. By minimizing total district perimeter, this directly optimizes the Polsby-Popper compactness metric while maintaining all constitutional constraints.
+\end{enumerate}
+
+Our key insight: standard graph partitioning minimizes edge cuts, treating all adjacencies equally. But geographic adjacencies have vastly different boundary lengths—from 10-meter corners to 50-kilometer borders. By weighting edges with actual boundary lengths, METIS minimizes total perimeter, dramatically improving district compactness.
+
+\subsection{National-Scale Validation}
+
+We apply both approaches to all 50 states using 2020 Census tract-level data (84,414 tracts nationwide), generating all 435 congressional districts. We then compare against enacted 2020 congressional districts using compactness metrics (Polsby-Popper and Reock scores) derived from official Census Bureau TIGER/Line shapefiles.
+
+\textbf{Key findings:}
+\begin{itemize}
+\item Edge-weighted recursive bisection achieves 0.367 mean Polsby-Popper score—\textbf{20\% better than enacted districts} (0.305) and \textbf{56\% better than baseline} (0.235)
+\item \textbf{37 of 50 states} exceed enacted district compactness
+\item States with partisan-drawn plans show the largest improvements: Illinois +174\%, Louisiana +104\%, New Hampshire +102\%
+\item Even baseline recursive bisection performs comparably to enacted districts in many states, demonstrating that algorithmic approaches are viable
+\end{itemize}
+
+\subsection{Contributions}
+
+This paper makes the following contributions:
+
+\begin{enumerate}
+\item \textbf{Complete algorithmic framework}: End-to-end system from census data to final districts using only population and adjacency as inputs
+\item \textbf{Edge-weighted enhancement}: Novel application of boundary length weighting to redistricting via METIS format code 011
+\item \textbf{National-scale validation}: First comprehensive 50-state comparison showing algorithmic redistricting can exceed human-drawn compactness
+\item \textbf{Baseline comparison}: Rigorous analysis against enacted 2020 districts using official Census boundaries
+\item \textbf{Open-source implementation}: Reproducible pipeline with documented methodology available for public scrutiny
+\end{enumerate}
+
+The remainder of this paper proceeds as follows: Section 2 reviews related work and background on graph partitioning and compactness metrics. Section 3 presents our methodology, including both baseline and edge-weighted approaches. Section 4 covers implementation details and computational complexity. Section 5 reports comprehensive results across all 50 states. Section 6 analyzes political and demographic characteristics. Section 7 discusses implications for redistricting reform. Section 8 concludes.

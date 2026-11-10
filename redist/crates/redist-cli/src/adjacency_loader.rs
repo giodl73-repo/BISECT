@@ -4,7 +4,7 @@
 /// Falls back to the Python pkl shim if `.adj.bin` not found, so the
 /// transition is backward-compatible.
 ///
-/// The `.adj.bin` format is written by `redist_py.adjacency_to_bin()` and
+/// The `.adj.bin` format is written by `bisect_py.adjacency_to_bin()` and
 /// read by `redist_data::deserialize_adjacency()`. It is ~2-5× smaller than
 /// pkl and loads in <1ms (vs ~200ms for the Python shim).
 use std::collections::HashMap;
