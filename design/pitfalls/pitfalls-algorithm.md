@@ -10,6 +10,11 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 
 **Domain:** Any system that asks METIS (or any optimizer) to satisfy multiple hard constraints simultaneously. If one constraint is constitutional and the other is policy-driven, the constitutional constraint must not be in the optimizer's objective function.
 
+**Why it's hard to catch:** Multi-objective output often looks like a plausible
+tradeoff rather than a failed constraint. The constitutional defect only
+becomes visible when downstream balance validation is read as a hard gate
+instead of one metric among several.
+
 **Structural solution:** Encode policy signals (minority clustering) in the graph structure (edge weights), not in the optimization objective (vertex weights). The optimizer sees a single objective — minimize weighted edge cuts — and population balance is enforced by ufactor alone.
 
 **Status:** SOLVED
@@ -23,6 +28,10 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 **Pattern:** A boolean flag used to mean two different things will drift when one meaning changes but code depending on the other meaning doesn't. The flag starts as a unified signal; refactoring splits its meanings; code written for the original meaning breaks silently.
 
 **Domain:** Any system where a single flag controls both "is this a special run?" and "use this special algorithm mode?". When the algorithm changes (e.g., from multi-constraint to edge-weighting), the "special run" meaning persists but the "algorithm mode" meaning becomes wrong.
+
+**Why it's hard to catch:** Both meanings are true at first, so tests and
+callers normalize the conflation. The bug appears later when one meaning
+changes and old branch conditions still pass review as familiar plumbing.
 
 **Structural solution:** Separate the two concerns into separate signals. `vra_mode=True` means "this is a VRA run" (for logging, analysis, branching). `multi_constraint` is a derived property (`vra_target_tree is not None`), not a copy of `vra_mode`. Each flag has exactly one meaning.
 
@@ -38,6 +47,11 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 
 **Domain:** Any graph-weighting approach where the signal condition (e.g., "both endpoints are minority") applies to a large fraction of the graph. High-diversity regions have many minority tracts, making most edges minority-minority.
 
+**Why it's hard to catch:** The weighting code is doing exactly what it was
+asked to do, and every boosted edge remains individually defensible. The loss
+of contrast is a distribution-level failure that only appears when signal
+density is measured across the graph.
+
 **Structural solution:** Adaptive scaling that tapers the boost as signal density rises. When nearly all edges carry the signal, the boost is reduced to maintain discriminative contrast. Floor ensures some signal always exists.
 
 **Status:** SOLVED
@@ -52,6 +66,10 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 
 **Domain:** Any system where a flag controls both (a) a branching condition and (b) an assumption about data layout. When the data layout changes, the flag no longer tracks that change.
 
+**Why it's hard to catch:** The branch remains semantically named and can still
+be true for legitimate reasons. Reviewers see a valid mode check while the
+hidden layout assumption underneath it has already changed.
+
 **Structural solution:** Derive indexing from the data itself (`ndim`), not from a flag. `array.ndim == 2` is always true when the array is 2D, regardless of what flags say.
 
 **Status:** SOLVED
@@ -65,6 +83,11 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 **Pattern:** An algorithm designed for a specific domain (bisection requires at least 2 districts) receives input outside that domain (1 district) and either crashes, produces degenerate output, or silently succeeds with wrong results. Callers assume the algorithm handles all cases.
 
 **Domain:** Any recursive or iterative algorithm with a minimum meaningful input size. Single-district states in redistricting have no bisection to perform; any bisection algorithm applied to them is operating outside its designed range.
+
+**Why it's hard to catch:** Degenerate inputs are often rare, small, and easy to
+treat as harmless shortcuts. Without an explicit domain gate, callers may
+interpret a no-op, crash, or odd-looking output as an edge-case implementation
+detail rather than invalid algorithm entry.
 
 **Structural solution:** Explicit domain check at the entry point, before any algorithm logic runs. Return early with a documented no-op when input is outside the domain.
 
