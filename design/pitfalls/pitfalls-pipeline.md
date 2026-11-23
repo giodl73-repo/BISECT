@@ -42,6 +42,11 @@ Structural vulnerabilities in multi-script pipeline chains. The root pattern: a 
 
 **Domain:** Any pipeline where an optional step can be skipped via a flag, and that flag must traverse subprocess boundaries. The inversion (False / skip) is harder to propagate than the assertion (True / run) because conditional logic at each boundary tends to only check for True.
 
+**Why it's hard to catch:** Positive paths are usually what tests and examples
+exercise, while explicit disable paths look like absence of work. The missing
+flag propagation is only visible when a downstream process does work that the
+outer command already said to skip.
+
 **Structural solution:** Propagate the disable case explicitly: `if not args.run_analysis: cmd.append('--skip-analysis')`. Child scripts must also register the disable flag (`--skip-analysis` sets `run_analysis=False`). The default in child scripts must be False — explicit enable required, not implicit.
 
 **Status:** SOLVED for `--skip-analysis`, `--skip-political`, `--skip-demographic`
@@ -160,6 +165,11 @@ Then extract from the temp file. The system's I/O subsystem handles large transf
 **Pattern:** A lookup function filters a collection by a year key and returns only matching entries. If no entries match (e.g., the year "2030" or a typo "202a"), the function returns an empty collection with no error. The caller receives an empty list and may produce zero output with zero error messages, making the bug invisible.
 
 **Domain:** Any system where a key parameter (year, version, region) is used to filter a collection, and the "no matches" result is indistinguishable from "valid but empty." Pipeline orchestrators are particularly vulnerable because they treat empty state lists as "nothing to do" rather than "invalid input."
+
+**Why it's hard to catch:** An empty collection is a valid shape for many
+filters, so the pipeline can exit quietly with zero work and zero failures.
+Without a separate allowlist check, reviewers cannot tell whether "nothing to
+do" means valid empty scope or invalid input.
 
 **Structural solution:** Validate the key parameter against an allowlist before filtering. Return `Err` for unknown values:
 ```rust
@@ -285,6 +295,11 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Pattern:** A wave pulse marks deliverables complete and records validation commands, but does not name the accepted requirements, package boundaries, code-rigor constraints, risk disposition, pitfall/invariant effects, or public/custody impact. The work looks closed locally while VTRACE evidence remains partial.
 
 **Domain:** Any wave/pulse-managed project where pulses predate a formal systems-engineering trace process. The failure is procedural rather than technical: implementation, tests, and docs may all exist, but downstream reviewers cannot tell which mission/spec IDs were satisfied or which risks were accepted.
+
+**Why it's hard to catch:** A pulse can contain real work, passing commands, and
+local notes, so it feels complete to the implementer. The missing trace only
+appears when another reviewer tries to reuse the result and cannot connect it to
+requirements, risks, or accepted boundaries.
 
 **Structural solution:** VTRACE-governed pulses must follow the `context/waves/PHASES.md` closure rules: parent IDs, affected boundaries, validation level, role gates, verification state, risk/pitfall disposition, and public/custody effects are required before closure. Archived pulses are not retroactively rewritten, but future governed pulses cannot close on "implemented" alone.
 

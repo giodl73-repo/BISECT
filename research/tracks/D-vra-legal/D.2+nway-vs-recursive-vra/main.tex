@@ -28,6 +28,10 @@ However, methods exhibit distinct characteristics. N-way partitioning offers \te
 This equivalence finding has important implications for redistricting reform: practitioners can confidently choose either method based on computational constraints (speed vs optimization) rather than effectiveness concerns. Both approaches produce comparable VRA compliance when properly configured with edge-weighting and total minority coalitions.
 \end{abstract}
 
+\paragraph{Population metric declaration.} Unless otherwise stated, empirical majority-minority percentages in this paper are computed from total resident population in the BISECT tract inputs. We use total population for equal-population redistricting and algorithmic plan construction; VRA/Gingles legal interpretation requires voting-age population (VAP) or citizen voting-age population (CVAP) evidence, so demographic threshold results here are descriptive feasibility screens, not standalone Section 2 conclusions.
+
+\paragraph{Threshold sensitivity declaration.} Method-comparison results near majority-minority thresholds are bounded empirical transition ranges, not point legal rules. Borderline states, including Mississippi, must be interpreted with the tested parameter grid and reported sensitivity bands; a point result can move between one and two majority-minority districts under different weights, thresholds, seeds, or population standards.
+
 \section{Introduction}
 \input{sections/01_introduction}
 

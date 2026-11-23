@@ -12,10 +12,18 @@ Structural vulnerabilities in census data handling. Data errors are silent — t
 
 **Why it survives:** The code runs correctly for whichever metric it uses. The error is in the framing, not the computation. Papers that don't state their metric look rigorous.
 
+**Why it's hard to catch:** The numeric pipeline can be internally consistent
+while the paper or user-facing claim names the wrong legal metric. The failure
+is a claim-to-context mismatch, so ordinary computation tests pass unless the
+paper text is checked for explicit metric declarations.
+
 **Structural solution:** Explicit metric declaration in every paper section that reports minority percentages. System documentation should state which metric is used and why. Ideally, provide both — total population for apportionment context, VAP for VRA context.
 
-**Status:** OPEN — papers D.0-D.3 do not explicitly state total population vs. VAP
-**Test:** None yet
+**Status:** SOLVED — papers D.0-D.3 now include a front-matter
+Population metric declaration that distinguishes total resident population,
+VAP, and CVAP, and frames VRA/Gingles interpretation as requiring VAP/CVAP
+evidence beyond total-population feasibility screens.
+**Test:** `crates/bisect-analysis/tests/research_pitfall_guards.rs::d_series_papers_declare_population_metric_for_vra_claims`
 
 ---
 
@@ -26,6 +34,11 @@ Structural vulnerabilities in census data handling. Data errors are silent — t
 **Domain:** Any Python project where scripts are called as subprocesses and import from project-level packages. The project root must be on `sys.path` for imports to resolve — but subprocesses don't inherit the parent's `sys.path`, only the environment's `PYTHONPATH`.
 
 **Why it survives:** Running the script directly from the command line (with the correct working directory) works fine. The bug only appears when called as a subprocess from another script — a code path that's hard to test without integration tests.
+
+**Why it's hard to catch:** Developer runs often execute from the repository
+root where imports resolve, while orchestrated subprocesses start with a
+different module context. The parent sees a child failure unless integration
+tests exercise the exact subprocess route.
 
 **Structural solution:** Every script that imports from project-level packages must add the project root to `sys.path` in its own `__init__` block, independent of how it's invoked.
 
